@@ -17,174 +17,215 @@ Util::addStyle('projectcheck', 'navigation');
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
 <style nonce="<?php p($_['cspNonce'] ?? '') ?>">
-    /* Filter Container - Horizontal Layout */
+    /* Filter Container - Beautiful Card Design */
     .filters-container {
-        background: var(--color-main-background);
-        border: 1px solid var(--color-border);
+        background: linear-gradient(135deg, var(--color-main-background) 0%, var(--color-background-hover) 100%);
+        border: 2px solid var(--color-border);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s ease;
+    }
+
+    .filters-container:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Search Input - Modern Design */
+    .search-input-wrapper {
+        position: relative;
+        flex: 1;
+        min-width: 320px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 16px 12px 44px;
+        border: 2px solid var(--color-border);
         border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 20px;
+        font-size: 15px;
+        background: var(--color-main-background);
+        color: var(--color-text);
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--color-primary-element, #0082c9);
+        box-shadow: 0 0 0 3px rgba(0, 130, 201, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        color: var(--color-text-maxcontrast);
+        pointer-events: none;
+    }
+
+    /* Filter Controls - Beautiful Layout */
+    .filter-controls {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: 16px;
     }
 
-    /* Search Input */
-    .search-input-wrapper {
-        position: relative;
-        flex: 1;
-        min-width: 300px;
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 8px 12px 8px 36px;
-        border: 1px solid var(--color-border);
-        border-radius: 4px;
-        font-size: 14px;
-        background: var(--color-main-background);
-        color: var(--color-text);
-        transition: all 0.2s ease;
-    }
-
-    .search-input:focus {
-        outline: none;
-        border-color: var(--color-primary);
-        box-shadow: 0 0 0 2px var(--color-primary-alpha-20);
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 14px;
-        color: var(--color-text-maxcontrast);
-        pointer-events: none;
-    }
-
-    /* Filter Controls - Horizontal */
-    .filter-controls {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px;
-    }
-
     .filter-group {
         display: flex;
-        align-items: center;
+        flex-direction: column;
         gap: 6px;
     }
 
     .filter-label {
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--color-text);
-        white-space: nowrap;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-text-maxcontrast);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .filter-select,
     .filter-date {
-        padding: 6px 8px;
-        border: 1px solid var(--color-border);
-        border-radius: 4px;
-        font-size: 13px;
+        padding: 10px 14px;
+        border: 2px solid var(--color-border);
+        border-radius: 8px;
+        font-size: 14px;
         background: var(--color-main-background);
         color: var(--color-text);
-        transition: all 0.2s ease;
-        min-width: 120px;
+        transition: all 0.3s ease;
+        min-width: 160px;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .filter-select:hover,
+    .filter-date:hover {
+        border-color: var(--color-primary-element, #0082c9);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
     .filter-select:focus,
     .filter-date:focus {
         outline: none;
-        border-color: var(--color-primary);
-        box-shadow: 0 0 0 2px var(--color-primary-alpha-20);
+        border-color: var(--color-primary-element, #0082c9);
+        box-shadow: 0 0 0 3px rgba(0, 130, 201, 0.1);
     }
 
-    /* Action Buttons */
+    /* Action Buttons - Modern Style */
     .filter-actions {
         display: flex;
-        gap: 8px;
+        gap: 10px;
         margin-left: auto;
     }
 
     .btn {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
+        gap: 8px;
+        padding: 10px 18px;
         border: none;
-        border-radius: 4px;
-        font-size: 13px;
-        font-weight: 500;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
         text-decoration: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .btn-primary {
-        background: var(--color-primary);
-        color: var(--color-primary-text);
+        background: var(--color-primary-element, #0082c9);
+        color: var(--color-primary-element-text, #fff);
     }
 
     .btn-primary:hover {
-        background: var(--color-primary-hover);
+        background: var(--color-primary-element-hover, #006aa3);
     }
 
     .btn-secondary {
-        background: var(--color-background-hover);
+        background: var(--color-background-dark);
         color: var(--color-text);
-        border: 1px solid var(--color-border);
+        border: 2px solid var(--color-border);
     }
 
     .btn-secondary:hover {
-        background: var(--color-background-dark);
+        background: var(--color-background-hover);
+        border-color: var(--color-primary-element, #0082c9);
     }
 
     .btn-icon {
-        font-size: 14px;
+        font-size: 16px;
+        line-height: 1;
     }
 
     /* Responsive Design */
     @media (max-width: 1024px) {
         .filters-container {
-            flex-direction: column;
-            align-items: stretch;
+            padding: 20px;
+            gap: 16px;
         }
 
         .search-input-wrapper {
             min-width: auto;
+            width: 100%;
         }
 
         .filter-controls {
-            justify-content: center;
+            width: 100%;
+            justify-content: space-between;
         }
 
         .filter-actions {
             margin-left: 0;
+            width: 100%;
             justify-content: center;
         }
     }
 
     @media (max-width: 768px) {
+        .filters-container {
+            padding: 16px;
+        }
+
         .filter-controls {
             flex-direction: column;
             align-items: stretch;
-            gap: 8px;
+            gap: 12px;
         }
 
         .filter-group {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 4px;
+            width: 100%;
         }
 
         .filter-select,
         .filter-date {
             min-width: auto;
+            width: 100%;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
         }
     }
 
