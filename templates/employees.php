@@ -14,9 +14,146 @@ Util::addStyle('projectcheck', 'dashboard');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'custom-icons');
 Util::addStyle('projectcheck', 'navigation');
+Util::addStyle('projectcheck', 'time-entries');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
+
+<style nonce="<?php p($_['cspNonce'] ?? '') ?>">
+    /* Search and Filter Styles */
+    .filters-container {
+        background: linear-gradient(135deg, var(--color-main-background) 0%, var(--color-background-hover) 100%);
+        border: 2px solid var(--color-border);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        flex: 1;
+        min-width: 320px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 16px 12px 44px;
+        border: 2px solid var(--color-border);
+        border-radius: 8px;
+        font-size: 15px;
+        background: var(--color-main-background);
+        color: var(--color-text);
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--color-primary-element);
+        box-shadow: 0 0 0 3px rgba(0, 130, 201, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        opacity: 0.6;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    /* Table Styles */
+    .employees-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: var(--color-main-background);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .employees-table thead {
+        background: var(--color-background-hover);
+    }
+
+    .employees-table th {
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--color-main-text);
+        border-bottom: 2px solid var(--color-border);
+    }
+
+    .employees-table tbody tr {
+        border-bottom: 1px solid var(--color-border);
+        transition: background-color 0.2s ease;
+    }
+
+    .employees-table tbody tr:hover {
+        background: var(--color-background-hover);
+    }
+
+    .employees-table td {
+        padding: 16px;
+        vertical-align: middle;
+    }
+
+    .employee-name-cell {
+        font-weight: 500;
+    }
+
+    .employee-name-cell a {
+        color: var(--color-primary-element);
+        text-decoration: none;
+    }
+
+    .employee-name-cell a:hover {
+        text-decoration: underline;
+    }
+
+    /* No results message */
+    #no-results-row {
+        background: var(--color-background-hover);
+    }
+
+    .no-results-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .no-results-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .no-results-message h3 {
+        margin: 0 0 8px 0;
+        color: var(--color-main-text);
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .no-results-message p {
+        margin: 0 0 16px 0;
+        color: var(--color-text-lighter);
+        font-size: 14px;
+    }
+</style>
 
 <div id="app-content">
     <div id="app-content-wrapper">
@@ -36,16 +173,6 @@ Util::addStyle('projectcheck', 'navigation');
                     <div class="header-details">
                         <h2><?php p($l->t('Employee Overview')); ?></h2>
                         <p><?php p($l->t('Track employee performance and time tracking statistics')); ?></p>
-                        <div class="employee-meta">
-                            <div class="meta-item">
-                                <i data-lucide="users" class="lucide-icon primary"></i>
-                                <span><?php p(count($_['usersWithTimeEntries'])); ?> <?php p($l->t('Active Employees')); ?></span>
-                            </div>
-                            <div class="meta-item">
-                                <i data-lucide="calendar" class="lucide-icon primary"></i>
-                                <span><?php p(date('Y')); ?> <?php p($l->t('Performance')); ?></span>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div class="header-actions">
@@ -57,7 +184,7 @@ Util::addStyle('projectcheck', 'navigation');
             </div>
         </div>
 
-        <!-- Team Overview -->
+        <!-- Team Overview Stats -->
         <div class="section team-overview">
             <div class="section-header">
                 <h3><i data-lucide="users" class="lucide-icon"></i> <?php p($l->t('Team Overview')); ?></h3>
@@ -112,175 +239,100 @@ Util::addStyle('projectcheck', 'navigation');
             </div>
         </div>
 
-        <!-- Employee List -->
-        <?php if (!empty($_['employeeComparisonStats'])): ?>
-            <div class="section employee-list-section">
-                <div class="section-header">
-                    <h3><i data-lucide="list" class="lucide-icon"></i> <?php p($l->t('Employees')); ?></h3>
+        <!-- Search and Filters -->
+        <div class="section">
+            <div class="filters-container">
+                <!-- Search Input -->
+                <div class="search-input-wrapper">
+                    <input type="text" id="employee-search" class="search-input"
+                        placeholder="<?php p($l->t('Search employees...')); ?>">
+                    <span class="search-icon">🔍</span>
                 </div>
-                <div class="section-content">
-                    <div class="employee-grid">
-                        <?php foreach ($_['employeeComparisonStats'] as $index => $employee): ?>
-                            <div class="employee-card">
-                                <div class="employee-header">
-                                    <div class="employee-rank">#<?php p($index + 1); ?></div>
-                                    <h4 class="employee-name">
+
+                <!-- Action Buttons -->
+                <div class="filter-actions">
+                    <button id="clear-filters" class="btn btn-secondary">
+                        <span class="btn-icon">🔄</span>
+                        <?php p($l->t('Reset Search')); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Table -->
+        <div class="section">
+            <?php if (empty($_['employeeComparisonStats'])): ?>
+                <div class="emptycontent">
+                    <div class="icon-time"></div>
+                    <h2><?php p($l->t('No employees found')); ?></h2>
+                    <p><?php p($l->t('No employees have logged time entries yet.')); ?></p>
+                </div>
+            <?php else: ?>
+                <div class="grid-container">
+                    <table class="employees-table">
+                        <thead>
+                            <tr>
+                                <th><?php p($l->t('Rank')); ?></th>
+                                <th><?php p($l->t('Employee')); ?></th>
+                                <th><?php p($l->t('Total Hours')); ?></th>
+                                <th><?php p($l->t('Total Revenue')); ?></th>
+                                <th><?php p($l->t('Avg. Hourly Rate')); ?></th>
+                                <th><?php p($l->t('Actions')); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody id="employees-tbody">
+                            <!-- No Results Message (Hidden by default) -->
+                            <tr id="no-results-row" style="display: none;">
+                                <td colspan="6">
+                                    <div class="no-results-message">
+                                        <div class="no-results-icon">🔍</div>
+                                        <h3><?php p($l->t('No employees match your search')); ?></h3>
+                                        <p><?php p($l->t('Try adjusting your search criteria.')); ?></p>
+                                        <button id="clear-search-inline" class="btn btn-secondary">
+                                            <span class="btn-icon">🔄</span>
+                                            <?php p($l->t('Reset Search')); ?>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <?php foreach ($_['employeeComparisonStats'] as $index => $employee): ?>
+                                <tr data-employee-name="<?php p(strtolower($employee['user_display_name'])); ?>"
+                                    data-employee-id="<?php p($employee['user_id']); ?>">
+                                    <td>
+                                        <strong>#<?php p($index + 1); ?></strong>
+                                    </td>
+                                    <td class="employee-name-cell">
                                         <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $employee['user_id']])); ?>">
                                             <?php p($employee['user_display_name']); ?>
                                         </a>
-                                    </h4>
-                                </div>
-                                <div class="employee-stats">
-                                    <div class="stat">
-                                        <i data-lucide="clock" class="lucide-icon"></i>
-                                        <span class="stat-value"><?php p(number_format($employee['total_hours'], 1)); ?>h</span>
-                                    </div>
-                                    <div class="stat">
-                                        <i data-lucide="euro" class="lucide-icon"></i>
-                                        <span class="stat-value">€<?php p(number_format($employee['total_cost'], 2)); ?></span>
-                                    </div>
-                                    <div class="stat">
-                                        <i data-lucide="trending-up" class="lucide-icon"></i>
-                                        <span class="stat-value">€<?php p(number_format($employee['avg_hourly_rate'], 2)); ?>/h</span>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
+                                    </td>
+                                    <td>
+                                        <i data-lucide="clock" class="lucide-icon" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                                        <?php p(number_format($employee['total_hours'], 1)); ?>h
+                                    </td>
+                                    <td>
+                                        <i data-lucide="euro" class="lucide-icon" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                                        €<?php p(number_format($employee['total_cost'], 2)); ?>
+                                    </td>
+                                    <td>
+                                        <i data-lucide="trending-up" class="lucide-icon" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                                        €<?php p(number_format($employee['avg_hourly_rate'], 2)); ?>/h
+                                    </td>
+                                    <td>
+                                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $employee['user_id']])); ?>"
+                                           class="button primary" title="<?php p($l->t('View Details')); ?>">
+                                            <i data-lucide="eye" class="lucide-icon" style="width: 16px; height: 16px;"></i>
+                                            <?php p($l->t('View Details')); ?>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-        <?php endif; ?>
-
-        <!-- Detailed Employee Breakdown -->
-        <?php if (!empty($_['detailedEmployeeProjectTypeStats'])): ?>
-            <div class="section detailed-breakdown-section">
-                <div class="section-header">
-                    <h3><i data-lucide="pie-chart" class="lucide-icon"></i> <?php p($l->t('Employee Work Breakdown')); ?></h3>
-                    <p><?php p($l->t('See how each employee worked on different project types over the years')); ?></p>
-                </div>
-                <div class="section-content">
-                    <div class="breakdown-container">
-                        <?php foreach ($_['detailedEmployeeProjectTypeStats'] as $year => $yearData): ?>
-                            <div class="year-breakdown">
-                                <div class="year-header">
-                                    <h4><?php p($year); ?></h4>
-                                    <?php
-                                    $yearTotalHours = 0;
-                                    $yearTotalCost = 0;
-                                    foreach ($yearData as $employeeData) {
-                                        foreach ($employeeData['by_type'] as $typeData) {
-                                            $yearTotalHours += $typeData['total_hours'];
-                                            $yearTotalCost += $typeData['total_cost'];
-                                        }
-                                    }
-                                    ?>
-                                    <div class="year-summary">
-                                        <span class="summary-item">
-                                            <i data-lucide="clock" class="lucide-icon"></i>
-                                            <?php p(number_format($yearTotalHours, 1)); ?>h total
-                                        </span>
-                                        <span class="summary-item">
-                                            <i data-lucide="euro" class="lucide-icon"></i>
-                                            €<?php p(number_format($yearTotalCost, 2)); ?> total
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="employees-breakdown">
-                                    <?php foreach ($yearData as $userId => $employeeData): ?>
-                                        <div class="employee-breakdown-card">
-                                            <div class="employee-breakdown-header">
-                                                <h5 class="employee-name">
-                                                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $userId])); ?>">
-                                                        <i data-lucide="user" class="lucide-icon"></i>
-                                                        <?php p($employeeData['user_display_name']); ?>
-                                                    </a>
-                                                </h5>
-                                                <?php
-                                                $employeeTotalHours = array_sum(array_column($employeeData['by_type'], 'total_hours'));
-                                                $employeeTotalCost = array_sum(array_column($employeeData['by_type'], 'total_cost'));
-                                                ?>
-                                                <div class="employee-totals">
-                                                    <span class="total-item">
-                                                        <i data-lucide="clock" class="lucide-icon"></i>
-                                                        <?php p(number_format($employeeTotalHours, 1)); ?>h
-                                                    </span>
-                                                    <span class="total-item">
-                                                        <i data-lucide="euro" class="lucide-icon"></i>
-                                                        €<?php p(number_format($employeeTotalCost, 2)); ?>
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div class="project-types-breakdown">
-                                                <?php foreach ($employeeData['by_type'] as $projectType => $typeData): ?>
-                                                    <div class="project-type-row">
-                                                        <div class="project-type-info">
-                                                            <?php
-                                                            $displayNames = [
-                                                                'client' => $l->t('Client Project'),
-                                                                'admin' => $l->t('Administrative'),
-                                                                'sales' => $l->t('Sales & Marketing'),
-                                                                'customer' => $l->t('Customer Support'),
-                                                                'product' => $l->t('Product Development'),
-                                                                'meeting' => $l->t('Meetings & Overhead'),
-                                                                'internal' => $l->t('Internal Project'),
-                                                                'research' => $l->t('Research & Development'),
-                                                                'training' => $l->t('Training & Education'),
-                                                                'other' => $l->t('Other')
-                                                            ];
-
-                                                            // Icon mapping for project types
-                                                            $iconMapping = [
-                                                                'client' => '👥',
-                                                                'admin' => '⚙️',
-                                                                'sales' => '📈',
-                                                                'customer' => '🎧',
-                                                                'product' => '💻',
-                                                                'meeting' => '🤝',
-                                                                'internal' => '🏢',
-                                                                'research' => '🔬',
-                                                                'training' => '🎓',
-                                                                'other' => '📋'
-                                                            ];
-
-                                                            $displayName = $displayNames[$projectType] ?? ucfirst($projectType);
-                                                            $icon = $iconMapping[$projectType] ?? '📋';
-                                                            ?>
-                                                            <div class="project-type-display">
-                                                                <span class="project-type-icon"
-                                                                    data-project-type="<?php p($projectType); ?>"
-                                                                    title="<?php p($displayName); ?>">
-                                                                    <?php p($icon); ?>
-                                                                </span>
-                                                                <span class="project-type-text"><?php p($displayName); ?></span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="project-type-stats">
-                                                            <span class="stat">
-                                                                <i data-lucide="clock" class="lucide-icon"></i>
-                                                                <?php p(number_format($typeData['total_hours'], 1)); ?>h
-                                                            </span>
-                                                            <span class="stat">
-                                                                <i data-lucide="euro" class="lucide-icon"></i>
-                                                                €<?php p(number_format($typeData['total_cost'], 2)); ?>
-                                                            </span>
-                                                            <span class="percentage">
-                                                                <?php p($employeeTotalHours > 0 ? round(($typeData['total_hours'] / $employeeTotalHours) * 100, 1) : 0); ?>%
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                <?php endforeach; ?>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 

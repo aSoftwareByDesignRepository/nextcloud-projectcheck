@@ -584,6 +584,15 @@
         "Try adjusting your search criteria or clear the filters to see all entries.": "Versuchen Sie, Ihre Suchkriterien anzupassen oder die Filter zu löschen, um alle Einträge zu sehen.",
         "Reset Filters": "Filter zurücksetzen",
         "Employee performance and time tracking statistics": "Mitarbeiterleistung und Zeiterfassungsstatistiken",
-        "Back to Employees": "Zurück zu Mitarbeitenden"
+        "Back to Employees": "Zurück zu Mitarbeitenden",
+        "Search employees...": "Mitarbeitende suchen...",
+        "Reset Search": "Suche zurücksetzen",
+        "No employees found": "Keine Mitarbeitenden gefunden",
+        "No employees have logged time entries yet.": "Es haben noch keine Mitarbeitenden Zeiteinträge erfasst.",
+        "Rank": "Rang",
+        "Employee": "Mitarbeitende/r",
+        "Avg. Hourly Rate": "Durchschn. Stundensatz",
+        "No employees match your search": "Keine Mitarbeitenden entsprechen Ihrer Suche",
+        "Try adjusting your search criteria.": "Versuchen Sie, Ihre Suchkriterien anzupassen."
     }
 }

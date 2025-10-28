@@ -382,6 +382,15 @@
         "Try adjusting your search criteria or clear the filters to see all entries.": "Try adjusting your search criteria or clear the filters to see all entries.",
         "Reset Filters": "Reset Filters",
         "Employee performance and time tracking statistics": "Employee performance and time tracking statistics",
-        "Back to Employees": "Back to Employees"
+        "Back to Employees": "Back to Employees",
+        "Search employees...": "Search employees...",
+        "Reset Search": "Reset Search",
+        "No employees found": "No employees found",
+        "No employees have logged time entries yet.": "No employees have logged time entries yet.",
+        "Rank": "Rank",
+        "Employee": "Employee",
+        "Avg. Hourly Rate": "Avg. Hourly Rate",
+        "No employees match your search": "No employees match your search",
+        "Try adjusting your search criteria.": "Try adjusting your search criteria."
     }
 }
