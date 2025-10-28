@@ -8,10 +8,6 @@
 (function () {
 	'use strict';
 
-	console.log('🚀 TIME ENTRIES JS LOADED - VERSION 2.0.1 - MANUAL FILTER ONLY');
-	console.log('📋 Filter behavior: User must click Apply Filters button');
-	console.log('✅ No automatic filtering on dropdown change');
-
 	// Global variables
 	let searchTimeout = null;
 

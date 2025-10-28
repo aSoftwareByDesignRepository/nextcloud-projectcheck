@@ -101,11 +101,10 @@ Util::addStyle('projectcheck', 'navigation');
 				<div class="form-row">
 					<div class="form-group">
 						<label for="date" class="required"><?php p($l->t('Date')); ?></label>
-						<input type="text" name="date" id="date" class="form-input" required
-							placeholder="dd.mm.yyyy"
-							value="<?php p($isEdit ? $timeEntry->getDate()->format('d.m.Y') : date('d.m.Y')); ?>"
-							pattern="\d{2}\.\d{2}\.\d{4}"
-							title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>">
+						<input type="date" name="date" id="date" class="form-input" required
+							value="<?php p($isEdit ? $timeEntry->getDate()->format('Y-m-d') : date('Y-m-d')); ?>"
+							max="<?php p(date('Y-m-d')); ?>"
+							title="<?php p($l->t('Select date')); ?>">
 						<div class="error-message" id="date-error"></div>
 					</div>
 				</div>

@@ -72,6 +72,23 @@
 	transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Date picker specific styling */
+.form-group input[type="date"] {
+	min-height: 42px;
+	cursor: pointer;
+	position: relative;
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+	cursor: pointer;
+	opacity: 0.6;
+	filter: invert(var(--background-invert-if-dark, 0));
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
+	opacity: 1;
+}
+
 /* Enhanced select styling for better theme compatibility */
 .form-group select {
 	-webkit-appearance: none;

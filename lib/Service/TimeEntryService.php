@@ -440,7 +440,7 @@ class TimeEntryService
 			}
 
 			if (!$date) {
-				$errors['date'] = 'Invalid date format (dd.mm.yyyy)';
+				$errors['date'] = 'Invalid date format';
 			} else {
 				// Check if date is not in the future (allow today)
 				$today = new \DateTime();
