@@ -195,7 +195,7 @@ Util::addStyle('projectcheck', 'navigation');
                                         </a>
                                         <div class="project-badges">
                                             <span class="priority-badge priority-<?php echo strtolower($project->getPriority()); ?>">
-                                                <?php p($project->getPriority()); ?>
+                                                <?php p($l->t($project->getPriority())); ?>
                                             </span>
                                             <?php if ($budgetInfo): ?>
                                                 <?php if ($budgetInfo['consumption_percentage'] >= 100): ?>
@@ -243,7 +243,7 @@ Util::addStyle('projectcheck', 'navigation');
                                 </td>
                                 <td>
                                     <span class="status-badge status-<?php echo strtolower(str_replace(' ', '-', $project->getStatus())); ?>">
-                                        <?php p($project->getStatus()); ?>
+                                        <?php p($l->t($project->getStatus())); ?>
                                     </span>
                                 </td>
                                 <td class="budget-cell">
