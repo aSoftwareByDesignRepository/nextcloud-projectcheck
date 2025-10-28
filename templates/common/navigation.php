@@ -9,12 +9,15 @@
 
 // Get current page to highlight active navigation item
 $currentPage = $_SERVER['REQUEST_URI'] ?? '';
-$isDashboard = strpos($currentPage, '/dashboard') !== false || strpos($currentPage, '/index.php/apps/projectcheck') !== false;
 $isProjects = strpos($currentPage, '/projects') !== false;
 $isCustomers = strpos($currentPage, '/customers') !== false;
 $isEmployees = strpos($currentPage, '/employees') !== false;
 $isTimeEntries = strpos($currentPage, '/time-entries') !== false;
 $isSettings = strpos($currentPage, '/settings') !== false;
+// Dashboard is active if URL contains /dashboard OR if it's the base app URL without any specific section
+$isDashboard = strpos($currentPage, '/dashboard') !== false || 
+               (!$isProjects && !$isCustomers && !$isEmployees && !$isTimeEntries && !$isSettings && 
+                strpos($currentPage, '/apps/projectcheck') !== false);
 
 // Get stats for the footer (if available)
 $projectCount = $_['stats']['total_projects'] ?? $_['stats']['totalProjects'] ?? 0;
