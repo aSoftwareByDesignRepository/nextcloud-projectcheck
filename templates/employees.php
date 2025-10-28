@@ -42,7 +42,7 @@ Util::addStyle('projectcheck', 'time-entries');
 
     .search-input {
         width: 100%;
-        padding: 12px 16px 12px 44px;
+        padding: 12px 16px;
         border: 2px solid var(--color-border);
         border-radius: 8px;
         font-size: 15px;
@@ -55,15 +55,6 @@ Util::addStyle('projectcheck', 'time-entries');
         outline: none;
         border-color: var(--color-primary-element);
         box-shadow: 0 0 0 3px rgba(0, 130, 201, 0.1);
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 18px;
-        opacity: 0.6;
     }
 
     .filter-actions {
@@ -283,7 +274,6 @@ Util::addStyle('projectcheck', 'time-entries');
                 <div class="search-input-wrapper">
                     <input type="text" id="employee-search" class="search-input"
                         placeholder="<?php p($l->t('Search employees...')); ?>">
-                    <span class="search-icon">🔍</span>
                 </div>
 
                 <!-- Action Buttons -->
