@@ -67,7 +67,7 @@ class Version1001Date202401010001 extends SimpleMigrationStep
 				'notnull' => true,
 			]);
 
-			$table->setPrimaryKey(['id']);
+			$table->setPrimaryKey(['id'], 'customers_pk');
 			$table->addIndex(['name'], 'customers_name_idx');
 			$table->addIndex(['email'], 'customers_email_idx');
 			$table->addIndex(['created_by'], 'customers_creator_idx');

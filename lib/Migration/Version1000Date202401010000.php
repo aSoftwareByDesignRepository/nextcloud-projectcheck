@@ -98,7 +98,7 @@ class Version1000Date202401010000 extends SimpleMigrationStep
 				'notnull' => true,
 			]);
 
-			$table->setPrimaryKey(['id']);
+			$table->setPrimaryKey(['id'], 'projects_pk');
 			$table->addIndex(['customer_id'], 'projects_customer_idx');
 			$table->addIndex(['status'], 'projects_status_idx');
 			$table->addIndex(['created_by'], 'projects_creator_idx');
@@ -139,7 +139,7 @@ class Version1000Date202401010000 extends SimpleMigrationStep
 				'length' => 64,
 			]);
 
-			$table->setPrimaryKey(['id']);
+			$table->setPrimaryKey(['id'], 'members_pk');
 			$table->addIndex(['project_id'], 'members_project_idx');
 			$table->addIndex(['user_id'], 'members_user_idx');
 			$table->addIndex(['role'], 'members_role_idx');

@@ -67,7 +67,7 @@ class Version1002Date202401010002 extends SimpleMigrationStep
 				'notnull' => true,
 			]);
 
-			$table->setPrimaryKey(['id']);
+			$table->setPrimaryKey(['id'], 'time_entries_pk');
 			$table->addIndex(['project_id'], 'time_entries_project_idx');
 			$table->addIndex(['user_id'], 'time_entries_user_idx');
 			$table->addIndex(['date'], 'time_entries_date_idx');

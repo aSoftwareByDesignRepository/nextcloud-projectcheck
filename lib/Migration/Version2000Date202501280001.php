@@ -113,7 +113,7 @@ class Version2000Date202501280001 extends SimpleMigrationStep
 				'notnull' => true,
 			]);
 
-			$table->setPrimaryKey(['id']);
+			$table->setPrimaryKey(['id'], 'pc_proj_pk');
 			$table->addIndex(['customer_id'], 'pc_proj_cust_idx');
 			$table->addIndex(['status'], 'pc_proj_status_idx');
 			$table->addIndex(['created_by'], 'pc_proj_creator_idx');
@@ -161,7 +161,7 @@ class Version2000Date202501280001 extends SimpleMigrationStep
 				'notnull' => true,
 			]);
 
-			$table->setPrimaryKey(['id']);
+			$table->setPrimaryKey(['id'], 'pc_cust_pk');
 			$table->addIndex(['name'], 'pc_cust_name_idx');
 			$table->addIndex(['created_by'], 'pc_cust_creator_idx');
 		}
@@ -203,7 +203,7 @@ class Version2000Date202501280001 extends SimpleMigrationStep
 				'notnull' => true,
 			]);
 
-			$table->setPrimaryKey(['id']);
+			$table->setPrimaryKey(['id'], 'pc_time_pk');
 			$table->addIndex(['project_id'], 'pc_time_proj_idx');
 			$table->addIndex(['user_id'], 'pc_time_user_idx');
 			$table->addIndex(['date'], 'pc_time_date_idx');
@@ -240,7 +240,7 @@ class Version2000Date202501280001 extends SimpleMigrationStep
 				'length' => 64,
 			]);
 
-			$table->setPrimaryKey(['id']);
+			$table->setPrimaryKey(['id'], 'pc_memb_pk');
 			$table->addIndex(['project_id'], 'pc_memb_proj_idx');
 			$table->addIndex(['user_id'], 'pc_memb_user_idx');
 			$table->addIndex(['role'], 'pc_memb_role_idx');
