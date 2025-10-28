@@ -628,16 +628,20 @@ class TimeEntryController extends Controller
 				return new DataResponse(['error' => 'User not authenticated'], 401);
 			}
 
-			$userId = $user->getUID();
+			$currentUserId = $user->getUID();
 
 			// Get filters from request
 			$projectId = $this->request->getParam('project_id', '');
+			$filterUserId = $this->request->getParam('user_id', '');
+			$projectType = $this->request->getParam('project_type', '');
 			$dateFrom = $this->request->getParam('date_from', '');
 			$dateTo = $this->request->getParam('date_to', '');
 			$search = $this->request->getParam('search', '');
 
 			$filters = [];
 			if ($projectId) $filters['project_id'] = $projectId;
+			if ($filterUserId) $filters['user_id'] = $filterUserId;
+			if ($projectType) $filters['project_type'] = $projectType;
 			if ($dateFrom) $filters['date_from'] = $dateFrom;
 			if ($dateTo) $filters['date_to'] = $dateTo;
 			if ($search) $filters['search'] = $search;
@@ -646,7 +650,7 @@ class TimeEntryController extends Controller
 			$timeEntries = $this->timeEntryService->getTimeEntriesWithProjectInfo($filters);
 
 			// Generate CSV content
-			$csv = $this->generateTimeEntriesCSV($timeEntries, $userId);
+			$csv = $this->generateTimeEntriesCSV($timeEntries, $currentUserId);
 
 			// Generate filename with current date
 			$filename = 'time_entries_' . date('Y-m-d_H-i-s') . '.csv';

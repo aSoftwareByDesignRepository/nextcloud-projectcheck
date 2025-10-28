@@ -239,117 +239,6 @@ Util::addStyle('projectcheck', 'navigation');
         <?php endif; ?>
 
 
-        <!-- Project Type Statistics -->
-        <?php if (!empty($_['projectTypeStats'])): ?>
-            <div class="section project-type-stats-section compact">
-                <div class="section-header">
-                    <h3><i data-lucide="pie-chart" class="lucide-icon"></i> <?php p($l->t('Project Type Analysis')); ?></h3>
-                </div>
-                <div class="section-content">
-                    <div class="project-type-stats-compact">
-                        <?php foreach ($_['projectTypeStats'] as $year => $yearData): ?>
-                            <div class="year-section-compact">
-                                <div class="year-header-compact">
-                                    <h4><?php p($year); ?></h4>
-                                    <?php
-                                    $yearTotalHours = array_sum(array_column($yearData, 'total_hours'));
-                                    $yearTotalCost = array_sum(array_column($yearData, 'total_cost'));
-                                    ?>
-                                    <div class="year-summary-compact">
-                                        <span class="summary-item-compact">
-                                            <i data-lucide="clock" class="lucide-icon"></i>
-                                            <?php p(number_format($yearTotalHours, 1)); ?>h
-                                        </span>
-                                        <span class="summary-item-compact">
-                                            <i data-lucide="euro" class="lucide-icon"></i>
-                                            €<?php p(number_format($yearTotalCost, 2)); ?>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="project-types-table">
-                                    <table class="compact-table">
-                                        <thead>
-                                            <tr>
-                                                <th><?php p($l->t('Type')); ?></th>
-                                                <th><?php p($l->t('Hours')); ?></th>
-                                                <th><?php p($l->t('Cost')); ?></th>
-                                                <th><?php p($l->t('Entries')); ?></th>
-                                                <th><?php p($l->t('Hours Share')); ?></th>
-                                                <th><?php p($l->t('Cost Share')); ?></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($yearData as $projectType => $typeData): ?>
-                                                <tr>
-                                                    <td class="type-cell">
-                                                        <?php
-                                                        $displayNames = [
-                                                            'client' => $l->t('Client Project'),
-                                                            'admin' => $l->t('Administrative'),
-                                                            'sales' => $l->t('Sales & Marketing'),
-                                                            'customer' => $l->t('Customer Support'),
-                                                            'product' => $l->t('Product Development'),
-                                                            'meeting' => $l->t('Meetings & Overhead'),
-                                                            'internal' => $l->t('Internal Project'),
-                                                            'research' => $l->t('Research & Development'),
-                                                            'training' => $l->t('Training & Education'),
-                                                            'other' => $l->t('Other')
-                                                        ];
-
-                                                        // Icon mapping for project types (same as in main table)
-                                                        $iconMapping = [
-                                                            'client' => '👥',
-                                                            'admin' => '⚙️',
-                                                            'sales' => '📈',
-                                                            'customer' => '🎧',
-                                                            'product' => '💻',
-                                                            'meeting' => '🤝',
-                                                            'internal' => '🏢',
-                                                            'research' => '🔬',
-                                                            'training' => '🎓',
-                                                            'other' => '📋'
-                                                        ];
-
-                                                        $displayName = $displayNames[$projectType] ?? ucfirst($projectType);
-                                                        $icon = $iconMapping[$projectType] ?? '📋';
-                                                        ?>
-                                                        <div class="project-type-display">
-                                                            <span class="project-type-icon"
-                                                                data-project-type="<?php p($projectType); ?>"
-                                                                title="<?php p($displayName); ?>">
-                                                                <?php p($icon); ?>
-                                                            </span>
-                                                            <span class="project-type-text"><?php p($displayName); ?></span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="stat-cell"><?php p(number_format($typeData['total_hours'], 1)); ?>h</td>
-                                                    <td class="stat-cell">€<?php p(number_format($typeData['total_cost'], 2)); ?></td>
-                                                    <td class="stat-cell"><?php p($typeData['entry_count']); ?></td>
-                                                    <td class="percentage-cell">
-                                                        <div class="percentage-bar">
-                                                            <div class="percentage-fill" style="width: <?php p($yearTotalHours > 0 ? ($typeData['total_hours'] / $yearTotalHours) * 100 : 0); ?>%"></div>
-                                                            <span class="percentage-text"><?php p($yearTotalHours > 0 ? round(($typeData['total_hours'] / $yearTotalHours) * 100, 1) : 0); ?>%</span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="percentage-cell">
-                                                        <div class="percentage-bar">
-                                                            <div class="percentage-fill" style="width: <?php p($yearTotalCost > 0 ? ($typeData['total_cost'] / $yearTotalCost) * 100 : 0); ?>%"></div>
-                                                            <span class="percentage-text"><?php p($yearTotalCost > 0 ? round(($typeData['total_cost'] / $yearTotalCost) * 100, 1) : 0); ?>%</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
-
-
         <!-- Search and Filter Section -->
         <div class="section">
             <div class="filters-container">
@@ -564,4 +453,113 @@ Util::addStyle('projectcheck', 'navigation');
             }
         });
     });
-</script>
+</script>        <!-- Project Type Statistics -->
+        <?php if (!empty($_['projectTypeStats'])): ?>
+            <div class="section project-type-stats-section compact">
+                <div class="section-header">
+                    <h3><i data-lucide="pie-chart" class="lucide-icon"></i> <?php p($l->t('Project Type Analysis')); ?></h3>
+                </div>
+                <div class="section-content">
+                    <div class="project-type-stats-compact">
+                        <?php foreach ($_['projectTypeStats'] as $year => $yearData): ?>
+                            <div class="year-section-compact">
+                                <div class="year-header-compact">
+                                    <h4><?php p($year); ?></h4>
+                                    <?php
+                                    $yearTotalHours = array_sum(array_column($yearData, 'total_hours'));
+                                    $yearTotalCost = array_sum(array_column($yearData, 'total_cost'));
+                                    ?>
+                                    <div class="year-summary-compact">
+                                        <span class="summary-item-compact">
+                                            <i data-lucide="clock" class="lucide-icon"></i>
+                                            <?php p(number_format($yearTotalHours, 1)); ?>h
+                                        </span>
+                                        <span class="summary-item-compact">
+                                            <i data-lucide="euro" class="lucide-icon"></i>
+                                            €<?php p(number_format($yearTotalCost, 2)); ?>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="project-types-table">
+                                    <table class="compact-table">
+                                        <thead>
+                                            <tr>
+                                                <th><?php p($l->t('Type')); ?></th>
+                                                <th><?php p($l->t('Hours')); ?></th>
+                                                <th><?php p($l->t('Cost')); ?></th>
+                                                <th><?php p($l->t('Entries')); ?></th>
+                                                <th><?php p($l->t('Hours Share')); ?></th>
+                                                <th><?php p($l->t('Cost Share')); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($yearData as $projectType => $typeData): ?>
+                                                <tr>
+                                                    <td class="type-cell">
+                                                        <?php
+                                                        $displayNames = [
+                                                            'client' => $l->t('Client Project'),
+                                                            'admin' => $l->t('Administrative'),
+                                                            'sales' => $l->t('Sales & Marketing'),
+                                                            'customer' => $l->t('Customer Support'),
+                                                            'product' => $l->t('Product Development'),
+                                                            'meeting' => $l->t('Meetings & Overhead'),
+                                                            'internal' => $l->t('Internal Project'),
+                                                            'research' => $l->t('Research & Development'),
+                                                            'training' => $l->t('Training & Education'),
+                                                            'other' => $l->t('Other')
+                                                        ];
+
+                                                        // Icon mapping for project types (same as in main table)
+                                                        $iconMapping = [
+                                                            'client' => '👥',
+                                                            'admin' => '⚙️',
+                                                            'sales' => '📈',
+                                                            'customer' => '🎧',
+                                                            'product' => '💻',
+                                                            'meeting' => '🤝',
+                                                            'internal' => '🏢',
+                                                            'research' => '🔬',
+                                                            'training' => '🎓',
+                                                            'other' => '📋'
+                                                        ];
+
+                                                        $displayName = $displayNames[$projectType] ?? ucfirst($projectType);
+                                                        $icon = $iconMapping[$projectType] ?? '📋';
+                                                        ?>
+                                                        <div class="project-type-display">
+                                                            <span class="project-type-icon"
+                                                                data-project-type="<?php p($projectType); ?>"
+                                                                title="<?php p($displayName); ?>">
+                                                                <?php p($icon); ?>
+                                                            </span>
+                                                            <span class="project-type-text"><?php p($displayName); ?></span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="stat-cell"><?php p(number_format($typeData['total_hours'], 1)); ?>h</td>
+                                                    <td class="stat-cell">€<?php p(number_format($typeData['total_cost'], 2)); ?></td>
+                                                    <td class="stat-cell"><?php p($typeData['entry_count']); ?></td>
+                                                    <td class="percentage-cell">
+                                                        <div class="percentage-bar">
+                                                            <div class="percentage-fill" style="width: <?php p($yearTotalHours > 0 ? ($typeData['total_hours'] / $yearTotalHours) * 100 : 0); ?>%"></div>
+                                                            <span class="percentage-text"><?php p($yearTotalHours > 0 ? round(($typeData['total_hours'] / $yearTotalHours) * 100, 1) : 0); ?>%</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="percentage-cell">
+                                                        <div class="percentage-bar">
+                                                            <div class="percentage-fill" style="width: <?php p($yearTotalCost > 0 ? ($typeData['total_cost'] / $yearTotalCost) * 100 : 0); ?>%"></div>
+                                                            <span class="percentage-text"><?php p($yearTotalCost > 0 ? round(($typeData['total_cost'] / $yearTotalCost) * 100, 1) : 0); ?>%</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
