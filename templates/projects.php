@@ -11,6 +11,7 @@ use OCP\Util;
 
 Util::addScript('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'projects');
+Util::addStyle('projectcheck', 'dashboard');
 Util::addStyle('projectcheck', 'navigation');
 ?>
 
