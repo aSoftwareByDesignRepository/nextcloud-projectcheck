@@ -89,21 +89,21 @@
 
 		// Validate hourly rate
 		if (data.defaultHourlyRate && parseFloat(data.defaultHourlyRate) <= 0) {
-			errors.push('Default hourly rate must be greater than 0');
+			errors.push(t('projectcheck', 'Default hourly rate must be greater than 0'));
 		}
 
 		// Validate budget thresholds
 		if (data.budgetWarningThreshold) {
 			const warning = parseInt(data.budgetWarningThreshold);
 			if (warning < 0 || warning > 100) {
-				errors.push('Budget warning threshold must be between 0 and 100');
+				errors.push(t('projectcheck', 'Budget warning threshold must be between 0 and 100'));
 			}
 		}
 
 		if (data.budgetCriticalThreshold) {
 			const critical = parseInt(data.budgetCriticalThreshold);
 			if (critical < 0 || critical > 100) {
-				errors.push('Budget critical threshold must be between 0 and 100');
+				errors.push(t('projectcheck', 'Budget critical threshold must be between 0 and 100'));
 			}
 		}
 
@@ -112,7 +112,7 @@
 			const warning = parseInt(data.budgetWarningThreshold);
 			const critical = parseInt(data.budgetCriticalThreshold);
 			if (warning >= critical) {
-				errors.push('Warning threshold must be less than critical threshold');
+				errors.push(t('projectcheck', 'Warning threshold must be less than critical threshold'));
 			}
 		}
 
@@ -120,7 +120,7 @@
 		if (data.itemsPerPage) {
 			const items = parseInt(data.itemsPerPage);
 			if (items < 5 || items > 100) {
-				errors.push('Items per page must be between 5 and 100');
+				errors.push(t('projectcheck', 'Items per page must be between 5 and 100'));
 			}
 		}
 
@@ -147,7 +147,7 @@
 		})
 			.then(function (response) {
 				if (!response.ok) {
-					throw new Error('Network response was not ok');
+					throw new Error(t('projectcheck', 'Network response was not ok'));
 				}
 				return response.json();
 			})
@@ -155,7 +155,7 @@
 				showLoadingState(false);
 
 				if (result.success) {
-					showMessage(result.message, 'success');
+					showMessage(t('projectcheck', 'Settings updated successfully'), 'success');
 					updateFormWithNewValues(result.settings);
 				} else {
 					showMessage(result.error || t('projectcheck', 'Failed to save settings'), 'error');
@@ -163,6 +163,7 @@
 			})
 			.catch(function (error) {
 				showLoadingState(false);
+				console.error('Settings save error:', error);
 				showMessage(t('projectcheck', 'Failed to save settings') + ': ' + error.message, 'error');
 			});
 	}
@@ -210,7 +211,7 @@
 				const critical = parseInt(criticalThreshold.value) || 0;
 
 				if (warning >= critical && critical > 0) {
-					criticalThreshold.setCustomValidity('Critical threshold must be greater than warning threshold');
+					criticalThreshold.setCustomValidity(t('projectcheck', 'Critical threshold must be greater than warning threshold'));
 				} else {
 					criticalThreshold.setCustomValidity('');
 				}
@@ -246,10 +247,10 @@
 			if (field.value && !isNaN(value)) {
 				if (min !== undefined && value < min) {
 					isValid = false;
-					message = `Value must be at least ${min}`;
+					message = t('projectcheck', 'Value must be at least') + ' ' + min;
 				} else if (max !== undefined && value > max) {
 					isValid = false;
-					message = `Value must be at most ${max}`;
+					message = t('projectcheck', 'Value must be at most') + ' ' + max;
 				}
 			}
 		} else if (field.type === 'text') {
@@ -258,7 +259,7 @@
 				const regex = new RegExp(pattern);
 				if (!regex.test(field.value)) {
 					isValid = false;
-					message = field.title || 'Invalid format';
+					message = field.title || t('projectcheck', 'Invalid format');
 				}
 			}
 		}
@@ -281,7 +282,7 @@
 
 		if (resetButton) {
 			resetButton.addEventListener('click', function () {
-				if (confirm('Are you sure you want to reset all settings to their default values?')) {
+				if (confirm(t('projectcheck', 'Are you sure you want to reset all settings to their default values?'))) {
 					resetSettings();
 				}
 			});
@@ -349,11 +350,11 @@
 		if (loading) {
 			form.classList.add('loading');
 			submitButton.disabled = true;
-			submitButton.textContent = 'Saving...';
+			submitButton.textContent = t('projectcheck', 'Saving...');
 		} else {
 			form.classList.remove('loading');
 			submitButton.disabled = false;
-			submitButton.textContent = 'Save Settings';
+			submitButton.textContent = t('projectcheck', 'Save Settings');
 		}
 	}
 
