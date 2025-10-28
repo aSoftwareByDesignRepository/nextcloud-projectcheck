@@ -53,16 +53,36 @@ Util::addStyle('projectcheck', 'common/progress-bars');
                     </div>
                 </div>
                 <div class="header-actions">
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="button primary">
-                        <i data-lucide="plus" class="lucide-icon"></i>
-                        <?php p($l->t('New Project')); ?>
-                    </a>
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="button secondary">
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="button primary">
                         <i data-lucide="clock" class="lucide-icon"></i>
                         <?php p($l->t('New Time Entry')); ?>
                     </a>
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="button secondary">
+                        <i data-lucide="plus" class="lucide-icon"></i>
+                        <?php p($l->t('New Project')); ?>
+                    </a>
                 </div>
             </div>
+        </div>
+
+        <!-- Quick Actions Toolbar -->
+        <div class="quick-actions-toolbar">
+            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="toolbar-action">
+                <i data-lucide="clock" class="lucide-icon"></i>
+                <span><?php p($l->t('New Time Entry')); ?></span>
+            </a>
+            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="toolbar-action">
+                <i data-lucide="plus" class="lucide-icon"></i>
+                <span><?php p($l->t('New Project')); ?></span>
+            </a>
+            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.index')); ?>" class="toolbar-action">
+                <i data-lucide="folder" class="lucide-icon"></i>
+                <span><?php p($l->t('View Projects')); ?></span>
+            </a>
+            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="toolbar-action">
+                <i data-lucide="bar-chart-3" class="lucide-icon"></i>
+                <span><?php p($l->t('View Time Entries')); ?></span>
+            </a>
         </div>
 
         <!-- Budget Alerts -->
@@ -97,64 +117,59 @@ Util::addStyle('projectcheck', 'common/progress-bars');
             </div>
         <?php endif; ?>
 
-        <!-- Statistics Overview -->
-        <div class="section">
-            <div class="section-header">
-                <h3><?php p($l->t('Overview Statistics')); ?></h3>
-                <p><?php p($l->t('Key metrics and project insights')); ?></p>
+        <!-- Statistics Overview (Compact & Collapsible) -->
+        <div class="section stats-overview-section compact">
+            <div class="section-header clickable" data-toggle-stats>
+                <div>
+                    <h3><?php p($l->t('Overview Statistics')); ?></h3>
+                    <p><?php p($l->t('Key metrics and project insights')); ?></p>
+                </div>
+                <button type="button" class="expand-toggle" aria-label="<?php p($l->t('Expand statistics')); ?>">
+                    <i data-lucide="chevron-down" class="lucide-icon"></i>
+                </button>
             </div>
 
-            <div class="overview-stats">
+            <div class="overview-stats compact">
                 <div class="overview-stat">
-                    <div class="stat-icon">
-                        <i data-lucide="folder" class="lucide-icon white"></i>
-                    </div>
+                    <i data-lucide="folder" class="lucide-icon"></i>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($_['stats']['totalProjects'] ?? 0); ?></div>
-                        <div class="stat-label"><?php p($l->t('Total Projects')); ?></div>
+                        <div class="stat-label"><?php p($l->t('Projects')); ?></div>
                         <div class="stat-detail">
-                            <span class="stat-sub"><?php p($_['stats']['activeProjects'] ?? 0); ?> active</span>
-                            <span class="stat-sub"><?php p($_['stats']['completedProjects'] ?? 0); ?> completed</span>
+                            <span><?php p($_['stats']['activeProjects'] ?? 0); ?> <?php p($l->t('active')); ?></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="overview-stat">
-                    <div class="stat-icon">
-                        <i data-lucide="euro" class="lucide-icon white"></i>
-                    </div>
+                    <i data-lucide="euro" class="lucide-icon"></i>
                     <div class="stat-content">
-                        <div class="stat-number">€<?php p(number_format($_['stats']['totalBudget'] ?? 0, 2)); ?></div>
-                        <div class="stat-label"><?php p($l->t('Total Budget')); ?></div>
+                        <div class="stat-number">€<?php p(number_format($_['stats']['totalBudget'] ?? 0, 0)); ?></div>
+                        <div class="stat-label"><?php p($l->t('Budget')); ?></div>
                         <div class="stat-detail">
-                            <span class="stat-sub">€<?php p(number_format($_['stats']['totalConsumption'] ?? 0, 2)); ?> used</span>
-                            <span class="stat-sub"><?php p($_['stats']['consumptionPercentage'] ?? 0); ?>% consumed</span>
+                            <span><?php p($_['stats']['consumptionPercentage'] ?? 0); ?>% <?php p($l->t('used')); ?></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="overview-stat">
-                    <div class="stat-icon">
-                        <i data-lucide="clock" class="lucide-icon white"></i>
-                    </div>
+                    <i data-lucide="clock" class="lucide-icon"></i>
                     <div class="stat-content">
-                        <div class="stat-number"><?php p($_['stats']['totalHours'] ?? 0); ?></div>
-                        <div class="stat-label"><?php p($l->t('Total Hours')); ?></div>
+                        <div class="stat-number"><?php p($_['stats']['totalHours'] ?? 0); ?>h</div>
+                        <div class="stat-label"><?php p($l->t('Hours')); ?></div>
                         <div class="stat-detail">
-                            <span class="stat-sub"><?php p($l->t('This month')); ?></span>
+                            <span><?php p($l->t('total')); ?></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="overview-stat">
-                    <div class="stat-icon">
-                        <i data-lucide="users" class="lucide-icon white"></i>
-                    </div>
+                    <i data-lucide="users" class="lucide-icon"></i>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($_['stats']['totalCustomers'] ?? 0); ?></div>
-                        <div class="stat-label"><?php p($l->t('Total Customers')); ?></div>
+                        <div class="stat-label"><?php p($l->t('Customers')); ?></div>
                         <div class="stat-detail">
-                            <span class="stat-sub"><?php p($l->t('Active clients')); ?></span>
+                            <span><?php p($l->t('active')); ?></span>
                         </div>
                     </div>
                 </div>
@@ -473,12 +488,14 @@ Util::addStyle('projectcheck', 'common/progress-bars');
             </div>
         <?php endif; ?>
 
-        <!-- Recent Projects -->
-        <div class="section">
-            <div class="section-header">
-                <h3><?php p($l->t('Recent Projects')); ?></h3>
-                <p><?php p($l->t('Your latest project activities')); ?></p>
-            </div>
+        <!-- Recent Projects and Time Entries (Side by Side) -->
+        <div class="two-column-layout">
+            <!-- Recent Projects -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><?php p($l->t('Recent Projects')); ?></h3>
+                    <p><?php p($l->t('Your latest project activities')); ?></p>
+                </div>
 
             <?php if (empty($_['stats']['recentProjects'])): ?>
                 <div class="empty-state">
@@ -604,14 +621,14 @@ Util::addStyle('projectcheck', 'common/progress-bars');
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-        </div>
-
-        <!-- Recent Time Entries -->
-        <div class="section">
-            <div class="section-header">
-                <h3><?php p($l->t('Recent Time Entries')); ?></h3>
-                <p><?php p($l->t('Your latest time tracking activities')); ?></p>
             </div>
+
+            <!-- Recent Time Entries -->
+            <div class="section">
+                <div class="section-header">
+                    <h3><?php p($l->t('Recent Time Entries')); ?></h3>
+                    <p><?php p($l->t('Your latest time tracking activities')); ?></p>
+                </div>
 
             <?php if (empty($_['stats']['recentTimeEntries'])): ?>
                 <div class="empty-state">
@@ -659,57 +676,9 @@ Util::addStyle('projectcheck', 'common/progress-bars');
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="section">
-            <div class="section-header">
-                <h3><?php p($l->t('Quick Actions')); ?></h3>
-                <p><?php p($l->t('Common tasks and shortcuts')); ?></p>
-            </div>
-
-            <div class="actions-grid">
-                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="action-card">
-                    <div class="action-icon">
-                        <i data-lucide="plus" class="lucide-icon primary"></i>
-                    </div>
-                    <div class="action-content">
-                        <h4><?php p($l->t('New Project')); ?></h4>
-                        <p><?php p($l->t('Create a new project')); ?></p>
-                    </div>
-                </a>
-
-                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="action-card">
-                    <div class="action-icon">
-                        <i data-lucide="clock" class="lucide-icon primary"></i>
-                    </div>
-                    <div class="action-content">
-                        <h4><?php p($l->t('New Time Entry')); ?></h4>
-                        <p><?php p($l->t('Log your time')); ?></p>
-                    </div>
-                </a>
-
-                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.index')); ?>" class="action-card">
-                    <div class="action-icon">
-                        <i data-lucide="folder" class="lucide-icon primary"></i>
-                    </div>
-                    <div class="action-content">
-                        <h4><?php p($l->t('View Projects')); ?></h4>
-                        <p><?php p($l->t('Browse all projects')); ?></p>
-                    </div>
-                </a>
-
-                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="action-card">
-                    <div class="action-icon">
-                        <i data-lucide="bar-chart-3" class="lucide-icon primary"></i>
-                    </div>
-                    <div class="action-content">
-                        <h4><?php p($l->t('View Time Entries')); ?></h4>
-                        <p><?php p($l->t('See all time entries')); ?></p>
-                    </div>
-                </a>
             </div>
         </div>
+        <!-- End Two Column Layout -->
     </div>
 </div>
 
@@ -727,6 +696,7 @@ Util::addStyle('projectcheck', 'common/progress-bars');
         'bar-chart-3': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>',
         'pie-chart': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
         'dollar-sign': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+        'chevron-down': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><polyline points="6,9 12,15 18,9"/></svg>',
         'settings': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
     };
 
@@ -738,6 +708,17 @@ Util::addStyle('projectcheck', 'common/progress-bars');
                 el.innerHTML = svgIcons[iconName];
             }
         });
+
+        // Toggle stats expand/collapse
+        const toggleBtn = document.querySelector('[data-toggle-stats]');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const statsSection = document.querySelector('.stats-overview-section');
+                if (statsSection) {
+                    statsSection.classList.toggle('expanded');
+                }
+            });
+        }
     });
 
     // Temporary popup functions (will be moved to webpack build)
