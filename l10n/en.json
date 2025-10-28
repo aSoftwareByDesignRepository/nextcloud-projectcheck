@@ -380,6 +380,8 @@
         "All Employees": "All Employees",
         "No time entries match your filters": "No time entries match your filters",
         "Try adjusting your search criteria or clear the filters to see all entries.": "Try adjusting your search criteria or clear the filters to see all entries.",
-        "Reset Filters": "Reset Filters"
+        "Reset Filters": "Reset Filters",
+        "Employee performance and time tracking statistics": "Employee performance and time tracking statistics",
+        "Back to Employees": "Back to Employees"
     }
 }
