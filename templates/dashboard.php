@@ -117,59 +117,64 @@ Util::addStyle('projectcheck', 'common/progress-bars');
             </div>
         <?php endif; ?>
 
-        <!-- Statistics Overview (Compact & Collapsible) -->
-        <div class="section stats-overview-section compact">
-            <div class="section-header clickable" data-toggle-stats>
-                <div>
-                    <h3><?php p($l->t('Overview Statistics')); ?></h3>
-                    <p><?php p($l->t('Key metrics and project insights')); ?></p>
-                </div>
-                <button type="button" class="expand-toggle" aria-label="<?php p($l->t('Expand statistics')); ?>">
-                    <i data-lucide="chevron-down" class="lucide-icon"></i>
-                </button>
+        <!-- Statistics Overview -->
+        <div class="section stats-overview-section">
+            <div class="section-header">
+                <h3><?php p($l->t('Overview Statistics')); ?></h3>
+                <p><?php p($l->t('Key metrics and project insights')); ?></p>
             </div>
 
-            <div class="overview-stats compact">
+            <div class="overview-stats">
                 <div class="overview-stat">
-                    <i data-lucide="folder" class="lucide-icon"></i>
+                    <div class="stat-icon">
+                        <i data-lucide="folder" class="lucide-icon white"></i>
+                    </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($_['stats']['totalProjects'] ?? 0); ?></div>
-                        <div class="stat-label"><?php p($l->t('Projects')); ?></div>
+                        <div class="stat-label"><?php p($l->t('Total Projects')); ?></div>
                         <div class="stat-detail">
-                            <span><?php p($_['stats']['activeProjects'] ?? 0); ?> <?php p($l->t('active')); ?></span>
+                            <span class="stat-sub"><?php p($_['stats']['activeProjects'] ?? 0); ?> <?php p($l->t('active')); ?></span>
+                            <span class="stat-sub"><?php p($_['stats']['completedProjects'] ?? 0); ?> <?php p($l->t('completed')); ?></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="overview-stat">
-                    <i data-lucide="euro" class="lucide-icon"></i>
+                    <div class="stat-icon">
+                        <i data-lucide="euro" class="lucide-icon white"></i>
+                    </div>
                     <div class="stat-content">
-                        <div class="stat-number">€<?php p(number_format($_['stats']['totalBudget'] ?? 0, 0)); ?></div>
-                        <div class="stat-label"><?php p($l->t('Budget')); ?></div>
+                        <div class="stat-number">€<?php p(number_format($_['stats']['totalBudget'] ?? 0, 2)); ?></div>
+                        <div class="stat-label"><?php p($l->t('Total Budget')); ?></div>
                         <div class="stat-detail">
-                            <span><?php p($_['stats']['consumptionPercentage'] ?? 0); ?>% <?php p($l->t('used')); ?></span>
+                            <span class="stat-sub">€<?php p(number_format($_['stats']['totalConsumption'] ?? 0, 2)); ?> <?php p($l->t('used')); ?></span>
+                            <span class="stat-sub"><?php p($_['stats']['consumptionPercentage'] ?? 0); ?>% <?php p($l->t('consumed')); ?></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="overview-stat">
-                    <i data-lucide="clock" class="lucide-icon"></i>
+                    <div class="stat-icon">
+                        <i data-lucide="clock" class="lucide-icon white"></i>
+                    </div>
                     <div class="stat-content">
-                        <div class="stat-number"><?php p($_['stats']['totalHours'] ?? 0); ?>h</div>
-                        <div class="stat-label"><?php p($l->t('Hours')); ?></div>
+                        <div class="stat-number"><?php p($_['stats']['totalHours'] ?? 0); ?></div>
+                        <div class="stat-label"><?php p($l->t('Total Hours')); ?></div>
                         <div class="stat-detail">
-                            <span><?php p($l->t('total')); ?></span>
+                            <span class="stat-sub"><?php p($l->t('This month')); ?></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="overview-stat">
-                    <i data-lucide="users" class="lucide-icon"></i>
+                    <div class="stat-icon">
+                        <i data-lucide="users" class="lucide-icon white"></i>
+                    </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($_['stats']['totalCustomers'] ?? 0); ?></div>
-                        <div class="stat-label"><?php p($l->t('Customers')); ?></div>
+                        <div class="stat-label"><?php p($l->t('Total Customers')); ?></div>
                         <div class="stat-detail">
-                            <span><?php p($l->t('active')); ?></span>
+                            <span class="stat-sub"><?php p($l->t('Active clients')); ?></span>
                         </div>
                     </div>
                 </div>
@@ -708,17 +713,6 @@ Util::addStyle('projectcheck', 'common/progress-bars');
                 el.innerHTML = svgIcons[iconName];
             }
         });
-
-        // Toggle stats expand/collapse
-        const toggleBtn = document.querySelector('[data-toggle-stats]');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function() {
-                const statsSection = document.querySelector('.stats-overview-section');
-                if (statsSection) {
-                    statsSection.classList.toggle('expanded');
-                }
-            });
-        }
     });
 
     // Temporary popup functions (will be moved to webpack build)
