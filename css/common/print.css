@@ -1,0 +1,443 @@
+/* Print-Friendly Styles for ProjectControl App
+ * Optimized for printing reports and data export
+ */
+
+/* ===== PRINT MEDIA QUERY ===== */
+@media print {
+  /* ===== GENERAL PRINT STYLES ===== */
+  
+  /* Reset page margins and set paper size */
+  @page {
+    margin: 1in;
+    size: A4;
+  }
+  
+  /* Hide non-essential elements */
+  .page-header,
+  .page-footer,
+  .content-sidebar,
+  .loading-overlay,
+  .toast-container,
+  .modal-container,
+  .nav-menu,
+  .search-filter-section,
+  .btn,
+  .form-actions,
+  .pagination,
+  .breadcrumbs,
+  .skip-link,
+  .theme-toggle,
+  .user-menu,
+  .app-navigation {
+    display: none !important;
+  }
+  
+  /* ===== LAYOUT ADJUSTMENTS ===== */
+  
+  /* Simplify layout for print */
+  .page-layout {
+    display: block !important;
+    min-height: auto !important;
+  }
+  
+  .page-main {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .page-content {
+    padding: 0 !important;
+  }
+  
+  .content-layout {
+    display: block !important;
+  }
+  
+  .content-main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .container {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* ===== TYPOGRAPHY OPTIMIZATION ===== */
+  
+  /* Optimize fonts for print */
+  body {
+    font-family: 'Times New Roman', serif !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Times New Roman', serif !important;
+    font-weight: bold !important;
+    color: #000 !important;
+    page-break-after: avoid !important;
+    margin-top: 1em !important;
+    margin-bottom: 0.5em !important;
+  }
+  
+  h1 { font-size: 18pt !important; }
+  h2 { font-size: 16pt !important; }
+  h3 { font-size: 14pt !important; }
+  h4 { font-size: 12pt !important; }
+  h5 { font-size: 11pt !important; }
+  h6 { font-size: 10pt !important; }
+  
+  p {
+    margin: 0.5em 0 !important;
+    text-align: justify !important;
+  }
+  
+  /* ===== TABLE PRINT STYLES ===== */
+  
+  /* Optimize tables for print */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 1em 0 !important;
+    page-break-inside: avoid !important;
+  }
+  
+  th, td {
+    border: 1px solid #000 !important;
+    padding: 0.5em !important;
+    text-align: left !important;
+    vertical-align: top !important;
+    font-size: 10pt !important;
+  }
+  
+  th {
+    background: #f0f0f0 !important;
+    font-weight: bold !important;
+    color: #000 !important;
+  }
+  
+  /* Ensure table headers repeat on new pages */
+  thead {
+    display: table-header-group !important;
+  }
+  
+  tbody {
+    display: table-row-group !important;
+  }
+  
+  tr {
+    page-break-inside: avoid !important;
+  }
+  
+  /* ===== CARD AND COMPONENT PRINT STYLES ===== */
+  
+  /* Simplify cards for print */
+  .card {
+    border: 1px solid #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    margin: 1em 0 !important;
+    padding: 1em !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .card-header {
+    border-bottom: 1px solid #000 !important;
+    margin-bottom: 1em !important;
+    padding-bottom: 0.5em !important;
+  }
+  
+  .card-title {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    color: #000 !important;
+    margin: 0 !important;
+  }
+  
+  .card-body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* ===== FORM PRINT STYLES ===== */
+  
+  /* Hide form inputs and show values as text */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+  }
+  
+  .form-label {
+    font-weight: bold !important;
+    color: #000 !important;
+    margin-bottom: 0.25em !important;
+  }
+  
+  .form-group {
+    margin-bottom: 1em !important;
+    page-break-inside: avoid !important;
+  }
+  
+  /* ===== LIST PRINT STYLES ===== */
+  
+  /* Optimize lists for print */
+  ul, ol {
+    margin: 0.5em 0 !important;
+    padding-left: 2em !important;
+  }
+  
+  li {
+    margin: 0.25em 0 !important;
+    page-break-inside: avoid !important;
+  }
+  
+  /* ===== LINK PRINT STYLES ===== */
+  
+  /* Show URLs for links */
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")" !important;
+    font-size: 9pt !important;
+    color: #666 !important;
+  }
+  
+  /* Don't show URLs for internal links or buttons */
+  a[href^="#"]:after,
+  a[href^="javascript:"]:after,
+  .btn:after {
+    content: "" !important;
+  }
+  
+  /* ===== IMAGE PRINT STYLES ===== */
+  
+  /* Optimize images for print */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid !important;
+  }
+  
+  /* ===== PAGE BREAKS ===== */
+  
+  /* Avoid page breaks in important content */
+  .project-detail,
+  .customer-detail,
+  .time-entry-detail {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Force page breaks before major sections */
+  h1 {
+    page-break-before: always !important;
+  }
+  
+  h1:first-child {
+    page-break-before: avoid !important;
+  }
+  
+  /* ===== REPORT SPECIFIC STYLES ===== */
+  
+  /* Project Report Styles */
+  .project-report {
+    page-break-inside: avoid !important;
+  }
+  
+  .project-report__header {
+    text-align: center !important;
+    margin-bottom: 2em !important;
+    border-bottom: 2px solid #000 !important;
+    padding-bottom: 1em !important;
+  }
+  
+  .project-report__title {
+    font-size: 20pt !important;
+    font-weight: bold !important;
+    margin: 0 0 0.5em 0 !important;
+  }
+  
+  .project-report__subtitle {
+    font-size: 12pt !important;
+    color: #666 !important;
+    margin: 0 !important;
+  }
+  
+  .project-report__meta {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1em !important;
+    margin: 1em 0 !important;
+  }
+  
+  .project-report__meta-item {
+    border: 1px solid #ccc !important;
+    padding: 0.5em !important;
+  }
+  
+  .project-report__meta-label {
+    font-weight: bold !important;
+    color: #000 !important;
+  }
+  
+  .project-report__meta-value {
+    color: #333 !important;
+  }
+  
+  /* Time Entry Report Styles */
+  .time-entry-report {
+    page-break-inside: avoid !important;
+  }
+  
+  .time-entry-report__summary {
+    background: #f9f9f9 !important;
+    border: 1px solid #ccc !important;
+    padding: 1em !important;
+    margin: 1em 0 !important;
+  }
+  
+  .time-entry-report__summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1em !important;
+  }
+  
+  .time-entry-report__summary-item {
+    text-align: center !important;
+  }
+  
+  .time-entry-report__summary-label {
+    font-size: 9pt !important;
+    color: #666 !important;
+    text-transform: uppercase !important;
+  }
+  
+  .time-entry-report__summary-value {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    color: #000 !important;
+  }
+  
+  /* ===== UTILITY CLASSES FOR PRINT ===== */
+  
+  /* Show elements that should be visible in print */
+  .print-show {
+    display: block !important;
+  }
+  
+  /* Hide elements that should not be visible in print */
+  .print-hide {
+    display: none !important;
+  }
+  
+  /* Page break utilities */
+  .page-break-before {
+    page-break-before: always !important;
+  }
+  
+  .page-break-after {
+    page-break-after: always !important;
+  }
+  
+  .page-break-inside-avoid {
+    page-break-inside: avoid !important;
+  }
+  
+  /* ===== FOOTER AND HEADER FOR PRINT ===== */
+  
+  /* Add page numbers */
+  @page {
+    @bottom-center {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 9pt;
+      color: #666;
+    }
+  }
+  
+  /* Add document title to each page */
+  @page {
+    @top-center {
+      content: "ProjectControl Report";
+      font-size: 9pt;
+      color: #666;
+    }
+  }
+  
+  /* ===== COLOR OPTIMIZATION ===== */
+  
+  /* Ensure good contrast for print */
+  .text-success {
+    color: #000 !important;
+  }
+  
+  .text-error {
+    color: #000 !important;
+  }
+  
+  .text-warning {
+    color: #000 !important;
+  }
+  
+  .text-info {
+    color: #000 !important;
+  }
+  
+  /* ===== RESPONSIVE PRINT STYLES ===== */
+  
+  /* Ensure content fits on page */
+  .print-container {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Adjust grid layouts for print */
+  .grid {
+    display: block !important;
+  }
+  
+  .grid > * {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 1em !important;
+  }
+  
+  /* ===== ACCESSIBILITY FOR PRINT ===== */
+  
+  /* Maintain semantic structure */
+  [role="main"] {
+    display: block !important;
+  }
+  
+  [role="navigation"] {
+    display: none !important;
+  }
+  
+  [role="complementary"] {
+    display: none !important;
+  }
+  
+  /* Ensure proper heading hierarchy */
+  h1 + h1,
+  h2 + h1,
+  h3 + h1,
+  h4 + h1,
+  h5 + h1,
+  h6 + h1 {
+    margin-top: 2em !important;
+  }
+}

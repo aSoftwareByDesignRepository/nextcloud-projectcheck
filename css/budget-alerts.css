@@ -1,0 +1,895 @@
+/**
+ * Budget alerts and warnings styling
+ * 
+ * @copyright Copyright (c) 2024, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+/* Budget alerts section */
+.budget-alerts-section {
+    margin-bottom: 20px;
+}
+
+/* Alert styling */
+.alert {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-icon {
+    margin-right: 12px;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.alert-message {
+    font-size: 13px;
+    line-height: 1.4;
+    opacity: 0.9;
+}
+
+/* Alert levels */
+.alert-warning {
+    color: var(--color-warning);
+    border: 1px solid var(--color-warning);
+}
+
+.alert-warning .alert-icon {
+    color: var(--color-warning);
+}
+
+.alert-critical {
+    color: var(--color-error);
+    border: 1px solid var(--color-error);
+}
+
+.alert-critical .alert-icon {
+    color: var(--color-error);
+}
+
+.alert-none {
+    color: var(--color-info);
+    border: 1px solid var(--color-info);
+}
+
+.alert-none .alert-icon {
+    color: var(--color-info);
+}
+
+/* Budget percentage styling based on warning levels */
+.budget-percentage {
+    font-weight: 600;
+}
+
+.budget-percentage.budget-warning {
+    color: var(--color-warning);
+}
+
+.budget-percentage.budget-critical {
+    color: var(--color-error);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.budget-percentage.budget-none {
+    color: var(--color-success);
+}
+
+/* Budget progress bar warning levels */
+.budget-progress-fill.budget-warning {
+    background-color: var(--color-warning);
+}
+
+.budget-progress-fill.budget-critical {
+    background-color: var(--color-error);
+}
+
+@keyframes progressPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.budget-progress-fill.budget-none {
+    background-color: #27ae60;
+}
+
+/* Over budget styling */
+.breakdown-item.over-budget {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 8px;
+}
+
+.breakdown-value.over-budget {
+    color: var(--color-error);
+    font-weight: bold;
+}
+
+/* Enhanced stat cards for budget info */
+.stat-sub {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 4px;
+    line-height: 1.2;
+}
+
+/* Budget form warnings */
+.form-group.budget-warning {
+    border-left: 4px solid var(--color-warning);
+}
+
+.form-group.budget-critical {
+    border-left: 4px solid var(--color-error);
+}
+
+.budget-impact-info {
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    padding: 16px;
+    margin: 16px 0 20px 0;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.budget-impact-info.warning {
+    color: var(--color-warning);
+}
+
+.budget-impact-info.critical {
+    color: var(--color-error);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .alert {
+        padding: 10px 12px;
+    }
+
+    .alert-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+    }
+
+    .alert-title {
+        font-size: 13px;
+    }
+
+    .alert-message {
+        font-size: 12px;
+    }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+    .alert-warning {
+        background-color: rgba(243, 156, 18, 0.1);
+        border-color: rgba(243, 156, 18, 0.3);
+        color: #f39c12;
+    }
+
+    .alert-critical {
+        background-color: rgba(231, 76, 60, 0.1);
+        border-color: rgba(231, 76, 60, 0.3);
+        color: #e74c3c;
+    }
+
+    .alert-none {
+        background-color: rgba(23, 162, 184, 0.1);
+        border-color: rgba(23, 162, 184, 0.3);
+        color: #17a2b8;
+    }
+
+    .budget-impact-info {
+        background-color: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #e8eaed;
+    }
+
+    .budget-impact-info.warning {
+        background-color: rgba(255, 193, 7, 0.15);
+        border-color: rgba(255, 193, 7, 0.4);
+        color: #ffcc02;
+    }
+
+    .budget-impact-info.critical {
+        background-color: rgba(244, 67, 54, 0.15);
+        border-color: rgba(244, 67, 54, 0.4);
+        color: #ff6b6b;
+    }
+}
+
+/* Budget Overview Integration with Form Styling */
+.form-group.budget-overview {
+    margin-bottom: 20px;
+}
+
+.form-group.budget-overview label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 500;
+    color: var(--color-text);
+    font-size: 14px;
+}
+
+.budget-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: var(--color-background-hover);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+}
+
+.budget-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.budget-stat-label {
+    font-size: 12px;
+    color: var(--color-text-maxcontrast);
+    font-weight: 500;
+}
+
+.budget-stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.budget-progress-container {
+    margin-top: 8px;
+}
+
+.budget-progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: var(--color-background-hover);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.budget-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-success) 0%, var(--color-warning) 70%, var(--color-error) 90%);
+    transition: width 0.3s ease, background-color 0.3s ease;
+    border-radius: 3px;
+}
+
+.budget-progress-fill.warning {
+    background: linear-gradient(90deg, var(--color-warning) 0%, #fd7e14 100%);
+    border-radius: 3px 0 0 3px !important;
+    /* Override Nextcloud's global .warning class */
+    margin-top: 0 !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+}
+
+.budget-progress-fill.critical {
+    background: linear-gradient(90deg, var(--color-error) 0%, #721c24 100%);
+    border-radius: 3px 0 0 3px !important;
+    /* Override Nextcloud's global .critical class if it exists */
+    margin-top: 0 !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+}
+
+/* Full budget progress gets rounded corners on both sides */
+.budget-progress-fill[style*="width: 100%"] {
+    border-radius: 3px;
+}
+
+.budget-progress-text {
+    text-align: center;
+    font-size: 12px;
+    color: var(--color-text-maxcontrast);
+    font-weight: 500;
+}
+
+/* Fade in animation matching existing form animations */
+#budget-info-section {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Color coding for budget values */
+.budget-stat-value.safe {
+    color: var(--color-success);
+}
+
+.budget-stat-value.warning {
+    color: var(--color-warning);
+}
+
+.budget-stat-value.critical {
+    color: var(--color-error);
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments matching form responsiveness */
+@media (max-width: 768px) {
+    .budget-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .budget-stat-value {
+        font-size: 14px;
+    }
+
+    .budget-stat-label {
+        font-size: 11px;
+    }
+}
+
+/* Dashboard Project Cards Budget Styling */
+.project-card.dashboard-card {
+    /* Use inset shadow for left accent so it can't be clipped */
+    box-shadow: inset 4px 0 0 transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    /* Allow tooltips inside the card (e.g., project-type-icon) to overflow */
+    overflow: visible !important;
+}
+
+.project-card.dashboard-card.budget-status-safe {
+    box-shadow: inset 4px 0 0 var(--color-success);
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.02) 0%, transparent 50%);
+}
+
+.project-card.dashboard-card.budget-status-warning {
+    box-shadow: inset 4px 0 0 var(--color-warning);
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, transparent 50%);
+}
+
+.project-card.dashboard-card.budget-status-critical {
+    box-shadow: inset 4px 0 0 var(--color-error);
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.05) 0%, transparent 50%);
+}
+
+/* Card Header Improvements */
+.card-title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.project-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.project-name a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.project-name a:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
+.project-status-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.budget-status-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.budget-status-badge.safe {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.budget-status-badge.warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--color-warning);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.budget-status-badge.critical {
+    color: var(--color-error);
+}
+
+/* Project Details Section */
+.project-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.detail-label {
+    font-size: 12px;
+    color: var(--color-text-maxcontrast);
+    font-weight: 500;
+    min-width: 60px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-size: 13px;
+    color: var(--color-text);
+    font-weight: 500;
+    text-align: right;
+    flex: 1;
+}
+
+/* Budget Info Styling */
+.budget-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+}
+
+.budget-remaining {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.budget-remaining.safe {
+    color: var(--color-success);
+}
+
+.budget-remaining.warning {
+    color: var(--color-warning);
+}
+
+.budget-remaining.critical {
+    color: var(--color-error);
+}
+
+.budget-separator {
+    font-size: 11px;
+    color: var(--color-text-maxcontrast);
+    font-weight: normal;
+}
+
+.budget-total {
+    font-size: 12px;
+    color: var(--color-text-maxcontrast);
+    font-weight: normal;
+}
+
+.usage-stats {
+    font-size: 12px;
+    color: var(--color-text-maxcontrast);
+}
+
+/* Progress Section */
+.card-progress-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+}
+
+.budget-progress-bar.dashboard {
+    height: 8px;
+    background-color: var(--color-background-hover);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    margin-bottom: 6px;
+}
+
+.budget-progress-bar.dashboard .budget-progress-fill {
+    height: 100%;
+    border-radius: 3px 0 0 3px !important;
+    transition: width 0.5s ease;
+}
+
+/* Full budget progress on dashboard gets rounded corners on both sides */
+.budget-progress-bar.dashboard .budget-progress-fill[style*="width: 100%"] {
+    border-radius: 3px !important;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: var(--color-text-maxcontrast);
+}
+
+.progress-label-center {
+    font-weight: 600;
+    font-size: 11px;
+}
+
+.progress-label-center.safe {
+    color: var(--color-success);
+}
+
+.progress-label-center.warning {
+    color: var(--color-warning);
+}
+
+.progress-label-center.critical {
+    color: var(--color-error);
+}
+
+/* Projects Table Budget Styling */
+.project-row {
+    transition: background-color 0.3s ease, border-left 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.project-row.budget-status-safe {
+    border-left-color: var(--color-success);
+}
+
+.project-row.budget-status-warning {
+    background-color: rgba(255, 193, 7, 0.03);
+    border-left-color: var(--color-warning);
+}
+
+.project-row.budget-status-critical {
+    background-color: rgba(220, 53, 69, 0.03);
+    border-left-color: var(--color-error);
+}
+
+/* Project Name Cell */
+.project-name-cell {
+    min-width: 200px;
+}
+
+.project-name-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.project-title {
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1.25;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project-title:hover {
+    text-decoration: underline;
+}
+
+.project-badges {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: nowrap;
+    margin-top: 0;
+    flex: 0 0 auto;
+}
+
+.budget-warning-badge {
+    font-size: 10.5px;
+    padding: 0 6px;
+    border-radius: 999px;
+    line-height: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--color-warning);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    font-weight: 500;
+}
+
+.budget-warning-badge.warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--color-warning);
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.budget-warning-badge.critical {
+    color: var(--color-error);
+}
+
+/* Compact Budget Cell */
+.budget-cell {
+    min-width: 140px;
+}
+
+.budget-info-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.budget-main {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.budget-remaining {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.budget-remaining.safe {
+    color: var(--color-success);
+}
+
+.budget-remaining.warning {
+    color: var(--color-warning);
+}
+
+.budget-remaining.critical {
+    color: var(--color-error);
+}
+
+.budget-total {
+    font-size: 12px;
+    color: var(--color-text-maxcontrast);
+    font-weight: normal;
+}
+
+.budget-secondary {
+    font-size: 11px;
+}
+
+.budget-percentage {
+    color: var(--color-text-maxcontrast);
+}
+
+.budget-percentage.warning {
+    color: var(--color-warning);
+}
+
+.budget-percentage.critical {
+    color: var(--color-error);
+}
+
+/* Progress Cell */
+.progress-cell {
+    min-width: 120px;
+}
+
+.progress-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.budget-progress-bar.compact {
+    height: 8px;
+    background-color: var(--color-background-hover);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+}
+
+.budget-progress-bar.compact .budget-progress-fill {
+    height: 100%;
+    border-radius: 3px 0 0 3px !important;
+    transition: width 0.3s ease;
+}
+
+/* Full budget progress in compact view gets rounded corners on both sides */
+.budget-progress-bar.compact .budget-progress-fill[style*="width: 100%"] {
+    border-radius: 3px !important;
+}
+
+.hours-logged {
+    font-size: 11px;
+    color: var(--color-text-maxcontrast);
+    text-align: center;
+}
+
+/* Priority badges in the new layout */
+.priority-badge {
+    font-size: 10.5px;
+    padding: 0 6px;
+    border-radius: 999px;
+    line-height: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.priority-badge.priority-low {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: var(--color-text-maxcontrast);
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.priority-badge.priority-medium {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--color-warning);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.priority-badge.priority-high {
+    background-color: rgba(255, 69, 0, 0.1);
+    color: #ff4500;
+    border: 1px solid rgba(255, 69, 0, 0.3);
+}
+
+.priority-badge.priority-critical {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--color-error);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+
+    /* Table responsive */
+    .project-name-cell,
+    .budget-cell,
+    .progress-cell {
+        min-width: auto;
+    }
+
+    .project-badges {
+        gap: 4px;
+    }
+
+    .budget-warning-badge {
+        font-size: 10px;
+        padding: 1px 4px;
+    }
+
+    .budget-info-compact {
+        gap: 1px;
+    }
+
+    .budget-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .progress-info {
+        gap: 2px;
+    }
+
+    .budget-progress-bar.compact {
+        height: 6px;
+    }
+
+    /* Dashboard cards responsive */
+    .project-card.dashboard-card {
+        box-shadow: inset 3px 0 0 currentColor;
+    }
+
+    .project-status-badges {
+        gap: 6px;
+    }
+
+    .budget-status-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .detail-label {
+        min-width: auto;
+    }
+
+    .detail-value {
+        text-align: left;
+    }
+
+    .budget-info {
+        align-items: flex-start;
+    }
+
+    .card-progress-section {
+        margin-top: 10px;
+        padding-top: 10px;
+    }
+
+    .budget-progress-bar.dashboard {
+        height: 6px;
+    }
+}

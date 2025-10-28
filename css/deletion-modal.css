@@ -1,0 +1,461 @@
+/**
+ * Deletion Modal Styles
+ * CSP-compliant styles for deletion confirmation modals
+ *
+ * @copyright Copyright (c) 2024, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+/* Deletion Modal Base */
+.projectcheck-deletion-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10001;
+    /* Higher than regular modals */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.projectcheck-deletion-modal__backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+}
+
+.projectcheck-deletion-modal__container {
+    background: var(--color-main-background, #ffffff);
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    border: 2px solid var(--color-error, #e9322d);
+}
+
+/* Header */
+.projectcheck-deletion-modal__header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border, #e1e5e9);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: linear-gradient(135deg, var(--color-error-background, #fef2f2), var(--color-main-background, #ffffff));
+}
+
+.projectcheck-deletion-modal__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-error, #e9322d);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.projectcheck-deletion-modal__title::before {
+    content: "⚠️";
+    font-size: 1.2em;
+}
+
+.projectcheck-deletion-modal__close {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 6px;
+    color: var(--color-text-maxcontrast, #6b7280);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.projectcheck-deletion-modal__close:hover {
+    background: var(--color-background-hover, #f3f4f6);
+    color: var(--color-text, #374151);
+}
+
+.projectcheck-deletion-modal__close:focus {
+    outline: 2px solid var(--color-primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+/* Body */
+.projectcheck-deletion-modal__body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    max-height: calc(90vh - 200px);
+}
+
+/* Loading State */
+.projectcheck-deletion-modal__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    color: var(--color-text-maxcontrast, #6b7280);
+}
+
+.projectcheck-deletion-modal__spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--color-border, #e1e5e9);
+    border-top: 2px solid var(--color-primary, #3b82f6);
+    border-radius: 50%;
+    animation: projectcheck-spin 1s linear infinite;
+}
+
+@keyframes projectcheck-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Warning Messages */
+.projectcheck-deletion-modal__warning {
+    background: var(--color-error-background, #fef2f2);
+    border: 1px solid var(--color-error, #e9322d);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.projectcheck-deletion-modal__warning-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-error, #e9322d);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.projectcheck-deletion-modal__warning-title::before {
+    content: "🚨";
+    font-size: 1.1em;
+}
+
+.projectcheck-deletion-modal__warning-message {
+    color: var(--color-text-maxcontrast, #6b7280);
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Impact Analysis */
+.projectcheck-deletion-modal__impact {
+    background: var(--color-main-background, #ffffff);
+    border: 1px solid var(--color-border, #e1e5e9);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.projectcheck-deletion-modal__impact-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text, #374151);
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.projectcheck-deletion-modal__impact-title::before {
+    content: "📊";
+    font-size: 1.1em;
+}
+
+.projectcheck-deletion-modal__impact-list {
+    margin-bottom: 0.75rem;
+}
+
+.projectcheck-deletion-modal__impact-list ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--color-text-maxcontrast, #6b7280);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.projectcheck-deletion-modal__impact-list li {
+    margin-bottom: 0.25rem;
+}
+
+.projectcheck-deletion-modal__impact-summary {
+    color: var(--color-text-maxcontrast, #6b7280);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.projectcheck-deletion-modal__impact-total {
+    font-weight: 600;
+    color: var(--color-warning, #f59e0b);
+    font-size: 1rem;
+}
+
+/* Strategy Selection */
+.projectcheck-deletion-modal__strategy {
+    background: var(--color-main-background, #ffffff);
+    border: 1px solid var(--color-border, #e1e5e9);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.projectcheck-deletion-modal__strategy-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text, #374151);
+    margin: 0 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.projectcheck-deletion-modal__strategy-title::before {
+    content: "⚙️";
+    font-size: 1.1em;
+}
+
+.projectcheck-deletion-modal__strategy-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.projectcheck-deletion-modal__strategy-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 0.75rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.projectcheck-deletion-modal__strategy-option:hover {
+    background: var(--color-background-hover, #f3f4f6);
+}
+
+.projectcheck-deletion-modal__strategy-option input[type="radio"] {
+    margin: 0;
+    margin-top: 0.125rem;
+}
+
+.projectcheck-deletion-modal__strategy-label {
+    flex: 1;
+    color: var(--color-text, #374151);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.projectcheck-deletion-modal__strategy-label strong {
+    color: var(--color-text, #111827);
+}
+
+.projectcheck-deletion-modal__reassign-options {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border, #e1e5e9);
+}
+
+.projectcheck-deletion-modal__reassign-options label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--color-text, #374151);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.projectcheck-deletion-modal__reassign-options select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--color-border, #e1e5e9);
+    border-radius: 6px;
+    background: var(--color-main-background, #ffffff);
+    color: var(--color-text, #374151);
+    font-size: 0.875rem;
+}
+
+.projectcheck-deletion-modal__reassign-options select:focus {
+    outline: 2px solid var(--color-primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+/* Action Buttons */
+.projectcheck-deletion-modal__actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border, #e1e5e9);
+}
+
+.projectcheck-deletion-modal__btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.projectcheck-deletion-modal__btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.projectcheck-deletion-modal__btn--cancel {
+    background: var(--color-main-background, #ffffff);
+    color: var(--color-text, #374151);
+    border-color: var(--color-border, #e1e5e9);
+}
+
+.projectcheck-deletion-modal__btn--cancel:hover:not(:disabled) {
+    background: var(--color-background-hover, #f3f4f6);
+}
+
+.projectcheck-deletion-modal__btn--delete {
+    background: var(--color-error, #e9322d);
+    color: var(--color-primary-text, #ffffff);
+    border-color: var(--color-error, #e9322d);
+}
+
+.projectcheck-deletion-modal__btn--delete:hover:not(:disabled) {
+    background: var(--color-error-hover, #dc2626);
+    border-color: var(--color-error-hover, #dc2626);
+}
+
+.projectcheck-deletion-modal__btn:focus {
+    outline: 2px solid var(--color-primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+/* Error State */
+.projectcheck-deletion-modal__error {
+    text-align: center;
+    padding: 2rem;
+}
+
+.projectcheck-deletion-modal__error h3 {
+    color: var(--color-error, #e9322d);
+    margin: 0 0 1rem 0;
+    font-size: 1.125rem;
+}
+
+.projectcheck-deletion-modal__error p {
+    color: var(--color-text-maxcontrast, #6b7280);
+    margin: 0 0 1.5rem 0;
+    font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .projectcheck-deletion-modal {
+        padding: 0.5rem;
+    }
+
+    .projectcheck-deletion-modal__container {
+        max-height: 95vh;
+    }
+
+    .projectcheck-deletion-modal__header {
+        padding: 1rem;
+    }
+
+    .projectcheck-deletion-modal__body {
+        padding: 1rem;
+    }
+
+    .projectcheck-deletion-modal__actions {
+        flex-direction: column;
+    }
+
+    .projectcheck-deletion-modal__btn {
+        width: 100%;
+    }
+
+    .projectcheck-deletion-modal__strategy-options {
+        gap: 0.5rem;
+    }
+
+    .projectcheck-deletion-modal__strategy-option {
+        padding: 0.5rem;
+    }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+    .projectcheck-deletion-modal__container {
+        background: var(--color-main-background, #1f2937);
+        border-color: var(--color-error, #ef4444);
+    }
+
+    .projectcheck-deletion-modal__header {
+        background: linear-gradient(135deg, var(--color-error-background, #7f1d1d), var(--color-main-background, #1f2937));
+    }
+
+    .projectcheck-deletion-modal__title {
+        color: var(--color-error, #ef4444);
+    }
+
+    .projectcheck-deletion-modal__close {
+        color: var(--color-text-maxcontrast, #9ca3af);
+    }
+
+    .projectcheck-deletion-modal__close:hover {
+        background: var(--color-background-hover, #374151);
+        color: var(--color-text, #d1d5db);
+    }
+
+    .projectcheck-deletion-modal__warning {
+        background: var(--color-error-background, #7f1d1d);
+        border-color: var(--color-error, #ef4444);
+    }
+
+    .projectcheck-deletion-modal__warning-title {
+        color: var(--color-error, #ef4444);
+    }
+
+    .projectcheck-deletion-modal__impact,
+    .projectcheck-deletion-modal__strategy {
+        background: var(--color-main-background, #1f2937);
+        border-color: var(--color-border, #4b5563);
+    }
+
+    .projectcheck-deletion-modal__btn--cancel {
+        background: var(--color-main-background, #1f2937);
+        color: var(--color-text, #d1d5db);
+        border-color: var(--color-border, #4b5563);
+    }
+
+    .projectcheck-deletion-modal__btn--cancel:hover:not(:disabled) {
+        background: var(--color-background-hover, #374151);
+    }
+}

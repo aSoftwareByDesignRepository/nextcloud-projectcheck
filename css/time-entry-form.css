@@ -1,0 +1,367 @@
+/**
+ * Time entry form styles for projectcheck app
+ */
+
+.time-entry-form-container {
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 20px;
+}
+
+.time-entry-form-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 30px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.time-entry-form-header h2 {
+	margin: 0;
+	color: var(--color-primary);
+	font-size: 24px;
+	font-weight: 600;
+}
+
+.form-actions {
+	display: flex;
+	gap: 10px;
+}
+
+/* Form */
+.time-entry-form {
+	background: var(--color-background);
+	border-radius: 8px;
+	padding: 30px;
+	border: 1px solid var(--color-border);
+}
+
+.form-row {
+	display: flex;
+	gap: 20px;
+	margin-bottom: 20px;
+}
+
+.form-group {
+	flex: 1;
+}
+
+.form-group label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: var(--color-text);
+}
+
+.form-group label.required::after {
+	content: ' *';
+	color: var(--color-error);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+	background: var(--color-background);
+	color: var(--color-text);
+	font-size: 14px;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Enhanced select styling for better theme compatibility */
+.form-group select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background-color: var(--color-main-background, var(--color-background));
+	color: var(--color-main-text, var(--color-text));
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	background-size: 16px;
+	padding-right: 40px;
+}
+
+.form-group select:focus {
+	background-color: var(--color-main-background, var(--color-background));
+	color: var(--color-main-text, var(--color-text));
+}
+
+/* Select option styling - using Nextcloud CSS variables */
+.form-group select option {
+	background-color: var(--color-main-background, var(--color-background));
+	color: var(--color-main-text, var(--color-text));
+	padding: 8px 12px;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+/* Checked/selected option */
+.form-group select option:checked {
+	background-color: var(--color-primary-element, var(--color-primary));
+	color: var(--color-primary-element-text, white);
+}
+
+/* Hover state for options */
+.form-group select option:hover {
+	background-color: var(--color-background-hover, var(--color-background-dark));
+}
+
+/* Dark theme support using data-theme attribute (for projectcheck app) */
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group select option {
+	background-color: var(--color-main-background, #181818);
+	color: var(--color-main-text, #e0e0e0);
+}
+
+/* Dark theme support using prefers-color-scheme (for Nextcloud core) */
+@media (prefers-color-scheme: dark) {
+
+	.form-group select,
+	.form-group select option {
+		background-color: var(--color-main-background, #181818);
+		color: var(--color-main-text, #e0e0e0);
+	}
+
+	.form-group select {
+		background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+	}
+}
+
+/* Specific styling for the project select dropdown */
+#project_id {
+	background-color: var(--color-main-background, var(--color-background));
+	color: var(--color-main-text, var(--color-text));
+}
+
+#project_id option {
+	background-color: var(--color-main-background, var(--color-background));
+	color: var(--color-main-text, var(--color-text));
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+	outline: none;
+	border-color: var(--color-primary);
+	box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.form-group input[readonly] {
+	background: var(--color-background-hover);
+	color: var(--color-text-maxcontrast);
+	cursor: not-allowed;
+}
+
+.form-group textarea {
+	resize: vertical;
+	min-height: 100px;
+	font-family: inherit;
+}
+
+/* Character count */
+.char-count {
+	text-align: right;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	margin-top: 5px;
+}
+
+.char-count.warning {
+	color: var(--color-warning);
+}
+
+.char-count.error {
+	color: var(--color-error);
+}
+
+/* Error messages */
+.error-message {
+	color: var(--color-error);
+	font-size: 12px;
+	margin-top: 5px;
+	min-height: 16px;
+}
+
+.form-group.has-error input,
+.form-group.has-error select,
+.form-group.has-error textarea {
+	border-color: var(--color-error);
+}
+
+.form-group.has-error input:focus,
+.form-group.has-error select:focus,
+.form-group.has-error textarea:focus {
+	box-shadow: 0 0 0 2px var(--color-error-light);
+}
+
+/* Form actions */
+.form-actions {
+	display: flex;
+	gap: 15px;
+	margin-top: 30px;
+	padding-top: 20px;
+	border-top: 1px solid var(--color-border);
+}
+
+.form-actions .btn {
+	padding: 10px 20px;
+	border-radius: 4px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border: none;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.form-actions .btn-primary {
+	background: var(--color-primary);
+	color: white;
+}
+
+.form-actions .btn-primary:hover {
+	background: var(--color-primary-hover);
+}
+
+.form-actions .btn-secondary {
+	background: var(--color-background-hover);
+	color: var(--color-text);
+	border: 1px solid var(--color-border);
+}
+
+.form-actions .btn-secondary:hover {
+	background: var(--color-background-dark);
+}
+
+/* Loading state */
+.time-entry-form.loading {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.time-entry-form.loading::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 20px;
+	height: 20px;
+	border: 2px solid var(--color-primary);
+	border-top: 2px solid transparent;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+/* Success message */
+.success-message {
+	background: var(--color-success);
+	color: white;
+	padding: 15px;
+	border-radius: 4px;
+	margin-bottom: 20px;
+	display: none;
+}
+
+.success-message.show {
+	display: block;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+	.time-entry-form-container {
+		padding: 10px;
+	}
+
+	.time-entry-form-header {
+		flex-direction: column;
+		gap: 15px;
+		align-items: stretch;
+	}
+
+	.time-entry-form {
+		padding: 20px;
+	}
+
+	.form-row {
+		flex-direction: column;
+		gap: 15px;
+	}
+
+	.form-actions {
+		flex-direction: column;
+	}
+
+	.form-actions .btn {
+		width: 100%;
+	}
+}
+
+/* Animations */
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.time-entry-form {
+	animation: fadeIn 0.3s ease;
+}
+
+/* Focus styles for accessibility */
+.form-group input:focus-visible,
+.form-group select:focus-visible,
+.form-group textarea:focus-visible {
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
+}
+
+/* Disabled state */
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled {
+	background: var(--color-background-hover);
+	color: var(--color-text-maxcontrast);
+	cursor: not-allowed;
+}
+
+/* Readonly state for hourly rate */
+.form-group input.readonly {
+	background: var(--color-background-hover);
+	color: var(--color-text-maxcontrast);
+	cursor: not-allowed;
+	border-color: var(--color-border-maxcontrast);
+}
+
+/* Remaining hours display */
+.budget-stat-sub {
+	display: block;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	margin-top: 2px;
+	font-weight: normal;
+}

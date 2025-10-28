@@ -1,0 +1,138 @@
+/**
+ * Custom SVG Icons for projectcheck app
+ *
+ * @copyright Copyright (c) 2024, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+/* Custom Icon Classes */
+.icon-calendar-custom {
+    background-image: url('../img/icons/calendar.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-time-custom {
+    background-image: url('../img/icons/time.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-money-custom {
+    background-image: url('../img/icons/money.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-user-custom {
+    background-image: url('../img/icons/user.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-chart-custom {
+    background-image: url('../img/icons/chart.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-add-custom {
+    background-image: url('../img/icons/add.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-info-custom {
+    background-image: url('../img/icons/info.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-tag-custom {
+    background-image: url('../img/icons/tag.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-edit-custom {
+    background-image: url('../img/icons/edit.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-delete-custom {
+    background-image: url('../img/icons/delete.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.icon-folder-custom {
+    background-image: url('../img/icons/folder.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+/* Icon sizing for different contexts */
+.icon-small {
+    width: 16px;
+    height: 16px;
+}
+
+.icon-medium {
+    width: 20px;
+    height: 20px;
+}
+
+.icon-large {
+    width: 32px;
+    height: 32px;
+}
+
+.icon-xl {
+    width: 48px;
+    height: 48px;
+}

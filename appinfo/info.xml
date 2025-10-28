@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>projectcheck</id>
+	<name>ProjectCheck</name>
+	<summary>IT project management with time tracking and budget control</summary>
+	<description>
+		A comprehensive project management application for IT projects with time tracking and budget control.
+		Features include:
+		- Project creation and management
+		- Team member assignment and role management
+		- Budget tracking and consumption monitoring
+		- Project status management
+		- Search and filtering capabilities
+		- Real-time budget calculations
+	</description>
+
+	<version>2.0.0</version>
+	<licence>agpl</licence>
+	<author>Alexander M&#xE4;ule</author>
+
+	<namespace>ProjectCheck</namespace>
+
+	<category>organization</category>
+
+	<website>https://software-by-design.de</website>
+	<bugs>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcontroll/issues</bugs>
+	<repository>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcontroll.git</repository>
+
+	<dependencies>
+		<nextcloud min-version="27" max-version="32"/>
+	</dependencies>
+
+	<navigations>
+		<navigation>
+			<name>ProjectCheck</name>
+			<route>projectcheck.page.index</route>
+			<icon>app.svg</icon>
+			<order>10</order>
+		</navigation>
+	</navigations>
+
+	<screenshots>
+		<screenshot>screenshots/dashboard.png</screenshot>
+		<screenshot>screenshots/projects.png</screenshot>
+		<screenshot>screenshots/time-entries.png</screenshot>
+		<screenshot>screenshots/customers.png</screenshot>
+	</screenshots>
+
+	<keywords>
+		<keyword>project management</keyword>
+		<keyword>time tracking</keyword>
+		<keyword>budget control</keyword>
+		<keyword>customer management</keyword>
+		<keyword>team collaboration</keyword>
+		<keyword>project planning</keyword>
+		<keyword>cost tracking</keyword>
+		<keyword>resource management</keyword>
+		<keyword>task management</keyword>
+		<keyword>reporting</keyword>
+	</keywords>
+
+	<release>
+		<databases>
+			<database>mysql</database>
+			<database>pgsql</database>
+		</databases>
+		<php min-version="8.1" max-version="8.4"/>
+		<platforms>
+			<platform>linux</platform>
+			<platform>mac</platform>
+			<platform>windows</platform>
+		</platforms>
+	</release>
+</info>

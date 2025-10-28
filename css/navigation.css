@@ -1,0 +1,204 @@
+/**
+ * Navigation CSS for projectcheck app
+ * Enhanced icon alignment for sidebar navigation
+ *
+ * @copyright Copyright (c) 2024, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+/* Navigation container improvements */
+#app-navigation {
+    position: relative;
+}
+
+/* Navigation menu improvements */
+#app-navigation .nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#app-navigation .nav-menu li {
+    margin: 0;
+    padding: 0;
+}
+
+/* Navigation links with perfect icon alignment */
+#app-navigation .nav-menu a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    text-decoration: none;
+    color: var(--color-text-light, #ffffff);
+    border-radius: 6px;
+    margin: 0.125rem 0.5rem;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    min-height: 44px;
+    /* Ensure touch-friendly size */
+}
+
+#app-navigation .nav-menu a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(2px);
+}
+
+#app-navigation .nav-menu li.active a,
+#app-navigation .nav-menu a[aria-current="page"] {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left: 3px solid var(--color-primary, #0082c9);
+    font-weight: 600;
+}
+
+/* Icon specific styling in navigation */
+#app-navigation .nav-menu .lucide-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    flex-shrink: 0;
+    stroke-width: 1.75;
+    opacity: 0.9;
+}
+
+#app-navigation .nav-menu li.active .lucide-icon,
+#app-navigation .nav-menu a[aria-current="page"] .lucide-icon {
+    opacity: 1;
+    color: var(--color-primary, #0082c9);
+}
+
+/* Text alignment */
+#app-navigation .nav-menu span {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* App brand section improvements */
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1rem;
+}
+
+.app-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background: linear-gradient(135deg, var(--color-primary, #0082c9), var(--color-primary-light, #00a0e6));
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.app-icon .lucide-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: 0;
+    color: white;
+    stroke-width: 1.5;
+}
+
+.app-info {
+    flex: 1;
+}
+
+.app-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-light, #ffffff);
+    line-height: 1.3;
+}
+
+.app-info p {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.2;
+}
+
+/* Sidebar footer improvements */
+.sidebar-footer {
+    margin-top: auto;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quick-stats {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-light, #ffffff);
+    line-height: 1.2;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.125rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #app-navigation .nav-menu a {
+        padding: 0.75rem 1rem;
+        gap: 0.625rem;
+    }
+
+    #app-navigation .nav-menu .lucide-icon {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .app-brand {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .app-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    .app-icon .lucide-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    #app-navigation .nav-menu a {
+        color: var(--color-text-light, #ffffff);
+    }
+
+    #app-navigation .nav-menu a:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    #app-navigation .nav-menu li.active a {
+        background-color: rgba(255, 255, 255, 0.12);
+    }
+}

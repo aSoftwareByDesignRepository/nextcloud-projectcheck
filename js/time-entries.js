@@ -1,0 +1,846 @@
+/**
+ * Time Entries Management JavaScript for the projectcheck app
+ *
+ * @copyright Copyright (c) 2024, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+(function () {
+	'use strict';
+
+	// Global variables
+	let searchTimeout = null;
+
+	// DOM elements
+	const elements = {
+		searchInput: document.getElementById('time-entry-search'),
+		projectFilter: document.getElementById('project-filter'),
+		userFilter: document.getElementById('user-filter'),
+		projectTypeFilter: document.getElementById('project-type-filter'),
+		clearFiltersBtn: document.getElementById('clear-filters'),
+		exportCsvBtn: document.getElementById('export-csv'),
+		timeEntriesTable: document.querySelector('.grid'),
+		timeEntriesTbody: document.querySelector('.grid tbody')
+	};
+
+	/**
+	 * Initialize the application
+	 */
+	function init() {
+		console.log('TimeEntries app initializing...');
+		// Run immediate truncation first to prevent flash
+		forceImmediateTruncation();
+		bindEvents();
+		initCalendarIcons();
+		initMessageAutoHide();
+		initMutationObserver();
+		console.log('TimeEntries app initialized');
+	}
+
+	/**
+	 * Initialize mutation observer to handle dynamic content
+	 */
+	function initMutationObserver() {
+		const observer = new MutationObserver(function (mutations) {
+			mutations.forEach(function (mutation) {
+				if (mutation.type === 'childList') {
+					// Check for new description cells
+					mutation.addedNodes.forEach(function (node) {
+						if (node.nodeType === 1) { // Element node
+							const descriptionCells = node.querySelectorAll ?
+								node.querySelectorAll('.grid .description-cell, .grid td:nth-child(6)') : [];
+							descriptionCells.forEach(cell => {
+								if (!cell.hasAttribute('data-processed')) {
+									const text = cell.textContent.trim();
+									if (text.length > 20) {
+										cell.setAttribute('data-original-text', text);
+										cell.setAttribute('title', text);
+										cell.style.cursor = 'help';
+										cell.textContent = text.substring(0, 20) + '...';
+										cell.setAttribute('data-processed', 'true');
+
+										cell.addEventListener('click', function (e) {
+											e.preventDefault();
+											showFullDescription(text, cell);
+										});
+									}
+								}
+							});
+						}
+					});
+				}
+			});
+		});
+
+		// Start observing
+		const targetNode = document.querySelector('.grid-container') || document.body;
+		observer.observe(targetNode, {
+			childList: true,
+			subtree: true
+		});
+	}
+
+	/**
+	 * Bind event listeners
+	 */
+	function bindEvents() {
+		console.log('Binding events...');
+
+		// Search functionality
+		if (elements.searchInput) {
+			elements.searchInput.addEventListener('input', handleSearch);
+		}
+
+		// Filter functionality
+		if (elements.projectFilter) {
+			elements.projectFilter.addEventListener('change', handleFilter);
+		}
+
+		if (elements.userFilter) {
+			elements.userFilter.addEventListener('change', handleFilter);
+		}
+
+		if (elements.projectTypeFilter) {
+			elements.projectTypeFilter.addEventListener('change', handleFilter);
+		}
+
+		// Date filter functionality
+		const dateFromInput = document.getElementById('date-from-filter');
+		const dateToInput = document.getElementById('date-to-filter');
+		if (dateFromInput) {
+			dateFromInput.addEventListener('change', handleFilter);
+		}
+		if (dateToInput) {
+			dateToInput.addEventListener('change', handleFilter);
+		}
+
+		// Clear filters
+		if (elements.clearFiltersBtn) {
+			elements.clearFiltersBtn.addEventListener('click', clearFilters);
+		}
+
+		// Export CSV button
+		if (elements.exportCsvBtn) {
+			elements.exportCsvBtn.addEventListener('click', exportToCsv);
+		}
+
+		// Delete time entry buttons
+		document.addEventListener('click', function (e) {
+			if (e.target.closest('.delete-entry-btn')) {
+				const button = e.target.closest('.delete-entry-btn');
+				const entryId = button.getAttribute('data-entry-id');
+				const entryDescription = button.getAttribute('data-entry-description');
+				console.log('Delete button clicked for time entry:', entryId, entryDescription);
+				showTimeEntryDeletionModal(entryId, entryDescription);
+			}
+		});
+	}
+
+	/**
+	 * Handle search input
+	 */
+	function handleSearch() {
+		clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(() => {
+			applyFilters();
+		}, 300);
+	}
+
+	/**
+	 * Handle filter changes
+	 */
+	function handleFilter() {
+		validateDateRange();
+		applyFilters();
+	}
+
+	/**
+	 * Validate and fix date range - ensure from-date is before to-date
+	 */
+	function validateDateRange() {
+		const dateFromInput = document.getElementById('date-from-filter');
+		const dateToInput = document.getElementById('date-to-filter');
+
+		if (!dateFromInput || !dateToInput) return;
+
+		const dateFrom = dateFromInput.value;
+		const dateTo = dateToInput.value;
+
+		// Only validate if both dates are set
+		if (dateFrom && dateTo) {
+			const fromDate = new Date(dateFrom);
+			const toDate = new Date(dateTo);
+
+			// If from-date is after to-date, switch them
+			if (fromDate > toDate) {
+				console.log('Date range invalid - switching dates:', { dateFrom, dateTo });
+				dateFromInput.value = dateTo;
+				dateToInput.value = dateFrom;
+
+				// Show a brief notification
+				showMessage('Date range corrected: from-date and to-date have been switched', 'info');
+			}
+		}
+	}
+
+	/**
+	 * Apply all filters
+	 */
+	function applyFilters() {
+		const searchTerm = elements.searchInput ? elements.searchInput.value.toLowerCase() : '';
+		const projectFilter = elements.projectFilter ? elements.projectFilter.value : '';
+		const userFilter = elements.userFilter ? elements.userFilter.value : '';
+		const projectTypeFilter = elements.projectTypeFilter ? elements.projectTypeFilter.value : '';
+		const dateFromInput = document.getElementById('date-from-filter');
+		const dateToInput = document.getElementById('date-to-filter');
+		const dateFrom = dateFromInput ? dateFromInput.value : '';
+		const dateTo = dateToInput ? dateToInput.value : '';
+
+		console.log('Applying filters:', { searchTerm, projectFilter, userFilter, dateFrom, dateTo });
+
+		const rows = elements.timeEntriesTbody ? elements.timeEntriesTbody.querySelectorAll('tr') : [];
+		console.log('Found rows:', rows.length);
+
+		rows.forEach(row => {
+			let showRow = true;
+
+			// Search filter
+			if (searchTerm) {
+				const description = row.querySelector('td:nth-child(6)')?.textContent.toLowerCase() || '';
+				const project = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+				const customer = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+
+				console.log('Search check:', { searchTerm, description, project, customer });
+
+				if (!description.includes(searchTerm) &&
+					!project.includes(searchTerm) &&
+					!customer.includes(searchTerm)) {
+					showRow = false;
+				}
+			}
+
+			// Project filter
+			if (projectFilter && showRow) {
+				const projectCell = row.querySelector('td:nth-child(2) a');
+				if (projectCell) {
+					const projectId = projectCell.getAttribute('href').match(/\/projects\/(\d+)/);
+					if (!projectId || projectId[1] !== projectFilter) {
+						showRow = false;
+					}
+				}
+			}
+
+			// User filter
+			if (userFilter && showRow) {
+				const userCell = row.querySelector('td:nth-child(4)');
+				if (userCell) {
+					const userText = userCell.textContent.trim();
+					// Check if the user text matches the selected user
+					// We need to find the user by their display name or user ID
+					const userOption = document.querySelector(`#user-filter option[value="${userFilter}"]`);
+					if (userOption && userText !== userOption.textContent.trim()) {
+						showRow = false;
+					}
+				}
+			}
+
+			// Project type filter
+			if (projectTypeFilter && showRow) {
+				const typeIcon = row.querySelector('td:nth-child(3) .project-type-icon');
+				if (typeIcon) {
+					const actualType = typeIcon.getAttribute('data-project-type');
+					if (actualType !== projectTypeFilter) {
+						showRow = false;
+					}
+				}
+			}
+
+			// Date range filter - convert display dates to ISO format for comparison
+			if (dateFrom && showRow) {
+				const dateCell = row.querySelector('td:nth-child(1)');
+				if (dateCell) {
+					const entryDateText = dateCell.textContent.trim();
+					const entryDateISO = convertDisplayDateToISO(entryDateText);
+					console.log('Date comparison:', { entryDateText, entryDateISO, dateFrom, isBefore: entryDateISO < dateFrom });
+					if (entryDateISO && entryDateISO < dateFrom) {
+						showRow = false;
+					}
+				}
+			}
+
+			if (dateTo && showRow) {
+				const dateCell = row.querySelector('td:nth-child(1)');
+				if (dateCell) {
+					const entryDateText = dateCell.textContent.trim();
+					const entryDateISO = convertDisplayDateToISO(entryDateText);
+					console.log('Date comparison:', { entryDateText, entryDateISO, dateTo, isAfter: entryDateISO > dateTo });
+					if (entryDateISO && entryDateISO > dateTo) {
+						showRow = false;
+					}
+				}
+			}
+
+			// Show/hide row
+			row.style.display = showRow ? '' : 'none';
+		});
+
+		updateEmptyState();
+	}
+
+	// Convert display date to ISO format for comparison
+	function convertDisplayDateToISO(dateText) {
+		if (!dateText) return null;
+
+		const userFormat = getDateFormat();
+		let day, month, year;
+
+		switch (userFormat) {
+			case 'd/m/Y':
+				[day, month, year] = dateText.split('/');
+				break;
+			case 'd.m.Y':
+				[day, month, year] = dateText.split('.');
+				break;
+			case 'm/d/Y':
+				[month, day, year] = dateText.split('/');
+				break;
+			case 'm.d.Y':
+				[month, day, year] = dateText.split('.');
+				break;
+			case 'Y-m-d':
+				[year, month, day] = dateText.split('-');
+				break;
+			default:
+				[day, month, year] = dateText.split('/');
+		}
+
+		if (day && month && year) {
+			return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+		}
+
+		return null;
+	}
+
+	// Get user's date format from the page
+	function getDateFormat() {
+		const formatElement = document.querySelector('[data-date-format]');
+		return formatElement ? formatElement.getAttribute('data-date-format') : 'd/m/Y';
+	}
+
+	/**
+	 * Clear all filters
+	 */
+	function clearFilters() {
+		if (elements.searchInput) {
+			elements.searchInput.value = '';
+		}
+		if (elements.projectFilter) {
+			elements.projectFilter.value = '';
+		}
+		if (elements.userFilter) {
+			elements.userFilter.value = '';
+		}
+		if (elements.projectTypeFilter) {
+			elements.projectTypeFilter.value = '';
+		}
+		const dateFromInput = document.getElementById('date-from-filter');
+		const dateToInput = document.getElementById('date-to-filter');
+		if (dateFromInput) {
+			dateFromInput.value = '';
+		}
+		if (dateToInput) {
+			dateToInput.value = '';
+		}
+
+		// Show all rows
+		const rows = elements.timeEntriesTbody ? elements.timeEntriesTbody.querySelectorAll('tr') : [];
+		rows.forEach(row => {
+			row.style.display = '';
+		});
+
+		updateEmptyState();
+	}
+
+	/**
+	 * Update empty state visibility
+	 */
+	function updateEmptyState() {
+		const visibleRows = elements.timeEntriesTbody ?
+			Array.from(elements.timeEntriesTbody.querySelectorAll('tr')).filter(row =>
+				row.style.display !== 'none'
+			) : [];
+
+		const emptyState = document.querySelector('.emptycontent');
+		if (emptyState) {
+			if (visibleRows.length === 0) {
+				emptyState.style.display = 'block';
+				emptyState.querySelector('h2').textContent = 'No time entries match your filters';
+				emptyState.querySelector('p').textContent = 'Try adjusting your search criteria or clear the filters.';
+			} else {
+				emptyState.style.display = 'none';
+			}
+		}
+	}
+
+	/**
+	 * Show time entry deletion modal
+	 */
+	function showTimeEntryDeletionModal(entryId, entryDescription) {
+		if (typeof window.projectcheckDeletionModal === 'undefined') {
+			console.error('Deletion modal not loaded');
+			// Fallback to old method
+			confirmDeleteTimeEntry(entryId, entryDescription);
+			return;
+		}
+
+		const deleteUrl = `/index.php/apps/projectcheck/time-entries/${entryId}`;
+
+		// Show the modal
+		window.projectcheckDeletionModal.show({
+			entityType: 'time_entry',
+			entityId: entryId,
+			entityName: entryDescription || 'Time Entry',
+			deleteUrl: deleteUrl,
+			onSuccess: function (entity) {
+				// Remove the row from the table
+				const row = document.querySelector(`tr[data-entry-id="${entity.id}"]`);
+				if (row) {
+					row.remove();
+					updateEmptyState();
+				}
+
+				// Show success message
+				showMessage('Time entry deleted successfully!', 'success');
+			},
+			onCancel: function () {
+				console.log('Time entry deletion cancelled');
+			}
+		});
+	}
+
+	/**
+	 * Confirm delete time entry - fallback method
+	 */
+	function confirmDeleteTimeEntry(entryId, entryDescription) {
+		const description = entryDescription || 'this time entry';
+		const message = `Are you sure you want to delete ${description}? This action cannot be undone.`;
+
+		if (confirm(message)) {
+			deleteTimeEntry(entryId);
+		}
+	}
+
+	/**
+	 * Delete time entry via AJAX
+	 */
+	function deleteTimeEntry(entryId) {
+		const url = `/index.php/apps/projectcheck/time-entries/${entryId}`;
+		const token = document.querySelector('input[name="requesttoken"]')?.value ||
+			document.querySelector('meta[name="requesttoken"]')?.content ||
+			(window.OC && window.OC.requestToken);
+
+		fetch(url, {
+			method: 'DELETE',
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				'requesttoken': token || '',
+				'X-Requested-With': 'XMLHttpRequest'
+			}
+		})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					// Remove the row from the table
+					const row = document.querySelector(`tr[data-entry-id="${entryId}"]`);
+					if (row) {
+						row.remove();
+						updateEmptyState();
+					}
+
+					// Show success message
+					showMessage('Time entry deleted successfully!', 'success');
+				} else {
+					showMessage(data.message || 'Failed to delete time entry', 'error');
+				}
+			})
+			.catch(error => {
+				console.error('Error deleting time entry:', error);
+				showMessage('An error occurred while deleting the time entry', 'error');
+			});
+	}
+
+	/**
+	 * Show message
+	 */
+	function showMessage(message, type) {
+		// Remove existing messages
+		const existingMessages = document.querySelectorAll('.notice');
+		existingMessages.forEach(msg => msg.remove());
+
+		// Create new message
+		const messageDiv = document.createElement('div');
+		messageDiv.className = `notice notice-${type}`;
+
+		// Choose appropriate icon based on message type
+		let iconClass = 'icon-info';
+		if (type === 'success') {
+			iconClass = 'icon-checkmark';
+		} else if (type === 'error') {
+			iconClass = 'icon-error';
+		}
+
+		messageDiv.innerHTML = `
+			<i class="icon ${iconClass}"></i>
+			<span>${message}</span>
+		`;
+
+		// Insert after header
+		const header = document.querySelector('.header-content');
+		if (header && header.parentNode) {
+			header.parentNode.insertBefore(messageDiv, header.nextSibling);
+		}
+
+		// Auto-hide after 3 seconds for info messages, 5 seconds for others
+		const hideDelay = type === 'info' ? 3000 : 5000;
+		setTimeout(() => {
+			if (messageDiv.parentNode) {
+				messageDiv.remove();
+			}
+		}, hideDelay);
+	}
+
+	// HTML5 date inputs work natively - no custom date picker needed
+
+	// Date conversion functions no longer needed with HTML5 date inputs
+
+	// All date conversion functions removed - HTML5 date inputs handle this automatically
+
+	// Date input formatting no longer needed with HTML5 date inputs
+
+	// All date formatting and validation functions removed - HTML5 date inputs handle this automatically
+
+	// No longer needed with HTML5 date inputs
+
+	// Initialize date picker functionality
+	function initCalendarIcons() {
+		// Add change listeners to date inputs
+		const dateInputs = document.querySelectorAll('input[type="date"]');
+		dateInputs.forEach(input => {
+			input.addEventListener('change', function () {
+				applyFilters(); // Apply filters when date changes
+			});
+		});
+
+		console.log('Date picker functionality initialized');
+	}
+
+	/**
+	 * Export time entries to CSV
+	 */
+	function exportToCsv() {
+		// Get current filter values (read directly from DOM to match current UI state)
+		const projectId = elements.projectFilter ? elements.projectFilter.value : '';
+		const userId = elements.userFilter ? elements.userFilter.value : '';
+		const projectType = elements.projectTypeFilter ? elements.projectTypeFilter.value : '';
+		const dateFromInput = document.getElementById('date-from-filter');
+		const dateToInput = document.getElementById('date-to-filter');
+		const dateFrom = dateFromInput ? dateFromInput.value : '';
+		const dateTo = dateToInput ? dateToInput.value : '';
+		const search = elements.searchInput ? elements.searchInput.value : '';
+
+		// Build URL with current filters
+		const params = new URLSearchParams();
+		if (projectId) params.append('project_id', projectId);
+		if (userId) params.append('user_id', userId);
+		if (projectType) params.append('project_type', projectType);
+		if (dateFrom) params.append('date_from', dateFrom);
+		if (dateTo) params.append('date_to', dateTo);
+		if (search) params.append('search', search);
+
+		// Build export URL
+		let exportUrl;
+		if (typeof OC !== 'undefined' && OC.generateUrl) {
+			exportUrl = OC.generateUrl('/apps/projectcheck/time-entries/export') +
+				(params.toString() ? '?' + params.toString() : '');
+		} else {
+			// Fallback if OC is not available
+			exportUrl = '/index.php/apps/projectcheck/time-entries/export' +
+				(params.toString() ? '?' + params.toString() : '');
+		}
+
+		// Use fetch to get JSON response with CSV data
+		fetch(exportUrl, {
+			method: 'GET',
+			credentials: 'same-origin',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			}
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Export failed with status: ' + response.status);
+				}
+
+				return response.json();
+			})
+			.then(data => {
+				if (data.error) {
+					throw new Error(data.error);
+				}
+
+				// Create and download the CSV file
+				const blob = new Blob([data.csv_data], { type: 'text/csv;charset=utf-8;' });
+				const link = document.createElement('a');
+				const url = URL.createObjectURL(blob);
+				link.setAttribute('href', url);
+				link.setAttribute('download', data.filename);
+				link.style.visibility = 'hidden';
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+			})
+			.catch(error => {
+				console.error('Export error:', error);
+				showMessage('Export failed: ' + error.message, 'error');
+			});
+	}
+
+	/**
+	 * Initialize message auto-hide
+	 */
+	function initMessageAutoHide() {
+		const messages = document.querySelectorAll('.notice');
+		messages.forEach(message => {
+			setTimeout(() => {
+				if (message.parentNode) {
+					message.remove();
+				}
+			}, 5000);
+		});
+	}
+
+	/**
+	 * Initialize description truncation for table cells
+	 */
+	function initDescriptionTruncation() {
+		// Run immediately to prevent flash of full text
+		const descriptionCells = document.querySelectorAll('.grid .description-cell, .grid td:nth-child(6)');
+		const maxLength = 20; // Maximum characters before truncation
+
+		descriptionCells.forEach(cell => {
+			// Skip if already processed
+			if (cell.hasAttribute('data-processed')) {
+				return;
+			}
+
+			const originalText = cell.textContent.trim();
+
+			if (originalText.length > maxLength) {
+				// Store original text in data attribute BEFORE truncating
+				cell.setAttribute('data-original-text', originalText);
+
+				// Truncate the text immediately
+				const truncatedText = originalText.substring(0, maxLength) + '...';
+				cell.textContent = truncatedText;
+
+				// Add tooltip with full text
+				cell.setAttribute('title', originalText);
+				cell.style.cursor = 'help';
+
+				// Mark as processed
+				cell.setAttribute('data-processed', 'true');
+
+				// Add click handler to show full text
+				cell.addEventListener('click', function (e) {
+					e.preventDefault();
+					showFullDescription(originalText, cell); // Use original full text
+				});
+			}
+		});
+	}
+
+	/**
+	 * Force immediate truncation on page load
+	 */
+	function forceImmediateTruncation() {
+		// Run as soon as possible
+		const descriptionCells = document.querySelectorAll('.grid .description-cell, .grid td:nth-child(6)');
+		descriptionCells.forEach(cell => {
+			// Skip if already processed
+			if (cell.hasAttribute('data-processed')) {
+				return;
+			}
+
+			const text = cell.textContent.trim();
+			if (text.length > 20) {
+				// Store original text BEFORE truncating
+				cell.setAttribute('data-original-text', text);
+				cell.setAttribute('title', text);
+				cell.style.cursor = 'help';
+
+				// Truncate for display
+				cell.textContent = text.substring(0, 20) + '...';
+
+				// Mark as processed to prevent duplicate event listeners
+				cell.setAttribute('data-processed', 'true');
+
+				// Add click handler to show full text
+				cell.addEventListener('click', function (e) {
+					e.preventDefault();
+					showFullDescription(text, cell); // Use original full text
+				});
+			}
+		});
+	}
+
+	/**
+	 * Additional truncation check for dynamic content
+	 */
+	function checkAndTruncateDescriptions() {
+		const descriptionCells = document.querySelectorAll('.grid .description-cell, .grid td:nth-child(6)');
+		descriptionCells.forEach(cell => {
+			if (!cell.hasAttribute('data-processed')) {
+				const text = cell.textContent.trim();
+				if (text.length > 20) {
+					cell.setAttribute('data-original-text', text);
+					cell.setAttribute('title', text);
+					cell.style.cursor = 'help';
+					cell.textContent = text.substring(0, 20) + '...';
+					cell.setAttribute('data-processed', 'true');
+
+					cell.addEventListener('click', function (e) {
+						e.preventDefault();
+						showFullDescription(text, cell);
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Show full description in a modal or popup
+	 */
+	function showFullDescription(text, cell) {
+		// Create a simple popup
+		const popup = document.createElement('div');
+		popup.style.cssText = `
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			background: #ffffff;
+			background-color: var(--color-background, #ffffff) !important;
+			border: 1px solid var(--color-border, #cccccc);
+			border-radius: 8px;
+			padding: 1rem;
+			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+			z-index: 1000;
+			max-width: 500px;
+			max-height: 300px;
+			overflow-y: auto;
+			word-wrap: break-word;
+			opacity: 1;
+			/* Ensure content is not truncated */
+			text-overflow: unset;
+			white-space: normal;
+		`;
+
+		// Create close button
+		const closeButton = document.createElement('button');
+		closeButton.innerHTML = '&times;';
+		closeButton.style.cssText = `
+			background: none; 
+			border: none; 
+			font-size: 1.2rem; 
+			cursor: pointer; 
+			color: var(--color-text, #000000);
+			padding: 0;
+			margin: 0;
+		`;
+
+		// Create header
+		const header = document.createElement('div');
+		header.style.cssText = `
+			display: flex; 
+			justify-content: space-between; 
+			align-items: center; 
+			margin-bottom: 0.5rem; 
+			background: transparent;
+		`;
+
+		const title = document.createElement('h3');
+		title.textContent = 'Full Description';
+		title.style.cssText = `
+			margin: 0; 
+			color: var(--color-text, #000000); 
+			background: transparent;
+		`;
+
+		header.appendChild(title);
+		header.appendChild(closeButton);
+
+		// Create content
+		const content = document.createElement('p');
+		content.textContent = text;
+		content.style.cssText = `
+			margin: 0; 
+			color: var(--color-text, #000000); 
+			white-space: pre-wrap; 
+			background: transparent;
+			word-wrap: break-word;
+			word-break: break-word;
+			overflow-wrap: break-word;
+			/* Ensure full text is displayed without truncation */
+			text-overflow: unset;
+			overflow: visible;
+			max-width: none;
+		`;
+
+		// Assemble popup
+		popup.appendChild(header);
+		popup.appendChild(content);
+
+		// Add backdrop
+		const backdrop = document.createElement('div');
+		backdrop.style.cssText = `
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.5);
+			z-index: 999;
+		`;
+
+		// Close function
+		function closePopup() {
+			popup.remove();
+			backdrop.remove();
+		}
+
+		// Add event listeners
+		closeButton.addEventListener('click', closePopup);
+		backdrop.addEventListener('click', closePopup);
+
+		// Add keyboard support
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape') {
+				closePopup();
+			}
+		});
+
+		document.body.appendChild(backdrop);
+		document.body.appendChild(popup);
+	}
+
+
+	// Initialize when DOM is ready
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init);
+	} else {
+		init();
+	}
+
+})();
