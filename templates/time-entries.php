@@ -413,7 +413,11 @@ Util::addStyle('projectcheck', 'navigation');
                                     continue;
                                 }
                                 ?>
-                                <tr data-entry-id="<?php p($timeEntry->getId()); ?>">
+                                <tr data-entry-id="<?php p($timeEntry->getId()); ?>"
+                                    data-project-id="<?php p($timeEntry->getProjectId()); ?>"
+                                    data-user-id="<?php p($timeEntry->getUserId()); ?>"
+                                    data-project-type="<?php p($entry['project_type'] ?? 'client'); ?>"
+                                    data-date-iso="<?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('Y-m-d') : ''); ?>">
                                     <td><?php p($timeEntry->getDate() ? $_['dateFormatService']->formatDate($timeEntry->getDate(), $_['userId']) : ''); ?></td>
                                     <td>
                                         <a href="<?php p(str_replace('PROJECT_ID', $timeEntry->getProjectId(), $_['projectShowUrl'] ?? '/index.php/apps/projectcheck/projects/')); ?>">

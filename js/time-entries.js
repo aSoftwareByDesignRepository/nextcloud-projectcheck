@@ -125,7 +125,7 @@
 
 
 	/**
-	 * Apply all filters
+	 * Apply all filters - SIMPLIFIED with data attributes
 	 */
 	function applyFilters() {
 		const searchTerm = elements.searchInput ? elements.searchInput.value.toLowerCase() : '';
@@ -137,141 +137,89 @@
 		const dateFrom = dateFromInput ? dateFromInput.value : '';
 		const dateTo = dateToInput ? dateToInput.value : '';
 
-		console.log('Applying filters:', { searchTerm, projectFilter, userFilter, dateFrom, dateTo });
+		console.log('=== APPLYING FILTERS ===');
+		console.log('Filters:', { searchTerm, projectFilter, userFilter, projectTypeFilter, dateFrom, dateTo });
 
 		const rows = elements.timeEntriesTbody ? elements.timeEntriesTbody.querySelectorAll('tr') : [];
-		console.log('Found rows:', rows.length);
+		console.log('Total rows:', rows.length);
+		
+		let visibleCount = 0;
 
 		rows.forEach(row => {
 			let showRow = true;
 
-		// Search filter
-		if (searchTerm) {
-			const description = row.querySelector('td:nth-child(7)')?.textContent.toLowerCase() || '';
-			const project = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-			const customer = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
-
-			console.log('Search check:', { searchTerm, description, project, customer });
-
-			if (!description.includes(searchTerm) &&
-				!project.includes(searchTerm) &&
-				!customer.includes(searchTerm)) {
-				showRow = false;
-			}
-		}
-
-			// Project filter
+			// Project filter - use data attribute
 			if (projectFilter && showRow) {
-				const projectCell = row.querySelector('td:nth-child(2) a');
-				if (projectCell) {
-					const projectId = projectCell.getAttribute('href').match(/\/projects\/(\d+)/);
-					if (!projectId || projectId[1] !== projectFilter) {
-						showRow = false;
-					}
+				const rowProjectId = row.getAttribute('data-project-id');
+				if (rowProjectId !== projectFilter) {
+					showRow = false;
 				}
 			}
 
-			// User filter
+			// User filter - use data attribute
 			if (userFilter && showRow) {
-				const userCell = row.querySelector('td:nth-child(4)');
-				if (userCell) {
-					const userText = userCell.textContent.trim();
-					// Check if the user text matches the selected user
-					// We need to find the user by their display name or user ID
-					const userOption = document.querySelector(`#user-filter option[value="${userFilter}"]`);
-					if (userOption && userText !== userOption.textContent.trim()) {
-						showRow = false;
-					}
+				const rowUserId = row.getAttribute('data-user-id');
+				if (rowUserId !== userFilter) {
+					showRow = false;
 				}
 			}
 
-			// Project type filter
+			// Project type filter - use data attribute
 			if (projectTypeFilter && showRow) {
-				const typeIcon = row.querySelector('td:nth-child(3) .project-type-icon');
-				if (typeIcon) {
-					const actualType = typeIcon.getAttribute('data-project-type');
-					if (actualType !== projectTypeFilter) {
-						showRow = false;
-					}
+				const rowProjectType = row.getAttribute('data-project-type');
+				if (rowProjectType !== projectTypeFilter) {
+					showRow = false;
 				}
 			}
 
-			// Date range filter - convert display dates to ISO format for comparison
+			// Date from filter - use data attribute
 			if (dateFrom && showRow) {
-				const dateCell = row.querySelector('td:nth-child(1)');
-				if (dateCell) {
-					const entryDateText = dateCell.textContent.trim();
-					const entryDateISO = convertDisplayDateToISO(entryDateText);
-					console.log('Date comparison:', { entryDateText, entryDateISO, dateFrom, isBefore: entryDateISO < dateFrom });
-					if (entryDateISO && entryDateISO < dateFrom) {
-						showRow = false;
-					}
+				const rowDateISO = row.getAttribute('data-date-iso');
+				if (rowDateISO && rowDateISO < dateFrom) {
+					showRow = false;
 				}
 			}
 
+			// Date to filter - use data attribute
 			if (dateTo && showRow) {
-				const dateCell = row.querySelector('td:nth-child(1)');
-				if (dateCell) {
-					const entryDateText = dateCell.textContent.trim();
-					const entryDateISO = convertDisplayDateToISO(entryDateText);
-					console.log('Date comparison:', { entryDateText, entryDateISO, dateTo, isAfter: entryDateISO > dateTo });
-					if (entryDateISO && entryDateISO > dateTo) {
-						showRow = false;
-					}
+				const rowDateISO = row.getAttribute('data-date-iso');
+				if (rowDateISO && rowDateISO > dateTo) {
+					showRow = false;
+				}
+			}
+
+			// Search filter - search in visible text
+			if (searchTerm && showRow) {
+				const description = row.querySelector('td:nth-child(7)')?.textContent.toLowerCase() || '';
+				const project = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+				const customer = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+
+				if (!description.includes(searchTerm) &&
+					!project.includes(searchTerm) &&
+					!customer.includes(searchTerm)) {
+					showRow = false;
 				}
 			}
 
 			// Show/hide row
 			row.style.display = showRow ? '' : 'none';
+			
+			if (showRow) {
+				visibleCount++;
+			}
 		});
 
+		console.log('Visible rows after filtering:', visibleCount);
 		updateEmptyState();
 	}
 
-	// Convert display date to ISO format for comparison
-	function convertDisplayDateToISO(dateText) {
-		if (!dateText) return null;
-
-		const userFormat = getDateFormat();
-		let day, month, year;
-
-		switch (userFormat) {
-			case 'd/m/Y':
-				[day, month, year] = dateText.split('/');
-				break;
-			case 'd.m.Y':
-				[day, month, year] = dateText.split('.');
-				break;
-			case 'm/d/Y':
-				[month, day, year] = dateText.split('/');
-				break;
-			case 'm.d.Y':
-				[month, day, year] = dateText.split('.');
-				break;
-			case 'Y-m-d':
-				[year, month, day] = dateText.split('-');
-				break;
-			default:
-				[day, month, year] = dateText.split('/');
-		}
-
-		if (day && month && year) {
-			return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-		}
-
-		return null;
-	}
-
-	// Get user's date format from the page
-	function getDateFormat() {
-		const formatElement = document.querySelector('[data-date-format]');
-		return formatElement ? formatElement.getAttribute('data-date-format') : 'd/m/Y';
-	}
 
 	/**
-	 * Clear all filters
+	 * Clear all filters and show all rows
 	 */
 	function clearFilters() {
+		console.log('=== CLEARING ALL FILTERS ===');
+		
 		if (elements.searchInput) {
 			elements.searchInput.value = '';
 		}
@@ -299,6 +247,7 @@
 			row.style.display = '';
 		});
 
+		console.log('All filters cleared, showing all', rows.length, 'rows');
 		updateEmptyState();
 	}
 
@@ -470,14 +419,8 @@
 
 	// Initialize date picker functionality
 	function initCalendarIcons() {
-		// Add change listeners to date inputs
-		const dateInputs = document.querySelectorAll('input[type="date"]');
-		dateInputs.forEach(input => {
-			input.addEventListener('change', function () {
-				applyFilters(); // Apply filters when date changes
-			});
-		});
-
+		// Date pickers are ready, no automatic filtering
+		// User must click "Apply Filters" button
 		console.log('Date picker functionality initialized');
 	}
 
