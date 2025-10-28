@@ -321,12 +321,30 @@ class TimeEntryMapper extends QBMapper
 			$qb->andWhere($qb->expr()->eq('t.user_id', $qb->createNamedParameter($filters['user_id'])));
 		}
 
+		if (!empty($filters['project_type'])) {
+			if ($this->columnExists('projects', 'project_type')) {
+				$qb->andWhere($qb->expr()->eq('p.project_type', $qb->createNamedParameter($filters['project_type'])));
+			}
+		}
+
 		if (!empty($filters['date_from'])) {
 			$qb->andWhere($qb->expr()->gte('t.date', $qb->createNamedParameter($filters['date_from'])));
 		}
 
 		if (!empty($filters['date_to'])) {
 			$qb->andWhere($qb->expr()->lte('t.date', $qb->createNamedParameter($filters['date_to'])));
+		}
+
+		// Search filter - search in description, project name, customer name
+		if (!empty($filters['search'])) {
+			$searchTerm = '%' . $this->db->escapeLikeParameter($filters['search']) . '%';
+			$qb->andWhere(
+				$qb->expr()->orX(
+					$qb->expr()->iLike('t.description', $qb->createNamedParameter($searchTerm)),
+					$qb->expr()->iLike('p.name', $qb->createNamedParameter($searchTerm)),
+					$qb->expr()->iLike('c.name', $qb->createNamedParameter($searchTerm))
+				)
+			);
 		}
 
 		// Apply pagination

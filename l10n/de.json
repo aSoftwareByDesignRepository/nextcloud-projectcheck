@@ -451,6 +451,9 @@
         "Log your time": "Zeit erfassen",
         "total": "gesamt",
         "Apply Filters": "Filter anwenden",
+        "No time entries to export": "Keine Zeiteinträge zum Exportieren",
+        "Exported": "Exportiert",
+        "entries": "Einträge",
         "Impact Analysis": "Auswirkungsanalyse",
         "time entries will be deleted": "Zeiteinträge werden gelöscht",
         "Total items affected:": "Betroffene Elemente insgesamt:",
@@ -568,6 +571,15 @@
         "Duration": "Dauer",
         "Hours Used": "Verwendete Stunden",
         "Recent Time Entries": "Aktuelle Zeiteinträge",
-        "Add Time Entry": "Zeiteintrag hinzufügen"
+        "Add Time Entry": "Zeiteintrag hinzufügen",
+        "No email": "Keine E-Mail",
+        "Never": "Nie",
+        "Log time for this employee": "Zeit für diesen Mitarbeiter erfassen",
+        "See all time entries": "Alle Zeiteinträge ansehen",
+        "View all employees": "Alle Mitarbeitenden anzeigen",
+        "Compare billable vs overhead work to measure this employee's productivity": "Abrechenbare vs. Gemeinkosten vergleichen, um die Produktivität dieses Mitarbeiters zu messen",
+        "Productivity Analysis": "Produktivitätsanalyse",
+        "Compare billable vs overhead work to measure productivity": "Abrechenbare vs. Gemeinkosten vergleichen, um Produktivität zu messen",
+        "All Employees": "Alle Mitarbeitenden"
     }
 }

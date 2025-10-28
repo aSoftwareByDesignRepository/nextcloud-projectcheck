@@ -431,10 +431,15 @@
 			iconClass = 'icon-error';
 		}
 
-		messageDiv.innerHTML = `
-			<i class="icon ${iconClass}"></i>
-			<span>${message}</span>
-		`;
+		// Create icon element
+		const icon = document.createElement('i');
+		icon.className = 'icon ' + iconClass;
+		messageDiv.appendChild(icon);
+
+		// Create message span
+		const messageSpan = document.createElement('span');
+		messageSpan.textContent = message;
+		messageDiv.appendChild(messageSpan);
 
 		// Insert after header
 		const header = document.querySelector('.header-content');
@@ -477,75 +482,79 @@
 	}
 
 	/**
-	 * Export time entries to CSV
+	 * Export time entries to CSV - ONLY visible (filtered) rows
 	 */
 	function exportToCsv() {
-		// Get current filter values (read directly from DOM to match current UI state)
-		const projectId = elements.projectFilter ? elements.projectFilter.value : '';
-		const userId = elements.userFilter ? elements.userFilter.value : '';
-		const projectType = elements.projectTypeFilter ? elements.projectTypeFilter.value : '';
-		const dateFromInput = document.getElementById('date-from-filter');
-		const dateToInput = document.getElementById('date-to-filter');
-		const dateFrom = dateFromInput ? dateFromInput.value : '';
-		const dateTo = dateToInput ? dateToInput.value : '';
-		const search = elements.searchInput ? elements.searchInput.value : '';
-
-		// Build URL with current filters
-		const params = new URLSearchParams();
-		if (projectId) params.append('project_id', projectId);
-		if (userId) params.append('user_id', userId);
-		if (projectType) params.append('project_type', projectType);
-		if (dateFrom) params.append('date_from', dateFrom);
-		if (dateTo) params.append('date_to', dateTo);
-		if (search) params.append('search', search);
-
-		// Build export URL
-		let exportUrl;
-		if (typeof OC !== 'undefined' && OC.generateUrl) {
-			exportUrl = OC.generateUrl('/apps/projectcheck/time-entries/export') +
-				(params.toString() ? '?' + params.toString() : '');
-		} else {
-			// Fallback if OC is not available
-			exportUrl = '/index.php/apps/projectcheck/time-entries/export' +
-				(params.toString() ? '?' + params.toString() : '');
+		const rows = elements.timeEntriesTbody ? elements.timeEntriesTbody.querySelectorAll('tr') : [];
+		const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+		
+		if (visibleRows.length === 0) {
+			showMessage(t('projectcheck', 'No time entries to export'), 'error');
+			return;
 		}
 
-		// Use fetch to get JSON response with CSV data
-		fetch(exportUrl, {
-			method: 'GET',
-			credentials: 'same-origin',
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json'
+		console.log('Exporting', visibleRows.length, 'visible entries');
+
+		// Build CSV manually from visible rows
+		const csvRows = [];
+		
+		// CSV Headers
+		csvRows.push([
+			t('projectcheck', 'Date'),
+			t('projectcheck', 'Project'),
+			t('projectcheck', 'Type'),
+			t('projectcheck', 'Customer'),
+			t('projectcheck', 'User'),
+			t('projectcheck', 'Hours'),
+			t('projectcheck', 'Description')
+		]);
+
+		// Extract data from visible rows
+		visibleRows.forEach(row => {
+			const cells = row.querySelectorAll('td');
+			if (cells.length >= 7) {
+				const rowData = [
+					cells[0].textContent.trim(), // Date
+					cells[1].textContent.trim(), // Project
+					cells[2].querySelector('.project-type-icon')?.getAttribute('title') || cells[2].textContent.trim(), // Type
+					cells[3].textContent.trim(), // Customer
+					cells[4].textContent.trim(), // User
+					cells[5].textContent.trim(), // Hours
+					cells[6].getAttribute('data-original-text') || cells[6].textContent.trim() // Description (full text)
+				];
+				csvRows.push(rowData);
 			}
-		})
-			.then(response => {
-				if (!response.ok) {
-					throw new Error('Export failed with status: ' + response.status);
-				}
+		});
 
-				return response.json();
-			})
-			.then(data => {
-				if (data.error) {
-					throw new Error(data.error);
-				}
+		// Convert to CSV format
+		const csvContent = csvRows.map(row => 
+			row.map(cell => {
+				// Escape quotes and wrap in quotes if contains comma, quote, or newline
+				const cellStr = String(cell).replace(/"/g, '""');
+				return /[,"\n]/.test(cellStr) ? `"${cellStr}"` : cellStr;
+			}).join(',')
+		).join('\n');
 
-				// Create and download the CSV file
-				const blob = new Blob([data.csv_data], { type: 'text/csv;charset=utf-8;' });
-				const link = document.createElement('a');
-				const url = URL.createObjectURL(blob);
-				link.setAttribute('href', url);
-				link.setAttribute('download', data.filename);
-				link.style.visibility = 'hidden';
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-			})
-			.catch(error => {
-				console.error('Export error:', error);
-				showMessage('Export failed: ' + error.message, 'error');
-			});
+		// Add BOM for proper UTF-8 encoding in Excel
+		const bom = '\uFEFF';
+		const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+		
+		// Create download link
+		const link = document.createElement('a');
+		const url = URL.createObjectURL(blob);
+		const filename = 'time_entries_filtered_' + new Date().toISOString().slice(0, 10) + '.csv';
+		
+		link.setAttribute('href', url);
+		link.setAttribute('download', filename);
+		link.style.visibility = 'hidden';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		
+		// Clean up
+		URL.revokeObjectURL(url);
+		
+		showMessage(t('projectcheck', 'Exported') + ' ' + visibleRows.length + ' ' + t('projectcheck', 'entries'), 'success');
 	}
 
 	/**
@@ -688,18 +697,19 @@
 			white-space: normal;
 		`;
 
-		// Create close button
-		const closeButton = document.createElement('button');
-		closeButton.innerHTML = '&times;';
-		closeButton.style.cssText = `
-			background: none; 
-			border: none; 
-			font-size: 1.2rem; 
-			cursor: pointer; 
-			color: var(--color-text, #000000);
-			padding: 0;
-			margin: 0;
-		`;
+	// Create close button
+	const closeButton = document.createElement('button');
+	closeButton.textContent = '×';
+	closeButton.style.cssText = `
+		background: none; 
+		border: none; 
+		font-size: 1.5rem; 
+		cursor: pointer; 
+		color: var(--color-text, #000000);
+		padding: 0;
+		margin: 0;
+		line-height: 1;
+	`;
 
 		// Create header
 		const header = document.createElement('div');

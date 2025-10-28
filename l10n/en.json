@@ -368,6 +368,15 @@
         "Project category (optional)": "Project category (optional)",
         "Available Hours": "Available Hours",
         "Calculated automatically from budget and hourly rate": "Calculated automatically from budget and hourly rate",
-        "Select the type of project to categorize it for productivity analysis": "Select the type of project to categorize it for productivity analysis"
+        "Select the type of project to categorize it for productivity analysis": "Select the type of project to categorize it for productivity analysis",
+        "No email": "No email",
+        "Never": "Never",
+        "Log time for this employee": "Log time for this employee",
+        "See all time entries": "See all time entries",
+        "View all employees": "View all employees",
+        "Compare billable vs overhead work to measure this employee's productivity": "Compare billable vs overhead work to measure this employee's productivity",
+        "Productivity Analysis": "Productivity Analysis",
+        "Compare billable vs overhead work to measure productivity": "Compare billable vs overhead work to measure productivity",
+        "All Employees": "All Employees"
     }
 }
