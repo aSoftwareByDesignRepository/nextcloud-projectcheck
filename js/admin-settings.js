@@ -69,7 +69,7 @@
 			const field = $('#default-hourly-rate');
 
 			if (isNaN(rate) || rate < 0) {
-				this.showError(field, 'Please enter a valid hourly rate');
+				this.showError(field, t('projectcheck', 'Please enter a valid hourly rate'));
 				return false;
 			}
 
@@ -82,7 +82,7 @@
 			const field = $('#max-projects-per-user');
 
 			if (isNaN(maxProjects) || maxProjects < 1) {
-				this.showError(field, 'Maximum projects must be at least 1');
+				this.showError(field, t('projectcheck', 'Maximum projects must be at least 1'));
 				return false;
 			}
 
@@ -95,7 +95,7 @@
 			const field = $('#max-team-members-per-project');
 
 			if (isNaN(maxTeamMembers) || maxTeamMembers < 1) {
-				this.showError(field, 'Maximum team members must be at least 1');
+				this.showError(field, t('projectcheck', 'Maximum team members must be at least 1'));
 				return false;
 			}
 

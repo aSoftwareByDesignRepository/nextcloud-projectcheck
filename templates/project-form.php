@@ -13,7 +13,7 @@ Util::addScript('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'navigation');
 
-$isEdit = isset($project) && $project instanceof \OCA\ProjectControl\Db\Project;
+$isEdit = isset($project) && $project instanceof \OCA\ProjectCheck\Db\Project;
 $pageTitle = $isEdit ? $l->t('Edit Project') : $l->t('Create New Project');
 $formAction = $_['formAction'] ?? ($isEdit ? '/projects/' . $project->getId() : '/projects');
 $formMethod = $isEdit ? 'PUT' : 'POST';

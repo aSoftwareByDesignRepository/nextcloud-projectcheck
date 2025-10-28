@@ -151,7 +151,7 @@
 			}
 
 			if (!date || isNaN(date.getTime())) {
-				errors.date = 'Invalid date format (dd.mm.yyyy)';
+				errors.date = t('projectcheck', 'Invalid date format (dd.mm.yyyy)');
 			}
 		}
 
@@ -258,7 +258,7 @@
 					if (result.errors) {
 						displayErrors(result.errors);
 					} else {
-						showNotification(result.error || 'Failed to save time entry', 'error');
+						showNotification(result.error || t('projectcheck', 'Failed to save time entry'), 'error');
 					}
 					// Re-enable form only on error
 					form.classList.remove('submitting');
@@ -343,7 +343,7 @@
 				} else {
 					const date = new Date(value);
 					if (isNaN(date.getTime())) {
-						error = 'Invalid date format';
+						error = t('projectcheck', 'Invalid date format');
 					}
 				}
 				break;

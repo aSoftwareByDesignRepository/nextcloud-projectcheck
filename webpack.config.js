@@ -19,7 +19,6 @@ module.exports = (env, argv) => {
             'time-entries': './js/time-entries.js',
             'time-entry-form': './js/time-entry-form.js',
             'time-entry-detail': './js/time-entry-detail.js',
-            lucide: './js/lucide.js',
             common: './js/common/index.js'
         },
         output: {

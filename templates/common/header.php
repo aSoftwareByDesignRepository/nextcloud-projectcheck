@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Common Header Template for ProjectControl App
+ * Common Header Template for ProjectCheck App
  * 
  * This template provides the header section that integrates with Nextcloud's
- * header system and provides navigation for the ProjectControl app.
+ * header system and provides navigation for the ProjectCheck app.
  */
 
 // Ensure this file is being included within Nextcloud
@@ -26,9 +26,9 @@ $currentUrl = $_SERVER['REQUEST_URI'];
         <div class="header__logo">
             <a href="<?php print_unescaped(link_to($appName, 'index.php')); ?>" class="header__logo-link">
                 <img src="<?php print_unescaped(image_path($appName, 'logo.svg')); ?>"
-                    alt="<?php p($l->t('ProjectControl')); ?>"
+                    alt="<?php p($l->t('ProjectCheck')); ?>"
                     class="header__logo-image">
-                <span class="header__logo-text">ProjectControl</span>
+                <span class="header__logo-text">ProjectCheck</span>
             </a>
         </div>
 
@@ -86,21 +86,19 @@ $currentUrl = $_SERVER['REQUEST_URI'];
         <div class="header__actions">
             <!-- Quick Actions -->
             <div class="header__quick-actions">
-                <button type="button"
+                <a href="<?php print_unescaped(link_to($appName, 'time-entry-form.php')); ?>"
                     class="header__action-btn header__action-btn--primary"
-                    onclick="window.location.href='<?php print_unescaped(link_to($appName, 'time-entry-form.php')); ?>'"
                     title="<?php p($l->t('Start Time Entry')); ?>">
                     <span class="header__action-icon">▶️</span>
                     <span class="header__action-text"><?php p($l->t('Start Timer')); ?></span>
-                </button>
+                </a>
 
-                <button type="button"
+                <a href="<?php print_unescaped(link_to($appName, 'project-form.php')); ?>"
                     class="header__action-btn"
-                    onclick="window.location.href='<?php print_unescaped(link_to($appName, 'project-form.php')); ?>'"
                     title="<?php p($l->t('New Project')); ?>">
                     <span class="header__action-icon">➕</span>
                     <span class="header__action-text"><?php p($l->t('New Project')); ?></span>
-                </button>
+                </a>
             </div>
 
             <!-- User Menu -->
@@ -235,19 +233,17 @@ $currentUrl = $_SERVER['REQUEST_URI'];
 
         <!-- Mobile Quick Actions -->
         <div class="header__mobile-actions">
-            <button type="button"
-                class="header__mobile-action-btn header__mobile-action-btn--primary"
-                onclick="window.location.href='<?php print_unescaped(link_to($appName, 'time-entry-form.php')); ?>'">
+            <a href="<?php print_unescaped(link_to($appName, 'time-entry-form.php')); ?>"
+                class="header__mobile-action-btn header__mobile-action-btn--primary">
                 <span class="header__mobile-action-icon">▶️</span>
                 <span class="header__mobile-action-text"><?php p($l->t('Start Timer')); ?></span>
-            </button>
+            </a>
 
-            <button type="button"
-                class="header__mobile-action-btn"
-                onclick="window.location.href='<?php print_unescaped(link_to($appName, 'project-form.php')); ?>'">
+            <a href="<?php print_unescaped(link_to($appName, 'project-form.php')); ?>"
+                class="header__mobile-action-btn">
                 <span class="header__mobile-action-icon">➕</span>
                 <span class="header__mobile-action-text"><?php p($l->t('New Project')); ?></span>
-            </button>
+            </a>
         </div>
     </div>
 </header>

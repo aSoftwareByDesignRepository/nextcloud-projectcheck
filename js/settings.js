@@ -158,12 +158,12 @@
 					showMessage(result.message, 'success');
 					updateFormWithNewValues(result.settings);
 				} else {
-					showMessage(result.error || 'Failed to save settings', 'error');
+					showMessage(result.error || t('projectcheck', 'Failed to save settings'), 'error');
 				}
 			})
 			.catch(function (error) {
 				showLoadingState(false);
-				showMessage('Failed to save settings: ' + error.message, 'error');
+				showMessage(t('projectcheck', 'Failed to save settings') + ': ' + error.message, 'error');
 			});
 	}
 

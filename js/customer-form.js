@@ -297,12 +297,12 @@
 						}, 1500);
 					}
 				} else {
-					showMessage(result.error || 'Failed to save customer', 'error');
+					showMessage(result.error || t('projectcheck', 'Failed to save customer'), 'error');
 				}
 			})
 			.catch(function (error) {
 				showLoadingState(false);
-				showMessage('Failed to save customer: ' + error.message, 'error');
+				showMessage(t('projectcheck', 'Failed to save customer') + ': ' + error.message, 'error');
 			});
 	}
 

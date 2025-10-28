@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Page Header Component for ProjectControl App
+ * Page Header Component for ProjectCheck App
  * 
  * This template provides a reusable page header component with title, subtitle,
  * breadcrumbs, and action buttons.
@@ -83,7 +83,7 @@ $appName = 'projectcheck';
                     <?php if (isset($action['type']) && $action['type'] === 'button'): ?>
                         <button type="button"
                             class="page-header__action-btn <?php echo isset($action['variant']) ? 'page-header__action-btn--' . $action['variant'] : ''; ?>"
-                            <?php echo isset($action['onclick']) ? 'onclick="' . $action['onclick'] . '"' : ''; ?>
+                            <?php echo isset($action['data']) ? 'data-action="' . $action['data'] . '"' : ''; ?>
                             <?php echo isset($action['disabled']) && $action['disabled'] ? 'disabled' : ''; ?>
                             title="<?php echo isset($action['title']) ? $action['title'] : $action['text']; ?>">
                             <?php if (isset($action['icon'])): ?>
@@ -134,7 +134,7 @@ $appName = 'projectcheck';
                                                 <?php elseif (isset($item['type']) && $item['type'] === 'button'): ?>
                                                     <button type="button"
                                                         class="page-header__dropdown-link"
-                                                        <?php echo isset($item['onclick']) ? 'onclick="' . $item['onclick'] . '"' : ''; ?>>
+                                                        <?php echo isset($item['data']) ? 'data-action="' . $item['data'] . '"' : ''; ?>>
                                                         <?php if (isset($item['icon'])): ?>
                                                             <span class="page-header__dropdown-icon"><?php p($item['icon']); ?></span>
                                                         <?php endif; ?>

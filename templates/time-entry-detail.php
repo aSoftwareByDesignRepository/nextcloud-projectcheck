@@ -15,7 +15,7 @@ Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'custom-icons');
 Util::addStyle('projectcheck', 'navigation');
 
-if (!isset($timeEntry) || !($timeEntry instanceof \OCA\ProjectControl\Db\TimeEntry)) {
+if (!isset($timeEntry) || !($timeEntry instanceof \OCA\ProjectCheck\Db\TimeEntry)) {
     throw new Exception('Time entry not found');
 }
 
@@ -43,8 +43,8 @@ $totalCost = $timeEntry->getCost() ?? ($timeEntry->getHours() * $timeEntry->getH
                 <div class="header-text">
                     <div class="header-details">
                         <h2><?php p($l->t('Time Entry Details')); ?></h2>
-                        <p style="margin-bottom: 10px;"><?php p($l->t('Time entry information and associated details')); ?></p>
-                        <div class=" project-meta">
+                        <p class="header-subtitle"><?php p($l->t('Time entry information and associated details')); ?></p>
+                        <div class="project-meta">
                             <div class="meta-item">
                                 <i class="icon-calendar-custom"></i>
                                 <span><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : 'Unknown'); ?></span>
@@ -303,7 +303,7 @@ $totalCost = $timeEntry->getCost() ?? ($timeEntry->getHours() * $timeEntry->getH
                             <i class="icon-edit-custom"></i>
                             <?php p($l->t('Edit Time Entry')); ?>
                         </a>
-                        <button type="button" class="button danger" onclick="confirmDelete()">
+                        <button type="button" class="button danger" id="delete-time-entry-btn">
                             <i class="icon-delete-custom"></i>
                             <?php p($l->t('Delete Time Entry')); ?>
                         </button>
@@ -323,20 +323,25 @@ $totalCost = $timeEntry->getCost() ?? ($timeEntry->getHours() * $timeEntry->getH
 </div>
 
 <script nonce="<?php p($_['cspNonce']) ?>">
-    function confirmDelete() {
-        if (confirm('<?php p($l->t('Are you sure you want to delete this time entry? This action cannot be undone.')); ?>')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.delete', ['id' => $timeEntryId])); ?>';
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteBtn = document.getElementById('delete-time-entry-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                if (confirm('<?php p($l->t('Are you sure you want to delete this time entry? This action cannot be undone.')); ?>')) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.delete', ['id' => $timeEntryId])); ?>';
 
-            const tokenInput = document.createElement('input');
-            tokenInput.type = 'hidden';
-            tokenInput.name = 'requesttoken';
-            tokenInput.value = '<?php p($_['requesttoken']); ?>';
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = 'requesttoken';
+                    tokenInput.value = '<?php p($_['requesttoken']); ?>';
 
-            form.appendChild(tokenInput);
-            document.body.appendChild(form);
-            form.submit();
+                    form.appendChild(tokenInput);
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
         }
-    }
+    });
 </script>

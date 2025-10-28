@@ -18,6 +18,9 @@ use OCP\IUserSession;
 use OCP\IConfig;
 use OCP\IGroupManager;
 use OCA\ProjectCheck\Service\CSPService;
+use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\CustomerService;
+use OCA\ProjectCheck\Traits\StatsTrait;
 
 /**
  * Settings controller for app configuration
@@ -25,6 +28,7 @@ use OCA\ProjectCheck\Service\CSPService;
 class SettingsController extends Controller
 {
 	use CSPTrait;
+	use StatsTrait;
 
 	/** @var IUserSession */
 	private $userSession;
@@ -35,6 +39,12 @@ class SettingsController extends Controller
 	/** @var IGroupManager */
 	private $groupManager;
 
+	/** @var ProjectService */
+	private $projectService;
+
+	/** @var CustomerService */
+	private $customerService;
+
 	/**
 	 * SettingsController constructor
 	 *
@@ -44,6 +54,8 @@ class SettingsController extends Controller
 	 * @param IConfig $config
 	 * @param IGroupManager $groupManager
 	 * @param CSPService $cspService
+	 * @param ProjectService $projectService
+	 * @param CustomerService $customerService
 	 */
 	public function __construct(
 		$appName,
@@ -51,13 +63,17 @@ class SettingsController extends Controller
 		IUserSession $userSession,
 		IConfig $config,
 		IGroupManager $groupManager,
-		CSPService $cspService
+		CSPService $cspService,
+		ProjectService $projectService,
+		CustomerService $customerService
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
 		$this->config = $config;
 		$this->groupManager = $groupManager;
 		$this->setCspService($cspService);
+		$this->projectService = $projectService;
+		$this->customerService = $customerService;
 	}
 
 	/**
@@ -90,8 +106,12 @@ class SettingsController extends Controller
 		// Get user settings
 		$settings = $this->getUserSettings($userId);
 
+		// Get stats for sidebar
+		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+
 		$response = new TemplateResponse($this->appName, 'settings', [
 			'settings' => $settings,
+			'stats' => $stats,
 			'userId' => $userId,
 			'requesttoken' => \OC::$server->getCSRFTokenManager()->getToken()->getEncryptedValue(),
 			'cspNonce' => \OC::$server->getContentSecurityPolicyNonceManager()->getNonce()

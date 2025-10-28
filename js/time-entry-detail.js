@@ -68,7 +68,7 @@
             })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Failed to delete time entry');
+                        throw new Error(t('projectcheck', 'Failed to delete time entry'));
                     }
                     return response.json();
                 })
@@ -77,12 +77,12 @@
                         // Redirect to time entries list
                         window.location.href = '/apps/projectcheck/time-entries';
                     } else {
-                        throw new Error(data.error || 'Failed to delete time entry');
+                        throw new Error(data.error || t('projectcheck', 'Failed to delete time entry'));
                     }
                 })
                 .catch(error => {
                     console.error('Error deleting time entry:', error);
-                    showError('Failed to delete time entry: ' + error.message);
+                    showError(t('projectcheck', 'Failed to delete time entry') + ': ' + error.message);
 
                     // Reset button state
                     button.disabled = false;

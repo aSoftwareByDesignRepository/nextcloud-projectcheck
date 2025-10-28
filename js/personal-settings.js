@@ -64,7 +64,7 @@
 			const field = $('#default-hourly-rate');
 
 			if (isNaN(rate) || rate < 0) {
-				this.showError(field, 'Please enter a valid hourly rate');
+				this.showError(field, t('projectcheck', 'Please enter a valid hourly rate'));
 				return false;
 			}
 
@@ -79,18 +79,18 @@
 			const criticalField = $('#budget-critical-threshold');
 
 			if (isNaN(warning) || warning < 0 || warning > 100) {
-				this.showError(warningField, 'Warning threshold must be between 0 and 100');
+				this.showError(warningField, t('projectcheck', 'Warning threshold must be between 0 and 100'));
 				return false;
 			}
 
 			if (isNaN(critical) || critical < 0 || critical > 100) {
-				this.showError(criticalField, 'Critical threshold must be between 0 and 100');
+				this.showError(criticalField, t('projectcheck', 'Critical threshold must be between 0 and 100'));
 				return false;
 			}
 
 			if (warning >= critical) {
-				this.showError(warningField, 'Warning threshold must be less than critical threshold');
-				this.showError(criticalField, 'Critical threshold must be greater than warning threshold');
+				this.showError(warningField, t('projectcheck', 'Warning threshold must be less than critical threshold'));
+				this.showError(criticalField, t('projectcheck', 'Critical threshold must be greater than warning threshold'));
 				return false;
 			}
 

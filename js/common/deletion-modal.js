@@ -41,7 +41,7 @@
 
         currentModal = document.getElementById('projectcheck-deletion-modal');
         if (!currentModal) {
-            console.error('Failed to create deletion modal');
+            console.error(t('projectcheck', 'Failed to create deletion modal'));
             return;
         }
 
@@ -71,8 +71,8 @@
                 <div class="projectcheck-deletion-modal__backdrop"></div>
                 <div class="projectcheck-deletion-modal__container" role="dialog" aria-labelledby="deletion-modal-title" aria-modal="true">
                     <div class="projectcheck-deletion-modal__header">
-                        <h2 id="deletion-modal-title" class="projectcheck-deletion-modal__title">Confirm Deletion</h2>
-                        <button class="projectcheck-deletion-modal__close" aria-label="Close modal" type="button">
+                        <h2 id="deletion-modal-title" class="projectcheck-deletion-modal__title">${t('projectcheck', 'Confirm Deletion')}</h2>
+                        <button class="projectcheck-deletion-modal__close" aria-label="${t('projectcheck', 'Close modal')}" type="button">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M15.898,4.045c-0.271-0.272-0.713-0.272-0.986,0l-4.71,4.711L5.493,4.045c-0.272-0.272-0.714-0.272-0.986,0s-0.272,0.714,0,0.986l4.709,4.711l-4.71,4.711c-0.272,0.271-0.272,0.713,0,0.986c0.136,0.136,0.314,0.203,0.492,0.203c0.179,0,0.357-0.067,0.493-0.203l4.711-4.711l4.71,4.711c0.136,0.136,0.314,0.203,0.494,0.203c0.18,0,0.357-0.067,0.493-0.203c0.272-0.273,0.272-0.715,0-0.986L10.187,9.742l4.711-4.711C16.17,4.759,16.17,4.317,15.898,4.045z"/>
                             </svg>
@@ -81,7 +81,7 @@
                     <div class="projectcheck-deletion-modal__body">
                         <div class="projectcheck-deletion-modal__loading">
                             <div class="projectcheck-deletion-modal__spinner"></div>
-                            <span>Analyzing dependencies...</span>
+                            <span>${t('projectcheck', 'Analyzing dependencies...')}</span>
                         </div>
                     </div>
                 </div>
@@ -179,12 +179,12 @@
                     currentDependencies = data.impact;
                     displayDependencyInfo(data.impact);
                 } else {
-                    displayError(data.error || 'Failed to load dependency information');
+                    displayError(data.error || t('projectcheck', 'Failed to load dependency information'));
                 }
             })
             .catch(error => {
                 console.error('Error loading dependencies:', error);
-                displayError('Failed to load dependency information');
+                displayError(t('projectcheck', 'Failed to load dependency information'));
             });
     }
 
@@ -233,9 +233,9 @@
         const entityName = currentEntity.name || 'this item';
         let content = `
             <div class="projectcheck-deletion-modal__warning">
-                <h3 class="projectcheck-deletion-modal__warning-title">Warning</h3>
+                <h3 class="projectcheck-deletion-modal__warning-title">${t('projectcheck', 'Warning')}</h3>
                 <p class="projectcheck-deletion-modal__warning-message">
-                    Are you sure you want to delete <strong>${entityName}</strong>? This action cannot be undone.
+                    ${t('projectcheck', 'Are you sure you want to delete')} <strong>${entityName}</strong>? ${t('projectcheck', 'This action cannot be undone.')}
                 </p>
             </div>
         `;
@@ -244,12 +244,12 @@
         if (hasDependencies(impact)) {
             content += `
                 <div class="projectcheck-deletion-modal__impact">
-                    <h3 class="projectcheck-deletion-modal__impact-title">Impact Analysis</h3>
+                    <h3 class="projectcheck-deletion-modal__impact-title">${t('projectcheck', 'Impact Analysis')}</h3>
                     <div class="projectcheck-deletion-modal__impact-list">
                         ${createImpactList(impact)}
                     </div>
                     <p class="projectcheck-deletion-modal__impact-summary">
-                        Total items affected: <span class="projectcheck-deletion-modal__impact-total">${getTotalImpact(impact)}</span>
+                        ${t('projectcheck', 'Total items affected')}: <span class="projectcheck-deletion-modal__impact-total">${getTotalImpact(impact)}</span>
                     </p>
                 </div>
             `;
@@ -264,10 +264,10 @@
         content += `
             <div class="projectcheck-deletion-modal__actions">
                 <button type="button" class="projectcheck-deletion-modal__btn projectcheck-deletion-modal__btn--cancel">
-                    Cancel
+                    ${t('projectcheck', 'Cancel')}
                 </button>
                 <button type="button" class="projectcheck-deletion-modal__btn projectcheck-deletion-modal__btn--delete">
-                    Delete
+                    ${t('projectcheck', 'Delete')}
                 </button>
             </div>
         `;
@@ -304,31 +304,31 @@
         switch (currentEntity.type) {
             case 'project':
                 if (impact.time_entries > 0) {
-                    list += `<li>${impact.time_entries} time entries will be deleted</li>`;
+                    list += `<li>${impact.time_entries} ${t('projectcheck', 'time entries will be deleted')}</li>`;
                 }
                 if (impact.project_members > 0) {
-                    list += `<li>${impact.project_members} team members will be removed</li>`;
+                    list += `<li>${impact.project_members} ${t('projectcheck', 'team members will be removed')}</li>`;
                 }
                 break;
             case 'customer':
                 if (impact.projects > 0) {
-                    list += `<li>${impact.projects} projects are associated</li>`;
+                    list += `<li>${impact.projects} ${t('projectcheck', 'projects are associated')}</li>`;
                 }
                 if (impact.time_entries > 0) {
-                    list += `<li>${impact.time_entries} time entries across all projects</li>`;
+                    list += `<li>${impact.time_entries} ${t('projectcheck', 'time entries across all projects')}</li>`;
                 }
                 if (impact.project_members > 0) {
-                    list += `<li>${impact.project_members} team members across all projects</li>`;
+                    list += `<li>${impact.project_members} ${t('projectcheck', 'team members across all projects')}</li>`;
                 }
                 break;
             case 'member':
                 if (impact.time_entries > 0) {
-                    list += `<li>${impact.time_entries} time entries will remain (unchanged)</li>`;
+                    list += `<li>${impact.time_entries} ${t('projectcheck', 'time entries will remain (unchanged)')}</li>`;
                 }
                 break;
         }
 
-        return list ? `<ul>${list}</ul>` : '<p>No dependencies found.</p>';
+        return list ? `<ul>${list}</ul>` : `<p>${t('projectcheck', 'No dependencies found.')}</p>`;
     }
 
     /**
@@ -355,31 +355,31 @@
     function createStrategySelection() {
         return `
             <div class="projectcheck-deletion-modal__strategy">
-                <h3 class="projectcheck-deletion-modal__strategy-title">Deletion Strategy</h3>
+                <h3 class="projectcheck-deletion-modal__strategy-title">${t('projectcheck', 'Deletion Strategy')}</h3>
                 <div class="projectcheck-deletion-modal__strategy-options">
                     <label class="projectcheck-deletion-modal__strategy-option">
                         <input type="radio" name="deletion-strategy" value="restrict" checked>
                         <span class="projectcheck-deletion-modal__strategy-label">
-                            <strong>Restrict</strong> - Only delete if no projects exist
+                            <strong>${t('projectcheck', 'Restrict')}</strong> - ${t('projectcheck', 'Only delete if no projects exist')}
                         </span>
                     </label>
                     <label class="projectcheck-deletion-modal__strategy-option">
                         <input type="radio" name="deletion-strategy" value="cascade">
                         <span class="projectcheck-deletion-modal__strategy-label">
-                            <strong>Cascade</strong> - Delete customer and all associated projects
+                            <strong>${t('projectcheck', 'Cascade')}</strong> - ${t('projectcheck', 'Delete customer and all associated projects')}
                         </span>
                     </label>
                     <label class="projectcheck-deletion-modal__strategy-option">
                         <input type="radio" name="deletion-strategy" value="reassign">
                         <span class="projectcheck-deletion-modal__strategy-label">
-                            <strong>Reassign</strong> - Move projects to another customer
+                            <strong>${t('projectcheck', 'Reassign')}</strong> - ${t('projectcheck', 'Move projects to another customer')}
                         </span>
                     </label>
                 </div>
                 <div class="projectcheck-deletion-modal__reassign-options" style="display: none;">
-                    <label for="reassign-customer">Reassign to customer:</label>
+                    <label for="reassign-customer">${t('projectcheck', 'Reassign to customer:')}</label>
                     <select id="reassign-customer" name="reassign-customer-id">
-                        <option value="">Select customer...</option>
+                        <option value="">${t('projectcheck', 'Select customer...')}</option>
                     </select>
                 </div>
             </div>
@@ -438,7 +438,7 @@
 
         // This would typically load from an API endpoint
         // For now, we'll use a placeholder
-        select.innerHTML = '<option value="">Select customer...</option>';
+        select.innerHTML = `<option value="">${t('projectcheck', 'Select customer...')}</option>`;
     }
 
     /**
@@ -450,7 +450,7 @@
         const deleteBtn = currentModal.querySelector('.projectcheck-deletion-modal__btn--delete');
         if (deleteBtn) {
             deleteBtn.disabled = true;
-            deleteBtn.textContent = 'Deleting...';
+            deleteBtn.textContent = t('projectcheck', 'Deleting...');
         }
 
         // Customer deletions use POST with form data, others use DELETE
@@ -497,7 +497,7 @@
             })
             .then(data => {
                 if (data.success) {
-                    showSuccessMessage(data.message || 'Item deleted successfully');
+                    showSuccessMessage(data.message || t('projectcheck', 'Item deleted successfully'));
                     closeDeletionModal();
 
                     // Trigger success callback
@@ -505,13 +505,13 @@
                         window.projectcheckDeletionModal.onSuccess(currentEntity);
                     }
                 } else {
-                    showErrorMessage(data.error || 'Failed to delete item');
+                    showErrorMessage(data.error || t('projectcheck', 'Failed to delete item'));
                     resetDeleteButton();
                 }
             })
             .catch(error => {
                 console.error('Deletion error:', error);
-                showErrorMessage('An error occurred while deleting the item');
+                showErrorMessage(t('projectcheck', 'An error occurred while deleting the item'));
                 resetDeleteButton();
             });
     }
@@ -523,7 +523,7 @@
         const deleteBtn = currentModal.querySelector('.projectcheck-deletion-modal__btn--delete');
         if (deleteBtn) {
             deleteBtn.disabled = false;
-            deleteBtn.textContent = 'Delete';
+            deleteBtn.textContent = t('projectcheck', 'Delete');
         }
     }
 
@@ -537,11 +537,11 @@
         if (body) {
             body.innerHTML = `
                 <div class="projectcheck-deletion-modal__error">
-                    <h3>Error</h3>
+                    <h3>${t('projectcheck', 'Error')}</h3>
                     <p>${message}</p>
                     <div class="projectcheck-deletion-modal__actions">
                         <button type="button" class="projectcheck-deletion-modal__btn projectcheck-deletion-modal__btn--cancel">
-                            Close
+                            ${t('projectcheck', 'Close')}
                         </button>
                     </div>
                 </div>

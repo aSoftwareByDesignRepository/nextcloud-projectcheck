@@ -461,7 +461,7 @@
 					// Show success message
 					showMessage('Time entry deleted successfully!', 'success');
 				} else {
-					showMessage(data.message || 'Failed to delete time entry', 'error');
+					showMessage(data.message || t('projectcheck', 'Failed to delete time entry'), 'error');
 				}
 			})
 			.catch(error => {

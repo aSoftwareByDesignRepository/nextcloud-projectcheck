@@ -24,7 +24,7 @@
 		// Get customer ID from URL
 		const customerId = getCustomerIdFromUrl();
 		if (!customerId) {
-			showError('Customer ID not found');
+			showError(t('projectcheck', 'Customer ID not found'));
 			return;
 		}
 
@@ -68,7 +68,7 @@
 		})
 			.then(response => {
 				if (!response.ok) {
-					throw new Error('Failed to load projects');
+					throw new Error(t('projectcheck', 'Failed to load projects'));
 				}
 				return response.json();
 			})
@@ -81,7 +81,7 @@
 			})
 			.catch(error => {
 				console.error('Error loading projects:', error);
-				showError('Failed to load projects');
+				showError(t('projectcheck', 'Failed to load projects'));
 			});
 	}
 

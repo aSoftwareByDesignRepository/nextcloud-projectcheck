@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Loading State Component for ProjectControl App
+ * Loading State Component for ProjectCheck App
  * 
  * This template provides various loading states and skeleton screens
  * for different content types.

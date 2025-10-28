@@ -249,7 +249,7 @@ style('projectcheck', 'customer-statistics');
 									<div class="yearly-progress-item">
 										<div class="yearly-progress-label"><?php p($l->t('Hours Share')); ?></div>
 										<div class="yearly-progress-bar">
-											<div class="yearly-progress-fill" style="width: <?php p($totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0); ?>%"></div>
+											<div class="yearly-progress-fill" data-width="<?php p($totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0); ?>"></div>
 										</div>
 										<div class="yearly-progress-percentage"><?php p($totalHours > 0 ? round(($yearData['total_hours'] / $totalHours) * 100, 1) : 0); ?>%</div>
 									</div>
@@ -589,6 +589,11 @@ style('projectcheck', 'customer-statistics');
 <script nonce="<?php p($_['cspNonce']) ?>">
 	// Load customer statistics only (projects are now rendered server-side)
 	document.addEventListener('DOMContentLoaded', function() {
+		// Set widths for progress bars using data attributes
+		document.querySelectorAll('[data-width]').forEach(function(el) {
+			el.style.width = el.getAttribute('data-width') + '%';
+		});
+		
 		loadCustomerStats();
 	});
 

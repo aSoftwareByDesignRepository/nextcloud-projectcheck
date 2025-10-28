@@ -263,7 +263,7 @@
                     // Show success message
                     showMessage('Customer deleted successfully!', 'success');
                 } else {
-                    showMessage(data.error || data.message || 'Failed to delete customer', 'error');
+                    showMessage(data.error || data.message || t('projectcheck', 'Failed to delete customer'), 'error');
                 }
             })
             .catch(error => {

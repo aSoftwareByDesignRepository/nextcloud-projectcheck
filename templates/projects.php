@@ -335,8 +335,7 @@ Util::addStyle('projectcheck', 'navigation');
                                         <button type="button" class="action-item delete-project-btn"
                                             data-project-id="<?php p($project->getId()); ?>"
                                             data-project-name="<?php p($project->getName()); ?>"
-                                            title="<?php p($l->t('Delete Project')); ?>"
-                                            onclick="console.log('Delete button clicked directly, project ID: <?php p($project->getId()); ?>');">
+                                            title="<?php p($l->t('Delete Project')); ?>">
                                             <span class="icon icon-delete"></span>
                                         </button>
                                     </div>

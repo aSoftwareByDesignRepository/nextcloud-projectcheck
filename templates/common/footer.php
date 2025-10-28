@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Common Footer Template for ProjectControl App
+ * Common Footer Template for ProjectCheck App
  * 
  * This template provides the footer section with links, copyright information,
  * and additional navigation options.
@@ -26,9 +26,9 @@ $currentYear = date('Y');
                 <div class="footer__section">
                     <div class="footer__logo">
                         <img src="<?php print_unescaped(image_path($appName, 'logo.svg')); ?>"
-                            alt="<?php p($l->t('ProjectControl')); ?>"
+                            alt="<?php p($l->t('ProjectCheck')); ?>"
                             class="footer__logo-image">
-                        <span class="footer__logo-text"><?php p($l->t('ProjectControl')); ?></span>
+                        <span class="footer__logo-text"><?php p($l->t('ProjectCheck')); ?></span>
                     </div>
                     <p class="footer__description">
                         <?php p($l->t('Professional project and time management for Nextcloud.')); ?>
@@ -143,7 +143,7 @@ $currentYear = date('Y');
                 <div class="footer__bottom-content">
                     <div class="footer__copyright">
                         <p class="footer__copyright-text">
-                            &copy; <?php p($currentYear); ?> <?php p($l->t('ProjectControl')); ?>.
+                            &copy; <?php p($currentYear); ?> <?php p($l->t('ProjectCheck')); ?>.
                             <?php p($l->t('Built for Nextcloud.')); ?>
                         </p>
                     </div>

@@ -15,7 +15,7 @@ Util::addStyle('projectcheck', 'budget-alerts');
 Util::addStyle('projectcheck', 'custom-icons');
 Util::addStyle('projectcheck', 'navigation');
 
-if (!isset($project) || !($project instanceof \OCA\ProjectControl\Db\Project)) {
+if (!isset($project) || !($project instanceof \OCA\ProjectCheck\Db\Project)) {
     throw new Exception('Project not found');
 }
 
@@ -198,14 +198,14 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                                     <div class="yearly-progress-item">
                                         <div class="yearly-progress-label"><?php p($l->t('Hours Share')); ?></div>
                                         <div class="yearly-progress-bar">
-                                            <div class="yearly-progress-fill" style="width: <?php p($totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0); ?>%"></div>
+                                            <div class="yearly-progress-fill" data-width="<?php p($totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0); ?>"></div>
                                         </div>
                                         <div class="yearly-progress-percentage"><?php p($totalHours > 0 ? round(($yearData['total_hours'] / $totalHours) * 100, 1) : 0); ?>%</div>
                                     </div>
                                     <div class="yearly-progress-item">
                                         <div class="yearly-progress-label"><?php p($l->t('Cost Share')); ?></div>
                                         <div class="yearly-progress-bar">
-                                            <div class="yearly-progress-fill" style="width: <?php p($totalCost > 0 ? ($yearData['total_cost'] / $totalCost) * 100 : 0); ?>%"></div>
+                                            <div class="yearly-progress-fill" data-width="<?php p($totalCost > 0 ? ($yearData['total_cost'] / $totalCost) * 100 : 0); ?>"></div>
                                         </div>
                                         <div class="yearly-progress-percentage"><?php p($totalCost > 0 ? round(($yearData['total_cost'] / $totalCost) * 100, 1) : 0); ?>%</div>
                                     </div>
@@ -386,10 +386,10 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                         <div class="budget-progress">
                             <?php if (isset($budgetInfo['consumption_percentage'])): ?>
                                 <div class="budget-progress-fill budget-<?php p($budgetInfo['warning_level']); ?>"
-                                    style="width: <?php p(min(100, $budgetInfo['consumption_percentage'])); ?>%"></div>
+                                    data-width="<?php p(min(100, $budgetInfo['consumption_percentage'])); ?>"></div>
                             <?php else: ?>
                                 <div class="budget-progress-fill <?php echo $warningLevel; ?>"
-                                    style="width: <?php p(min(100, ($budgetConsumption / max(1, $project->getTotalBudget() ?? 1)) * 100)); ?>%"></div>
+                                    data-width="<?php p(min(100, ($budgetConsumption / max(1, $project->getTotalBudget() ?? 1)) * 100)); ?>"></div>
                             <?php endif; ?>
                         </div>
                         <div class="budget-breakdown">
@@ -562,7 +562,7 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                 <div class="section-header">
                     <h3><i class="icon-user-custom"></i> <?php p($l->t('Team Members')); ?></h3>
                     <div class="section-header-actions">
-                        <button type="button" class="button primary" onclick="showAddTeamMemberModal()">
+                        <button type="button" class="button primary" id="add-team-member-btn">
                             <i class="icon-add-custom"></i>
                             <?php p($l->t('Add Team Member')); ?>
                         </button>
@@ -607,7 +607,7 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
     <div class="modal-content">
         <div class="modal-header">
             <h3><?php p($l->t('Change Project Status')); ?></h3>
-            <span class="close" onclick="closeStatusChangeModal()">&times;</span>
+            <span class="close" id="close-status-modal">&times;</span>
         </div>
         <div class="modal-body">
             <form id="statusChangeForm">
@@ -627,22 +627,56 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
             </form>
         </div>
         <div class="modal-footer">
-            <button type="button" class="button secondary" onclick="closeStatusChangeModal()"><?php p($l->t('Cancel')); ?></button>
-            <button type="button" class="button primary" onclick="submitStatusChange()"><?php p($l->t('Update Status')); ?></button>
+            <button type="button" class="button secondary" id="cancel-status-change"><?php p($l->t('Cancel')); ?></button>
+            <button type="button" class="button primary" id="submit-status-change"><?php p($l->t('Update Status')); ?></button>
         </div>
     </div>
 </div>
 
 <script nonce="<?php p($_['cspNonce']) ?>">
+    // Event listeners for buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set widths for progress bars using data attributes
+        document.querySelectorAll('[data-width]').forEach(function(el) {
+            el.style.width = el.getAttribute('data-width') + '%';
+        });
+
+        const addTeamMemberBtn = document.getElementById('add-team-member-btn');
+        if (addTeamMemberBtn) {
+            addTeamMemberBtn.addEventListener('click', showAddTeamMemberModal);
+        }
+
+        const closeStatusModal = document.getElementById('close-status-modal');
+        if (closeStatusModal) {
+            closeStatusModal.addEventListener('click', closeStatusChangeModal);
+        }
+
+        const cancelStatusChange = document.getElementById('cancel-status-change');
+        if (cancelStatusChange) {
+            cancelStatusChange.addEventListener('click', closeStatusChangeModal);
+        }
+
+        const submitStatusChange = document.getElementById('submit-status-change');
+        if (submitStatusChange) {
+            submitStatusChange.addEventListener('click', submitStatusChangeFunc);
+        }
+    });
+
     function showStatusChangeModal() {
-        document.getElementById('statusChangeModal').style.display = 'block';
+        const modal = document.getElementById('statusChangeModal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
     }
 
     function closeStatusChangeModal() {
-        document.getElementById('statusChangeModal').style.display = 'none';
+        const modal = document.getElementById('statusChangeModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
-    function submitStatusChange() {
+    function submitStatusChangeFunc() {
         const form = document.getElementById('statusChangeForm');
         const formData = new FormData(form);
 
@@ -659,24 +693,24 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert('Error updating status: ' + data.message);
+                    alert('<?php p($l->t('Error updating status')); ?>: ' + data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error updating status');
+                alert('<?php p($l->t('Error updating status')); ?>');
             });
     }
 
     function confirmDelete() {
-        if (confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+        if (confirm('<?php p($l->t('Are you sure you want to delete this project? This action cannot be undone.')); ?>')) {
             window.location.href = '<?php p($urlGenerator->linkToRoute('projectcheck.project.delete', ['id' => $projectId])); ?>';
         }
     }
 
     function showAddTeamMemberModal() {
         // Implement team member modal functionality
-        alert('Add team member functionality will be implemented here');
+        alert('<?php p($l->t('Add team member functionality will be implemented here')); ?>');
     }
 
     // Member removal functionality
@@ -716,9 +750,9 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
 
                 // Show success message
                 if (typeof OC !== 'undefined' && OC.Notification) {
-                    OC.Notification.showTemporary('Team member removed successfully');
+                    OC.Notification.showTemporary('<?php p($l->t('Team member removed successfully')); ?>');
                 } else {
-                    alert('Team member removed successfully');
+                    alert('<?php p($l->t('Team member removed successfully')); ?>');
                 }
             },
             onCancel: function() {
@@ -752,17 +786,17 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
 
                     // Show success message
                     if (typeof OC !== 'undefined' && OC.Notification) {
-                        OC.Notification.showTemporary('Team member removed successfully');
+                        OC.Notification.showTemporary('<?php p($l->t('Team member removed successfully')); ?>');
                     } else {
-                        alert('Team member removed successfully');
+                        alert('<?php p($l->t('Team member removed successfully')); ?>');
                     }
                 } else {
-                    alert('Error: ' + (data.error || 'Failed to remove team member'));
+                    alert('<?php p($l->t('Error')); ?>: ' + (data.error || '<?php p($l->t('Failed to remove team member')); ?>'));
                 }
             })
             .catch(error => {
                 console.error('Error removing member:', error);
-                alert('Error removing team member. Please try again.');
+                alert('<?php p($l->t('Error removing team member. Please try again.')); ?>');
             });
     }
 

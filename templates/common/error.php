@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Error State Component for ProjectControl App
+ * Error State Component for ProjectCheck App
  * 
  * This template provides various error states and empty states
  * for different scenarios.
@@ -43,7 +43,7 @@ $appName = 'projectcheck';
                         <?php if (isset($action['type']) && $action['type'] === 'button'): ?>
                             <button type="button"
                                 class="btn <?php echo isset($action['variant']) ? 'btn--' . $action['variant'] : 'btn--primary'; ?>"
-                                <?php echo isset($action['onclick']) ? 'onclick="' . $action['onclick'] . '"' : ''; ?>>
+                                <?php echo isset($action['data']) ? 'data-action="' . $action['data'] . '"' : ''; ?>>
                                 <?php if (isset($action['icon'])): ?>
                                     <span class="btn__icon"><?php p($action['icon']); ?></span>
                                 <?php endif; ?>
@@ -111,10 +111,10 @@ $appName = 'projectcheck';
                         <?php p($l->t('Go Back')); ?>
                     </a>
                 <?php endif; ?>
-                <button type="button" class="btn btn--primary" onclick="contactAdmin()">
+                <a href="mailto:admin@example.com" class="btn btn--primary">
                     <span class="btn__icon">📧</span>
                     <?php p($l->t('Contact Administrator')); ?>
-                </button>
+                </a>
             </div>
         </div>
     </div>
@@ -132,15 +132,15 @@ $appName = 'projectcheck';
             <p class="error-state__message"><?php p($errorMessage); ?></p>
             <div class="error-state__actions">
                 <?php if ($showRetry && $retryAction): ?>
-                    <button type="button" class="btn btn--primary" onclick="<?php p($retryAction); ?>">
+                    <a href="<?php print_unescaped($retryAction); ?>" class="btn btn--primary">
                         <span class="btn__icon">🔄</span>
                         <?php p($l->t('Try Again')); ?>
-                    </button>
+                    </a>
                 <?php endif; ?>
-                <button type="button" class="btn btn--secondary" onclick="window.location.reload()">
+                <a href="<?php print_unescaped($_SERVER['REQUEST_URI']); ?>" class="btn btn--secondary">
                     <span class="btn__icon">🔄</span>
                     <?php p($l->t('Refresh Page')); ?>
-                </button>
+                </a>
             </div>
         </div>
     </div>
@@ -157,10 +157,6 @@ $appName = 'projectcheck';
             <h3 class="error-state__title"><?php p($errorTitle); ?></h3>
             <p class="error-state__message"><?php p($errorMessage); ?></p>
             <div class="error-state__actions">
-                <button type="button" class="btn btn--primary" onclick="fixErrors()">
-                    <span class="btn__icon">🔧</span>
-                    <?php p($l->t('Fix Errors')); ?>
-                </button>
                 <?php if ($showBackButton && $backUrl): ?>
                     <a href="<?php print_unescaped($backUrl); ?>" class="btn btn--secondary">
                         <span class="btn__icon">←</span>
@@ -187,10 +183,10 @@ $appName = 'projectcheck';
             <?php endif; ?>
             <div class="error-state__actions">
                 <?php if ($showRetry && $retryAction): ?>
-                    <button type="button" class="btn btn--primary" onclick="<?php p($retryAction); ?>">
+                    <a href="<?php print_unescaped($retryAction); ?>" class="btn btn--primary">
                         <span class="btn__icon">🔄</span>
                         <?php p($l->t('Try Again')); ?>
-                    </button>
+                    </a>
                 <?php endif; ?>
                 <?php if ($showBackButton && $backUrl): ?>
                     <a href="<?php print_unescaped($backUrl); ?>" class="btn btn--secondary">
@@ -312,8 +308,8 @@ $appName = 'projectcheck';
     function contactAdmin() {
         // Open contact form or email client
         const email = 'admin@example.com';
-        const subject = '<?php p($l->t('Permission Issue - ProjectControl')); ?>';
-        const body = '<?php p($l->t('I am experiencing a permission issue in ProjectControl. Please help.')); ?>';
+        const subject = '<?php p($l->t('Permission Issue - ProjectCheck')); ?>';
+        const body = '<?php p($l->t('I am experiencing a permission issue in ProjectCheck. Please help.')); ?>';
 
         window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
     }

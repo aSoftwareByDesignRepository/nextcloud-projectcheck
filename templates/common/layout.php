@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Base Layout Template for ProjectControl App
+ * Base Layout Template for ProjectCheck App
  * 
  * This template provides the foundation HTML structure that all pages extend.
  * It includes common meta tags, CSS, JavaScript, and semantic HTML structure.
@@ -18,7 +18,7 @@ $appName = 'projectcheck';
 $appVersion = \OC::$server->getAppManager()->getAppVersion($appName);
 
 // Get the page title and meta information
-$pageTitle = isset($pageTitle) ? $pageTitle : $l->t('ProjectControl');
+$pageTitle = isset($pageTitle) ? $pageTitle : $l->t('ProjectCheck');
 $pageDescription = isset($pageDescription) ? $pageDescription : $l->t('Project and time management for Nextcloud');
 $pageKeywords = isset($pageKeywords) ? $pageKeywords : $l->t('project, time, management, nextcloud');
 
@@ -80,14 +80,14 @@ try {
     <link rel="apple-touch-icon" href="<?php print_unescaped(image_path($appName, 'apple-touch-icon.png')); ?>">
 
     <!-- Page Title -->
-    <title><?php p($pageTitle); ?> - <?php p($l->t('ProjectControl')); ?></title>
+    <title><?php p($pageTitle); ?> - <?php p($l->t('ProjectCheck')); ?></title>
 
     <!-- Nextcloud Core Styles -->
     <?php foreach ($_['cssfiles'] as $cssfile): ?>
         <link rel="stylesheet" href="<?php print_unescaped($cssfile); ?>">
     <?php endforeach; ?>
 
-    <!-- ProjectControl Common Styles -->
+    <!-- ProjectCheck Common Styles -->
     <link rel="stylesheet" href="<?php print_unescaped(link_to($appName, 'css/common/colors.css')); ?>">
     <link rel="stylesheet" href="<?php print_unescaped(link_to($appName, 'css/common/typography.css')); ?>">
     <link rel="stylesheet" href="<?php print_unescaped(link_to($appName, 'css/common/utilities.css')); ?>">
@@ -108,7 +108,7 @@ try {
         <script src="<?php print_unescaped($jsfile); ?>"></script>
     <?php endforeach; ?>
 
-    <!-- ProjectControl Common Scripts -->
+    <!-- ProjectCheck Common Scripts -->
     <script src="<?php print_unescaped(link_to($appName, 'js/common/layout.js')); ?>"></script>
     <script src="<?php print_unescaped(link_to($appName, 'js/common/components.js')); ?>"></script>
     <script src="<?php print_unescaped(link_to($appName, 'js/common/utils.js')); ?>"></script>
@@ -239,20 +239,20 @@ try {
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize common components
-            if (typeof ProjectControlLayout !== 'undefined') {
-                ProjectControlLayout.init();
+            if (typeof ProjectCheckLayout !== 'undefined') {
+                ProjectCheckLayout.init();
             }
 
-            if (typeof ProjectControlTheme !== 'undefined') {
-                ProjectControlTheme.init();
+            if (typeof ProjectCheckTheme !== 'undefined') {
+                ProjectCheckTheme.init();
             }
 
-            if (typeof ProjectControlValidation !== 'undefined') {
-                ProjectControlValidation.init();
+            if (typeof ProjectCheckValidation !== 'undefined') {
+                ProjectCheckValidation.init();
             }
 
-            if (typeof ProjectControlMessaging !== 'undefined') {
-                ProjectControlMessaging.init();
+            if (typeof ProjectCheckMessaging !== 'undefined') {
+                ProjectCheckMessaging.init();
             }
 
             // Page-specific initialization
@@ -299,8 +299,8 @@ try {
                     .then(data => {
                         if (data.success) {
                             // Show success message
-                            if (typeof ProjectControlMessaging !== 'undefined') {
-                                ProjectControlMessaging.show('success', data.message || 'Operation completed successfully');
+                            if (typeof ProjectCheckMessaging !== 'undefined') {
+                                ProjectCheckMessaging.show('success', data.message || 'Operation completed successfully');
                             }
 
                             // Redirect if specified
@@ -309,15 +309,15 @@ try {
                             }
                         } else {
                             // Show error message
-                            if (typeof ProjectControlMessaging !== 'undefined') {
-                                ProjectControlMessaging.show('error', data.message || 'An error occurred');
+                            if (typeof ProjectCheckMessaging !== 'undefined') {
+                                ProjectCheckMessaging.show('error', data.message || 'An error occurred');
                             }
                         }
                     })
                     .catch(error => {
                         console.error('Form submission error:', error);
-                        if (typeof ProjectControlMessaging !== 'undefined') {
-                            ProjectControlMessaging.show('error', 'An unexpected error occurred');
+                        if (typeof ProjectCheckMessaging !== 'undefined') {
+                            ProjectCheckMessaging.show('error', 'An unexpected error occurred');
                         }
                     })
                     .finally(() => {

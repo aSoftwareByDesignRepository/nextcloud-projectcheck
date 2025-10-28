@@ -287,12 +287,12 @@
 					// Refresh team members list
 					showTeamMembers(projectId);
 				} else {
-					alert('Error removing team member: ' + data.error);
+					alert(t('projectcheck', 'Error removing team member') + ': ' + data.error);
 				}
 			})
 			.catch(error => {
 				console.error('Error removing team member:', error);
-				alert('Error removing team member');
+				alert(t('projectcheck', 'Error removing team member. Please try again.'));
 			});
 	}
 
@@ -393,21 +393,21 @@
 							projectRow.remove();
 						}
 
-						// Show success message
-						showNotification('Project deleted successfully', 'success');
+					// Show success message
+					showNotification(t('projectcheck', 'Project deleted successfully'), 'success');
 
-						// Reload page to update stats
-						setTimeout(() => {
-							window.location.reload();
-						}, 1000);
-					} else {
-						alert('Error deleting project: ' + (data.error || 'Unknown error'));
-					}
-				})
-				.catch(error => {
-					console.error('Error deleting project:', error);
-					alert('Error deleting project. Please try again.');
-				})
+					// Reload page to update stats
+					setTimeout(() => {
+						window.location.reload();
+					}, 1000);
+				} else {
+					alert(t('projectcheck', 'Error deleting project') + ': ' + (data.error || t('projectcheck', 'Unknown error')));
+				}
+			})
+			.catch(error => {
+				console.error('Error deleting project:', error);
+				alert(t('projectcheck', 'Error deleting project. Please try again.'));
+			})
 				.finally(() => {
 					// Reset button state
 					if (deleteBtn) {
@@ -578,7 +578,7 @@
 			return 'Please enter a valid number';
 		}
 
-		return 'Invalid value';
+		return t('projectcheck', 'Invalid value');
 	}
 
 	/**

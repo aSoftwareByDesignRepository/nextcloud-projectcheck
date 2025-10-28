@@ -42,7 +42,7 @@ if (!isset($_['stats']) || empty($_['stats'])) {
                 <i data-lucide="folder" class="lucide-icon"></i>
             </div>
             <div class="app-info">
-                <h3><?php p($l->t('Project Control')); ?></h3>
+                <h3><?php p($l->t('ProjectCheck')); ?></h3>
                 <p><?php p($l->t('Manage your projects')); ?></p>
             </div>
         </div>
@@ -54,6 +54,12 @@ if (!isset($_['stats']) || empty($_['stats'])) {
             <a href="<?php p($_['dashboardUrl'] ?? '/index.php/apps/projectcheck/dashboard'); ?>">
                 <i data-lucide="home" class="lucide-icon"></i>
                 <span><?php p($l->t('Dashboard')); ?></span>
+            </a>
+        </li>
+        <li class="<?php echo $isTimeEntries ? 'active' : ''; ?>" <?php echo $isTimeEntries ? 'aria-current="page"' : ''; ?>>
+            <a href="<?php p($_['timeEntriesUrl'] ?? '/index.php/apps/projectcheck/time-entries'); ?>">
+                <i data-lucide="clock" class="lucide-icon"></i>
+                <span><?php p($l->t('Time Entries')); ?></span>
             </a>
         </li>
         <li class="<?php echo $isProjects ? 'active' : ''; ?>" <?php echo $isProjects ? 'aria-current="page"' : ''; ?>>
@@ -72,12 +78,6 @@ if (!isset($_['stats']) || empty($_['stats'])) {
             <a href="<?php p($_['employeesUrl'] ?? '/index.php/apps/projectcheck/employees'); ?>">
                 <i data-lucide="user-check" class="lucide-icon"></i>
                 <span><?php p($l->t('Employees')); ?></span>
-            </a>
-        </li>
-        <li class="<?php echo $isTimeEntries ? 'active' : ''; ?>" <?php echo $isTimeEntries ? 'aria-current="page"' : ''; ?>>
-            <a href="<?php p($_['timeEntriesUrl'] ?? '/index.php/apps/projectcheck/time-entries'); ?>">
-                <i data-lucide="clock" class="lucide-icon"></i>
-                <span><?php p($l->t('Time Entries')); ?></span>
             </a>
         </li>
         <li class="<?php echo $isSettings ? 'active' : ''; ?>" <?php echo $isSettings ? 'aria-current="page"' : ''; ?>>
