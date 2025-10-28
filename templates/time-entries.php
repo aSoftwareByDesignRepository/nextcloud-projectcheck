@@ -453,7 +453,8 @@ Util::addStyle('projectcheck', 'navigation');
             }
         });
     });
-</script>        <!-- Project Type Statistics -->
+
+        <!-- Project Type Statistics -->
         <?php if (!empty($_['projectTypeStats'])): ?>
             <div class="section project-type-stats-section compact">
                 <div class="section-header">
