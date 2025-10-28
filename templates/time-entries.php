@@ -365,6 +365,10 @@ Util::addStyle('projectcheck', 'navigation');
 
                 <!-- Action Buttons -->
                 <div class="filter-actions">
+                    <button id="apply-filters" class="btn btn-primary">
+                        <span class="btn-icon">🔍</span>
+                        <?php p($l->t('Apply Filters')); ?>
+                    </button>
                     <button id="clear-filters" class="btn btn-secondary">
                         <span class="btn-icon">🗑️</span>
                         <?php p($l->t('Clear')); ?>

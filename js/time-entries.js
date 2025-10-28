@@ -17,6 +17,7 @@
 		projectFilter: document.getElementById('project-filter'),
 		userFilter: document.getElementById('user-filter'),
 		projectTypeFilter: document.getElementById('project-type-filter'),
+		applyFiltersBtn: document.getElementById('apply-filters'),
 		clearFiltersBtn: document.getElementById('clear-filters'),
 		exportCsvBtn: document.getElementById('export-csv'),
 		timeEntriesTable: document.querySelector('.grid'),
@@ -86,32 +87,18 @@
 	function bindEvents() {
 		console.log('Binding events...');
 
-		// Search functionality
+		// Apply filters button (manual filtering)
+		if (elements.applyFiltersBtn) {
+			elements.applyFiltersBtn.addEventListener('click', applyFilters);
+		}
+
+		// Enter key in search field should also apply filters
 		if (elements.searchInput) {
-			elements.searchInput.addEventListener('input', handleSearch);
-		}
-
-		// Filter functionality
-		if (elements.projectFilter) {
-			elements.projectFilter.addEventListener('change', handleFilter);
-		}
-
-		if (elements.userFilter) {
-			elements.userFilter.addEventListener('change', handleFilter);
-		}
-
-		if (elements.projectTypeFilter) {
-			elements.projectTypeFilter.addEventListener('change', handleFilter);
-		}
-
-		// Date filter functionality
-		const dateFromInput = document.getElementById('date-from-filter');
-		const dateToInput = document.getElementById('date-to-filter');
-		if (dateFromInput) {
-			dateFromInput.addEventListener('change', handleFilter);
-		}
-		if (dateToInput) {
-			dateToInput.addEventListener('change', handleFilter);
+			elements.searchInput.addEventListener('keypress', function(e) {
+				if (e.key === 'Enter') {
+					applyFilters();
+				}
+			});
 		}
 
 		// Clear filters
@@ -136,52 +123,6 @@
 		});
 	}
 
-	/**
-	 * Handle search input
-	 */
-	function handleSearch() {
-		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => {
-			applyFilters();
-		}, 300);
-	}
-
-	/**
-	 * Handle filter changes
-	 */
-	function handleFilter() {
-		validateDateRange();
-		applyFilters();
-	}
-
-	/**
-	 * Validate and fix date range - ensure from-date is before to-date
-	 */
-	function validateDateRange() {
-		const dateFromInput = document.getElementById('date-from-filter');
-		const dateToInput = document.getElementById('date-to-filter');
-
-		if (!dateFromInput || !dateToInput) return;
-
-		const dateFrom = dateFromInput.value;
-		const dateTo = dateToInput.value;
-
-		// Only validate if both dates are set
-		if (dateFrom && dateTo) {
-			const fromDate = new Date(dateFrom);
-			const toDate = new Date(dateTo);
-
-			// If from-date is after to-date, switch them
-			if (fromDate > toDate) {
-				console.log('Date range invalid - switching dates:', { dateFrom, dateTo });
-				dateFromInput.value = dateTo;
-				dateToInput.value = dateFrom;
-
-				// Show a brief notification
-				showMessage('Date range corrected: from-date and to-date have been switched', 'info');
-			}
-		}
-	}
 
 	/**
 	 * Apply all filters
@@ -204,20 +145,20 @@
 		rows.forEach(row => {
 			let showRow = true;
 
-			// Search filter
-			if (searchTerm) {
-				const description = row.querySelector('td:nth-child(6)')?.textContent.toLowerCase() || '';
-				const project = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-				const customer = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+		// Search filter
+		if (searchTerm) {
+			const description = row.querySelector('td:nth-child(7)')?.textContent.toLowerCase() || '';
+			const project = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+			const customer = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
 
-				console.log('Search check:', { searchTerm, description, project, customer });
+			console.log('Search check:', { searchTerm, description, project, customer });
 
-				if (!description.includes(searchTerm) &&
-					!project.includes(searchTerm) &&
-					!customer.includes(searchTerm)) {
-					showRow = false;
-				}
+			if (!description.includes(searchTerm) &&
+				!project.includes(searchTerm) &&
+				!customer.includes(searchTerm)) {
+				showRow = false;
 			}
+		}
 
 			// Project filter
 			if (projectFilter && showRow) {
