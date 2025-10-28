@@ -117,7 +117,7 @@ Util::addStyle('projectcheck', 'time-entries');
         vertical-align: middle;
         margin-right: 4px;
         position: relative;
-        top: -3px;
+        top: -2px;
     }
 
     .employees-table .button .lucide-icon {
@@ -126,7 +126,7 @@ Util::addStyle('projectcheck', 'time-entries');
         margin-right: 6px;
         vertical-align: middle;
         position: relative;
-        top: -3px;
+        top: -2px;
     }
 
     .employee-name-cell {
@@ -155,7 +155,7 @@ Util::addStyle('projectcheck', 'time-entries');
         height: 18px;
         vertical-align: middle;
         position: relative;
-        top: -3px;
+        top: -2px;
         margin-right: 6px;
     }
 
