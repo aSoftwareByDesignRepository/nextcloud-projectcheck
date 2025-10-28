@@ -377,6 +377,9 @@
         "Compare billable vs overhead work to measure this employee's productivity": "Compare billable vs overhead work to measure this employee's productivity",
         "Productivity Analysis": "Productivity Analysis",
         "Compare billable vs overhead work to measure productivity": "Compare billable vs overhead work to measure productivity",
-        "All Employees": "All Employees"
+        "All Employees": "All Employees",
+        "No time entries match your filters": "No time entries match your filters",
+        "Try adjusting your search criteria or clear the filters to see all entries.": "Try adjusting your search criteria or clear the filters to see all entries.",
+        "Reset Filters": "Reset Filters"
     }
 }

@@ -8,15 +8,19 @@
 (function () {
 	'use strict';
 
+	console.log('🚀 TIME ENTRIES JS LOADED - VERSION 2.0.1 - MANUAL FILTER ONLY');
+	console.log('📋 Filter behavior: User must click Apply Filters button');
+	console.log('✅ No automatic filtering on dropdown change');
+
 	// Global variables
 	let searchTimeout = null;
 
-	// DOM elements
+	// DOM elements - NO AUTOMATIC EVENT LISTENERS
 	const elements = {
 		searchInput: document.getElementById('time-entry-search'),
 		projectFilter: document.getElementById('project-filter'),
 		userFilter: document.getElementById('user-filter'),
-		projectTypeFilter: document.getElementById('project-type-filter'),
+		projectTypeFilter: document.getElementById('time-entry-project-type-filter'),
 		applyFiltersBtn: document.getElementById('apply-filters'),
 		clearFiltersBtn: document.getElementById('clear-filters'),
 		exportCsvBtn: document.getElementById('export-csv'),
@@ -106,6 +110,12 @@
 			elements.clearFiltersBtn.addEventListener('click', clearFilters);
 		}
 
+		// Clear filters inline button (in no-results message)
+		const clearFiltersInlineBtn = document.getElementById('clear-filters-inline');
+		if (clearFiltersInlineBtn) {
+			clearFiltersInlineBtn.addEventListener('click', clearFilters);
+		}
+
 		// Export CSV button
 		if (elements.exportCsvBtn) {
 			elements.exportCsvBtn.addEventListener('click', exportToCsv);
@@ -146,6 +156,11 @@
 		let visibleCount = 0;
 
 		rows.forEach(row => {
+			// Skip the no-results row
+			if (row.id === 'no-results-row') {
+				return;
+			}
+
 			let showRow = true;
 
 			// Project filter - use data attribute
@@ -241,13 +256,15 @@
 			dateToInput.value = '';
 		}
 
-		// Show all rows
+		// Show all rows except the no-results row
 		const rows = elements.timeEntriesTbody ? elements.timeEntriesTbody.querySelectorAll('tr') : [];
 		rows.forEach(row => {
-			row.style.display = '';
+			if (row.id !== 'no-results-row') {
+				row.style.display = '';
+			}
 		});
 
-		console.log('All filters cleared, showing all', rows.length, 'rows');
+		console.log('All filters cleared, showing all rows');
 		updateEmptyState();
 	}
 
@@ -255,19 +272,25 @@
 	 * Update empty state visibility
 	 */
 	function updateEmptyState() {
-		const visibleRows = elements.timeEntriesTbody ?
+		// Get all rows except the no-results row
+		const allRows = elements.timeEntriesTbody ?
 			Array.from(elements.timeEntriesTbody.querySelectorAll('tr')).filter(row =>
-				row.style.display !== 'none'
+				row.id !== 'no-results-row'
 			) : [];
+		
+		const visibleRows = allRows.filter(row => row.style.display !== 'none');
+		const noResultsRow = document.getElementById('no-results-row');
 
-		const emptyState = document.querySelector('.emptycontent');
-		if (emptyState) {
-			if (visibleRows.length === 0) {
-				emptyState.style.display = 'block';
-				emptyState.querySelector('h2').textContent = 'No time entries match your filters';
-				emptyState.querySelector('p').textContent = 'Try adjusting your search criteria or clear the filters.';
+		console.log('updateEmptyState: Total rows:', allRows.length, 'Visible rows:', visibleRows.length);
+
+		// Show no-results row if there are rows but none are visible after filtering
+		if (noResultsRow) {
+			if (allRows.length > 0 && visibleRows.length === 0) {
+				noResultsRow.style.display = '';
+				console.log('Showing no-results row');
 			} else {
-				emptyState.style.display = 'none';
+				noResultsRow.style.display = 'none';
+				console.log('Hiding no-results row');
 			}
 		}
 	}

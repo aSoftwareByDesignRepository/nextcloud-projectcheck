@@ -235,6 +235,46 @@ Util::addStyle('projectcheck', 'navigation');
         border: 1px solid var(--color-primary-element);
         color: var(--color-primary-text);
     }
+
+    /* No Results Message Styles */
+    #no-results-row {
+        background: var(--color-background-hover);
+    }
+
+    #no-results-row td {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .no-results-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .no-results-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .no-results-message h3 {
+        margin: 0 0 8px 0;
+        color: var(--color-main-text);
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .no-results-message p {
+        margin: 0 0 16px 0;
+        color: var(--color-text-lighter);
+        font-size: 14px;
+    }
+
+    #clear-filters-inline {
+        margin: 0 auto;
+    }
 </style>
 
 <div id="app-content" data-date-format="<?php p($_['dateFormat']); ?>">
@@ -322,8 +362,8 @@ Util::addStyle('projectcheck', 'navigation');
                     </div>
 
                     <div class="filter-group">
-                        <label for="project-type-filter" class="filter-label"><?php p($l->t('Project Type')); ?></label>
-                        <select id="project-type-filter" class="filter-select">
+                        <label for="time-entry-project-type-filter" class="filter-label"><?php p($l->t('Project Type')); ?></label>
+                        <select id="time-entry-project-type-filter" class="filter-select">
                             <option value=""><?php p($l->t('All Types')); ?></option>
                             <option value="client" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'client') echo 'selected'; ?>>👥 <?php p($l->t('Client Project')); ?></option>
                             <option value="admin" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'admin') echo 'selected'; ?>>⚙️ <?php p($l->t('Administrative')); ?></option>
@@ -370,8 +410,8 @@ Util::addStyle('projectcheck', 'navigation');
                         <?php p($l->t('Apply Filters')); ?>
                     </button>
                     <button id="clear-filters" class="btn btn-secondary">
-                        <span class="btn-icon">🗑️</span>
-                        <?php p($l->t('Clear')); ?>
+                        <span class="btn-icon">🔄</span>
+                        <?php p($l->t('Reset Filters')); ?>
                     </button>
                     <button id="export-csv" class="btn btn-primary">
                         <span class="btn-icon">📊</span>
@@ -405,6 +445,20 @@ Util::addStyle('projectcheck', 'navigation');
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- No Results Message (Hidden by default) -->
+                            <tr id="no-results-row" style="display: none;">
+                                <td colspan="8">
+                                    <div class="no-results-message">
+                                        <div class="no-results-icon">🔍</div>
+                                        <h3><?php p($l->t('No time entries match your filters')); ?></h3>
+                                        <p><?php p($l->t('Try adjusting your search criteria or clear the filters to see all entries.')); ?></p>
+                                        <button id="clear-filters-inline" class="btn btn-secondary">
+                                            <span class="btn-icon">🔄</span>
+                                            <?php p($l->t('Reset Filters')); ?>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                             <?php foreach ($timeEntries as $entry): ?>
                                 <?php
                                 $timeEntry = $entry['timeEntry'];

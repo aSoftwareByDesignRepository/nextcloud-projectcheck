@@ -579,6 +579,9 @@
         "Compare billable vs overhead work to measure this employee's productivity": "Abrechenbare vs. Gemeinkosten vergleichen, um die Produktivität dieses Mitarbeiters zu messen",
         "Productivity Analysis": "Produktivitätsanalyse",
         "Compare billable vs overhead work to measure productivity": "Abrechenbare vs. Gemeinkosten vergleichen, um Produktivität zu messen",
-        "All Employees": "Alle Mitarbeitenden"
+        "All Employees": "Alle Mitarbeitenden",
+        "No time entries match your filters": "Keine Zeiteinträge entsprechen Ihren Filtern",
+        "Try adjusting your search criteria or clear the filters to see all entries.": "Versuchen Sie, Ihre Suchkriterien anzupassen oder die Filter zu löschen, um alle Einträge zu sehen.",
+        "Reset Filters": "Filter zurücksetzen"
     }
 }
