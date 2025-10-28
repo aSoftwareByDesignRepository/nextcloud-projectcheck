@@ -109,6 +109,26 @@ Util::addStyle('projectcheck', 'time-entries');
         vertical-align: middle;
     }
 
+    /* Icon alignment in table cells */
+    .employees-table td .lucide-icon {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 4px;
+        position: relative;
+        top: -1px;
+    }
+
+    .employees-table .button .lucide-icon {
+        width: 16px;
+        height: 16px;
+        margin-right: 6px;
+        vertical-align: middle;
+        position: relative;
+        top: -1px;
+    }
+
     .employee-name-cell {
         font-weight: 500;
     }
@@ -120,6 +140,23 @@ Util::addStyle('projectcheck', 'time-entries');
 
     .employee-name-cell a:hover {
         text-decoration: underline;
+    }
+
+    /* Overview cards icon alignment */
+    .overview-card .lucide-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-block;
+    }
+
+    /* Header actions icon alignment */
+    .header-actions .button .lucide-icon {
+        width: 18px;
+        height: 18px;
+        vertical-align: middle;
+        position: relative;
+        top: -1px;
+        margin-right: 6px;
     }
 
     /* No results message */
@@ -308,21 +345,21 @@ Util::addStyle('projectcheck', 'time-entries');
                                         </a>
                                     </td>
                                     <td>
-                                        <i data-lucide="clock" class="lucide-icon" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                                        <i data-lucide="clock" class="lucide-icon"></i>
                                         <?php p(number_format($employee['total_hours'], 1)); ?>h
                                     </td>
                                     <td>
-                                        <i data-lucide="euro" class="lucide-icon" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                                        <i data-lucide="euro" class="lucide-icon"></i>
                                         €<?php p(number_format($employee['total_cost'], 2)); ?>
                                     </td>
                                     <td>
-                                        <i data-lucide="trending-up" class="lucide-icon" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                                        <i data-lucide="trending-up" class="lucide-icon"></i>
                                         €<?php p(number_format($employee['avg_hourly_rate'], 2)); ?>/h
                                     </td>
                                     <td>
                                         <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $employee['user_id']])); ?>"
                                            class="button primary" title="<?php p($l->t('View Details')); ?>">
-                                            <i data-lucide="eye" class="lucide-icon" style="width: 16px; height: 16px;"></i>
+                                            <i data-lucide="eye" class="lucide-icon"></i>
                                             <?php p($l->t('View Details')); ?>
                                         </a>
                                     </td>
