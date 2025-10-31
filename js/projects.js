@@ -18,6 +18,7 @@
 		statusFilter: document.getElementById('status-filter'),
 		priorityFilter: document.getElementById('priority-filter'),
 		projectTypeFilter: document.getElementById('project-type-filter'),
+		customerFilter: document.getElementById('customer-filter'),
 		clearFiltersBtn: document.getElementById('clear-filters'),
 		projectsTable: document.querySelector('.projects-table'),
 		projectsTbody: document.getElementById('projects-tbody'),
@@ -66,6 +67,10 @@
 
 		if (elements.projectTypeFilter) {
 			elements.projectTypeFilter.addEventListener('change', handleFilter);
+		}
+
+		if (elements.customerFilter) {
+			elements.customerFilter.addEventListener('change', handleFilter);
 		}
 
 		// Clear filters
@@ -155,6 +160,7 @@
 		const status = elements.statusFilter ? elements.statusFilter.value : '';
 		const priority = elements.priorityFilter ? elements.priorityFilter.value : '';
 		const projectType = elements.projectTypeFilter ? elements.projectTypeFilter.value : '';
+		const customerId = elements.customerFilter ? elements.customerFilter.value : '';
 
 		// Build URL with filters
 		const url = new URL(window.location);
@@ -170,6 +176,9 @@
 		if (projectType) url.searchParams.set('project_type', projectType);
 		else url.searchParams.delete('project_type');
 
+		if (customerId) url.searchParams.set('customer_id', customerId);
+		else url.searchParams.delete('customer_id');
+
 		// Navigate to filtered URL
 		window.location.href = url.toString();
 	}
@@ -182,6 +191,7 @@
 		if (elements.statusFilter) elements.statusFilter.value = '';
 		if (elements.priorityFilter) elements.priorityFilter.value = '';
 		if (elements.projectTypeFilter) elements.projectTypeFilter.value = '';
+		if (elements.customerFilter) elements.customerFilter.value = '';
 
 		// Navigate to base URL
 		const url = new URL(window.location);

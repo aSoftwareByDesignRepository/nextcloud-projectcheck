@@ -132,6 +132,7 @@ class ProjectController extends Controller
 			'status' => $this->request->getParam('status', ''),
 			'priority' => $this->request->getParam('priority', ''),
 			'project_type' => $this->request->getParam('project_type', ''),
+			'customer_id' => $this->request->getParam('customer_id', ''),
 			'limit' => intval($this->request->getParam('limit', $defaultItemsPerPage)),
 			'offset' => intval($this->request->getParam('offset', 0)),
 		];
@@ -144,10 +145,14 @@ class ProjectController extends Controller
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService);
 
+		// Get customers for the filter dropdown
+		$customers = $this->customerService->getCustomersForSelect();
+
 		$response = new TemplateResponse($this->appName, 'projects', [
 			'projects' => $enrichedProjects,
 			'filters' => $filters,
 			'stats' => $stats,
+			'customers' => $customers,
 			'createUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.create'),
 			'projectsUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index'),
 			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => 'PROJECT_ID']),

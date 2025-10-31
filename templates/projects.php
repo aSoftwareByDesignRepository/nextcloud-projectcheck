@@ -153,6 +153,17 @@ Util::addStyle('projectcheck', 'navigation');
                         <option value="other" <?php if (($_['filters']['project_type'] ?? '') === 'other') echo 'selected'; ?>><?php p($l->t('Other')); ?></option>
                     </select>
 
+                    <select id="customer-filter">
+                        <option value=""><?php p($l->t('All Customers')); ?></option>
+                        <?php if (!empty($_['customers'])): ?>
+                            <?php foreach ($_['customers'] as $customer): ?>
+                                <option value="<?php p($customer['id']); ?>" <?php if (($_['filters']['customer_id'] ?? '') == $customer['id']) echo 'selected'; ?>>
+                                    <?php p($customer['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+
                     <button id="clear-filters" class="button">
                         <?php p($l->t('Clear Filters')); ?>
                     </button>
