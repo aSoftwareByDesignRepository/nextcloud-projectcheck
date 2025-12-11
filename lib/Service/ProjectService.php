@@ -43,6 +43,9 @@ class ProjectService
 	/** @var IConfig */
 	private $config;
 
+	/** @var ProjectMapper|null */
+	private $projectMapper;
+
 	/**
 	 * ProjectService constructor
 	 *
@@ -51,12 +54,13 @@ class ProjectService
 	 * @param IUserManager $userManager
 	 * @param IConfig $config
 	 */
-	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config)
+	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config, ?ProjectMapper $projectMapper = null)
 	{
 		$this->db = $db;
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->config = $config;
+		$this->projectMapper = $projectMapper ?? new ProjectMapper($db);
 		$this->calculator = new ProjectCalculator();
 	}
 
@@ -273,6 +277,11 @@ class ProjectService
 	{
 		$countFilters = $filters;
 		unset($countFilters['limit'], $countFilters['offset'], $countFilters['sort'], $countFilters['direction']);
+		// Fallback if mapper was not injected (legacy DI)
+		if (!$this->projectMapper) {
+			$this->projectMapper = new \OCA\ProjectCheck\Db\ProjectMapper($this->db);
+		}
+
 		return $this->projectMapper->countWithFilters($countFilters);
 	}
 
