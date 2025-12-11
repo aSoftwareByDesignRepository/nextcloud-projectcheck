@@ -487,6 +487,89 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
             </div>
         </div>
 
+        <!-- Project Files -->
+        <div class="section">
+            <div class="section-header section-header--files">
+                <h3><i class="icon-project-files"></i> <?php p($l->t('Project Files')); ?></h3>
+				<?php if ($canManageFiles): ?>
+					<form id="project-file-upload-form"
+						class="inline-form file-upload-bar"
+						action="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.upload', ['projectId' => $projectId])); ?>"
+						method="POST"
+						enctype="multipart/form-data">
+						<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+						<label class="button secondary ghost" for="project_files_upload">
+							<i class="icon-upload"></i>
+							<?php p($l->t('Select files')); ?>
+						</label>
+						<input type="file"
+							id="project_files_upload"
+							name="project_files[]"
+							aria-label="<?php p($l->t('Upload project files')); ?>"
+							class="file-input-hidden"
+							multiple
+							required>
+					</form>
+				<?php endif; ?>
+            </div>
+            <div class="section-content">
+                <?php if (!empty($projectFiles)): ?>
+                    <ul class="project-files-list">
+                        <?php foreach ($projectFiles as $file): ?>
+                            <li class="project-file-row" data-file-id="<?php p($file->getId()); ?>">
+                                <div class="file-info">
+                                    <i class="icon-file-custom"></i>
+                                    <div class="file-meta">
+                                        <a class="file-name"
+                                            href="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
+                                            target="_blank" rel="noreferrer noopener">
+                                            <?php p($file->getDisplayName()); ?>
+                                        </a>
+                                        <div class="file-details">
+                                            <span><?php p($l->t('Uploaded by %s', [$file->getUploadedBy()])); ?></span>
+                                            <span>•</span>
+                                            <span><?php p($file->getCreatedAt() ? $file->getCreatedAt()->format('d.m.Y H:i') : ''); ?></span>
+                                            <span>•</span>
+                                            <span><?php p(Util::humanFileSize($file->getSize())); ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="file-actions">
+                                    <a class="button secondary"
+                                        href="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
+                                        target="_blank" rel="noreferrer noopener">
+                                        <i class="icon icon-download"></i>
+                                        <?php p($l->t('Download')); ?>
+                                    </a>
+                                    <?php if ($canManageFiles): ?>
+                                        <button type="button"
+                                            class="button danger ghost delete-file-btn"
+                                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.delete', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
+                                            data-file-name="<?php p($file->getDisplayName()); ?>">
+                                            <i class="icon icon-delete"></i>
+                                            <?php p($l->t('Delete')); ?>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <i class="icon-project-files icon-large"></i>
+                        <h3><?php p($l->t('No files uploaded yet')); ?></h3>
+                        <p><?php p($l->t('Add contracts, checklists, or other documents to keep everything in one place.')); ?></p>
+                        <?php if ($canManageFiles): ?>
+                            <label class="button primary" for="project_files_upload">
+                                <i class="icon-add-custom"></i>
+                                <?php p($l->t('Upload files')); ?>
+                            </label>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <!-- Recent Time Entries -->
         <?php if (!empty($timeEntries)): ?>
             <div class="section">
@@ -807,6 +890,69 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
             closeStatusChangeModal();
         }
     }
+</script>
+
+<script nonce="<?php p($_['cspNonce'] ?? '') ?>">
+    document.addEventListener('DOMContentLoaded', () => {
+        const filesList = document.querySelector('.project-files-list');
+        const requestTokenInput = document.querySelector('input[name="requesttoken"]');
+        const requestToken = requestTokenInput ? requestTokenInput.value : (typeof OC !== 'undefined' ? OC.requestToken : '');
+        const fileInput = document.getElementById('project_files_upload');
+        const uploadForm = document.getElementById('project-file-upload-form');
+
+        if (filesList) {
+            filesList.addEventListener('click', async (event) => {
+                const button = event.target.closest('.delete-file-btn');
+                if (!button) {
+                    return;
+                }
+
+                const fileName = button.dataset.fileName || '';
+                if (!confirm('<?php p($l->t('Delete this file?')); ?>' + (fileName ? ' ' + fileName : ''))) {
+                    return;
+                }
+
+                const deleteUrl = button.dataset.deleteUrl;
+                const url = new URL(deleteUrl, window.location.origin);
+                if (requestToken) {
+                    url.searchParams.set('requesttoken', requestToken);
+                }
+                try {
+                    const response = await fetch(url.toString(), {
+                        method: 'DELETE',
+                        headers: {
+                            'requesttoken': requestToken,
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (!response.ok) {
+                        const data = await response.json().catch(() => ({}));
+                        const msg = data.error || 'Failed to delete';
+                        throw new Error(msg);
+                    }
+
+                    const row = button.closest('.project-file-row');
+                    if (row) {
+                        row.remove();
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert(error?.message || '<?php p($l->t('Could not delete the file. Please try again.')); ?>');
+                }
+            });
+        }
+
+        if (fileInput && uploadForm) {
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files && fileInput.files.length > 0) {
+                    uploadForm.submit();
+                }
+            });
+        }
+    });
 </script>
 
 <style nonce="<?php p($_['cspNonce'] ?? '') ?>">

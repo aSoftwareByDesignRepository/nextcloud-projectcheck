@@ -3,15 +3,17 @@
 	flex-direction: row;
 	align-items: center;
 	gap: 6px;
-	flex-wrap: nowrap;
+	flex-wrap: wrap;
 }
 
 .project-name-cell .project-title {
 	flex: 1 1 auto;
-	min-width: 0;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	min-width: 120px;
+	white-space: normal;
+	overflow: visible;
+	text-overflow: clip;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
 }
 
 .project-badges {
@@ -33,6 +35,158 @@
 	display: inline-flex;
 	align-items: center;
 	vertical-align: middle;
+}
+
+.project-files-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.project-file-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	padding: 12px 14px;
+	gap: 12px;
+}
+
+.project-file-row .file-info {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.project-file-row .file-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.project-file-row .file-name {
+	font-weight: 600;
+	color: var(--color-text);
+	text-decoration: none;
+	word-break: break-word;
+}
+
+.project-file-row .file-name:hover {
+	color: var(--color-primary);
+}
+
+.project-file-row .file-details {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.85rem;
+}
+
+.project-file-row .file-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	min-width: 180px;
+}
+
+.project-file-row .file-actions .button {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.95rem;
+	padding: 8px 12px;
+}
+
+.project-file-row .file-actions .button i {
+	display: block;
+}
+
+.inline-form {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.section-header--files {
+	align-items: center;
+}
+
+.section-header--files h3 {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.section-header--files h3 i {
+	display: inline-block;
+	color: var(--color-primary);
+	background-color: currentColor;
+	width: 24px;
+	height: 24px;
+	mask-size: contain;
+	-webkit-mask-size: contain;
+	vertical-align: middle;
+}
+
+.icon-project-files {
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	color: currentColor;
+	background-color: currentColor;
+	mask: url('../img/icons/project-files.svg') no-repeat center;
+	-webkit-mask: url('../img/icons/project-files.svg') no-repeat center;
+	mask-size: contain;
+	-webkit-mask-size: contain;
+	vertical-align: middle;
+}
+
+.icon-project-files.icon-large {
+	width: 48px;
+	height: 48px;
+	color: var(--color-text-maxcontrast);
+	background-color: currentColor;
+	mask-size: contain;
+	-webkit-mask-size: contain;
+}
+
+.file-upload-bar {
+	background: var(--color-main-background);
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	gap: 10px;
+}
+
+.file-upload-bar .button {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.file-upload-bar .button i {
+	display: block;
+}
+
+.file-input-hidden {
+	display: none;
+}
+
+.file-upload-bar .button {
+	margin: 0;
+}
+
+.project-files-list {
+	margin-top: 12px;
 }
 
 /* Spacing below the header section on projects page */
@@ -2158,7 +2312,7 @@ body {
 
 .empty-state i {
 	font-size: 3rem;
-	margin-bottom: 1rem;
+	margin-bottom: 0rem;
 	opacity: 0.5;
 	color: var(--color-primary);
 }

@@ -15,6 +15,7 @@ use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
+use OCA\ProjectCheck\Service\ProjectFileService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
@@ -56,6 +57,9 @@ class ProjectController extends Controller
 	/** @var ActivityService */
 	private $activityService;
 
+	/** @var ProjectFileService */
+	private $projectFileService;
+
 	/** @var IUserSession */
 	private $userSession;
 
@@ -76,6 +80,7 @@ class ProjectController extends Controller
 	 * @param BudgetService $budgetService
 	 * @param DeletionService $deletionService
 	 * @param ActivityService $activityService
+	 * @param ProjectFileService $projectFileService
 	 * @param IUserSession $userSession
 	 * @param IURLGenerator $urlGenerator
 	 * @param IConfig $config
@@ -90,6 +95,7 @@ class ProjectController extends Controller
 		BudgetService $budgetService,
 		DeletionService $deletionService,
 		ActivityService $activityService,
+		ProjectFileService $projectFileService,
 		IUserSession $userSession,
 		IURLGenerator $urlGenerator,
 		IConfig $config,
@@ -102,6 +108,7 @@ class ProjectController extends Controller
 		$this->budgetService = $budgetService;
 		$this->deletionService = $deletionService;
 		$this->activityService = $activityService;
+		$this->projectFileService = $projectFileService;
 		$this->userSession = $userSession;
 		$this->urlGenerator = $urlGenerator;
 		$this->config = $config;
@@ -233,6 +240,11 @@ class ProjectController extends Controller
 			$data = $this->request->getParams();
 			$project = $this->projectService->createProject($data);
 
+			$uploads = $this->request->getUploadedFile('project_files');
+			if ($uploads) {
+				$this->projectFileService->addFilesFromUpload($project->getId(), $uploads, $user->getUID());
+			}
+
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
 				return new DataResponse(['success' => true, 'message' => 'Project created successfully', 'project' => $project->getId()]);
@@ -307,6 +319,9 @@ class ProjectController extends Controller
 		// Determine warning level for budget using project's built-in method
 		$warningLevel = $project->getBudgetWarningLevel($totalHours);
 
+		$projectFiles = $this->projectFileService->listFiles($id, $user->getUID());
+		$canManageFiles = $this->projectService->canUserEditProject($user->getUID(), $id);
+
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService);
 
@@ -325,6 +340,9 @@ class ProjectController extends Controller
 			'budgetInfo' => $budgetInfo,
 			'yearlyStats' => $yearlyStats,
 			'stats' => $stats,
+			'projectFiles' => $projectFiles,
+			'canManageFiles' => $canManageFiles,
+			'projectId' => $id,
 			'urlGenerator' => $this->urlGenerator,
 			'canEdit' => true, // Open for now - can be restricted later if needed
 			'canChangeStatus' => true, // Open for now - can be restricted later if needed  
