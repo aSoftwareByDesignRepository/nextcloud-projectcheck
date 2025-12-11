@@ -132,7 +132,10 @@ Util::addStyle('projectcheck', 'customer-statistics');
                 </div>
 
                 <div class="filters-row">
-                    <button id="clear-filters" class="button">
+                    <button id="apply-filters" class="button primary" type="button">
+                        <?php p($l->t('Apply Filters')); ?>
+                    </button>
+                    <button id="clear-filters" class="button" type="button">
                         <?php p($l->t('Clear Filters')); ?>
                     </button>
                 </div>
@@ -201,6 +204,41 @@ Util::addStyle('projectcheck', 'customer-statistics');
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                <?php
+                    $pagination = $_['pagination'] ?? ['page' => 1, 'totalPages' => 1, 'totalEntries' => count($_['customers'] ?? []), 'perPage' => count($_['customers'] ?? [])];
+                    $currentPage = max(1, (int)($pagination['page'] ?? 1));
+                    $totalPages = max(1, (int)($pagination['totalPages'] ?? 1));
+                    $totalEntries = (int)($pagination['totalEntries'] ?? 0);
+                    $perPage = (int)($pagination['perPage'] ?? 0);
+                    $baseUrl = $_['urlGenerator']->linkToRoute('projectcheck.customer.index');
+                    $baseQuery = $_['filters'] ?? [];
+                    unset($baseQuery['limit'], $baseQuery['offset']);
+                ?>
+                <?php if ($totalPages > 1): ?>
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            <span><?php p($l->t('Page')); ?> <?php p($currentPage); ?> / <?php p($totalPages); ?></span>
+                            <span>•</span>
+                            <span><?php p($l->t('Total')); ?> <?php p($totalEntries); ?></span>
+                        </div>
+                        <div class="pagination-actions">
+                            <?php
+                                $prevQuery = array_merge($baseQuery, ['page' => max(1, $currentPage - 1)]);
+                                $nextQuery = array_merge($baseQuery, ['page' => min($totalPages, $currentPage + 1)]);
+                            ?>
+                            <a class="button secondary <?php echo $currentPage <= 1 ? 'disabled' : ''; ?>"
+                               href="<?php p($currentPage <= 1 ? '#' : $baseUrl . '?' . http_build_query($prevQuery)); ?>"
+                               aria-disabled="<?php echo $currentPage <= 1 ? 'true' : 'false'; ?>">
+                                ‹ <?php p($l->t('Previous')); ?>
+                            </a>
+                            <a class="button secondary <?php echo $currentPage >= $totalPages ? 'disabled' : ''; ?>"
+                               href="<?php p($currentPage >= $totalPages ? '#' : $baseUrl . '?' . http_build_query($nextQuery)); ?>"
+                               aria-disabled="<?php echo $currentPage >= $totalPages ? 'true' : 'false'; ?>">
+                                <?php p($l->t('Next')); ?> ›
+                            </a>
+                        </div>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>

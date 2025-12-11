@@ -159,6 +159,8 @@
 
 		if (customerId) url.searchParams.set('customer_id', customerId); else url.searchParams.delete('customer_id');
 
+		url.searchParams.set('page', '1'); // reset to first page on filter apply
+
 		// Navigate to filtered URL
 		window.location.href = url.toString();
 	}
@@ -176,6 +178,7 @@
 		// Navigate to default state (Active status)
 		const url = new URL(window.location);
 		url.searchParams.set('status', 'Active');
+		url.searchParams.delete('page');
 		url.searchParams.delete('priority');
 		url.searchParams.delete('project_type');
 		url.searchParams.delete('customer_id');

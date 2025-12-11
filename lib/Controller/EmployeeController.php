@@ -20,6 +20,7 @@ use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCP\IConfig;
 use OCA\ProjectCheck\Traits\StatsTrait;
 
 /**
@@ -48,6 +49,9 @@ class EmployeeController extends Controller
     /** @var IURLGenerator */
     private $urlGenerator;
 
+	/** @var IConfig */
+	private $config;
+
     /**
      * EmployeeController constructor
      *
@@ -58,7 +62,8 @@ class EmployeeController extends Controller
      * @param TimeEntryService $timeEntryService
      * @param ProjectService $projectService
      * @param CustomerService $customerService
-     * @param IURLGenerator $urlGenerator
+	 * @param IURLGenerator $urlGenerator
+	 * @param IConfig $config
      * @param CSPService $cspService
      */
     public function __construct(
@@ -70,6 +75,7 @@ class EmployeeController extends Controller
         ProjectService $projectService,
         CustomerService $customerService,
         IURLGenerator $urlGenerator,
+		IConfig $config,
         CSPService $cspService
     ) {
         parent::__construct($appName, $request);
@@ -79,6 +85,7 @@ class EmployeeController extends Controller
         $this->projectService = $projectService;
         $this->customerService = $customerService;
         $this->urlGenerator = $urlGenerator;
+		$this->config = $config;
         $this->setCspService($cspService);
     }
 
@@ -104,8 +111,32 @@ class EmployeeController extends Controller
         // Get employee yearly statistics
         $employeeYearlyStats = $this->timeEntryService->getEmployeeYearlyStats();
 
+        // Filters and pagination
+        $search = $this->request->getParam('search', '');
+        $page = max(1, (int)$this->request->getParam('page', 1));
+        $defaultItemsPerPage = (int)$this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
+        $perPage = $defaultItemsPerPage > 0 ? $defaultItemsPerPage : 20;
+
         // Get employee comparison statistics
-        $employeeComparisonStats = $this->timeEntryService->getEmployeeComparisonStats();
+        $employeeComparisonStatsAll = $this->timeEntryService->getEmployeeComparisonStats();
+
+        // Apply search filter (server-side)
+        if ($search) {
+            $needle = mb_strtolower($search);
+            $employeeComparisonStatsAll = array_values(array_filter($employeeComparisonStatsAll, static function ($item) use ($needle) {
+                $name = mb_strtolower($item['user_display_name'] ?? '');
+                $id = mb_strtolower($item['user_id'] ?? '');
+                return str_contains($name, $needle) || str_contains($id, $needle);
+            }));
+        }
+
+        $totalEmployees = count($employeeComparisonStatsAll);
+        $totalPages = (int)max(1, ceil($totalEmployees / $perPage));
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+        $offset = ($page - 1) * $perPage;
+        $employeeComparisonStats = array_slice($employeeComparisonStatsAll, $offset, $perPage);
 
         // Get employee project type statistics
         $employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId);
@@ -123,6 +154,15 @@ class EmployeeController extends Controller
             'employeeProjectTypeStats' => $employeeProjectTypeStats,
             'detailedEmployeeProjectTypeStats' => $detailedEmployeeProjectTypeStats,
             'usersWithTimeEntries' => $usersWithTimeEntries,
+            'filters' => [
+                'search' => $search,
+            ],
+            'pagination' => [
+                'page' => $page,
+                'perPage' => $perPage,
+                'totalEntries' => $totalEmployees,
+                'totalPages' => $totalPages,
+            ],
             'stats' => $stats,
             'urlGenerator' => $this->urlGenerator,
             'userManager' => $this->userManager

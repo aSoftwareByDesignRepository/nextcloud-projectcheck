@@ -120,6 +120,19 @@ class CustomerService
 	}
 
 	/**
+	 * Count customers with optional filters
+	 *
+	 * @param array $filters
+	 * @return int
+	 */
+	public function countCustomers(array $filters = []): int
+	{
+		$countFilters = $filters;
+		unset($countFilters['limit'], $countFilters['offset']);
+		return $this->customerMapper->countWithFilters($countFilters);
+	}
+
+	/**
 	 * Update customer
 	 *
 	 * @param int $id Customer ID

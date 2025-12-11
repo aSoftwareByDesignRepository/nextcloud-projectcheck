@@ -8,9 +8,6 @@
 (function () {
     'use strict';
 
-    // Global variables
-    let searchTimeout = null;
-
     // DOM elements
     const elements = {
         searchInput: document.getElementById('customer-search'),
@@ -35,9 +32,22 @@
     function bindEvents() {
         console.log('Binding events...');
 
-        // Search functionality
+        // Apply search on Enter
         if (elements.searchInput) {
-            elements.searchInput.addEventListener('input', handleSearch);
+            elements.searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    applyFilters();
+                }
+            });
+        }
+
+        // Apply button (if present)
+        const applyBtn = document.getElementById('apply-filters');
+        if (applyBtn) {
+            applyBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                applyFilters();
+            });
         }
 
         // Clear filters
@@ -59,84 +69,31 @@
     }
 
     /**
-     * Handle search input
-     */
-    function handleSearch() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            applyFilters();
-        }, 300);
-    }
-
-    /**
      * Apply all filters
      */
     function applyFilters() {
-        const searchTerm = elements.searchInput ? elements.searchInput.value.toLowerCase() : '';
-
-        const rows = elements.customersTbody ? elements.customersTbody.querySelectorAll('tr') : [];
-
-        rows.forEach(row => {
-            let showRow = true;
-
-            // Search filter
-            if (searchTerm) {
-                const name = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
-                const email = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-                const phone = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
-                const contactPerson = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
-
-                if (!name.includes(searchTerm) &&
-                    !email.includes(searchTerm) &&
-                    !phone.includes(searchTerm) &&
-                    !contactPerson.includes(searchTerm)) {
-                    showRow = false;
-                }
-            }
-
-            // Show/hide row
-            row.style.display = showRow ? '' : 'none';
-        });
-
-        updateEmptyState();
+        const searchTerm = elements.searchInput ? elements.searchInput.value : '';
+        const url = new URL(window.location.href);
+        searchTerm ? url.searchParams.set('search', searchTerm) : url.searchParams.delete('search');
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
     }
 
     /**
      * Clear all filters
      */
     function clearFilters() {
-        if (elements.searchInput) {
-            elements.searchInput.value = '';
-        }
-
-        // Show all rows
-        const rows = elements.customersTbody ? elements.customersTbody.querySelectorAll('tr') : [];
-        rows.forEach(row => {
-            row.style.display = '';
-        });
-
-        updateEmptyState();
+        const url = new URL(window.location.href);
+        url.searchParams.delete('search');
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
     }
 
     /**
      * Update empty state visibility
      */
     function updateEmptyState() {
-        const visibleRows = elements.customersTbody ?
-            Array.from(elements.customersTbody.querySelectorAll('tr')).filter(row =>
-                row.style.display !== 'none'
-            ) : [];
-
-        const emptyState = document.querySelector('.emptycontent');
-        if (emptyState) {
-            if (visibleRows.length === 0) {
-                emptyState.style.display = 'block';
-                emptyState.querySelector('h2').textContent = 'No customers match your filters';
-                emptyState.querySelector('p').textContent = 'Try adjusting your search criteria or clear the filters.';
-            } else {
-                emptyState.style.display = 'none';
-            }
-        }
+        // For server-side paging, the empty state is handled on render.
     }
 
     /**

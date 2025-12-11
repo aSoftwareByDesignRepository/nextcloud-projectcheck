@@ -95,6 +95,14 @@ class CustomerMapper extends QBMapper
 			$qb->andWhere($qb->expr()->eq('created_by', $qb->createNamedParameter($filters['created_by'])));
 		}
 
+		// Pagination
+		if (!empty($filters['limit'])) {
+			$qb->setMaxResults((int)$filters['limit']);
+		}
+		if (!empty($filters['offset'])) {
+			$qb->setFirstResult((int)$filters['offset']);
+		}
+
 		return $this->findEntities($qb);
 	}
 
@@ -125,11 +133,23 @@ class CustomerMapper extends QBMapper
 	 *
 	 * @return int
 	 */
-	public function count(): int
+	public function countWithFilters(array $filters = []): int
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->createFunction('COUNT(*)'))
 			->from($this->getTableName());
+
+		if (!empty($filters['search'])) {
+			$qb->andWhere($qb->expr()->orX(
+				$qb->expr()->like('name', $qb->createNamedParameter('%' . $filters['search'] . '%')),
+				$qb->expr()->like('email', $qb->createNamedParameter('%' . $filters['search'] . '%')),
+				$qb->expr()->like('contact_person', $qb->createNamedParameter('%' . $filters['search'] . '%'))
+			));
+		}
+
+		if (!empty($filters['created_by'])) {
+			$qb->andWhere($qb->expr()->eq('created_by', $qb->createNamedParameter($filters['created_by'])));
+		}
 
 		$result = $qb->execute();
 		$count = $result->fetchColumn();

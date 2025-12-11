@@ -6119,3 +6119,32 @@ body {
 		gap: 0.5rem;
 	}
 }
+
+/* Pagination (shared across listing pages) */
+.pagination {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 16px;
+	flex-wrap: wrap;
+}
+
+.pagination-info {
+	font-size: 14px;
+	color: var(--color-text-maxcontrast);
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.pagination-actions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.pagination-actions .button,
+.pagination-actions .btn {
+	padding: 8px 14px;
+}

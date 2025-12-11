@@ -183,6 +183,57 @@ class ProjectMapper extends QBMapper
 	}
 
 	/**
+	 * Count projects with filters (status, customer, priority, project_type, search)
+	 *
+	 * @param array $filters
+	 * @return int
+	 */
+	public function countWithFilters(array $filters = []): int
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->select($qb->func()->count('p.id'))
+			->from($this->getTableName(), 'p')
+			->leftJoin('p', 'customers', 'c', 'p.customer_id = c.id');
+
+		if (!empty($filters['status'])) {
+			if (is_array($filters['status'])) {
+				$statusParams = [];
+				foreach ($filters['status'] as $status) {
+					$statusParams[] = $qb->createNamedParameter($status);
+				}
+				$qb->andWhere($qb->expr()->in('p.status', $statusParams));
+			} else {
+				$qb->andWhere($qb->expr()->eq('p.status', $qb->createNamedParameter($filters['status'])));
+			}
+		}
+
+		if (!empty($filters['customer_id'])) {
+			$qb->andWhere($qb->expr()->eq('p.customer_id', $qb->createNamedParameter($filters['customer_id'])));
+		}
+
+		if (!empty($filters['priority'])) {
+			$qb->andWhere($qb->expr()->eq('p.priority', $qb->createNamedParameter($filters['priority'])));
+		}
+
+		if (!empty($filters['project_type']) && $this->columnExists('projects', 'project_type')) {
+			$qb->andWhere($qb->expr()->eq('p.project_type', $qb->createNamedParameter($filters['project_type'])));
+		}
+
+		if (!empty($filters['search'])) {
+			$qb->andWhere($qb->expr()->orX(
+				$qb->expr()->like('p.name', $qb->createNamedParameter('%' . $filters['search'] . '%')),
+				$qb->expr()->like('p.short_description', $qb->createNamedParameter('%' . $filters['search'] . '%'))
+			));
+		}
+
+		$result = $qb->execute();
+		$count = $result->fetchColumn();
+		$result->closeCursor();
+
+		return (int)$count;
+	}
+
+	/**
 	 * Get projects with budget consumption
 	 *
 	 * @param string $userId User ID

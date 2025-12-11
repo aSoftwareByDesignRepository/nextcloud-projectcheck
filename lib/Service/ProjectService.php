@@ -264,6 +264,19 @@ class ProjectService
 	}
 
 	/**
+	 * Count projects with filters (status, customer, priority, project_type, search)
+	 *
+	 * @param array $filters
+	 * @return int
+	 */
+	public function countProjects(array $filters = []): int
+	{
+		$countFilters = $filters;
+		unset($countFilters['limit'], $countFilters['offset'], $countFilters['sort'], $countFilters['direction']);
+		return $this->projectMapper->countWithFilters($countFilters);
+	}
+
+	/**
 	 * Update existing project
 	 *
 	 * @param int $id

@@ -135,6 +135,8 @@ class ProjectController extends Controller
 		$defaultItemsPerPage = $this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
 
 		$statusParam = $this->request->getParam('status', null);
+		$page = max(1, (int)$this->request->getParam('page', 1));
+
 		$filters = [
 			'search' => $this->request->getParam('search', ''),
 			// Default to Active when no status is supplied; allow explicit "all" to show everything
@@ -142,11 +144,19 @@ class ProjectController extends Controller
 			'priority' => $this->request->getParam('priority', ''),
 			'project_type' => $this->request->getParam('project_type', ''),
 			'customer_id' => $this->request->getParam('customer_id', ''),
-			'limit' => intval($this->request->getParam('limit', $defaultItemsPerPage)),
-			'offset' => intval($this->request->getParam('offset', 0)),
+			'limit' => $defaultItemsPerPage ? intval($defaultItemsPerPage) : 20,
+			'offset' => ($page - 1) * ($defaultItemsPerPage ? intval($defaultItemsPerPage) : 20),
 		];
 
 		$projects = $this->projectService->getProjects($filters);
+
+		$totalProjects = $this->projectService->countProjects($filters);
+		$totalPages = (int)max(1, ceil($totalProjects / $filters['limit']));
+		if ($page > $totalPages) {
+			$page = $totalPages;
+			$filters['offset'] = ($page - 1) * $filters['limit'];
+			$projects = $this->projectService->getProjects($filters);
+		}
 
 		// Enrich projects with budget information
 		$enrichedProjects = $this->enrichProjectsWithBudgetInfo($projects, $userId);
@@ -186,6 +196,12 @@ class ProjectController extends Controller
 			'filters' => $filters,
 			'stats' => $stats,
 			'customers' => $customers,
+			'pagination' => [
+				'page' => $page,
+				'perPage' => $filters['limit'],
+				'totalEntries' => $totalProjects,
+				'totalPages' => $totalPages,
+			],
 			'createUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.create'),
 			'projectsUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index'),
 			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => 'PROJECT_ID']),

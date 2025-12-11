@@ -23,6 +23,7 @@ use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCP\IConfig;
 use OCA\ProjectCheck\Traits\StatsTrait;
 
 /**
@@ -56,6 +57,9 @@ class CustomerController extends Controller
 
 	/** @var IURLGenerator */
 	private $urlGenerator;
+
+	/** @var IConfig */
+	private $config;
 
 	/**
 	 * Deletion impact preview
@@ -91,6 +95,7 @@ class CustomerController extends Controller
 	 * @param DeletionService $deletionService
 	 * @param ActivityService $activityService
 	 * @param IURLGenerator $urlGenerator
+	 * @param IConfig $config
 	 * @param CSPService $cspService
 	 */
 	public function __construct(
@@ -104,6 +109,7 @@ class CustomerController extends Controller
 		DeletionService $deletionService,
 		ActivityService $activityService,
 		IURLGenerator $urlGenerator,
+		IConfig $config,
 		CSPService $cspService
 	) {
 		parent::__construct($appName, $request);
@@ -115,6 +121,7 @@ class CustomerController extends Controller
 		$this->deletionService = $deletionService;
 		$this->activityService = $activityService;
 		$this->urlGenerator = $urlGenerator;
+		$this->config = $config;
 		$this->setCspService($cspService);
 	}
 
@@ -139,9 +146,27 @@ class CustomerController extends Controller
 
 		$userId = $user->getUID();
 
+		// Pagination settings
+		$page = max(1, (int)$this->request->getParam('page', 1));
+		$defaultItemsPerPage = (int)$this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
+		$perPage = $defaultItemsPerPage > 0 ? $defaultItemsPerPage : 20;
+
 		// Get customers with optional search
 		$search = $this->request->getParam('search', '');
-		$customers = $this->customerService->getCustomers(['search' => $search]);
+		$filters = [
+			'search' => $search,
+			'limit' => $perPage,
+			'offset' => ($page - 1) * $perPage,
+		];
+		$customers = $this->customerService->getCustomers($filters);
+
+		$totalCustomers = $this->customerService->countCustomers($filters);
+		$totalPages = (int)max(1, ceil($totalCustomers / $perPage));
+		if ($page > $totalPages) {
+			$page = $totalPages;
+			$filters['offset'] = ($page - 1) * $perPage;
+			$customers = $this->customerService->getCustomers($filters);
+		}
 
 		// Add deletion permission info to each customer
 		foreach ($customers as $customer) {
@@ -159,6 +184,13 @@ class CustomerController extends Controller
 		$response = new TemplateResponse($this->appName, 'customers', [
 			'customers' => $customers,
 			'search' => $search,
+			'filters' => $filters,
+			'pagination' => [
+				'page' => $page,
+				'perPage' => $perPage,
+				'totalEntries' => $totalCustomers,
+				'totalPages' => $totalPages,
+			],
 			'userId' => $userId,
 			'stats' => array_merge($stats, $comprehensiveStats),
 			'urlGenerator' => $this->urlGenerator,
