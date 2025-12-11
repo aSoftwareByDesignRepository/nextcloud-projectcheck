@@ -64,6 +64,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectControl\Db\TimeEntryMapper::class),
 				$c->query(\OCP\IConfig::class),
 				$c->query(\Psr\Log\LoggerInterface::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
 				self::APP_ID
 			);
 		});

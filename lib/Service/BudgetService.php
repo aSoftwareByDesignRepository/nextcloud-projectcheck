@@ -12,6 +12,7 @@ namespace OCA\ProjectCheck\Service;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
 use OCP\IConfig;
+use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -33,6 +34,9 @@ class BudgetService
     /** @var string */
     private $appName;
 
+    /** @var IL10N */
+    private $l10n;
+
     /**
      * BudgetService constructor
      */
@@ -40,11 +44,13 @@ class BudgetService
         TimeEntryMapper $timeEntryMapper,
         IConfig $config,
         LoggerInterface $logger,
+        IL10N $l10n,
         string $appName
     ) {
         $this->timeEntryMapper = $timeEntryMapper;
         $this->config = $config;
         $this->logger = $logger;
+        $this->l10n = $l10n;
         $this->appName = $appName;
     }
 
@@ -196,32 +202,28 @@ class BudgetService
         if ($consumptionPercentage >= 100) {
             $alerts[] = array_merge($alertData, [
                 'type' => 'budget_exceeded',
-                'title' => 'Budget Exceeded',
-                'message' => sprintf(
+                'title' => $this->l10n->t('Budget Exceeded'),
+                'message' => $this->l10n->t(
                     'Project "%s" has exceeded its budget by €%.2f (%.1f%% over)',
-                    $project->getName(),
-                    $usedBudget - $totalBudget,
-                    $consumptionPercentage - 100
+                    [$project->getName(), $usedBudget - $totalBudget, $consumptionPercentage - 100]
                 )
             ]);
         } elseif ($warningLevel === 'critical') {
             $alerts[] = array_merge($alertData, [
                 'type' => 'budget_critical',
-                'title' => 'Budget Critical',
-                'message' => sprintf(
+                'title' => $this->l10n->t('Budget Critical'),
+                'message' => $this->l10n->t(
                     'Project "%s" is approaching budget limit (%.1f%% used)',
-                    $project->getName(),
-                    $consumptionPercentage
+                    [$project->getName(), $consumptionPercentage]
                 )
             ]);
         } elseif ($warningLevel === 'warning') {
             $alerts[] = array_merge($alertData, [
                 'type' => 'budget_warning',
-                'title' => 'Budget Warning',
-                'message' => sprintf(
+                'title' => $this->l10n->t('Budget Warning'),
+                'message' => $this->l10n->t(
                     'Project "%s" budget consumption is at %.1f%%',
-                    $project->getName(),
-                    $consumptionPercentage
+                    [$project->getName(), $consumptionPercentage]
                 )
             ]);
         }
