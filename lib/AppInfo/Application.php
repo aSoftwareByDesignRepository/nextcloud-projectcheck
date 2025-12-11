@@ -173,6 +173,30 @@ class Application extends App implements IBootstrap
 			return $c->query('CustomerService');
 		});
 
+		// Register TimeEntryController explicitly (ensures DI build)
+		$context->registerService(\OCA\ProjectCheck\Controller\TimeEntryController::class, function ($c) {
+			return new \OCA\ProjectCheck\Controller\TimeEntryController(
+				$c->query('appName'),
+				$c->query(\OCP\IRequest::class),
+				$c->query(\OCP\IUserSession::class),
+				$c->query(\OCA\ProjectCheck\Service\TimeEntryService::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Service\CustomerService::class),
+				$c->query(\OCA\ProjectCheck\Service\BudgetService::class),
+				$c->query(\OCA\ProjectControl\Service\DeletionService::class),
+				$c->query(\OCA\ProjectControl\Service\ActivityService::class),
+				$c->query(\OCP\IURLGenerator::class),
+				$c->query(\OCP\IConfig::class),
+				$c->query(\OCA\ProjectControl\Service\DateFormatService::class),
+				$c->query(\OCA\ProjectControl\Service\CSPService::class)
+			);
+		});
+
+		// Alias for legacy mis-cased controller resolution
+		$context->registerService(\OCA\ProjectCheck\Controller\TimeentryController::class, function ($c) {
+			return $c->query(\OCA\ProjectCheck\Controller\TimeEntryController::class);
+		});
+
 		// Register mappers
 		$context->registerService(\OCA\ProjectCheck\Db\ProjectMapper::class, function ($c) {
 			return new \OCA\ProjectCheck\Db\ProjectMapper(
