@@ -78,13 +78,15 @@ Util::addStyle('projectcheck', 'navigation');
         flex-wrap: wrap;
         align-items: center;
         gap: 16px;
+        width: 100%;
     }
 
     .filter-group {
         display: flex;
         flex-direction: column;
         gap: 6px;
-        min-width: 220px;
+        min-width: 260px;
+        flex: 1 1 260px;
     }
 
     .filter-label {
@@ -97,17 +99,26 @@ Util::addStyle('projectcheck', 'navigation');
 
     .filter-select,
     .filter-date {
-        padding: 10px 14px;
+        padding: 12px 14px;
         border: 2px solid var(--color-border);
         border-radius: 8px;
         font-size: 14px;
+        line-height: 1.4;
+        min-height: 46px;
         background: var(--color-main-background);
         color: var(--color-text);
         transition: all 0.3s ease;
-        min-width: 220px;
-        flex: 0 0 auto;
+        min-width: 260px;
+        width: 100%;
+        max-width: 100%;
+        flex: 1 1 auto;
         cursor: pointer;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .filter-select option {
+        line-height: 1.4;
+        white-space: normal;
     }
 
     .filter-select:hover,
