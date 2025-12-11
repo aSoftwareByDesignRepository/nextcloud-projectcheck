@@ -36,26 +36,27 @@ class Application extends App implements IBootstrap
 	{
 		// Register services
 		$context->registerService('ProjectService', function ($c) {
-			return new \OCA\ProjectControl\Service\ProjectService(
+			return new \OCA\ProjectCheck\Service\ProjectService(
 				$c->query(\OCP\IDBConnection::class),
 				$c->query(\OCP\IUserSession::class),
 				$c->query(\OCP\IUserManager::class),
-				$c->query(\OCP\IConfig::class)
+				$c->query(\OCP\IConfig::class),
+				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class)
 			);
 		});
 
 		$context->registerService('CustomerService', function ($c) {
-			return new \OCA\ProjectControl\Service\CustomerService(
-				$c->query(\OCA\ProjectControl\Db\CustomerMapper::class),
+			return new \OCA\ProjectCheck\Service\CustomerService(
+				$c->query(\OCA\ProjectCheck\Db\CustomerMapper::class),
 				$c->query('ProjectService'),
-				$c->query(\OCA\ProjectControl\Db\TimeEntryMapper::class)
+				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class)
 			);
 		});
 
 		$context->registerService('TimeEntryService', function ($c) {
-			return new \OCA\ProjectControl\Service\TimeEntryService(
-				$c->query(\OCA\ProjectControl\Db\TimeEntryMapper::class),
-				$c->query(\OCA\ProjectControl\Db\ProjectMapper::class)
+			return new \OCA\ProjectCheck\Service\TimeEntryService(
+				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class),
+				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class)
 			);
 		});
 
@@ -85,9 +86,9 @@ class Application extends App implements IBootstrap
 		$context->registerService('DeletionService', function ($c) {
 			return new \OCA\ProjectControl\Service\DeletionService(
 				$c->query(\OCP\IDBConnection::class),
-				$c->query(\OCA\ProjectControl\Db\CustomerMapper::class),
-				$c->query(\OCA\ProjectControl\Db\TimeEntryMapper::class),
-				$c->query(\OCA\ProjectControl\Db\ProjectMapper::class),
+				$c->query(\OCA\ProjectCheck\Db\CustomerMapper::class),
+				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class),
+				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class),
 				$c->query('ProjectService'),
 				$c->query('ProjectMemberService')
 			);
@@ -163,30 +164,30 @@ class Application extends App implements IBootstrap
 		});
 
 		// Register ProjectService with class name for auto-wiring
-		$context->registerService(\OCA\ProjectControl\Service\ProjectService::class, function ($c) {
+		$context->registerService(\OCA\ProjectCheck\Service\ProjectService::class, function ($c) {
 			return $c->query('ProjectService');
 		});
 
 		// Register CustomerService with class name for auto-wiring
-		$context->registerService(\OCA\ProjectControl\Service\CustomerService::class, function ($c) {
+		$context->registerService(\OCA\ProjectCheck\Service\CustomerService::class, function ($c) {
 			return $c->query('CustomerService');
 		});
 
 		// Register mappers
-		$context->registerService(\OCA\ProjectControl\Db\ProjectMapper::class, function ($c) {
-			return new \OCA\ProjectControl\Db\ProjectMapper(
+		$context->registerService(\OCA\ProjectCheck\Db\ProjectMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\ProjectMapper(
 				$c->query(\OCP\IDBConnection::class)
 			);
 		});
 
-		$context->registerService(\OCA\ProjectControl\Db\CustomerMapper::class, function ($c) {
-			return new \OCA\ProjectControl\Db\CustomerMapper(
+		$context->registerService(\OCA\ProjectCheck\Db\CustomerMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\CustomerMapper(
 				$c->query(\OCP\IDBConnection::class)
 			);
 		});
 
-		$context->registerService(\OCA\ProjectControl\Db\TimeEntryMapper::class, function ($c) {
-			return new \OCA\ProjectControl\Db\TimeEntryMapper(
+		$context->registerService(\OCA\ProjectCheck\Db\TimeEntryMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\TimeEntryMapper(
 				$c->query(\OCP\IDBConnection::class)
 			);
 		});
