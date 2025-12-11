@@ -151,6 +151,30 @@ class ProjectController extends Controller
 		// Enrich projects with budget information
 		$enrichedProjects = $this->enrichProjectsWithBudgetInfo($projects, $userId);
 
+		// Sort projects by remaining budget (ascending). Over budget (negative remaining) floats to the top.
+		$computeRemaining = static function (array $item): float {
+			if (isset($item['budgetInfo']['remaining_budget'])) {
+				return (float)$item['budgetInfo']['remaining_budget'];
+			}
+			if (isset($item['project']) && method_exists($item['project'], 'getTotalBudget')) {
+				$total = $item['project']->getTotalBudget();
+				if ($total !== null) {
+					return (float)$total;
+				}
+			}
+			// No budget info; push to bottom
+			return PHP_FLOAT_MAX;
+		};
+
+		usort($enrichedProjects, static function (array $a, array $b) use ($computeRemaining) {
+			$remainingA = $computeRemaining($a);
+			$remainingB = $computeRemaining($b);
+			if ($remainingA === $remainingB) {
+				return 0;
+			}
+			return ($remainingA < $remainingB) ? -1 : 1;
+		});
+
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService);
 

@@ -10,7 +10,6 @@
 
 	// Global variables
 	let currentProjectId = null;
-	let searchTimeout = null;
 
 	// DOM elements
 	const elements = {
@@ -19,6 +18,7 @@
 		priorityFilter: document.getElementById('priority-filter'),
 		projectTypeFilter: document.getElementById('project-type-filter'),
 		customerFilter: document.getElementById('customer-filter'),
+		applyFiltersBtn: document.getElementById('apply-filters'),
 		clearFiltersBtn: document.getElementById('clear-filters'),
 		projectsTable: document.querySelector('.projects-table'),
 		projectsTbody: document.getElementById('projects-tbody'),
@@ -51,26 +51,22 @@
 	 */
 	function bindEvents() {
 		console.log('Binding events...');
-		// Search functionality
+		// Search functionality (apply on Enter)
 		if (elements.searchInput) {
-			elements.searchInput.addEventListener('input', handleSearch);
+			elements.searchInput.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					applyFilters();
+				}
+			});
 		}
 
-		// Filter functionality
-		if (elements.statusFilter) {
-			elements.statusFilter.addEventListener('change', handleFilter);
-		}
-
-		if (elements.priorityFilter) {
-			elements.priorityFilter.addEventListener('change', handleFilter);
-		}
-
-		if (elements.projectTypeFilter) {
-			elements.projectTypeFilter.addEventListener('change', handleFilter);
-		}
-
-		if (elements.customerFilter) {
-			elements.customerFilter.addEventListener('change', handleFilter);
+		// Apply filters button
+		if (elements.applyFiltersBtn) {
+			elements.applyFiltersBtn.addEventListener('click', function (e) {
+				e.preventDefault();
+				applyFilters();
+			});
 		}
 
 		// Clear filters
@@ -136,23 +132,6 @@
 	}
 
 	/**
-	 * Handle search input
-	 */
-	function handleSearch() {
-		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => {
-			applyFilters();
-		}, 300);
-	}
-
-	/**
-	 * Handle filter changes
-	 */
-	function handleFilter() {
-		applyFilters();
-	}
-
-	/**
 	 * Apply all filters and search
 	 */
 	function applyFilters() {
@@ -164,8 +143,7 @@
 
 		// Build URL with filters
 		const url = new URL(window.location);
-		if (searchTerm) url.searchParams.set('search', searchTerm);
-		else url.searchParams.delete('search');
+		if (searchTerm) url.searchParams.set('search', searchTerm); else url.searchParams.delete('search');
 
 		if (status && status !== 'all') {
 			url.searchParams.set('status', status);
@@ -175,14 +153,11 @@
 			url.searchParams.delete('status');
 		}
 
-		if (priority) url.searchParams.set('priority', priority);
-		else url.searchParams.delete('priority');
+		if (priority) url.searchParams.set('priority', priority); else url.searchParams.delete('priority');
 
-		if (projectType) url.searchParams.set('project_type', projectType);
-		else url.searchParams.delete('project_type');
+		if (projectType) url.searchParams.set('project_type', projectType); else url.searchParams.delete('project_type');
 
-		if (customerId) url.searchParams.set('customer_id', customerId);
-		else url.searchParams.delete('customer_id');
+		if (customerId) url.searchParams.set('customer_id', customerId); else url.searchParams.delete('customer_id');
 
 		// Navigate to filtered URL
 		window.location.href = url.toString();

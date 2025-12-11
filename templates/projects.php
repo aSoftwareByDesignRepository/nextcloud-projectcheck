@@ -164,6 +164,9 @@ Util::addStyle('projectcheck', 'navigation');
                         <?php endif; ?>
                     </select>
 
+                    <button id="apply-filters" class="button primary">
+                        <?php p($l->t('Apply Filters')); ?>
+                    </button>
                     <button id="clear-filters" class="button">
                         <?php p($l->t('Clear Filters')); ?>
                     </button>
