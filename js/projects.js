@@ -34,7 +34,7 @@
 	 */
 	function init() {
 		// Only initialize if we're on the projects page
-		if (!document.getElementById('projects-tbody') && !document.querySelector('.projects-table')) {
+		if (!document.getElementById('projects-tbody') && !document.getElementById('project-search') && !document.querySelector('.projects-table')) {
 			console.log('ProjectControl: Not on projects page, skipping initialization');
 			return;
 		}

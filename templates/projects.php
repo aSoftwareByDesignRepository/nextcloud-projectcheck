@@ -164,10 +164,10 @@ Util::addStyle('projectcheck', 'navigation');
                         <?php endif; ?>
                     </select>
 
-                    <button id="apply-filters" class="button primary">
+                    <button id="apply-filters" class="button primary" type="button">
                         <?php p($l->t('Apply Filters')); ?>
                     </button>
-                    <button id="clear-filters" class="button">
+                    <button id="clear-filters" class="button" type="button">
                         <?php p($l->t('Clear Filters')); ?>
                     </button>
                 </div>
@@ -183,7 +183,7 @@ Util::addStyle('projectcheck', 'navigation');
                     <p><?php p($l->t('Create your first project to get started!')); ?></p>
                 </div>
             <?php else: ?>
-                <table class="grid">
+                <table class="grid projects-table">
                     <thead>
                         <tr>
                             <th><?php p($l->t('Name')); ?></th>
@@ -195,7 +195,7 @@ Util::addStyle('projectcheck', 'navigation');
                             <th><?php p($l->t('Actions')); ?></th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="projects-tbody">
                         <?php foreach ($_['projects'] as $projectData): ?>
                             <?php
                             $project = $projectData['project'] ?? $projectData;
