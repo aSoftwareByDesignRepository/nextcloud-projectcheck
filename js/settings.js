@@ -116,14 +116,6 @@
 			}
 		}
 
-		// Validate items per page
-		if (data.itemsPerPage) {
-			const items = parseInt(data.itemsPerPage);
-			if (items < 5 || items > 100) {
-				errors.push(t('projectcheck', 'Items per page must be between 5 and 100'));
-			}
-		}
-
 		// Show errors if any
 		if (errors.length > 0) {
 			showMessage(errors.join('<br>'), 'error');
@@ -304,11 +296,8 @@
 			projectUpdates: 'true',
 			defaultProjectStatus: 'Active',
 			defaultProjectPriority: 'Medium',
-			itemsPerPage: '20',
 			showCompletedProjects: 'true',
 			autoCalculateHours: 'true',
-			dateFormat: 'Y-m-d',
-			timeFormat: 'H:i',
 			currency: 'EUR',
 			language: 'en'
 		};

@@ -25,7 +25,6 @@ use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\BudgetService;
-use OCA\ProjectCheck\Service\DateFormatService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\CSPService;
@@ -58,8 +57,6 @@ class TimeEntryController extends Controller
 	/** @var IConfig */
 	private $config;
 
-	/** @var DateFormatService */
-	private $dateFormatService;
 
 	/** @var DeletionService */
 	private $deletionService;
@@ -78,7 +75,6 @@ class TimeEntryController extends Controller
 	 * @param CustomerService $customerService
 	 * @param IURLGenerator $urlGenerator
 	 * @param IConfig $config
-	 * @param DateFormatService $dateFormatService
 	 * @param DeletionService $deletionService
 	 * @param ActivityService $activityService
 	 * @param CSPService $cspService
@@ -92,7 +88,6 @@ class TimeEntryController extends Controller
 		CustomerService $customerService,
 		IURLGenerator $urlGenerator,
 		IConfig $config,
-		DateFormatService $dateFormatService,
 		DeletionService $deletionService,
 		ActivityService $activityService,
 		CSPService $cspService
@@ -104,7 +99,6 @@ class TimeEntryController extends Controller
 		$this->customerService = $customerService;
 		$this->urlGenerator = $urlGenerator;
 		$this->config = $config;
-		$this->dateFormatService = $dateFormatService;
 		$this->deletionService = $deletionService;
 		$this->activityService = $activityService;
 		$this->setCspService($cspService);
@@ -138,21 +132,16 @@ class TimeEntryController extends Controller
 		$projectType = $this->request->getParam('project_type', '');
 		$page = max(1, (int)$this->request->getParam('page', 1));
 
-		// Determine pagination settings
-		$defaultItemsPerPage = (int)$this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
-		$perPage = $defaultItemsPerPage > 0 ? $defaultItemsPerPage : 20;
+		// Determine pagination settings (fixed 20 per page)
+		$perPage = 20;
 
 		$filters = [];
 		if ($projectId) $filters['project_id'] = $projectId;
 		if ($dateFrom) {
-			// Convert user format to ISO format for database queries
-			$parsedDate = $this->dateFormatService->parseDate($dateFrom, $userId);
-			$filters['date_from'] = $parsedDate ? $parsedDate->format('Y-m-d') : $dateFrom;
+			$filters['date_from'] = $dateFrom;
 		}
 		if ($dateTo) {
-			// Convert user format to ISO format for database queries
-			$parsedDate = $this->dateFormatService->parseDate($dateTo, $userId);
-			$filters['date_to'] = $parsedDate ? $parsedDate->format('Y-m-d') : $dateTo;
+			$filters['date_to'] = $dateTo;
 		}
 		if ($search) $filters['search'] = $search;
 		if ($filterUserId) $filters['user_id'] = $filterUserId;
@@ -199,19 +188,12 @@ class TimeEntryController extends Controller
 		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType();
 		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis();
 
-		// Get user's date format setting
-		$dateFormat = $this->dateFormatService->getUserDateFormat($userId);
-		$availableDateFormats = $this->dateFormatService->getAvailableDateFormats();
-
 		$response = new TemplateResponse($this->appName, 'time-entries', [
 			'timeEntries' => $timeEntries,
 			'projects' => $userProjects,
 			'users' => $users,
 			'filters' => $formFilters,
 			'userId' => $userId,
-			'dateFormat' => $dateFormat,
-			'availableDateFormats' => $availableDateFormats,
-			'dateFormatService' => $this->dateFormatService,
 			'stats' => $stats,
 			'projectTypeStats' => $projectTypeStats,
 			'detailedProjectTypeStats' => $detailedProjectTypeStats,
@@ -745,7 +727,7 @@ class TimeEntryController extends Controller
 				$projectTypeDisplayName = $entry['project_type_display_name'] ?? $entry['project_type'] ?? 'Client Project';
 
 				$row = [
-					$this->dateFormatService->formatDate($timeEntry->getDate(), $userId),
+					$timeEntry->getDate() ? $timeEntry->getDate()->format('Y-m-d') : '',
 					$entry['projectName'] ?? 'Unknown Project',
 					$entry['customerName'] ?? '',
 					$projectTypeDisplayName,
@@ -754,7 +736,7 @@ class TimeEntryController extends Controller
 					number_format($timeEntry->getHourlyRate(), 2, ',', ''),
 					number_format($totalAmount, 2, ',', ''),
 					$entry['userDisplayName'] ?? $timeEntry->getUserId() ?? '',
-					$this->dateFormatService->formatDateTime($timeEntry->getCreatedAt(), $userId)
+					$timeEntry->getCreatedAt() ? $timeEntry->getCreatedAt()->format('Y-m-d H:i') : ''
 				];
 
 

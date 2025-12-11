@@ -114,8 +114,7 @@ class EmployeeController extends Controller
         // Filters and pagination
         $search = $this->request->getParam('search', '');
         $page = max(1, (int)$this->request->getParam('page', 1));
-        $defaultItemsPerPage = (int)$this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
-        $perPage = $defaultItemsPerPage > 0 ? $defaultItemsPerPage : 20;
+        $perPage = 20;
 
         // Get employee comparison statistics
         $employeeComparisonStatsAll = $this->timeEntryService->getEmployeeComparisonStats();

@@ -106,6 +106,7 @@ class ProjectService
 		$project->setHourlyRate($hourlyRate);
 		$project->setTotalBudget($totalBudget);
 		$project->setAvailableHours($availableHours);
+		$project->setCategory($data['category'] ?? '');
 		$project->setPriority($data['priority'] ?? $defaultPriority);
 		$project->setStatus($data['status'] ?? $defaultStatus);
 		$project->setStartDate($this->parseEuropeanDate($data['start_date'] ?? null));
@@ -125,6 +126,7 @@ class ProjectService
 			'hourly_rate' => $qb->createNamedParameter($project->getHourlyRate()),
 			'total_budget' => $qb->createNamedParameter($project->getTotalBudget()),
 			'available_hours' => $qb->createNamedParameter($project->getAvailableHours()),
+			'category' => $qb->createNamedParameter($project->getCategory()),
 			'priority' => $qb->createNamedParameter($project->getPriority()),
 			'status' => $qb->createNamedParameter($project->getStatus()),
 			'start_date' => $project->getStartDate() ? $qb->createNamedParameter($project->getStartDate()->format('Y-m-d H:i:s')) : $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL),
@@ -305,6 +307,9 @@ class ProjectService
 			throw new \Exception('Cannot edit completed or cancelled projects');
 		}
 
+		// Merge incoming data with existing project to allow partial updates (e.g. status-only or rate-only changes)
+		$data = $this->mergeWithExistingProjectData($project, $data);
+
 		$this->validateProjectData($data, $id);
 
 		// Recalculate available hours if budget or rate changed
@@ -330,6 +335,7 @@ class ProjectService
 			'hourly_rate' => 'hourly_rate',
 			'total_budget' => 'total_budget',
 			'available_hours' => 'available_hours',
+			'category' => 'category',
 			'start_date' => 'start_date',
 			'end_date' => 'end_date',
 			'status' => 'status',
@@ -391,6 +397,7 @@ class ProjectService
 					'hourly_rate' => 'hourly_rate',
 					'total_budget' => 'total_budget',
 					'available_hours' => 'available_hours',
+					'category' => 'category',
 					'start_date' => 'start_date',
 					'end_date' => 'end_date',
 					'status' => 'status',
@@ -1248,6 +1255,44 @@ class ProjectService
 		$member->setAssignedBy($row['assigned_by']);
 
 		return $member;
+	}
+
+	/**
+	 * Merge provided update data with the current project to support partial updates.
+	 *
+	 * @param Project $project
+	 * @param array $data
+	 * @return array
+	 */
+	private function mergeWithExistingProjectData(Project $project, array $data): array
+	{
+		$currentData = [
+			'name' => $project->getName(),
+			'short_description' => $project->getShortDescription(),
+			'detailed_description' => $project->getDetailedDescription(),
+			'customer_id' => $project->getCustomerId(),
+			'hourly_rate' => $project->getHourlyRate(),
+			'total_budget' => $project->getTotalBudget(),
+			'available_hours' => $project->getAvailableHours(),
+			'category' => $project->getCategory(),
+			'priority' => $project->getPriority(),
+			'status' => $project->getStatus(),
+			'start_date' => $project->getStartDate() ? $project->getStartDate()->format('Y-m-d') : null,
+			'end_date' => $project->getEndDate() ? $project->getEndDate()->format('Y-m-d') : null,
+			'tags' => $project->getTags(),
+			'project_type' => $project->getProjectType(),
+		];
+
+		$mergedData = array_merge($currentData, $data);
+
+		// Normalize DateTime objects back to strings for validation/DB writes
+		foreach (['start_date', 'end_date'] as $dateField) {
+			if ($mergedData[$dateField] instanceof \DateTimeInterface) {
+				$mergedData[$dateField] = $mergedData[$dateField]->format('Y-m-d');
+			}
+		}
+
+		return $mergedData;
 	}
 
 	/**

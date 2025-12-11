@@ -424,24 +424,14 @@ Util::addStyle('projectcheck', 'navigation');
                     <div class="filter-group">
                         <label for="date-from-filter" class="filter-label"><?php p($l->t('From')); ?></label>
                         <input type="date" id="date-from-filter" name="date_from" class="filter-date"
-                            value="<?php
-                                    if (!empty($filters['date_from'])) {
-                                        $parsedDate = $_['dateFormatService']->parseDate($filters['date_from'], $_['userId']);
-                                        echo $parsedDate ? $parsedDate->format('Y-m-d') : '';
-                                    }
-                                    ?>"
+                            value="<?php p($filters['date_from'] ?? ''); ?>"
                             title="<?php p($l->t('Select start date')); ?>">
                     </div>
 
                     <div class="filter-group">
                         <label for="date-to-filter" class="filter-label"><?php p($l->t('To')); ?></label>
                         <input type="date" id="date-to-filter" name="date_to" class="filter-date"
-                            value="<?php
-                                    if (!empty($filters['date_to'])) {
-                                        $parsedDate = $_['dateFormatService']->parseDate($filters['date_to'], $_['userId']);
-                                        echo $parsedDate ? $parsedDate->format('Y-m-d') : '';
-                                    }
-                                    ?>"
+                            value="<?php p($filters['date_to'] ?? ''); ?>"
                             title="<?php p($l->t('Select end date')); ?>">
                     </div>
                 </div>
@@ -515,7 +505,7 @@ Util::addStyle('projectcheck', 'navigation');
                                     data-user-id="<?php p($timeEntry->getUserId()); ?>"
                                     data-project-type="<?php p($entry['project_type'] ?? 'client'); ?>"
                                     data-date-iso="<?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('Y-m-d') : ''); ?>">
-                                    <td><?php p($timeEntry->getDate() ? $_['dateFormatService']->formatDate($timeEntry->getDate(), $_['userId']) : ''); ?></td>
+                                    <td><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('Y-m-d') : ''); ?></td>
                                     <td>
                                         <a href="<?php p(str_replace('PROJECT_ID', $timeEntry->getProjectId(), $_['projectShowUrl'] ?? '/index.php/apps/projectcheck/projects/')); ?>">
                                             <?php p($entry['projectName'] ?? $l->t('Unknown Project')); ?>

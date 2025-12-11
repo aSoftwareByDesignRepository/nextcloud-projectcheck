@@ -61,8 +61,8 @@ class Application extends App implements IBootstrap
 		});
 
 		$context->registerService('BudgetService', function ($c) {
-			return new \OCA\ProjectControl\Service\BudgetService(
-				$c->query(\OCA\ProjectControl\Db\TimeEntryMapper::class),
+			return new \OCA\ProjectCheck\Service\BudgetService(
+				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class),
 				$c->query(\OCP\IConfig::class),
 				$c->query(\Psr\Log\LoggerInterface::class),
 				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
@@ -71,20 +71,20 @@ class Application extends App implements IBootstrap
 		});
 
 		$context->registerService('ProjectMemberService', function ($c) {
-			return new \OCA\ProjectControl\Service\ProjectMemberService(
+			return new \OCA\ProjectCheck\Service\ProjectMemberService(
 				$c->query(\OCP\IDBConnection::class),
-				$c->query(\OCA\ProjectControl\Db\ProjectMapper::class),
-				$c->query(\OCA\ProjectControl\Db\TimeEntryMapper::class)
+				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class),
+				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class)
 			);
 		});
 
 		// Register ProjectMemberService with its class name for auto-wiring
-		$context->registerService(\OCA\ProjectControl\Service\ProjectMemberService::class, function ($c) {
+		$context->registerService(\OCA\ProjectCheck\Service\ProjectMemberService::class, function ($c) {
 			return $c->query('ProjectMemberService');
 		});
 
 		$context->registerService('DeletionService', function ($c) {
-			return new \OCA\ProjectControl\Service\DeletionService(
+			return new \OCA\ProjectCheck\Service\DeletionService(
 				$c->query(\OCP\IDBConnection::class),
 				$c->query(\OCA\ProjectCheck\Db\CustomerMapper::class),
 				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class),
@@ -95,18 +95,18 @@ class Application extends App implements IBootstrap
 		});
 
 		// Register DeletionService with its class name for auto-wiring
-		$context->registerService(\OCA\ProjectControl\Service\DeletionService::class, function ($c) {
+		$context->registerService(\OCA\ProjectCheck\Service\DeletionService::class, function ($c) {
 			return $c->query('DeletionService');
 		});
 
 		$context->registerService('ActivityService', function ($c) {
-			return new \OCA\ProjectControl\Service\ActivityService(
+			return new \OCA\ProjectCheck\Service\ActivityService(
 				$c->query(\OCP\Activity\IManager::class)
 			);
 		});
 
 		// Register ActivityService with its class name for auto-wiring
-		$context->registerService(\OCA\ProjectControl\Service\ActivityService::class, function ($c) {
+		$context->registerService(\OCA\ProjectCheck\Service\ActivityService::class, function ($c) {
 			return $c->query('ActivityService');
 		});
 
@@ -128,38 +128,30 @@ class Application extends App implements IBootstrap
 		});
 
 		// Register CSPService (no dependencies)
-		$context->registerService(\OCA\ProjectControl\Service\CSPService::class, function ($c) {
-			return new \OCA\ProjectControl\Service\CSPService();
+		$context->registerService(\OCA\ProjectCheck\Service\CSPService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\CSPService();
 		});
 
 		// Register BudgetAlertService
-		$context->registerService(\OCA\ProjectControl\Service\BudgetAlertService::class, function ($c) {
-			return new \OCA\ProjectControl\Service\BudgetAlertService(
+		$context->registerService(\OCA\ProjectCheck\Service\BudgetAlertService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\BudgetAlertService(
 				$c->query(\OCP\IConfig::class),
 				$c->query(\OCP\IUserSession::class),
 				$c->query(\OCP\Notification\IManager::class),
 				$c->query(\OCP\IUserManager::class),
 				$c->query(\Psr\Log\LoggerInterface::class),
-				$c->query(\OCA\ProjectControl\Service\ProjectService::class),
-				$c->query(\OCA\ProjectControl\Service\TimeEntryService::class)
-			);
-		});
-
-		// Register DateFormatService
-		$context->registerService(\OCA\ProjectControl\Service\DateFormatService::class, function ($c) {
-			return new \OCA\ProjectControl\Service\DateFormatService(
-				$c->query(\OCP\IConfig::class),
-				$c->query(\OCP\IUserSession::class)
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Service\TimeEntryService::class)
 			);
 		});
 
 		// Register BudgetService with class name for auto-wiring
-		$context->registerService(\OCA\ProjectControl\Service\BudgetService::class, function ($c) {
+		$context->registerService(\OCA\ProjectCheck\Service\BudgetService::class, function ($c) {
 			return $c->query('BudgetService');
 		});
 
 		// Register TimeEntryService with class name for auto-wiring
-		$context->registerService(\OCA\ProjectControl\Service\TimeEntryService::class, function ($c) {
+		$context->registerService(\OCA\ProjectCheck\Service\TimeEntryService::class, function ($c) {
 			return $c->query('TimeEntryService');
 		});
 
@@ -183,12 +175,11 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
 				$c->query(\OCA\ProjectCheck\Service\CustomerService::class),
 				$c->query(\OCA\ProjectCheck\Service\BudgetService::class),
-				$c->query(\OCA\ProjectControl\Service\DeletionService::class),
-				$c->query(\OCA\ProjectControl\Service\ActivityService::class),
+				$c->query(\OCA\ProjectCheck\Service\DeletionService::class),
+				$c->query(\OCA\ProjectCheck\Service\ActivityService::class),
 				$c->query(\OCP\IURLGenerator::class),
 				$c->query(\OCP\IConfig::class),
-				$c->query(\OCA\ProjectControl\Service\DateFormatService::class),
-				$c->query(\OCA\ProjectControl\Service\CSPService::class)
+				$c->query(\OCA\ProjectCheck\Service\CSPService::class)
 			);
 		});
 
@@ -217,19 +208,20 @@ class Application extends App implements IBootstrap
 		});
 
 		// Register controllers
-		$context->registerService(\OCA\ProjectControl\Controller\ProjectMemberController::class, function ($c) {
-			return new \OCA\ProjectControl\Controller\ProjectMemberController(
+		$context->registerService(\OCA\ProjectCheck\Controller\ProjectMemberController::class, function ($c) {
+			return new \OCA\ProjectCheck\Controller\ProjectMemberController(
 				$c->query('appName'),
 				$c->query(\OCP\IRequest::class),
 				$c->query(\OCP\IUserSession::class),
 				$c->query('ProjectMemberService'),
 				$c->query('DeletionService'),
-				$c->query('ActivityService')
+				$c->query('ActivityService'),
+				$c->query(\OCA\ProjectCheck\Service\CSPService::class)
 			);
 		});
 
 		// Register capabilities
-		$context->registerCapability(\OCA\ProjectControl\Capabilities::class);
+		$context->registerCapability(\OCA\ProjectCheck\Capabilities::class);
 	}
 
 	/**
