@@ -630,10 +630,13 @@ class ProjectService
 			return false;
 		}
 
-		// Check if user is in admin group
-		// For now, we'll use a simple check - in a real implementation,
-		// you might want to check against a specific admin group
-		return $user->getUID() === 'admin' || $user->getUID() === 'administrator';
+		// Treat default admin users and root as admins
+		$uid = $user->getUID();
+		if (in_array($uid, ['admin', 'administrator', 'root'], true)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
