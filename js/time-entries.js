@@ -8,9 +8,6 @@
 (function () {
 	'use strict';
 
-	// Global variables
-	let searchTimeout = null;
-
 	// DOM elements - NO AUTOMATIC EVENT LISTENERS
 	const elements = {
 		searchInput: document.getElementById('time-entry-search'),
@@ -87,7 +84,7 @@
 	function bindEvents() {
 		console.log('Binding events...');
 
-		// Apply filters button (manual filtering)
+		// Apply filters button (navigate with query params)
 		if (elements.applyFiltersBtn) {
 			elements.applyFiltersBtn.addEventListener('click', applyFilters);
 		}
@@ -131,10 +128,10 @@
 
 
 	/**
-	 * Apply all filters - SIMPLIFIED with data attributes
+	 * Apply filters by navigating with query params (server-side paging)
 	 */
 	function applyFilters() {
-		const searchTerm = elements.searchInput ? elements.searchInput.value.toLowerCase() : '';
+		const searchTerm = elements.searchInput ? elements.searchInput.value : '';
 		const projectFilter = elements.projectFilter ? elements.projectFilter.value : '';
 		const userFilter = elements.userFilter ? elements.userFilter.value : '';
 		const projectTypeFilter = elements.projectTypeFilter ? elements.projectTypeFilter.value : '';
@@ -143,152 +140,40 @@
 		const dateFrom = dateFromInput ? dateFromInput.value : '';
 		const dateTo = dateToInput ? dateToInput.value : '';
 
-		console.log('=== APPLYING FILTERS ===');
-		console.log('Filters:', { searchTerm, projectFilter, userFilter, projectTypeFilter, dateFrom, dateTo });
-
-		const rows = elements.timeEntriesTbody ? elements.timeEntriesTbody.querySelectorAll('tr') : [];
-		console.log('Total rows:', rows.length);
-		
-		let visibleCount = 0;
-
-		rows.forEach(row => {
-			// Skip the no-results row
-			if (row.id === 'no-results-row') {
-				return;
-			}
-
-			let showRow = true;
-
-			// Project filter - use data attribute
-			if (projectFilter && showRow) {
-				const rowProjectId = row.getAttribute('data-project-id');
-				if (rowProjectId !== projectFilter) {
-					showRow = false;
-				}
-			}
-
-			// User filter - use data attribute
-			if (userFilter && showRow) {
-				const rowUserId = row.getAttribute('data-user-id');
-				if (rowUserId !== userFilter) {
-					showRow = false;
-				}
-			}
-
-			// Project type filter - use data attribute
-			if (projectTypeFilter && showRow) {
-				const rowProjectType = row.getAttribute('data-project-type');
-				if (rowProjectType !== projectTypeFilter) {
-					showRow = false;
-				}
-			}
-
-			// Date from filter - use data attribute
-			if (dateFrom && showRow) {
-				const rowDateISO = row.getAttribute('data-date-iso');
-				if (rowDateISO && rowDateISO < dateFrom) {
-					showRow = false;
-				}
-			}
-
-			// Date to filter - use data attribute
-			if (dateTo && showRow) {
-				const rowDateISO = row.getAttribute('data-date-iso');
-				if (rowDateISO && rowDateISO > dateTo) {
-					showRow = false;
-				}
-			}
-
-			// Search filter - search in visible text
-			if (searchTerm && showRow) {
-				const description = row.querySelector('td:nth-child(7)')?.textContent.toLowerCase() || '';
-				const project = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
-				const customer = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
-
-				if (!description.includes(searchTerm) &&
-					!project.includes(searchTerm) &&
-					!customer.includes(searchTerm)) {
-					showRow = false;
-				}
-			}
-
-			// Show/hide row
-			row.style.display = showRow ? '' : 'none';
-			
-			if (showRow) {
-				visibleCount++;
-			}
-		});
-
-		console.log('Visible rows after filtering:', visibleCount);
-		updateEmptyState();
+		const url = new URL(window.location.href);
+		searchTerm ? url.searchParams.set('search', searchTerm) : url.searchParams.delete('search');
+		projectFilter ? url.searchParams.set('project_id', projectFilter) : url.searchParams.delete('project_id');
+		userFilter ? url.searchParams.set('user_id', userFilter) : url.searchParams.delete('user_id');
+		projectTypeFilter ? url.searchParams.set('project_type', projectTypeFilter) : url.searchParams.delete('project_type');
+		dateFrom ? url.searchParams.set('date_from', dateFrom) : url.searchParams.delete('date_from');
+		dateTo ? url.searchParams.set('date_to', dateTo) : url.searchParams.delete('date_to');
+		url.searchParams.set('page', '1'); // reset to first page on new filter set
+		window.location.href = url.toString();
 	}
 
 
 	/**
-	 * Clear all filters and show all rows
+	 * Clear all filters and reload
 	 */
 	function clearFilters() {
 		console.log('=== CLEARING ALL FILTERS ===');
 		
-		if (elements.searchInput) {
-			elements.searchInput.value = '';
-		}
-		if (elements.projectFilter) {
-			elements.projectFilter.value = '';
-		}
-		if (elements.userFilter) {
-			elements.userFilter.value = '';
-		}
-		if (elements.projectTypeFilter) {
-			elements.projectTypeFilter.value = '';
-		}
-		const dateFromInput = document.getElementById('date-from-filter');
-		const dateToInput = document.getElementById('date-to-filter');
-		if (dateFromInput) {
-			dateFromInput.value = '';
-		}
-		if (dateToInput) {
-			dateToInput.value = '';
-		}
-
-		// Show all rows except the no-results row
-		const rows = elements.timeEntriesTbody ? elements.timeEntriesTbody.querySelectorAll('tr') : [];
-		rows.forEach(row => {
-			if (row.id !== 'no-results-row') {
-				row.style.display = '';
-			}
-		});
-
-		console.log('All filters cleared, showing all rows');
-		updateEmptyState();
+		const url = new URL(window.location.href);
+		url.searchParams.delete('search');
+		url.searchParams.delete('project_id');
+		url.searchParams.delete('user_id');
+		url.searchParams.delete('project_type');
+		url.searchParams.delete('date_from');
+		url.searchParams.delete('date_to');
+		url.searchParams.set('page', '1');
+		window.location.href = url.toString();
 	}
 
 	/**
 	 * Update empty state visibility
 	 */
 	function updateEmptyState() {
-		// Get all rows except the no-results row
-		const allRows = elements.timeEntriesTbody ?
-			Array.from(elements.timeEntriesTbody.querySelectorAll('tr')).filter(row =>
-				row.id !== 'no-results-row'
-			) : [];
-		
-		const visibleRows = allRows.filter(row => row.style.display !== 'none');
-		const noResultsRow = document.getElementById('no-results-row');
-
-		console.log('updateEmptyState: Total rows:', allRows.length, 'Visible rows:', visibleRows.length);
-
-		// Show no-results row if there are rows but none are visible after filtering
-		if (noResultsRow) {
-			if (allRows.length > 0 && visibleRows.length === 0) {
-				noResultsRow.style.display = '';
-				console.log('Showing no-results row');
-			} else {
-				noResultsRow.style.display = 'none';
-				console.log('Hiding no-results row');
-			}
-		}
+		// For server-side paging the no-results row is controlled on render; nothing to do.
 	}
 
 	/**

@@ -128,6 +128,19 @@ class TimeEntryService
 	}
 
 	/**
+	 * Count time entries with optional filters (same filter keys as findWithProjectInfo)
+	 *
+	 * @param array $filters
+	 * @return int
+	 */
+	public function countTimeEntries(array $filters = []): int
+	{
+		$countFilters = $filters;
+		unset($countFilters['limit'], $countFilters['offset']);
+		return $this->timeEntryMapper->count($countFilters);
+	}
+
+	/**
 	 * Update a time entry
 	 *
 	 * @param int $id Time entry ID

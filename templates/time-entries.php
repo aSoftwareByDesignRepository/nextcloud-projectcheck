@@ -143,6 +143,34 @@ Util::addStyle('projectcheck', 'navigation');
         justify-content: flex-end;
     }
 
+    /* Pagination */
+    .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+    }
+
+    .pagination-info {
+        font-size: 14px;
+        color: var(--color-text-maxcontrast);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .pagination-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .pagination-actions .btn {
+        padding: 8px 14px;
+    }
+
     .btn {
         display: inline-flex;
         align-items: center;
@@ -549,6 +577,43 @@ Util::addStyle('projectcheck', 'navigation');
                         </tbody>
                     </table>
                 </div>
+                <?php
+                    $pagination = $_['pagination'] ?? ['page' => 1, 'totalPages' => 1, 'totalEntries' => count($timeEntries), 'perPage' => count($timeEntries)];
+                    $currentPage = max(1, (int)($pagination['page'] ?? 1));
+                    $totalPages = max(1, (int)($pagination['totalPages'] ?? 1));
+                    $totalEntries = (int)($pagination['totalEntries'] ?? 0);
+                    $perPage = (int)($pagination['perPage'] ?? 0);
+
+                    // Build helper for pagination links with current filters
+                    $baseUrl = $_['indexUrl'] ?? '/index.php/apps/projectcheck/time-entries';
+                    $baseQuery = $filters ?? [];
+                    unset($baseQuery['limit'], $baseQuery['offset']);
+                ?>
+                <?php if ($totalPages > 1): ?>
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            <span><?php p($l->t('Page')); ?> <?php p($currentPage); ?> / <?php p($totalPages); ?></span>
+                            <span>•</span>
+                            <span><?php p($l->t('Total')); ?> <?php p($totalEntries); ?></span>
+                        </div>
+                        <div class="pagination-actions">
+                            <?php
+                                $prevQuery = array_merge($baseQuery, ['page' => max(1, $currentPage - 1)]);
+                                $nextQuery = array_merge($baseQuery, ['page' => min($totalPages, $currentPage + 1)]);
+                            ?>
+                            <a class="btn btn-secondary <?php echo $currentPage <= 1 ? 'disabled' : ''; ?>"
+                               href="<?php p($currentPage <= 1 ? '#' : $baseUrl . '?' . http_build_query($prevQuery)); ?>"
+                               aria-disabled="<?php echo $currentPage <= 1 ? 'true' : 'false'; ?>">
+                                ‹ <?php p($l->t('Previous')); ?>
+                            </a>
+                            <a class="btn btn-secondary <?php echo $currentPage >= $totalPages ? 'disabled' : ''; ?>"
+                               href="<?php p($currentPage >= $totalPages ? '#' : $baseUrl . '?' . http_build_query($nextQuery)); ?>"
+                               aria-disabled="<?php echo $currentPage >= $totalPages ? 'true' : 'false'; ?>">
+                                <?php p($l->t('Next')); ?> ›
+                            </a>
+                        </div>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>

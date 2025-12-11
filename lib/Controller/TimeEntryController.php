@@ -136,6 +136,11 @@ class TimeEntryController extends Controller
 		$search = $this->request->getParam('search', '');
 		$filterUserId = $this->request->getParam('user_id', '');
 		$projectType = $this->request->getParam('project_type', '');
+		$page = max(1, (int)$this->request->getParam('page', 1));
+
+		// Determine pagination settings
+		$defaultItemsPerPage = (int)$this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
+		$perPage = $defaultItemsPerPage > 0 ? $defaultItemsPerPage : 20;
 
 		$filters = [];
 		if ($projectId) $filters['project_id'] = $projectId;
@@ -152,6 +157,20 @@ class TimeEntryController extends Controller
 		if ($search) $filters['search'] = $search;
 		if ($filterUserId) $filters['user_id'] = $filterUserId;
 		if ($projectType) $filters['project_type'] = $projectType;
+
+		// Apply pagination filters
+		$filters['limit'] = $perPage;
+		$filters['offset'] = ($page - 1) * $perPage;
+
+		// Count total entries for pagination
+		$totalEntries = $this->timeEntryService->countTimeEntries($filters);
+		$totalPages = (int)max(1, ceil($totalEntries / $perPage));
+
+		// Clamp page if user requests beyond last page
+		if ($page > $totalPages) {
+			$page = $totalPages;
+			$filters['offset'] = ($page - 1) * $perPage;
+		}
 
 		// Keep original filter values for the form (in ISO format for date inputs)
 		$formFilters = [
@@ -197,6 +216,12 @@ class TimeEntryController extends Controller
 			'projectTypeStats' => $projectTypeStats,
 			'detailedProjectTypeStats' => $detailedProjectTypeStats,
 			'productivityAnalysis' => $productivityAnalysis,
+			'pagination' => [
+				'page' => $page,
+				'perPage' => $perPage,
+				'totalEntries' => $totalEntries,
+				'totalPages' => $totalPages,
+			],
 			'createUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.create'),
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => 'ENTRY_ID']),
