@@ -470,7 +470,7 @@ class CustomerService
 	 */
 	public function getTotalCustomerCount(): int
 	{
-		return $this->customerMapper->count();
+		return $this->customerMapper->countWithFilters([]);
 	}
 
 	/**
