@@ -22,6 +22,10 @@ return [
 		['name' => 'project#updatePost', 'url' => '/projects/{id}/update', 'verb' => 'POST'],
 		['name' => 'project#delete', 'url' => '/projects/{id}', 'verb' => 'DELETE'],
 		['name' => 'project#changeStatus', 'url' => '/projects/{id}/status', 'verb' => 'PUT'],
+		['name' => 'projectfile#upload', 'url' => '/projects/{projectId}/files', 'verb' => 'POST'],
+		['name' => 'projectfile#list', 'url' => '/projects/{projectId}/files', 'verb' => 'GET'],
+		['name' => 'projectfile#download', 'url' => '/projects/{projectId}/files/{fileId}/download', 'verb' => 'GET'],
+		['name' => 'projectfile#delete', 'url' => '/projects/{projectId}/files/{fileId}', 'verb' => 'DELETE'],
 
 		// Team member management routes
 		['name' => 'project#getTeamMembers', 'url' => '/projects/{id}/members', 'verb' => 'GET'],

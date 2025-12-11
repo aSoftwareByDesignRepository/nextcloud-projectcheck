@@ -108,6 +108,23 @@ class Application extends App implements IBootstrap
 			return $c->query('ActivityService');
 		});
 
+		// Register ProjectFile mapper and service (ProjectCheck namespace)
+		$context->registerService(\OCA\ProjectCheck\Db\ProjectFileMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\ProjectFileMapper(
+				$c->query(\OCP\IDBConnection::class)
+			);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Service\ProjectFileService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\ProjectFileService(
+				$c->query(\OCA\ProjectCheck\Db\ProjectFileMapper::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCP\Files\AppData\IAppDataFactory::class),
+				$c->query(\OCP\IUserSession::class),
+				$c->query(\Psr\Log\LoggerInterface::class)
+			);
+		});
+
 		// Register CSPService (no dependencies)
 		$context->registerService(\OCA\ProjectControl\Service\CSPService::class, function ($c) {
 			return new \OCA\ProjectControl\Service\CSPService();
