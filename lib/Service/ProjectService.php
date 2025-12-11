@@ -11,6 +11,7 @@ namespace OCA\ProjectCheck\Service;
 
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
+use OCA\ProjectCheck\Db\ProjectMapper;
 use OCA\ProjectCheck\Util\ProjectCalculator;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
