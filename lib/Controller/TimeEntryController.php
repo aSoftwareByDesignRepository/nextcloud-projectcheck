@@ -73,6 +73,7 @@ class TimeEntryController extends Controller
 	 * @param TimeEntryService $timeEntryService
 	 * @param ProjectService $projectService
 	 * @param CustomerService $customerService
+	 * @param BudgetService $budgetService
 	 * @param IURLGenerator $urlGenerator
 	 * @param IConfig $config
 	 * @param DeletionService $deletionService
@@ -86,6 +87,7 @@ class TimeEntryController extends Controller
 		TimeEntryService $timeEntryService,
 		ProjectService $projectService,
 		CustomerService $customerService,
+		BudgetService $budgetService,
 		IURLGenerator $urlGenerator,
 		IConfig $config,
 		DeletionService $deletionService,
@@ -97,6 +99,7 @@ class TimeEntryController extends Controller
 		$this->timeEntryService = $timeEntryService;
 		$this->projectService = $projectService;
 		$this->customerService = $customerService;
+		// BudgetService currently unused here; kept for DI compatibility.
 		$this->urlGenerator = $urlGenerator;
 		$this->config = $config;
 		$this->deletionService = $deletionService;

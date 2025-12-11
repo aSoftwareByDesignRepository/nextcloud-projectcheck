@@ -226,7 +226,7 @@ class CleanupJob extends Job implements IJob
 	{
 		try {
 			// Use the BudgetAlertService to check for alerts
-			$budgetAlertService = \OC::$server->query(\OCA\ProjectControl\Service\BudgetAlertService::class);
+			$budgetAlertService = \OC::$server->query(\OCA\ProjectCheck\Service\BudgetAlertService::class);
 			$alerts = $budgetAlertService->checkBudgetAlerts('system');
 
 			$warningCount = count($alerts);
