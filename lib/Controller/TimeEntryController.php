@@ -227,8 +227,12 @@ class TimeEntryController extends Controller
 
 		$userId = $user->getUID();
 
-		// Get all projects for time entry selection (excluding cancelled projects)
-		$userProjects = $this->projectService->getProjects(['status' => ['Active', 'On Hold', 'Completed']]);
+		// Get all projects for time entry selection (exclude completed/cancelled)
+		$userProjects = $this->projectService->getProjects(['status' => ['Active', 'On Hold']]);
+		$userProjects = array_values(array_filter($userProjects, static function ($project) {
+			$status = trim((string)$project->getStatus());
+			return strcasecmp($status, 'Completed') !== 0 && strcasecmp($status, 'Cancelled') !== 0;
+		}));
 
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService);
