@@ -85,8 +85,8 @@ Util::addStyle('projectcheck', 'navigation');
         display: flex;
         flex-direction: column;
         gap: 6px;
-        min-width: 260px;
-        flex: 1 1 260px;
+        min-width: 200px;
+        flex: 1 1 200px;
     }
 
     .filter-label {
@@ -108,7 +108,7 @@ Util::addStyle('projectcheck', 'navigation');
         background: var(--color-main-background);
         color: var(--color-text);
         transition: all 0.3s ease;
-        min-width: 260px;
+        min-width: 200px;
         width: 100%;
         max-width: 100%;
         flex: 1 1 auto;
@@ -139,6 +139,8 @@ Util::addStyle('projectcheck', 'navigation');
         display: flex;
         gap: 10px;
         margin-left: auto;
+        flex: 0 0 auto;
+        justify-content: flex-end;
     }
 
     .btn {
