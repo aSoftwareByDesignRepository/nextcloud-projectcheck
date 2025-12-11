@@ -167,8 +167,13 @@
 		if (searchTerm) url.searchParams.set('search', searchTerm);
 		else url.searchParams.delete('search');
 
-		if (status) url.searchParams.set('status', status);
-		else url.searchParams.delete('status');
+		if (status && status !== 'all') {
+			url.searchParams.set('status', status);
+		} else if (status === 'all') {
+			url.searchParams.set('status', 'all');
+		} else {
+			url.searchParams.delete('status');
+		}
 
 		if (priority) url.searchParams.set('priority', priority);
 		else url.searchParams.delete('priority');
@@ -188,14 +193,18 @@
 	 */
 	function clearFilters() {
 		if (elements.searchInput) elements.searchInput.value = '';
-		if (elements.statusFilter) elements.statusFilter.value = '';
+		if (elements.statusFilter) elements.statusFilter.value = 'Active';
 		if (elements.priorityFilter) elements.priorityFilter.value = '';
 		if (elements.projectTypeFilter) elements.projectTypeFilter.value = '';
 		if (elements.customerFilter) elements.customerFilter.value = '';
 
-		// Navigate to base URL
+		// Navigate to default state (Active status)
 		const url = new URL(window.location);
-		url.search = '';
+		url.searchParams.set('status', 'Active');
+		url.searchParams.delete('priority');
+		url.searchParams.delete('project_type');
+		url.searchParams.delete('customer_id');
+		url.searchParams.delete('search');
 		window.location.href = url.toString();
 	}
 

@@ -134,9 +134,11 @@ class ProjectController extends Controller
 		$userId = $user->getUID();
 		$defaultItemsPerPage = $this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
 
+		$statusParam = $this->request->getParam('status', null);
 		$filters = [
 			'search' => $this->request->getParam('search', ''),
-			'status' => $this->request->getParam('status', ''),
+			// Default to Active when no status is supplied; allow explicit "all" to show everything
+			'status' => $statusParam === null ? 'Active' : $statusParam,
 			'priority' => $this->request->getParam('priority', ''),
 			'project_type' => $this->request->getParam('project_type', ''),
 			'customer_id' => $this->request->getParam('customer_id', ''),

@@ -198,6 +198,11 @@ class ProjectService
 			->leftJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
 
 		// Apply filters
+		if (isset($filters['status']) && $filters['status'] === 'all') {
+			// Explicit "all" means no status filter
+			$filters['status'] = '';
+		}
+
 		if (!empty($filters['status'])) {
 			if (is_array($filters['status'])) {
 				// Handle multiple statuses

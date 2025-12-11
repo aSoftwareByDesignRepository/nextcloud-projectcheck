@@ -124,8 +124,8 @@ Util::addStyle('projectcheck', 'navigation');
 
                 <div class="filters-row">
                     <select id="status-filter">
-                        <option value=""><?php p($l->t('All Statuses')); ?></option>
-                        <option value="Active" <?php if (($_['filters']['status'] ?? '') === 'Active') echo 'selected'; ?>><?php p($l->t('Active')); ?></option>
+                        <option value="all" <?php if (($_['filters']['status'] ?? '') === 'all') echo 'selected'; ?>><?php p($l->t('All Statuses')); ?></option>
+                        <option value="Active" <?php if (($_['filters']['status'] ?? 'Active') === 'Active') echo 'selected'; ?>><?php p($l->t('Active')); ?></option>
                         <option value="On Hold" <?php if (($_['filters']['status'] ?? '') === 'On Hold') echo 'selected'; ?>><?php p($l->t('On Hold')); ?></option>
                         <option value="Completed" <?php if (($_['filters']['status'] ?? '') === 'Completed') echo 'selected'; ?>><?php p($l->t('Completed')); ?></option>
                         <option value="Cancelled" <?php if (($_['filters']['status'] ?? '') === 'Cancelled') echo 'selected'; ?>><?php p($l->t('Cancelled')); ?></option>
