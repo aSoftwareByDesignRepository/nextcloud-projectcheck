@@ -92,17 +92,28 @@
         let alertClass = 'budget-impact-info';
 
         if (wouldExceed) {
-            message = `⚠️ This entry would exceed the project budget by €${(impact.additional_cost - impact.remaining_budget_after).toFixed(2)}`;
+            message = t('projectcheck', '⚠️ This entry would exceed the project budget by €{amount}', {
+                amount: (impact.additional_cost - impact.remaining_budget_after).toFixed(2),
+            });
             alertClass += ' critical';
         } else if (warningLevel === 'critical') {
-            message = `⚠️ This entry would bring the project to ${impact.new_consumption.toFixed(1)}% of budget (€${impact.additional_cost.toFixed(2)} cost)`;
+            message = t('projectcheck', '⚠️ This entry would bring the project to {percent}% of budget (€{cost} cost)', {
+                percent: impact.new_consumption.toFixed(1),
+                cost: impact.additional_cost.toFixed(2),
+            });
             alertClass += ' critical';
         } else if (warningLevel === 'warning') {
-            message = `⚡ This entry would bring the project to ${impact.new_consumption.toFixed(1)}% of budget (€${impact.additional_cost.toFixed(2)} cost)`;
+            message = t('projectcheck', '⚡ This entry would bring the project to {percent}% of budget (€{cost} cost)', {
+                percent: impact.new_consumption.toFixed(1),
+                cost: impact.additional_cost.toFixed(2),
+            });
             alertClass += ' warning';
         } else {
             // Show positive feedback for entries within budget
-            message = `✅ Entry cost: €${impact.additional_cost.toFixed(2)} - Budget remaining: €${impact.remaining_budget_after.toFixed(2)}`;
+            message = t('projectcheck', '✅ Entry cost: €{cost} - Budget remaining: €{remaining}', {
+                cost: impact.additional_cost.toFixed(2),
+                remaining: impact.remaining_budget_after.toFixed(2),
+            });
         }
 
         warningContainer.innerHTML = `

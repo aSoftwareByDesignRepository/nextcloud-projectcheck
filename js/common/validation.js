@@ -272,7 +272,7 @@ const ProjectControlValidation = {
           return true; // Allow if budget check fails
         }
       },
-      message: 'This time entry would exceed the project budget'
+      message: t('projectcheck', 'This time entry would exceed the project budget')
     },
     
     customerActive: {

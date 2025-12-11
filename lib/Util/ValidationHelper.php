@@ -346,7 +346,7 @@ class ValidationHelper
 		);
 
 		if (!$budgetCheck['withinBudget']) {
-			$errors['budget_exceeded'] = 'This time entry would exceed the project budget';
+			$errors['budget_exceeded'] = $this->l10n->t('This time entry would exceed the project budget');
 		}
 
 		// Check if project is active
