@@ -94,7 +94,23 @@ style('projectcheck', 'navigation');
 					</div>
 				</div>
 
-				<!-- Display options removed: items per page fixed to 20; date format not configurable -->
+				<div class="settings-section">
+					<h3><?php p($l->t('Display Options')); ?></h3>
+
+					<div class="form-group">
+						<label for="itemsPerPage"><?php p($l->t('Items per Page')); ?></label>
+						<input type="number" id="itemsPerPage" name="itemsPerPage"
+							value="<?php p($settings['itemsPerPage']); ?>"
+							min="5" max="100" class="form-control">
+						<small><?php p($l->t('Number of projects to show per page')); ?></small>
+					</div>
+
+					<div class="form-group">
+						<label><?php p($l->t('Date Format')); ?></label>
+						<input type="text" class="form-control" value="dd.mm.yyyy" readonly>
+						<small><?php p($l->t('Date format is fixed to DD.MM.YYYY for all users')); ?></small>
+					</div>
+				</div>
 
 				<div class="settings-section">
 					<h3><?php p($l->t('Notifications')); ?></h3>

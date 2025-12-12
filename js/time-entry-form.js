@@ -57,6 +57,67 @@
 		if (descriptionTextarea) {
 			descriptionTextarea.addEventListener('input', updateCharacterCount);
 		}
+
+		// Date input formatting for dd.mm.yyyy
+		const dateInput = document.getElementById('date');
+		if (dateInput) {
+			initializeDateInput(dateInput);
+		}
+	}
+
+	/**
+	 * Initialize date input with European format (dd.mm.yyyy)
+	 */
+	function initializeDateInput(input) {
+		// Auto-format as user types
+		input.addEventListener('input', function() {
+			let value = this.value.replace(/\D/g, ''); // Remove non-digits
+
+			if (value.length >= 2) {
+				value = value.substring(0, 2) + '.' + value.substring(2);
+			}
+			if (value.length >= 5) {
+				value = value.substring(0, 5) + '.' + value.substring(5, 9);
+			}
+
+			this.value = value;
+		});
+
+		// Validate on blur
+		input.addEventListener('blur', function() {
+			if (this.value && this.value.length === 10) {
+				const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+				const match = this.value.match(dateRegex);
+
+				if (match) {
+					const day = parseInt(match[1], 10);
+					const month = parseInt(match[2], 10);
+					const year = parseInt(match[3], 10);
+
+					// Basic validation
+					if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+						this.setCustomValidity(t('projectcheck', 'Please enter a valid date'));
+					} else {
+						// Check if date is not in the future
+						const date = new Date(year, month - 1, day);
+						const today = new Date();
+						today.setHours(0, 0, 0, 0);
+						
+						if (date > today) {
+							this.setCustomValidity(t('projectcheck', 'Date cannot be in the future'));
+						} else {
+							this.setCustomValidity('');
+						}
+					}
+				} else {
+					this.setCustomValidity(t('projectcheck', 'Please enter date in format dd.mm.yyyy'));
+				}
+			} else if (this.value) {
+				this.setCustomValidity(t('projectcheck', 'Please enter date in format dd.mm.yyyy'));
+			} else {
+				this.setCustomValidity('');
+			}
+		});
 	}
 
 	/**
@@ -136,21 +197,34 @@
 		if (!data.date) {
 			errors.date = 'Date is required';
 		} else {
-			// Validate date format - support both European (dd.mm.yyyy) and ISO (yyyy-mm-dd) formats
+			// Validate date format - expect European format (dd.mm.yyyy)
 			let date = null;
 			if (/^\d{2}\.\d{2}\.\d{4}$/.test(data.date)) {
 				// European format: dd.mm.yyyy
 				const parts = data.date.split('.');
-				const day = parts[0];
-				const month = parts[1];
-				const year = parts[2];
-				date = new Date(year, month - 1, day);
-			} else if (/^\d{4}-\d{2}-\d{2}$/.test(data.date)) {
-				// ISO format: yyyy-mm-dd
-				date = new Date(data.date);
-			}
-
-			if (!date || isNaN(date.getTime())) {
+				const day = parseInt(parts[0], 10);
+				const month = parseInt(parts[1], 10);
+				const year = parseInt(parts[2], 10);
+				
+				// Validate ranges
+				if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+					errors.date = t('projectcheck', 'Invalid date format (dd.mm.yyyy)');
+				} else {
+					date = new Date(year, month - 1, day);
+					
+					// Check if date is valid
+					if (isNaN(date.getTime()) || date.getDate() !== day || date.getMonth() !== (month - 1) || date.getFullYear() !== year) {
+						errors.date = t('projectcheck', 'Invalid date (e.g., 31.02.2024 is not valid)');
+					} else {
+						// Check if date is not in the future
+						const today = new Date();
+						today.setHours(0, 0, 0, 0);
+						if (date > today) {
+							errors.date = t('projectcheck', 'Date cannot be in the future');
+						}
+					}
+				}
+			} else {
 				errors.date = t('projectcheck', 'Invalid date format (dd.mm.yyyy)');
 			}
 		}
@@ -340,10 +414,23 @@
 			case 'date':
 				if (!value) {
 					error = 'Date is required';
+				} else if (!/^\d{2}\.\d{2}\.\d{4}$/.test(value)) {
+					error = t('projectcheck', 'Invalid date format (dd.mm.yyyy)');
 				} else {
-					const date = new Date(value);
-					if (isNaN(date.getTime())) {
-						error = t('projectcheck', 'Invalid date format');
+					const parts = value.split('.');
+					const day = parseInt(parts[0], 10);
+					const month = parseInt(parts[1], 10);
+					const year = parseInt(parts[2], 10);
+					const date = new Date(year, month - 1, day);
+					
+					if (isNaN(date.getTime()) || date.getDate() !== day || date.getMonth() !== (month - 1) || date.getFullYear() !== year) {
+						error = t('projectcheck', 'Invalid date (e.g., 31.02.2024 is not valid)');
+					} else {
+						const today = new Date();
+						today.setHours(0, 0, 0, 0);
+						if (date > today) {
+							error = t('projectcheck', 'Date cannot be in the future');
+						}
 					}
 				}
 				break;

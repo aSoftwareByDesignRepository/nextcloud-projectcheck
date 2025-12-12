@@ -128,6 +128,17 @@
 
 
 	/**
+	 * Convert European date format (dd.mm.yyyy) to ISO format (yyyy-mm-dd) for backend
+	 */
+	function convertEuropeanDateToISO(dateString) {
+		if (!dateString || !/^\d{2}\.\d{2}\.\d{4}$/.test(dateString)) {
+			return dateString; // Return as-is if not European format
+		}
+		const parts = dateString.split('.');
+		return `${parts[2]}-${parts[1]}-${parts[0]}`;
+	}
+
+	/**
 	 * Apply filters by navigating with query params (server-side paging)
 	 */
 	function applyFilters() {
@@ -137,8 +148,16 @@
 		const projectTypeFilter = elements.projectTypeFilter ? elements.projectTypeFilter.value : '';
 		const dateFromInput = document.getElementById('date-from-filter');
 		const dateToInput = document.getElementById('date-to-filter');
-		const dateFrom = dateFromInput ? dateFromInput.value : '';
-		const dateTo = dateToInput ? dateToInput.value : '';
+		let dateFrom = dateFromInput ? dateFromInput.value.trim() : '';
+		let dateTo = dateToInput ? dateToInput.value.trim() : '';
+
+		// Convert European format (dd.mm.yyyy) to ISO format (yyyy-mm-dd) for backend
+		if (dateFrom) {
+			dateFrom = convertEuropeanDateToISO(dateFrom);
+		}
+		if (dateTo) {
+			dateTo = convertEuropeanDateToISO(dateTo);
+		}
 
 		const url = new URL(window.location.href);
 		searchTerm ? url.searchParams.set('search', searchTerm) : url.searchParams.delete('search');
@@ -309,23 +328,70 @@
 		}, hideDelay);
 	}
 
-	// HTML5 date inputs work natively - no custom date picker needed
-
-	// Date conversion functions no longer needed with HTML5 date inputs
-
-	// All date conversion functions removed - HTML5 date inputs handle this automatically
-
-	// Date input formatting no longer needed with HTML5 date inputs
-
-	// All date formatting and validation functions removed - HTML5 date inputs handle this automatically
-
-	// No longer needed with HTML5 date inputs
-
-	// Initialize date picker functionality
+	/**
+	 * Initialize date input formatting for European format (dd.mm.yyyy)
+	 */
 	function initCalendarIcons() {
-		// Date pickers are ready, no automatic filtering
-		// User must click "Apply Filters" button
-		console.log('Date picker functionality initialized');
+		const dateFromInput = document.getElementById('date-from-filter');
+		const dateToInput = document.getElementById('date-to-filter');
+
+		if (dateFromInput) {
+			initializeDateInput(dateFromInput);
+		}
+		if (dateToInput) {
+			initializeDateInput(dateToInput);
+		}
+	}
+
+	/**
+	 * Initialize date input with European format (dd.mm.yyyy)
+	 */
+	function initializeDateInput(input) {
+		// Auto-format as user types
+		input.addEventListener('input', function() {
+			let value = this.value.replace(/\D/g, ''); // Remove non-digits
+
+			if (value.length >= 2) {
+				value = value.substring(0, 2) + '.' + value.substring(2);
+			}
+			if (value.length >= 5) {
+				value = value.substring(0, 5) + '.' + value.substring(5, 9);
+			}
+
+			this.value = value;
+		});
+
+		// Validate on blur
+		input.addEventListener('blur', function() {
+			if (this.value && this.value.length === 10) {
+				const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+				const match = this.value.match(dateRegex);
+
+				if (match) {
+					const day = parseInt(match[1], 10);
+					const month = parseInt(match[2], 10);
+					const year = parseInt(match[3], 10);
+
+					// Basic validation
+					if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+						this.setCustomValidity(t('projectcheck', 'Please enter a valid date'));
+					} else {
+						const date = new Date(year, month - 1, day);
+						if (isNaN(date.getTime()) || date.getDate() !== day || date.getMonth() !== (month - 1) || date.getFullYear() !== year) {
+							this.setCustomValidity(t('projectcheck', 'Invalid date'));
+						} else {
+							this.setCustomValidity('');
+						}
+					}
+				} else {
+					this.setCustomValidity(t('projectcheck', 'Please enter date in format dd.mm.yyyy'));
+				}
+			} else if (this.value) {
+				this.setCustomValidity(t('projectcheck', 'Please enter date in format dd.mm.yyyy'));
+			} else {
+				this.setCustomValidity('');
+			}
+		});
 	}
 
 	/**

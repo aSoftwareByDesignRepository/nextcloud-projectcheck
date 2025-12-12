@@ -260,8 +260,9 @@ const ProjectControlUtils = {
 
   /**
    * Format date
+   * Default format is DD.MM.YYYY for European users
    */
-  formatDate(date, format = 'YYYY-MM-DD') {
+  formatDate(date, format = 'DD.MM.YYYY') {
     const d = new Date(date);
     
     const year = d.getFullYear();

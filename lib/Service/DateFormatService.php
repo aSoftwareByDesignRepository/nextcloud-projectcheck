@@ -52,10 +52,10 @@ class DateFormatService
         }
 
         if (!$userId) {
-            return 'Y-m-d'; // Default format
+            return 'd.m.Y'; // Default format for European users
         }
 
-        return $this->config->getUserValue($userId, $this->appName, 'date_format', 'Y-m-d');
+        return $this->config->getUserValue($userId, $this->appName, 'date_format', 'd.m.Y');
     }
 
     /**

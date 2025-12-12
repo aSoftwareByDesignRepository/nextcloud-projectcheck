@@ -28,6 +28,7 @@ use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCA\ProjectCheck\Service\DateFormatService;
 use OCA\ProjectCheck\Traits\StatsTrait;
 use OCA\ProjectCheck\Controller\CSPTrait;
 
@@ -57,6 +58,8 @@ class TimeEntryController extends Controller
 	/** @var IConfig */
 	private $config;
 
+	/** @var DateFormatService */
+	private $dateFormatService;
 
 	/** @var DeletionService */
 	private $deletionService;
@@ -76,6 +79,7 @@ class TimeEntryController extends Controller
 	 * @param BudgetService $budgetService
 	 * @param IURLGenerator $urlGenerator
 	 * @param IConfig $config
+	 * @param DateFormatService $dateFormatService
 	 * @param DeletionService $deletionService
 	 * @param ActivityService $activityService
 	 * @param CSPService $cspService
@@ -90,6 +94,7 @@ class TimeEntryController extends Controller
 		BudgetService $budgetService,
 		IURLGenerator $urlGenerator,
 		IConfig $config,
+		DateFormatService $dateFormatService,
 		DeletionService $deletionService,
 		ActivityService $activityService,
 		CSPService $cspService
@@ -102,6 +107,7 @@ class TimeEntryController extends Controller
 		// BudgetService currently unused here; kept for DI compatibility.
 		$this->urlGenerator = $urlGenerator;
 		$this->config = $config;
+		$this->dateFormatService = $dateFormatService;
 		$this->deletionService = $deletionService;
 		$this->activityService = $activityService;
 		$this->setCspService($cspService);
@@ -201,6 +207,7 @@ class TimeEntryController extends Controller
 			'projectTypeStats' => $projectTypeStats,
 			'detailedProjectTypeStats' => $detailedProjectTypeStats,
 			'productivityAnalysis' => $productivityAnalysis,
+			'dateFormatService' => $this->dateFormatService,
 			'pagination' => [
 				'page' => $page,
 				'perPage' => $perPage,

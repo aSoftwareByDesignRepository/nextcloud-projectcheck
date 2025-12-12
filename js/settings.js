@@ -116,6 +116,14 @@
 			}
 		}
 
+		// Validate items per page
+		if (data.itemsPerPage) {
+			const items = parseInt(data.itemsPerPage);
+			if (items < 5 || items > 100) {
+				errors.push(t('projectcheck', 'Items per page must be between 5 and 100'));
+			}
+		}
+
 		// Show errors if any
 		if (errors.length > 0) {
 			showMessage(errors.join('<br>'), 'error');
@@ -296,8 +304,10 @@
 			projectUpdates: 'true',
 			defaultProjectStatus: 'Active',
 			defaultProjectPriority: 'Medium',
+			itemsPerPage: '20',
 			showCompletedProjects: 'true',
 			autoCalculateHours: 'true',
+			timeFormat: 'H:i',
 			currency: 'EUR',
 			language: 'en'
 		};
@@ -318,6 +328,10 @@
 		if (!form) return;
 
 		Object.keys(settings).forEach(function (key) {
+			// Skip dateFormat because it is fixed system-wide and not present in the form
+			if (key === 'dateFormat') {
+				return;
+			}
 			const field = form.querySelector(`[name="${key}"]`);
 			if (field) {
 				if (field.type === 'checkbox') {

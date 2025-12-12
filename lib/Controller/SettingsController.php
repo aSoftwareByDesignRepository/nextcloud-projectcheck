@@ -177,8 +177,12 @@ class SettingsController extends Controller
 			'projectUpdates' => $this->config->getUserValue($userId, $this->appName, 'project_updates', 'true'),
 			'defaultProjectStatus' => $this->config->getUserValue($userId, $this->appName, 'default_project_status', 'Active'),
 			'defaultProjectPriority' => $this->config->getUserValue($userId, $this->appName, 'default_project_priority', 'Medium'),
+			'itemsPerPage' => $this->config->getUserValue($userId, $this->appName, 'items_per_page', '20'),
 			'showCompletedProjects' => $this->config->getUserValue($userId, $this->appName, 'show_completed_projects', 'true'),
 			'autoCalculateHours' => $this->config->getUserValue($userId, $this->appName, 'auto_calculate_hours', 'true'),
+			// Date format is enforced to d.m.Y system-wide
+			'dateFormat' => 'd.m.Y',
+			'timeFormat' => $this->config->getUserValue($userId, $this->appName, 'time_format', 'H:i'),
 			'currency' => $this->config->getUserValue($userId, $this->appName, 'currency', 'EUR'),
 			'language' => $this->config->getUserValue($userId, $this->appName, 'language', 'en')
 		];
@@ -242,6 +246,14 @@ class SettingsController extends Controller
 			}
 		}
 
+		if (isset($data['itemsPerPage'])) {
+			$items = intval($data['itemsPerPage']);
+			if ($items > 0 && $items <= 100) {
+				$this->config->setUserValue($userId, $this->appName, 'items_per_page', $items);
+				$settings['itemsPerPage'] = $items;
+			}
+		}
+
 		if (isset($data['showCompletedProjects'])) {
 			$show = $data['showCompletedProjects'] === 'true' ? 'true' : 'false';
 			$this->config->setUserValue($userId, $this->appName, 'show_completed_projects', $show);
@@ -252,6 +264,13 @@ class SettingsController extends Controller
 			$auto = $data['autoCalculateHours'] === 'true' ? 'true' : 'false';
 			$this->config->setUserValue($userId, $this->appName, 'auto_calculate_hours', $auto);
 			$settings['autoCalculateHours'] = $auto;
+		}
+
+		// Date format is fixed to d.m.Y; ignore any incoming value
+
+		if (isset($data['timeFormat'])) {
+			$this->config->setUserValue($userId, $this->appName, 'time_format', $data['timeFormat']);
+			$settings['timeFormat'] = $data['timeFormat'];
 		}
 
 		if (isset($data['currency'])) {

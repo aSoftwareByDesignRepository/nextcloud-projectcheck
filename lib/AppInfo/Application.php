@@ -132,6 +132,14 @@ class Application extends App implements IBootstrap
 			return new \OCA\ProjectCheck\Service\CSPService();
 		});
 
+		// Register DateFormatService
+		$context->registerService(\OCA\ProjectCheck\Service\DateFormatService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\DateFormatService(
+				$c->query(\OCP\IConfig::class),
+				$c->query(\OCP\IUserSession::class)
+			);
+		});
+
 		// Register BudgetAlertService
 		$context->registerService(\OCA\ProjectCheck\Service\BudgetAlertService::class, function ($c) {
 			return new \OCA\ProjectCheck\Service\BudgetAlertService(
@@ -177,6 +185,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Service\BudgetService::class),
 				$c->query(\OCP\IURLGenerator::class),
 				$c->query(\OCP\IConfig::class),
+				$c->query(\OCA\ProjectCheck\Service\DateFormatService::class),
 				$c->query(\OCA\ProjectCheck\Service\DeletionService::class),
 				$c->query(\OCA\ProjectCheck\Service\ActivityService::class),
 				$c->query(\OCA\ProjectCheck\Service\CSPService::class)
