@@ -132,6 +132,8 @@ class ProjectController extends Controller
 
 		// Get user's default items per page setting
 		$userId = $user->getUID();
+		$defaultItemsPerPage = $this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
+
 		$statusParam = $this->request->getParam('status', null);
 		$page = max(1, (int)$this->request->getParam('page', 1));
 
@@ -142,8 +144,8 @@ class ProjectController extends Controller
 			'priority' => $this->request->getParam('priority', ''),
 			'project_type' => $this->request->getParam('project_type', ''),
 			'customer_id' => $this->request->getParam('customer_id', ''),
-			'limit' => 20,
-			'offset' => ($page - 1) * 20,
+			'limit' => $defaultItemsPerPage ? intval($defaultItemsPerPage) : 20,
+			'offset' => ($page - 1) * ($defaultItemsPerPage ? intval($defaultItemsPerPage) : 20),
 		];
 
 		$projects = $this->projectService->getProjects($filters);

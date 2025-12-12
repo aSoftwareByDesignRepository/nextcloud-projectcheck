@@ -19,7 +19,8 @@ module.exports = (env, argv) => {
             'time-entries': './js/time-entries.js',
             'time-entry-form': './js/time-entry-form.js',
             'time-entry-detail': './js/time-entry-detail.js',
-            common: './js/common/index.js'
+            'project-form': './js/project-form.js',
+            'datepicker': './js/common/datepicker.js'
         },
         output: {
             path: path.resolve(__dirname, 'dist'),
@@ -142,7 +143,9 @@ module.exports = (env, argv) => {
                         /^animation-fill-mode/,
                         /^animation-play-state/,
                         /^(#)?app-content$/,
-                        /^(#)?app-navigation$/
+                        /^(#)?app-navigation$/,
+                        // Datepicker classes
+                        /^projectcheck-datepicker/
                     ]
                 })
             ] : [])
@@ -163,6 +166,11 @@ module.exports = (env, argv) => {
                         compress: {
                             drop_console: isProduction,
                             drop_debugger: isProduction
+                        },
+                        // Critical: Do not use eval in minification
+                        ecma: 5,
+                        output: {
+                            ascii_only: true
                         }
                     },
                     extractComments: false
@@ -182,33 +190,13 @@ module.exports = (env, argv) => {
                     }
                 })
             ],
-            splitChunks: {
-                chunks: 'all',
-                cacheGroups: {
-                    vendor: {
-                        test: /[\\/]node_modules[\\/]/,
-                        name: 'vendors',
-                        chunks: 'all',
-                        priority: 10
-                    },
-                    shared: {
-                        name: 'shared',
-                        minChunks: 2,
-                        chunks: 'all',
-                        priority: 5,
-                        reuseExistingChunk: true
-                    },
-                    styles: {
-                        name: 'styles',
-                        test: /\.css$/,
-                        chunks: 'all',
-                        enforce: true
-                    }
-                }
-            },
-            runtimeChunk: 'single'
+            // CRITICAL: Completely disable code splitting to avoid eval()/Function() CSP issues
+            splitChunks: false,
+            // CRITICAL: Disable runtime chunk to avoid eval() CSP issues
+            runtimeChunk: false
         },
-        devtool: isProduction ? 'source-map' : 'source-map',
+        // CRITICAL: Disable source maps to avoid eval() CSP issues
+        devtool: false,
         cache: {
             type: 'filesystem',
             buildDependencies: {
@@ -219,6 +207,10 @@ module.exports = (env, argv) => {
             hints: isProduction ? 'warning' : false,
             maxEntrypointSize: 512000,
             maxAssetSize: 512000
+        },
+        // CRITICAL: Disable all chunk loading mechanisms
+        experiments: {
+            topLevelAwait: false
         }
     };
 };

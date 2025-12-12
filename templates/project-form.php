@@ -9,7 +9,9 @@
 
 use OCP\Util;
 
+Util::addScript('projectcheck', 'datepicker');
 Util::addScript('projectcheck', 'projects');
+Util::addScript('projectcheck', 'project-form');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'navigation');
 
@@ -334,75 +336,5 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
             updateCharCount(detailedDescriptionTextarea, detailedDescriptionCount, 2000);
         }
 
-        // Date format handling for European format (dd.mm.yyyy)
-        const startDateInput = document.getElementById('start_date');
-        const endDateInput = document.getElementById('end_date');
-
-        function formatDateInput(input) {
-            if (!input) return;
-
-            input.addEventListener('input', function() {
-                let value = this.value.replace(/\D/g, ''); // Remove non-digits
-
-                if (value.length >= 2) {
-                    value = value.substring(0, 2) + '.' + value.substring(2);
-                }
-                if (value.length >= 5) {
-                    value = value.substring(0, 5) + '.' + value.substring(5, 9);
-                }
-
-                this.value = value;
-            });
-
-            input.addEventListener('blur', function() {
-                if (this.value && this.value.length === 10) {
-                    // Validate date format
-                    const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
-                    const match = this.value.match(dateRegex);
-
-                    if (match) {
-                        const day = parseInt(match[1], 10);
-                        const month = parseInt(match[2], 10);
-                        const year = parseInt(match[3], 10);
-
-                        // Basic validation
-                        if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
-                            this.setCustomValidity('Please enter a valid date');
-                        } else {
-                            this.setCustomValidity('');
-                        }
-                    } else {
-                        this.setCustomValidity('Please enter date in format dd.mm.yyyy');
-                    }
-                }
-            });
-        }
-
-        formatDateInput(startDateInput);
-        formatDateInput(endDateInput);
-
-        // Convert European date format to ISO format before form submission
-        const form = document.getElementById('project-form');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                const startDate = document.getElementById('start_date');
-                const endDate = document.getElementById('end_date');
-
-                function convertToISO(dateInput) {
-                    if (dateInput && dateInput.value && dateInput.value.length === 10) {
-                        const parts = dateInput.value.split('.');
-                        if (parts.length === 3) {
-                            const day = parts[0].padStart(2, '0');
-                            const month = parts[1].padStart(2, '0');
-                            const year = parts[2];
-                            dateInput.value = year + '-' + month + '-' + day;
-                        }
-                    }
-                }
-
-                convertToISO(startDate);
-                convertToISO(endDate);
-            });
-        }
     });
 </script>
