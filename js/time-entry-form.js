@@ -142,6 +142,9 @@
 			return;
 		}
 
+		// Remove internal _raw field before sending to server
+		delete formData._raw;
+		
 		submitTimeEntryData(formData, form);
 	}
 
@@ -151,9 +154,11 @@
 	function collectFormData(form) {
 		const formData = new FormData(form);
 		const data = {};
+		const rawData = {}; // Store raw values for validation
 
 		for (let [key, value] of formData.entries()) {
 			const trimmedValue = value.trim();
+			rawData[key] = trimmedValue; // Store raw value
 
 			// Convert numeric fields to numbers
 			if (key === 'project_id' || key === 'hours' || key === 'hourly_rate') {
@@ -166,6 +171,9 @@
 			}
 		}
 
+		// Store raw data for validation
+		data._raw = rawData;
+
 		return data;
 	}
 
@@ -173,6 +181,9 @@
 	 * Convert European date format (dd.mm.yyyy) to ISO format (yyyy-mm-dd)
 	 */
 	function convertEuropeanDateToISO(dateString) {
+		if (!dateString) {
+			return '';
+		}
 		if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateString)) {
 			const parts = dateString.split('.');
 			const day = parts[0];
@@ -180,7 +191,12 @@
 			const year = parts[2];
 			return `${year}-${month}-${day}`;
 		}
-		return dateString; // Return as-is if not European format
+		// If already in ISO format, return as-is
+		if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+			return dateString;
+		}
+		// Otherwise return as-is (will be caught by validation)
+		return dateString;
 	}
 
 	/**
@@ -194,14 +210,17 @@
 			errors.project_id = 'Project is required';
 		}
 
-		if (!data.date) {
+		// Use raw date value for validation (before conversion to ISO)
+		const rawDate = data._raw && data._raw.date ? data._raw.date : '';
+		
+		if (!rawDate) {
 			errors.date = 'Date is required';
 		} else {
 			// Validate date format - expect European format (dd.mm.yyyy)
 			let date = null;
-			if (/^\d{2}\.\d{2}\.\d{4}$/.test(data.date)) {
+			if (/^\d{2}\.\d{2}\.\d{4}$/.test(rawDate)) {
 				// European format: dd.mm.yyyy
-				const parts = data.date.split('.');
+				const parts = rawDate.split('.');
 				const day = parseInt(parts[0], 10);
 				const month = parseInt(parts[1], 10);
 				const year = parseInt(parts[2], 10);
