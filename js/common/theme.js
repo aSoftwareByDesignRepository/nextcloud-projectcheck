@@ -119,11 +119,15 @@ const ProjectControlTheme = {
   },
 
   /**
-   * Get theme-specific CSS variables
+   * Theme variables aligned with Nextcloud (--color-main-text, --color-main-background)
+   * so server theme and app theme stay in sync. App vars (--color-text, etc.) are
+   * derived in CSS from these.
    */
   getThemeVariables(theme) {
     const variables = {
       light: {
+        '--color-main-text': '#212121',
+        '--color-main-background': '#ffffff',
         '--color-background': '#ffffff',
         '--color-background-secondary': '#fafafa',
         '--color-background-tertiary': '#f5f5f5',
@@ -137,6 +141,8 @@ const ProjectControlTheme = {
         '--color-shadow-heavy': 'rgba(0, 0, 0, 0.25)'
       },
       dark: {
+        '--color-main-text': '#e0e0e0',
+        '--color-main-background': '#1a1a1a',
         '--color-background': '#1a1a1a',
         '--color-background-secondary': '#2a2a2a',
         '--color-background-tertiary': '#3a3a3a',

@@ -57,15 +57,15 @@
   --color-gray-800: #424242;
   --color-gray-900: #212121;
 
-  /* Background Colors */
-  --color-background: var(--color-background, var(--color-white));
+  /* Background Colors - prefer Nextcloud theme, fallback for readability */
+  --color-background: var(--color-main-background, var(--color-background, var(--color-white)));
   --color-background-secondary: var(--color-gray-50);
   --color-background-tertiary: var(--color-gray-100);
-  --color-background-elevated: var(--color-white);
+  --color-background-elevated: var(--color-main-background, var(--color-white));
   --color-background-overlay: rgba(0, 0, 0, 0.5);
 
-  /* Text Colors */
-  --color-text: var(--color-main-text, var(--color-gray-900));
+  /* Text Colors - prefer Nextcloud theme (--color-main-text) so every theme is readable */
+  --color-text: var(--color-main-text, #222);
   --color-text-secondary: var(--color-gray-700);
   --color-text-tertiary: var(--color-gray-500);
   --color-text-inverse: var(--color-white);
@@ -221,19 +221,19 @@
   --color-gray-800: #9a9a9a;
   --color-gray-900: #e0e0e0;
 
-  /* Background Colors - Dark theme */
-  --color-background: #1a1a1a;
-  --color-background-secondary: #2a2a2a;
+  /* Background Colors - Dark theme; prefer Nextcloud when set */
+  --color-background: var(--color-main-background, #1a1a1a);
+  --color-background-secondary: var(--color-background-hover, #2a2a2a);
   --color-background-tertiary: #3a3a3a;
-  --color-background-elevated: #2a2a2a;
+  --color-background-elevated: var(--color-main-background, #2a2a2a);
   --color-background-overlay: rgba(0, 0, 0, 0.7);
 
-  /* Text Colors - Dark theme */
-  --color-text: #e0e0e0;
-  --color-text-secondary: #b0b0b0;
+  /* Text Colors - Dark theme; prefer Nextcloud --color-main-text when set */
+  --color-text: var(--color-main-text, #e0e0e0);
+  --color-text-secondary: var(--color-text-maxcontrast, #b0b0b0);
   --color-text-tertiary: #8a8a8a;
   --color-text-inverse: #1a1a1a;
-  --color-text-muted: #6a6a6a;
+  --color-text-muted: var(--color-text-maxcontrast, #6a6a6a);
 
   /* Border Colors - Dark theme */
   --color-border: #3a3a3a;

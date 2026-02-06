@@ -58,7 +58,7 @@
   --letter-spacing-widest: 0.1em;
 
   /* Text Colors */
-  --text-color-primary: var(--color-text);
+  --text-color-primary: var(--color-main-text, var(--color-text, #222));
   --text-color-secondary: var(--color-text-secondary);
   --text-color-tertiary: var(--color-text-tertiary);
   --text-color-muted: var(--color-text-muted);
