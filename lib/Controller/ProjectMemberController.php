@@ -10,6 +10,8 @@
 namespace OCA\ProjectCheck\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\IRequest;
@@ -68,11 +70,11 @@ class ProjectMemberController extends Controller
     /**
      * Get deletion impact for a project member
      *
-     * @NoAdminRequired
-     * @NoCSRFRequired
      * @param int $id
      * @return JSONResponse
      */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function getDeletionImpact(int $id): JSONResponse
     {
         $user = $this->userSession->getUser();
@@ -91,11 +93,11 @@ class ProjectMemberController extends Controller
     /**
      * Remove a project member
      *
-     * @NoAdminRequired
-     * @NoCSRFRequired
      * @param int $id
      * @return JSONResponse
      */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function remove(int $id): JSONResponse
     {
         $user = $this->userSession->getUser();
@@ -142,11 +144,11 @@ class ProjectMemberController extends Controller
     /**
      * Remove project member via POST (for HTML forms)
      *
-     * @NoAdminRequired
-     * @NoCSRFRequired
      * @param int $id
      * @return JSONResponse
      */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function removePost(int $id): JSONResponse
     {
         // Delegate to the remove method

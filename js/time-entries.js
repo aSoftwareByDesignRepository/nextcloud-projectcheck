@@ -172,8 +172,8 @@
 			}
 			
 			function openCalendar() {
+				// If already open, do nothing (avoids focus+click both calling open and second call closing it)
 				if (calendarElement && calendarElement.parentNode) {
-					closeCalendar();
 					return;
 				}
 				
@@ -282,12 +282,20 @@
 				renderCalendarForElement(calendarElement);
 				
 				setTimeout(() => {
-					document.addEventListener('click', function closeOnOutside(e) {
-						if (!calendarElement.contains(e.target) && e.target !== element) {
+					function closeOnOutside(e) {
+						if (!calendarElement || !calendarElement.parentNode) {
+							document.removeEventListener('click', closeOnOutside);
+							return;
+						}
+						const triggerArea = element.parentNode;
+						const clickedInsideCalendar = calendarElement.contains(e.target);
+						const clickedInsideTrigger = (triggerArea && triggerArea.contains(e.target)) || e.target === element;
+						if (!clickedInsideCalendar && !clickedInsideTrigger) {
 							closeCalendar();
 							document.removeEventListener('click', closeOnOutside);
 						}
-					});
+					}
+					document.addEventListener('click', closeOnOutside);
 				}, 100);
 			}
 			

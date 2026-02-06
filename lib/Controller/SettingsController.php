@@ -10,6 +10,8 @@
 namespace OCA\ProjectCheck\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
@@ -79,10 +81,10 @@ class SettingsController extends Controller
 	/**
 	 * Show settings page
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function index()
 	{
 		$user = $this->userSession->getUser();
@@ -124,10 +126,10 @@ class SettingsController extends Controller
 	/**
 	 * Update settings
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function update()
 	{
 		$user = $this->userSession->getUser();

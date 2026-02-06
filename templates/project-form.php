@@ -9,7 +9,7 @@
 
 use OCP\Util;
 
-Util::addScript('projectcheck', 'datepicker');
+Util::addScript('projectcheck', 'common/datepicker');
 Util::addScript('projectcheck', 'projects');
 Util::addScript('projectcheck', 'project-form');
 Util::addStyle('projectcheck', 'projects');

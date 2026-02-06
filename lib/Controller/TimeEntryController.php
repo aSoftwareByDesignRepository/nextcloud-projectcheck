@@ -116,10 +116,10 @@ class TimeEntryController extends Controller
 	/**
 	 * Show time entry list page
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function index()
 	{
 		$user = $this->userSession->getUser();
@@ -228,10 +228,10 @@ class TimeEntryController extends Controller
 	/**
 	 * Show time entry creation form
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function create()
 	{
 		$user = $this->userSession->getUser();
@@ -270,10 +270,10 @@ class TimeEntryController extends Controller
 	/**
 	 * Store new time entry
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function store()
 	{
 		$user = $this->userSession->getUser();
@@ -336,11 +336,11 @@ class TimeEntryController extends Controller
 	/**
 	 * Show time entry detail page
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Time entry ID
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function show($id)
 	{
 		$user = $this->userSession->getUser();
@@ -381,11 +381,11 @@ class TimeEntryController extends Controller
 	/**
 	 * Show time entry edit form
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Time entry ID
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function edit($id)
 	{
 		$user = $this->userSession->getUser();
@@ -435,11 +435,11 @@ class TimeEntryController extends Controller
 	/**
 	 * Update time entry
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Time entry ID
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function update($id)
 	{
 		$user = $this->userSession->getUser();
@@ -483,11 +483,11 @@ class TimeEntryController extends Controller
 	/**
 	 * Update time entry via POST for forms that cannot send PUT
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Time entry ID
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function updatePost($id)
 	{
 		// Delegate to update() to keep logic in one place
@@ -497,11 +497,11 @@ class TimeEntryController extends Controller
 	/**
 	 * Get deletion impact for a time entry
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getDeletionImpact(int $id): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -558,11 +558,11 @@ class TimeEntryController extends Controller
 	/**
 	 * Get time entries for a project
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $projectId Project ID
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getForProject($projectId)
 	{
 		$user = $this->userSession->getUser();
@@ -586,10 +586,10 @@ class TimeEntryController extends Controller
 	/**
 	 * Get time entry statistics
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getStats()
 	{
 		$user = $this->userSession->getUser();
@@ -609,10 +609,10 @@ class TimeEntryController extends Controller
 	/**
 	 * Search time entries
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function search()
 	{
 		$user = $this->userSession->getUser();

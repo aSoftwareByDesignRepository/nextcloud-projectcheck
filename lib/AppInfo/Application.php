@@ -41,6 +41,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IUserSession::class),
 				$c->query(\OCP\IUserManager::class),
 				$c->query(\OCP\IConfig::class),
+				$c->query(\OCP\IGroupManager::class),
 				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class)
 			);
 		});

@@ -11,6 +11,8 @@ namespace OCA\ProjectCheck\Controller;
 
 use OCA\ProjectCheck\Service\ProjectFileService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\FileDisplayResponse;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -41,9 +43,9 @@ class ProjectFileController extends Controller
 	/**
 	 * Upload one or more files for a project
 	 *
-	 * @NoAdminRequired
 	 * @return Response
 	 */
+	#[NoAdminRequired]
 	public function upload(int $projectId)
 	{
 		$user = $this->userSession->getUser();
@@ -78,9 +80,8 @@ class ProjectFileController extends Controller
 
 	/**
 	 * List files for a project
-	 *
-	 * @NoAdminRequired
 	 */
+	#[NoAdminRequired]
 	public function list(int $projectId): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -111,10 +112,9 @@ class ProjectFileController extends Controller
 
 	/**
 	 * Download a project file
-	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function download(int $projectId, int $fileId)
 	{
 		$user = $this->userSession->getUser();
@@ -142,9 +142,8 @@ class ProjectFileController extends Controller
 
 	/**
 	 * Delete a project file
-	 *
-	 * @NoAdminRequired
 	 */
+	#[NoAdminRequired]
 	public function delete(int $projectId, int $fileId): DataResponse
 	{
 		$user = $this->userSession->getUser();

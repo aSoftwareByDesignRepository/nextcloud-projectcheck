@@ -10,6 +10,8 @@
 namespace OCA\ProjectCheck\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -85,10 +87,10 @@ class DashboardController extends Controller
 	/**
 	 * Show dashboard page
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function index()
 	{
 		$user = $this->userSession->getUser();
@@ -147,10 +149,10 @@ class DashboardController extends Controller
 	/**
 	 * Get dashboard statistics via API
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getStats()
 	{
 		$user = $this->userSession->getUser();

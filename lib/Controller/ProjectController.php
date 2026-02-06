@@ -22,6 +22,8 @@ use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -118,10 +120,10 @@ class ProjectController extends Controller
 	/**
 	 * Display project list
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function index(): TemplateResponse
 	{
 		$user = $this->userSession->getUser();
@@ -217,10 +219,10 @@ class ProjectController extends Controller
 	/**
 	 * Display project creation form
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function create(): TemplateResponse
 	{
 		$user = $this->userSession->getUser();
@@ -265,9 +267,9 @@ class ProjectController extends Controller
 	/**
 	 * Store new project
 	 *
-	 * @NoAdminRequired
 	 * @return RedirectResponse
 	 */
+	#[NoAdminRequired]
 	public function store(): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -310,11 +312,11 @@ class ProjectController extends Controller
 	/**
 	 * Display project details
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function show(int $id): TemplateResponse
 	{
 		$user = $this->userSession->getUser();
@@ -398,11 +400,11 @@ class ProjectController extends Controller
 	/**
 	 * Get budget information for a project
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Project ID
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getBudgetInfo(int $id): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -444,12 +446,12 @@ class ProjectController extends Controller
 	/**
 	 * Check budget impact for a time entry
 	 *
-	 * @NoAdminRequired
 	 * @param int $project_id
 	 * @param float $additional_hours
 	 * @param float $additional_rate
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
 	public function checkBudgetImpact(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -488,11 +490,11 @@ class ProjectController extends Controller
 	/**
 	 * Display project edit form
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function edit(int $id): TemplateResponse
 	{
 		$user = $this->userSession->getUser();
@@ -531,10 +533,10 @@ class ProjectController extends Controller
 	/**
 	 * Update project
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @return RedirectResponse
 	 */
+	#[NoAdminRequired]
 	public function update(int $id): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -591,10 +593,10 @@ class ProjectController extends Controller
 	/**
 	 * Update project via POST (for form submissions)
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @return RedirectResponse|DataResponse
 	 */
+	#[NoAdminRequired]
 	public function updatePost(int $id): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -632,10 +634,10 @@ class ProjectController extends Controller
 	/**
 	 * Delete project
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @return RedirectResponse|DataResponse
 	 */
+	#[NoAdminRequired]
 	public function delete(int $id): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -705,10 +707,10 @@ class ProjectController extends Controller
 	/**
 	 * Change project status
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @return RedirectResponse|DataResponse
 	 */
+	#[NoAdminRequired]
 	public function changeStatus(int $id): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -746,10 +748,10 @@ class ProjectController extends Controller
 	/**
 	 * Get project team members
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
 	public function getTeamMembers(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -773,10 +775,10 @@ class ProjectController extends Controller
 	/**
 	 * Add team member to project
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
 	public function addTeamMember(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -805,11 +807,11 @@ class ProjectController extends Controller
 	/**
 	 * Update team member
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @param string $userId
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
 	public function updateTeamMember(int $id, string $userId): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -839,11 +841,11 @@ class ProjectController extends Controller
 	/**
 	 * Remove team member from project
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @param string $userId
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
 	public function removeTeamMember(int $id, string $userId): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -867,9 +869,9 @@ class ProjectController extends Controller
 	/**
 	 * Search projects
 	 *
-	 * @NoAdminRequired
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
 	public function search(): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -895,9 +897,9 @@ class ProjectController extends Controller
 	/**
 	 * Filter projects
 	 *
-	 * @NoAdminRequired
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
 	public function filter(): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -922,10 +924,10 @@ class ProjectController extends Controller
 	/**
 	 * API endpoint for project list
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function apiIndex(): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -950,9 +952,9 @@ class ProjectController extends Controller
 	/**
 	 * API endpoint for creating project
 	 *
-	 * @NoAdminRequired
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
 	public function apiStore(): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -977,11 +979,11 @@ class ProjectController extends Controller
 	/**
 	 * API endpoint for getting project
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function apiShow(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1011,10 +1013,10 @@ class ProjectController extends Controller
 	/**
 	 * API endpoint for updating project
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
 	public function apiUpdate(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1039,10 +1041,10 @@ class ProjectController extends Controller
 	/**
 	 * API endpoint for deleting project
 	 *
-	 * @NoAdminRequired
 	 * @param int $id
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
 	public function apiDelete(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1061,11 +1063,11 @@ class ProjectController extends Controller
 	/**
 	 * Get deletion impact for a project
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getDeletionImpact(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1084,11 +1086,11 @@ class ProjectController extends Controller
 	/**
 	 * API endpoint for getting projects by customer
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $customerId
 	 * @return DataResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function apiByCustomer(int $customerId): DataResponse
 	{
 		$user = $this->userSession->getUser();

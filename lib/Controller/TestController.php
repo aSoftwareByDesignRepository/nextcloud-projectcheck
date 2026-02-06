@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 use OCA\ProjectCheck\Service\CSPService;
@@ -25,10 +27,10 @@ class TestController extends Controller
     /**
      * Test page to verify CSP configuration
      *
-     * @NoAdminRequired
-     * @NoCSRFRequired
      * @return TemplateResponse
      */
+    #[NoAdminRequired]
+    #[NoCSRFRequired]
     public function index(): TemplateResponse
     {
         $response = new TemplateResponse($this->appName, 'test', [

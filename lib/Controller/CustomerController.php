@@ -10,6 +10,8 @@
 namespace OCA\ProjectCheck\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
@@ -63,10 +65,9 @@ class CustomerController extends Controller
 
 	/**
 	 * Deletion impact preview
-	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getDeletionImpact($id)
 	{
 		$user = $this->userSession->getUser();
@@ -128,10 +129,10 @@ class CustomerController extends Controller
 	/**
 	 * Show customer list page
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function index()
 	{
 		$user = $this->userSession->getUser();
@@ -205,10 +206,10 @@ class CustomerController extends Controller
 	/**
 	 * Show customer creation form
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function create()
 	{
 		$user = $this->userSession->getUser();
@@ -236,10 +237,10 @@ class CustomerController extends Controller
 	/**
 	 * Store new customer
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function store()
 	{
 		$user = $this->userSession->getUser();
@@ -279,11 +280,11 @@ class CustomerController extends Controller
 	/**
 	 * Show customer detail page
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Customer ID
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function show($id)
 	{
 		$user = $this->userSession->getUser();
@@ -336,11 +337,11 @@ class CustomerController extends Controller
 	/**
 	 * Show customer edit form
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Customer ID
 	 * @return TemplateResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function edit($id)
 	{
 		$user = $this->userSession->getUser();
@@ -377,11 +378,11 @@ class CustomerController extends Controller
 	/**
 	 * Update customer
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Customer ID
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function update($id)
 	{
 		$user = $this->userSession->getUser();
@@ -432,11 +433,11 @@ class CustomerController extends Controller
 	/**
 	 * Delete customer
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Customer ID
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function delete($id)
 	{
 		$user = $this->userSession->getUser();
@@ -494,11 +495,11 @@ class CustomerController extends Controller
 	/**
 	 * Update customer via POST (for HTML forms)
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Customer ID
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function updatePost($id)
 	{
 		// Delegate to the update method
@@ -508,11 +509,11 @@ class CustomerController extends Controller
 	/**
 	 * Delete customer via POST (for HTML forms)
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @param int $id Customer ID
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function deletePost($id)
 	{
 		error_log('deletePost called with customer ID: ' . $id);
@@ -553,10 +554,10 @@ class CustomerController extends Controller
 	/**
 	 * Search customers via API
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function search()
 	{
 		$user = $this->userSession->getUser();
@@ -581,10 +582,10 @@ class CustomerController extends Controller
 	/**
 	 * Get customers for select dropdown
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getForSelect()
 	{
 		$user = $this->userSession->getUser();
@@ -603,10 +604,10 @@ class CustomerController extends Controller
 	/**
 	 * Get customer statistics
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getStats()
 	{
 		$user = $this->userSession->getUser();
@@ -633,10 +634,10 @@ class CustomerController extends Controller
 	/**
 	 * Get customer analytics
 	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 * @return JSONResponse
 	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function getAnalytics()
 	{
 		$user = $this->userSession->getUser();

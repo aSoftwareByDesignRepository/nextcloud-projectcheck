@@ -18,6 +18,7 @@ use OCP\IDBConnection;
 use OCP\IUserSession;
 use OCP\IUserManager;
 use OCP\IConfig;
+use OCP\IGroupManager;
 
 /**
  * Class ProjectService
@@ -44,6 +45,9 @@ class ProjectService
 	/** @var IConfig */
 	private $config;
 
+	/** @var IGroupManager */
+	private $groupManager;
+
 	/** @var ProjectMapper|null */
 	private $projectMapper;
 
@@ -55,12 +59,13 @@ class ProjectService
 	 * @param IUserManager $userManager
 	 * @param IConfig $config
 	 */
-	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config, ?ProjectMapper $projectMapper = null)
+	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config, IGroupManager $groupManager, ?ProjectMapper $projectMapper = null)
 	{
 		$this->db = $db;
 		$this->userSession = $userSession;
 		$this->userManager = $userManager;
 		$this->config = $config;
+		$this->groupManager = $groupManager;
 		$this->projectMapper = $projectMapper ?? new ProjectMapper($db);
 		$this->calculator = new ProjectCalculator();
 	}
@@ -660,18 +665,8 @@ class ProjectService
 	 */
 	private function isUserAdmin(string $userId): bool
 	{
-		$user = $this->userManager->get($userId);
-		if (!$user) {
-			return false;
-		}
-
-		// Treat default admin users and root as admins
-		$uid = $user->getUID();
-		if (in_array($uid, ['admin', 'administrator', 'root'], true)) {
-			return true;
-		}
-
-		return false;
+		// Use Nextcloud's group-based admin check (users in the admin group)
+		return $this->groupManager->isAdmin($userId);
 	}
 
 	/**

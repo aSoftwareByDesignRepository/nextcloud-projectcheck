@@ -13,8 +13,9 @@ use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCP\IDBConnection;
 use OCP\IUserSession;
-use OCP\ILogger;
 use OCP\IUserManager;
+use OCP\IConfig;
+use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use PHPUnit\Framework\TestCase;
@@ -35,8 +36,11 @@ class ProjectServiceTest extends TestCase {
 	/** @var IUserSession|\PHPUnit\Framework\MockObject\MockObject */
 	private $userSession;
 
-	/** @var ILogger|\PHPUnit\Framework\MockObject\MockObject */
-	private $logger;
+	/** @var IConfig|\PHPUnit\Framework\MockObject\MockObject */
+	private $config;
+
+	/** @var IGroupManager|\PHPUnit\Framework\MockObject\MockObject */
+	private $groupManager;
 
 	/** @var IUserManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $userManager;
@@ -49,15 +53,20 @@ class ProjectServiceTest extends TestCase {
 
 		$this->db = $this->createMock(IDBConnection::class);
 		$this->userSession = $this->createMock(IUserSession::class);
-		$this->logger = $this->createMock(ILogger::class);
+		$this->config = $this->createMock(IConfig::class);
+		$this->config->method('getUserValue')->willReturnArgument(3);
+		$this->groupManager = $this->createMock(IGroupManager::class);
+		$this->groupManager->method('isAdmin')->willReturn(false);
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->user = $this->createMock(IUser::class);
 
 		$this->projectService = new ProjectService(
 			$this->db,
 			$this->userSession,
-			$this->logger,
-			$this->userManager
+			$this->userManager,
+			$this->config,
+			$this->groupManager,
+			null
 		);
 	}
 
