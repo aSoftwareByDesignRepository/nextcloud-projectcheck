@@ -87,7 +87,7 @@
 .form-control:focus {
 	outline: none;
 	border-color: var(--color-primary);
-	box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 .form-control:invalid {

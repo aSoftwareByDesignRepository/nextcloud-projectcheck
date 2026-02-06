@@ -758,18 +758,18 @@
     gap: 1rem;
     padding: 1.25rem;
     background: linear-gradient(135deg,
-            rgba(var(--color-primary-rgb), 0.05) 0%,
-            rgba(var(--color-primary-rgb), 0.02) 100%);
+            color-mix(in srgb, var(--color-primary) 5%, transparent) 0%,
+            color-mix(in srgb, var(--color-primary) 2%, transparent) 100%);
     border-radius: 12px;
-    border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
     transition: all 0.3s ease;
     margin: 0;
 }
 
 .section .overview-stat:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(var(--color-primary-rgb), 0.15);
-    border-color: rgba(var(--color-primary-rgb), 0.2);
+    box-shadow: 0 8px 25px color-mix(in srgb, var(--color-primary) 15%, transparent);
+    border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 .section .overview-stat .stat-icon {
@@ -831,7 +831,7 @@
 .section .overview-stat .stat-sub {
     font-size: 0.75rem;
     color: var(--color-text-maxcontrast);
-    background: rgba(var(--color-primary-rgb), 0.1);
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
     padding: 0.2rem 0.4rem;
     border-radius: 4px;
     white-space: nowrap;

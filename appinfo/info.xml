@@ -31,8 +31,8 @@
 	<repository>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcontroll.git</repository>
 
 	<dependencies>
-		<!-- Verified for Nextcloud 32.0.3 and later 32.x/33.x patch releases -->
-		<nextcloud min-version="32" max-version="33"/>
+		<!-- Compatible with Nextcloud 32, 33, 34, 35, 36 (current and future releases) -->
+		<nextcloud min-version="32" max-version="36"/>
 	</dependencies>
 
 	<navigations>

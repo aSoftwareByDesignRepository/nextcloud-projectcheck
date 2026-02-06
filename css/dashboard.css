@@ -253,17 +253,17 @@ body {
 	gap: 1rem;
 	padding: 1.5rem;
 	background: linear-gradient(135deg,
-			rgba(var(--color-primary-rgb), 0.05) 0%,
-			rgba(var(--color-primary-rgb), 0.02) 100%);
+			color-mix(in srgb, var(--color-primary) 5%, transparent) 0%,
+			color-mix(in srgb, var(--color-primary) 2%, transparent) 100%);
 	border-radius: 12px;
-	border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+	border: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
 	transition: all 0.3s ease;
 }
 
 .overview-stat:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 8px 25px rgba(var(--color-primary-rgb), 0.15);
-	border-color: rgba(var(--color-primary-rgb), 0.2);
+	box-shadow: 0 8px 25px color-mix(in srgb, var(--color-primary) 15%, transparent);
+	border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 .overview-stat .stat-icon {
@@ -277,7 +277,7 @@ body {
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 	position: relative;
 }
 
@@ -324,7 +324,7 @@ body {
 .overview-stat .stat-sub {
 	font-size: 0.8rem;
 	color: var(--color-text-maxcontrast);
-	background: rgba(var(--color-primary-rgb), 0.1);
+	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 	padding: 0.25rem 0.5rem;
 	border-radius: 6px;
 }
@@ -442,23 +442,24 @@ body {
 	white-space: nowrap;
 }
 
+/* NC32+: use color-mix instead of deprecated --color-*-rgb */
 .status-active {
-	background: rgba(var(--color-success-rgb), 0.15);
+	background: color-mix(in srgb, var(--color-success) 15%, transparent);
 	color: var(--color-success-text);
 }
 
 .status-on-hold {
-	background: rgba(var(--color-warning-rgb), 0.15);
+	background: color-mix(in srgb, var(--color-warning) 15%, transparent);
 	color: var(--color-warning-text);
 }
 
 .status-completed {
-	background: rgba(var(--color-primary-rgb), 0.15);
+	background: color-mix(in srgb, var(--color-primary) 15%, transparent);
 	color: var(--color-primary-text);
 }
 
 .status-cancelled {
-	background: rgba(var(--color-error-rgb), 0.15);
+	background: color-mix(in srgb, var(--color-error) 15%, transparent);
 	color: var(--color-error-text);
 }
 
@@ -466,7 +467,7 @@ body {
 .duration {
 	display: inline-block;
 	padding: 0.25rem 0.75rem;
-	background: rgba(var(--color-primary-rgb), 0.1);
+	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 	color: var(--color-primary-text);
 	border-radius: 20px;
 	font-size: 0.75rem;
@@ -483,7 +484,7 @@ body {
 .empty-icon {
 	width: 64px;
 	height: 64px;
-	background: rgba(var(--color-primary-rgb), 0.1);
+	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
@@ -550,7 +551,7 @@ body {
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 	position: relative;
 }
 
@@ -606,12 +607,12 @@ body {
 			var(--color-primary) 0%,
 			var(--color-primary-hover) 100%);
 	color: var(--color-primary-text);
-	box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .button.primary:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.4);
+	box-shadow: 0 6px 20px color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 .button.secondary {
@@ -710,7 +711,7 @@ body {
 	background: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	transform: scale(1.1);
-	box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.2);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 /* Enhanced tooltip for project type icons */

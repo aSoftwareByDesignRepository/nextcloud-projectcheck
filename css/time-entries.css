@@ -32,9 +32,9 @@
 	right: 0;
 	bottom: 0;
 	background-image:
-		radial-gradient(circle at 20% 80%, rgba(var(--color-primary-rgb), 0.03) 0%, transparent 50%),
-		radial-gradient(circle at 80% 20%, rgba(var(--color-primary-rgb), 0.03) 0%, transparent 50%),
-		radial-gradient(circle at 40% 40%, rgba(var(--color-primary-rgb), 0.02) 0%, transparent 50%);
+		radial-gradient(circle at 20% 80%, color-mix(in srgb, var(--color-primary) 3%, transparent) 0%, transparent 50%),
+		radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--color-primary) 3%, transparent) 0%, transparent 50%),
+		radial-gradient(circle at 40% 40%, color-mix(in srgb, var(--color-primary) 2%, transparent) 0%, transparent 50%);
 	pointer-events: none;
 	z-index: 0;
 }
@@ -58,8 +58,8 @@
 	padding: 1.5rem 1rem;
 	border-bottom: 1px solid rgba(var(--color-border), 0.3);
 	background: linear-gradient(135deg,
-			rgba(var(--color-primary-rgb), 0.05) 0%,
-			rgba(var(--color-primary-rgb), 0.02) 100%);
+			color-mix(in srgb, var(--color-primary) 5%, transparent) 0%,
+			color-mix(in srgb, var(--color-primary) 2%, transparent) 100%);
 	position: relative;
 	z-index: 1;
 }
@@ -80,7 +80,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .app-icon .icon {
@@ -130,8 +130,8 @@
 	width: 0;
 	height: 100%;
 	background: linear-gradient(90deg,
-			rgba(var(--color-primary-rgb), 0.1) 0%,
-			rgba(var(--color-primary-rgb), 0.05) 100%);
+			color-mix(in srgb, var(--color-primary) 10%, transparent) 0%,
+			color-mix(in srgb, var(--color-primary) 5%, transparent) 100%);
 	transition: width 0.3s ease;
 	z-index: 0;
 }
@@ -144,7 +144,7 @@
 	background: linear-gradient(135deg,
 			var(--color-primary) 0%,
 			var(--color-primary-hover) 100%);
-	box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 	transform: translateX(4px);
 }
 
@@ -214,7 +214,7 @@
 	width: 30px;
 	height: 30px;
 	background: radial-gradient(circle,
-			rgba(var(--color-primary-rgb), 0.2) 0%,
+			color-mix(in srgb, var(--color-primary) 20%, transparent) 0%,
 			transparent 70%);
 	border-radius: 50%;
 	transform: translate(-50%, -50%);
@@ -241,8 +241,8 @@
 	padding: 1rem;
 	border-top: 1px solid rgba(var(--color-border), 0.3);
 	background: linear-gradient(135deg,
-			rgba(var(--color-primary-rgb), 0.02) 0%,
-			rgba(var(--color-primary-rgb), 0.05) 100%);
+			color-mix(in srgb, var(--color-primary) 2%, transparent) 0%,
+			color-mix(in srgb, var(--color-primary) 5%, transparent) 100%);
 	position: relative;
 	z-index: 1;
 }
@@ -256,15 +256,15 @@
 	text-align: center;
 	padding: 0.75rem;
 	border-radius: var(--border-radius);
-	background: rgba(var(--color-primary-rgb), 0.05);
-	border: 1px solid rgba(var(--color-primary-rgb), 0.1);
+	background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
 	transition: all 0.3s ease;
 }
 
 .stat-item:hover {
-	background: rgba(var(--color-primary-rgb), 0.08);
+	background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.15);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
 .stat-number {
@@ -295,12 +295,12 @@
 }
 
 #app-navigation::-webkit-scrollbar-thumb {
-	background: rgba(var(--color-primary-rgb), 0.2);
+	background: color-mix(in srgb, var(--color-primary) 20%, transparent);
 	border-radius: 3px;
 }
 
 #app-navigation::-webkit-scrollbar-thumb:hover {
-	background: rgba(var(--color-primary-rgb), 0.4);
+	background: color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 /* Main Content Area */
@@ -333,8 +333,8 @@
 	align-items: flex-start;
 	padding: 2rem;
 	background: linear-gradient(135deg,
-			rgba(var(--color-primary-rgb), 0.03) 0%,
-			rgba(var(--color-primary-rgb), 0.01) 100%);
+			color-mix(in srgb, var(--color-primary) 3%, transparent) 0%,
+			color-mix(in srgb, var(--color-primary) 1%, transparent) 100%);
 	border-bottom: 1px solid var(--color-border);
 }
 
@@ -399,12 +399,12 @@
 			var(--color-primary) 0%,
 			var(--color-primary-hover) 100%);
 	color: var(--color-primary-text);
-	box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .button.primary:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.4);
+	box-shadow: 0 6px 20px color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 .button:not(.primary) {
@@ -500,7 +500,7 @@
 .searchbox input:focus {
 	outline: none;
 	border-color: var(--color-primary);
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 .filters-row {
@@ -526,7 +526,7 @@
 .filters-row input[type="date"]:focus {
 	outline: none;
 	border-color: var(--color-primary);
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 /* Table Styling */
@@ -538,8 +538,8 @@
 
 .grid thead {
 	background: linear-gradient(135deg,
-			rgba(var(--color-primary-rgb), 0.05) 0%,
-			rgba(var(--color-primary-rgb), 0.02) 100%);
+			color-mix(in srgb, var(--color-primary) 5%, transparent) 0%,
+			color-mix(in srgb, var(--color-primary) 2%, transparent) 100%);
 }
 
 .grid th {
@@ -693,7 +693,7 @@
 	background: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
 	transform: scale(1.1);
-	box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.2);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 /* Project Type Display (Icon + Text for analysis tables) */
@@ -1005,10 +1005,10 @@
 	}
 
 	.button.primary {
-		box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.4);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 40%, transparent);
 	}
 
 	.button.primary:hover {
-		box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.5);
+		box-shadow: 0 6px 20px color-mix(in srgb, var(--color-primary) 50%, transparent);
 	}
 }
