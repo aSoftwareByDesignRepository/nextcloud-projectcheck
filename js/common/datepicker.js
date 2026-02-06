@@ -369,16 +369,36 @@ function initializeDatepicker(input, options = {}) {
 
 	const datepicker = createCalendar();
 
-	// Auto-format input as user types
-	element.addEventListener('input', function() {
-		let value = this.value.replace(/\D/g, '');
-		if (value.length >= 2) {
-			value = value.substring(0, 2) + '.' + value.substring(2);
+	// Datepicker-only: no manual input. Values are set only by the calendar.
+	element.setAttribute('readonly', 'readonly');
+	element.setAttribute('autocomplete', 'off');
+	element.readOnly = true;
+
+	// Prevent any keyboard input (allow only Tab, Escape, Enter for accessibility)
+	element.addEventListener('keydown', function(e) {
+		const allow = e.key === 'Tab' || e.key === 'Escape' || e.key === 'Enter';
+		if (!allow) {
+			e.preventDefault();
+			// Open calendar on any keypress so keyboard users can pick a date
+			datepicker.open();
 		}
-		if (value.length >= 5) {
-			value = value.substring(0, 5) + '.' + value.substring(5, 9);
-		}
-		this.value = value;
+	});
+
+	// Open calendar on focus (primary way for keyboard/screen reader)
+	element.addEventListener('focus', function(e) {
+		e.preventDefault();
+		datepicker.open();
+	});
+
+	// Open calendar on click (in case focus didn't open it)
+	element.addEventListener('click', function(e) {
+		e.preventDefault();
+		datepicker.open();
+	});
+
+	// Block paste so only datepicker can set the value
+	element.addEventListener('paste', function(e) {
+		e.preventDefault();
 	});
 
 	// Add calendar icon button

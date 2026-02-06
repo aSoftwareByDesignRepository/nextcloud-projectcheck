@@ -795,6 +795,16 @@ body {
 	color: var(--color-primary);
 }
 
+/* Datepicker-only: no manual input */
+.datepicker-only,
+.form-input.datepicker-only {
+	cursor: pointer;
+	caret-color: transparent;
+}
+.datepicker-only:focus {
+	outline: none;
+}
+
 /* Hide the browser's default date picker in case of type="date" fallback */
 .date-picker-input::-webkit-calendar-picker-indicator {
 	display: none;

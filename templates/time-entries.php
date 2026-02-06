@@ -135,6 +135,11 @@ Util::addStyle('projectcheck', 'navigation');
         box-shadow: 0 0 0 3px rgba(0, 130, 201, 0.1);
     }
 
+    .filter-date.datepicker-only {
+        cursor: pointer;
+        caret-color: transparent;
+    }
+
     /* Action Buttons - Modern Style */
     .filter-actions {
         display: flex;
@@ -424,7 +429,7 @@ Util::addStyle('projectcheck', 'navigation');
 
                     <div class="filter-group">
                         <label for="date-from-filter" class="filter-label"><?php p($l->t('From')); ?></label>
-                        <input type="text" id="date-from-filter" name="date_from" class="filter-date"
+                        <input type="text" id="date-from-filter" name="date_from" class="filter-date datepicker-only"
                             value="<?php
                                     if (!empty($filters['date_from'])) {
                                         // Parse ISO format (yyyy-mm-dd) from URL parameter and convert to dd.mm.yyyy
@@ -435,12 +440,13 @@ Util::addStyle('projectcheck', 'navigation');
                             placeholder="dd.mm.yyyy"
                             pattern="\d{2}\.\d{2}\.\d{4}"
                             maxlength="10"
-                            title="<?php p($l->t('Enter start date in format dd.mm.yyyy')); ?>">
+                            title="<?php p($l->t('Enter start date in format dd.mm.yyyy')); ?>"
+                            readonly="readonly" autocomplete="off">
                     </div>
 
                     <div class="filter-group">
                         <label for="date-to-filter" class="filter-label"><?php p($l->t('To')); ?></label>
-                        <input type="text" id="date-to-filter" name="date_to" class="filter-date"
+                        <input type="text" id="date-to-filter" name="date_to" class="filter-date datepicker-only"
                             value="<?php
                                     if (!empty($filters['date_to'])) {
                                         // Parse ISO format (yyyy-mm-dd) from URL parameter and convert to dd.mm.yyyy
@@ -451,7 +457,8 @@ Util::addStyle('projectcheck', 'navigation');
                             placeholder="dd.mm.yyyy"
                             pattern="\d{2}\.\d{2}\.\d{4}"
                             maxlength="10"
-                            title="<?php p($l->t('Enter end date in format dd.mm.yyyy')); ?>">
+                            title="<?php p($l->t('Enter end date in format dd.mm.yyyy')); ?>"
+                            readonly="readonly" autocomplete="off">
                     </div>
                 </div>
 

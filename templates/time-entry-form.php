@@ -102,12 +102,12 @@ Util::addStyle('projectcheck', 'navigation');
 				<div class="form-row">
 					<div class="form-group">
 						<label for="date" class="required"><?php p($l->t('Date')); ?></label>
-						<input type="text" name="date" id="date" class="form-input" required
+						<input type="text" name="date" id="date" class="form-input datepicker-only" required
 							value="<?php p($isEdit ? $timeEntry->getDate()->format('d.m.Y') : date('d.m.Y')); ?>"
 							placeholder="dd.mm.yyyy"
 							pattern="\d{2}\.\d{2}\.\d{4}"
 							title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>"
-							maxlength="10">
+							maxlength="10" readonly="readonly" autocomplete="off">
 						<div class="error-message" id="date-error"></div>
 					</div>
 				</div>

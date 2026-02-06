@@ -529,6 +529,12 @@
 	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
+.filters-row .filter-date.datepicker-only,
+.filters-row input.datepicker-only {
+	cursor: pointer;
+	caret-color: transparent;
+}
+
 /* Table Styling */
 .grid {
 	width: 100%;

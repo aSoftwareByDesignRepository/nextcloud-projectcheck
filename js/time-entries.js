@@ -300,18 +300,21 @@
 		}
 		
 		const datepicker = createCalendar();
-		
-		element.addEventListener('input', function() {
-			let value = this.value.replace(/\D/g, '');
-			if (value.length >= 2) {
-				value = value.substring(0, 2) + '.' + value.substring(2);
+
+		// Datepicker-only: no manual input
+		element.setAttribute('readonly', 'readonly');
+		element.setAttribute('autocomplete', 'off');
+		element.readOnly = true;
+		element.addEventListener('keydown', function(e) {
+			if (e.key !== 'Tab' && e.key !== 'Escape' && e.key !== 'Enter') {
+				e.preventDefault();
+				datepicker.open();
 			}
-			if (value.length >= 5) {
-				value = value.substring(0, 5) + '.' + value.substring(5, 9);
-			}
-			this.value = value;
 		});
-		
+		element.addEventListener('focus', function(e) { e.preventDefault(); datepicker.open(); });
+		element.addEventListener('click', function(e) { e.preventDefault(); datepicker.open(); });
+		element.addEventListener('paste', function(e) { e.preventDefault(); });
+
 		const wrapper = document.createElement('div');
 		wrapper.style.cssText = 'position: relative; display: inline-block; width: 100%;';
 		element.parentNode.insertBefore(wrapper, element);

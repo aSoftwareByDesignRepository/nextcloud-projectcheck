@@ -72,6 +72,17 @@
 	transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Datepicker-only: no manual input, open via calendar only */
+.datepicker-only,
+.form-group input.datepicker-only {
+	cursor: pointer;
+	caret-color: transparent;
+}
+.datepicker-only:focus,
+.form-group input.datepicker-only:focus {
+	outline: none;
+}
+
 /* Date picker specific styling */
 .form-group input[type="date"] {
 	min-height: 42px;

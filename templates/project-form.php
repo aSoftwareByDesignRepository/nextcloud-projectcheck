@@ -112,11 +112,12 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
                         <input type="text"
                             id="start_date"
                             name="start_date"
-                            class="form-input"
+                            class="form-input datepicker-only"
                             placeholder="dd.mm.yyyy"
                             value="<?php p($isEdit && $project->getStartDate() ? $project->getStartDate()->format('d.m.Y') : ''); ?>"
                             pattern="\d{2}\.\d{2}\.\d{4}"
-                            title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>">
+                            title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>"
+                            readonly="readonly" autocomplete="off">
                     </div>
 
                     <div class="form-group">
@@ -124,11 +125,12 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
                         <input type="text"
                             id="end_date"
                             name="end_date"
-                            class="form-input"
+                            class="form-input datepicker-only"
                             placeholder="dd.mm.yyyy"
                             value="<?php p($isEdit && $project->getEndDate() ? $project->getEndDate()->format('d.m.Y') : ''); ?>"
                             pattern="\d{2}\.\d{2}\.\d{4}"
-                            title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>">
+                            title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>"
+                            readonly="readonly" autocomplete="off">
                     </div>
                 </div>
 
