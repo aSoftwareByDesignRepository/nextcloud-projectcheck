@@ -726,15 +726,27 @@ body {
 
 .filters-row select,
 .filters-row input[type="date"] {
-	padding: 0.9rem 1rem;
+	padding: 0.9rem 2rem 0.9rem 1rem;
 	border: 2px solid var(--color-border);
 	border-radius: var(--border-radius);
 	font-size: 0.95rem;
+	line-height: 1.4;
 	background-color: var(--color-main-background);
 	color: var(--color-main-text);
 	transition: all 0.3s ease;
 	min-width: 150px;
 	min-height: 48px;
+	appearance: none;
+	box-sizing: border-box;
+}
+
+/* Fix Nextcloud's global select arrow positioning - move from top-left to right side */
+.filters-row select {
+	background-image: var(--icon-triangle-s-dark);
+	background-repeat: no-repeat;
+	background-position: right 0.75rem center;
+	background-size: 12px 12px;
+	padding-right: 2.5rem !important;
 }
 
 .filters-row select:focus,
@@ -905,8 +917,26 @@ body {
 	font-weight: 600;
 	font-size: 0.95rem;
 	color: var(--color-main-text);
-	border-bottom: 2px solid var(--color-border);
+	vertical-align: middle;
+}
+
+.grid th.sortable {
+	cursor: pointer;
+	user-select: none;
 	white-space: nowrap;
+}
+
+.grid th.sortable:hover {
+	background-color: var(--color-background-hover);
+}
+
+.grid th.sortable .sort-indicator {
+	display: inline;
+	vertical-align: middle;
+	margin-left: 0.25rem;
+	font-size: 0.7rem;
+	opacity: 0.8;
+	line-height: 1;
 }
 
 .grid td {

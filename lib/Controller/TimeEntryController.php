@@ -185,6 +185,7 @@ class TimeEntryController extends Controller
 
 		// Get all projects for filter dropdown (excluding cancelled projects)
 		$userProjects = $this->projectService->getProjects(['status' => ['Active', 'On Hold', 'Completed']]);
+		$userProjects = $this->sortProjectsByName($userProjects);
 
 		// Get all users who have time entries
 		$users = $this->timeEntryService->getUsersWithTimeEntries();
@@ -250,6 +251,8 @@ class TimeEntryController extends Controller
 			$status = trim((string)$project->getStatus());
 			return strcasecmp($status, 'Completed') !== 0 && strcasecmp($status, 'Cancelled') !== 0;
 		}));
+
+		$userProjects = $this->sortProjectsByName($userProjects);
 
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService);
@@ -415,6 +418,7 @@ class TimeEntryController extends Controller
 		$userId = $user->getUID();
 		// Get all projects for time entry selection (excluding cancelled projects)
 		$userProjects = $this->projectService->getProjects(['status' => ['Active', 'On Hold', 'Completed']]);
+		$userProjects = $this->sortProjectsByName($userProjects);
 
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService);
@@ -684,6 +688,23 @@ class TimeEntryController extends Controller
 			error_log('TimeEntryController::export() - Exception: ' . $e->getMessage());
 			return new DataResponse(['error' => 'Export failed: ' . $e->getMessage()], 500);
 		}
+	}
+
+	/**
+	 * Sort projects alphabetically by name (case-insensitive).
+	 * Null-safe for PHP 8.1+ compatibility (strcasecmp rejects null).
+	 *
+	 * @param array<\OCA\ProjectCheck\Db\Project> $projects
+	 * @return array<\OCA\ProjectCheck\Db\Project>
+	 */
+	private function sortProjectsByName(array $projects): array
+	{
+		usort($projects, static function ($a, $b) {
+			$nameA = $a->getName() ?? '';
+			$nameB = $b->getName() ?? '';
+			return strcasecmp($nameA, $nameB);
+		});
+		return $projects;
 	}
 
 	/**

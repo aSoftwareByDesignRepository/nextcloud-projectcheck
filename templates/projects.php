@@ -186,12 +186,28 @@ Util::addStyle('projectcheck', 'navigation');
                 <table class="grid projects-table">
                     <thead>
                         <tr>
-                            <th><?php p($l->t('Name')); ?></th>
-                            <th><?php p($l->t('Customer')); ?></th>
-                            <th><?php p($l->t('Type')); ?></th>
-                            <th><?php p($l->t('Status')); ?></th>
-                            <th><?php p($l->t('Budget')); ?></th>
-                            <th><?php p($l->t('Progress')); ?></th>
+                            <?php
+                            $currentSort = $_['sort'] ?? 'remaining_budget';
+                            $currentDirection = $_['direction'] ?? 'asc';
+                            $sortableHeaders = [
+                                'name' => $l->t('Name'),
+                                'customer' => $l->t('Customer'),
+                                'type' => $l->t('Type'),
+                                'status' => $l->t('Status'),
+                                'remaining_budget' => $l->t('Budget'),
+                                'progress' => $l->t('Progress'),
+                            ];
+                            foreach ($sortableHeaders as $sortKey => $label):
+                                $isActive = ($currentSort === $sortKey);
+                                $dir = $isActive ? $currentDirection : 'desc';
+                            ?>
+                            <th class="sortable" data-sort="<?php p($sortKey); ?>" data-direction="<?php p($dir); ?>" title="<?php p($l->t('Click to sort')); ?>">
+                                <?php p($label); ?>
+                                <?php if ($isActive): ?>
+                                    <span class="sort-indicator" aria-hidden="true"><?php echo $dir === 'asc' ? '▲' : '▼'; ?></span>
+                                <?php endif; ?>
+                            </th>
+                            <?php endforeach; ?>
                             <th><?php p($l->t('Actions')); ?></th>
                         </tr>
                     </thead>

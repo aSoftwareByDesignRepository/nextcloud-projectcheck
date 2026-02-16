@@ -116,6 +116,13 @@ class CustomerService
 			$customer->setProjectCount($projectCount);
 		}
 
+		// Guarantee alphabetical order by name (case-insensitive, null-safe)
+		usort($customers, static function ($a, $b) {
+			$nameA = $a->getName() ?? '';
+			$nameB = $b->getName() ?? '';
+			return strcasecmp($nameA, $nameB);
+		});
+
 		return $customers;
 	}
 

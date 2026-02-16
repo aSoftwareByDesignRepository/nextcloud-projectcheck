@@ -258,9 +258,22 @@ class ProjectService
 			$qb->setFirstResult($filters['offset']);
 		}
 
-		// Apply sorting
-		$sortField = $filters['sort'] ?? 'created_at';
-		$sortDirection = $filters['direction'] ?? 'DESC';
+		// Apply sorting (allowlisted for security - no SQL injection)
+		$sortColumnMap = [
+			'name' => 'p.name',
+			'customer_name' => 'c.name',
+			'project_type' => 'p.project_type',
+			'status' => 'p.status',
+			'created_at' => 'p.created_at',
+		];
+		$requestedSort = $filters['sort'] ?? 'created_at';
+		$sortField = $sortColumnMap[$requestedSort] ?? 'p.created_at';
+		// project_type column may not exist on older installations
+		if ($requestedSort === 'project_type' && !$this->columnExists('projects', 'project_type')) {
+			$sortField = 'p.created_at';
+		}
+		$requestedDirection = strtoupper((string)($filters['direction'] ?? 'DESC'));
+		$sortDirection = ($requestedDirection === 'ASC') ? 'ASC' : 'DESC';
 		$qb->orderBy($sortField, $sortDirection);
 
 		$result = $qb->execute();

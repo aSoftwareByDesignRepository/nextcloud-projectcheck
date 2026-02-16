@@ -139,15 +139,34 @@ class ProjectController extends Controller
 		$statusParam = $this->request->getParam('status', null);
 		$page = max(1, (int)$this->request->getParam('page', 1));
 
+		// Allowlisted sort columns (user-facing -> DB or computed)
+		$allowedSortColumns = ['name', 'customer', 'type', 'status', 'remaining_budget', 'progress'];
+		$requestedSort = $this->request->getParam('sort', 'remaining_budget');
+		$sort = in_array($requestedSort, $allowedSortColumns, true) ? $requestedSort : 'remaining_budget';
+		$requestedDirection = strtolower((string)$this->request->getParam('direction', 'asc'));
+		$direction = ($requestedDirection === 'desc') ? 'desc' : 'asc';
+
+		// Map user-facing sort to DB column for ProjectService
+		$sortToDbColumn = [
+			'name' => 'name',
+			'customer' => 'customer_name',
+			'type' => 'project_type',
+			'status' => 'status',
+		];
+		$dbSortable = isset($sortToDbColumn[$sort]);
+		$dbSort = $dbSortable ? $sortToDbColumn[$sort] : 'created_at';
+		$dbDirection = ($direction === 'asc') ? 'ASC' : 'DESC';
+
 		$filters = [
 			'search' => $this->request->getParam('search', ''),
-			// Default to Active when no status is supplied; allow explicit "all" to show everything
 			'status' => $statusParam === null ? 'Active' : $statusParam,
 			'priority' => $this->request->getParam('priority', ''),
 			'project_type' => $this->request->getParam('project_type', ''),
 			'customer_id' => $this->request->getParam('customer_id', ''),
 			'limit' => $defaultItemsPerPage ? intval($defaultItemsPerPage) : 20,
 			'offset' => ($page - 1) * ($defaultItemsPerPage ? intval($defaultItemsPerPage) : 20),
+			'sort' => $dbSort,
+			'direction' => $dbDirection,
 		];
 
 		$projects = $this->projectService->getProjects($filters);
@@ -163,29 +182,36 @@ class ProjectController extends Controller
 		// Enrich projects with budget information
 		$enrichedProjects = $this->enrichProjectsWithBudgetInfo($projects, $userId);
 
-		// Sort projects by remaining budget (ascending). Over budget (negative remaining) floats to the top.
-		$computeRemaining = static function (array $item): float {
-			if (isset($item['budgetInfo']['remaining_budget'])) {
-				return (float)$item['budgetInfo']['remaining_budget'];
-			}
-			if (isset($item['project']) && method_exists($item['project'], 'getTotalBudget')) {
-				$total = $item['project']->getTotalBudget();
-				if ($total !== null) {
-					return (float)$total;
+		// For computed columns (remaining_budget, progress), sort in PHP after enrichment
+		if ($sort === 'remaining_budget' || $sort === 'progress') {
+			$computeRemaining = static function (array $item): float {
+				if (isset($item['budgetInfo']['remaining_budget'])) {
+					return (float)$item['budgetInfo']['remaining_budget'];
 				}
-			}
-			// No budget info; push to bottom
-			return PHP_FLOAT_MAX;
-		};
-
-		usort($enrichedProjects, static function (array $a, array $b) use ($computeRemaining) {
-			$remainingA = $computeRemaining($a);
-			$remainingB = $computeRemaining($b);
-			if ($remainingA === $remainingB) {
-				return 0;
-			}
-			return ($remainingA < $remainingB) ? -1 : 1;
-		});
+				if (isset($item['project']) && method_exists($item['project'], 'getTotalBudget')) {
+					$total = $item['project']->getTotalBudget();
+					if ($total !== null) {
+						return (float)$total;
+					}
+				}
+				return PHP_FLOAT_MAX;
+			};
+			$computeProgress = static function (array $item): float {
+				if (isset($item['budgetInfo']['consumption_percentage'])) {
+					return (float)$item['budgetInfo']['consumption_percentage'];
+				}
+				return 0.0;
+			};
+			usort($enrichedProjects, static function (array $a, array $b) use ($sort, $direction, $computeRemaining, $computeProgress) {
+				$valA = $sort === 'remaining_budget' ? $computeRemaining($a) : $computeProgress($a);
+				$valB = $sort === 'remaining_budget' ? $computeRemaining($b) : $computeProgress($b);
+				if ($valA === $valB) {
+					return 0;
+				}
+				$cmp = ($valA < $valB) ? -1 : 1;
+				return $direction === 'desc' ? -$cmp : $cmp;
+			});
+		}
 
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService);
@@ -195,9 +221,11 @@ class ProjectController extends Controller
 
 		$response = new TemplateResponse($this->appName, 'projects', [
 			'projects' => $enrichedProjects,
-			'filters' => $filters,
+			'filters' => array_merge($filters, ['sort' => $sort, 'direction' => $direction]),
 			'stats' => $stats,
 			'customers' => $customers,
+			'sort' => $sort,
+			'direction' => $direction,
 			'pagination' => [
 				'page' => $page,
 				'perPage' => $filters['limit'],

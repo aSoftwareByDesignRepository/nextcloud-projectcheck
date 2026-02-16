@@ -161,6 +161,12 @@
 
 		url.searchParams.set('page', '1'); // reset to first page on filter apply
 
+		// Preserve sort and direction
+		const currentSort = url.searchParams.get('sort');
+		const currentDirection = url.searchParams.get('direction');
+		if (currentSort) url.searchParams.set('sort', currentSort);
+		if (currentDirection) url.searchParams.set('direction', currentDirection);
+
 		// Navigate to filtered URL
 		window.location.href = url.toString();
 	}
@@ -175,7 +181,7 @@
 		if (elements.projectTypeFilter) elements.projectTypeFilter.value = '';
 		if (elements.customerFilter) elements.customerFilter.value = '';
 
-		// Navigate to default state (Active status)
+		// Navigate to default state (Active status, default sort)
 		const url = new URL(window.location);
 		url.searchParams.set('status', 'Active');
 		url.searchParams.delete('page');
@@ -183,6 +189,8 @@
 		url.searchParams.delete('project_type');
 		url.searchParams.delete('customer_id');
 		url.searchParams.delete('search');
+		url.searchParams.delete('sort');
+		url.searchParams.delete('direction');
 		window.location.href = url.toString();
 	}
 
@@ -192,13 +200,16 @@
 	function handleSort(e) {
 		const header = e.currentTarget;
 		const sortField = header.dataset.sort;
-		const currentDirection = header.dataset.direction || 'asc';
+		if (!sortField) return;
+		// When column is active: toggle direction. When inactive: first click = ascending
+		const currentDirection = header.dataset.direction || 'desc';
 		const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
 
 		// Update URL with sort parameters
 		const url = new URL(window.location);
 		url.searchParams.set('sort', sortField);
 		url.searchParams.set('direction', newDirection);
+		url.searchParams.set('page', '1'); // reset to first page on sort change
 
 		window.location.href = url.toString();
 	}

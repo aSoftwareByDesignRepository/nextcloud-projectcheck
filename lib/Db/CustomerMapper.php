@@ -70,7 +70,8 @@ class CustomerMapper extends QBMapper
 	}
 
 	/**
-	 * Find all customers with optional filters
+	 * Find all customers with optional filters.
+	 * Always ordered alphabetically by name (ASC) for consistent list and dropdown UX.
 	 *
 	 * @param array $filters Optional filters
 	 * @return Customer[]
