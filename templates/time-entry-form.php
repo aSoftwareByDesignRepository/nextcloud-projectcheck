@@ -103,7 +103,7 @@ Util::addStyle('projectcheck', 'navigation');
 					<div class="form-group">
 						<label for="date" class="required"><?php p($l->t('Date')); ?></label>
 						<input type="text" name="date" id="date" class="form-input datepicker-only" required
-							value="<?php p($isEdit ? $timeEntry->getDate()->format('d.m.Y') : date('d.m.Y')); ?>"
+							value="<?php p($isEdit ? $timeEntry->getDate()->format('d.m.Y') : ''); ?>"
 							placeholder="dd.mm.yyyy"
 							pattern="\d{2}\.\d{2}\.\d{4}"
 							title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>"

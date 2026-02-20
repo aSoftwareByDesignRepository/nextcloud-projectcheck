@@ -78,7 +78,8 @@ function initializeDatepicker(input, options = {}) {
 	// German month names
 	const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 
 		'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-	const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+	// German locale week layout: Monday -> Sunday
+	const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
 	let currentDate = null;
 	let selectedDate = null;
