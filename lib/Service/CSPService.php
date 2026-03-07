@@ -57,6 +57,7 @@ class CSPService
     /**
      * Apply CSP and inject a template nonce parameter.
      * Note: Core middleware will attach the CSP header and JS nonce as needed.
+     * Nonce is obtained via OC internal API until OCP exposes a public interface.
      */
     public function applyPolicyWithNonce(TemplateResponse $response, string $context): TemplateResponse
     {
@@ -73,7 +74,7 @@ class CSPService
                 break;
         }
 
-        // Expose nonce to templates that use inline tags
+        // Expose nonce to templates that use inline tags (OC internal until OCP provides interface)
         $params = $response->getParams();
         $params['cspNonce'] = \OC::$server->getContentSecurityPolicyNonceManager()->getNonce();
         $response->setParams($params);

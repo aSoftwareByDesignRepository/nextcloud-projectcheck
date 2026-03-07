@@ -120,6 +120,7 @@ class SettingsController extends Controller
 		// Get stats for sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService);
 
+		// requesttoken/cspNonce: required for templates; use OC internals until OCP exposes these
 		$response = new TemplateResponse($this->appName, 'settings', [
 			'settings' => $settings,
 			'stats' => $stats,
