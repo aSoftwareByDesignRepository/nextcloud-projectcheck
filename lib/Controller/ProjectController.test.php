@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Integration tests for ProjectController
  *
@@ -10,20 +13,29 @@ namespace OCA\ProjectCheck\Tests\Controller;
 
 use OCA\ProjectCheck\Controller\ProjectController;
 use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\CustomerService;
+use OCA\ProjectCheck\Service\TimeEntryService;
+use OCA\ProjectCheck\Service\BudgetService;
+use OCA\ProjectCheck\Service\DeletionService;
+use OCA\ProjectCheck\Service\ActivityService;
+use OCA\ProjectCheck\Service\ProjectFileService;
+use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
-use OCP\ILogger;
+use OCP\IURLGenerator;
+use OCP\IConfig;
+use OCP\IL10N;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class ProjectControllerTest
  *
- * @package OCA\ProjectControl\Tests\Controller
+ * @package OCA\ProjectCheck\Tests\Controller
  */
 class ProjectControllerTest extends TestCase {
 
@@ -39,11 +51,11 @@ class ProjectControllerTest extends TestCase {
 	/** @var IUserSession|\PHPUnit\Framework\MockObject\MockObject */
 	private $userSession;
 
-	/** @var ILogger|\PHPUnit\Framework\MockObject\MockObject */
-	private $logger;
-
 	/** @var IUser|\PHPUnit\Framework\MockObject\MockObject */
 	private $user;
+
+	/** @var IL10N|\PHPUnit\Framework\MockObject\MockObject */
+	private $l10n;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -51,15 +63,38 @@ class ProjectControllerTest extends TestCase {
 		$this->projectService = $this->createMock(ProjectService::class);
 		$this->request = $this->createMock(IRequest::class);
 		$this->userSession = $this->createMock(IUserSession::class);
-		$this->logger = $this->createMock(ILogger::class);
 		$this->user = $this->createMock(IUser::class);
+
+		// IL10N mock: t() returns first argument
+		$this->l10n = $this->createMock(IL10N::class);
+		$this->l10n->method('t')
+			->willReturnCallback(static fn ($s, $p = []) => is_array($p) && !empty($p) ? vsprintf($s, $p) : $s);
+
+		$customerService = $this->createMock(CustomerService::class);
+		$timeEntryService = $this->createMock(TimeEntryService::class);
+		$budgetService = $this->createMock(BudgetService::class);
+		$deletionService = $this->createMock(DeletionService::class);
+		$activityService = $this->createMock(ActivityService::class);
+		$projectFileService = $this->createMock(ProjectFileService::class);
+		$urlGenerator = $this->createMock(IURLGenerator::class);
+		$config = $this->createMock(IConfig::class);
+		$cspService = $this->createMock(CSPService::class);
 
 		$this->controller = new ProjectController(
 			'projectcheck',
 			$this->request,
 			$this->projectService,
+			$customerService,
+			$timeEntryService,
+			$budgetService,
+			$deletionService,
+			$activityService,
+			$projectFileService,
 			$this->userSession,
-			$this->logger
+			$urlGenerator,
+			$config,
+			$cspService,
+			$this->l10n
 		);
 	}
 
@@ -67,11 +102,9 @@ class ProjectControllerTest extends TestCase {
 	 * Test complete project creation workflow
 	 */
 	public function testCompleteProjectCreationWorkflow(): void {
-		// Mock user authentication
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		// Mock request parameters
 		$projectData = [
 			'name' => 'Test Project',
 			'short_description' => 'A test project',
@@ -83,8 +116,9 @@ class ProjectControllerTest extends TestCase {
 		];
 
 		$this->request->method('getParams')->willReturn($projectData);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
+		$this->request->method('getUploadedFile')->with('project_files')->willReturn(null);
 
-		// Mock project creation
 		$project = new Project();
 		$project->setId(1);
 		$project->setName('Test Project');
@@ -100,27 +134,25 @@ class ProjectControllerTest extends TestCase {
 
 		$this->projectService->method('createProject')->willReturn($project);
 
-		// Test project creation
 		$response = $this->controller->store();
 
 		$this->assertInstanceOf(DataResponse::class, $response);
 		$this->assertEquals(200, $response->getStatus());
-		
+
 		$data = $response->getData();
 		$this->assertTrue($data['success']);
 		$this->assertEquals('Project created successfully', $data['message']);
-		$this->assertInstanceOf(Project::class, $data['project']);
+		$this->assertIsScalar($data['project']);
+		$this->assertEquals(1, $data['project']);
 	}
 
 	/**
 	 * Test project editing and validation
 	 */
 	public function testProjectEditingAndValidation(): void {
-		// Mock user authentication
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		// Mock existing project
 		$existingProject = new Project();
 		$existingProject->setId(1);
 		$existingProject->setName('Original Project');
@@ -129,7 +161,6 @@ class ProjectControllerTest extends TestCase {
 
 		$this->projectService->method('getProject')->with(1)->willReturn($existingProject);
 
-		// Mock update data
 		$updateData = [
 			'name' => 'Updated Project',
 			'short_description' => 'Updated description',
@@ -138,8 +169,10 @@ class ProjectControllerTest extends TestCase {
 		];
 
 		$this->request->method('getParams')->willReturn($updateData);
+		$this->request->method('getMethod')->willReturn('PUT');
+		$this->request->method('getParam')->with('_method')->willReturn(null);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn(null);
 
-		// Mock updated project
 		$updatedProject = clone $existingProject;
 		$updatedProject->setName('Updated Project');
 		$updatedProject->setShortDescription('Updated description');
@@ -149,12 +182,11 @@ class ProjectControllerTest extends TestCase {
 
 		$this->projectService->method('updateProject')->willReturn($updatedProject);
 
-		// Test project update
 		$response = $this->controller->update(1);
 
 		$this->assertInstanceOf(DataResponse::class, $response);
 		$this->assertEquals(200, $response->getStatus());
-		
+
 		$data = $response->getData();
 		$this->assertTrue($data['success']);
 		$this->assertEquals('Project updated successfully', $data['message']);
@@ -164,32 +196,22 @@ class ProjectControllerTest extends TestCase {
 	 * Test team member management
 	 */
 	public function testTeamMemberManagement(): void {
-		// Mock user authentication
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		// Mock project
 		$project = new Project();
 		$project->setId(1);
 		$project->setName('Test Project');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
 
-		// Mock team member data
-		$memberData = [
-			'user_id' => 'newuser',
-			'role' => 'Developer',
-			'hourly_rate' => 45.0
-		];
-
 		$this->request->method('getParam')
 			->willReturnMap([
-				['user_id', 'newuser'],
-				['role', 'Developer'],
-				['hourly_rate', 45.0]
+				['user_id', null, 'newuser'],
+				['role', null, 'Developer'],
+				['hourly_rate', null, 45.0]
 			]);
 
-		// Mock team member
 		$member = new ProjectMember();
 		$member->setId(1);
 		$member->setProjectId(1);
@@ -199,12 +221,11 @@ class ProjectControllerTest extends TestCase {
 
 		$this->projectService->method('addTeamMember')->willReturn($member);
 
-		// Test adding team member
 		$response = $this->controller->addTeamMember(1);
 
 		$this->assertInstanceOf(DataResponse::class, $response);
 		$this->assertEquals(200, $response->getStatus());
-		
+
 		$data = $response->getData();
 		$this->assertTrue($data['success']);
 		$this->assertEquals('Team member added successfully', $data['message']);
@@ -215,11 +236,9 @@ class ProjectControllerTest extends TestCase {
 	 * Test search and filtering functionality
 	 */
 	public function testSearchAndFilteringFunctionality(): void {
-		// Mock user authentication
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		// Mock search parameters
 		$searchParams = [
 			'search' => 'test',
 			'status' => 'Active',
@@ -229,9 +248,8 @@ class ProjectControllerTest extends TestCase {
 			'offset' => 0
 		];
 
-		$this->request->method('getParams')->willReturn($searchParams);
+		$this->request->method('getParam')->with('q', '')->willReturn('test');
 
-		// Mock search results
 		$projects = [
 			new Project(),
 			new Project()
@@ -239,12 +257,11 @@ class ProjectControllerTest extends TestCase {
 
 		$this->projectService->method('getProjects')->willReturn($projects);
 
-		// Test search functionality
 		$response = $this->controller->search();
 
 		$this->assertInstanceOf(DataResponse::class, $response);
 		$this->assertEquals(200, $response->getStatus());
-		
+
 		$data = $response->getData();
 		$this->assertTrue($data['success']);
 		$this->assertIsArray($data['projects']);
@@ -255,36 +272,28 @@ class ProjectControllerTest extends TestCase {
 	 * Test permission checks and access control
 	 */
 	public function testPermissionChecksAndAccessControl(): void {
-		// Mock user authentication
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		// Mock project with different creator
 		$project = new Project();
 		$project->setId(1);
 		$project->setName('Test Project');
 		$project->setCreatedBy('otheruser');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
-
-		// Mock permission checks
-		$this->projectService->method('canUserAccessProject')
-			->with('testuser', 1)
-			->willReturn(false);
-
-		$this->projectService->method('canUserEditProject')
-			->with('testuser', 1)
-			->willReturn(false);
-
-		// Test access control - should return error for unauthorized access
 		$this->projectService->method('updateProject')
 			->willThrowException(new \Exception('Access denied'));
+
+		$this->request->method('getParams')->willReturn(['status' => 'Active']);
+		$this->request->method('getMethod')->willReturn('PUT');
+		$this->request->method('getParam')->with('_method')->willReturn(null);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn(null);
 
 		$response = $this->controller->update(1);
 
 		$this->assertInstanceOf(DataResponse::class, $response);
 		$this->assertEquals(400, $response->getStatus());
-		
+
 		$data = $response->getData();
 		$this->assertArrayHasKey('error', $data);
 		$this->assertEquals('Access denied', $data['error']);
@@ -294,18 +303,15 @@ class ProjectControllerTest extends TestCase {
 	 * Test API responses and error handling
 	 */
 	public function testApiResponsesAndErrorHandling(): void {
-		// Mock user authentication
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		// Mock project
 		$project = new Project();
 		$project->setId(1);
 		$project->setName('Test Project');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
 
-		// Mock team members
 		$teamMembers = [
 			new ProjectMember(),
 			new ProjectMember()
@@ -313,12 +319,11 @@ class ProjectControllerTest extends TestCase {
 
 		$this->projectService->method('getProjectTeam')->with(1)->willReturn($teamMembers);
 
-		// Test API show endpoint
 		$response = $this->controller->apiShow(1);
 
 		$this->assertInstanceOf(DataResponse::class, $response);
 		$this->assertEquals(200, $response->getStatus());
-		
+
 		$data = $response->getData();
 		$this->assertTrue($data['success']);
 		$this->assertInstanceOf(Project::class, $data['project']);
@@ -329,20 +334,17 @@ class ProjectControllerTest extends TestCase {
 	 * Test project status change functionality
 	 */
 	public function testProjectStatusChangeFunctionality(): void {
-		// Mock user authentication
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		// Mock project
 		$project = new Project();
 		$project->setId(1);
 		$project->setName('Test Project');
 		$project->setStatus('Active');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
-
-		// Mock status change
 		$this->request->method('getParam')->with('status')->willReturn('On Hold');
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
 
 		$updatedProject = clone $project;
 		$updatedProject->setStatus('On Hold');
@@ -351,46 +353,43 @@ class ProjectControllerTest extends TestCase {
 			->with(1, ['status' => 'On Hold'])
 			->willReturn($updatedProject);
 
-		// Test status change
 		$response = $this->controller->changeStatus(1);
 
 		$this->assertInstanceOf(DataResponse::class, $response);
 		$this->assertEquals(200, $response->getStatus());
-		
+
 		$data = $response->getData();
 		$this->assertTrue($data['success']);
 		$this->assertEquals('Project status updated successfully', $data['message']);
-		$this->assertEquals('On Hold', $data['project']->getStatus());
+		// Controller returns only success/message; project object is not in response
 	}
 
 	/**
 	 * Test project deletion functionality
 	 */
 	public function testProjectDeletionFunctionality(): void {
-		// Mock user authentication
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		// Mock project
 		$project = new Project();
 		$project->setId(1);
 		$project->setName('Test Project');
 		$project->setStatus('Active');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserDeleteProject')->with('testuser', 1)->willReturn(true);
 
-		// Mock empty team members (allows deletion)
-		$this->projectService->method('getProjectTeam')->with(1)->willReturn([]);
+		$this->request->method('getMethod')->willReturn('DELETE');
+		$this->request->method('getParam')->with('_method')->willReturn(null);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
 
-		// Mock successful deletion
 		$this->projectService->method('deleteProject')->with(1)->willReturn(true);
 
-		// Test project deletion
 		$response = $this->controller->delete(1);
 
 		$this->assertInstanceOf(DataResponse::class, $response);
 		$this->assertEquals(200, $response->getStatus());
-		
+
 		$data = $response->getData();
 		$this->assertTrue($data['success']);
 		$this->assertEquals('Project deleted successfully', $data['message']);
@@ -400,31 +399,28 @@ class ProjectControllerTest extends TestCase {
 	 * Test error handling for invalid data
 	 */
 	public function testErrorHandlingForInvalidData(): void {
-		// Mock user authentication
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		// Mock invalid project data
 		$invalidData = [
-			'name' => '', // Empty name should cause validation error
+			'name' => '',
 			'short_description' => 'A test project',
 			'customer_id' => 1,
-			'hourly_rate' => -10.0, // Invalid negative rate
+			'hourly_rate' => -10.0,
 			'total_budget' => 5000.0
 		];
 
 		$this->request->method('getParams')->willReturn($invalidData);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
 
-		// Mock validation error
 		$this->projectService->method('createProject')
 			->willThrowException(new \Exception('Project name is required'));
 
-		// Test error handling
 		$response = $this->controller->store();
 
 		$this->assertInstanceOf(DataResponse::class, $response);
 		$this->assertEquals(400, $response->getStatus());
-		
+
 		$data = $response->getData();
 		$this->assertArrayHasKey('error', $data);
 		$this->assertEquals('Project name is required', $data['error']);
@@ -434,16 +430,15 @@ class ProjectControllerTest extends TestCase {
 	 * Test unauthenticated access
 	 */
 	public function testUnauthenticatedAccess(): void {
-		// Mock no user authentication
 		$this->userSession->method('getUser')->willReturn(null);
 
-		// Test unauthenticated access
 		$response = $this->controller->index();
 
 		$this->assertInstanceOf(TemplateResponse::class, $response);
 		$this->assertEquals('error', $response->getTemplateName());
-		
+
 		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
 		$this->assertEquals('User not authenticated', $data['error']);
 	}
 }

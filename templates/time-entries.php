@@ -490,7 +490,17 @@ Util::addStyle('projectcheck', 'navigation');
                 </div>
             <?php else: ?>
                 <div class="grid-container">
-                    <table class="grid">
+                    <table class="grid time-entries-table">
+                        <colgroup>
+                            <col class="col-date">
+                            <col class="col-project">
+                            <col class="col-type">
+                            <col class="col-customer">
+                            <col class="col-user">
+                            <col class="col-hours">
+                            <col class="col-description">
+                            <col class="col-actions">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th><?php p($l->t('Date')); ?></th>
@@ -522,7 +532,6 @@ Util::addStyle('projectcheck', 'navigation');
                                 <?php
                                 $timeEntry = $entry['timeEntry'];
                                 if (!$timeEntry || !is_object($timeEntry)) {
-                                    error_log('TimeEntry template error: timeEntry is not an object. Entry: ' . print_r($entry, true));
                                     continue;
                                 }
                                 ?>
@@ -567,7 +576,7 @@ Util::addStyle('projectcheck', 'navigation');
                                     <td><?php p($entry['customerName'] ?? ''); ?></td>
                                     <td><?php p($entry['userDisplayName'] ?? $timeEntry->getUserId() ?? ''); ?></td>
                                     <td><?php p($timeEntry->getHours() ?? 0); ?></td>
-                                    <td class="description-cell"><?php p($timeEntry->getDescription() ?? ''); ?></td>
+                                    <td class="description-cell"><span class="description-cell__text"><?php p($timeEntry->getDescription() ?? ''); ?></span></td>
                                     <td>
                                         <div class="action-items">
                                             <a href="<?php p(str_replace('ENTRY_ID', $timeEntry->getId(), $_['showUrl'] ?? '/index.php/apps/projectcheck/time-entries/')); ?>"
@@ -576,13 +585,14 @@ Util::addStyle('projectcheck', 'navigation');
                                             </a>
                                             <?php if ($timeEntry->getUserId() === $_['userId']): ?>
                                                 <a href="<?php p(str_replace('ENTRY_ID', $timeEntry->getId(), $_['editUrl'] ?? '/index.php/apps/projectcheck/time-entries/edit/')); ?>"
-                                                    class="action-item" title="<?php p($l->t('Edit Time Entry')); ?>">
+                                                    class="action-item" title="<?php p($l->t('Edit Time Entry')); ?>" aria-label="<?php p($l->t('Edit time entry')); ?>">
                                                     <span class="icon icon-rename"></span>
                                                 </a>
                                                 <button type="button" class="action-item delete-entry-btn"
                                                     data-entry-id="<?php p($timeEntry->getId()); ?>"
                                                     data-entry-description="<?php p($timeEntry->getDescription() ?? ''); ?>"
-                                                    title="<?php p($l->t('Delete Time Entry')); ?>">
+                                                    title="<?php p($l->t('Delete Time Entry')); ?>"
+                                                    aria-label="<?php p($l->t('Delete time entry')); ?>">
                                                     <span class="icon icon-delete"></span>
                                                 </button>
                                             <?php endif; ?>

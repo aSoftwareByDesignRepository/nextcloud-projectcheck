@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * User deleted listener for projectcheck app
  *
@@ -15,36 +17,21 @@ use OCP\User\Events\UserDeletedEvent;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\CustomerService;
+use Psr\Log\LoggerInterface;
 
 /**
  * Listener for user deletion events
+ *
+ * @template-implements IEventListener<UserDeletedEvent>
  */
 class UserDeletedListener implements IEventListener
 {
-    /** @var ProjectService */
-    private $projectService;
-
-    /** @var TimeEntryService */
-    private $timeEntryService;
-
-    /** @var CustomerService */
-    private $customerService;
-
-    /**
-     * UserDeletedListener constructor
-     *
-     * @param ProjectService $projectService
-     * @param TimeEntryService $timeEntryService
-     * @param CustomerService $customerService
-     */
     public function __construct(
-        ProjectService $projectService,
-        TimeEntryService $timeEntryService,
-        CustomerService $customerService
+        private readonly ProjectService $projectService,
+        private readonly TimeEntryService $timeEntryService,
+        private readonly CustomerService $customerService,
+        private readonly LoggerInterface $logger,
     ) {
-        $this->projectService = $projectService;
-        $this->timeEntryService = $timeEntryService;
-        $this->customerService = $customerService;
     }
 
     /**
@@ -74,10 +61,9 @@ class UserDeletedListener implements IEventListener
             // Clean up user's projects (transfer to admin or delete)
             $this->cleanupUserProjects($userId);
         } catch (\Exception $e) {
-            // Log error but don't fail the user deletion
-            \OC::$server->getLogger()->error('Error cleaning up projectcontrol data for user ' . $userId, [
+            $this->logger->error('Error cleaning up projectcheck data for deleted user', [
                 'exception' => $e,
-                'app' => 'projectcheck'
+                'userId' => $userId,
             ]);
         }
     }
@@ -96,10 +82,10 @@ class UserDeletedListener implements IEventListener
             try {
                 $this->timeEntryService->deleteTimeEntry($timeEntry->getId(), $userId);
             } catch (\Exception $e) {
-                // Log error but continue
-                \OC::$server->getLogger()->error('Error deleting time entry ' . $timeEntry->getId(), [
+                $this->logger->error('Error deleting time entry on user deletion', [
                     'exception' => $e,
-                    'app' => 'projectcheck'
+                    'timeEntryId' => $timeEntry->getId(),
+                    'userId' => $userId,
                 ]);
             }
         }
@@ -131,10 +117,10 @@ class UserDeletedListener implements IEventListener
             try {
                 $this->customerService->deleteCustomer($customer->getId(), $userId);
             } catch (\Exception $e) {
-                // Log error but continue
-                \OC::$server->getLogger()->error('Error deleting customer ' . $customer->getId(), [
+                $this->logger->error('Error deleting customer on user deletion', [
                     'exception' => $e,
-                    'app' => 'projectcheck'
+                    'customerId' => $customer->getId(),
+                    'userId' => $userId,
                 ]);
             }
         }
@@ -147,22 +133,18 @@ class UserDeletedListener implements IEventListener
      */
     private function cleanupUserProjects(string $userId): void
     {
-        // Get all projects created by the user
-        $projects = $this->projectService->getProjectsByUser($userId);
+        $projects = $this->projectService->getProjectsCreatedByUser($userId);
 
         foreach ($projects as $project) {
             try {
-                // For now, we'll just mark the project as cancelled
-                // In a real implementation, you might want to transfer ownership
-                $this->projectService->updateProject($project->getId(), [
-                    'status' => 'Cancelled',
-                    'updated_at' => new \DateTime()
-                ], $userId);
+                if (!$project->isCompleted() && !$project->isCancelled()) {
+                    $this->projectService->updateProject($project->getId(), ['status' => 'Cancelled']);
+                }
             } catch (\Exception $e) {
-                // Log error but continue
-                \OC::$server->getLogger()->error('Error updating project ' . $project->getId(), [
+                $this->logger->error('Error cancelling project on user deletion', [
                     'exception' => $e,
-                    'app' => 'projectcheck'
+                    'projectId' => $project->getId(),
+                    'userId' => $userId,
                 ]);
             }
         }

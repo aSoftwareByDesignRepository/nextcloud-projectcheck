@@ -368,7 +368,7 @@
 		const messageDiv = document.getElementById('settings-message');
 
 		if (messageDiv) {
-			messageDiv.innerHTML = message;
+			messageDiv.textContent = message;
 			messageDiv.className = `settings-message ${type}`;
 			messageDiv.style.display = 'block';
 

@@ -33,7 +33,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: color-mix(in srgb, var(--color-main-text) 50%, transparent);
     z-index: 1999;
     backdrop-filter: blur(2px);
   }
@@ -97,7 +97,7 @@
   .menu-bar {
     margin-top: 0; /* No header margin on mobile */
     height: 100vh;
-    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 4px 0 12px color-mix(in srgb, var(--color-main-text) 30%, transparent);
   }
 
   /* Larger touch targets for mobile */

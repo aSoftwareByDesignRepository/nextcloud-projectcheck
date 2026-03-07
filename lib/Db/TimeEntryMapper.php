@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * TimeEntry mapper for projectcontrol app
  *

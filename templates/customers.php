@@ -181,7 +181,7 @@ Util::addStyle('projectcheck', 'customer-statistics');
                                             <span class="icon icon-details"></span>
                                         </a>
                                         <a href="<?php p(str_replace('CUSTOMER_ID', $customer->getId(), $_['editUrl'] ?? '')); ?>"
-                                            class="action-item" title="<?php p($l->t('Edit Customer')); ?>">
+                                            class="action-item" title="<?php p($l->t('Edit Customer')); ?>" aria-label="<?php p($l->t('Edit customer')); ?>">
                                             <span class="icon icon-rename"></span>
                                         </a>
                                         <?php if ($customer->getCanDelete()): ?>
@@ -189,7 +189,8 @@ Util::addStyle('projectcheck', 'customer-statistics');
                                                 data-customer-id="<?php p($customer->getId()); ?>"
                                                 data-customer-name="<?php p($customer->getName()); ?>"
                                                 data-delete-url="<?php p($_['deleteUrl'] ?? ''); ?>"
-                                                title="<?php p($l->t('Delete Customer')); ?>">
+                                                title="<?php p($l->t('Delete Customer')); ?>"
+                                                aria-label="<?php p($l->t('Delete customer')); ?>">
                                                 <span class="icon icon-delete"></span>
                                             </button>
                                         <?php else: ?>

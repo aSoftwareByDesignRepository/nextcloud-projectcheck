@@ -29,7 +29,7 @@ style('projectcheck', 'common/progress-bars');
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
-            <nav class="breadcrumb" aria-label="Breadcrumb">
+            <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
                 <ol>
                     <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.index')); ?>"><?php p($l->t('Employees')); ?></a></li>
                     <li aria-current="page"><?php p($employee->getDisplayName()); ?></li>

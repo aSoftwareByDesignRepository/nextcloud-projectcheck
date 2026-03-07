@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * TimeEntry controller for projectcheck app
  *
@@ -31,6 +33,8 @@ use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\DateFormatService;
 use OCA\ProjectCheck\Traits\StatsTrait;
 use OCA\ProjectCheck\Controller\CSPTrait;
+use OCP\IL10N;
+use Psr\Log\LoggerInterface;
 
 /**
  * TimeEntry controller for time tracking
@@ -67,6 +71,12 @@ class TimeEntryController extends Controller
 	/** @var ActivityService */
 	private $activityService;
 
+	/** @var IL10N */
+	private $l;
+
+	/** @var LoggerInterface */
+	private $logger;
+
 	/**
 	 * TimeEntryController constructor
 	 *
@@ -83,9 +93,11 @@ class TimeEntryController extends Controller
 	 * @param DeletionService $deletionService
 	 * @param ActivityService $activityService
 	 * @param CSPService $cspService
+	 * @param IL10N $l
+	 * @param LoggerInterface $logger
 	 */
 	public function __construct(
-		$appName,
+		string $appName,
 		IRequest $request,
 		IUserSession $userSession,
 		TimeEntryService $timeEntryService,
@@ -97,19 +109,22 @@ class TimeEntryController extends Controller
 		DateFormatService $dateFormatService,
 		DeletionService $deletionService,
 		ActivityService $activityService,
-		CSPService $cspService
+		CSPService $cspService,
+		IL10N $l,
+		LoggerInterface $logger
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
 		$this->timeEntryService = $timeEntryService;
 		$this->projectService = $projectService;
 		$this->customerService = $customerService;
-		// BudgetService currently unused here; kept for DI compatibility.
 		$this->urlGenerator = $urlGenerator;
 		$this->config = $config;
 		$this->dateFormatService = $dateFormatService;
 		$this->deletionService = $deletionService;
 		$this->activityService = $activityService;
+		$this->l = $l;
+		$this->logger = $logger;
 		$this->setCspService($cspService);
 	}
 
@@ -125,7 +140,7 @@ class TimeEntryController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'User not authenticated'
+				'message' => $this->l->t('User not authenticated')
 			], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
@@ -238,7 +253,7 @@ class TimeEntryController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'User not authenticated'
+				'message' => $this->l->t('User not authenticated')
 			], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
@@ -281,7 +296,7 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$userId = $user->getUID();
@@ -295,40 +310,26 @@ class TimeEntryController extends Controller
 			$data = $this->request->getParams();
 		}
 
-		// Debug: Log the received data
-		error_log('TimeEntry store - Received data: ' . print_r($data, true));
-
-
-
 		try {
-			// Debug: Log validation step
-			error_log('TimeEntry store - Starting validation');
-
 			// Validate data
 			$errors = $this->timeEntryService->validateTimeEntryData($data);
 			if (!empty($errors)) {
-				error_log('TimeEntry store - Validation errors: ' . print_r($errors, true));
 				return new JSONResponse([
 					'success' => false,
 					'errors' => $errors
 				], 400);
 			}
 
-			error_log('TimeEntry store - Validation passed, creating time entry');
-
 			// Create time entry
 			$timeEntry = $this->timeEntryService->createTimeEntry($data, $userId);
-
-			error_log('TimeEntry store - Time entry created successfully');
 
 			return new JSONResponse([
 				'success' => true,
 				'timeEntry' => $timeEntry->getSummary(),
-				'message' => 'Time entry created successfully'
+				'message' => $this->l->t('Time entry created successfully')
 			]);
 		} catch (\Exception $e) {
-			error_log('TimeEntry store - Exception: ' . $e->getMessage());
-			error_log('TimeEntry store - Exception trace: ' . $e->getTraceAsString());
+			$this->logger->error('Time entry creation failed', ['exception' => $e]);
 			return new JSONResponse([
 				'success' => false,
 				'error' => $e->getMessage()
@@ -349,7 +350,7 @@ class TimeEntryController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'User not authenticated'
+				'message' => $this->l->t('User not authenticated')
 			]);
 			return $this->configureCSP($response);
 		}
@@ -394,7 +395,7 @@ class TimeEntryController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'User not authenticated'
+				'message' => $this->l->t('User not authenticated')
 			], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
@@ -410,7 +411,7 @@ class TimeEntryController extends Controller
 		// Check if user has access to this time entry
 		if ($timeEntry->getUserId() !== $user->getUID()) {
 			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'Access denied'
+				'message' => $this->l->t('Access denied')
 			], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
@@ -448,7 +449,7 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		// Accept JSON body (AJAX) or form-encoded params (HTML form)
@@ -510,7 +511,7 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -533,7 +534,7 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -571,7 +572,7 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$timeEntries = $this->timeEntryService->getTimeEntriesByProject($projectId);
@@ -598,7 +599,7 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$userId = $user->getUID();
@@ -621,7 +622,7 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$query = $this->request->getParam('q', '');
@@ -650,7 +651,7 @@ class TimeEntryController extends Controller
 		try {
 			$user = $this->userSession->getUser();
 			if (!$user) {
-				return new DataResponse(['error' => 'User not authenticated'], 401);
+				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 			}
 
 			$currentUserId = $user->getUID();
@@ -685,8 +686,8 @@ class TimeEntryController extends Controller
 				'filename' => $filename
 			]);
 		} catch (\Exception $e) {
-			error_log('TimeEntryController::export() - Exception: ' . $e->getMessage());
-			return new DataResponse(['error' => 'Export failed: ' . $e->getMessage()], 500);
+			$this->logger->error('Time entry export failed', ['exception' => $e]);
+			return new DataResponse(['error' => $this->l->t('Export failed: %s', [$e->getMessage()])], 500);
 		}
 	}
 
@@ -748,7 +749,7 @@ class TimeEntryController extends Controller
 			foreach ($timeEntries as $entry) {
 				$timeEntry = $entry['timeEntry'];
 				if (!$timeEntry || !is_object($timeEntry)) {
-					error_log('Skipping invalid time entry: ' . json_encode($entry));
+					$this->logger->warning('Skipping invalid time entry in CSV export', ['entry' => $entry]);
 					continue;
 				}
 
@@ -783,7 +784,7 @@ class TimeEntryController extends Controller
 
 			return $csv;
 		} catch (\Exception $e) {
-			error_log('generateTimeEntriesCSV() - Exception: ' . $e->getMessage());
+			$this->logger->error('CSV generation failed', ['exception' => $e]);
 			throw $e;
 		}
 	}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Employee controller for projectcheck app
  *
@@ -23,6 +25,7 @@ use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCP\IConfig;
+use OCP\IL10N;
 use OCA\ProjectCheck\Traits\StatsTrait;
 
 /**
@@ -54,6 +57,9 @@ class EmployeeController extends Controller
 	/** @var IConfig */
 	private $config;
 
+	/** @var IL10N */
+	private $l;
+
     /**
      * EmployeeController constructor
      *
@@ -67,6 +73,7 @@ class EmployeeController extends Controller
 	 * @param IURLGenerator $urlGenerator
 	 * @param IConfig $config
      * @param CSPService $cspService
+     * @param IL10N $l
      */
     public function __construct(
         $appName,
@@ -78,7 +85,8 @@ class EmployeeController extends Controller
         CustomerService $customerService,
         IURLGenerator $urlGenerator,
 		IConfig $config,
-        CSPService $cspService
+        CSPService $cspService,
+        IL10N $l
     ) {
         parent::__construct($appName, $request);
         $this->userSession = $userSession;
@@ -88,6 +96,7 @@ class EmployeeController extends Controller
         $this->customerService = $customerService;
         $this->urlGenerator = $urlGenerator;
 		$this->config = $config;
+		$this->l = $l;
         $this->setCspService($cspService);
     }
 
@@ -103,7 +112,7 @@ class EmployeeController extends Controller
         $user = $this->userSession->getUser();
         if (!$user) {
             $response = new TemplateResponse($this->appName, 'error', [
-                'message' => 'User not authenticated'
+                'message' => $this->l->t('User not authenticated')
             ], 'guest');
             return $this->configureCSP($response, 'guest');
         }
@@ -186,7 +195,7 @@ class EmployeeController extends Controller
         $user = $this->userSession->getUser();
         if (!$user) {
             $response = new TemplateResponse($this->appName, 'error', [
-                'message' => 'User not authenticated'
+                'message' => $this->l->t('User not authenticated')
             ], 'guest');
             return $this->configureCSP($response, 'guest');
         }
@@ -233,7 +242,7 @@ class EmployeeController extends Controller
     {
         $user = $this->userSession->getUser();
         if (!$user) {
-            return new JSONResponse(['error' => 'User not authenticated'], 401);
+            return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
         }
 
         $userId = $this->request->getParam('user_id', null);

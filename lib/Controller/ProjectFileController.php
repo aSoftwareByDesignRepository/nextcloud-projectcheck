@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Controller for project file management
  *
@@ -20,24 +22,28 @@ use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
+use OCP\IL10N;
 
 class ProjectFileController extends Controller
 {
 	private ProjectFileService $fileService;
 	private IUserSession $userSession;
 	private IURLGenerator $urlGenerator;
+	private IL10N $l;
 
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		ProjectFileService $fileService,
 		IUserSession $userSession,
-		IURLGenerator $urlGenerator
+		IURLGenerator $urlGenerator,
+		IL10N $l
 	) {
 		parent::__construct($appName, $request);
 		$this->fileService = $fileService;
 		$this->userSession = $userSession;
 		$this->urlGenerator = $urlGenerator;
+		$this->l = $l;
 	}
 
 	/**
@@ -50,7 +56,7 @@ class ProjectFileController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -86,7 +92,7 @@ class ProjectFileController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -119,7 +125,7 @@ class ProjectFileController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -148,7 +154,7 @@ class ProjectFileController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {

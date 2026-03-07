@@ -32,7 +32,7 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
-            <nav class="breadcrumb" aria-label="Breadcrumb">
+            <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
                 <ol>
                     <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.index')); ?>"><?php p($l->t('Projects')); ?></a></li>
                     <li aria-current="page"><?php p($project->getName()); ?></li>
@@ -545,7 +545,8 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                                         <button type="button"
                                             class="button danger ghost delete-file-btn"
                                             data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.delete', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
-                                            data-file-name="<?php p($file->getDisplayName()); ?>">
+                                            data-file-name="<?php p($file->getDisplayName()); ?>"
+                                            aria-label="<?php p($l->t('Delete file')); ?>">
                                             <i class="icon icon-delete"></i>
                                             <?php p($l->t('Delete')); ?>
                                         </button>
@@ -671,8 +672,9 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                                         <button type="button" class="action-btn remove-member-btn"
                                             data-member-id="<?php p($member['id'] ?? ''); ?>"
                                             data-member-name="<?php p($member['name'] ?? $l->t('Unknown')); ?>"
-                                            title="<?php p($l->t('Remove from project')); ?>">
-                                            <i class="icon-delete-custom"></i>
+                                            title="<?php p($l->t('Remove from project')); ?>"
+                                            aria-label="<?php p($l->t('Remove %s from project', [$member['name'] ?? $l->t('Unknown')])); ?>">
+                                            <i class="icon-delete-custom" aria-hidden="true"></i>
                                         </button>
                                     <?php endif; ?>
                                 </div>
@@ -690,7 +692,7 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
     <div class="modal-content">
         <div class="modal-header">
             <h3><?php p($l->t('Change Project Status')); ?></h3>
-            <span class="close" id="close-status-modal">&times;</span>
+            <button type="button" class="close" id="close-status-modal" aria-label="<?php p($l->t('Close')); ?>">&times;</button>
         </div>
         <div class="modal-body">
             <form id="statusChangeForm">

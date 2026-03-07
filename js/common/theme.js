@@ -187,7 +187,7 @@ const ProjectControlTheme = {
     button.type = 'button';
     button.className = `btn btn--secondary ${className} ${className}--${size}`;
     button.setAttribute('data-theme-toggle', '');
-    button.setAttribute('aria-label', 'Toggle theme');
+    button.setAttribute('aria-label', t('projectcheck', 'Toggle theme'));
 
     const icon = document.createElement('span');
     icon.setAttribute('data-theme-icon', '');

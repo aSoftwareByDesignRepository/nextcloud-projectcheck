@@ -28,7 +28,7 @@
   scroll-behavior: smooth;
 
   /* Ensure menu bar is always visible */
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 8px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 /* Ensure menu bar content doesn't interfere with Nextcloud header */

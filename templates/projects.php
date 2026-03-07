@@ -119,11 +119,13 @@ Util::addStyle('projectcheck', 'navigation');
                 <div class="searchbox">
                     <input type="text" id="project-search"
                         placeholder="<?php p($l->t('Search projects...')); ?>"
-                        value="<?php p($_['filters']['search'] ?? ''); ?>">
+                        value="<?php p($_['filters']['search'] ?? ''); ?>"
+                        aria-label="<?php p($l->t('Search projects')); ?>"
+                        autocomplete="off">
                 </div>
 
                 <div class="filters-row">
-                    <select id="status-filter">
+                    <select id="status-filter" aria-label="<?php p($l->t('Filter by status')); ?>">
                         <option value="all" <?php if (($_['filters']['status'] ?? '') === 'all') echo 'selected'; ?>><?php p($l->t('All Statuses')); ?></option>
                         <option value="Active" <?php if (($_['filters']['status'] ?? 'Active') === 'Active') echo 'selected'; ?>><?php p($l->t('Active')); ?></option>
                         <option value="On Hold" <?php if (($_['filters']['status'] ?? '') === 'On Hold') echo 'selected'; ?>><?php p($l->t('On Hold')); ?></option>
@@ -131,7 +133,7 @@ Util::addStyle('projectcheck', 'navigation');
                         <option value="Cancelled" <?php if (($_['filters']['status'] ?? '') === 'Cancelled') echo 'selected'; ?>><?php p($l->t('Cancelled')); ?></option>
                     </select>
 
-                    <select id="priority-filter">
+                    <select id="priority-filter" aria-label="<?php p($l->t('Filter by priority')); ?>">
                         <option value=""><?php p($l->t('All Priorities')); ?></option>
                         <option value="Low" <?php if (($_['filters']['priority'] ?? '') === 'Low') echo 'selected'; ?>><?php p($l->t('Low')); ?></option>
                         <option value="Medium" <?php if (($_['filters']['priority'] ?? '') === 'Medium') echo 'selected'; ?>><?php p($l->t('Medium')); ?></option>
@@ -139,7 +141,7 @@ Util::addStyle('projectcheck', 'navigation');
                         <option value="Critical" <?php if (($_['filters']['priority'] ?? '') === 'Critical') echo 'selected'; ?>><?php p($l->t('Critical')); ?></option>
                     </select>
 
-                    <select id="project-type-filter">
+                    <select id="project-type-filter" aria-label="<?php p($l->t('Filter by project type')); ?>">
                         <option value=""><?php p($l->t('All Project Types')); ?></option>
                         <option value="client" <?php if (($_['filters']['project_type'] ?? '') === 'client') echo 'selected'; ?>><?php p($l->t('Client Project')); ?></option>
                         <option value="admin" <?php if (($_['filters']['project_type'] ?? '') === 'admin') echo 'selected'; ?>><?php p($l->t('Administrative')); ?></option>
@@ -153,7 +155,7 @@ Util::addStyle('projectcheck', 'navigation');
                         <option value="other" <?php if (($_['filters']['project_type'] ?? '') === 'other') echo 'selected'; ?>><?php p($l->t('Other')); ?></option>
                     </select>
 
-                    <select id="customer-filter">
+                    <select id="customer-filter" aria-label="<?php p($l->t('Filter by customer')); ?>">
                         <option value=""><?php p($l->t('All Customers')); ?></option>
                         <?php if (!empty($_['customers'])): ?>
                             <?php foreach ($_['customers'] as $customer): ?>
@@ -201,7 +203,7 @@ Util::addStyle('projectcheck', 'navigation');
                                 $isActive = ($currentSort === $sortKey);
                                 $dir = $isActive ? $currentDirection : 'desc';
                             ?>
-                            <th class="sortable" data-sort="<?php p($sortKey); ?>" data-direction="<?php p($dir); ?>" title="<?php p($l->t('Click to sort')); ?>">
+                            <th class="sortable" data-sort="<?php p($sortKey); ?>" data-direction="<?php p($dir); ?>" role="columnheader" scope="col" tabindex="0" title="<?php p($l->t('Click to sort')); ?>" aria-sort="<?php echo $isActive ? ($currentDirection === 'asc' ? 'ascending' : 'descending') : 'none'; ?>">
                                 <?php p($label); ?>
                                 <?php if ($isActive): ?>
                                     <span class="sort-indicator" aria-hidden="true"><?php echo $dir === 'asc' ? '▲' : '▼'; ?></span>
@@ -346,18 +348,23 @@ Util::addStyle('projectcheck', 'navigation');
                                 <td>
                                     <div class="action-items">
                                         <a href="<?php p(str_replace('PROJECT_ID', $project->getId(), $_['showUrl'])); ?>"
-                                            class="action-item" title="<?php p($l->t('View Project')); ?>">
-                                            <span class="icon icon-details"></span>
+                                            class="action-item"
+                                            title="<?php p($l->t('View Project')); ?>"
+                                            aria-label="<?php p($l->t('View project %s', [$project->getName()])); ?>">
+                                            <span class="icon icon-details" aria-hidden="true"></span>
                                         </a>
                                         <a href="<?php p(str_replace('PROJECT_ID', $project->getId(), $_['editUrl'])); ?>"
-                                            class="action-item" title="<?php p($l->t('Edit Project')); ?>">
-                                            <span class="icon icon-rename"></span>
+                                            class="action-item"
+                                            title="<?php p($l->t('Edit Project')); ?>"
+                                            aria-label="<?php p($l->t('Edit project %s', [$project->getName()])); ?>">
+                                            <span class="icon icon-rename" aria-hidden="true"></span>
                                         </a>
                                         <button type="button" class="action-item delete-project-btn"
                                             data-project-id="<?php p($project->getId()); ?>"
                                             data-project-name="<?php p($project->getName()); ?>"
-                                            title="<?php p($l->t('Delete Project')); ?>">
-                                            <span class="icon icon-delete"></span>
+                                            title="<?php p($l->t('Delete Project')); ?>"
+                                            aria-label="<?php p($l->t('Delete project %s', [$project->getName()])); ?>">
+                                            <span class="icon icon-delete" aria-hidden="true"></span>
                                         </button>
                                     </div>
                                 </td>

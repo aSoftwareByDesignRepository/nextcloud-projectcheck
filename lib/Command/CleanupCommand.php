@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Console command for cleanup tasks in projectcontrol app
  *

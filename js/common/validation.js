@@ -3,6 +3,13 @@
  * Provides comprehensive form validation with real-time feedback
  */
 
+function escapeHtml(text) {
+	if (text == null) return '';
+	const div = document.createElement('div');
+	div.textContent = String(text);
+	return div.innerHTML;
+}
+
 const ProjectControlValidation = {
   /**
    * Initialize validation system
@@ -654,7 +661,7 @@ const ProjectControlValidation = {
     
     errorContainer.innerHTML = `
       <div class="alert alert--error">
-        <strong>Submission Error:</strong> ${message}
+        <strong>Submission Error:</strong> ${escapeHtml(message)}
         <button type="button" class="alert__dismiss" onclick="this.parentElement.parentElement.remove()">×</button>
       </div>
     `;
@@ -674,7 +681,7 @@ const ProjectControlValidation = {
     
     infoContainer.innerHTML = `
       <div class="alert alert--info">
-        <strong>Info:</strong> ${message}
+        <strong>Info:</strong> ${escapeHtml(message)}
         <button type="button" class="alert__dismiss" onclick="this.parentElement.parentElement.remove()">×</button>
       </div>
     `;
@@ -994,7 +1001,7 @@ const ProjectControlValidation = {
     errorContainer.innerHTML = `
       <h4>Please fix the following errors:</h4>
       <ul>
-        ${errors.map(error => `<li><strong>${error.field}:</strong> ${error.message}</li>`).join('')}
+        ${errors.map(error => `<li><strong>${escapeHtml(error.field)}:</strong> ${escapeHtml(error.message)}</li>`).join('')}
       </ul>
     `;
     errorContainer.style.display = 'block';
@@ -1020,7 +1027,7 @@ const ProjectControlValidation = {
     warningContainer.innerHTML = `
       <h4>Please review the following warnings:</h4>
       <ul>
-        ${warnings.map(warning => `<li><strong>${warning.field}:</strong> ${warning.message}</li>`).join('')}
+        ${warnings.map(warning => `<li><strong>${escapeHtml(warning.field)}:</strong> ${escapeHtml(warning.message)}</li>`).join('')}
       </ul>
     `;
     warningContainer.style.display = 'block';

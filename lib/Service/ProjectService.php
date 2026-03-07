@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * ProjectService for the projectcheck app
  *
@@ -51,6 +53,9 @@ class ProjectService
 	/** @var ProjectMapper|null */
 	private $projectMapper;
 
+	/** @var BudgetService|null */
+	private $budgetService;
+
 	/**
 	 * ProjectService constructor
 	 *
@@ -58,8 +63,11 @@ class ProjectService
 	 * @param IUserSession $userSession
 	 * @param IUserManager $userManager
 	 * @param IConfig $config
+	 * @param IGroupManager $groupManager
+	 * @param ProjectMapper|null $projectMapper
+	 * @param BudgetService|null $budgetService
 	 */
-	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config, IGroupManager $groupManager, ?ProjectMapper $projectMapper = null)
+	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config, IGroupManager $groupManager, ?ProjectMapper $projectMapper = null, ?BudgetService $budgetService = null)
 	{
 		$this->db = $db;
 		$this->userSession = $userSession;
@@ -67,6 +75,7 @@ class ProjectService
 		$this->config = $config;
 		$this->groupManager = $groupManager;
 		$this->projectMapper = $projectMapper ?? new ProjectMapper($db);
+		$this->budgetService = $budgetService;
 		$this->calculator = new ProjectCalculator();
 	}
 
@@ -286,6 +295,112 @@ class ProjectService
 		$result->closeCursor();
 
 		return $projects;
+	}
+
+	/**
+	 * Get projects for list view: filtered, enriched with budget info, and sorted.
+	 * Handles both DB-sortable columns and computed columns (remaining_budget, progress).
+	 *
+	 * @param array $filters search, status, priority, project_type, customer_id, limit, offset
+	 * @param string $sort User-facing: name, customer, type, status, remaining_budget, progress
+	 * @param string $direction asc|desc
+	 * @param string $userId
+	 * @return array<int, array{project: Project, budgetInfo: array}>
+	 */
+	public function getProjectsForListView(array $filters, string $sort, string $direction, string $userId): array
+	{
+		if ($this->budgetService === null) {
+			throw new \RuntimeException('BudgetService is required for getProjectsForListView');
+		}
+
+		$sortToDbColumn = [
+			'name' => 'name',
+			'customer' => 'customer_name',
+			'type' => 'project_type',
+			'status' => 'status',
+		];
+		$dbSortable = isset($sortToDbColumn[$sort]);
+		$dbSort = $dbSortable ? $sortToDbColumn[$sort] : 'created_at';
+		$dbDirection = ($direction === 'desc') ? 'DESC' : 'ASC';
+
+		$dbFilters = array_merge($filters, [
+			'sort' => $dbSort,
+			'direction' => $dbDirection,
+		]);
+
+		// For computed columns, use created_at as placeholder for initial DB sort
+		if ($sort === 'remaining_budget' || $sort === 'progress') {
+			$dbFilters['sort'] = 'created_at';
+			$dbFilters['direction'] = 'DESC';
+		}
+
+		$projects = $this->getProjects($dbFilters);
+		$enriched = $this->enrichProjectsWithBudgetInfo($projects, $userId);
+
+		// For computed columns, sort in PHP after enrichment
+		if ($sort === 'remaining_budget' || $sort === 'progress') {
+			$computeRemaining = static function (array $item): float {
+				if (isset($item['budgetInfo']['remaining_budget'])) {
+					return (float)$item['budgetInfo']['remaining_budget'];
+				}
+				if (isset($item['project']) && method_exists($item['project'], 'getTotalBudget')) {
+					$total = $item['project']->getTotalBudget();
+					return $total !== null ? (float)$total : PHP_FLOAT_MAX;
+				}
+				return PHP_FLOAT_MAX;
+			};
+			$computeProgress = static function (array $item): float {
+				return isset($item['budgetInfo']['consumption_percentage'])
+					? (float)$item['budgetInfo']['consumption_percentage']
+					: 0.0;
+			};
+			usort($enriched, static function (array $a, array $b) use ($sort, $direction, $computeRemaining, $computeProgress): int {
+				$valA = $sort === 'remaining_budget' ? $computeRemaining($a) : $computeProgress($a);
+				$valB = $sort === 'remaining_budget' ? $computeRemaining($b) : $computeProgress($b);
+				if ($valA === $valB) {
+					return 0;
+				}
+				$cmp = $valA < $valB ? -1 : 1;
+				return $direction === 'desc' ? -$cmp : $cmp;
+			});
+		}
+
+		return $enriched;
+	}
+
+	/**
+	 * Enrich projects with budget information.
+	 *
+	 * @param array<Project> $projects
+	 * @param string $userId
+	 * @return array<int, array{project: Project, budgetInfo: array}>
+	 */
+	public function enrichProjectsWithBudgetInfo(array $projects, string $userId): array
+	{
+		if ($this->budgetService === null) {
+			throw new \RuntimeException('BudgetService is required for enrichProjectsWithBudgetInfo');
+		}
+
+		$enriched = [];
+		foreach ($projects as $project) {
+			try {
+				$budgetInfo = $this->budgetService->getProjectBudgetInfo($project, $userId);
+				$enriched[] = ['project' => $project, 'budgetInfo' => $budgetInfo];
+			} catch (\Exception $e) {
+				$enriched[] = [
+					'project' => $project,
+					'budgetInfo' => [
+						'total_budget' => $project->getTotalBudget() ?? 0,
+						'used_budget' => 0,
+						'remaining_budget' => $project->getTotalBudget() ?? 0,
+						'consumption_percentage' => 0,
+						'warning_level' => 'safe',
+						'used_hours' => 0,
+					],
+				];
+			}
+		}
+		return $enriched;
 	}
 
 	/**

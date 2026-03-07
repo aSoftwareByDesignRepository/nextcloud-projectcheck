@@ -4,6 +4,13 @@
  */
 
 const ProjectControlMessaging = {
+  escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+  },
+
   /**
    * Initialize messaging system
    */
@@ -82,11 +89,11 @@ const ProjectControlMessaging = {
     toast.innerHTML = `
       <div class="toast-icon">${icon}</div>
       <div class="toast-content">
-        ${title ? `<div class="toast-title">${title}</div>` : ''}
-        <div class="toast-message">${message}</div>
+        ${title ? `<div class="toast-title">${this.escapeHtml(title)}</div>` : ''}
+        <div class="toast-message">${this.escapeHtml(message)}</div>
         ${actions.length > 0 ? this.createToastActions(actions) : ''}
       </div>
-      ${dismissible ? '<button type="button" class="toast-close" aria-label="Close notification">&times;</button>' : ''}
+      ${dismissible ? `<button type="button" class="toast-close" aria-label="${t('projectcheck', 'Close notification')}">&times;</button>` : ''}
     `;
     
     // Add event listeners
@@ -119,9 +126,9 @@ const ProjectControlMessaging = {
     const actionsHtml = actions.map(action => `
       <button type="button" 
               class="toast-action" 
-              data-action="${action.name}"
+              data-action="${this.escapeHtml(action.name)}"
               ${action.primary ? 'data-primary="true"' : ''}>
-        ${action.label}
+        ${this.escapeHtml(action.label)}
       </button>
     `).join('');
     
@@ -228,10 +235,10 @@ const ProjectControlMessaging = {
     alert.innerHTML = `
       <div class="alert-icon">${icon}</div>
       <div class="alert-content">
-        ${title ? `<div class="alert-title">${title}</div>` : ''}
-        <div class="alert-message">${message}</div>
+        ${title ? `<div class="alert-title">${this.escapeHtml(title)}</div>` : ''}
+        <div class="alert-message">${this.escapeHtml(message)}</div>
       </div>
-      ${dismissible ? '<button type="button" class="alert-close" aria-label="Dismiss alert">&times;</button>' : ''}
+      ${dismissible ? `<button type="button" class="alert-close" aria-label="${t('projectcheck', 'Dismiss alert')}">&times;</button>` : ''}
     `;
 
     container.appendChild(alert);
@@ -325,14 +332,14 @@ const ProjectControlMessaging = {
     
     modal.innerHTML = `
       <div class="modal-header">
-        <h2 class="modal-title">${title}</h2>
+        <h2 class="modal-title">${this.escapeHtml(title)}</h2>
       </div>
       <div class="modal-body">
-        <p>${message}</p>
+        <p>${this.escapeHtml(message)}</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn--secondary modal-cancel">${cancelText}</button>
-        <button type="button" class="btn btn--${type} modal-confirm">${confirmText}</button>
+        <button type="button" class="btn btn--secondary modal-cancel">${this.escapeHtml(cancelText)}</button>
+        <button type="button" class="btn btn--${type} modal-confirm">${this.escapeHtml(confirmText)}</button>
       </div>
     `;
     
@@ -786,14 +793,14 @@ const ProjectControlMessaging = {
         ${this.getToastIcon(messageData.type)}
       </div>
       <div class="persistent-notification__content">
-        <div class="persistent-notification__title">${messageData.title || ''}</div>
-        <div class="persistent-notification__message">${messageData.message}</div>
+        <div class="persistent-notification__title">${this.escapeHtml(messageData.title || '')}</div>
+        <div class="persistent-notification__message">${this.escapeHtml(messageData.message)}</div>
       </div>
       <div class="persistent-notification__actions">
-        <button type="button" class="persistent-notification__acknowledge" aria-label="Acknowledge">
+        <button type="button" class="persistent-notification__acknowledge" aria-label="${t('projectcheck', 'Acknowledge')}">
           ✓
         </button>
-        <button type="button" class="persistent-notification__dismiss" aria-label="Dismiss">
+        <button type="button" class="persistent-notification__dismiss" aria-label="${t('projectcheck', 'Dismiss')}">
           ×
         </button>
       </div>
@@ -838,9 +845,9 @@ const ProjectControlMessaging = {
           <div class="history-item history-item--${msg.type} ${msg.acknowledged ? 'history-item--acknowledged' : ''}">
             <div class="history-item__icon">${this.getToastIcon(msg.type)}</div>
             <div class="history-item__content">
-              <div class="history-item__title">${msg.title || ''}</div>
-              <div class="history-item__message">${msg.message}</div>
-              <div class="history-item__timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
+              <div class="history-item__title">${this.escapeHtml(msg.title || '')}</div>
+              <div class="history-item__message">${this.escapeHtml(msg.message)}</div>
+              <div class="history-item__timestamp">${this.escapeHtml(new Date(msg.timestamp).toLocaleString())}</div>
             </div>
             <div class="history-item__status">
               ${msg.acknowledged ? '✓ Acknowledged' : '⚠ Pending'}

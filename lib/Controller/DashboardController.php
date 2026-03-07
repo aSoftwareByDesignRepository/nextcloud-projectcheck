@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Dashboard controller for projectcheck app
  *
@@ -23,6 +25,7 @@ use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Traits\StatsTrait;
+use OCP\IL10N;
 
 /**
  * Dashboard controller for project overview and statistics
@@ -49,6 +52,9 @@ class DashboardController extends Controller
 
 	/** @var IURLGenerator */
 	private $urlGenerator;
+
+	/** @var IL10N */
+	private $l;
 
 	/**
 	 * DashboardController constructor
@@ -81,6 +87,7 @@ class DashboardController extends Controller
 		$this->customerService = $customerService;
 		$this->budgetService = $budgetService;
 		$this->urlGenerator = $urlGenerator;
+		$this->l = $l;
 		$this->setCspService($cspService);
 	}
 
@@ -96,7 +103,7 @@ class DashboardController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'User not authenticated'
+				'message' => $this->l->t('User not authenticated')
 			], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
@@ -157,7 +164,7 @@ class DashboardController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$userId = $user->getUID();

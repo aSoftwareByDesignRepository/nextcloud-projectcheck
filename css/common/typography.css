@@ -57,8 +57,8 @@
   --letter-spacing-wider: 0.05em;
   --letter-spacing-widest: 0.1em;
 
-  /* Text Colors */
-  --text-color-primary: var(--color-main-text, var(--color-text, #222));
+  /* Text Colors - fallback ensures contrast if theme vars load late */
+  --text-color-primary: var(--color-main-text, #222);
   --text-color-secondary: var(--color-text-secondary);
   --text-color-tertiary: var(--color-text-tertiary);
   --text-color-muted: var(--color-text-muted);
@@ -614,22 +614,22 @@ i {
   }
 }
 
-/* Accessibility: High Contrast Mode */
+/* Accessibility: High Contrast Mode - use Nextcloud vars */
 @media (prefers-contrast: high) {
   :root {
-    --text-color-primary: #000000;
-    --text-color-secondary: #000000;
-    --text-color-tertiary: #000000;
-    --text-color-muted: #000000;
-    --text-color-inverse: #ffffff;
+    --text-color-primary: var(--color-main-text);
+    --text-color-secondary: var(--color-text-maxcontrast);
+    --text-color-tertiary: var(--color-text-lighter);
+    --text-color-muted: var(--color-text-lighter);
+    --text-color-inverse: var(--color-primary-element-text);
   }
 
   [data-theme="dark"] {
-    --text-color-primary: #ffffff;
-    --text-color-secondary: #ffffff;
-    --text-color-tertiary: #ffffff;
-    --text-color-muted: #ffffff;
-    --text-color-inverse: #000000;
+    --text-color-primary: var(--color-main-text);
+    --text-color-secondary: var(--color-text-maxcontrast);
+    --text-color-tertiary: var(--color-text-lighter);
+    --text-color-muted: var(--color-text-lighter);
+    --text-color-inverse: var(--color-primary-element-text);
   }
 }
 

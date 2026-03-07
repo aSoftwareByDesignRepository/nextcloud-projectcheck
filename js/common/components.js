@@ -4,6 +4,13 @@
  */
 
 const ProjectControlComponents = {
+  escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+  },
+
   /**
    * Initialize all components
    */
@@ -141,8 +148,8 @@ const ProjectControlComponents = {
 
     modal.innerHTML = `
       <div class="modal-header">
-        <h2 class="modal-title">${title}</h2>
-        ${closable ? '<button type="button" class="modal-close" aria-label="Close modal">&times;</button>' : ''}
+        <h2 class="modal-title">${this.escapeHtml(title)}</h2>
+        ${closable ? `<button type="button" class="modal-close" aria-label="${t('projectcheck', 'Close modal')}">&times;</button>` : ''}
       </div>
       <div class="modal-body">
         ${content}
@@ -378,10 +385,10 @@ const ProjectControlComponents = {
     alert.innerHTML = `
       <div class="alert-icon">${this.getAlertIcon(type)}</div>
       <div class="alert-content">
-        ${title ? `<div class="alert-title">${title}</div>` : ''}
-        <div class="alert-message">${message}</div>
+        ${title ? `<div class="alert-title">${this.escapeHtml(title)}</div>` : ''}
+        <div class="alert-message">${this.escapeHtml(message)}</div>
       </div>
-      ${dismissible ? '<button type="button" class="alert-close" aria-label="Dismiss alert">&times;</button>' : ''}
+      ${dismissible ? `<button type="button" class="alert-close" aria-label="${t('projectcheck', 'Dismiss alert')}">&times;</button>` : ''}
     `;
 
     if (autoDismiss) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * ProjectMember controller for projectcheck app
  *
@@ -20,6 +22,7 @@ use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\ProjectMemberService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
+use OCP\IL10N;
 
 /**
  * ProjectMember controller for team member management
@@ -39,6 +42,9 @@ class ProjectMemberController extends Controller
 
     /** @var ActivityService */
     private $activityService;
+
+    /** @var IL10N */
+    private $l;
 
     /**
      * ProjectMemberController constructor
@@ -64,6 +70,7 @@ class ProjectMemberController extends Controller
         $this->projectMemberService = $projectMemberService;
         $this->deletionService = $deletionService;
         $this->activityService = $activityService;
+        $this->l = $l;
         $this->setCspService($cspService);
     }
 
@@ -113,7 +120,7 @@ class ProjectMemberController extends Controller
         if ($method === 'POST' && $postData === 'DELETE') {
             // Continue with delete logic
         } elseif ($method !== 'DELETE') {
-            return new JSONResponse(['error' => 'Method not allowed'], 405);
+            return new JSONResponse(['error' => $this->l->t('Method not allowed')], 405);
         }
 
         try {
@@ -131,7 +138,7 @@ class ProjectMemberController extends Controller
 
             return new JSONResponse([
                 'success' => true,
-                'message' => 'Project member removed successfully'
+                'message' => $this->l->t('Project member removed successfully')
             ]);
         } catch (\Exception $e) {
             return new JSONResponse([

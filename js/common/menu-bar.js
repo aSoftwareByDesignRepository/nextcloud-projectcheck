@@ -104,7 +104,7 @@
         // Set proper ARIA attributes
         if (menuBar) {
             menuBar.setAttribute('role', 'navigation');
-            menuBar.setAttribute('aria-label', 'Main navigation');
+            menuBar.setAttribute('aria-label', t('projectcheck', 'Main navigation'));
         }
 
         // Set focus management

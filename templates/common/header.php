@@ -33,7 +33,7 @@ $currentUrl = $_SERVER['REQUEST_URI'];
         </div>
 
         <!-- Main Navigation -->
-        <nav class="header__navigation" role="navigation" aria-label="Main navigation">
+        <nav class="header__navigation" role="navigation" aria-label="<?php p($l->t('Main navigation')); ?>">
             <ul class="header__nav-list">
                 <li class="header__nav-item">
                     <a href="<?php print_unescaped(link_to($appName, 'index.php')); ?>"
@@ -107,6 +107,7 @@ $currentUrl = $_SERVER['REQUEST_URI'];
                     class="header__user-btn"
                     aria-expanded="false"
                     aria-haspopup="true"
+                    aria-label="<?php p($l->t('User menu')); ?>"
                     title="<?php p($l->t('User menu')); ?>">
                     <span class="header__user-avatar">
                         <?php if ($user): ?>
@@ -177,7 +178,7 @@ $currentUrl = $_SERVER['REQUEST_URI'];
         <!-- Mobile Menu Toggle -->
         <button type="button"
             class="header__mobile-toggle"
-            aria-label="Toggle mobile menu"
+            aria-label="<?php p($l->t('Toggle mobile menu')); ?>"
             aria-expanded="false">
             <span class="header__mobile-toggle-line"></span>
             <span class="header__mobile-toggle-line"></span>
@@ -187,7 +188,7 @@ $currentUrl = $_SERVER['REQUEST_URI'];
 
     <!-- Mobile Navigation -->
     <div class="header__mobile-nav" style="display: none;">
-        <nav class="header__mobile-navigation" role="navigation" aria-label="Mobile navigation">
+        <nav class="header__mobile-navigation" role="navigation" aria-label="<?php p($l->t('Mobile navigation')); ?>">
             <ul class="header__mobile-nav-list">
                 <li class="header__mobile-nav-item">
                     <a href="<?php print_unescaped(link_to($appName, 'index.php')); ?>"

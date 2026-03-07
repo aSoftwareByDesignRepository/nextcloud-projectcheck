@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Migration to add time tracking tables for projectcheck app
  *

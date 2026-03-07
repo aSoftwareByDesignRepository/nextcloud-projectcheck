@@ -83,7 +83,7 @@
 /* Warning State */
 .progress-fill--warning,
 .nc-progress-fill--warning {
-    background: linear-gradient(90deg, var(--color-warning), #fd7e14);
+    background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover));
 }
 
 /* Error/Critical State */
@@ -91,7 +91,7 @@
 .nc-progress-fill--error,
 .progress-fill--critical,
 .nc-progress-fill--critical {
-    background: linear-gradient(90deg, var(--color-error), #721c24);
+    background: linear-gradient(90deg, var(--color-error), var(--color-error-hover));
 }
 
 /* Info State */
@@ -129,11 +129,11 @@
 .progress-fill--striped,
 .nc-progress-fill--striped {
     background-image: linear-gradient(45deg,
-            rgba(255, 255, 255, .15) 25%,
+            color-mix(in srgb, var(--color-primary-element-text) 15%, transparent) 25%,
             transparent 25%,
             transparent 50%,
-            rgba(255, 255, 255, .15) 50%,
-            rgba(255, 255, 255, .15) 75%,
+            color-mix(in srgb, var(--color-primary-element-text) 15%, transparent) 50%,
+            color-mix(in srgb, var(--color-primary-element-text) 15%, transparent) 75%,
             transparent 75%,
             transparent);
     background-size: 16px 16px;
@@ -301,13 +301,13 @@
 .budget-progress-fill.warning,
 .yearly-progress-fill.warning,
 .compact-progress .progress-fill.warning {
-    background: linear-gradient(90deg, var(--color-warning), #fd7e14) !important;
+    background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover)) !important;
 }
 
 .budget-progress-fill.critical,
 .yearly-progress-fill.critical,
 .compact-progress .progress-fill.critical {
-    background: linear-gradient(90deg, var(--color-error), #721c24) !important;
+    background: linear-gradient(90deg, var(--color-error), var(--color-error-hover)) !important;
 }
 
 .budget-progress-fill[style*="width: 100%"],

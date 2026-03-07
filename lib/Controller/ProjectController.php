@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * ProjectController for the projectcheck app
  *
@@ -29,6 +31,7 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
 use OCP\IConfig;
+use OCP\IL10N;
 use OCA\ProjectCheck\Traits\StatsTrait;
 
 /**
@@ -71,6 +74,9 @@ class ProjectController extends Controller
 	/** @var IConfig */
 	private $config;
 
+	/** @var IL10N */
+	private $l;
+
 	/**
 	 * ProjectController constructor
 	 *
@@ -87,6 +93,7 @@ class ProjectController extends Controller
 	 * @param IURLGenerator $urlGenerator
 	 * @param IConfig $config
 	 * @param CSPService $cspService
+	 * @param IL10N $l
 	 */
 	public function __construct(
 		string $appName,
@@ -101,7 +108,8 @@ class ProjectController extends Controller
 		IUserSession $userSession,
 		IURLGenerator $urlGenerator,
 		IConfig $config,
-		CSPService $cspService
+		CSPService $cspService,
+		IL10N $l
 	) {
 		parent::__construct($appName, $request);
 		$this->projectService = $projectService;
@@ -114,6 +122,7 @@ class ProjectController extends Controller
 		$this->userSession = $userSession;
 		$this->urlGenerator = $urlGenerator;
 		$this->config = $config;
+		$this->l = $l;
 		$this->setCspService($cspService);
 	}
 
@@ -128,7 +137,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => 'User not authenticated'], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('User not authenticated')], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -169,48 +178,14 @@ class ProjectController extends Controller
 			'direction' => $dbDirection,
 		];
 
-		$projects = $this->projectService->getProjects($filters);
+		$enrichedProjects = $this->projectService->getProjectsForListView($filters, $sort, $direction, $userId);
 
 		$totalProjects = $this->projectService->countProjects($filters);
 		$totalPages = (int)max(1, ceil($totalProjects / $filters['limit']));
 		if ($page > $totalPages) {
 			$page = $totalPages;
 			$filters['offset'] = ($page - 1) * $filters['limit'];
-			$projects = $this->projectService->getProjects($filters);
-		}
-
-		// Enrich projects with budget information
-		$enrichedProjects = $this->enrichProjectsWithBudgetInfo($projects, $userId);
-
-		// For computed columns (remaining_budget, progress), sort in PHP after enrichment
-		if ($sort === 'remaining_budget' || $sort === 'progress') {
-			$computeRemaining = static function (array $item): float {
-				if (isset($item['budgetInfo']['remaining_budget'])) {
-					return (float)$item['budgetInfo']['remaining_budget'];
-				}
-				if (isset($item['project']) && method_exists($item['project'], 'getTotalBudget')) {
-					$total = $item['project']->getTotalBudget();
-					if ($total !== null) {
-						return (float)$total;
-					}
-				}
-				return PHP_FLOAT_MAX;
-			};
-			$computeProgress = static function (array $item): float {
-				if (isset($item['budgetInfo']['consumption_percentage'])) {
-					return (float)$item['budgetInfo']['consumption_percentage'];
-				}
-				return 0.0;
-			};
-			usort($enrichedProjects, static function (array $a, array $b) use ($sort, $direction, $computeRemaining, $computeProgress) {
-				$valA = $sort === 'remaining_budget' ? $computeRemaining($a) : $computeProgress($a);
-				$valB = $sort === 'remaining_budget' ? $computeRemaining($b) : $computeProgress($b);
-				if ($valA === $valB) {
-					return 0;
-				}
-				$cmp = ($valA < $valB) ? -1 : 1;
-				return $direction === 'desc' ? -$cmp : $cmp;
-			});
+			$enrichedProjects = $this->projectService->getProjectsForListView($filters, $sort, $direction, $userId);
 		}
 
 		// Get common stats for the sidebar
@@ -255,7 +230,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => 'User not authenticated'], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('User not authenticated')], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -303,7 +278,7 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => 'User not authenticated'], 401);
+				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
@@ -319,7 +294,7 @@ class ProjectController extends Controller
 
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['success' => true, 'message' => 'Project created successfully', 'project' => $project->getId()]);
+				return new DataResponse(['success' => true, 'message' => $this->l->t('Project created successfully'), 'project' => $project->getId()]);
 			}
 
 			// Redirect to projects list with success message
@@ -349,13 +324,13 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => 'User not authenticated'], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('User not authenticated')], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$project = $this->projectService->getProject($id);
 		if (!$project) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => 'Project not found'], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Project not found')], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -437,13 +412,13 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
 			$project = $this->projectService->getProject($id);
 			if (!$project) {
-				return new JSONResponse(['error' => 'Project not found'], 404);
+				return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
 			}
 
 			// No access restrictions for viewing budget info
@@ -484,7 +459,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$projectId = (int) $this->request->getParam('project_id');
@@ -492,13 +467,13 @@ class ProjectController extends Controller
 		$additionalRate = (float) $this->request->getParam('additional_rate');
 
 		if (!$projectId || $additionalHours <= 0 || $additionalRate <= 0) {
-			return new JSONResponse(['error' => 'Invalid parameters'], 400);
+			return new JSONResponse(['error' => $this->l->t('Invalid parameters')], 400);
 		}
 
 		try {
 			$project = $this->projectService->getProject($projectId);
 			if (!$project) {
-				return new JSONResponse(['error' => 'Project not found'], 404);
+				return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
 			}
 
 			$impact = $this->budgetService->checkTimeEntryBudgetImpact($project, $additionalHours, $additionalRate);
@@ -527,13 +502,13 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => 'User not authenticated'], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('User not authenticated')], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$project = $this->projectService->getProject($id);
 		if (!$project) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => 'Project not found'], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Project not found')], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -570,7 +545,7 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => 'User not authenticated'], 401);
+				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
@@ -587,9 +562,9 @@ class ProjectController extends Controller
 		} elseif ($method !== 'PUT') {
 			// If it's not a PUT request and not a POST with _method=PUT, return error
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => 'Method not allowed'], 405);
+				return new DataResponse(['error' => $this->l->t('Method not allowed')], 405);
 			}
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => 'Method not allowed']);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Method not allowed')]);
 			return new RedirectResponse($url);
 		}
 
@@ -600,7 +575,7 @@ class ProjectController extends Controller
 
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['success' => true, 'message' => 'Project updated successfully', 'project' => $project->getId()]);
+				return new DataResponse(['success' => true, 'message' => $this->l->t('Project updated successfully'), 'project' => $project->getId()]);
 			}
 
 			// Redirect to projects list with success message
@@ -630,7 +605,7 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => 'User not authenticated'], 401);
+				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
@@ -641,7 +616,7 @@ class ProjectController extends Controller
 
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['success' => true, 'message' => 'Project updated successfully', 'project' => $project->getId()]);
+				return new DataResponse(['success' => true, 'message' => $this->l->t('Project updated successfully'), 'project' => $project->getId()]);
 			}
 
 			// Redirect to projects list with success message
@@ -671,7 +646,7 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => 'User not authenticated'], 401);
+				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
@@ -679,9 +654,9 @@ class ProjectController extends Controller
 		// Check if user can delete this project
 		if (!$this->projectService->canUserDeleteProject($user->getUID(), $id)) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => 'Access denied'], 403);
+				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 			}
-			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => 'Access denied']));
+			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
 		}
 
 		// Handle method override for HTML forms
@@ -694,9 +669,9 @@ class ProjectController extends Controller
 		} elseif ($method !== 'DELETE') {
 			// If it's not a DELETE request and not a POST with _method=DELETE, redirect with error
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => 'Method not allowed'], 405);
+				return new DataResponse(['error' => $this->l->t('Method not allowed')], 405);
 			}
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => 'Method not allowed']);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Method not allowed')]);
 			return new RedirectResponse($url);
 		}
 
@@ -714,7 +689,7 @@ class ProjectController extends Controller
 
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['success' => true, 'message' => 'Project deleted successfully']);
+				return new DataResponse(['success' => true, 'message' => $this->l->t('Project deleted successfully')]);
 			}
 
 			// Redirect to projects list with success message
@@ -744,7 +719,7 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => 'User not authenticated'], 401);
+				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
@@ -755,7 +730,7 @@ class ProjectController extends Controller
 
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['success' => true, 'message' => 'Project status updated successfully']);
+				return new DataResponse(['success' => true, 'message' => $this->l->t('Project status updated successfully')]);
 			}
 
 			// Redirect to projects list with success message
@@ -784,7 +759,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -811,7 +786,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -824,7 +799,7 @@ class ProjectController extends Controller
 			return new DataResponse([
 				'success' => true,
 				'member' => $member,
-				'message' => 'Team member added successfully',
+				'message' => $this->l->t('Team member added successfully'),
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
@@ -844,7 +819,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -858,7 +833,7 @@ class ProjectController extends Controller
 			return new DataResponse([
 				'success' => true,
 				'member' => $member,
-				'message' => 'Team member updated successfully',
+				'message' => $this->l->t('Team member updated successfully'),
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
@@ -878,7 +853,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -886,7 +861,7 @@ class ProjectController extends Controller
 
 			return new DataResponse([
 				'success' => true,
-				'message' => 'Team member removed successfully',
+				'message' => $this->l->t('Team member removed successfully'),
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
@@ -904,7 +879,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -932,7 +907,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -960,7 +935,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -987,7 +962,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -997,7 +972,7 @@ class ProjectController extends Controller
 			return new DataResponse([
 				'success' => true,
 				'project' => $project,
-				'message' => 'Project created successfully'
+				'message' => $this->l->t('Project created successfully')
 			]);
 		} catch (\Exception $e) {
 			return new DataResponse(['error' => $e->getMessage()], 400);
@@ -1016,13 +991,13 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
 			$project = $this->projectService->getProject($id);
 			if (!$project) {
-				return new DataResponse(['error' => 'Project not found'], 404);
+				return new DataResponse(['error' => $this->l->t('Project not found')], 404);
 			}
 
 			$teamMembers = $this->projectService->getProjectTeam($id);
@@ -1049,7 +1024,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -1059,7 +1034,7 @@ class ProjectController extends Controller
 			return new DataResponse([
 				'success' => true,
 				'project' => $project,
-				'message' => 'Project updated successfully'
+				'message' => $this->l->t('Project updated successfully')
 			]);
 		} catch (\Exception $e) {
 			return new DataResponse(['error' => $e->getMessage()], 400);
@@ -1077,12 +1052,12 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
 			$this->projectService->deleteProject($id);
-			return new DataResponse(['success' => true, 'message' => 'Project deleted successfully']);
+			return new DataResponse(['success' => true, 'message' => $this->l->t('Project deleted successfully')]);
 		} catch (\Exception $e) {
 			return new DataResponse(['error' => $e->getMessage()], 400);
 		}
@@ -1100,7 +1075,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -1123,7 +1098,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => 'User not authenticated'], 401);
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -1162,40 +1137,4 @@ class ProjectController extends Controller
 		}
 	}
 
-	/**
-	 * Enrich projects with budget information
-	 *
-	 * @param array $projects
-	 * @param string $userId
-	 * @return array
-	 */
-	private function enrichProjectsWithBudgetInfo(array $projects, string $userId): array
-	{
-		$enrichedProjects = [];
-
-		foreach ($projects as $project) {
-			try {
-				$budgetInfo = $this->budgetService->getProjectBudgetInfo($project, $userId);
-				$enrichedProjects[] = [
-					'project' => $project,
-					'budgetInfo' => $budgetInfo
-				];
-			} catch (\Exception $e) {
-				// If budget info fails, include project without budget data
-				$enrichedProjects[] = [
-					'project' => $project,
-					'budgetInfo' => [
-						'total_budget' => $project->getTotalBudget() ?? 0,
-						'used_budget' => 0,
-						'remaining_budget' => $project->getTotalBudget() ?? 0,
-						'consumption_percentage' => 0,
-						'warning_level' => 'safe',
-						'used_hours' => 0
-					]
-				];
-			}
-		}
-
-		return $enrichedProjects;
-	}
 }

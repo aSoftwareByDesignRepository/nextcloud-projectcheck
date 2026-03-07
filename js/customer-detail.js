@@ -58,7 +58,7 @@
 		if (!projectsList) return;
 
 		// Show loading state
-		projectsList.innerHTML = '<div class="loading">Loading projects...</div>';
+		projectsList.innerHTML = '<div class="loading">' + t('projectcheck', 'Loading projects...') + '</div>';
 
 		// Make AJAX request to get projects for this customer
 		fetch(`/apps/projectcheck/api/projects/by-customer/${customerId}`, {
@@ -97,24 +97,32 @@
 			return;
 		}
 
-		const projectsHtml = projects.map(project => `
-			<div class="project-item">
+		const projectsHtml = projects.map(project => {
+			const name = escapeHtml(String(project.name ?? ''));
+			const status = escapeHtml(String(project.status ?? ''));
+			const budget = escapeHtml(formatCurrency(project.budget));
+			const progress = escapeHtml(String(project.progress ?? ''));
+			const startDate = escapeHtml(formatDate(project.start_date));
+			const endDate = escapeHtml(formatDate(project.end_date));
+			const id = Number(project.id);
+			const statusClass = escapeHtml(String((project.status ?? '').toLowerCase()));
+			return `<div class="project-item">
 				<div class="project-header">
-					<h4><a href="/apps/projectcheck/projects/${project.id}">${escapeHtml(project.name)}</a></h4>
-					<span class="project-status status-${project.status.toLowerCase()}">${escapeHtml(project.status)}</span>
+					<h4><a href="/apps/projectcheck/projects/${id}">${name}</a></h4>
+					<span class="project-status status-${statusClass}">${status}</span>
 				</div>
 				<div class="project-details">
 					<div class="project-info">
-						<span class="project-budget">Budget: ${formatCurrency(project.budget)}</span>
-						<span class="project-progress">Progress: ${project.progress}%</span>
+						<span class="project-budget">Budget: ${budget}</span>
+						<span class="project-progress">Progress: ${progress}%</span>
 					</div>
 					<div class="project-dates">
-						<span class="project-start">Start: ${formatDate(project.start_date)}</span>
-						<span class="project-end">End: ${formatDate(project.end_date)}</span>
+						<span class="project-start">Start: ${startDate}</span>
+						<span class="project-end">End: ${endDate}</span>
 					</div>
 				</div>
-			</div>
-		`).join('');
+			</div>`;
+		}).join('');
 
 		projectsList.innerHTML = projectsHtml;
 	}
@@ -126,11 +134,12 @@
 		const projectsList = document.getElementById('projects-list');
 		if (!projectsList) return;
 
+		const customerId = getCustomerIdFromUrl();
 		projectsList.innerHTML = `
 			<div class="no-projects">
-				<p>No projects found for this customer.</p>
-				<a href="/apps/projectcheck/projects/create?customer_id=${getCustomerIdFromUrl()}" class="button primary">
-					Create First Project
+				<p>${t('projectcheck', 'No projects found for this customer.')}</p>
+				<a href="/apps/projectcheck/projects/create?customer_id=${encodeURIComponent(String(customerId || ''))}" class="button primary">
+					${t('projectcheck', 'Create First Project')}
 				</a>
 			</div>
 		`;

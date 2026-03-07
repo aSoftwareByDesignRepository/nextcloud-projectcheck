@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Customer controller for projectcheck app
  *
@@ -26,6 +28,8 @@ use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCP\IConfig;
+use OCP\IL10N;
+use Psr\Log\LoggerInterface;
 use OCA\ProjectCheck\Traits\StatsTrait;
 
 /**
@@ -63,16 +67,22 @@ class CustomerController extends Controller
 	/** @var IConfig */
 	private $config;
 
+	/** @var IL10N */
+	private $l;
+
+	/** @var LoggerInterface */
+	private $logger;
+
 	/**
 	 * Deletion impact preview
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function getDeletionImpact($id)
+	public function getDeletionImpact(int $id): JSONResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
@@ -98,9 +108,11 @@ class CustomerController extends Controller
 	 * @param IURLGenerator $urlGenerator
 	 * @param IConfig $config
 	 * @param CSPService $cspService
+	 * @param IL10N $l
+	 * @param LoggerInterface $logger
 	 */
 	public function __construct(
-		$appName,
+		string $appName,
 		IRequest $request,
 		IUserSession $userSession,
 		CustomerService $customerService,
@@ -111,7 +123,9 @@ class CustomerController extends Controller
 		ActivityService $activityService,
 		IURLGenerator $urlGenerator,
 		IConfig $config,
-		CSPService $cspService
+		CSPService $cspService,
+		IL10N $l,
+		LoggerInterface $logger
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
@@ -123,6 +137,8 @@ class CustomerController extends Controller
 		$this->activityService = $activityService;
 		$this->urlGenerator = $urlGenerator;
 		$this->config = $config;
+		$this->l = $l;
+		$this->logger = $logger;
 		$this->setCspService($cspService);
 	}
 
@@ -133,11 +149,10 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function index()
+	public function index(): TemplateResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			// Return a proper error response that will redirect to login
 			$response = new TemplateResponse($this->appName, 'error', [
 				'message' => 'User not authenticated',
 				'urlGenerator' => $this->urlGenerator
@@ -210,7 +225,7 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function create()
+	public function create(): TemplateResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
@@ -241,11 +256,11 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function store()
+	public function store(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$userId = $user->getUID();
@@ -342,7 +357,7 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function edit($id)
+	public function edit(int $id): TemplateResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
@@ -387,7 +402,7 @@ class CustomerController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		// Handle method override for HTML forms
@@ -399,7 +414,7 @@ class CustomerController extends Controller
 			// Continue with update logic
 		} elseif ($method !== 'PUT') {
 			// If it's not a PUT request and not a POST with _method=PUT, return 405
-			return new JSONResponse(['error' => 'Method not allowed'], 405);
+			return new JSONResponse(['error' => $this->l->t('Method not allowed')], 405);
 		}
 
 		$data = $this->request->getParams();
@@ -438,11 +453,11 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function delete($id)
+	public function delete(int $id): JSONResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		// Handle method override for HTML forms
@@ -454,7 +469,7 @@ class CustomerController extends Controller
 			// Continue with delete logic
 		} elseif ($method !== 'DELETE') {
 			// If it's not a DELETE request and not a POST with _method=DELETE, return 405
-			return new JSONResponse(['error' => 'Method not allowed'], 405);
+			return new JSONResponse(['error' => $this->l->t('Method not allowed')], 405);
 		}
 
 		try {
@@ -479,11 +494,10 @@ class CustomerController extends Controller
 
 			return new JSONResponse([
 				'success' => true,
-				'message' => 'Customer deleted successfully'
+				'message' => $this->l->t('Customer deleted successfully')
 			]);
 		} catch (\Exception $e) {
-			// Log the error for debugging
-			error_log('Customer deletion error: ' . $e->getMessage());
+			$this->logger->error('Customer deletion failed', ['exception' => $e]);
 
 			return new JSONResponse([
 				'success' => false,
@@ -500,7 +514,7 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function updatePost($id)
+	public function updatePost(int $id): JSONResponse
 	{
 		// Delegate to the update method
 		return $this->update($id);
@@ -514,18 +528,14 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function deletePost($id)
+	public function deletePost(int $id): JSONResponse
 	{
-		error_log('deletePost called with customer ID: ' . $id);
-
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			error_log('User not authenticated in deletePost');
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
-			error_log('Attempting to delete customer with ID: ' . $id);
 			$strategy = $this->request->getParam('strategy', 'restrict');
 			$reassignCustomerId = $this->request->getParam('reassign_customer_id');
 			$options = ['strategy' => $strategy];
@@ -534,15 +544,13 @@ class CustomerController extends Controller
 			}
 
 			$this->deletionService->deleteCustomerWithStrategy($id, $options);
-			error_log('Customer deleted successfully');
 
 			return new JSONResponse([
 				'success' => true,
-				'message' => 'Customer deleted successfully'
+				'message' => $this->l->t('Customer deleted successfully')
 			]);
 		} catch (\Exception $e) {
-			// Log the error for debugging
-			error_log('Customer deletion error: ' . $e->getMessage());
+			$this->logger->error('Customer deletion failed', ['exception' => $e, 'customerId' => $id]);
 
 			return new JSONResponse([
 				'success' => false,
@@ -558,11 +566,11 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function search()
+	public function search(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$query = $this->request->getParam('q', '');
@@ -586,11 +594,11 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function getForSelect()
+	public function getForSelect(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$customers = $this->customerService->getCustomersForSelect();
@@ -608,11 +616,11 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function getStats()
+	public function getStats(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		$customerId = $this->request->getParam('customer_id', null);
@@ -638,25 +646,22 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function getAnalytics()
+	public function getAnalytics(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		try {
 			$analytics = $this->getCustomerAnalytics($user->getUID());
-
-			// Add some debugging
-			error_log('Customer Analytics Data: ' . json_encode($analytics));
 
 			return new JSONResponse([
 				'success' => true,
 				'analytics' => $analytics
 			]);
 		} catch (\Exception $e) {
-			error_log('Customer Analytics Error: ' . $e->getMessage());
+			$this->logger->error('Customer analytics failed', ['exception' => $e]);
 			return new JSONResponse([
 				'success' => false,
 				'error' => $e->getMessage()
@@ -916,10 +921,10 @@ class CustomerController extends Controller
 			$activities[] = [
 				'id' => $entry->getId(),
 				'description' => $entry->getDescription(),
-				'project_name' => $project ? $project->getName() : 'Unknown Project',
-				'customer_name' => $project ? $project->getCustomerName() : 'Unknown Customer',
+				'project_name' => $project ? $project->getName() : $this->l->t('Unknown Project'),
+				'customer_name' => $project ? $project->getCustomerName() : $this->l->t('Unknown Customer'),
 				'hours' => $entry->getHours(),
-				'date' => $entry->getDate() ? $entry->getDate()->format('d.m.Y') : 'Unknown Date'
+				'date' => $entry->getDate() ? $entry->getDate()->format('d.m.Y') : $this->l->t('Unknown Date')
 			];
 		}
 

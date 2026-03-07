@@ -488,7 +488,7 @@
 		const messageDiv = document.getElementById('form-message');
 
 		if (messageDiv) {
-			messageDiv.innerHTML = message;
+			messageDiv.textContent = message;
 			messageDiv.className = `form-message ${type}`;
 			messageDiv.style.display = 'block';
 

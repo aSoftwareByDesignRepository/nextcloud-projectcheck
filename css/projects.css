@@ -163,7 +163,7 @@
 	padding: 8px 12px;
 	border: 1px solid var(--color-border);
 	border-radius: 10px;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 	gap: 10px;
 }
 
@@ -209,34 +209,15 @@ body {
 }
 
 
-/* Beautiful Sidebar Styling */
+/* Sidebar - Nextcloud vars for light/dark/high-contrast themes */
 #app-navigation {
-	background: linear-gradient(180deg,
-			var(--color-primary-background) 0%,
-			var(--color-main-background) 100%);
+	background: var(--color-background-dark);
 	border-right: 1px solid var(--color-border);
-	box-shadow: 2px 0 20px rgba(0, 0, 0, 0.08);
 	position: relative;
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
 	height: 100vh;
-}
-
-/* Subtle background pattern */
-#app-navigation::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-image:
-		radial-gradient(circle at 20% 80%, color-mix(in srgb, var(--color-primary) 3%, transparent) 0%, transparent 50%),
-		radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--color-primary) 3%, transparent) 0%, transparent 50%),
-		radial-gradient(circle at 40% 40%, color-mix(in srgb, var(--color-primary) 2%, transparent) 0%, transparent 50%);
-	pointer-events: none;
-	z-index: 0;
 }
 
 #app-navigation::before {
@@ -246,20 +227,15 @@ body {
 	left: 0;
 	right: 0;
 	height: 3px;
-	background: linear-gradient(90deg,
-			var(--color-primary) 0%,
-			var(--color-primary-hover) 50%,
-			var(--color-primary) 100%);
+	background: var(--color-primary-element);
 	z-index: 2;
 }
 
 /* Sidebar Header */
 .sidebar-header {
 	padding: 1.5rem 1rem;
-	border-bottom: 1px solid rgba(var(--color-border), 0.3);
-	background: linear-gradient(135deg,
-			color-mix(in srgb, var(--color-primary) 5%, transparent) 0%,
-			color-mix(in srgb, var(--color-primary) 2%, transparent) 100%);
+	border-bottom: 1px solid var(--color-border);
+	background: var(--color-background-dark);
 	position: relative;
 	z-index: 1;
 }
@@ -273,19 +249,17 @@ body {
 .app-icon {
 	width: 48px;
 	height: 48px;
-	background: linear-gradient(135deg,
-			var(--color-primary) 0%,
-			var(--color-primary-hover) 100%);
+	background: var(--color-primary-element);
 	border-radius: 12px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
-.app-icon .icon {
+.app-icon .icon,
+.app-icon .lucide-icon {
 	font-size: 1.5rem;
-	color: var(--color-primary-text);
+	color: var(--color-primary-element-text);
 }
 
 .app-info h3 {
@@ -297,10 +271,10 @@ body {
 }
 
 .app-info p {
-	margin: 0.25rem 0 0 0;
+	margin: 0;
 	font-size: 0.85rem;
-	color: var(--color-text-maxcontrast);
-	opacity: 0.8;
+	color: var(--color-text-lighter);
+	line-height: 1.2;
 }
 
 /* Navigation Menu */
@@ -316,40 +290,16 @@ body {
 .nav-menu li {
 	margin: 0.25rem 0.75rem;
 	border-radius: var(--border-radius);
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: background-color 0.2s ease;
 	position: relative;
-	overflow: hidden;
-	backdrop-filter: blur(10px);
 }
 
-.nav-menu li::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 0;
-	height: 100%;
-	background: linear-gradient(90deg,
-			color-mix(in srgb, var(--color-primary) 10%, transparent) 0%,
-			color-mix(in srgb, var(--color-primary) 5%, transparent) 100%);
-	transition: width 0.3s ease;
-	z-index: 0;
-}
-
-.nav-menu li:hover::before {
-	width: 100%;
+.nav-menu li:hover {
+	background: var(--color-background-hover);
 }
 
 .nav-menu li.active {
-	background: linear-gradient(135deg,
-			var(--color-primary) 0%,
-			var(--color-primary-hover) 100%);
-	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
-	transform: translateX(4px);
-}
-
-.nav-menu li.active::before {
-	display: none;
+	background: var(--color-primary-element);
 }
 
 .nav-menu li a {
@@ -357,26 +307,26 @@ body {
 	align-items: center;
 	padding: 0.875rem 1rem;
 	text-decoration: none;
-	color: var(--color-text-maxcontrast);
+	color: var(--color-main-text);
 	font-weight: 500;
 	font-size: 0.95rem;
-	transition: all 0.3s ease;
+	transition: color 0.2s ease;
 	position: relative;
 	z-index: 1;
 	border-radius: var(--border-radius);
 }
 
 .nav-menu li:hover a {
-	color: var(--color-text);
-	transform: translateX(2px);
+	color: var(--color-main-text);
 }
 
 .nav-menu li.active a {
-	color: var(--color-primary-text);
+	color: var(--color-primary-element-text);
 	font-weight: 600;
 }
 
-.nav-menu li .icon {
+.nav-menu li .icon,
+.nav-menu li .lucide-icon {
 	width: 20px;
 	height: 20px;
 	margin-right: 0.875rem;
@@ -385,19 +335,18 @@ body {
 	align-items: center;
 	justify-content: center;
 	font-size: 1.1rem;
-	transition: all 0.3s ease;
-	position: relative;
-	color: var(--color-text-maxcontrast);
+	transition: color 0.2s ease;
+	color: var(--color-main-text);
 }
 
-.nav-menu li:hover .icon {
-	transform: scale(1.1);
-	color: var(--color-primary);
+.nav-menu li:hover .icon,
+.nav-menu li:hover .lucide-icon {
+	color: var(--color-main-text);
 }
 
-.nav-menu li.active .icon {
-	color: var(--color-primary-text);
-	transform: scale(1.15);
+.nav-menu li.active .icon,
+.nav-menu li.active .lucide-icon {
+	color: var(--color-primary-element-text);
 }
 
 .nav-menu li .icon::before {
@@ -405,44 +354,11 @@ body {
 	line-height: 1;
 }
 
-/* Enhanced icon styling with subtle glow effect */
-.nav-menu li.active .icon::after {
-	content: '';
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 30px;
-	height: 30px;
-	background: radial-gradient(circle,
-			color-mix(in srgb, var(--color-primary) 20%, transparent) 0%,
-			transparent 70%);
-	border-radius: 50%;
-	transform: translate(-50%, -50%);
-	z-index: -1;
-	animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-
-	0%,
-	100% {
-		opacity: 0.6;
-		transform: translate(-50%, -50%) scale(1);
-	}
-
-	50% {
-		opacity: 0.3;
-		transform: translate(-50%, -50%) scale(1.2);
-	}
-}
-
 /* Sidebar Footer */
 .sidebar-footer {
 	padding: 1rem;
-	border-top: 1px solid rgba(var(--color-border), 0.3);
-	background: linear-gradient(135deg,
-			color-mix(in srgb, var(--color-primary) 2%, transparent) 0%,
-			color-mix(in srgb, var(--color-primary) 5%, transparent) 100%);
+	border-top: 1px solid var(--color-border);
+	background: var(--color-background-dark);
 	position: relative;
 	z-index: 1;
 }
@@ -456,22 +372,20 @@ body {
 	text-align: center;
 	padding: 0.75rem;
 	border-radius: var(--border-radius);
-	background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-	border: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
-	transition: all 0.3s ease;
+	background: var(--color-background-darker, var(--color-background-dark));
+	border: 1px solid var(--color-border);
+	transition: background-color 0.2s ease;
 }
 
 .stat-item:hover {
-	background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent);
+	background: var(--color-background-hover);
 }
 
 .stat-number {
 	display: block;
 	font-size: 1.5rem;
 	font-weight: 700;
-	color: var(--color-primary);
+	color: var(--color-primary-element);
 	line-height: 1;
 	margin-bottom: 0.25rem;
 }
@@ -483,6 +397,17 @@ body {
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 	font-weight: 500;
+}
+
+/* Sidebar footer stats - main text for contrast on dark sidebar */
+.sidebar-footer .stat-number {
+	font-size: 1.25rem;
+	color: var(--color-main-text);
+}
+
+.sidebar-footer .stat-label {
+	font-size: 0.7rem;
+	color: var(--color-text-lighter);
 }
 
 /* Sidebar scrollbar styling */
@@ -569,7 +494,7 @@ body {
 	border-radius: 16px;
 	margin-bottom: 2rem;
 	overflow: visible;
-	box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 2px 20px color-mix(in srgb, var(--color-main-text) 4%, transparent);
 	border: 1px solid var(--color-border);
 	position: relative;
 	height: auto;
@@ -584,7 +509,7 @@ body {
 	padding: 2.5rem 2rem;
 	margin: 0;
 	border-radius: 0;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 }
 
 .header-content {
@@ -643,13 +568,13 @@ body {
 	background-color: var(--color-background-hover);
 	color: var(--color-main-text);
 	border: 1px solid var(--color-border);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 1px 3px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .button:hover {
 	background-color: var(--color-background-dark);
 	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 15%, transparent);
 }
 
 .button.primary {
@@ -675,7 +600,7 @@ body {
 	padding: 2rem;
 	border-bottom: 1px solid var(--color-border);
 	margin: 0;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 1px 3px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 }
 
 .filters-container {
@@ -700,7 +625,7 @@ body {
 	background-color: var(--color-main-background);
 	color: var(--color-main-text);
 	transition: all 0.3s ease;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 1px 3px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 	min-height: 48px;
 }
 
@@ -855,8 +780,8 @@ body {
 }
 
 .action-item.delete-project-btn:hover {
-	background-color: rgba(244, 67, 54, 0.1);
-	color: #f44336;
+	background-color: var(--color-error-light);
+	color: var(--color-error);
 }
 
 /* Main Content Section */
@@ -901,7 +826,7 @@ body {
 	background-color: var(--color-main-background);
 	border-radius: var(--border-radius);
 	overflow: hidden;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 	border: 1px solid var(--color-border);
 }
 
@@ -952,30 +877,30 @@ body {
 .grid tbody tr:hover {
 	background-color: var(--color-background-hover);
 	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 }
 
 /* Budget Status Row Highlighting */
 .grid tbody tr.budget-status-warning {
-	background-color: rgba(255, 152, 0, 0.05);
-	border-left: 4px solid #ff9800;
+	background-color: var(--color-warning-light);
+	border-left: 4px solid var(--color-warning);
 }
 
 .grid tbody tr.budget-status-warning:hover {
-	background-color: rgba(255, 152, 0, 0.1);
+	background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
 	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-warning) 25%, transparent);
 }
 
 .grid tbody tr.budget-status-critical {
-	background-color: rgba(244, 67, 54, 0.05);
-	border-left: 4px solid #f44336;
+	background-color: var(--color-error-light);
+	border-left: 4px solid var(--color-error);
 }
 
 .grid tbody tr.budget-status-critical:hover {
-	background-color: rgba(244, 67, 54, 0.1);
+	background-color: color-mix(in srgb, var(--color-error) 15%, transparent);
 	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-error) 25%, transparent);
 }
 
 .grid tbody tr:last-child td {
@@ -996,51 +921,51 @@ body {
 }
 
 .status-active {
-	background-color: rgba(76, 175, 80, 0.1);
-	color: #4caf50;
-	border: 1px solid rgba(76, 175, 80, 0.2);
+	background-color: var(--color-success-light);
+	color: var(--color-success);
+	border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
 .status-on-hold {
-	background-color: rgba(255, 152, 0, 0.1);
-	color: #ff9800;
-	border: 1px solid rgba(255, 152, 0, 0.2);
+	background-color: var(--color-warning-light);
+	color: var(--color-warning);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
 }
 
 .status-completed {
-	background-color: rgba(33, 150, 243, 0.1);
-	color: #2196f3;
-	border: 1px solid rgba(33, 150, 243, 0.2);
+	background-color: var(--color-info-light);
+	color: var(--color-info);
+	border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
 }
 
 .status-cancelled {
-	background-color: rgba(244, 67, 54, 0.1);
-	color: #f44336;
-	border: 1px solid rgba(244, 67, 54, 0.2);
+	background-color: var(--color-error-light);
+	color: var(--color-error);
+	border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
 }
 
 .priority-low {
-	background-color: rgba(76, 175, 80, 0.1);
-	color: #4caf50;
-	border: 1px solid rgba(76, 175, 80, 0.2);
+	background-color: var(--color-success-light);
+	color: var(--color-success);
+	border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
 .priority-medium {
-	background-color: rgba(255, 152, 0, 0.1);
-	color: #ff9800;
-	border: 1px solid rgba(255, 152, 0, 0.2);
+	background-color: var(--color-warning-light);
+	color: var(--color-warning);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
 }
 
 .priority-high {
-	background-color: rgba(255, 87, 34, 0.1);
-	color: #ff5722;
-	border: 1px solid rgba(255, 87, 34, 0.2);
+	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+	color: var(--color-accent);
+	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .priority-critical {
-	background-color: rgba(244, 67, 54, 0.1);
-	color: #f44336;
-	border: 1px solid rgba(244, 67, 54, 0.2);
+	background-color: var(--color-error-light);
+	color: var(--color-error);
+	border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
 }
 
 /* Project Type Badges */
@@ -1056,63 +981,63 @@ body {
 }
 
 .project-type-badge.client {
-	background-color: rgba(76, 175, 80, 0.1);
-	color: #4caf50;
-	border: 1px solid rgba(76, 175, 80, 0.2);
+	background-color: var(--color-success-light);
+	color: var(--color-success);
+	border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
 .project-type-badge.admin {
-	background-color: rgba(156, 39, 176, 0.1);
-	color: #9c27b0;
-	border: 1px solid rgba(156, 39, 176, 0.2);
+	background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .project-type-badge.sales {
-	background-color: rgba(255, 152, 0, 0.1);
-	color: #ff9800;
-	border: 1px solid rgba(255, 152, 0, 0.2);
+	background-color: var(--color-warning-light);
+	color: var(--color-warning);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
 }
 
 .project-type-badge.customer {
-	background-color: rgba(33, 150, 243, 0.1);
-	color: #2196f3;
-	border: 1px solid rgba(33, 150, 243, 0.2);
+	background-color: var(--color-info-light);
+	color: var(--color-info);
+	border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
 }
 
 .project-type-badge.product {
-	background-color: rgba(103, 58, 183, 0.1);
-	color: #673ab7;
-	border: 1px solid rgba(103, 58, 183, 0.2);
+	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+	color: var(--color-accent);
+	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .project-type-badge.meeting {
-	background-color: rgba(255, 87, 34, 0.1);
-	color: #ff5722;
-	border: 1px solid rgba(255, 87, 34, 0.2);
+	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+	color: var(--color-accent);
+	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .project-type-badge.internal {
-	background-color: rgba(96, 125, 139, 0.1);
-	color: #607d8b;
-	border: 1px solid rgba(96, 125, 139, 0.2);
+	background-color: var(--color-background-tertiary);
+	color: var(--color-text-secondary);
+	border: 1px solid var(--color-border);
 }
 
 .project-type-badge.research {
-	background-color: rgba(0, 150, 136, 0.1);
-	color: #009688;
-	border: 1px solid rgba(0, 150, 136, 0.2);
+	background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .project-type-badge.training {
-	background-color: rgba(121, 85, 72, 0.1);
-	color: #795548;
-	border: 1px solid rgba(121, 85, 72, 0.2);
+	background-color: var(--color-background-tertiary);
+	color: var(--color-text-secondary);
+	border: 1px solid var(--color-border);
 }
 
 .project-type-badge.other {
-	background-color: rgba(158, 158, 158, 0.1);
-	color: #9e9e9e;
-	border: 1px solid rgba(158, 158, 158, 0.2);
+	background-color: var(--color-background-tertiary);
+	color: var(--color-text-muted);
+	border: 1px solid var(--color-border);
 }
 
 /* Action Items */
@@ -1153,15 +1078,15 @@ body {
 }
 
 .notice-success {
-	background-color: rgba(76, 175, 80, 0.1);
-	color: #4caf50;
-	border-left-color: #4caf50;
+	background-color: var(--color-success-light);
+	color: var(--color-success);
+	border-left-color: var(--color-success);
 }
 
 .notice-error {
-	background-color: rgba(244, 67, 54, 0.1);
-	color: #f44336;
-	border-left-color: #f44336;
+	background-color: var(--color-error-light);
+	color: var(--color-error);
+	border-left-color: var(--color-error);
 }
 
 .notice .icon {
@@ -1304,7 +1229,7 @@ body {
 	color: var(--color-main-text);
 	font-size: 0.95rem;
 	transition: all 0.3s ease;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 1px 3px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 }
 
 .form-group input:focus,
@@ -1650,14 +1575,14 @@ body {
 }
 
 .actions-grid .button.danger {
-	background: #e53e3e;
-	color: white;
-	border-color: #e53e3e;
+	background: var(--color-error);
+	color: var(--color-button-danger-text);
+	border-color: var(--color-error);
 }
 
 .actions-grid .button.danger:hover {
-	background: #c53030;
-	border-color: #c53030;
+	background: var(--color-error-hover);
+	border-color: var(--color-error-hover);
 	transform: translateY(-1px);
 }
 
@@ -1988,7 +1913,7 @@ body {
 .project-item:hover {
 	background: var(--color-background-dark);
 	transform: translateY(-2px);
-	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 8px 25px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 	border-color: var(--color-primary);
 }
 
@@ -2105,14 +2030,14 @@ body {
 }
 
 .budget-progress-fill.warning {
-	background: linear-gradient(90deg, var(--color-warning), #fd7e14);
+	background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover));
 	margin-top: 0 !important;
 	padding: 0 !important;
 	background-color: transparent !important;
 }
 
 .budget-progress-fill.critical {
-	background: linear-gradient(90deg, var(--color-error), #721c24);
+	background: linear-gradient(90deg, var(--color-error), var(--color-error-dark));
 	margin-top: 0 !important;
 	padding: 0 !important;
 	background-color: transparent !important;
@@ -2202,7 +2127,7 @@ body {
 .time-entry-item:hover {
 	background: var(--color-background-dark);
 	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .entry-header {
@@ -2286,7 +2211,7 @@ body {
 	padding: 0.75rem;
 	margin: -0.75rem;
 	border-radius: 4px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 	z-index: 10;
 	position: relative;
 	white-space: normal;
@@ -2393,7 +2318,7 @@ body {
 .team-member-item:hover {
 	background: var(--color-background-dark);
 	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .member-avatar {
@@ -2593,8 +2518,8 @@ body {
 	right: 0;
 	bottom: 0;
 	background: linear-gradient(135deg,
-			rgba(255, 255, 255, 0.1) 0%,
-			rgba(255, 255, 255, 0.05) 100%);
+			color-mix(in srgb, var(--color-main-text) 10%, transparent) 0%,
+			color-mix(in srgb, var(--color-main-text) 5%, transparent) 100%);
 	opacity: 0;
 	transition: opacity 0.2s ease;
 }
@@ -2841,7 +2766,7 @@ body {
 	height: 1px;
 	background: linear-gradient(90deg,
 			transparent 0%,
-			rgba(var(--color-border), 0.3) 50%,
+			var(--color-border) 50%,
 			transparent 100%);
 	opacity: 0;
 	transition: opacity 0.3s ease;
@@ -2975,7 +2900,7 @@ body {
 .project-overview-card:hover {
 	background: var(--color-background-dark);
 	transform: translateY(-2px);
-	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 8px 25px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .overview-header {
@@ -3023,7 +2948,7 @@ body {
 .overview-stat:hover {
 	background: var(--color-background-hover);
 	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .overview-stat .stat-icon {
@@ -3095,7 +3020,7 @@ body {
 	padding: 1.5rem;
 	transition: box-shadow 0.2s ease, border-color 0.2s ease;
 	position: relative;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 4%, transparent);
 }
 
 .yearly-stat-card::before {
@@ -3110,7 +3035,7 @@ body {
 }
 
 .yearly-stat-card:hover {
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+	box-shadow: 0 4px 16px color-mix(in srgb, var(--color-main-text) 8%, transparent);
 	border-color: var(--color-primary);
 }
 
@@ -3338,7 +3263,7 @@ body {
 }
 
 .budget-progress-fill.warning {
-	background: linear-gradient(90deg, var(--color-warning) 0%, #fd7e14 100%);
+	background: linear-gradient(90deg, var(--color-warning) 0%, var(--color-warning) 100%);
 	border-radius: 3px 0 0 3px !important;
 	/* Override Nextcloud's global .warning class */
 	margin-top: 0 !important;
@@ -3347,7 +3272,7 @@ body {
 }
 
 .budget-progress-fill.critical {
-	background: linear-gradient(90deg, var(--color-error) 0%, #721c24 100%);
+	background: linear-gradient(90deg, var(--color-error) 0%, var(--color-error) 100%);
 	border-radius: 3px 0 0 3px !important;
 	/* Override Nextcloud's global .critical class if it exists */
 	margin-top: 0 !important;
@@ -3437,7 +3362,7 @@ body {
 .timeline-item:hover {
 	background: var(--color-background-hover);
 	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .timeline-icon {
@@ -3525,11 +3450,11 @@ body {
 }
 
 .budget-remaining.warning {
-	color: #ff9800;
+	color: var(--color-warning);
 }
 
 .budget-remaining.critical {
-	color: #f44336;
+	color: var(--color-error);
 }
 
 .budget-secondary {
@@ -3545,11 +3470,11 @@ body {
 }
 
 .budget-percentage.warning {
-	color: #ff9800;
+	color: var(--color-warning);
 }
 
 .budget-percentage.critical {
-	color: #f44336;
+	color: var(--color-error);
 }
 
 /* Budget Cell Specific Styling */
@@ -3769,7 +3694,7 @@ body {
 
 .detailed-project-card:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 	border-color: var(--color-primary);
 }
 
@@ -3931,14 +3856,14 @@ body {
 
 /* Warning and critical states */
 .progress-fill.warning {
-	background: linear-gradient(90deg, var(--color-warning), #fd7e14);
+	background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover));
 	margin-top: 0 !important;
 	padding: 0 !important;
 	background-color: transparent !important;
 }
 
 .progress-fill.critical {
-	background: linear-gradient(90deg, var(--color-error), #721c24);
+	background: linear-gradient(90deg, var(--color-error), var(--color-error-dark));
 	margin-top: 0 !important;
 	padding: 0 !important;
 	background-color: transparent !important;
@@ -3977,7 +3902,7 @@ body {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background: rgba(0, 0, 0, 0.5);
+	background: color-mix(in srgb, var(--color-main-text) 50%, transparent);
 	z-index: 10000;
 	backdrop-filter: blur(2px);
 }
@@ -3989,7 +3914,7 @@ body {
 	transform: translate(-50%, -50%);
 	background: var(--color-main-background);
 	border-radius: var(--border-radius-large);
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 8px 32px color-mix(in srgb, var(--color-main-text) 20%, transparent);
 	max-width: 600px;
 	width: calc(100vw - 40px);
 	max-height: calc(100vh - 40px);
@@ -4167,7 +4092,7 @@ body {
 
 .employee-section:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 	border-color: var(--color-primary);
 }
 
@@ -4256,7 +4181,7 @@ body {
 
 .employee-card:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 8px 25px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 	border-color: var(--color-primary);
 }
 
@@ -4387,7 +4312,7 @@ body {
 
 .comparison-stat-card:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 8px 25px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 	border-color: var(--color-primary);
 }
 
@@ -4538,7 +4463,7 @@ body {
 	border-radius: var(--border-radius);
 	padding: 2rem;
 	margin-bottom: 2rem;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 20px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 /* Compact Project Type Statistics */
@@ -4663,7 +4588,7 @@ body {
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--color-text);
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	text-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 /* Responsive adjustments for compact layout */
@@ -4711,7 +4636,7 @@ body {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
 	padding: 1.5rem;
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 }
 
 .project-type-stats-container .year-header {
@@ -4773,7 +4698,7 @@ body {
 
 .project-type-card:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 15px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .project-type-card .type-header {
@@ -4869,7 +4794,7 @@ body {
 	border-radius: var(--border-radius);
 	padding: 2rem;
 	margin-bottom: 2rem;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 20px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .productivity-stats-container {
@@ -4882,7 +4807,7 @@ body {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
 	padding: 1.5rem;
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 }
 
 .productivity-year-section .year-header {
@@ -4915,15 +4840,15 @@ body {
 
 .productivity-card:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 15px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .productivity-card.billable {
-	border-left: 4px solid #4caf50;
+	border-left: 4px solid var(--color-success);
 }
 
 .productivity-card.overhead {
-	border-left: 4px solid #ff9800;
+	border-left: 4px solid var(--color-warning);
 }
 
 .productivity-card .card-header {
@@ -4995,11 +4920,11 @@ body {
 }
 
 .ratio-fill.billable {
-	background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%);
+	background: linear-gradient(90deg, var(--color-success) 0%, var(--color-success-hover) 100%);
 }
 
 .ratio-fill.overhead {
-	background: linear-gradient(90deg, #ff9800 0%, #ffb74d 100%);
+	background: linear-gradient(90deg, var(--color-warning) 0%, var(--color-warning-hover) 100%);
 }
 
 .ratio-labels {
@@ -5015,13 +4940,13 @@ body {
 }
 
 .ratio-label.billable {
-	color: #4caf50;
-	background: rgba(76, 175, 80, 0.1);
+	color: var(--color-success);
+	background: var(--color-success-light);
 }
 
 .ratio-label.overhead {
-	color: #ff9800;
-	background: rgba(255, 152, 0, 0.1);
+	color: var(--color-warning);
+	background: var(--color-warning-light);
 }
 
 /* Responsive design for project type statistics */
@@ -5190,7 +5115,7 @@ body {
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--color-text);
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	text-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 /* Responsive design for compact employee statistics */
@@ -5412,7 +5337,7 @@ body {
 }
 
 .employee-work-card:hover {
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 	transform: translateY(-2px);
 }
 
@@ -5644,7 +5569,7 @@ body {
 .employee-card:hover {
 	background: var(--color-background-hover);
 	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .employee-header {
@@ -5882,43 +5807,43 @@ body {
 }
 
 .project-type-client {
-	background: #4caf50;
+	background: var(--color-success);
 }
 
 .project-type-admin {
-	background: #ff9800;
+	background: var(--color-warning);
 }
 
 .project-type-sales {
-	background: #2196f3;
+	background: var(--color-info);
 }
 
 .project-type-customer {
-	background: #9c27b0;
+	background: var(--color-primary);
 }
 
 .project-type-product {
-	background: #00bcd4;
+	background: var(--color-info);
 }
 
 .project-type-meeting {
-	background: #795548;
+	background: var(--color-text-secondary);
 }
 
 .project-type-internal {
-	background: #607d8b;
+	background: var(--color-text-muted);
 }
 
 .project-type-research {
-	background: #e91e63;
+	background: var(--color-accent);
 }
 
 .project-type-training {
-	background: #ff5722;
+	background: var(--color-accent);
 }
 
 .project-type-other {
-	background: #9e9e9e;
+	background: var(--color-text-muted);
 }
 
 .project-type-stats {
@@ -6008,7 +5933,7 @@ body {
 	border-radius: 4px;
 	font-size: 0.875rem;
 	white-space: nowrap;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+	box-shadow: 0 4px 20px color-mix(in srgb, var(--color-main-text) 25%, transparent);
 	border: 1px solid var(--color-border);
 	opacity: 0;
 	visibility: hidden;
@@ -6052,53 +5977,53 @@ body {
 
 /* Specific styling for different project types */
 .project-type-icon[data-project-type="client"] {
-	background: rgba(52, 152, 219, 0.1);
-	border-color: rgba(52, 152, 219, 0.3);
+	background: color-mix(in srgb, var(--color-info) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="admin"] {
-	background: rgba(149, 165, 166, 0.1);
-	border-color: rgba(149, 165, 166, 0.3);
+	background: color-mix(in srgb, var(--color-text-lighter) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-text-lighter) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="sales"] {
-	background: rgba(46, 204, 113, 0.1);
-	border-color: rgba(46, 204, 113, 0.3);
+	background: color-mix(in srgb, var(--color-success) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="customer"] {
-	background: rgba(155, 89, 182, 0.1);
-	border-color: rgba(155, 89, 182, 0.3);
+	background: color-mix(in srgb, var(--color-primary-element) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-primary-element) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="product"] {
-	background: rgba(230, 126, 34, 0.1);
-	border-color: rgba(230, 126, 34, 0.3);
+	background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="meeting"] {
-	background: rgba(231, 76, 60, 0.1);
-	border-color: rgba(231, 76, 60, 0.3);
+	background: color-mix(in srgb, var(--color-error) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="internal"] {
-	background: rgba(52, 73, 94, 0.1);
-	border-color: rgba(52, 73, 94, 0.3);
+	background: color-mix(in srgb, var(--color-text-lighter) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-text-lighter) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="research"] {
-	background: rgba(142, 68, 173, 0.1);
-	border-color: rgba(142, 68, 173, 0.3);
+	background: color-mix(in srgb, var(--color-primary-element) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-primary-element) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="training"] {
-	background: rgba(39, 174, 96, 0.1);
-	border-color: rgba(39, 174, 96, 0.3);
+	background: color-mix(in srgb, var(--color-success) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="other"] {
-	background: rgba(149, 165, 166, 0.1);
-	border-color: rgba(149, 165, 166, 0.3);
+	background: color-mix(in srgb, var(--color-text-lighter) 10%, transparent);
+	border-color: color-mix(in srgb, var(--color-text-lighter) 30%, transparent);
 }
 
 /* Responsive design */

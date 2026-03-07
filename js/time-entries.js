@@ -60,15 +60,12 @@
 	 */
 	function init() {
 		console.log('TimeEntries app initializing...');
-		// Run immediate truncation first to prevent flash
-		forceImmediateTruncation();
 		bindEvents();
 		
 		// Initialize datepicker immediately (using inline implementation if needed)
 		initCalendarIcons();
 		
 		initMessageAutoHide();
-		initMutationObserver();
 		console.log('TimeEntries app initialized');
 	}
 

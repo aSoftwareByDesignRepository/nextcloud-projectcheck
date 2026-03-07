@@ -74,11 +74,17 @@
 			elements.clearFiltersBtn.addEventListener('click', clearFilters);
 		}
 
-		// Table sorting
+		// Table sorting (click + keyboard for accessibility)
 		if (elements.projectsTable) {
 			const sortableHeaders = elements.projectsTable.querySelectorAll('th.sortable');
 			sortableHeaders.forEach(header => {
 				header.addEventListener('click', handleSort);
+				header.addEventListener('keydown', function (e) {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						handleSort.call(this, e);
+					}
+				});
 			});
 		}
 
@@ -221,7 +227,7 @@
 		currentProjectId = projectId;
 
 		// Show loading state
-		elements.teamMembersList.innerHTML = '<div class="loading">Loading team members...</div>';
+		elements.teamMembersList.innerHTML = '<div class="loading">' + t('projectcheck', 'Loading team members…') + '</div>';
 		elements.teamModal.classList.add('show');
 
 		// Fetch team members
@@ -236,12 +242,12 @@
 				if (data.success) {
 					renderTeamMembers(data.teamMembers);
 				} else {
-					elements.teamMembersList.innerHTML = '<p class="error">Error loading team members</p>';
+					elements.teamMembersList.innerHTML = '<p class="error">' + t('projectcheck', 'Error loading team members') + '</p>';
 				}
 			})
 			.catch(error => {
 				console.error('Error fetching team members:', error);
-				elements.teamMembersList.innerHTML = '<p class="error">Error loading team members</p>';
+				elements.teamMembersList.innerHTML = '<p class="error">' + t('projectcheck', 'Error loading team members') + '</p>';
 			});
 	}
 
@@ -250,7 +256,7 @@
 	 */
 	function renderTeamMembers(teamMembers) {
 		if (teamMembers.length === 0) {
-			elements.teamMembersList.innerHTML = '<p>No team members assigned to this project.</p>';
+			elements.teamMembersList.innerHTML = '<p>' + t('projectcheck', 'No team members assigned to this project.') + '</p>';
 			return;
 		}
 
@@ -262,7 +268,7 @@
 					${member.hourly_rate ? `<div class="team-member-rate">${member.hourly_rate} €/h</div>` : ''}
 				</div>
 				<div class="team-member-actions">
-					<button class="button secondary small remove-member-btn" data-user-id="${member.user_id}">
+					<button class="button secondary small remove-member-btn" data-user-id="${escapeHtml(member.user_id)}">
 						Remove
 					</button>
 				</div>
@@ -384,8 +390,6 @@
 
 			// Send delete request
 			const deleteUrl = OC.generateUrl('/apps/projectcheck/projects/' + projectId);
-			console.log('Sending DELETE request to:', deleteUrl);
-			console.log('OC.requestToken:', OC.requestToken);
 			fetch(deleteUrl, {
 				method: 'DELETE',
 				headers: {
@@ -653,13 +657,6 @@
 		document.addEventListener('DOMContentLoaded', init);
 	} else {
 		init();
-	}
-
-	// Check if OC object is available
-	console.log('OC object available:', typeof OC !== 'undefined');
-	if (typeof OC !== 'undefined') {
-		console.log('OC.requestToken available:', typeof OC.requestToken !== 'undefined');
-		console.log('OC.generateUrl available:', typeof OC.generateUrl !== 'undefined');
 	}
 
 	/**

@@ -64,6 +64,11 @@
 		<keyword>reporting</keyword>
 	</keywords>
 
+	<settings>
+		<admin>OCA\ProjectCheck\Settings\AdminSettings</admin>
+		<personal>OCA\ProjectCheck\Settings\PersonalSettings</personal>
+	</settings>
+
 	<release>
 		<databases>
 			<database>mysql</database>

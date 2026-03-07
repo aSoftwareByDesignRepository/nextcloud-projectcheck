@@ -113,34 +113,34 @@
 
 /* ===== COLOR AND CONTRAST ===== */
 
-/* High Contrast Mode Support */
+/* High Contrast Mode Support - Nextcloud themes provide high-contrast variable values */
 @media (prefers-contrast: high) {
   :root {
-    --color-primary: #0066cc;
-    --color-primary-hover: #004499;
-    --color-error: #cc0000;
-    --color-success: #006600;
-    --color-warning: #cc6600;
-    --color-border: #000000;
-    --color-text: #000000;
-    --color-background: #ffffff;
-    --color-background-secondary: #f0f0f0;
-    --color-background-tertiary: #e0e0e0;
+    --color-primary: var(--color-primary-element);
+    --color-primary-hover: var(--color-primary-element-hover);
+    --color-error: var(--color-error);
+    --color-success: var(--color-success);
+    --color-warning: var(--color-warning);
+    --color-border: var(--color-border);
+    --color-text: var(--color-main-text);
+    --color-background: var(--color-main-background);
+    --color-background-secondary: var(--color-background-dark);
+    --color-background-tertiary: var(--color-background-darker);
   }
-  
+
   [data-theme="dark"] {
-    --color-primary: #66b3ff;
-    --color-primary-hover: #99ccff;
-    --color-error: #ff6666;
-    --color-success: #66cc66;
-    --color-warning: #ffcc66;
-    --color-border: #ffffff;
-    --color-text: #ffffff;
-    --color-background: #000000;
-    --color-background-secondary: #1a1a1a;
-    --color-background-tertiary: #2a2a2a;
+    --color-primary: var(--color-primary-element);
+    --color-primary-hover: var(--color-primary-element-hover);
+    --color-error: var(--color-error);
+    --color-success: var(--color-success);
+    --color-warning: var(--color-warning);
+    --color-border: var(--color-border);
+    --color-text: var(--color-main-text);
+    --color-background: var(--color-main-background);
+    --color-background-secondary: var(--color-background-dark);
+    --color-background-tertiary: var(--color-background-darker);
   }
-  
+
   /* Ensure all borders are visible */
   .card,
   .form-input,
@@ -148,15 +148,16 @@
   .table {
     border-width: 2px;
   }
-  
+
   /* Ensure focus indicators are highly visible */
   *:focus {
-    outline: 3px solid #000000;
+    outline: 3px solid var(--color-primary-element);
     outline-offset: 2px;
   }
-  
+
   [data-theme="dark"] *:focus {
-    outline: 3px solid #ffffff;
+    outline: 3px solid var(--color-primary-element);
+    outline-offset: 2px;
   }
 }
 
@@ -597,17 +598,17 @@ th {
     display: none !important;
   }
   
-  /* Ensure proper contrast for print */
+/* Ensure proper contrast for print - black/white for ink savings */
   * {
-    color: black !important;
-    background: white !important;
+    color: var(--color-print-text, #000) !important;
+    background: var(--color-print-bg, #fff) !important;
   }
-  
+
   /* Ensure links are visible */
   a[href]::after {
     content: " (" attr(href) ")";
     font-size: 0.8em;
-    color: black !important;
+    color: var(--color-print-text, #000) !important;
   }
   
   /* Ensure headings are properly styled */
@@ -625,6 +626,6 @@ th {
   img[alt]::after {
     content: " (" attr(alt) ")";
     font-size: 0.8em;
-    color: black !important;
+    color: var(--color-print-text, #000) !important;
   }
 }

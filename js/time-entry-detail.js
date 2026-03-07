@@ -98,7 +98,7 @@
         // Add ARIA labels and roles
         const deleteButton = document.querySelector('.delete-time-entry');
         if (deleteButton) {
-            deleteButton.setAttribute('aria-label', 'Delete time entry');
+            deleteButton.setAttribute('aria-label', t('projectcheck', 'Delete time entry'));
         }
 
         // Add focus management
@@ -158,7 +158,7 @@
         notification.innerHTML = `
 			<div class="notification-content">
 				<span class="notification-message">${escapeHtml(message)}</span>
-				<button type="button" class="notification-close" aria-label="Close notification">
+				<button type="button" class="notification-close" aria-label="${t('projectcheck', 'Close notification')}">
 					<span class="icon-close"></span>
 				</button>
 			</div>

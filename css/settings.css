@@ -34,7 +34,7 @@
 	border: 1px solid var(--color-border);
 	border-radius: 8px;
 	padding: 30px;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2px 4px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .settings-section {
@@ -167,21 +167,21 @@
 }
 
 .settings-message.success {
-	background: #E8F5E8;
-	color: #2E7D32;
-	border: 1px solid #4CAF50;
+	background: color-mix(in srgb, var(--color-success) 10%, var(--color-main-background));
+	color: var(--color-success);
+	border: 1px solid color-mix(in srgb, var(--color-success) 50%, transparent);
 }
 
 .settings-message.error {
-	background: #FFEBEE;
-	color: #D32F2F;
-	border: 1px solid #F44336;
+	background: color-mix(in srgb, var(--color-error) 10%, var(--color-main-background));
+	color: var(--color-error);
+	border: 1px solid color-mix(in srgb, var(--color-error) 50%, transparent);
 }
 
 .settings-message.warning {
-	background: #FFF3E0;
-	color: #F57C00;
-	border: 1px solid #FF9800;
+	background: color-mix(in srgb, var(--color-warning) 10%, var(--color-main-background));
+	color: var(--color-warning);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 50%, transparent);
 }
 
 /* Form validation styles */

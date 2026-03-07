@@ -24,7 +24,7 @@ Util::addStyle('projectcheck', 'common/progress-bars');
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
-            <nav class="breadcrumb" aria-label="Breadcrumb">
+            <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
                 <ol>
                     <li aria-current="page"><?php p($l->t('Dashboard')); ?></li>
                 </ol>
@@ -412,7 +412,7 @@ Util::addStyle('projectcheck', 'common/progress-bars');
                     <h3>
                         <i data-lucide="trending-up" class="lucide-icon"></i>
                         <?php p($l->t('Productivity Analysis Dashboard')); ?>
-                        <button class="info-popup-trigger" data-action="show-productivity-info" title="<?php p($l->t('Click for detailed explanation')); ?>">?</button>
+                        <button class="info-popup-trigger" data-action="show-productivity-info" title="<?php p($l->t('Click for detailed explanation')); ?>" aria-label="<?php p($l->t('Show productivity analysis explanation')); ?>">?</button>
                     </h3>
                     <p><?php p($l->t('Compare billable vs overhead work to measure productivity')); ?></p>
                 </div>
@@ -774,7 +774,7 @@ Util::addStyle('projectcheck', 'common/progress-bars');
     <div class="popup-content">
         <div class="popup-header">
             <h3><?php p($l->t('Productivity Analysis Explanation')); ?></h3>
-            <button class="popup-close" data-action="hide-productivity-info">×</button>
+            <button class="popup-close" data-action="hide-productivity-info" aria-label="<?php p($l->t('Close')); ?>">×</button>
         </div>
         <div class="popup-body">
             <div class="info-section">

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Migration from projectcontrol to projectcheck
  * This migration ONLY migrates app configuration and user preferences

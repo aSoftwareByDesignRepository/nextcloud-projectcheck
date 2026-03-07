@@ -187,7 +187,7 @@ Util::addStyle('projectcheck', 'time-entries');
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
-            <nav class="breadcrumb" aria-label="Breadcrumb">
+            <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
                 <ol>
                     <li aria-current="page"><?php p($l->t('Employees')); ?></li>
                 </ol>

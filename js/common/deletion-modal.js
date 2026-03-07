@@ -230,7 +230,7 @@
      * Create dependency content based on entity type and impact
      */
     function createDependencyContent(impact) {
-        const entityName = currentEntity.name || 'this item';
+        const entityName = escapeHtml(currentEntity.name || 'this item');
         let content = `
             <div class="projectcheck-deletion-modal__warning">
                 <h3 class="projectcheck-deletion-modal__warning-title">${t('projectcheck', 'Warning')}</h3>
@@ -538,7 +538,7 @@
             body.innerHTML = `
                 <div class="projectcheck-deletion-modal__error">
                     <h3>${t('projectcheck', 'Error')}</h3>
-                    <p>${message}</p>
+                    <p>${escapeHtml(message)}</p>
                     <div class="projectcheck-deletion-modal__actions">
                         <button type="button" class="projectcheck-deletion-modal__btn projectcheck-deletion-modal__btn--cancel">
                             ${t('projectcheck', 'Close')}
@@ -597,6 +597,16 @@
         currentModal = null;
         currentEntity = null;
         currentDependencies = null;
+    }
+
+    /**
+     * Escape HTML to prevent XSS
+     */
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        const div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
     }
 
     /**

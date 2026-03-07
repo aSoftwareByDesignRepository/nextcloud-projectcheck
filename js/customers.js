@@ -240,10 +240,12 @@
         // Create new message
         const messageDiv = document.createElement('div');
         messageDiv.className = `notice notice-${type}`;
-        messageDiv.innerHTML = `
-			<i class="icon icon-${type === 'success' ? 'checkmark' : 'error'}"></i>
-			<span>${message}</span>
-		`;
+        const icon = document.createElement('i');
+        icon.className = `icon icon-${type === 'success' ? 'checkmark' : 'error'}`;
+        const span = document.createElement('span');
+        span.textContent = message;
+        messageDiv.appendChild(icon);
+        messageDiv.appendChild(span);
 
         // Insert after header
         const header = document.querySelector('.header-content');

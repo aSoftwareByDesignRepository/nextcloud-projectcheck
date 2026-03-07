@@ -30,7 +30,7 @@ style('projectcheck', 'customer-statistics');
 	<div id="app-content-wrapper">
 		<!-- Breadcrumb Navigation -->
 		<div class="breadcrumb-container">
-			<nav class="breadcrumb" aria-label="Breadcrumb">
+			<nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
 				<ol>
 					<li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.index')); ?>"><?php p($l->t('Customers')); ?></a></li>
 					<li aria-current="page"><?php p($customer->getName()); ?></li>

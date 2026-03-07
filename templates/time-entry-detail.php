@@ -29,7 +29,7 @@ $totalCost = $timeEntry->getCost() ?? ($timeEntry->getHours() * $timeEntry->getH
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
-            <nav class="breadcrumb" aria-label="Breadcrumb">
+            <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
                 <ol>
                     <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>"><?php p($l->t('Time Entries')); ?></a></li>
                     <li aria-current="page"><?php p($l->t('Time Entry Details')); ?></li>
@@ -303,7 +303,8 @@ $totalCost = $timeEntry->getCost() ?? ($timeEntry->getHours() * $timeEntry->getH
                             <i class="icon-edit-custom"></i>
                             <?php p($l->t('Edit Time Entry')); ?>
                         </a>
-                        <button type="button" class="button danger" id="delete-time-entry-btn">
+                        <button type="button" class="button danger delete-time-entry" id="delete-time-entry-btn"
+                            aria-label="<?php p($l->t('Delete time entry')); ?>">
                             <i class="icon-delete-custom"></i>
                             <?php p($l->t('Delete Time Entry')); ?>
                         </button>

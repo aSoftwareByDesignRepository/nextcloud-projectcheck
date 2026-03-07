@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Cron job for cleanup tasks in projectcontrol app
  *

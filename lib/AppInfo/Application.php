@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Application class for the projectcheck app
  *
@@ -13,6 +15,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\User\Events\UserDeletedEvent;
 use OCP\Util;
 
 /**
@@ -42,7 +45,8 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IUserManager::class),
 				$c->query(\OCP\IConfig::class),
 				$c->query(\OCP\IGroupManager::class),
-				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class)
+				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class),
+				$c->query(\OCA\ProjectCheck\Service\BudgetService::class)
 			);
 		});
 
@@ -189,7 +193,9 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Service\DateFormatService::class),
 				$c->query(\OCA\ProjectCheck\Service\DeletionService::class),
 				$c->query(\OCA\ProjectCheck\Service\ActivityService::class),
-				$c->query(\OCA\ProjectCheck\Service\CSPService::class)
+				$c->query(\OCA\ProjectCheck\Service\CSPService::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\Psr\Log\LoggerInterface::class)
 			);
 		});
 
@@ -226,12 +232,16 @@ class Application extends App implements IBootstrap
 				$c->query('ProjectMemberService'),
 				$c->query('DeletionService'),
 				$c->query('ActivityService'),
-				$c->query(\OCA\ProjectCheck\Service\CSPService::class)
+				$c->query(\OCA\ProjectCheck\Service\CSPService::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID)
 			);
 		});
 
 		// Register capabilities
 		$context->registerCapability(\OCA\ProjectCheck\Capabilities::class);
+
+		// Register event listeners
+		$context->registerEventListener(UserDeletedEvent::class, \OCA\ProjectCheck\Listener\UserDeletedListener::class);
 	}
 
 	/**

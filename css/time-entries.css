@@ -1,5 +1,6 @@
 /**
  * Time Entries CSS for projectcheck app
+ * Sidebar styling: projects.css + navigation.css (theme-safe, all themes)
  *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
@@ -9,262 +10,19 @@
 	padding-left: 36px;
 }
 
-/* Beautiful Sidebar Styling */
-#app-navigation {
-	background: linear-gradient(180deg,
-			var(--color-primary-background) 0%,
-			var(--color-main-background) 100%);
-	border-right: 1px solid var(--color-border);
-	box-shadow: 2px 0 20px rgba(0, 0, 0, 0.08);
-	position: relative;
-	overflow: hidden;
-	display: flex;
-	flex-direction: column;
-	height: 100vh;
-}
-
-/* Subtle background pattern */
-#app-navigation::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-image:
-		radial-gradient(circle at 20% 80%, color-mix(in srgb, var(--color-primary) 3%, transparent) 0%, transparent 50%),
-		radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--color-primary) 3%, transparent) 0%, transparent 50%),
-		radial-gradient(circle at 40% 40%, color-mix(in srgb, var(--color-primary) 2%, transparent) 0%, transparent 50%);
-	pointer-events: none;
-	z-index: 0;
-}
-
-#app-navigation::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 3px;
-	background: linear-gradient(90deg,
-			var(--color-primary) 0%,
-			var(--color-primary-hover) 50%,
-			var(--color-primary) 100%);
-	z-index: 2;
-}
-
-/* Sidebar Header */
-.sidebar-header {
-	padding: 1.5rem 1rem;
-	border-bottom: 1px solid rgba(var(--color-border), 0.3);
-	background: linear-gradient(135deg,
-			color-mix(in srgb, var(--color-primary) 5%, transparent) 0%,
-			color-mix(in srgb, var(--color-primary) 2%, transparent) 100%);
-	position: relative;
-	z-index: 1;
-}
-
-.app-brand {
-	display: flex;
-	align-items: center;
-	gap: 0.875rem;
-}
-
-.app-icon {
-	width: 48px;
-	height: 48px;
-	background: linear-gradient(135deg,
-			var(--color-primary) 0%,
-			var(--color-primary-hover) 100%);
-	border-radius: 12px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
-}
-
-.app-icon .icon {
-	font-size: 1.5rem;
-	color: var(--color-primary-text);
-}
-
-.app-info h3 {
-	margin: 0;
-	font-size: 1.1rem;
-	font-weight: 600;
-	color: var(--color-main-text);
-	line-height: 1.2;
-}
-
-.app-info p {
-	margin: 0.25rem 0 0 0;
-	font-size: 0.85rem;
-	color: var(--color-text-maxcontrast);
-	opacity: 0.8;
-}
-
-/* Navigation Menu */
-.nav-menu {
-	margin: 0;
-	padding: 1.5rem 0;
-	list-style: none;
-	position: relative;
-	z-index: 1;
-	flex: 1;
-}
-
-.nav-menu li {
-	margin: 0.25rem 0.75rem;
-	border-radius: var(--border-radius);
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	position: relative;
-	overflow: hidden;
-	backdrop-filter: blur(10px);
-}
-
-.nav-menu li::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 0;
-	height: 100%;
-	background: linear-gradient(90deg,
-			color-mix(in srgb, var(--color-primary) 10%, transparent) 0%,
-			color-mix(in srgb, var(--color-primary) 5%, transparent) 100%);
-	transition: width 0.3s ease;
-	z-index: 0;
-}
-
-.nav-menu li:hover::before {
-	width: 100%;
-}
-
-.nav-menu li.active {
-	background: linear-gradient(135deg,
-			var(--color-primary) 0%,
-			var(--color-primary-hover) 100%);
-	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
-	transform: translateX(4px);
-}
-
-.nav-menu li.active::before {
-	display: none;
-}
-
-.nav-menu li a {
-	display: flex;
-	align-items: center;
-	padding: 0.875rem 1rem;
-	text-decoration: none;
-	color: var(--color-text-maxcontrast);
-	font-weight: 500;
-	font-size: 0.95rem;
-	transition: all 0.3s ease;
-	position: relative;
-	z-index: 1;
-	border-radius: var(--border-radius);
-}
-
-.nav-menu li:hover a {
-	color: var(--color-text);
-	transform: translateX(2px);
-}
-
-.nav-menu li.active a {
-	color: var(--color-primary-text);
-	font-weight: 600;
-}
-
-.nav-menu li .icon {
-	width: 20px;
-	height: 20px;
-	margin-right: 0.875rem;
-	flex-shrink: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 1.1rem;
-	transition: all 0.3s ease;
-	position: relative;
-	color: var(--color-text-maxcontrast);
-}
-
-.nav-menu li:hover .icon {
-	transform: scale(1.1);
-	color: var(--color-primary);
-}
-
-.nav-menu li.active .icon {
-	color: var(--color-primary-text);
-	transform: scale(1.15);
-}
-
-.nav-menu li .icon::before {
-	font-family: 'iconfont';
-	line-height: 1;
-}
-
-/* Enhanced icon styling with subtle glow effect */
-.nav-menu li.active .icon::after {
-	content: '';
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 30px;
-	height: 30px;
-	background: radial-gradient(circle,
-			color-mix(in srgb, var(--color-primary) 20%, transparent) 0%,
-			transparent 70%);
-	border-radius: 50%;
-	transform: translate(-50%, -50%);
-	z-index: -1;
-	animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-
-	0%,
-	100% {
-		opacity: 0.6;
-		transform: translate(-50%, -50%) scale(1);
-	}
-
-	50% {
-		opacity: 0.3;
-		transform: translate(-50%, -50%) scale(1.2);
-	}
-}
-
-/* Sidebar Footer */
-.sidebar-footer {
-	padding: 1rem;
-	border-top: 1px solid rgba(var(--color-border), 0.3);
-	background: linear-gradient(135deg,
-			color-mix(in srgb, var(--color-primary) 2%, transparent) 0%,
-			color-mix(in srgb, var(--color-primary) 5%, transparent) 100%);
-	position: relative;
-	z-index: 1;
-}
-
-.quick-stats {
-	display: flex;
-	justify-content: center;
-}
-
 .stat-item {
 	text-align: center;
 	padding: 0.75rem;
 	border-radius: var(--border-radius);
-	background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-	border: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
+	background: var(--color-background-darker);
+	border: 1px solid var(--color-border);
 	transition: all 0.3s ease;
 }
 
 .stat-item:hover {
-	background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+	background: var(--color-background-hover);
 	transform: translateY(-2px);
-	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
 .stat-number {
@@ -283,24 +41,6 @@
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 	font-weight: 500;
-}
-
-/* Sidebar scrollbar styling */
-#app-navigation::-webkit-scrollbar {
-	width: 6px;
-}
-
-#app-navigation::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-#app-navigation::-webkit-scrollbar-thumb {
-	background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-	border-radius: 3px;
-}
-
-#app-navigation::-webkit-scrollbar-thumb:hover {
-	background: color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 /* Main Content Area */
@@ -322,7 +62,7 @@
 	border-radius: 16px;
 	margin-bottom: 2rem;
 	overflow: hidden;
-	box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 2px 20px var(--color-shadow-light);
 	border: 1px solid var(--color-border);
 }
 
@@ -384,8 +124,8 @@
 	right: 0;
 	bottom: 0;
 	background: linear-gradient(135deg,
-			rgba(255, 255, 255, 0.1) 0%,
-			rgba(255, 255, 255, 0.05) 100%);
+			color-mix(in srgb, var(--color-main-text) 10%, transparent) 0%,
+			color-mix(in srgb, var(--color-main-text) 5%, transparent) 100%);
 	opacity: 0;
 	transition: opacity 0.2s ease;
 }
@@ -442,31 +182,23 @@
 }
 
 .notice-success {
-	background: linear-gradient(135deg,
-			rgba(46, 204, 113, 0.1) 0%,
-			rgba(46, 204, 113, 0.05) 100%);
-	color: #27ae60;
-	border: 1px solid rgba(46, 204, 113, 0.2);
+	background: color-mix(in srgb, var(--color-success) 12%, transparent);
+	color: var(--color-success);
+	border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
 .notice-success::before {
-	background: linear-gradient(135deg,
-			rgba(46, 204, 113, 0.05) 0%,
-			transparent 100%);
+	background: transparent;
 }
 
 .notice-error {
-	background: linear-gradient(135deg,
-			rgba(231, 76, 60, 0.1) 0%,
-			rgba(231, 76, 60, 0.05) 100%);
-	color: #e74c3c;
-	border: 1px solid rgba(231, 76, 60, 0.2);
+	background: color-mix(in srgb, var(--color-error) 12%, transparent);
+	color: var(--color-error);
+	border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
 }
 
 .notice-error::before {
-	background: linear-gradient(135deg,
-			rgba(231, 76, 60, 0.05) 0%,
-			transparent 100%);
+	background: transparent;
 }
 
 .notice .icon {
@@ -535,161 +267,132 @@
 	caret-color: transparent;
 }
 
-/* Table Styling */
+/* Table Styling - Nextcloud-native, variables only */
 .grid {
 	width: 100%;
+	table-layout: fixed;
 	border-collapse: collapse;
 	background: var(--color-main-background);
+	word-wrap: break-word;
+	word-break: break-word;
 }
 
 .grid thead {
-	background: linear-gradient(135deg,
-			color-mix(in srgb, var(--color-primary) 5%, transparent) 0%,
-			color-mix(in srgb, var(--color-primary) 2%, transparent) 100%);
+	background: var(--color-background-dark);
 }
 
 .grid th {
-	padding: 1rem 1.5rem;
+	padding: 12px 16px;
 	text-align: left;
 	font-weight: 600;
 	color: var(--color-main-text);
-	font-size: 0.875rem;
+	font-size: var(--default-font-size);
 	border-bottom: 2px solid var(--color-border);
 }
 
 .grid td {
-	padding: 1rem 1.5rem;
+	padding: 12px 16px;
 	border-bottom: 1px solid var(--color-border);
-	color: var(--color-text);
-	font-size: 0.875rem;
+	color: var(--color-main-text);
+	font-size: var(--default-font-size);
 	vertical-align: middle;
-}
-
-/* Ensure table doesn't break with long content */
-.grid {
-	table-layout: fixed;
-	width: 100%;
-	border-collapse: collapse;
-	min-width: 100%;
-	max-width: 100%;
-	/* Force table to respect width constraints */
-	word-wrap: break-word;
-	word-break: break-word;
-}
-
-/* Ensure all table cells don't expand beyond their allocated space */
-.grid td:not(:nth-child(6)) {
-	overflow: hidden !important;
-	word-wrap: break-word;
-	word-break: break-word;
-	overflow-wrap: break-word;
-	box-sizing: border-box !important;
-	max-width: 100% !important;
-}
-
-/* Ensure tooltips in the Type column (3rd col) are not clipped */
-.grid td:nth-child(3) {
-	overflow: visible !important;
-	position: relative;
-}
-
-/* Comprehensive fix for long descriptions in time entries table */
-.grid td:nth-child(6),
-.grid .description-cell {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	vertical-align: middle;
-	padding: 1rem 1.5rem;
-	line-height: 1.4;
 	box-sizing: border-box;
 }
 
-/* Force table to respect container width */
 .grid-container {
 	overflow-x: auto;
 	width: 100%;
-	max-width: 100%;
-	position: relative;
+	-webkit-overflow-scrolling: touch;
 }
 
-/* Additional constraints to prevent table expansion */
-.grid tbody tr {
-	height: auto;
-	min-height: 3rem;
+/*
+ * Time Entries Table - Column layout and wrapping
+ * Narrow: Date, Type, Hours. Wide: Description. Scoped to avoid affecting customers table.
+ */
+.time-entries-table {
+	border-collapse: separate;
+	border-spacing: 8px 0;
 }
 
-/* Force table cells to respect their width constraints */
-.grid th,
-.grid td {
-	box-sizing: border-box;
-	vertical-align: middle;
+.time-entries-table th,
+.time-entries-table td {
+	padding-inline: 12px;
 }
 
-/* Mobile responsive adjustments */
-@media (max-width: 768px) {
+.time-entries-table col.col-date { width: 110px; }
+.time-entries-table col.col-project { width: 12%; }
+.time-entries-table col.col-type { width: 4%; }
+.time-entries-table col.col-customer { width: 15%; }
+.time-entries-table col.col-user { width: 9%; }
+.time-entries-table col.col-hours { width: 6%; }
+.time-entries-table col.col-description { width: 42%; }
+.time-entries-table col.col-actions { width: 9%; }
+
+
+.time-entries-table tbody tr:hover,
+.time-entries-table tbody tr:focus-within {
+	background: var(--color-background-dark);
+}
+
+/* Date: no truncation, ensure full dd.mm.yyyy visible */
+.time-entries-table td:nth-child(1) {
+	white-space: nowrap;
+}
+
+/* Hours column: keep header and cells within bounds */
+.time-entries-table th:nth-child(6),
+.time-entries-table td:nth-child(6) {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 0;
+}
+
+.time-entries-table td:nth-child(3) {
+	white-space: nowrap;
+	overflow: visible;
+}
+
+/* Description: wrap freely, no truncation */
+.time-entries-table .description-cell,
+.time-entries-table .description-cell__text {
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+	line-height: 1.5;
+}
+
+/* Project/Customer/User: allow wrap to multiple lines, no truncation */
+.time-entries-table td:nth-child(2),
+.time-entries-table td:nth-child(4),
+.time-entries-table td:nth-child(5) {
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+	min-width: 0;
+}
+
+@media (max-width: 1024px) {
 	.grid-container {
 		overflow-x: scroll;
-		-webkit-overflow-scrolling: touch;
 	}
 
-	.grid {
-		min-width: 600px;
-		/* Ensure table doesn't get too compressed */
+	.time-entries-table {
+		min-width: 700px;
 	}
 }
 
-/* Ensure table rows don't break layout */
-.grid tbody tr {
-	height: auto;
-	min-height: 3rem;
-}
-
-/* Force table cells to respect their width constraints */
-.grid th,
-.grid td {
-	box-sizing: border-box;
-	vertical-align: middle;
-}
-
-
-
-/* Show full description on hover */
-.grid td:nth-child(6):hover,
-.grid .description-cell:hover {
-	white-space: normal;
-	overflow: visible;
-	background: var(--color-background-hover);
-	z-index: 10;
-	position: relative;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	border-radius: 4px;
-	padding: 0.75rem;
-	word-wrap: break-word;
-	word-break: break-word;
-	overflow-wrap: break-word;
-}
-
-/* Force description cells to be truncated - simplified approach */
-.grid .description-cell {
-	text-overflow: ellipsis;
-	overflow: hidden;
-	white-space: nowrap;
-	position: relative;
-}
-
-/* Project Type Icons */
+/* Project Type Icons - minimal, variables only */
 .project-type-icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 1.2rem;
-	width: 32px;
-	height: 32px;
-	border-radius: 6px;
+	font-size: 1rem;
+	width: 28px;
+	height: 28px;
+	border-radius: var(--border-radius);
 	background: var(--color-background-hover);
 	border: 1px solid var(--color-border);
-	transition: all 0.2s ease;
 	cursor: help;
 	position: relative;
 	flex-shrink: 0;
@@ -698,8 +401,6 @@
 .project-type-icon:hover {
 	background: var(--color-primary-element-light);
 	border-color: var(--color-primary-element);
-	transform: scale(1.1);
-	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 /* Project Type Display (Icon + Text for analysis tables) */
@@ -715,34 +416,31 @@
 	color: var(--color-text);
 }
 
-/* Enhanced tooltip for project type icons */
+/* Tooltip for project type icons - variables only */
 .project-type-icon::after {
 	content: attr(title);
 	position: absolute;
-	top: -45px;
+	bottom: 100%;
 	left: 50%;
-	transform: translateX(-50%);
+	transform: translateX(-50%) translateY(-4px);
 	background: var(--color-main-background);
-	color: var(--color-text);
-	padding: 0.5rem 0.75rem;
-	border-radius: 4px;
-	font-size: 0.875rem;
+	color: var(--color-main-text);
+	padding: 6px 10px;
+	border-radius: var(--border-radius);
+	font-size: var(--default-font-size);
 	white-space: nowrap;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+	box-shadow: 0 2px 8px var(--color-box-shadow);
 	border: 1px solid var(--color-border);
 	opacity: 0;
 	visibility: hidden;
-	transition: all 0.2s ease;
-	z-index: 999999;
+	transition: opacity 100ms, visibility 100ms;
+	z-index: 100;
 	pointer-events: none;
-	max-width: 250px;
-	text-align: center;
 }
 
 .project-type-icon:hover::after {
 	opacity: 1;
 	visibility: visible;
-	transform: translateX(-50%) translateY(-4px);
 }
 
 /* Make sure parent containers allow tooltips to be visible */
@@ -771,53 +469,53 @@
 
 /* Specific styling for different project types */
 .project-type-icon[data-project-type="client"] {
-	background: rgba(52, 152, 219, 0.1);
-	border-color: rgba(52, 152, 219, 0.3);
+	background: var(--color-info-light);
+	border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="admin"] {
-	background: rgba(149, 165, 166, 0.1);
-	border-color: rgba(149, 165, 166, 0.3);
+	background: var(--color-background-tertiary);
+	border-color: var(--color-border);
 }
 
 .project-type-icon[data-project-type="sales"] {
-	background: rgba(46, 204, 113, 0.1);
-	border-color: rgba(46, 204, 113, 0.3);
+	background: var(--color-success-light);
+	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="customer"] {
-	background: rgba(155, 89, 182, 0.1);
-	border-color: rgba(155, 89, 182, 0.3);
+	background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="product"] {
-	background: rgba(230, 126, 34, 0.1);
-	border-color: rgba(230, 126, 34, 0.3);
+	background: var(--color-warning-light);
+	border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="meeting"] {
-	background: rgba(231, 76, 60, 0.1);
-	border-color: rgba(231, 76, 60, 0.3);
+	background: var(--color-error-light);
+	border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="internal"] {
-	background: rgba(52, 73, 94, 0.1);
-	border-color: rgba(52, 73, 94, 0.3);
+	background: var(--color-background-tertiary);
+	border-color: var(--color-border);
 }
 
 .project-type-icon[data-project-type="research"] {
-	background: rgba(142, 68, 173, 0.1);
-	border-color: rgba(142, 68, 173, 0.3);
+	background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+	border-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="training"] {
-	background: rgba(39, 174, 96, 0.1);
-	border-color: rgba(39, 174, 96, 0.3);
+	background: var(--color-success-light);
+	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="other"] {
-	background: rgba(149, 165, 166, 0.1);
-	border-color: rgba(149, 165, 166, 0.3);
+	background: var(--color-background-tertiary);
+	border-color: var(--color-border);
 }
 
 /* Universal class for handling long text descriptions */
@@ -857,7 +555,7 @@
 	padding: 0.75rem;
 	margin: -0.75rem;
 	border-radius: 4px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2px 8px var(--color-shadow-light);
 	z-index: 10;
 	position: relative;
 	white-space: normal;
@@ -873,25 +571,18 @@
 	}
 }
 
-.grid tbody tr {
-	transition: all 0.2s ease;
-}
-
 .grid tbody tr:hover {
-	background: var(--color-background-hover);
-	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+	background: var(--color-background-dark);
 }
 
 .grid a {
-	color: var(--color-primary);
+	color: var(--color-primary-element);
 	text-decoration: none;
 	font-weight: 500;
-	transition: color 0.2s ease;
 }
 
 .grid a:hover {
-	color: var(--color-primary-hover);
+	color: var(--color-primary-element-hover);
 	text-decoration: underline;
 }
 
@@ -906,26 +597,34 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 2rem;
-	height: 2rem;
+	width: 32px;
+	height: 32px;
+	min-width: 32px;
+	min-height: 32px;
 	border: none;
-	border-radius: 6px;
+	border-radius: var(--border-radius);
 	background: var(--color-background-hover);
-	color: var(--color-text);
+	color: var(--color-main-text);
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition: background 100ms, color 100ms;
 	text-decoration: none;
 }
 
-.action-item:hover {
-	background: var(--color-primary);
-	color: var(--color-primary-text);
-	transform: scale(1.1);
+.action-item:hover,
+.action-item:focus-visible {
+	background: var(--color-primary-element);
+	color: var(--color-primary-element-text);
 }
 
-.action-item.delete-entry-btn:hover {
+.action-item.delete-entry-btn:hover,
+.action-item.delete-entry-btn:focus-visible {
 	background: var(--color-error);
-	color: var(--color-button-danger-text);
+	color: var(--color-error-text, var(--color-primary-element-text));
+}
+
+.action-item:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .action-item .icon {
@@ -1007,7 +706,7 @@
 /* Dark Mode Enhancements */
 @media (prefers-color-scheme: dark) {
 	.section {
-		box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 2px 20px color-mix(in srgb, var(--color-main-text) 20%, transparent);
 	}
 
 	.button.primary {

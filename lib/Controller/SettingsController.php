@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Settings controller for projectcheck app
  *
@@ -23,6 +25,7 @@ use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Traits\StatsTrait;
+use OCP\IL10N;
 
 /**
  * Settings controller for app configuration
@@ -47,6 +50,9 @@ class SettingsController extends Controller
 	/** @var CustomerService */
 	private $customerService;
 
+	/** @var IL10N */
+	private $l;
+
 	/**
 	 * SettingsController constructor
 	 *
@@ -58,6 +64,7 @@ class SettingsController extends Controller
 	 * @param CSPService $cspService
 	 * @param ProjectService $projectService
 	 * @param CustomerService $customerService
+	 * @param IL10N $l
 	 */
 	public function __construct(
 		$appName,
@@ -67,7 +74,8 @@ class SettingsController extends Controller
 		IGroupManager $groupManager,
 		CSPService $cspService,
 		ProjectService $projectService,
-		CustomerService $customerService
+		CustomerService $customerService,
+		IL10N $l
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
@@ -76,6 +84,7 @@ class SettingsController extends Controller
 		$this->setCspService($cspService);
 		$this->projectService = $projectService;
 		$this->customerService = $customerService;
+		$this->l = $l;
 	}
 
 	/**
@@ -98,7 +107,7 @@ class SettingsController extends Controller
 		// Check if user is admin
 		if (!$this->groupManager->isInGroup($user->getUID(), 'admin')) {
 			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'Access denied - Admin privileges required'
+				'message' => $this->l->t('Access denied - Admin privileges required')
 			]);
 			return $this->configureCSP($response, 'guest');
 		}
@@ -134,12 +143,12 @@ class SettingsController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new JSONResponse(['error' => 'User not authenticated'], 401);
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
 		// Check if user is admin
 		if (!$this->groupManager->isInGroup($user->getUID(), 'admin')) {
-			return new JSONResponse(['error' => 'Access denied - Admin privileges required'], 403);
+			return new JSONResponse(['error' => $this->l->t('Access denied - Admin privileges required')], 403);
 		}
 
 		$userId = $user->getUID();
@@ -152,7 +161,7 @@ class SettingsController extends Controller
 			return new JSONResponse([
 				'success' => true,
 				'settings' => $updatedSettings,
-				'message' => 'Settings updated successfully'
+				'message' => $this->l->t('Settings updated successfully')
 			]);
 		} catch (\Exception $e) {
 			return new JSONResponse([
