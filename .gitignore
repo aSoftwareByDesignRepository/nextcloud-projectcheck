@@ -47,6 +47,12 @@ junit.xml
 *.tar.gz
 *.zip
 
+# Release signatures (tarballs already ignored above); CHECKSUMS-*.txt may be committed
+release/*.tar.gz.asc
+release/SIGNATURE-*.txt
+release/APPSTORE-SIGNATURE*.txt
+release/*.b64
+
 # Local development
 .local/
 local/
