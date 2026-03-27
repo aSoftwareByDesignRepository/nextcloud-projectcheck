@@ -328,12 +328,13 @@ class TimeEntryController extends Controller
 				'timeEntry' => $timeEntry->getSummary(),
 				'message' => $this->l->t('Time entry created successfully')
 			]);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->logger->error('Time entry creation failed', ['exception' => $e]);
+			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
 				'error' => $e->getMessage()
-			], 400);
+			], $status);
 		}
 	}
 
@@ -477,11 +478,13 @@ class TimeEntryController extends Controller
 				'timeEntry' => $timeEntry->getSummary(),
 				'message' => 'Time entry updated successfully'
 			]);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
+			$this->logger->error('Time entry update failed', ['exception' => $e]);
+			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
 				'error' => $e->getMessage()
-			], 400);
+			], $status);
 		}
 	}
 
@@ -517,8 +520,10 @@ class TimeEntryController extends Controller
 		try {
 			$impact = $this->timeEntryService->getTimeEntryDeletionImpact($id);
 			return new JSONResponse(['success' => true, 'impact' => $impact]);
-		} catch (\Exception $e) {
-			return new JSONResponse(['success' => false, 'error' => $e->getMessage()], 400);
+		} catch (\Throwable $e) {
+			$this->logger->error('Time entry deletion impact failed', ['exception' => $e]);
+			$status = $e instanceof \Exception ? 400 : 500;
+			return new JSONResponse(['success' => false, 'error' => $e->getMessage()], $status);
 		}
 	}
 
@@ -552,11 +557,13 @@ class TimeEntryController extends Controller
 				'success' => true,
 				'message' => 'Time entry deleted successfully'
 			]);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
+			$this->logger->error('Time entry delete failed', ['exception' => $e]);
+			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
 				'error' => $e->getMessage()
-			], 400);
+			], $status);
 		}
 	}
 
@@ -685,7 +692,7 @@ class TimeEntryController extends Controller
 				'csv_data' => $csv,
 				'filename' => $filename
 			]);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->logger->error('Time entry export failed', ['exception' => $e]);
 			return new DataResponse(['error' => $this->l->t('Export failed: %s', [$e->getMessage()])], 500);
 		}
@@ -783,7 +790,7 @@ class TimeEntryController extends Controller
 			fclose($output);
 
 			return $csv;
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->logger->error('CSV generation failed', ['exception' => $e]);
 			throw $e;
 		}

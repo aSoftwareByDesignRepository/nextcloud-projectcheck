@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Db;
 
+use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
@@ -73,7 +74,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->setFirstResult($filters['offset']);
 		}
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$timeEntries = [];
 		while ($row = $result->fetch()) {
 			$timeEntries[] = $this->mapRowToEntity($row);
@@ -195,7 +196,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->andWhere($qb->expr()->lte('date', $qb->createNamedParameter($filters['date_to'])));
 		}
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$count = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -226,7 +227,7 @@ class TimeEntryMapper extends QBMapper
 			->from($this->getTableName())
 			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId)));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$total = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -246,7 +247,7 @@ class TimeEntryMapper extends QBMapper
 			->from($this->getTableName())
 			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId)));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$total = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -276,7 +277,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->andWhere($qb->expr()->lte('date', $qb->createNamedParameter($filters['date_to'])));
 		}
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$total = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -358,7 +359,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->setFirstResult($filters['offset']);
 		}
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$timeEntries = [];
 		while ($row = $result->fetch()) {
 			$timeEntry = $this->mapRowToEntity($row);
@@ -395,7 +396,7 @@ class TimeEntryMapper extends QBMapper
 			->groupBy('t.user_id', 'u.displayname')
 			->orderBy('u.displayname', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$users = [];
 		while ($row = $result->fetch()) {
 			$users[] = [
@@ -428,7 +429,7 @@ class TimeEntryMapper extends QBMapper
 			->groupBy($qb->createFunction('YEAR(date)'))
 			->orderBy('year', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$yearlyStats = [];
 		while ($row = $result->fetch()) {
 			$yearlyStats[] = [
@@ -461,7 +462,7 @@ class TimeEntryMapper extends QBMapper
 			->groupBy($qb->createFunction('YEAR(date)'))
 			->orderBy('year', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$yearlyStats = [];
 		while ($row = $result->fetch()) {
 			$yearlyStats[] = [
@@ -497,7 +498,7 @@ class TimeEntryMapper extends QBMapper
 			->groupBy($qb->createFunction('YEAR(t.date)'))
 			->orderBy('year', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$yearlyStats = [];
 		while ($row = $result->fetch()) {
 			$yearlyStats[] = [
@@ -538,7 +539,7 @@ class TimeEntryMapper extends QBMapper
 			->addOrderBy('c.name', 'ASC')
 			->addOrderBy('p.name', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$detailedStats = [];
 		while ($row = $result->fetch()) {
 			$year = (int) $row['year'];
@@ -597,7 +598,7 @@ class TimeEntryMapper extends QBMapper
 			->groupBy($qb->createFunction('YEAR(date)'))
 			->orderBy('year', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$yearlyStats = [];
 		while ($row = $result->fetch()) {
 			$yearlyStats[] = [
@@ -634,7 +635,7 @@ class TimeEntryMapper extends QBMapper
 			->orderBy('year', 'DESC')
 			->addOrderBy('u.displayname', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$employeeStats = [];
 		while ($row = $result->fetch()) {
 			$year = (int) $row['year'];
@@ -680,7 +681,7 @@ class TimeEntryMapper extends QBMapper
 			->groupBy('t.user_id')
 			->orderBy('total_hours', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$comparisonStats = [];
 		while ($row = $result->fetch()) {
 			$comparisonStats[] = [
@@ -725,7 +726,7 @@ class TimeEntryMapper extends QBMapper
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$projectTypeStats = [];
 		while ($row = $result->fetch()) {
 			$year = (int) $row['year'];
@@ -777,7 +778,7 @@ class TimeEntryMapper extends QBMapper
 			->addOrderBy('p.project_type', 'ASC')
 			->addOrderBy('c.name', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$detailedStats = [];
 		while ($row = $result->fetch()) {
 			$year = (int) $row['year'];
@@ -862,7 +863,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->select('*')
 				->from($table)
 				->setMaxResults(1);
-			$result = $qb->execute();
+			$result = $qb->executeQuery();
 			$row = $result->fetch();
 			$result->closeCursor();
 
@@ -898,7 +899,7 @@ class TimeEntryMapper extends QBMapper
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$productivityStats = [];
 		while ($row = $result->fetch()) {
 			$year = (int) $row['year'];
@@ -961,12 +962,12 @@ class TimeEntryMapper extends QBMapper
 		$timeEntry->setId((int) $row['id']);
 		$timeEntry->setProjectId((int) $row['project_id']);
 		$timeEntry->setUserId($row['user_id']);
-		$timeEntry->setDate(new \DateTime($row['date']));
+		$timeEntry->setDate(SafeDateTime::fromRequired($row['date'] ?? null, 'time_entries.date'));
 		$timeEntry->setHours((float) $row['hours']);
 		$timeEntry->setDescription($row['description']);
 		$timeEntry->setHourlyRate((float) $row['hourly_rate']);
-		$timeEntry->setCreatedAt(new \DateTime($row['created_at']));
-		$timeEntry->setUpdatedAt(new \DateTime($row['updated_at']));
+		$timeEntry->setCreatedAt(SafeDateTime::fromRequired($row['created_at'] ?? null, 'time_entries.created_at'));
+		$timeEntry->setUpdatedAt(SafeDateTime::fromRequired($row['updated_at'] ?? null, 'time_entries.updated_at'));
 
 		return $timeEntry;
 	}
@@ -986,12 +987,12 @@ class TimeEntryMapper extends QBMapper
 			->orderBy('date', 'DESC')
 			->setMaxResults(1);
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$row = $result->fetch();
 		$result->closeCursor();
 
-		if ($row && $row['date']) {
-			return new \DateTime($row['date']);
+		if ($row && !empty($row['date'])) {
+			return SafeDateTime::fromOptional($row['date']);
 		}
 
 		return null;
@@ -1025,7 +1026,7 @@ class TimeEntryMapper extends QBMapper
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$stats = [];
 
 		while ($row = $result->fetch()) {
@@ -1078,7 +1079,7 @@ class TimeEntryMapper extends QBMapper
 			->addOrderBy('u.displayname', 'ASC')
 			->addOrderBy('p.project_type', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$stats = [];
 
 		while ($row = $result->fetch()) {
@@ -1137,7 +1138,7 @@ class TimeEntryMapper extends QBMapper
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$productivityStats = [];
 
 		while ($row = $result->fetch()) {

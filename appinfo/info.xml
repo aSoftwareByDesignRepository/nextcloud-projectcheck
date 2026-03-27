@@ -18,7 +18,7 @@
 		- Real-time budget calculations
 	</description>
 
-	<version>2.0.17</version>
+	<version>2.0.21</version>
 	<licence>agpl</licence>
 	<author>Alexander M&#xE4;ule</author>
 
@@ -31,8 +31,8 @@
 	<repository>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcontroll.git</repository>
 
 	<dependencies>
-		<!-- Compatible with Nextcloud 32, 33, 34, 35, 36 (current and future releases) -->
-		<nextcloud min-version="32" max-version="36"/>
+		<!-- Compatible with Nextcloud 32+ through current stable (see release notes) -->
+		<nextcloud min-version="32" max-version="37"/>
 	</dependencies>
 
 	<navigations>
@@ -74,7 +74,7 @@
 			<database>mysql</database>
 			<database>pgsql</database>
 		</databases>
-		<php min-version="8.1" max-version="8.4"/>
+		<php min-version="8.2" max-version="8.5"/>
 		<platforms>
 			<platform>linux</platform>
 			<platform>mac</platform>

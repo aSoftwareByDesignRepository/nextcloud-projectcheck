@@ -263,7 +263,7 @@ class CleanupJob extends Job implements IJob
 			try {
 				$endDate = $project->getEndDate();
 				if ($endDate) {
-					$endDateTime = new \DateTime($endDate);
+					$endDateTime = \DateTime::createFromInterface($endDate);
 					$now = new \DateTime();
 					$daysUntilDeadline = $now->diff($endDateTime)->days;
 

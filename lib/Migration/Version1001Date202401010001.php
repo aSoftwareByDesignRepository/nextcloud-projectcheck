@@ -104,7 +104,7 @@ class Version1001Date202401010001 extends SimpleMigrationStep
 			   ->leftJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
 			   ->where($qb->expr()->isNull('c.id'));
 			
-			$result = $qb->execute();
+			$result = $qb->executeQuery();
 			$orphanedProjects = $result->fetchAll();
 			
 			if (!empty($orphanedProjects)) {
@@ -122,7 +122,7 @@ class Version1001Date202401010001 extends SimpleMigrationStep
 					   'updated_at' => $qb->createNamedParameter(date('Y-m-d H:i:s'))
 				   ]);
 				
-				$qb->execute();
+				$qb->executeStatement();
 				$defaultCustomerId = $connection->lastInsertId('customers');
 				
 				// Update orphaned projects to use the default customer
@@ -132,7 +132,7 @@ class Version1001Date202401010001 extends SimpleMigrationStep
 				   ->where($qb->expr()->eq('customer_id', $qb->createNamedParameter(0)))
 				   ->orWhere($qb->expr()->isNull('customer_id'));
 				
-				$qb->execute();
+				$qb->executeStatement();
 				
 				$output->info('Updated ' . count($orphanedProjects) . ' projects to use default customer.');
 			}

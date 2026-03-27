@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Service;
 
+use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\IConfig;
 use OCP\IUserSession;
 
@@ -90,7 +91,11 @@ class DateFormatService
     public function formatDate($date, $userId = null)
     {
         if (is_string($date)) {
-            $date = new \DateTime($date);
+            if ($date === '') {
+                return '';
+            }
+            $parsed = SafeDateTime::fromOptional($date);
+            $date = $parsed;
         }
 
         if (!$date instanceof \DateTime) {
@@ -111,7 +116,11 @@ class DateFormatService
     public function formatDateTime($datetime, $userId = null)
     {
         if (is_string($datetime)) {
-            $datetime = new \DateTime($datetime);
+            if ($datetime === '') {
+                return '';
+            }
+            $parsed = SafeDateTime::fromOptional($datetime);
+            $datetime = $parsed;
         }
 
         if (!$datetime instanceof \DateTime) {

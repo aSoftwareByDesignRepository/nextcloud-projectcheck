@@ -14,6 +14,7 @@ namespace OCA\ProjectCheck\Service;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCA\ProjectCheck\Db\ProjectMapper;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
+use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\DB\QueryBuilder\IQueryBuilder;
@@ -64,7 +65,7 @@ class ProjectMemberService
                 ->from('project_members')
                 ->where($qb->expr()->eq('id', $qb->createNamedParameter($id, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
 
-            $result = $qb->execute();
+            $result = $qb->executeQuery();
             $row = $result->fetch();
             $result->closeCursor();
 
@@ -78,7 +79,7 @@ class ProjectMemberService
             $member->setUserId($row['user_id']);
             $member->setRole($row['role']);
             $member->setHourlyRate((float)$row['hourly_rate']);
-            $member->setAssignedAt(new \DateTime($row['assigned_at']));
+            $member->setAssignedAt(SafeDateTime::fromRequired($row['assigned_at'] ?? null, 'project_members.assigned_at'));
             $member->setAssignedBy($row['assigned_by']);
 
             return $member;
@@ -101,7 +102,7 @@ class ProjectMemberService
             ->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)))
             ->orderBy('role', 'ASC');
 
-        $result = $qb->execute();
+        $result = $qb->executeQuery();
         $members = [];
 
         while ($row = $result->fetch()) {
@@ -111,7 +112,7 @@ class ProjectMemberService
             $member->setUserId($row['user_id']);
             $member->setRole($row['role']);
             $member->setHourlyRate((float)$row['hourly_rate']);
-            $member->setAssignedAt(new \DateTime($row['assigned_at']));
+            $member->setAssignedAt(SafeDateTime::fromRequired($row['assigned_at'] ?? null, 'project_members.assigned_at'));
             $member->setAssignedBy($row['assigned_by']);
 
             $members[] = $member;
@@ -163,7 +164,7 @@ class ProjectMemberService
                 'assigned_by' => $qb->createNamedParameter($data['assigned_by'])
             ]);
 
-        $qb->execute();
+        $qb->executeStatement();
         $member->setId((int)$this->db->lastInsertId('project_members'));
 
         return $member;
@@ -197,7 +198,7 @@ class ProjectMemberService
             $qb = $this->db->getQueryBuilder();
             $qb->delete('project_members')
                 ->where($qb->expr()->eq('id', $qb->createNamedParameter($id, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
-            $qb->execute();
+            $qb->executeStatement();
 
             $this->db->commit();
             return true;
@@ -252,7 +253,7 @@ class ProjectMemberService
             ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
             ->andWhere($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
 
-        $result = $qb->execute();
+        $result = $qb->executeQuery();
         $row = $result->fetch();
         $result->closeCursor();
 
@@ -266,7 +267,7 @@ class ProjectMemberService
         $member->setUserId($row['user_id']);
         $member->setRole($row['role']);
         $member->setHourlyRate((float)$row['hourly_rate']);
-        $member->setAssignedAt(new \DateTime($row['assigned_at']));
+        $member->setAssignedAt(SafeDateTime::fromRequired($row['assigned_at'] ?? null, 'project_members.assigned_at'));
         $member->setAssignedBy($row['assigned_by']);
 
         return $member;
@@ -291,7 +292,7 @@ class ProjectMemberService
             ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($member->getUserId())))
             ->andWhere($qb->expr()->eq('project_id', $qb->createNamedParameter($member->getProjectId(), \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
 
-        return (int)$qb->execute()->fetchOne();
+        return (int)$qb->executeQuery()->fetchOne();
     }
 
     /**

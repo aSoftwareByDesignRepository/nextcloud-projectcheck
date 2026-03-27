@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Db;
 
+use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\IDBConnection;
 
@@ -151,7 +152,7 @@ class ProjectMapper extends QBMapper
 			   $qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId))
 		   ));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$count = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -177,7 +178,7 @@ class ProjectMapper extends QBMapper
 		   ))
 		   ->andWhere($qb->expr()->eq('p.status', $qb->createNamedParameter($status)));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$count = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -228,7 +229,7 @@ class ProjectMapper extends QBMapper
 			));
 		}
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$count = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -254,7 +255,7 @@ class ProjectMapper extends QBMapper
 		   ))
 		   ->orderBy('p.created_at', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$projects = [];
 		
 		while ($row = $result->fetch()) {
@@ -287,12 +288,12 @@ class ProjectMapper extends QBMapper
 		$project->setCategory($row['category']);
 		$project->setPriority($row['priority']);
 		$project->setStatus($row['status']);
-		$project->setStartDate(new \DateTime($row['start_date']));
-		$project->setEndDate(new \DateTime($row['end_date']));
+		$project->setStartDate(SafeDateTime::fromOptional($row['start_date'] ?? null));
+		$project->setEndDate(SafeDateTime::fromOptional($row['end_date'] ?? null));
 		$project->setTags($row['tags']);
 		$project->setCreatedBy($row['created_by']);
-		$project->setCreatedAt(new \DateTime($row['created_at']));
-		$project->setUpdatedAt(new \DateTime($row['updated_at']));
+		$project->setCreatedAt(SafeDateTime::fromRequired($row['created_at'] ?? null, 'projects.created_at'));
+		$project->setUpdatedAt(SafeDateTime::fromRequired($row['updated_at'] ?? null, 'projects.updated_at'));
 		
 		return $project;
 	}

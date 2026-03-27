@@ -58,10 +58,15 @@ class TimeEntryService
 			throw new \Exception('Project not found');
 		}
 
+		$parsedDate = $this->parseTimeEntryDateString($data['date'] ?? null);
+		if ($parsedDate === null) {
+			throw new \Exception('Date is required');
+		}
+
 		$timeEntry = new TimeEntry();
 		$timeEntry->setProjectId((int)$data['project_id']);
 		$timeEntry->setUserId($userId);
-		$timeEntry->setDate(new \DateTime($data['date']));
+		$timeEntry->setDate($parsedDate);
 		$timeEntry->setHours((float)$data['hours']);
 		$timeEntry->setDescription($data['description'] ?? '');
 		$timeEntry->setHourlyRate((float)$data['hourly_rate']);
@@ -168,18 +173,11 @@ class TimeEntryService
 			$timeEntry->setProjectId((int)$data['project_id']);
 		}
 		if (isset($data['date'])) {
-			// Accept either DateTime, ISO yyyy-mm-dd, or dd.mm.yyyy
 			if ($data['date'] instanceof \DateTimeInterface) {
-				$timeEntry->setDate($data['date']);
+				$timeEntry->setDate(\DateTime::createFromInterface($data['date']));
 			} else {
-				$dateString = (string)$data['date'];
-				$parsed = null;
-				if (preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $dateString, $m)) {
-					$parsed = \DateTime::createFromFormat('Y-m-d', $m[3] . '-' . $m[2] . '-' . $m[1]);
-				} elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $dateString)) {
-					$parsed = \DateTime::createFromFormat('Y-m-d', $dateString);
-				}
-				if ($parsed) {
+				$parsed = $this->parseTimeEntryDateString($data['date']);
+				if ($parsed !== null) {
 					$timeEntry->setDate($parsed);
 				}
 			}
@@ -418,6 +416,38 @@ class TimeEntryService
 	}
 
 	/**
+	 * Parse time entry date from request (dd.mm.yyyy or yyyy-mm-dd). Null if empty/invalid.
+	 *
+	 * @param mixed $value
+	 */
+	private function parseTimeEntryDateString($value): ?\DateTime
+	{
+		if ($value === null || $value === '') {
+			return null;
+		}
+		if ($value instanceof \DateTimeInterface) {
+			return \DateTime::createFromInterface($value);
+		}
+		if (\is_bool($value)) {
+			return null;
+		}
+		$s = trim((string)$value);
+		if ($s === '') {
+			return null;
+		}
+		if (preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $s, $m)) {
+			$dt = \DateTime::createFromFormat('Y-m-d', $m[3] . '-' . $m[2] . '-' . $m[1]);
+			return $dt !== false ? $dt : null;
+		}
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s)) {
+			$dt = \DateTime::createFromFormat('Y-m-d', $s);
+			return $dt !== false ? $dt : null;
+		}
+
+		return null;
+	}
+
+	/**
 	 * Validate time entry data
 	 *
 	 * @param array $data Time entry data
@@ -440,19 +470,7 @@ class TimeEntryService
 		if (!isset($data['date']) || $data['date'] === '' || $data['date'] === null) {
 			$errors['date'] = 'Date is required';
 		} else {
-			// Validate date format - support both European (dd.mm.yyyy) and ISO (yyyy-mm-dd) formats
-			$date = null;
-			if (preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $data['date'], $matches)) {
-				// European format: dd.mm.yyyy
-				$day = $matches[1];
-				$month = $matches[2];
-				$year = $matches[3];
-				$isoDate = $year . '-' . $month . '-' . $day;
-				$date = \DateTime::createFromFormat('Y-m-d', $isoDate);
-			} elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $data['date'], $matches)) {
-				// ISO format: yyyy-mm-dd (from HTML5 date inputs)
-				$date = \DateTime::createFromFormat('Y-m-d', $data['date']);
-			}
+			$date = $this->parseTimeEntryDateString($data['date']);
 
 			if (!$date) {
 				$errors['date'] = 'Invalid date format';

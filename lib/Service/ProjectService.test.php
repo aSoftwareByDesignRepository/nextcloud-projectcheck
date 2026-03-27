@@ -94,7 +94,8 @@ class ProjectServiceTest extends TestCase {
 		$qb->method('insert')->willReturnSelf();
 		$qb->method('values')->willReturnSelf();
 		$qb->method('createNamedParameter')->willReturn(':param');
-		$qb->method('execute')->willReturnSelf();
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('executeStatement')->willReturn(1);
 		$this->db->method('getQueryBuilder')->willReturn($qb);
 		$this->db->method('lastInsertId')->willReturn(1);
 
@@ -196,7 +197,8 @@ class ProjectServiceTest extends TestCase {
 		$qb->method('where')->willReturnSelf();
 		$qb->method('andWhere')->willReturnSelf();
 		$qb->method('createNamedParameter')->willReturn(':param');
-		$qb->method('execute')->willReturnSelf();
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('executeStatement')->willReturn(1);
 		$qb->method('fetch')->willReturn(false); // No existing member
 		$qb->method('closeCursor')->willReturnSelf();
 		$qb->method('insert')->willReturnSelf();
@@ -236,7 +238,8 @@ class ProjectServiceTest extends TestCase {
 		$qb->method('where')->willReturnSelf();
 		$qb->method('andWhere')->willReturnSelf();
 		$qb->method('createNamedParameter')->willReturn(':param');
-		$qb->method('execute')->willReturnSelf();
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('executeStatement')->willReturn(1);
 		$qb->method('fetch')->willReturn(false);
 		$qb->method('closeCursor')->willReturnSelf();
 		$this->db->method('getQueryBuilder')->willReturn($qb);
@@ -266,7 +269,8 @@ class ProjectServiceTest extends TestCase {
 		$qb->method('where')->willReturnSelf();
 		$qb->method('andWhere')->willReturnSelf();
 		$qb->method('createNamedParameter')->willReturn(':param');
-		$qb->method('execute')->willReturnSelf();
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('executeStatement')->willReturn(1);
 		$qb->method('fetch')->willReturn(false);
 		$qb->method('closeCursor')->willReturnSelf();
 		$this->db->method('getQueryBuilder')->willReturn($qb);
@@ -298,7 +302,8 @@ class ProjectServiceTest extends TestCase {
 		$qb->method('from')->willReturnSelf();
 		$qb->method('where')->willReturnSelf();
 		$qb->method('createNamedParameter')->willReturn(':param');
-		$qb->method('execute')->willReturnSelf();
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('executeStatement')->willReturn(1);
 		$qb->method('fetch')->willReturn([
 			'id' => $projectId,
 			'name' => 'Test Project',
@@ -346,7 +351,8 @@ class ProjectServiceTest extends TestCase {
 		$qb->method('from')->willReturnSelf();
 		$qb->method('where')->willReturnSelf();
 		$qb->method('createNamedParameter')->willReturn(':param');
-		$qb->method('execute')->willReturnSelf();
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('executeStatement')->willReturn(1);
 		$qb->method('fetch')->willReturn([
 			'id' => $projectId,
 			'name' => 'Test Project',
@@ -389,7 +395,8 @@ class ProjectServiceTest extends TestCase {
 		$qb->method('where')->willReturnSelf();
 		$qb->method('andWhere')->willReturnSelf();
 		$qb->method('createNamedParameter')->willReturn(':param');
-		$qb->method('execute')->willReturnSelf();
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('executeStatement')->willReturn(1);
 		$qb->method('fetch')->willReturn([
 			'id' => $projectId,
 			'name' => 'Test Project',
@@ -441,7 +448,8 @@ class ProjectServiceTest extends TestCase {
 		$qb->method('orX')->willReturnSelf();
 		$qb->method('like')->willReturnSelf();
 		$qb->method('createNamedParameter')->willReturn(':param');
-		$qb->method('execute')->willReturnSelf();
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('executeStatement')->willReturn(1);
 		$qb->method('fetch')->willReturn(false);
 		$qb->method('closeCursor')->willReturnSelf();
 		$this->db->method('getQueryBuilder')->willReturn($qb);
@@ -467,7 +475,8 @@ class ProjectServiceTest extends TestCase {
 		$qb->method('where')->willReturnSelf();
 		$qb->method('andWhere')->willReturnSelf();
 		$qb->method('createNamedParameter')->willReturn(':param');
-		$qb->method('execute')->willReturnSelf();
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('executeStatement')->willReturn(1);
 		$qb->method('fetch')->willReturn(false);
 		$qb->method('closeCursor')->willReturnSelf();
 		$this->db->method('getQueryBuilder')->willReturn($qb);

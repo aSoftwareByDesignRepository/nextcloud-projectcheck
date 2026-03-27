@@ -15,6 +15,7 @@ use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCA\ProjectCheck\Db\ProjectMapper;
 use OCA\ProjectCheck\Util\ProjectCalculator;
+use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 use OCP\IUserSession;
@@ -159,7 +160,7 @@ class ProjectService
 		$qb->insert('projects')->values($values);
 
 		try {
-			$qb->execute();
+			$qb->executeStatement();
 		} catch (\Exception $e) {
 			// If the error is about project_type column not existing, try again without it
 			if (strpos($e->getMessage(), 'project_type') !== false || strpos($e->getMessage(), 'Unknown column') !== false) {
@@ -167,7 +168,7 @@ class ProjectService
 				unset($values['project_type']);
 				$qb = $this->db->getQueryBuilder();
 				$qb->insert('projects')->values($values);
-				$qb->execute();
+				$qb->executeStatement();
 			} else {
 				// Re-throw if it's a different error
 				throw $e;
@@ -194,7 +195,7 @@ class ProjectService
 			->leftJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
 			->where($qb->expr()->eq('p.id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$row = $result->fetch();
 		$result->closeCursor();
 
@@ -285,7 +286,7 @@ class ProjectService
 		$sortDirection = ($requestedDirection === 'ASC') ? 'ASC' : 'DESC';
 		$qb->orderBy($sortField, $sortDirection);
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$projects = [];
 
 		while ($row = $result->fetch()) {
@@ -512,7 +513,7 @@ class ProjectService
 		$qb->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 
 		try {
-			$qb->execute();
+			$qb->executeStatement();
 		} catch (\Exception $e) {
 			// If the error is about project_type column not existing, try again without it
 			if (strpos($e->getMessage(), 'project_type') !== false || strpos($e->getMessage(), 'Unknown column') !== false) {
@@ -570,7 +571,7 @@ class ProjectService
 				}
 
 				$qb->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
-				$qb->execute();
+				$qb->executeStatement();
 			} else {
 				// Re-throw if it's a different error
 				throw $e;
@@ -610,19 +611,19 @@ class ProjectService
 			$qb = $this->db->getQueryBuilder();
 			$qb->delete('time_entries')
 				->where($qb->expr()->eq('project_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
-			$qb->execute();
+			$qb->executeStatement();
 
 			// Delete project team members
 			$qb = $this->db->getQueryBuilder();
 			$qb->delete('project_members')
 				->where($qb->expr()->eq('project_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
-			$qb->execute();
+			$qb->executeStatement();
 
 			// Delete the project itself
 			$qb = $this->db->getQueryBuilder();
 			$qb->delete('projects')
 				->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
-			$qb->execute();
+			$qb->executeStatement();
 
 			// Commit transaction
 			$this->db->commit();
@@ -812,7 +813,7 @@ class ProjectService
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
 			->orderBy('p.created_at', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$projects = [];
 
 		while ($row = $result->fetch()) {
@@ -838,7 +839,7 @@ class ProjectService
 			->where($qb->expr()->eq('p.created_by', $qb->createNamedParameter($userId)))
 			->orderBy('p.created_at', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$projects = [];
 
 		while ($row = $result->fetch()) {
@@ -863,7 +864,7 @@ class ProjectService
 			->leftJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
 			->orderBy('p.created_at', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$projects = [];
 
 		while ($row = $result->fetch()) {
@@ -934,7 +935,7 @@ class ProjectService
 				'assigned_by' => $qb->createNamedParameter($member->getAssignedBy()),
 			]);
 
-		$qb->execute();
+		$qb->executeStatement();
 		$member->setId($this->db->lastInsertId('project_members'));
 
 		return $member;
@@ -962,7 +963,7 @@ class ProjectService
 				$qb->expr()->eq('user_id', $qb->createNamedParameter($userId))
 			));
 
-		$qb->execute();
+		$qb->executeStatement();
 
 		return true;
 	}
@@ -981,7 +982,7 @@ class ProjectService
 			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)))
 			->orderBy('role', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$members = [];
 
 		while ($row = $result->fetch()) {
@@ -1010,7 +1011,7 @@ class ProjectService
 				$qb->expr()->eq('user_id', $qb->createNamedParameter($userId))
 			));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$row = $result->fetch();
 		$result->closeCursor();
 
@@ -1066,7 +1067,7 @@ class ProjectService
 			->set('updated_at', $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')))
 			->where($qb->expr()->eq('id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
 
-		$qb->execute();
+		$qb->executeStatement();
 
 		$project->setStatus($newStatus);
 		$project->setUpdatedAt(new \DateTime());
@@ -1106,7 +1107,7 @@ class ProjectService
 				$qb->expr()->eq('user_id', $qb->createNamedParameter($userId))
 			));
 
-		$qb->execute();
+		$qb->executeStatement();
 
 		$member->setRole($newRole);
 
@@ -1130,7 +1131,7 @@ class ProjectService
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
 			->orderBy('p.created_at', 'DESC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$projects = [];
 
 		while ($row = $result->fetch()) {
@@ -1157,7 +1158,7 @@ class ProjectService
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($managerId)))
 			->andWhere($qb->expr()->eq('pm.role', $qb->createNamedParameter('Project Manager')));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$managedProjects = [];
 
 		while ($row = $result->fetch()) {
@@ -1179,7 +1180,7 @@ class ProjectService
 			->andWhere($qb->expr()->neq('pm.user_id', $qb->createNamedParameter($managerId)))
 			->orderBy('pm.user_id', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$teamMembers = [];
 
 		while ($row = $result->fetch()) {
@@ -1259,8 +1260,11 @@ class ProjectService
 			isset($data['start_date']) && !empty($data['start_date']) &&
 			isset($data['end_date']) && !empty($data['end_date'])
 		) {
-			$startDate = new \DateTime($data['start_date']);
-			$endDate = new \DateTime($data['end_date']);
+			$startDate = SafeDateTime::fromOptional($data['start_date']);
+			$endDate = SafeDateTime::fromOptional($data['end_date']);
+			if ($startDate === null || $endDate === null) {
+				throw new \Exception('Invalid start or end date');
+			}
 			if ($endDate <= $startDate) {
 				throw new \Exception('End date must be after start date');
 			}
@@ -1303,13 +1307,13 @@ class ProjectService
 		$project->setCategory($row['category']);
 		$project->setPriority($row['priority']);
 		$project->setStatus($row['status']);
-		$project->setStartDate($row['start_date'] ? new \DateTime($row['start_date']) : null);
-		$project->setEndDate($row['end_date'] ? new \DateTime($row['end_date']) : null);
+		$project->setStartDate(SafeDateTime::fromOptional($row['start_date'] ?? null));
+		$project->setEndDate(SafeDateTime::fromOptional($row['end_date'] ?? null));
 		$project->setTags($row['tags']);
 		$project->setProjectType($row['project_type'] ?? 'client');
 		$project->setCreatedBy($row['created_by']);
-		$project->setCreatedAt(new \DateTime($row['created_at']));
-		$project->setUpdatedAt(new \DateTime($row['updated_at']));
+		$project->setCreatedAt(SafeDateTime::fromRequired($row['created_at'] ?? null, 'projects.created_at'));
+		$project->setUpdatedAt(SafeDateTime::fromRequired($row['updated_at'] ?? null, 'projects.updated_at'));
 
 		return $project;
 	}
@@ -1331,7 +1335,7 @@ class ProjectService
 				->where($qb->expr()->eq('type', $qb->createNamedParameter('table')))
 				->andWhere($qb->expr()->eq('name', $qb->createNamedParameter($table)));
 
-			$result = $qb->execute();
+			$result = $qb->executeQuery();
 			$row = $result->fetch();
 			$result->closeCursor();
 
@@ -1351,7 +1355,7 @@ class ProjectService
 				$qb->select($column)
 					->from($table)
 					->setMaxResults(1);
-				$result = $qb->execute();
+				$result = $qb->executeQuery();
 				$result->closeCursor();
 				return true;
 			} catch (\Exception $e2) {
@@ -1374,7 +1378,7 @@ class ProjectService
 		$member->setUserId($row['user_id']);
 		$member->setRole($row['role']);
 		$member->setHourlyRate($row['hourly_rate']);
-		$member->setAssignedAt(new \DateTime($row['assigned_at']));
+		$member->setAssignedAt(SafeDateTime::fromRequired($row['assigned_at'] ?? null, 'project_members.assigned_at'));
 		$member->setAssignedBy($row['assigned_by']);
 
 		return $member;
@@ -1429,7 +1433,7 @@ class ProjectService
 		$qb->select($qb->createFunction('COUNT(*)'))
 			->from('projects');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$count = $result->fetchOne();
 		$result->closeCursor();
 
@@ -1465,7 +1469,7 @@ class ProjectService
 
 		try {
 			return new \DateTime($isoDate);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			return null;
 		}
 	}

@@ -59,7 +59,7 @@ class DeletionService
         $qb->select($qb->createFunction('COUNT(*)'))
             ->from('projects')
             ->where($qb->expr()->eq('customer_id', $qb->createNamedParameter($customerId, IQueryBuilder::PARAM_INT)));
-        $projectsCount = (int) $qb->execute()->fetchOne();
+        $projectsCount = (int) $qb->executeQuery()->fetchOne();
 
         // Count time entries across all projects of this customer
         $qb = $this->db->getQueryBuilder();
@@ -67,7 +67,7 @@ class DeletionService
             ->from('time_entries', 't')
             ->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
             ->where($qb->expr()->eq('p.customer_id', $qb->createNamedParameter($customerId, IQueryBuilder::PARAM_INT)));
-        $timeEntriesCount = (int) $qb->execute()->fetchOne();
+        $timeEntriesCount = (int) $qb->executeQuery()->fetchOne();
 
         // Count project members across projects of the customer
         $qb = $this->db->getQueryBuilder();
@@ -75,7 +75,7 @@ class DeletionService
             ->from('project_members', 'pm')
             ->innerJoin('pm', 'projects', 'p2', $qb->expr()->eq('pm.project_id', 'p2.id'))
             ->where($qb->expr()->eq('p2.customer_id', $qb->createNamedParameter($customerId, IQueryBuilder::PARAM_INT)));
-        $membersCount = (int) $qb->execute()->fetchOne();
+        $membersCount = (int) $qb->executeQuery()->fetchOne();
 
         return [
             'projects' => $projectsCount,
@@ -124,7 +124,7 @@ class DeletionService
                 $qb->update('projects')
                     ->set('customer_id', $qb->createNamedParameter($reassignCustomerId, IQueryBuilder::PARAM_INT))
                     ->where($qb->expr()->eq('customer_id', $qb->createNamedParameter($customerId, IQueryBuilder::PARAM_INT)));
-                $qb->execute();
+                $qb->executeStatement();
 
                 // Now delete original customer
                 $customer = $this->customerMapper->find($customerId);
@@ -148,7 +148,7 @@ class DeletionService
                 $qb = $this->db->getQueryBuilder();
                 $qb->select('id')->from('projects')
                     ->where($qb->expr()->eq('customer_id', $qb->createNamedParameter($customerId, IQueryBuilder::PARAM_INT)));
-                $result = $qb->execute();
+                $result = $qb->executeQuery();
                 while ($row = $result->fetch()) {
                     $this->projectService->deleteProject((int) $row['id']);
                 }
@@ -181,14 +181,14 @@ class DeletionService
         $qb->select($qb->createFunction('COUNT(*)'))
             ->from('time_entries')
             ->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
-        $timeEntriesCount = (int) $qb->execute()->fetchOne();
+        $timeEntriesCount = (int) $qb->executeQuery()->fetchOne();
 
         // Count project members
         $qb = $this->db->getQueryBuilder();
         $qb->select($qb->createFunction('COUNT(*)'))
             ->from('project_members')
             ->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
-        $membersCount = (int) $qb->execute()->fetchOne();
+        $membersCount = (int) $qb->executeQuery()->fetchOne();
 
         // Get project details for context
         $project = $this->projectMapper->find($projectId);
@@ -233,7 +233,7 @@ class DeletionService
             $qb = $this->db->getQueryBuilder();
             $qb->delete('projects')
                 ->where($qb->expr()->eq('id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
-            $qb->execute();
+            $qb->executeStatement();
             return true;
         }
 
@@ -267,7 +267,7 @@ class DeletionService
             ->from('time_entries')
             ->where($qb->expr()->eq('id', $qb->createNamedParameter($entryId, IQueryBuilder::PARAM_INT)));
 
-        $result = $qb->execute();
+        $result = $qb->executeQuery();
         $row = $result->fetch();
         $result->closeCursor();
 

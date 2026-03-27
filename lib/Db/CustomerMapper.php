@@ -154,7 +154,7 @@ class CustomerMapper extends QBMapper
 			$qb->andWhere($qb->expr()->eq('created_by', $qb->createNamedParameter($filters['created_by'])));
 		}
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$count = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -173,7 +173,7 @@ class CustomerMapper extends QBMapper
 			->from($this->getTableName(), 'c')
 			->innerJoin('c', 'projects', 'p', $qb->expr()->eq('c.id', 'p.customer_id'));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$count = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -199,7 +199,7 @@ class CustomerMapper extends QBMapper
 				$qb->expr()->neq('contact_person', $qb->createNamedParameter(''))
 			));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$count = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -219,7 +219,7 @@ class CustomerMapper extends QBMapper
 			->from('projects')
 			->where($qb->expr()->eq('customer_id', $qb->createNamedParameter($customerId)));
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$count = $result->fetchColumn();
 		$result->closeCursor();
 
@@ -240,7 +240,7 @@ class CustomerMapper extends QBMapper
 			->groupBy('c.id')
 			->orderBy('c.name', 'ASC');
 
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 		$customers = [];
 		while ($row = $result->fetch()) {
 			$customer = $this->mapRowToEntity($row);
