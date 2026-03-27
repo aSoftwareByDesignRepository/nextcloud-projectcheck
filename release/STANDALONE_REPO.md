@@ -2,6 +2,8 @@
 
 Develop in the **Nextcloud monorepo** (`nextcloud-dev`), publish **source + releases** from a **dedicated public repo**, same idea as **ArbeitszeitCheck** / `ArbeitszeitCheck`.
 
+**Convenience script** (from monorepo root): `scripts/push-public-app-subtree.sh projectcheck aSoftwareByDesignRepository/nextcloud-projectcheck` — runs `git subtree split` and pushes to `main`.
+
 Suggested remote (adjust org/name if you prefer):
 
 | | |
@@ -9,7 +11,7 @@ Suggested remote (adjust org/name if you prefer):
 | **Public repo** | `aSoftwareByDesignRepository/nextcloud-projectcheck` |
 | **Clone URL** | `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck.git` |
 
-`appinfo/info.xml` may still list **`nextcloud-projectcontroll`** (monorepo-style URL). After the dedicated repo exists, update **`<repository>`** and **`<bugs>`** to the **`nextcloud-projectcheck`** URLs so the App Store and users point at the right place.
+**`appinfo/info.xml`** should list **`nextcloud-projectcheck`** for **`<repository>`** and **`<bugs>`** (App Store and clone URLs).
 
 Create an **empty** repository on GitHub (no README/license if you want a clean first push from subtree; or keep README and merge carefully).
 

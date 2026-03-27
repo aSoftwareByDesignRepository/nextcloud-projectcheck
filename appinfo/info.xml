@@ -27,8 +27,8 @@
 	<category>organization</category>
 
 	<website>https://software-by-design.de</website>
-	<bugs>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcontroll/issues</bugs>
-	<repository>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcontroll.git</repository>
+	<bugs>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues</bugs>
+	<repository>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck.git</repository>
 
 	<dependencies>
 		<!-- Compatible with Nextcloud 32+ through current stable (see release notes) -->
