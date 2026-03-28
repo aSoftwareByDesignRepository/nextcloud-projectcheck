@@ -1,6 +1,6 @@
 # Release folder (ProjectCheck)
 
-This directory holds **release documentation** for the **public ProjectCheck app repository** workflow (same pattern as ArbeitszeitCheck).
+This directory holds **release documentation** for the **ProjectCheck** standalone app repository workflow (`nextcloud-projectcheck`, **private** — see monorepo `ready2publish/REPOSITORY-LAYOUT.md`).
 
 | File | Purpose |
 |------|---------|

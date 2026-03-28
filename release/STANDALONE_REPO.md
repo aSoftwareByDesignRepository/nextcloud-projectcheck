@@ -1,6 +1,6 @@
 # Standalone repository: ProjectCheck
 
-Develop in the **Nextcloud monorepo** (`nextcloud-dev`), publish **source + releases** from a **dedicated public repo**, same idea as **ArbeitszeitCheck** / `ArbeitszeitCheck`.
+Develop in the **Nextcloud monorepo** (canonical GitHub name **`nextcloud-development`**; local clone folder may differ, e.g. `nextcloud-dev`). Publish **source + releases** from the **dedicated private** standalone repo **`nextcloud-projectcheck`** — same subtree workflow as the other apps; visibility policy: [REPOSITORY-LAYOUT.md](../../../ready2publish/REPOSITORY-LAYOUT.md).
 
 **Convenience script** (from monorepo root): `scripts/push-public-app-subtree.sh projectcheck aSoftwareByDesignRepository/nextcloud-projectcheck` — runs `git subtree split` and pushes to `main`.
 
@@ -8,10 +8,10 @@ Suggested remote (adjust org/name if you prefer):
 
 | | |
 |--|--|
-| **Public repo** | `aSoftwareByDesignRepository/nextcloud-projectcheck` |
-| **Clone URL** | `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck.git` |
+| **Standalone repo** | `aSoftwareByDesignRepository/nextcloud-projectcheck` (private) |
+| **Clone URL** | `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck.git` (requires access) |
 
-**`appinfo/info.xml`** should list **`nextcloud-projectcheck`** for **`<repository>`** and **`<bugs>`** (App Store and clone URLs).
+**`appinfo/info.xml`** should list **`nextcloud-projectcheck`** for **`<repository>`** and **`<bugs>`**.
 
 Create an **empty** repository on GitHub (no README/license if you want a clean first push from subtree; or keep README and merge carefully).
 
@@ -22,7 +22,7 @@ Create an **empty** repository on GitHub (no README/license if you want a clean 
 From the **monorepo root** (parent of `apps/`):
 
 ```bash
-cd /path/to/nextcloud-dev
+cd /path/to/nextcloud-development
 
 # SSH or HTTPS — your choice
 git remote add projectcheck-public git@github.com:aSoftwareByDesignRepository/nextcloud-projectcheck.git
@@ -36,7 +36,7 @@ git remote add projectcheck-public git@github.com:aSoftwareByDesignRepository/ne
 This publishes **only** `apps/projectcheck/` history to the default branch of `projectcheck-public` (usually `main`).
 
 ```bash
-cd /path/to/nextcloud-dev
+cd /path/to/nextcloud-development
 git subtree push --prefix=apps/projectcheck projectcheck-public main
 ```
 
@@ -46,7 +46,7 @@ git subtree push --prefix=apps/projectcheck projectcheck-public main
 ### Variant: split to a branch, then push (more control)
 
 ```bash
-cd /path/to/nextcloud-dev
+cd /path/to/nextcloud-development
 git subtree split --prefix=apps/projectcheck -b split-projectcheck
 git push projectcheck-public split-projectcheck:main --force
 # optional: delete local branch
@@ -59,7 +59,7 @@ Use `--force` only when you intend to replace the remote history (e.g. empty rep
 
 ## After monorepo changes
 
-Whenever you want the public repo to match the monorepo’s `apps/projectcheck`:
+Whenever you want the standalone repo to match the monorepo’s `apps/projectcheck`:
 
 1. Commit and push your work on **`master`** (or your main branch) in the monorepo.
 2. Run **`git subtree push`** again (same command as above).

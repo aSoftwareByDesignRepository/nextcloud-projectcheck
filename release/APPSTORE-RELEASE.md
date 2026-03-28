@@ -24,7 +24,7 @@ Replace `X.Y.Z` with the real version (e.g. `2.0.21`).
 
 ## 2. Build the installable `.tar.gz`
 
-From the repo root that contains `apps/projectcheck` (here: `nextcloud-dev/apps/`):
+From the repo root that contains `apps/projectcheck` (here: `nextcloud-development/apps/`; local folder name may differ):
 
 ```bash
 cd apps
@@ -100,14 +100,14 @@ Submit; fix any validation errors (wrong checksum/signature almost always means 
 
 ---
 
-## 7. GitHub release — **public app repo only**
+## 7. GitHub release — **standalone app repo** (not the monorepo)
 
-User-facing downloads and release tags belong on the **standalone app repository**, not on the private Nextcloud monorepo.
+Release tags and assets belong on **`nextcloud-projectcheck`**, not on the private development monorepo. Visibility: **private** app repo — see [REPOSITORY-LAYOUT.md](../../../ready2publish/REPOSITORY-LAYOUT.md).
 
 | Repository | Role |
 |------------|------|
-| **This workspace** (`nextcloud-dev`, …) | Day-to-day development; **do not** create product releases here unless you explicitly want a monorepo release. |
-| **`aSoftwareByDesignRepository/nextcloud-projectcheck`** | **Public** ProjectCheck repo — tags, GitHub Releases, and the `.tar.gz` asset users expect. |
+| **This workspace** (`nextcloud-development` or e.g. `nextcloud-dev`, …) | Day-to-day development; **do not** create product releases here unless you explicitly want a monorepo release. |
+| **`aSoftwareByDesignRepository/nextcloud-projectcheck`** | **Private** ProjectCheck repo — tags, GitHub Releases, and the `.tar.gz` asset (App Store workflow). |
 
 **Canonical GitHub repo for releases**
 
@@ -128,7 +128,7 @@ From `apps/projectcheck/release` after building `projectcheck-${VERSION}.tar.gz`
 
 ```bash
 VERSION=X.Y.Z
-cd /path/to/nextcloud-dev/apps/projectcheck/release
+cd /path/to/nextcloud-development/apps/projectcheck/release
 
 gh release create "v${VERSION}" \
   --repo aSoftwareByDesignRepository/nextcloud-projectcheck \
@@ -147,7 +147,7 @@ gh release upload "v${VERSION}" "projectcheck-${VERSION}.tar.gz" \
 
 ### Source code on GitHub
 
-Publishing the **tarball** does not push git history. To publish app sources to the public repo, use [STANDALONE_REPO.md](./STANDALONE_REPO.md) (`git subtree push`).
+Publishing the **tarball** does not push git history. To publish app sources to the standalone repo, use [STANDALONE_REPO.md](./STANDALONE_REPO.md) (`git subtree push`).
 
 ---
 
