@@ -377,7 +377,7 @@ Util::addStyle('projectcheck', 'navigation');
                     <input type="text" id="time-entry-search" class="search-input"
                         placeholder="<?php p($l->t('Search descriptions, projects, or customers...')); ?>"
                         value="<?php p($filters['search'] ?? ''); ?>">
-                    <span class="search-icon">🔍</span>
+                    <span class="search-icon" aria-hidden="true">🔍</span>
                 </div>
 
                 <!-- Filter Controls -->
@@ -414,16 +414,16 @@ Util::addStyle('projectcheck', 'navigation');
                         <label for="time-entry-project-type-filter" class="filter-label"><?php p($l->t('Project Type')); ?></label>
                         <select id="time-entry-project-type-filter" class="filter-select">
                             <option value=""><?php p($l->t('All Types')); ?></option>
-                            <option value="client" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'client') echo 'selected'; ?>>👥 <?php p($l->t('Client Project')); ?></option>
-                            <option value="admin" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'admin') echo 'selected'; ?>>⚙️ <?php p($l->t('Administrative')); ?></option>
-                            <option value="sales" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'sales') echo 'selected'; ?>>📈 <?php p($l->t('Sales & Marketing')); ?></option>
-                            <option value="customer" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'customer') echo 'selected'; ?>>🎧 <?php p($l->t('Customer Support')); ?></option>
-                            <option value="product" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'product') echo 'selected'; ?>>💻 <?php p($l->t('Product Development')); ?></option>
-                            <option value="meeting" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'meeting') echo 'selected'; ?>>🤝 <?php p($l->t('Meetings & Overhead')); ?></option>
-                            <option value="internal" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'internal') echo 'selected'; ?>>🏢 <?php p($l->t('Internal Project')); ?></option>
-                            <option value="research" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'research') echo 'selected'; ?>>🔬 <?php p($l->t('Research & Development')); ?></option>
-                            <option value="training" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'training') echo 'selected'; ?>>🎓 <?php p($l->t('Training & Education')); ?></option>
-                            <option value="other" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'other') echo 'selected'; ?>>📋 <?php p($l->t('Other')); ?></option>
+                            <option value="client" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'client') echo 'selected'; ?>><?php p($l->t('Client Project')); ?></option>
+                            <option value="admin" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'admin') echo 'selected'; ?>><?php p($l->t('Administrative')); ?></option>
+                            <option value="sales" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'sales') echo 'selected'; ?>><?php p($l->t('Sales & Marketing')); ?></option>
+                            <option value="customer" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'customer') echo 'selected'; ?>><?php p($l->t('Customer Support')); ?></option>
+                            <option value="product" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'product') echo 'selected'; ?>><?php p($l->t('Product Development')); ?></option>
+                            <option value="meeting" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'meeting') echo 'selected'; ?>><?php p($l->t('Meetings & Overhead')); ?></option>
+                            <option value="internal" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'internal') echo 'selected'; ?>><?php p($l->t('Internal Project')); ?></option>
+                            <option value="research" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'research') echo 'selected'; ?>><?php p($l->t('Research & Development')); ?></option>
+                            <option value="training" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'training') echo 'selected'; ?>><?php p($l->t('Training & Education')); ?></option>
+                            <option value="other" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'other') echo 'selected'; ?>><?php p($l->t('Other')); ?></option>
                         </select>
                     </div>
 
@@ -465,15 +465,15 @@ Util::addStyle('projectcheck', 'navigation');
                 <!-- Action Buttons -->
                 <div class="filter-actions">
                     <button id="apply-filters" class="btn btn-primary">
-                        <span class="btn-icon">🔍</span>
+                        <span class="btn-icon" aria-hidden="true">🔍</span>
                         <?php p($l->t('Apply Filters')); ?>
                     </button>
                     <button id="clear-filters" class="btn btn-secondary">
-                        <span class="btn-icon">🔄</span>
+                        <span class="btn-icon" aria-hidden="true">🔄</span>
                         <?php p($l->t('Reset Filters')); ?>
                     </button>
                     <button id="export-csv" class="btn btn-primary">
-                        <span class="btn-icon">📊</span>
+                        <span class="btn-icon" aria-hidden="true">📊</span>
                         <?php p($l->t('Export')); ?>
                     </button>
                 </div>
@@ -518,11 +518,11 @@ Util::addStyle('projectcheck', 'navigation');
                             <tr id="no-results-row" style="display: none;">
                                 <td colspan="8">
                                     <div class="no-results-message">
-                                        <div class="no-results-icon">🔍</div>
+                                        <div class="no-results-icon" aria-hidden="true">🔍</div>
                                         <h3><?php p($l->t('No time entries match your filters')); ?></h3>
                                         <p><?php p($l->t('Try adjusting your search criteria or clear the filters to see all entries.')); ?></p>
                                         <button id="clear-filters-inline" class="btn btn-secondary">
-                                            <span class="btn-icon">🔄</span>
+                                            <span class="btn-icon" aria-hidden="true">🔄</span>
                                             <?php p($l->t('Reset Filters')); ?>
                                         </button>
                                     </div>
@@ -644,132 +644,4 @@ Util::addStyle('projectcheck', 'navigation');
         </div>
     </div>
 </div>
-
-<script nonce="<?php p($_['cspNonce']) ?>">
-    // Local SVG icon library
-    const svgIcons = {
-        'pie-chart': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
-        clock: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>',
-        euro: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.25.5-2.5 1.5-3.5Z"/></svg>'
-    };
-
-    // Initialize icons
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('[data-lucide]').forEach(function(el) {
-            const iconName = el.getAttribute('data-lucide');
-            if (svgIcons[iconName]) {
-                el.innerHTML = svgIcons[iconName];
-            }
-        });
-    });
-
-        <!-- Project Type Statistics -->
-        <?php if (!empty($_['projectTypeStats'])): ?>
-            <div class="section project-type-stats-section compact">
-                <div class="section-header">
-                    <h3><i data-lucide="pie-chart" class="lucide-icon"></i> <?php p($l->t('Project Type Analysis')); ?></h3>
-                </div>
-                <div class="section-content">
-                    <div class="project-type-stats-compact">
-                        <?php foreach ($_['projectTypeStats'] as $year => $yearData): ?>
-                            <div class="year-section-compact">
-                                <div class="year-header-compact">
-                                    <h4><?php p($year); ?></h4>
-                                    <?php
-                                    $yearTotalHours = array_sum(array_column($yearData, 'total_hours'));
-                                    $yearTotalCost = array_sum(array_column($yearData, 'total_cost'));
-                                    ?>
-                                    <div class="year-summary-compact">
-                                        <span class="summary-item-compact">
-                                            <i data-lucide="clock" class="lucide-icon"></i>
-                                            <?php p(number_format($yearTotalHours, 1)); ?>h
-                                        </span>
-                                        <span class="summary-item-compact">
-                                            <i data-lucide="euro" class="lucide-icon"></i>
-                                            €<?php p(number_format($yearTotalCost, 2)); ?>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="project-types-table">
-                                    <table class="compact-table">
-                                        <thead>
-                                            <tr>
-                                                <th><?php p($l->t('Type')); ?></th>
-                                                <th><?php p($l->t('Hours')); ?></th>
-                                                <th><?php p($l->t('Cost')); ?></th>
-                                                <th><?php p($l->t('Entries')); ?></th>
-                                                <th><?php p($l->t('Hours Share')); ?></th>
-                                                <th><?php p($l->t('Cost Share')); ?></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($yearData as $projectType => $typeData): ?>
-                                                <tr>
-                                                    <td class="type-cell">
-                                                        <?php
-                                                        $displayNames = [
-                                                            'client' => $l->t('Client Project'),
-                                                            'admin' => $l->t('Administrative'),
-                                                            'sales' => $l->t('Sales & Marketing'),
-                                                            'customer' => $l->t('Customer Support'),
-                                                            'product' => $l->t('Product Development'),
-                                                            'meeting' => $l->t('Meetings & Overhead'),
-                                                            'internal' => $l->t('Internal Project'),
-                                                            'research' => $l->t('Research & Development'),
-                                                            'training' => $l->t('Training & Education'),
-                                                            'other' => $l->t('Other')
-                                                        ];
-
-                                                        // Icon mapping for project types (same as in main table)
-                                                        $iconMapping = [
-                                                            'client' => '👥',
-                                                            'admin' => '⚙️',
-                                                            'sales' => '📈',
-                                                            'customer' => '🎧',
-                                                            'product' => '💻',
-                                                            'meeting' => '🤝',
-                                                            'internal' => '🏢',
-                                                            'research' => '🔬',
-                                                            'training' => '🎓',
-                                                            'other' => '📋'
-                                                        ];
-
-                                                        $displayName = $displayNames[$projectType] ?? ucfirst($projectType);
-                                                        $icon = $iconMapping[$projectType] ?? '📋';
-                                                        ?>
-                                                        <div class="project-type-display">
-                                                            <span class="project-type-icon"
-                                                                data-project-type="<?php p($projectType); ?>"
-                                                                title="<?php p($displayName); ?>">
-                                                                <?php p($icon); ?>
-                                                            </span>
-                                                            <span class="project-type-text"><?php p($displayName); ?></span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="stat-cell"><?php p(number_format($typeData['total_hours'], 1)); ?>h</td>
-                                                    <td class="stat-cell">€<?php p(number_format($typeData['total_cost'], 2)); ?></td>
-                                                    <td class="stat-cell"><?php p($typeData['entry_count']); ?></td>
-                                                    <td class="percentage-cell">
-                                                        <div class="percentage-bar">
-                                                            <div class="percentage-fill" style="width: <?php p($yearTotalHours > 0 ? ($typeData['total_hours'] / $yearTotalHours) * 100 : 0); ?>%"></div>
-                                                            <span class="percentage-text"><?php p($yearTotalHours > 0 ? round(($typeData['total_hours'] / $yearTotalHours) * 100, 1) : 0); ?>%</span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="percentage-cell">
-                                                        <div class="percentage-bar">
-                                                            <div class="percentage-fill" style="width: <?php p($yearTotalCost > 0 ? ($typeData['total_cost'] / $yearTotalCost) * 100 : 0); ?>%"></div>
-                                                            <span class="percentage-text"><?php p($yearTotalCost > 0 ? round(($typeData['total_cost'] / $yearTotalCost) * 100, 1) : 0); ?>%</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
 

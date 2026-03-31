@@ -104,8 +104,8 @@ class ProjectService
 		$defaultPriority = $this->config->getUserValue($userId, 'projectcheck', 'default_project_priority', 'Medium');
 
 		// Calculate available hours from budget and rate (if provided)
-		$hourlyRate = $data['hourly_rate'] ?? floatval($defaultHourlyRate);
-		$totalBudget = $data['total_budget'] ?? 0;
+		$hourlyRate = isset($data['hourly_rate']) && $data['hourly_rate'] !== '' ? (float)$data['hourly_rate'] : (float)$defaultHourlyRate;
+		$totalBudget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float)$data['total_budget'] : 0.0;
 
 		if ($hourlyRate > 0 && $totalBudget > 0) {
 			$availableHours = $this->calculator->calculateAvailableHours($totalBudget, $hourlyRate);
@@ -448,8 +448,8 @@ class ProjectService
 
 		// Recalculate available hours if budget or rate changed
 		if (isset($data['total_budget']) || isset($data['hourly_rate'])) {
-			$budget = $data['total_budget'] ?? $project->getTotalBudget();
-			$rate = $data['hourly_rate'] ?? $project->getHourlyRate();
+			$budget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float)$data['total_budget'] : (float)$project->getTotalBudget();
+			$rate = isset($data['hourly_rate']) && $data['hourly_rate'] !== '' ? (float)$data['hourly_rate'] : (float)$project->getHourlyRate();
 
 			if ($budget > 0 && $rate > 0) {
 				$data['available_hours'] = $this->calculator->calculateAvailableHours($budget, $rate);
@@ -1249,7 +1249,7 @@ class ProjectService
 			isset($data['hourly_rate']) && !empty($data['hourly_rate']) &&
 			isset($data['total_budget']) && !empty($data['total_budget'])
 		) {
-			$availableHours = $this->calculator->calculateAvailableHours($data['total_budget'], $data['hourly_rate']);
+			$availableHours = $this->calculator->calculateAvailableHours((float)$data['total_budget'], (float)$data['hourly_rate']);
 			if ($availableHours < 0.5) {
 				throw new \Exception('Budget too low for the specified hourly rate');
 			}

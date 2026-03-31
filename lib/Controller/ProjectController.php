@@ -333,6 +333,10 @@ class ProjectController extends Controller
 			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Project not found')], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
+		if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
+			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Access denied')], 'guest');
+			return $this->configureCSP($response, 'guest');
+		}
 
 		// Get additional project data
 		$teamMembers = $this->projectService->getProjectTeam($id);
@@ -421,7 +425,9 @@ class ProjectController extends Controller
 				return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
 			}
 
-			// No access restrictions for viewing budget info
+			if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
+				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+			}
 
 			$budgetInfo = $this->budgetService->getProjectBudgetInfo($project, $user->getUID());
 
@@ -475,6 +481,9 @@ class ProjectController extends Controller
 			if (!$project) {
 				return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
 			}
+			if (!$this->projectService->canUserAccessProject($user->getUID(), $projectId)) {
+				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+			}
 
 			$impact = $this->budgetService->checkTimeEntryBudgetImpact($project, $additionalHours, $additionalRate);
 
@@ -511,8 +520,10 @@ class ProjectController extends Controller
 			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Project not found')], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
-
-		// No edit restrictions for now - open access
+		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
+			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Access denied')], 'guest');
+			return $this->configureCSP($response, 'guest');
+		}
 
 		// Get customers for the dropdown
 		$customers = $this->customerService->getCustomersForSelect();
@@ -550,7 +561,12 @@ class ProjectController extends Controller
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
 
-		// No edit restrictions for now - open access
+		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
+			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
+				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			}
+			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
+		}
 
 		// Handle method override for HTML forms
 		$method = $this->request->getMethod();
@@ -608,6 +624,12 @@ class ProjectController extends Controller
 				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
+		}
+		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
+			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
+				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			}
+			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
 		}
 
 		try {
@@ -723,6 +745,12 @@ class ProjectController extends Controller
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
+		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
+			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
+				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			}
+			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
+		}
 
 		try {
 			$status = $this->request->getParam('status');
@@ -761,6 +789,9 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 
 		try {
 			$teamMembers = $this->projectService->getProjectTeam($id);
@@ -787,6 +818,9 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
 		try {
@@ -821,6 +855,9 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 
 		try {
 			$role = $this->request->getParam('role');
@@ -854,6 +891,9 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
 		try {
@@ -993,6 +1033,9 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 
 		try {
 			$project = $this->projectService->getProject($id);
@@ -1026,6 +1069,9 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 
 		try {
 			$data = $this->request->getParams();
@@ -1054,6 +1100,9 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		if (!$this->projectService->canUserDeleteProject($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 
 		try {
 			$this->projectService->deleteProject($id);
@@ -1076,6 +1125,9 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		if (!$this->projectService->canUserDeleteProject($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
 		try {

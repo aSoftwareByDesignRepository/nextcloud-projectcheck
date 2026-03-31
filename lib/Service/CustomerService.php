@@ -155,6 +155,7 @@ class CustomerService
 		if (!$customer) {
 			throw new \Exception('Customer not found');
 		}
+		$originalName = $customer->getName();
 
 		// Update fields if provided
 		if (isset($data['name'])) {
@@ -182,7 +183,7 @@ class CustomerService
 		}
 
 		// Check if name change conflicts with existing customer
-		if (isset($data['name']) && $data['name'] !== $customer->getName()) {
+		if (isset($data['name']) && $data['name'] !== $originalName) {
 			$existingCustomer = $this->customerMapper->findByName($data['name']);
 			if ($existingCustomer && $existingCustomer->getId() !== $id) {
 				throw new \Exception('A customer with this name already exists');
