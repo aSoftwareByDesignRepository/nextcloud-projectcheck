@@ -40,15 +40,21 @@ This runs the PHPUnit **controller** unit suite (`tests/Unit/Controller`). Front
 
 ### Publishing on the Nextcloud App Store
 
-1. **Certificate:** Generate a key and CSR, open a PR on [nextcloud/app-certificate-requests](https://github.com/nextcloud/app-certificate-requests), store `projectcheck.crt` next to your private key under `~/.nextcloud/certificates/`. Official guide: [App Developer Guide — Obtaining a Certificate](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#obtaining-a-certificate).
-2. **Register the app id** once at [apps.nextcloud.com](https://apps.nextcloud.com) (developer account → register app) using your public certificate and the app-id signature from the docs.
-3. **Ship a version:** bump `appinfo/info.xml` and `CHANGELOG.md`, then build and sign the tarball as described in **`release/APPSTORE-RELEASE.md`** (includes `./release/build-appstore-archive.sh` and upload steps).
+The **canonical** steps are the **[App Developer Guide](https://nextcloudappstore.readthedocs.io/en/latest/developer.html)** (App Store docs / Read the Docs): *Obtaining a Certificate* → *Registering an App* → *Uploading an App Release*, plus *App metadata* (`info.xml`, `CHANGELOG.md`) and *Blacklisted files* (archives must not contain `.git/`).
+
+ProjectCheck-specific commands, tarball layout, and GitHub Release notes: **`release/APPSTORE-RELEASE.md`**.
+
+Summary:
+
+1. **Certificate:** [Obtaining a Certificate](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#obtaining-a-certificate) — CSR PR to [nextcloud/app-certificate-requests](https://github.com/nextcloud/app-certificate-requests); keep `~/.nextcloud/certificates/projectcheck.key` private.
+2. **Register app id:** [Registering an App](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#registering-an-app) — paste `projectcheck.crt` and the `echo -n "projectcheck" | openssl dgst …` signature.
+3. **Release:** [Uploading an App Release](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#uploading-an-app-release) — host `projectcheck-X.Y.Z.tar.gz` at an **HTTPS** URL, then submit that URL and the `openssl dgst -sha512 -sign …` signature over the **same** file. Build helpers: `./release/build-appstore-archive.sh`.
 
 **Public OSS source:** point `repository` / `bugs` in `info.xml` at a **public** GitHub repo. From this monorepo, push the app subtree with `scripts/push-public-app-subtree.sh` (see `release/STANDALONE_REPO.md`).
 
 ### Documentation
 
-- **Release workflow** (App Store tarball, signatures, GitHub Releases): `release/APPSTORE-RELEASE.md`
+- **Release workflow** (aligned with the official App Developer Guide): `release/APPSTORE-RELEASE.md`
 - **Syncing this app from a private monorepo** (git subtree): `release/STANDALONE_REPO.md`
 
 ### Project & support

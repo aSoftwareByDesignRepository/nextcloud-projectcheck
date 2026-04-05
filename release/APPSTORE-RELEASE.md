@@ -1,38 +1,75 @@
 # Nextcloud App Store — release workflow (ProjectCheck)
 
-End-to-end steps to produce the **archive**, **checksums**, and **code signature** you need at [apps.nextcloud.com](https://apps.nextcloud.com) (developer account → your app → new version).
+This file is the **ProjectCheck-specific** checklist. The **canonical** procedure is the upstream **App Developer Guide** (same content as the App Store “Search docs” / Read the Docs):
 
-Replace `X.Y.Z` with the real version (e.g. `2.0.22`).
+**[App Developer Guide — Nextcloud App Store](https://nextcloudappstore.readthedocs.io/en/latest/developer.html)**
 
----
+Sections you will use:
 
-## 0. Prerequisites
+| Topic | Anchor |
+|--------|--------|
+| Obtaining a Certificate | [#obtaining-a-certificate](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#obtaining-a-certificate) |
+| Registering an App | [#registering-an-app](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#registering-an-app) |
+| Uploading an App Release | [#uploading-an-app-release](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#uploading-an-app-release) |
+| App Metadata (`info.xml`, `CHANGELOG.md`) | [#app-metadata](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#app-metadata) |
+| Blacklisted Files | [#blacklisted-files](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#blacklisted-files) |
 
-- Registered app and **developer certificate** from Nextcloud (private key on your machine).
-- Default key path used below: `~/.nextcloud/certificates/projectcheck.key` (same basename as app id).
-- This monorepo: build the tarball from **`apps/`** so the archive root is `projectcheck/`.
-
----
-
-## 1. Version and changelog
-
-1. Bump **`appinfo/info.xml`**: `<version>X.Y.Z</version>` and any required `<dependencies>` / `<nextcloud min-version="…" max-version="…"/>`.
-2. Update **`CHANGELOG.md`** (and localized changelog if present) for `X.Y.Z`.
-3. Optionally add **`release/GITHUB_RELEASE_NOTES_X.Y.Z.md`** for GitHub.
+Replace `X.Y.Z` with the real version (e.g. `2.0.22`). App id is **`projectcheck`** (lowercase, matches the top-level folder inside the `.tar.gz`).
 
 ---
 
-## 2. Build the installable `.tar.gz`
+## 1. Obtaining a certificate (upstream steps)
 
-**Recommended (webpack + Composer production deps + correct excludes):** from the **monorepo root** (parent of `apps/`):
+From the guide: store keys under `~/.nextcloud/certificates/`, then generate key + CSR (`CN` must equal the app id):
+
+```bash
+mkdir -p ~/.nextcloud/certificates/
+cd ~/.nextcloud/certificates/
+openssl req -nodes -newkey rsa:4096 -keyout projectcheck.key -out projectcheck.csr -subj "/CN=projectcheck"
+```
+
+Open a **pull request** on [nextcloud/app-certificate-requests](https://github.com/nextcloud/app-certificate-requests) with the contents of **`projectcheck.csr`**. After approval, save the signed public cert as **`projectcheck.crt`** next to **`projectcheck.key`**. Never commit the `.key` file.
+
+---
+
+## 2. Registering the app id (one-time)
+
+After you have **`projectcheck.crt`**, use the [register app](https://apps.nextcloud.com/developer/apps/new) UI (or REST API). The guide asks for:
+
+- **Certificate:** paste **`projectcheck.crt`**
+- **Signature** over the app id (proves you hold the private key):
+
+```bash
+echo -n "projectcheck" | openssl dgst -sha512 -sign ~/.nextcloud/certificates/projectcheck.key | openssl base64
+```
+
+---
+
+## 3. Version, `info.xml`, and `CHANGELOG.md`
+
+1. Bump **`appinfo/info.xml`**: `<version>X.Y.Z</version>` and adjust **`<dependencies><nextcloud …/></dependencies>`** if needed.
+2. Update **`CHANGELOG.md`** at the app root. The store imports changelog from **`CHANGELOG.md`**; the release heading must match the **semantic version** in `info.xml` (see [Changelog](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#changelog) — pattern `## X.Y.Z` / Keep a Changelog).
+3. Optional: **`release/GITHUB_RELEASE_NOTES_X.Y.Z.md`** for GitHub Releases.
+
+---
+
+## 4. Build the installable `.tar.gz`
+
+The uploaded archive must:
+
+- Contain **exactly one** top-level folder named **`projectcheck`** (lowercase ASCII + underscores only).
+- Contain **`projectcheck/appinfo/info.xml`**.
+- **Not** contain **`.git`** ([blacklisted](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#blacklisted-files)).
+
+**Recommended** (monorepo root = parent of `apps/`):
 
 ```bash
 ./apps/projectcheck/release/build-appstore-archive.sh X.Y.Z
 ```
 
-This runs `npm ci`, `npm run build`, `composer install --no-dev`, then packs `projectcheck/` with excludes for `node_modules`, `tests`, prior release tarballs, etc.
+This runs `npm ci`, `npm run build`, `composer install --no-dev`, then packs with excludes for `node_modules`, `tests`, prior release tarballs, etc.
 
-**Manual pack only** (if you already built `dist/` and `vendor/` yourself):
+**Manual pack** (if you already built `dist/` and production `vendor/`):
 
 ```bash
 cd apps
@@ -44,100 +81,63 @@ tar --exclude='projectcheck/node_modules' \
     -czf "projectcheck/release/projectcheck-${VERSION}.tar.gz" projectcheck
 ```
 
-Add more `--exclude=` lines as needed (see monorepo `ready4upload/BUILD_INSTRUCTIONS.txt` for upload-only bundles).
-
-**Do not commit** the tarball (see app `.gitignore`).
+Do **not** commit the tarball (see app `.gitignore`).
 
 ---
 
-## 3. SHA-256 / SHA-512 (app store + checksum file)
+## 5. Host the archive (Download URL)
 
-```bash
-cd apps/projectcheck/release
-sha256sum "projectcheck-${VERSION}.tar.gz"
-sha512sum "projectcheck-${VERSION}.tar.gz"
-```
-
-- The app store form usually asks for **SHA-256** of the uploaded archive.
-- Copy the hashes into **`release/CHECKSUMS-X.Y.Z.txt`** (optional; see ArbeitszeitCheck `CHECKSUMS-*.txt` as template). Only commit the checksums file if you want them in git; the tarball stays **ignored**.
+**Uploading an App Release** expects a **Download** field: an **HTTPS URL** to your **`projectcheck-X.Y.Z.tar.gz`** — the store downloads the file and verifies it. Typical flow: attach the file to a **GitHub Release** on your public app repo and use the **browser download** URL for the asset (see §7).
 
 ---
 
-## 4. Code signature (base64) for the app store
+## 6. Signature + checksums for the release archive
 
-The store expects a **base64-encoded** RSA signature over the **exact** `.tar.gz` bytes (SHA-512 digest signed with your app certificate key).
-
-**One line** (copy output into the store’s signature field):
+**Signature** (sign the **exact** `.tar.gz` bytes you host at the Download URL):
 
 ```bash
 openssl dgst -sha512 -sign ~/.nextcloud/certificates/projectcheck.key \
-  "projectcheck-${VERSION}.tar.gz" | openssl base64 | tr -d '\n'
+  /path/to/projectcheck-X.Y.Z.tar.gz | openssl base64
 ```
 
-If you prefer wrapped output, omit `| tr -d '\n'`.
+(Add `| tr -d '\n'` if the form needs a single line.) If you change the file, regenerate the signature.
 
-**Important:** If you change the tarball or rebuild, **regenerate** the signature.
-
-**Do not commit** the private key or ad-hoc signature dump files.
-
----
-
-## 5. Optional: detached GPG sign the archive
-
-Not required by the app store; useful for mirrors or GitHub releases.
+**Hashes** (for your records; the UI may ask for SHA-256):
 
 ```bash
-gpg --detach-sign --armor "projectcheck-${VERSION}.tar.gz"
+sha256sum projectcheck-X.Y.Z.tar.gz
+sha512sum projectcheck-X.Y.Z.tar.gz
 ```
 
-Produces `projectcheck-X.Y.Z.tar.gz.asc` — **ignored** by git.
+---
+
+## 7. Upload at apps.nextcloud.com
+
+Use [upload app release](https://apps.nextcloud.com/developer/apps/releases/new) (or REST API). Match the guide:
+
+| Field | Typical value |
+|--------|----------------|
+| **Download** | HTTPS URL to `projectcheck-X.Y.Z.tar.gz` |
+| **Nightly** | Only for nightlies |
+| **Signature** | Output of `openssl dgst -sha512 -sign … .tar.gz \| openssl base64` |
+
+Metadata is taken from the archive (`info.xml`, `CHANGELOG.md`) as described under [App metadata](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#app-metadata).
 
 ---
 
-## 6. Upload at apps.nextcloud.com
+## 8. GitHub Release — standalone app repo (not the monorepo)
 
-Typical fields:
-
-| Field | Source |
-|--------|--------|
-| **Archive** | `release/projectcheck-X.Y.Z.tar.gz` |
-| **SHA-256** | From `sha256sum` / `CHECKSUMS-X.Y.Z.txt` |
-| **Signature** | Output of the `openssl dgst … \| openssl base64` command |
-| **Changelog** | Paste from `CHANGELOG.md` (or shortened) |
-
-Submit; fix any validation errors (wrong checksum/signature almost always means a wrong file or stale copy).
-
----
-
-## 7. GitHub release — **standalone app repo** (not the monorepo)
-
-Release tags and assets belong on **`nextcloud-projectcheck`**, not on the private development monorepo. Visibility: **private** app repo — see [REPOSITORY-LAYOUT.md](../../../ready2publish/REPOSITORY-LAYOUT.md).
-
-| Repository | Role |
-|------------|------|
-| **This workspace** (`nextcloud-development` or e.g. `nextcloud-dev`, …) | Day-to-day development; **do not** create product releases here unless you explicitly want a monorepo release. |
-| **`aSoftwareByDesignRepository/nextcloud-projectcheck`** | **Private** ProjectCheck repo — tags, GitHub Releases, and the `.tar.gz` asset (App Store workflow). |
-
-**Canonical GitHub repo for releases**
-
-- `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck`
-- Shorthand for `gh`: `--repo aSoftwareByDesignRepository/nextcloud-projectcheck`
-
-Always pass **`--repo aSoftwareByDesignRepository/nextcloud-projectcheck`** (or set `GH_REPO` once) so `gh` never targets your monorepo remote by mistake.
+Tags and release assets usually live on **`nextcloud-projectcheck`**, not the private dev monorepo. See [REPOSITORY-LAYOUT.md](../../../ready2publish/REPOSITORY-LAYOUT.md).
 
 ```bash
 export GH_REPO=aSoftwareByDesignRepository/nextcloud-projectcheck
 ```
 
-Build the tarball **here** (monorepo `apps/`), then point `gh` at the file with an absolute or correct relative path.
-
-### Create a new GitHub Release (tag + notes + asset)
-
-From `apps/projectcheck/release` after building `projectcheck-${VERSION}.tar.gz`:
+After building `projectcheck-${VERSION}.tar.gz`:
 
 ```bash
 VERSION=X.Y.Z
-cd /path/to/nextcloud-development/apps/projectcheck/release
+cd /path/to/monorepo/apps/projectcheck/release
 
 gh release create "v${VERSION}" \
   --repo aSoftwareByDesignRepository/nextcloud-projectcheck \
@@ -146,7 +146,7 @@ gh release create "v${VERSION}" \
   "projectcheck-${VERSION}.tar.gz"
 ```
 
-If the release **already exists** and you only need to **replace the asset**:
+Replace asset:
 
 ```bash
 gh release upload "v${VERSION}" "projectcheck-${VERSION}.tar.gz" \
@@ -154,9 +154,17 @@ gh release upload "v${VERSION}" "projectcheck-${VERSION}.tar.gz" \
   --clobber
 ```
 
-### Source code on GitHub
+Source sync without tarball history: [STANDALONE_REPO.md](./STANDALONE_REPO.md) (`git subtree push`).
 
-Publishing the **tarball** does not push git history. To publish app sources to the standalone repo, use [STANDALONE_REPO.md](./STANDALONE_REPO.md) (`git subtree push`).
+---
+
+## Optional: GPG-sign the archive
+
+Not required by the store:
+
+```bash
+gpg --detach-sign --armor "projectcheck-${VERSION}.tar.gz"
+```
 
 ---
 
@@ -167,17 +175,15 @@ Publishing the **tarball** does not push git history. To publish app sources to 
 | `README.md`, `APPSTORE-RELEASE.md`, `STANDALONE_REPO.md`, `GITHUB_RELEASE_NOTES_*.md` | Yes |
 | `CHECKSUMS-X.Y.Z.txt` | Optional |
 | `*.tar.gz`, `*.tar.gz.asc` | **No** (gitignored) |
-| `SIGNATURE-*.txt` or local signature dumps | **No** |
-| Private key `*.key` | **Never** in the repo |
+| Private key `*.key` | **Never** |
 
 ---
 
 ## Quick checklist
 
-- [ ] `info.xml` version = `X.Y.Z`
-- [ ] Changelog updated
-- [ ] Tarball built with correct excludes
-- [ ] SHA-256 + SHA-512 recorded; store gets **SHA-256**
-- [ ] OpenSSL base64 signature **from the same tarball file**
-- [ ] Nothing uploaded to git except docs/checksums (no `.tar.gz`, no keys)
-- [ ] GitHub Release (if used): **`gh` with `--repo aSoftwareByDesignRepository/nextcloud-projectcheck`**, not the monorepo
+- [ ] `info.xml` `<version>` = changelog release version = tarball intent
+- [ ] `CHANGELOG.md` has a section for that version
+- [ ] Tarball top folder is **`projectcheck/`** only; **no `.git`**
+- [ ] Download URL is **HTTPS** and points at the **same** file you signed
+- [ ] Release signature is from **`openssl dgst -sha512 -sign … projectcheck-X.Y.Z.tar.gz`**
+- [ ] `gh` release commands use **`--repo aSoftwareByDesignRepository/nextcloud-projectcheck`** when that is your canonical remote
