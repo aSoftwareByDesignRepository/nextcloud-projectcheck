@@ -18,7 +18,7 @@
 		- Real-time budget calculations
 	</description>
 
-	<version>2.0.22</version>
+	<version>2.0.23</version>
 	<licence>AGPL-3.0-or-later</licence>
 	<author mail="info@software-by-design.de" homepage="https://software-by-design.de">Alexander M&#xE4;ule</author>
 
@@ -37,6 +37,35 @@
 		<nextcloud min-version="32" max-version="37"/>
 	</dependencies>
 
+	<!-- HTTPS URLs (same pattern as ArbeitszeitCheck); files live under screenshots/ in the app repo -->
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-01.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-01.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-02.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-02.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-03.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-03.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-04.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-04.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-05.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-05.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-06.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-06.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-07.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-07.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-08.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-08.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-09.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/master/screenshots/projectcheck-screenshot-09.png
+	</screenshot>
+
 	<navigations>
 		<navigation>
 			<name>ProjectCheck</name>
@@ -45,13 +74,6 @@
 			<order>10</order>
 		</navigation>
 	</navigations>
-
-	<screenshots>
-		<screenshot>screenshots/dashboard.png</screenshot>
-		<screenshot>screenshots/projects.png</screenshot>
-		<screenshot>screenshots/time-entries.png</screenshot>
-		<screenshot>screenshots/customers.png</screenshot>
-	</screenshots>
 
 	<keywords>
 		<keyword>project management</keyword>

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.23 - 2026-04-05
+
+### Added
+
+- Nine App Store screenshots (`screenshots/projectcheck-screenshot-01.png` … `09.png`), referenced in `info.xml` with HTTPS `raw.githubusercontent.com` URLs (same pattern as ArbeitszeitCheck).
+
 ## 2.0.22 - 2026-04-05
 
 ### Added
