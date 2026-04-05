@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Routes for the projectcontrol app
+ * Routes for the projectcheck app
  *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
@@ -102,7 +102,5 @@ return [
 		['name' => 'projectmember#getDeletionImpact', 'url' => '/api/project-members/{id}/deletion-impact', 'verb' => 'GET'],
 		['name' => 'projectmember#remove', 'url' => '/api/project-members/{id}/remove', 'verb' => 'DELETE'],
 		['name' => 'projectmember#removePost', 'url' => '/api/project-members/{id}/remove', 'verb' => 'POST'],
-
-		// Test route removed in production
 	],
 ];

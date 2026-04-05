@@ -9,7 +9,7 @@ declare(strict_types=1);
  * @license AGPL-3.0-or-later
  */
 
-namespace OCA\ProjectCheck\Tests\Controller;
+namespace OCA\ProjectCheck\Tests\Unit\Controller;
 
 use OCA\ProjectCheck\Controller\ProjectController;
 use OCA\ProjectCheck\Service\ProjectService;
@@ -35,7 +35,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class ProjectControllerTest
  *
- * @package OCA\ProjectCheck\Tests\Controller
+ * @package OCA\ProjectCheck\Tests\Unit\Controller
  */
 class ProjectControllerTest extends TestCase {
 
@@ -79,6 +79,7 @@ class ProjectControllerTest extends TestCase {
 		$urlGenerator = $this->createMock(IURLGenerator::class);
 		$config = $this->createMock(IConfig::class);
 		$cspService = $this->createMock(CSPService::class);
+		$cspService->method('applyPolicyWithNonce')->willReturnArgument(0);
 
 		$this->controller = new ProjectController(
 			'projectcheck',
@@ -160,6 +161,7 @@ class ProjectControllerTest extends TestCase {
 		$existingProject->setCreatedBy('testuser');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($existingProject);
+		$this->projectService->method('canUserEditProject')->with('testuser', 1)->willReturn(true);
 
 		$updateData = [
 			'name' => 'Updated Project',
@@ -171,7 +173,7 @@ class ProjectControllerTest extends TestCase {
 		$this->request->method('getParams')->willReturn($updateData);
 		$this->request->method('getMethod')->willReturn('PUT');
 		$this->request->method('getParam')->with('_method')->willReturn(null);
-		$this->request->method('getHeader')->with('X-Requested-With')->willReturn(null);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
 
 		$updatedProject = clone $existingProject;
 		$updatedProject->setName('Updated Project');
@@ -204,6 +206,7 @@ class ProjectControllerTest extends TestCase {
 		$project->setName('Test Project');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
 
 		$this->request->method('getParam')
 			->willReturnMap([
@@ -281,13 +284,14 @@ class ProjectControllerTest extends TestCase {
 		$project->setCreatedBy('otheruser');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserEditProject')->with('testuser', 1)->willReturn(true);
 		$this->projectService->method('updateProject')
 			->willThrowException(new \Exception('Access denied'));
 
 		$this->request->method('getParams')->willReturn(['status' => 'Active']);
 		$this->request->method('getMethod')->willReturn('PUT');
 		$this->request->method('getParam')->with('_method')->willReturn(null);
-		$this->request->method('getHeader')->with('X-Requested-With')->willReturn(null);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
 
 		$response = $this->controller->update(1);
 
@@ -311,6 +315,7 @@ class ProjectControllerTest extends TestCase {
 		$project->setName('Test Project');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserAccessProject')->with('testuser', 1)->willReturn(true);
 
 		$teamMembers = [
 			new ProjectMember(),
@@ -343,6 +348,7 @@ class ProjectControllerTest extends TestCase {
 		$project->setStatus('Active');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserEditProject')->with('testuser', 1)->willReturn(true);
 		$this->request->method('getParam')->with('status')->willReturn('On Hold');
 		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
 
@@ -437,8 +443,8 @@ class ProjectControllerTest extends TestCase {
 		$this->assertInstanceOf(TemplateResponse::class, $response);
 		$this->assertEquals('error', $response->getTemplateName());
 
-		$data = $response->getData();
-		$this->assertArrayHasKey('error', $data);
-		$this->assertEquals('User not authenticated', $data['error']);
+		$params = $response->getParams();
+		$this->assertArrayHasKey('error', $params);
+		$this->assertEquals('User not authenticated', $params['error']);
 	}
 }

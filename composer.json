@@ -1,7 +1,7 @@
 {
-	"name": "aSoftwareByDesignRepository/nextcloud-projectcheck",
+	"name": "software-by-design/nextcloud-projectcheck",
 	"description": "IT project management with time tracking and budget control",
-	"type": "library",
+	"type": "project",
 	"license": "AGPL-3.0-or-later",
 	"authors": [
 		{
@@ -10,13 +10,12 @@
 		}
 	],
 	"require": {
-		"php": ">=8.1",
-		"nextcloud/ocp": "^25.0"
+		"php": ">=8.2"
 	},
 	"require-dev": {
-		"phpunit/phpunit": "^9.5",
-		"phpstan/phpstan": "^1.0",
-		"nextcloud/coding-standard": "^5.0"
+		"doctrine/dbal": "^3.9",
+		"nextcloud/ocp": "^32",
+		"phpunit/phpunit": "^9.6"
 	},
 	"autoload": {
 		"psr-4": {
@@ -25,17 +24,14 @@
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"OCA\\ProjectCheck\\Tests\\": "tests/"
+			"OCA\\ProjectCheck\\Tests\\": "tests/",
+			"OCP\\": "vendor/nextcloud/ocp/OCP/",
+			"NCU\\": "vendor/nextcloud/ocp/NCU/"
 		}
 	},
 	"scripts": {
-		"test": "phpunit",
-		"test:unit": "phpunit --testsuite=unit",
-		"test:integration": "phpunit --testsuite=integration",
-		"test:acceptance": "phpunit --testsuite=acceptance",
-		"phpstan": "phpstan analyse",
-		"cs:check": "phpcs",
-		"cs:fix": "phpcbf"
+		"test": "phpunit --testsuite unit",
+		"test:unit": "phpunit --testsuite unit"
 	},
 	"config": {
 		"optimize-autoloader": true,

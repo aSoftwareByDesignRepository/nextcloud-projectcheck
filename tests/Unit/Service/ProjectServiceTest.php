@@ -5,11 +5,13 @@ declare(strict_types=1);
 /**
  * Unit tests for ProjectService
  *
+ * Not added to the default `unit` testsuite in `phpunit.xml` until QueryBuilder / IResult mocks match the current API.
+ *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
  */
 
-namespace OCA\ProjectCheck\Tests\Service;
+namespace OCA\ProjectCheck\Tests\Unit\Service;
 
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Db\Project;
@@ -26,7 +28,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class ProjectServiceTest
  *
- * @package OCA\ProjectControl\Tests\Service
+ * @package OCA\ProjectCheck\Tests\Unit\Service
  */
 class ProjectServiceTest extends TestCase {
 

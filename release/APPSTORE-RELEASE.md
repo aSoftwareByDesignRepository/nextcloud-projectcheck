@@ -2,7 +2,7 @@
 
 End-to-end steps to produce the **archive**, **checksums**, and **code signature** you need at [apps.nextcloud.com](https://apps.nextcloud.com) (developer account → your app → new version).
 
-Replace `X.Y.Z` with the real version (e.g. `2.0.21`).
+Replace `X.Y.Z` with the real version (e.g. `2.0.22`).
 
 ---
 
@@ -24,7 +24,15 @@ Replace `X.Y.Z` with the real version (e.g. `2.0.21`).
 
 ## 2. Build the installable `.tar.gz`
 
-From the repo root that contains `apps/projectcheck` (here: `nextcloud-development/apps/`; local folder name may differ):
+**Recommended (webpack + Composer production deps + correct excludes):** from the **monorepo root** (parent of `apps/`):
+
+```bash
+./apps/projectcheck/release/build-appstore-archive.sh X.Y.Z
+```
+
+This runs `npm ci`, `npm run build`, `composer install --no-dev`, then packs `projectcheck/` with excludes for `node_modules`, `tests`, prior release tarballs, etc.
+
+**Manual pack only** (if you already built `dist/` and `vendor/` yourself):
 
 ```bash
 cd apps
@@ -32,6 +40,7 @@ VERSION=X.Y.Z
 tar --exclude='projectcheck/node_modules' \
     --exclude='projectcheck/.git' \
     --exclude='projectcheck/release/projectcheck-*.tar.gz' \
+    --exclude='projectcheck/tests' \
     -czf "projectcheck/release/projectcheck-${VERSION}.tar.gz" projectcheck
 ```
 

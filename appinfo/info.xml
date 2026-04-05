@@ -18,8 +18,8 @@
 		- Real-time budget calculations
 	</description>
 
-	<version>2.0.21</version>
-	<licence>agpl</licence>
+	<version>2.0.22</version>
+	<licence>AGPL-3.0-or-later</licence>
 	<author>Alexander M&#xE4;ule</author>
 
 	<namespace>ProjectCheck</namespace>
