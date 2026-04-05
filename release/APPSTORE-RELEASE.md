@@ -14,7 +14,9 @@ Sections you will use:
 | App Metadata (`info.xml`, `CHANGELOG.md`) | [#app-metadata](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#app-metadata) |
 | Blacklisted Files | [#blacklisted-files](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#blacklisted-files) |
 
-Replace `X.Y.Z` with the real version (e.g. `2.0.22`). App id is **`projectcheck`** (lowercase, matches the top-level folder inside the `.tar.gz`).
+Replace `X.Y.Z` with the real version (e.g. `2.0.24`). App id is **`projectcheck`** (lowercase, matches the top-level folder inside the `.tar.gz`).
+
+**Repository:** build and release from **[`nextcloud-projectcheck`](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck)** — that GitHub repo contains **only** ProjectCheck. A private monorepo path is optional for some teams (see §4).
 
 ---
 
@@ -61,17 +63,25 @@ The uploaded archive must:
 - Contain **`projectcheck/appinfo/info.xml`**.
 - **Not** contain **`.git`** ([blacklisted](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#blacklisted-files)).
 
-**Recommended** (monorepo root = parent of `apps/`):
+**Recommended — clone of [`nextcloud-projectcheck`](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck)** (app sources at repository root):
+
+```bash
+cd /path/to/nextcloud-projectcheck
+./release/build-appstore-archive.sh X.Y.Z
+```
+
+**Same script from a private monorepo** (app under `apps/projectcheck/`):
 
 ```bash
 ./apps/projectcheck/release/build-appstore-archive.sh X.Y.Z
 ```
 
-This runs `npm ci`, `npm run build`, `composer install --no-dev`, then packs with excludes for `node_modules`, `tests`, prior release tarballs, etc.
+This runs `npm ci`, `npm run build`, `composer install --no-dev`, then packs with excludes for `node_modules`, `tests`, prior release tarballs, etc. The archive always has a top-level **`projectcheck/`** folder (required by the store).
 
 **Manual pack** (if you already built `dist/` and production `vendor/`):
 
 ```bash
+# From monorepo: parent of apps/
 cd apps
 VERSION=X.Y.Z
 tar --exclude='projectcheck/node_modules' \
@@ -125,19 +135,19 @@ Metadata is taken from the archive (`info.xml`, `CHANGELOG.md`) as described und
 
 ---
 
-## 8. GitHub Release — standalone app repo (not the monorepo)
+## 8. GitHub Release — use `nextcloud-projectcheck`
 
-Tags and release assets usually live on **`nextcloud-projectcheck`**, not the private dev monorepo. See [REPOSITORY-LAYOUT.md](../../../ready2publish/REPOSITORY-LAYOUT.md).
+App **tags** and **release assets** (`projectcheck-X.Y.Z.tar.gz`) belong on **[`nextcloud-projectcheck`](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck)** — the public ProjectCheck-only repo — not on a private dev monorepo. Optional layout notes: [REPOSITORY-LAYOUT.md](../../../ready2publish/REPOSITORY-LAYOUT.md) (if present in your monorepo).
 
 ```bash
 export GH_REPO=aSoftwareByDesignRepository/nextcloud-projectcheck
 ```
 
-After building `projectcheck-${VERSION}.tar.gz`:
+After building `projectcheck-${VERSION}.tar.gz` (output is under `release/` in the app tree):
 
 ```bash
 VERSION=X.Y.Z
-cd /path/to/monorepo/apps/projectcheck/release
+cd /path/to/nextcloud-projectcheck/release
 
 gh release create "v${VERSION}" \
   --repo aSoftwareByDesignRepository/nextcloud-projectcheck \

@@ -1,33 +1,36 @@
 # Release folder (ProjectCheck)
 
-This directory holds **release documentation** for the **ProjectCheck** standalone app repository workflow (`nextcloud-projectcheck`, **private** — see monorepo `ready2publish/REPOSITORY-LAYOUT.md`).
+Documentation for **shipping** ProjectCheck to the Nextcloud App Store and for **GitHub Releases** on **[`nextcloud-projectcheck`](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck)** — the public repo that contains **only** this app.
 
 | File | Purpose |
 |------|---------|
 | [APPSTORE-RELEASE.md](./APPSTORE-RELEASE.md) | Nextcloud App Store: build tarball, checksums, OpenSSL signature, GitHub Release |
-| [STANDALONE_REPO.md](./STANDALONE_REPO.md) | Sync **`apps/projectcheck`** from this monorepo to the **standalone GitHub repo** (`git subtree`) |
+| [STANDALONE_REPO.md](./STANDALONE_REPO.md) | **Optional:** sync `apps/projectcheck` from a **private monorepo** into `nextcloud-projectcheck` (`git subtree`) |
 
-**Suggested public repo** (create on GitHub if it does not exist yet):
+**Suggested public repo:** `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck`
 
-- `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck`
-
-Update **`appinfo/info.xml`** `<repository>` / `<bugs>` when the standalone repo is live.
+Update **`appinfo/info.xml`** `<repository>` / `<bugs>` if your fork uses different URLs.
 
 **Generated** (gitignored — see app `.gitignore`):
 
 - `projectcheck-*.tar.gz`, signatures, local `SIGNATURE-*.txt`
 
-## Quick tarball (from monorepo `apps/`)
+## Quick tarball
+
+From a clone of **`nextcloud-projectcheck`** (app at repo root):
 
 ```bash
-cd apps
-VERSION=2.0.21
-tar --exclude='projectcheck/node_modules' \
-    --exclude='projectcheck/.git' \
-    --exclude='projectcheck/release/projectcheck-*.tar.gz' \
-    -czf "projectcheck/release/projectcheck-${VERSION}.tar.gz" projectcheck
+./release/build-appstore-archive.sh X.Y.Z
 ```
 
-Stricter “upload-only” bundles are documented in the monorepo `ready4upload/BUILD_INSTRUCTIONS.txt`.
+From a **monorepo** (app at `apps/projectcheck`):
+
+```bash
+./apps/projectcheck/release/build-appstore-archive.sh X.Y.Z
+```
+
+Manual `tar` examples: **APPSTORE-RELEASE.md**.
+
+Stricter “upload-only” bundles may be documented in the private monorepo under `ready4upload/` (maintainers only).
 
 Details: **APPSTORE-RELEASE.md**.

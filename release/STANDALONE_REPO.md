@@ -1,23 +1,31 @@
-# Standalone repository: ProjectCheck
+# Optional: push from a private monorepo into `nextcloud-projectcheck`
 
-Develop in the **Nextcloud monorepo** (canonical GitHub name **`nextcloud-development`**; local clone folder may differ, e.g. `nextcloud-dev`). Publish **source + releases** from the **dedicated private** standalone repo **`nextcloud-projectcheck`** — same subtree workflow as the other apps; visibility policy: [REPOSITORY-LAYOUT.md](../../../ready2publish/REPOSITORY-LAYOUT.md).
+**[`nextcloud-projectcheck`](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck)** on GitHub is the **canonical public repository** for ProjectCheck: it contains **only** this app (source, issues, releases). Most contributors and users never need this document.
 
-**Convenience script** (from monorepo root): `scripts/push-public-app-subtree.sh projectcheck aSoftwareByDesignRepository/nextcloud-projectcheck` — runs `git subtree split` and pushes to `main`.
+Use the workflow below **only if** you develop ProjectCheck inside a **larger private repository** (e.g. a Nextcloud “all apps” monorepo) and want to **publish** the same tree to **`nextcloud-projectcheck`** without maintaining two codebases by hand.
+
+Develop in the private repo (canonical GitHub name **`nextcloud-development`**; local folder may differ). Publish **source** to **`aSoftwareByDesignRepository/nextcloud-projectcheck`** with `git subtree`. Further policy (visibility, layout): see monorepo `ready2publish/REPOSITORY-LAYOUT.md` if present.
+
+**Convenience script** (run from **monorepo root**, not inside `nextcloud-projectcheck`):
+
+`scripts/push-public-app-subtree.sh projectcheck aSoftwareByDesignRepository/nextcloud-projectcheck`
+
+That runs `git subtree split` on `apps/projectcheck` and pushes to `main` on the standalone repo.
 
 Suggested remote (adjust org/name if you prefer):
 
 | | |
 |--|--|
-| **Standalone repo** | `aSoftwareByDesignRepository/nextcloud-projectcheck` (private) |
-| **Clone URL** | `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck.git` (requires access) |
+| **Public app repo** | `aSoftwareByDesignRepository/nextcloud-projectcheck` |
+| **Clone URL** | `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck.git` |
 
-**`appinfo/info.xml`** should list **`nextcloud-projectcheck`** for **`<repository>`** and **`<bugs>`**.
+**`appinfo/info.xml`** should list **`nextcloud-projectcheck`** for **`<repository>`** and **`<bugs>`** (already the case in this tree).
 
-Create an **empty** repository on GitHub (no README/license if you want a clean first push from subtree; or keep README and merge carefully).
+Create an **empty** repository on GitHub if needed (no README/license if you want a clean first push from subtree; or keep README and merge carefully).
 
 ---
 
-## One-time setup
+## One-time setup (monorepo)
 
 From the **monorepo root** (parent of `apps/`):
 
@@ -59,7 +67,7 @@ Use `--force` only when you intend to replace the remote history (e.g. empty rep
 
 ## After monorepo changes
 
-Whenever you want the standalone repo to match the monorepo’s `apps/projectcheck`:
+Whenever you want **`nextcloud-projectcheck`** to match the monorepo’s `apps/projectcheck`:
 
 1. Commit and push your work on **`master`** (or your main branch) in the monorepo.
 2. Run **`git subtree push`** again (same command as above).
@@ -68,7 +76,7 @@ Whenever you want the standalone repo to match the monorepo’s `apps/projectche
 
 ## Releases (tarball + GitHub Release)
 
-Build the `.tar.gz` as in [APPSTORE-RELEASE.md](./APPSTORE-RELEASE.md), then attach it to a **tag on `projectcheck-public`**, not on the monorepo.
+Build the `.tar.gz` as in [APPSTORE-RELEASE.md](./APPSTORE-RELEASE.md), then attach it to a **tag on `nextcloud-projectcheck`**, not on the private monorepo.
 
 ```bash
 export GH_REPO=aSoftwareByDesignRepository/nextcloud-projectcheck
@@ -79,7 +87,7 @@ gh release create "v${VERSION}" --title "v${VERSION}" "projectcheck-${VERSION}.t
 
 ## `info.xml` URLs
 
-Point **repository** and **bugs** at the standalone repo once it exists, e.g.:
+Point **repository** and **bugs** at the standalone repo, e.g.:
 
 - `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck`
 - `https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues`

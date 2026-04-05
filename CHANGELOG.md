@@ -49,4 +49,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `appinfo/info.xml` repository and bugs URLs now point at the **`nextcloud-projectcheck`** GitHub repository (private standalone app repo; see monorepo `ready2publish/REPOSITORY-LAYOUT.md`).
+- `appinfo/info.xml` repository and bugs URLs now point at the **`nextcloud-projectcheck`** GitHub repository (canonical public home for ProjectCheck only; optional monorepo layout: `ready2publish/REPOSITORY-LAYOUT.md`).
