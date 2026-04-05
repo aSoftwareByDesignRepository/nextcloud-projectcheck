@@ -9,13 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `appinfo/info.xml`: `<donation>` (same destination as ArbeitszeitCheck `.github/FUNDING.yml` custom link) for App Store listing parity.
 - `release/build-appstore-archive.sh` to build a signed-upload-ready `.tar.gz` (npm + webpack + `composer install --no-dev`, excludes `node_modules`, tests, and extra release artifacts).
 - PHPUnit layout under `tests/Unit/Controller` with `composer.json` / `nextcloud/ocp` dev tooling; `composer test` runs the controller unit suite.
 
 ### Changed
 
 - `composer.json`: valid package name, reproducible `composer.lock`, dev dependencies for tests (PHPUnit, OCP stubs, Doctrine DBAL for interface constants).
-- `appinfo/info.xml`: SPDX licence `AGPL-3.0-or-later`.
+- `appinfo/info.xml`: SPDX licence `AGPL-3.0-or-later`; author `mail` / `homepage` aligned with ArbeitszeitCheck.
 - `README.md` and `release/APPSTORE-RELEASE.md`: aligned with the official [App Developer Guide](https://nextcloudappstore.readthedocs.io/en/latest/developer.html) (certificate, register app, upload release, metadata, blacklisted files).
 
 ### Removed
