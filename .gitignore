@@ -1,0 +1,85 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+*.cache
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Test outputs
+test-results/
+junit.xml
+tests/results.xml
+tests/coverage/
+
+# Package files
+*.tar.gz
+*.zip
+
+# Release signatures (tarballs already ignored above); CHECKSUMS-*.txt may be committed
+release/*.tar.gz.asc
+release/SIGNATURE-*.txt
+release/APPSTORE-SIGNATURE*.txt
+release/*.b64
+
+# Local development
+.local/
+local/
+
+# Backup files
+*.bak
+*.backup
+
+# PHP specific
+composer.phar
+.phpunit.result.cache
+
+# JavaScript specific
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Webpack
+.webpack/
+
+# Sass
+.sass-cache/
+
+# ESLint
+.eslintcache
+
+# Stylelint
+.stylelintcache

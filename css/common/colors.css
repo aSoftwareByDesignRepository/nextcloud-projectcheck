@@ -1,0 +1,295 @@
+/* Color System for ProjectCheck App
+ * Uses ONLY Nextcloud CSS variables - no hardcoded colors.
+ * Compatible with light, dark, and high-contrast themes.
+ * @see Nextcloud theming: --color-main-text, --color-primary-element, --color-border, etc.
+ */
+
+:root {
+  /* Aliases to Nextcloud variables - do not override */
+  --color-primary: var(--color-primary-element);
+  --color-primary-hover: var(--color-primary-element-hover);
+  --color-primary-active: var(--color-primary-element);
+  --color-primary-light: var(--color-primary-element-light, var(--color-background-dark));
+  --color-primary-lighter: var(--color-background-dark);
+  --color-primary-text: var(--color-primary-element-text);
+
+  /* Secondary / neutral - from Nextcloud */
+  --color-secondary: var(--color-background-dark);
+  --color-secondary-hover: var(--color-background-hover);
+  --color-secondary-active: var(--color-background-hover);
+
+  /* Accent - use primary when no accent in theme */
+  --color-accent: var(--color-primary-element);
+  --color-accent-hover: var(--color-primary-element-hover);
+  --color-accent-active: var(--color-primary-element-hover);
+  --color-accent-light: var(--color-primary-element-light, var(--color-background-dark));
+
+  /* Semantic - aliases for app compatibility (Nextcloud defines base vars) */
+  --color-success-hover: var(--color-success);
+  --color-success-light: var(--color-background-dark);
+  --color-success-dark: var(--color-success);
+
+  --color-warning-hover: var(--color-warning);
+  --color-warning-light: var(--color-background-dark);
+  --color-warning-dark: var(--color-warning);
+
+  --color-error-hover: var(--color-error);
+  --color-error-light: var(--color-background-dark);
+  --color-error-dark: var(--color-error);
+
+  --color-info-hover: var(--color-info);
+  --color-info-light: var(--color-background-dark);
+  --color-info-dark: var(--color-info);
+
+  /* Backgrounds */
+  --color-background: var(--color-main-background);
+  --color-background-secondary: var(--color-background-dark);
+  --color-background-tertiary: var(--color-background-darker, var(--color-background-dark));
+  --color-background-elevated: var(--color-main-background);
+  --color-background-overlay: color-mix(in srgb, var(--color-main-text) 50%, transparent);
+
+  /* Text */
+  --color-text: var(--color-main-text);
+  --color-text-secondary: var(--color-text-maxcontrast);
+  --color-text-tertiary: var(--color-text-lighter);
+  --color-text-inverse: var(--color-primary-element-text);
+  --color-text-muted: var(--color-text-lighter);
+
+  /* Borders */
+  --color-border: var(--color-border);
+  --color-border-secondary: var(--color-border);
+  --color-border-focus: var(--color-primary-element);
+  --color-border-error: var(--color-error);
+  --color-border-success: var(--color-success);
+  --color-border-warning: var(--color-warning);
+
+  /* Shadows - use Nextcloud's if available */
+  --color-shadow-light: var(--color-box-shadow, color-mix(in srgb, var(--color-main-text) 10%, transparent));
+  --color-shadow-medium: var(--color-box-shadow, color-mix(in srgb, var(--color-main-text) 15%, transparent));
+  --color-shadow-heavy: var(--color-box-shadow, color-mix(in srgb, var(--color-main-text) 25%, transparent));
+
+  /* Status */
+  --color-status-online: var(--color-success);
+  --color-status-offline: var(--color-text-lighter);
+  --color-status-busy: var(--color-warning);
+  --color-status-away: var(--color-info);
+
+  /* Project status */
+  --color-project-active: var(--color-success);
+  --color-project-paused: var(--color-warning);
+  --color-project-completed: var(--color-info);
+  --color-project-cancelled: var(--color-error);
+
+  /* Time entry */
+  --color-time-entry-billable: var(--color-success);
+  --color-time-entry-non-billable: var(--color-text-lighter);
+  --color-time-entry-overtime: var(--color-warning);
+
+  /* Menu */
+  --color-menu-background: var(--color-main-background);
+  --color-menu-border: var(--color-border);
+  --color-menu-item-hover: var(--color-background-hover);
+  --color-menu-item-active: var(--color-primary-element);
+  --color-menu-item-active-text: var(--color-primary-element-text);
+  --color-menu-section-header: var(--color-text-maxcontrast);
+  --color-menu-user-avatar: var(--color-primary-element);
+  --color-menu-user-avatar-text: var(--color-primary-element-text);
+
+  /* Form */
+  --color-form-background: var(--color-main-background);
+  --color-form-border: var(--color-border);
+  --color-form-border-focus: var(--color-primary-element);
+  --color-form-border-error: var(--color-error);
+  --color-form-border-success: var(--color-success);
+  --color-form-label: var(--color-main-text);
+  --color-form-help: var(--color-text-maxcontrast);
+  --color-form-required: var(--color-error);
+
+  /* Table */
+  --color-table-background: var(--color-main-background);
+  --color-table-border: var(--color-border);
+  --color-table-header-background: var(--color-background-dark);
+  --color-table-row-hover: var(--color-background-hover);
+  --color-table-row-selected: var(--color-primary-element-light, var(--color-background-dark));
+  --color-table-stripe: var(--color-background-dark);
+
+  /* Modal */
+  --color-modal-background: var(--color-main-background);
+  --color-modal-overlay: var(--color-background-overlay);
+  --color-modal-border: var(--color-border);
+  --color-modal-header-background: var(--color-background-dark);
+  --color-modal-footer-background: var(--color-background-dark);
+
+  /* Notifications */
+  --color-notification-success: var(--color-success);
+  --color-notification-success-background: var(--color-background-dark);
+  --color-notification-error: var(--color-error);
+  --color-notification-error-background: var(--color-background-dark);
+  --color-notification-warning: var(--color-warning);
+  --color-notification-warning-background: var(--color-background-dark);
+  --color-notification-info: var(--color-info);
+  --color-notification-info-background: var(--color-background-dark);
+
+  /* Buttons */
+  --color-button-primary: var(--color-primary-element);
+  --color-button-primary-hover: var(--color-primary-element-hover);
+  --color-button-primary-active: var(--color-primary-element-hover);
+  --color-button-primary-text: var(--color-primary-element-text);
+  --color-button-secondary: var(--color-background-dark);
+  --color-button-secondary-hover: var(--color-background-hover);
+  --color-button-secondary-active: var(--color-background-hover);
+  --color-button-secondary-text: var(--color-main-text);
+  --color-button-danger: var(--color-error);
+  --color-button-danger-hover: var(--color-error);
+  --color-button-danger-text: var(--color-primary-element-text);
+
+  /* Loading */
+  --color-loading-spinner: var(--color-primary-element);
+  --color-loading-background: var(--color-background-dark);
+  --color-progress-bar: var(--color-primary-element);
+  --color-progress-background: var(--color-background-dark);
+
+  /* Primary background for gradients - Nextcloud 32+ */
+  --color-primary-background: var(--color-primary-element-light, var(--color-background-dark));
+}
+
+/* Utility classes - use Nextcloud variables only */
+.bg-primary { background-color: var(--color-primary-element); }
+.bg-primary-hover:hover { background-color: var(--color-primary-element-hover); }
+.bg-primary-light { background-color: var(--color-primary-element-light, var(--color-background-dark)); }
+.bg-primary-lighter { background-color: var(--color-background-dark); }
+.bg-secondary { background-color: var(--color-background-dark); }
+.bg-secondary-hover:hover { background-color: var(--color-background-hover); }
+.bg-accent { background-color: var(--color-primary-element); }
+.bg-accent-hover:hover { background-color: var(--color-primary-element-hover); }
+.bg-accent-light { background-color: var(--color-background-dark); }
+.bg-success { background-color: var(--color-success); }
+.bg-success-hover:hover { background-color: var(--color-success); }
+.bg-success-light { background-color: var(--color-background-dark); }
+.bg-warning { background-color: var(--color-warning); }
+.bg-warning-hover:hover { background-color: var(--color-warning); }
+.bg-warning-light { background-color: var(--color-background-dark); }
+.bg-error { background-color: var(--color-error); }
+.bg-error-hover:hover { background-color: var(--color-error); }
+.bg-error-light { background-color: var(--color-background-dark); }
+.bg-info { background-color: var(--color-info); }
+.bg-info-hover:hover { background-color: var(--color-info); }
+.bg-info-light { background-color: var(--color-background-dark); }
+.bg-background { background-color: var(--color-main-background); }
+.bg-background-secondary { background-color: var(--color-background-dark); }
+.bg-background-tertiary { background-color: var(--color-background-darker, var(--color-background-dark)); }
+.bg-background-elevated { background-color: var(--color-main-background); }
+
+.text-primary { color: var(--color-primary-element); }
+.text-primary-hover:hover { color: var(--color-primary-element-hover); }
+.text-secondary { color: var(--color-text-maxcontrast); }
+.text-tertiary { color: var(--color-text-lighter); }
+.text-muted { color: var(--color-text-lighter); }
+.text-inverse { color: var(--color-primary-element-text); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-error { color: var(--color-error); }
+.text-info { color: var(--color-info); }
+
+.border-primary { border-color: var(--color-primary-element); }
+.border-secondary { border-color: var(--color-border); }
+.border-focus { border-color: var(--color-primary-element); }
+.border-error { border-color: var(--color-error); }
+.border-success { border-color: var(--color-success); }
+.border-warning { border-color: var(--color-warning); }
+
+.text-status-online { color: var(--color-success); }
+.text-status-offline { color: var(--color-text-lighter); }
+.text-status-busy { color: var(--color-warning); }
+.text-status-away { color: var(--color-info); }
+
+.text-project-active { color: var(--color-success); }
+.text-project-paused { color: var(--color-warning); }
+.text-project-completed { color: var(--color-info); }
+.text-project-cancelled { color: var(--color-error); }
+
+.text-time-entry-billable { color: var(--color-success); }
+.text-time-entry-non-billable { color: var(--color-text-lighter); }
+.text-time-entry-overtime { color: var(--color-warning); }
+
+.bg-menu { background-color: var(--color-main-background); }
+.border-menu { border-color: var(--color-border); }
+.bg-menu-item-hover:hover { background-color: var(--color-background-hover); }
+.bg-menu-item-active { background-color: var(--color-primary-element); }
+.text-menu-item-active { color: var(--color-primary-element-text); }
+.text-menu-section-header { color: var(--color-text-maxcontrast); }
+.bg-menu-user-avatar { background-color: var(--color-primary-element); }
+.text-menu-user-avatar { color: var(--color-primary-element-text); }
+
+.bg-form { background-color: var(--color-main-background); }
+.border-form { border-color: var(--color-border); }
+.border-form-focus:focus { border-color: var(--color-primary-element); }
+.border-form-error { border-color: var(--color-error); }
+.border-form-success { border-color: var(--color-success); }
+.text-form-label { color: var(--color-main-text); }
+.text-form-help { color: var(--color-text-maxcontrast); }
+.text-form-required { color: var(--color-error); }
+
+.bg-table { background-color: var(--color-main-background); }
+.border-table { border-color: var(--color-border); }
+.bg-table-header { background-color: var(--color-background-dark); }
+.bg-table-row-hover:hover { background-color: var(--color-background-hover); }
+.bg-table-row-selected { background-color: var(--color-primary-element-light, var(--color-background-dark)); }
+.bg-table-stripe { background-color: var(--color-background-dark); }
+
+.bg-modal { background-color: var(--color-main-background); }
+.bg-modal-overlay { background-color: var(--color-background-overlay); }
+.border-modal { border-color: var(--color-border); }
+.bg-modal-header { background-color: var(--color-background-dark); }
+.bg-modal-footer { background-color: var(--color-background-dark); }
+
+.bg-notification-success { background-color: var(--color-background-dark); }
+.text-notification-success { color: var(--color-success); }
+.bg-notification-error { background-color: var(--color-background-dark); }
+.text-notification-error { color: var(--color-error); }
+.bg-notification-warning { background-color: var(--color-background-dark); }
+.text-notification-warning { color: var(--color-warning); }
+.bg-notification-info { background-color: var(--color-background-dark); }
+.text-notification-info { color: var(--color-info); }
+
+.bg-button-primary { background-color: var(--color-primary-element); }
+.bg-button-primary-hover:hover { background-color: var(--color-primary-element-hover); }
+.text-button-primary { color: var(--color-primary-element-text); }
+.bg-button-secondary { background-color: var(--color-background-dark); }
+.bg-button-secondary-hover:hover { background-color: var(--color-background-hover); }
+.text-button-secondary { color: var(--color-main-text); }
+.bg-button-danger { background-color: var(--color-error); }
+.bg-button-danger-hover:hover { background-color: var(--color-error); }
+.text-button-danger { color: var(--color-primary-element-text); }
+
+.text-loading-spinner { color: var(--color-primary-element); }
+.bg-loading { background-color: var(--color-background-dark); }
+.bg-progress-bar { background-color: var(--color-primary-element); }
+.bg-progress-background { background-color: var(--color-background-dark); }
+
+.hover\:bg-primary:hover { background-color: var(--color-primary-element-hover); }
+.hover\:bg-secondary:hover { background-color: var(--color-background-hover); }
+.hover\:bg-accent:hover { background-color: var(--color-primary-element-hover); }
+.hover\:bg-success:hover { background-color: var(--color-success); }
+.hover\:bg-warning:hover { background-color: var(--color-warning); }
+.hover\:bg-error:hover { background-color: var(--color-error); }
+.hover\:bg-info:hover { background-color: var(--color-info); }
+.hover\:text-primary:hover { color: var(--color-primary-element-hover); }
+.hover\:text-success:hover { color: var(--color-success); }
+.hover\:text-warning:hover { color: var(--color-warning); }
+.hover\:text-error:hover { color: var(--color-error); }
+.hover\:text-info:hover { color: var(--color-info); }
+
+.focus\:border-primary:focus { border-color: var(--color-primary-element); }
+.focus\:border-error:focus { border-color: var(--color-error); }
+.focus\:border-success:focus { border-color: var(--color-success); }
+.focus\:border-warning:focus { border-color: var(--color-warning); }
+
+/* Reduced motion support - WCAG */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

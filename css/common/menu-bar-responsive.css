@@ -1,0 +1,276 @@
+/**
+ * Menu Bar Responsive CSS
+ * Mobile hamburger menu and responsive behavior
+ * Breakpoint: 768px and below
+ */
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  /* Hide vertical menu bar by default on mobile */
+  .menu-bar {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 280px; /* Slightly wider on mobile for better touch targets */
+    height: 100vh;
+    z-index: 2000; /* Higher z-index to appear above other content */
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  /* Show menu bar when mobile menu is open */
+  .menu-bar.mobile-open {
+    display: flex;
+    transform: translateX(0);
+  }
+
+  /* Mobile overlay background */
+  .menu-bar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: color-mix(in srgb, var(--color-main-text) 50%, transparent);
+    z-index: 1999;
+    backdrop-filter: blur(2px);
+  }
+
+  .menu-bar-overlay.mobile-open {
+    display: block;
+  }
+
+  /* Hamburger menu button */
+  .menu-bar-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 44px;
+    height: 44px;
+    background-color: var(--color-main-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 2001;
+    transition: background-color 0.2s ease;
+  }
+
+  .menu-bar-toggle:hover {
+    background-color: var(--color-background-hover);
+  }
+
+  .menu-bar-toggle:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Hamburger icon lines */
+  .menu-bar-toggle .hamburger-line {
+    width: 20px;
+    height: 2px;
+    background-color: var(--color-text);
+    margin: 2px 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    border-radius: 1px;
+  }
+
+  /* Animated hamburger to X */
+  .menu-bar-toggle.mobile-open .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .menu-bar-toggle.mobile-open .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-bar-toggle.mobile-open .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+  }
+
+  /* Mobile menu bar adjustments */
+  .menu-bar {
+    margin-top: 0; /* No header margin on mobile */
+    height: 100vh;
+    box-shadow: 4px 0 12px color-mix(in srgb, var(--color-main-text) 30%, transparent);
+  }
+
+  /* Larger touch targets for mobile */
+  .menu-item {
+    padding: 1rem;
+    min-height: 48px; /* Minimum touch target size */
+    font-size: 1rem;
+  }
+
+  .menu-item .icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 1rem;
+  }
+
+  .menu-item .icon::before {
+    font-size: 20px;
+  }
+
+  /* Mobile menu sections */
+  .menu-bar-top {
+    padding: 2rem 1rem;
+  }
+
+  .menu-bar-top .logo img {
+    height: 48px;
+  }
+
+  .menu-bar-top .brand-name {
+    font-size: 1.5rem;
+  }
+
+  .menu-bar-bottom {
+    padding: 1.5rem 1rem;
+  }
+
+  .menu-bar-bottom .user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .menu-bar-bottom .user-name {
+    font-size: 1rem;
+  }
+
+  /* Mobile menu section headers */
+  .menu-section-header {
+    padding: 1rem;
+    font-size: 0.875rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Mobile menu groups */
+  .menu-group {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Mobile menu badges */
+  .menu-item .badge {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    min-width: 24px;
+  }
+
+  /* Mobile focus states */
+  .menu-item:focus {
+    outline: 3px solid var(--color-primary);
+    outline-offset: -3px;
+  }
+
+  /* Mobile loading state */
+  .menu-item.loading::after {
+    width: 20px;
+    height: 20px;
+    right: 1.5rem;
+  }
+
+  /* Mobile scrollbar styling */
+  .menu-bar-middle::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .menu-bar-middle::-webkit-scrollbar-track {
+    background: var(--color-background-hover);
+  }
+
+  .menu-bar-middle::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+
+  .menu-bar-middle::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-maxcontrast);
+  }
+}
+
+/* Tablet breakpoint adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .menu-bar {
+    width: 220px; /* Slightly narrower on tablets */
+  }
+
+  .menu-item {
+    padding: 0.875rem 1rem;
+  }
+
+  .menu-item .icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .menu-item .icon::before {
+    font-size: 18px;
+  }
+}
+
+/* Large screen optimizations */
+@media (min-width: 1025px) {
+  .menu-bar-toggle {
+    display: none; /* Hide hamburger on desktop */
+  }
+
+  .menu-bar-overlay {
+    display: none; /* Hide overlay on desktop */
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .menu-bar {
+    border-right: 2px solid var(--color-text);
+  }
+
+  .menu-item {
+    border: 1px solid transparent;
+  }
+
+  .menu-item:hover {
+    border-color: var(--color-text);
+  }
+
+  .menu-item.active {
+    border-color: var(--color-primary);
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .menu-bar {
+    transition: none;
+  }
+
+  .menu-bar-toggle .hamburger-line {
+    transition: none;
+  }
+
+  .menu-item {
+    transition: none;
+  }
+
+  .menu-item:hover {
+    transform: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .menu-bar,
+  .menu-bar-toggle,
+  .menu-bar-overlay {
+    display: none !important;
+  }
+}

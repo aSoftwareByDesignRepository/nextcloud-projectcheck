@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2024 Nextcloud GmbH and Nextcloud contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>projectcheck</id>
+	<name>ProjectCheck</name>
+	<summary>IT project management with time tracking and budget control</summary>
+	<description>
+		A comprehensive project management application for IT projects with time tracking and budget control.
+		Features include:
+		- Project creation and management
+		- Team member assignment and role management
+		- Budget tracking and consumption monitoring
+		- Project status management
+		- Search and filtering capabilities
+		- Real-time budget calculations
+	</description>
+
+	<version>2.0.25</version>
+	<licence>AGPL-3.0-or-later</licence>
+	<author mail="info@software-by-design.de" homepage="https://software-by-design.de">Alexander M&#xE4;ule</author>
+
+	<namespace>ProjectCheck</namespace>
+
+	<category>organization</category>
+
+	<website>https://software-by-design.de</website>
+	<bugs>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues</bugs>
+	<repository>https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck.git</repository>
+
+	<donation type="other" title="Software by Design">https://software-by-design.de/</donation>
+
+	<dependencies>
+		<!-- Compatible with Nextcloud 32+ through current stable (see release notes) -->
+		<nextcloud min-version="32" max-version="37"/>
+	</dependencies>
+
+	<!-- HTTPS raw URLs; branch must match GitHub default (here: main on nextcloud-projectcheck) -->
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-01.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-01.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-02.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-02.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-03.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-03.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-04.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-04.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-05.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-05.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-06.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-06.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-07.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-07.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-08.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-08.png
+	</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-09.png">
+		https://raw.githubusercontent.com/aSoftwareByDesignRepository/nextcloud-projectcheck/refs/heads/main/screenshots/projectcheck-screenshot-09.png
+	</screenshot>
+
+	<navigations>
+		<navigation>
+			<name>ProjectCheck</name>
+			<route>projectcheck.page.index</route>
+			<icon>app.svg</icon>
+			<order>10</order>
+		</navigation>
+	</navigations>
+
+	<keywords>
+		<keyword>project management</keyword>
+		<keyword>time tracking</keyword>
+		<keyword>budget control</keyword>
+		<keyword>customer management</keyword>
+		<keyword>team collaboration</keyword>
+		<keyword>project planning</keyword>
+		<keyword>cost tracking</keyword>
+		<keyword>resource management</keyword>
+		<keyword>task management</keyword>
+		<keyword>reporting</keyword>
+	</keywords>
+
+	<settings>
+		<admin>OCA\ProjectCheck\Settings\AdminSettings</admin>
+		<personal>OCA\ProjectCheck\Settings\PersonalSettings</personal>
+	</settings>
+
+	<release>
+		<databases>
+			<database>mysql</database>
+			<database>pgsql</database>
+		</databases>
+		<php min-version="8.2" max-version="8.5"/>
+		<platforms>
+			<platform>linux</platform>
+			<platform>mac</platform>
+			<platform>windows</platform>
+		</platforms>
+	</release>
+</info>

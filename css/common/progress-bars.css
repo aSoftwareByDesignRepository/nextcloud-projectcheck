@@ -1,0 +1,317 @@
+/**
+ * Unified Progress Bar Component System
+ * 
+ * @copyright Copyright (c) 2024, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+/* ================================================================
+   BASE PROGRESS BAR COMPONENT
+   ================================================================ */
+
+.progress-bar,
+.nc-progress-bar {
+    position: relative;
+    width: 100%;
+    background: var(--color-background-hover);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+}
+
+.progress-fill,
+.nc-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+/* Full progress gets rounded corners on both sides */
+.progress-fill[style*="width: 100%"],
+.nc-progress-fill[style*="width: 100%"] {
+    border-radius: var(--border-radius);
+}
+
+/* ================================================================
+   SIZE VARIANTS
+   ================================================================ */
+
+/* Extra Small - 2px height */
+.progress-bar--xs,
+.nc-progress-bar--xs {
+    height: 2px;
+}
+
+/* Small - 4px height */
+.progress-bar--sm,
+.nc-progress-bar--sm {
+    height: 4px;
+}
+
+/* Medium (default) - 6px height */
+.progress-bar,
+.nc-progress-bar,
+.progress-bar--md,
+.nc-progress-bar--md {
+    height: 6px;
+}
+
+/* Large - 8px height */
+.progress-bar--lg,
+.nc-progress-bar--lg {
+    height: 8px;
+}
+
+/* Extra Large - 12px height */
+.progress-bar--xl,
+.nc-progress-bar--xl {
+    height: 12px;
+}
+
+/* ================================================================
+   COLOR VARIANTS
+   ================================================================ */
+
+/* Success State */
+.progress-fill--success,
+.nc-progress-fill--success {
+    background: linear-gradient(90deg, var(--color-success), var(--color-success-hover));
+}
+
+/* Warning State */
+.progress-fill--warning,
+.nc-progress-fill--warning {
+    background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover));
+}
+
+/* Error/Critical State */
+.progress-fill--error,
+.nc-progress-fill--error,
+.progress-fill--critical,
+.nc-progress-fill--critical {
+    background: linear-gradient(90deg, var(--color-error), var(--color-error-hover));
+}
+
+/* Info State */
+.progress-fill--info,
+.nc-progress-fill--info {
+    background: linear-gradient(90deg, var(--color-info), var(--color-info-hover));
+}
+
+/* ================================================================
+   STYLE VARIANTS
+   ================================================================ */
+
+/* Flat style (no gradient) */
+.progress-fill--flat,
+.nc-progress-fill--flat {
+    background: var(--color-primary);
+}
+
+.progress-fill--flat.progress-fill--success,
+.nc-progress-fill--flat.nc-progress-fill--success {
+    background: var(--color-success);
+}
+
+.progress-fill--flat.progress-fill--warning,
+.nc-progress-fill--flat.nc-progress-fill--warning {
+    background: var(--color-warning);
+}
+
+.progress-fill--flat.progress-fill--error,
+.nc-progress-fill--flat.nc-progress-fill--error {
+    background: var(--color-error);
+}
+
+/* Striped style for loading/indeterminate states */
+.progress-fill--striped,
+.nc-progress-fill--striped {
+    background-image: linear-gradient(45deg,
+            color-mix(in srgb, var(--color-primary-element-text) 15%, transparent) 25%,
+            transparent 25%,
+            transparent 50%,
+            color-mix(in srgb, var(--color-primary-element-text) 15%, transparent) 50%,
+            color-mix(in srgb, var(--color-primary-element-text) 15%, transparent) 75%,
+            transparent 75%,
+            transparent);
+    background-size: 16px 16px;
+}
+
+/* Animated stripes */
+.progress-fill--animated,
+.nc-progress-fill--animated {
+    animation: progressStripes 1s linear infinite;
+}
+
+@keyframes progressStripes {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 16px 0;
+    }
+}
+
+/* ================================================================
+   LAYOUT COMPONENTS
+   ================================================================ */
+
+/* Progress Item - Container with label and percentage */
+.progress-item,
+.nc-progress-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.progress-item:last-child,
+.nc-progress-item:last-child {
+    margin-bottom: 0;
+}
+
+.progress-label,
+.nc-progress-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-light);
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+.progress-percentage,
+.nc-progress-percentage {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+    min-width: 40px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Progress wrapper - Just the bar */
+.progress-wrapper,
+.nc-progress-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+/* ================================================================
+   UTILITY CLASSES
+   ================================================================ */
+
+/* Remove border */
+.progress-bar--borderless,
+.nc-progress-bar--borderless {
+    border: none;
+}
+
+/* Compact spacing */
+.progress-item--compact,
+.nc-progress-item--compact {
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.progress-item--compact .progress-label,
+.nc-progress-item--compact .nc-progress-label {
+    font-size: 0.8125rem;
+    min-width: 60px;
+}
+
+.progress-item--compact .progress-percentage,
+.nc-progress-item--compact .nc-progress-percentage {
+    font-size: 0.8125rem;
+    min-width: 35px;
+}
+
+/* ================================================================
+   DARK MODE SUPPORT
+   ================================================================ */
+
+@media (prefers-color-scheme: dark) {
+
+    .progress-bar,
+    .nc-progress-bar {
+        background: var(--color-background-dark);
+        border-color: var(--color-border-dark);
+    }
+}
+
+/* ================================================================
+   RESPONSIVE DESIGN
+   ================================================================ */
+
+@media (max-width: 768px) {
+
+    .progress-item,
+    .nc-progress-item {
+        gap: 8px;
+    }
+
+    .progress-label,
+    .nc-progress-label {
+        min-width: 60px;
+        font-size: 0.8125rem;
+    }
+
+    .progress-percentage,
+    .nc-progress-percentage {
+        min-width: 35px;
+        font-size: 0.8125rem;
+    }
+}
+
+/* ================================================================
+   BACKWARD COMPATIBILITY
+   ================================================================ */
+
+/* Legacy class mappings */
+.budget-progress-bar {
+    @extend .progress-bar--lg;
+}
+
+.budget-progress-fill {
+    @extend .progress-fill;
+}
+
+.yearly-progress-bar {
+    @extend .progress-bar--sm;
+}
+
+.yearly-progress-fill {
+    @extend .progress-fill;
+}
+
+.compact-progress .progress-bar {
+    @extend .progress-bar--sm;
+}
+
+/* Override legacy specific styles */
+.budget-progress-fill,
+.yearly-progress-fill,
+.compact-progress .progress-fill {
+    border-radius: var(--border-radius) 0 0 var(--border-radius) !important;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light)) !important;
+}
+
+.budget-progress-fill.warning,
+.yearly-progress-fill.warning,
+.compact-progress .progress-fill.warning {
+    background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover)) !important;
+}
+
+.budget-progress-fill.critical,
+.yearly-progress-fill.critical,
+.compact-progress .progress-fill.critical {
+    background: linear-gradient(90deg, var(--color-error), var(--color-error-hover)) !important;
+}
+
+.budget-progress-fill[style*="width: 100%"],
+.yearly-progress-fill[style*="width: 100%"],
+.compact-progress .progress-fill[style*="width: 100%"] {
+    border-radius: var(--border-radius) !important;
+}

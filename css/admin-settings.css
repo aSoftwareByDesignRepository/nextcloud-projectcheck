@@ -1,0 +1,247 @@
+/**
+ * Admin settings styles for projectcheck app
+ *
+ * @copyright Copyright (c) 2024, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+.admin-settings-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.admin-settings-header {
+    margin-bottom: 30px;
+}
+
+.admin-settings-header h2 {
+    margin: 0 0 10px 0;
+    color: var(--color-primary);
+}
+
+.admin-settings-header p {
+    margin: 0;
+    color: var(--color-text-maxcontrast);
+}
+
+.admin-settings-form {
+    background: var(--color-main-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: 30px;
+}
+
+.form-section {
+    margin-bottom: 30px;
+}
+
+.form-section h3 {
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-primary);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.form-group label.required::after {
+    content: ' *';
+    color: var(--color-error);
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-main-background);
+    color: var(--color-text);
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-alpha-20);
+}
+
+.form-control.has-error {
+    border-color: var(--color-error);
+}
+
+.error-message {
+    color: var(--color-error);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.form-group.has-error .form-control {
+    border-color: var(--color-error);
+}
+
+.form-actions {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+    text-align: right;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--color-primary-text);
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+    background: var(--color-background-dark);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+    background: var(--color-background-hover);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-settings-container {
+        padding: 10px;
+    }
+
+    .admin-settings-form {
+        padding: 20px;
+    }
+}
+
+.help-text {
+    font-size: 12px;
+    color: var(--color-text-maxcontrast);
+    margin-top: 5px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin: 0;
+}
+
+.checkbox-group label {
+    margin: 0;
+    font-weight: normal;
+}
+
+.admin-warning {
+    background: var(--color-warning);
+    color: var(--color-warning-text);
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.admin-warning h4 {
+    margin: 0 0 10px 0;
+    color: var(--color-warning-text);
+}
+
+.admin-warning p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.settings-summary {
+    background: var(--color-background-dark);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.settings-summary h4 {
+    margin: 0 0 15px 0;
+    color: var(--color-primary);
+}
+
+.settings-summary ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.settings-summary li {
+    margin-bottom: 5px;
+    color: var(--color-text);
+}
+
+.permission-section {
+    background: var(--color-background-dark);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.permission-section h4 {
+    margin: 0 0 15px 0;
+    color: var(--color-primary);
+}
+
+.permission-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.permission-item input[type="checkbox"] {
+    margin: 0;
+}
+
+.permission-item label {
+    margin: 0;
+    font-weight: normal;
+    font-size: 14px;
+}

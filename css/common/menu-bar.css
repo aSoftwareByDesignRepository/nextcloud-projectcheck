@@ -1,0 +1,341 @@
+/**
+ * Menu Bar CSS
+ * Vertical menu bar with 240px width and full screen height
+ * Positioned fixed on the left side of the screen
+ */
+
+.menu-bar {
+  /* Core dimensions and positioning */
+  width: 240px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  /* Visual styling */
+  background-color: var(--color-main-background);
+  border-right: 1px solid var(--color-border);
+
+  /* Layering and overflow */
+  z-index: 1000;
+  overflow-y: auto;
+
+  /* Flexbox layout for internal sections */
+  display: flex;
+  flex-direction: column;
+
+  /* Smooth scrolling for content that exceeds height */
+  scroll-behavior: smooth;
+
+  /* Ensure menu bar is always visible */
+  box-shadow: 2px 0 8px color-mix(in srgb, var(--color-main-text) 10%, transparent);
+}
+
+/* Ensure menu bar content doesn't interfere with Nextcloud header */
+.menu-bar {
+  margin-top: var(--header-height, 50px);
+  height: calc(100vh - var(--header-height, 50px));
+}
+
+/* Menu bar sections */
+.menu-bar-top {
+  flex-shrink: 0;
+  padding: 1.5rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-main-background);
+}
+
+.menu-bar-top .logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.menu-bar-top .logo img {
+  height: 40px;
+  width: auto;
+  max-width: 100%;
+}
+
+.menu-bar-top .brand-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: center;
+  margin: 0;
+}
+
+.menu-bar-middle {
+  flex: 1;
+  padding: 0.5rem 0;
+  overflow-y: auto;
+  background-color: var(--color-main-background);
+}
+
+.menu-bar-middle .navigation-section {
+  margin-bottom: 1rem;
+}
+
+.menu-bar-bottom {
+  flex-shrink: 0;
+  padding: 1rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-main-background);
+}
+
+.menu-bar-bottom .user-info {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+}
+
+.menu-bar-bottom .user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+  background-color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-text);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.menu-bar-bottom .user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-bar-bottom .user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-bar-bottom .user-role {
+  font-size: 0.75rem;
+  color: var(--color-text-maxcontrast);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Menu items */
+.menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin: 0.125rem 0;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--color-text-maxcontrast);
+  background-color: transparent;
+  border: none;
+  border-radius: var(--border-radius);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-size: var(--font-size);
+  font-weight: 400;
+}
+
+.menu-item:hover {
+  background-color: var(--color-background-hover);
+  color: var(--color-text);
+}
+
+.menu-item.active {
+  background-color: var(--color-primary);
+  color: var(--color-primary-text);
+  font-weight: 500;
+}
+
+.menu-item.active:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* Menu item icons */
+.menu-item .icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Nextcloud icon integration */
+.menu-item .icon::before {
+  font-family: 'iconfont';
+  font-size: 16px;
+  line-height: 1;
+  display: block;
+}
+
+/* Specific icon mappings for common menu items */
+.menu-item[data-icon="home"] .icon::before {
+  content: '\e900';
+}
+
+.menu-item[data-icon="dashboard"] .icon::before {
+  content: '\e901';
+}
+
+.menu-item[data-icon="projects"] .icon::before {
+  content: '\e902';
+}
+
+.menu-item[data-icon="customers"] .icon::before {
+  content: '\e903';
+}
+
+.menu-item[data-icon="time"] .icon::before {
+  content: '\e904';
+}
+
+.menu-item[data-icon="reports"] .icon::before {
+  content: '\e905';
+}
+
+.menu-item[data-icon="settings"] .icon::before {
+  content: '\e906';
+}
+
+.menu-item[data-icon="users"] .icon::before {
+  content: '\e907';
+}
+
+.menu-item[data-icon="folder"] .icon::before {
+  content: '\e908';
+}
+
+.menu-item[data-icon="calendar"] .icon::before {
+  content: '\e909';
+}
+
+.menu-item[data-icon="chart"] .icon::before {
+  content: '\e90a';
+}
+
+.menu-item[data-icon="gear"] .icon::before {
+  content: '\e90b';
+}
+
+.menu-item[data-icon="user"] .icon::before {
+  content: '\e90c';
+}
+
+.menu-item[data-icon="logout"] .icon::before {
+  content: '\e90d';
+}
+
+.menu-item[data-icon="help"] .icon::before {
+  content: '\e90e';
+}
+
+.menu-item[data-icon="info"] .icon::before {
+  content: '\e90f';
+}
+
+/* Fallback for missing icons */
+.menu-item .icon::before {
+  content: '\e900';
+  /* Default to home icon */
+}
+
+/* Menu item text */
+.menu-item .text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Menu item badges/counters */
+.menu-item .badge {
+  background-color: var(--color-error);
+  color: var(--color-error-text);
+  border-radius: 10px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: auto;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Menu section headers */
+.menu-section-header {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-maxcontrast);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Menu group styling */
+.menu-group {
+  margin-bottom: 0.5rem;
+}
+
+/* Ensure menu bar works with Nextcloud's dark theme */
+[data-theme="dark"] .menu-bar {
+  background-color: var(--color-main-background);
+  border-right-color: var(--color-border);
+}
+
+/* Focus states for accessibility */
+.menu-item:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+/* Disabled menu items */
+.menu-item:disabled,
+.menu-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading state for menu items */
+.menu-item.loading {
+  position: relative;
+  color: var(--color-text-maxcontrast);
+}
+
+.menu-item.loading::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: translateY(-50%) rotate(0deg);
+  }
+
+  100% {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}

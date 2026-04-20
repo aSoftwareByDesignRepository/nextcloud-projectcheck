@@ -1,0 +1,40 @@
+{
+	"name": "software-by-design/nextcloud-projectcheck",
+	"description": "IT project management with time tracking and budget control",
+	"type": "project",
+	"license": "AGPL-3.0-or-later",
+	"authors": [
+		{
+			"name": "Alexander Mäule",
+			"email": "info@software-by-design.de"
+		}
+	],
+	"require": {
+		"php": ">=8.2"
+	},
+	"require-dev": {
+		"doctrine/dbal": "^3.9",
+		"nextcloud/ocp": "^32",
+		"phpunit/phpunit": "^9.6"
+	},
+	"autoload": {
+		"psr-4": {
+			"OCA\\ProjectCheck\\": "lib/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"OCA\\ProjectCheck\\Tests\\": "tests/",
+			"OCP\\": "vendor/nextcloud/ocp/OCP/",
+			"NCU\\": "vendor/nextcloud/ocp/NCU/"
+		}
+	},
+	"scripts": {
+		"test": "phpunit --testsuite unit",
+		"test:unit": "phpunit --testsuite unit"
+	},
+	"config": {
+		"optimize-autoloader": true,
+		"sort-packages": true
+	}
+}

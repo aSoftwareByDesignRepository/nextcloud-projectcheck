@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+namespace OCA\ProjectCheck\Service;
+
+use OCP\AppFramework\Http\ContentSecurityPolicy;
+use OCP\AppFramework\Http\TemplateResponse;
+
+/**
+ * Centralized CSP policy management for ProjectControl
+ */
+class CSPService
+{
+    /**
+     * Base policy shared by all contexts (no external CDNs)
+     */
+    public function getDefaultPolicy(): ContentSecurityPolicy
+    {
+        $policy = new ContentSecurityPolicy();
+
+        // Scripts, styles, images, fonts, media, and connections from self
+        $policy->addAllowedScriptDomain("'self'");
+        $policy->addAllowedStyleDomain("'self'");
+        $policy->addAllowedImageDomain("'self'");
+        $policy->addAllowedFontDomain("'self'");
+        $policy->addAllowedMediaDomain("'self'");
+        $policy->addAllowedConnectDomain("'self'");
+
+        // Allow data/blob where commonly needed
+        $policy->addAllowedImageDomain('data:');
+        $policy->addAllowedImageDomain('blob:');
+        $policy->addAllowedFontDomain('data:');
+        $policy->addAllowedMediaDomain('blob:');
+
+        // Clickjacking protection (allow framing by self only)
+        $policy->addAllowedFrameAncestorDomain("'self'");
+
+        return $policy;
+    }
+
+    public function getMainAppPolicy(): ContentSecurityPolicy
+    {
+        return $this->getDefaultPolicy();
+    }
+
+    public function getModalPolicy(): ContentSecurityPolicy
+    {
+        return $this->getDefaultPolicy();
+    }
+
+    public function getGuestPolicy(): ContentSecurityPolicy
+    {
+        return $this->getDefaultPolicy();
+    }
+
+    /**
+     * Apply CSP and inject a template nonce parameter.
+     * Note: Core middleware will attach the CSP header and JS nonce as needed.
+     * Nonce is obtained via OC internal API until OCP exposes a public interface.
+     */
+    public function applyPolicyWithNonce(TemplateResponse $response, string $context): TemplateResponse
+    {
+        switch ($context) {
+            case 'modal':
+                $policy = $this->getModalPolicy();
+                break;
+            case 'guest':
+                $policy = $this->getGuestPolicy();
+                break;
+            case 'main':
+            default:
+                $policy = $this->getMainAppPolicy();
+                break;
+        }
+
+        // Expose nonce to templates that use inline tags (OC internal until OCP provides interface)
+        $params = $response->getParams();
+        $params['cspNonce'] = \OC::$server->getContentSecurityPolicyNonceManager()->getNonce();
+        $response->setParams($params);
+
+        $response->setContentSecurityPolicy($policy);
+        return $response;
+    }
+}
+

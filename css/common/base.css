@@ -1,0 +1,780 @@
+/* Base Styles and Resets for ProjectControl App
+ * Normalizes browser differences and establishes foundation styles
+ */
+
+/* Lucide Icons Base Styling - Global Alignment */
+.lucide-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 1.5;
+  stroke: currentColor;
+  fill: none;
+  display: inline-block;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: -2px;
+  /* Fine-tune vertical alignment */
+}
+
+.lucide-icon.small {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1.25;
+}
+
+.lucide-icon.large {
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 1.75;
+}
+
+.lucide-icon.xl {
+  width: 2rem;
+  height: 2rem;
+  stroke-width: 2;
+}
+
+/* Global button alignment with icons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.button .lucide-icon {
+  margin: 0;
+  vertical-align: baseline;
+}
+
+/* Navigation menu alignment */
+#app-navigation .nav-menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+#app-navigation .nav-menu .lucide-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* Meta items alignment */
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meta-item .lucide-icon {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* Form section headers alignment */
+.form-section h3,
+.section-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-section h3 .lucide-icon,
+.section-header h3 .lucide-icon {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* Stat cards alignment */
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.stat-icon .lucide-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Action cards alignment */
+.action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.action-icon .lucide-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* App brand icon */
+.app-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-icon .lucide-icon {
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+}
+
+/* CSS Reset - Modern Normalize */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  background-color: var(--color-background);
+  text-rendering: optimizeLegibility;
+  -webkit-font-feature-settings: "kern" 1;
+  font-feature-settings: "kern" 1;
+}
+
+/* Typography Reset */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+p {
+  margin: 0;
+}
+
+/* List Reset */
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Link Reset */
+a {
+  color: inherit;
+  text-decoration: inherit;
+  background-color: transparent;
+}
+
+/* Form Element Reset */
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+  margin: 0;
+}
+
+button,
+input {
+  overflow: visible;
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+button,
+[type="button"],
+[type="reset"],
+[type="submit"] {
+  -webkit-appearance: button;
+  appearance: button;
+}
+
+button::-moz-focus-inner,
+[type="button"]::-moz-focus-inner,
+[type="reset"]::-moz-focus-inner,
+[type="submit"]::-moz-focus-inner {
+  border-style: none;
+  padding: 0;
+}
+
+button:-moz-focusring,
+[type="button"]:-moz-focusring,
+[type="reset"]:-moz-focusring,
+[type="submit"]:-moz-focusring {
+  outline: 1px dotted ButtonText;
+}
+
+fieldset {
+  padding: 0.35em 0.75em 0.625em;
+  margin: 0;
+  border: 0;
+}
+
+legend {
+  box-sizing: border-box;
+  color: inherit;
+  display: table;
+  max-width: 100%;
+  padding: 0;
+  white-space: normal;
+}
+
+progress {
+  vertical-align: baseline;
+}
+
+textarea {
+  overflow: auto;
+}
+
+[type="checkbox"],
+[type="radio"] {
+  box-sizing: border-box;
+  padding: 0;
+}
+
+[type="number"]::-webkit-inner-spin-button,
+[type="number"]::-webkit-outer-spin-button {
+  height: auto;
+}
+
+[type="search"] {
+  -webkit-appearance: textfield;
+  appearance: textfield;
+  outline-offset: -2px;
+}
+
+[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button;
+  appearance: button;
+  font: inherit;
+}
+
+/* Table Reset */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Image Reset */
+img {
+  border-style: none;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+svg {
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+/* Media Reset */
+audio,
+video {
+  display: inline-block;
+}
+
+audio:not([controls]) {
+  display: none;
+  height: 0;
+}
+
+/* Interactive Element Reset */
+details {
+  display: block;
+}
+
+summary {
+  display: list-item;
+}
+
+template {
+  display: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Focus Management */
+:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* Skip Links for Accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  padding: 8px;
+  text-decoration: none;
+  border-radius: var(--radius-base);
+  z-index: var(--z-fixed);
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Selection Styles */
+::selection {
+  background-color: var(--color-primary-light);
+  color: var(--color-text);
+}
+
+::-moz-selection {
+  background-color: var(--color-primary-light);
+  color: var(--color-text);
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-400);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-500);
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-400) var(--color-background-secondary);
+}
+
+/* Print Styles */
+@media print {
+
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+
+  abbr[title]:after {
+    content: " (" attr(title) ")";
+  }
+
+  a[href^="#"]:after,
+  a[href^="javascript:"]:after {
+    content: "";
+  }
+
+  pre,
+  blockquote {
+    border: 1px solid var(--color-border);
+    page-break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  img {
+    page-break-inside: avoid;
+  }
+
+  img {
+    max-width: 100% !important;
+  }
+
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  * {
+    border-color: currentColor !important;
+  }
+
+  img {
+    filter: contrast(1.2);
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Dark Mode Support - explicit fallbacks for sidebar/content contrast when theme vars not applied */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-background: #1a1a1a;
+    --color-background-secondary: #2a2a2a;
+    --color-background-tertiary: #3a3a3a;
+    --color-main-background: #1a1a1a;
+    --color-background-dark: #2a2a2a;
+    --color-text: #e8e8e8;
+    --color-text-secondary: #d0d0d0;
+    --color-text-tertiary: #b0b0b0;
+    --color-main-text: #e8e8e8;
+    --color-text-maxcontrast: #e8e8e8;
+    --color-text-lighter: #a0a0a0;
+    --color-border: #4a4a4a;
+    --color-border-secondary: #3a3a3a;
+  }
+}
+
+/* Base Element Styles */
+html {
+  font-size: 16px;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* Semantic HTML Elements */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+menu,
+nav,
+section {
+  display: block;
+}
+
+/* Form Element Base Styles */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  padding: var(--space-2) var(--space-3);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+  outline: none;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: var(--color-background-secondary);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Button Base Styles */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Link Base Styles */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+a:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* List Base Styles */
+ul,
+ol {
+  padding-left: var(--space-6);
+}
+
+ul {
+  list-style-type: disc;
+}
+
+ol {
+  list-style-type: decimal;
+}
+
+li {
+  margin-bottom: var(--space-1);
+}
+
+/* Table Base Styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+th {
+  font-weight: var(--font-weight-semibold);
+  background-color: var(--color-background-secondary);
+}
+
+/* Code Base Styles */
+code {
+  font-family: var(--font-family-mono);
+  font-size: 0.875em;
+  background-color: var(--color-background-secondary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+}
+
+pre {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  background-color: var(--color-background-secondary);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+  margin: var(--space-4) 0;
+}
+
+pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Blockquote Base Styles */
+blockquote {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border-left: 4px solid var(--color-primary);
+  background-color: var(--color-background-secondary);
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+/* Horizontal Rule Base Styles */
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-6) 0;
+}
+
+/* Small Text Base Styles */
+small {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Strong and Emphasis Base Styles */
+strong,
+b {
+  font-weight: var(--font-weight-semibold);
+}
+
+em,
+i {
+  font-style: italic;
+}
+
+/* Mark Base Styles */
+mark {
+  background-color: var(--color-accent-light);
+  color: var(--color-text);
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+/* Abbreviation Base Styles */
+abbr[title] {
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+/* Definition List Base Styles */
+dl {
+  margin: var(--space-4) 0;
+}
+
+dt {
+  font-weight: var(--font-weight-semibold);
+  margin-top: var(--space-2);
+}
+
+dd {
+  margin-left: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+/* Address Base Styles */
+address {
+  font-style: normal;
+  line-height: inherit;
+}
+
+/* Time Base Styles */
+time {
+  color: var(--color-text-secondary);
+}
+
+/* Meter and Progress Base Styles */
+meter,
+progress {
+  width: 100%;
+  height: var(--space-4);
+  border-radius: var(--radius-full);
+  background-color: var(--color-background-secondary);
+  border: none;
+}
+
+meter::-webkit-meter-bar,
+progress::-webkit-progress-bar {
+  background-color: var(--color-background-secondary);
+  border-radius: var(--radius-full);
+}
+
+meter::-webkit-meter-optimum-value,
+progress::-webkit-progress-value {
+  background-color: var(--color-success);
+  border-radius: var(--radius-full);
+}
+
+meter::-webkit-meter-suboptimum-value {
+  background-color: var(--color-warning);
+  border-radius: var(--radius-full);
+}
+
+meter::-webkit-meter-even-less-good-value {
+  background-color: var(--color-error);
+  border-radius: var(--radius-full);
+}
