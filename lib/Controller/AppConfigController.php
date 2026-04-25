@@ -406,13 +406,25 @@ class AppConfigController extends Controller
 	}
 
 	/**
+	 * Read POST/PUT data without using Request::getContent() (protected in Nextcloud core).
+	 *
+	 * For JSON, the body is read from php://input so the result matches the request body and is
+	 * not combined with the query string (relevant for security and parity with the browser client
+	 * which always sends application/json with a full body).
+	 *
 	 * @return array<string, mixed>
+	 * @throws JsonException when the body looks like JSON but is not valid
 	 */
 	private function getPayload(): array
 	{
-		$raw = (string) $this->request->getContent();
-		$contentType = (string) $this->request->getHeader('Content-Type');
-		if (str_starts_with($contentType, 'application/json') && $raw !== '') {
+		$contentType = $this->request->getHeader('Content-Type');
+		if (preg_match(IRequest::JSON_CONTENT_TYPE_REGEX, $contentType) === 1) {
+			$raw = (string) file_get_contents('php://input');
+			if ($raw === '') {
+				// Stream may have been read earlier; the framework may have merged JSON into parameters.
+				$merged = $this->request->getParams();
+				return is_array($merged) ? $merged : [];
+			}
 			$data = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
 			return is_array($data) ? $data : [];
 		}
@@ -420,11 +432,16 @@ class AppConfigController extends Controller
 		if (is_array($params) && $params !== []) {
 			return $params;
 		}
-		if ($raw !== '' && (str_starts_with(ltrim($raw), '{') || str_starts_with(ltrim($raw), '['))) {
-			$data = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
-			return is_array($data) ? $data : [];
+		$raw = (string) file_get_contents('php://input');
+		if ($raw === '') {
+			return is_array($params) ? $params : [];
 		}
-		return is_array($params) ? $params : [];
+		$trim = ltrim($raw);
+		if (!str_starts_with($trim, '{') && !str_starts_with($trim, '[')) {
+			return is_array($params) ? $params : [];
+		}
+		$data = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+		return is_array($data) ? $data : [];
 	}
 
 	/**

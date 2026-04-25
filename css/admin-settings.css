@@ -56,7 +56,7 @@
 
 .form-group label.required::after {
     content: ' *';
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 .form-control {
@@ -81,7 +81,7 @@
 }
 
 .error-message {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
     font-size: 12px;
     margin-top: 5px;
 }
@@ -370,7 +370,7 @@ section.projectcheck-panel,
 }
 
 .projectcheck-form-status[data-state="error"] {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 .visually-hidden {
@@ -383,6 +383,55 @@ section.projectcheck-panel,
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+/* In-form section navigation (org page): skip to sections, WCAG 2.4.1 / clear structure */
+.projectcheck-section-nav {
+    margin: 0 0 1.25rem 0;
+    padding: 0.9rem 1rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius, 6px);
+    background: var(--color-background-darker, var(--color-background-dark));
+}
+
+.projectcheck-section-nav__kicker {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    color: var(--color-text-maxcontrast);
+}
+
+.projectcheck-section-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+}
+
+.projectcheck-section-nav__link {
+    color: var(--color-primary-element, var(--color-primary));
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary-element) 45%, transparent);
+    padding: 0.1rem 0;
+}
+
+.projectcheck-section-nav__link:hover {
+    color: var(--color-main-text);
+    border-bottom-color: var(--color-primary-element);
+}
+
+.projectcheck-section-nav__link:focus-visible {
+    outline: 2px solid var(--color-primary-element);
+    outline-offset: 3px;
+    border-radius: 2px;
+    border-bottom-color: transparent;
 }
 
 /* —— In-app organization page: layout, spacing, responsive —— */
@@ -581,7 +630,7 @@ section.projectcheck-panel,
 }
 
 .projectcheck-form-status[data-state="success"] {
-    color: var(--color-success, #0a5);
+    color: var(--pc-emphasis-text-success);
 }
 
 /* Org page: clear separation between sections (WCAG 2.4.7 / focus visible) */

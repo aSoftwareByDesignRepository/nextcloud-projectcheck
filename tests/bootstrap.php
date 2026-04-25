@@ -17,3 +17,13 @@ if (!is_file($autoload)) {
 }
 
 require_once $autoload;
+
+/* Nextcloud’s OCP\Util::addStyle() delegates to \OC_Util, which is not present in this unit-test
+ * environment. Provide a no-op so listeners that register styles (e.g. common/colors.css) can run. */
+if (!\class_exists(\OC_Util::class, false)) {
+	// phpcs:ignore
+	class OC_Util {
+		public static function addStyle(string $application, ?string $file = null, bool $prepend = false): void {
+		}
+	}
+}

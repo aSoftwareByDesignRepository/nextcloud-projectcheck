@@ -781,7 +781,7 @@ body {
 
 .action-item.delete-project-btn:hover {
 	background-color: var(--color-error-light);
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 }
 
 /* Main Content Section */
@@ -922,26 +922,30 @@ body {
 
 .status-active {
 	background-color: var(--color-success-light);
-	color: var(--color-success);
-	border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-success);
 }
 
 .status-on-hold {
 	background-color: var(--color-warning-light);
-	color: var(--color-warning);
-	border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-warning);
 }
 
 .status-completed {
 	background-color: var(--color-info-light);
-	color: var(--color-info);
-	border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-info) 28%, var(--color-border));
+	border-inline-start: 3px solid var(--color-info);
 }
 
 .status-cancelled {
 	background-color: var(--color-error-light);
-	color: var(--color-error);
-	border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
+	border-inline-start: 3px solid var(--color-error);
 }
 
 .status-archived {
@@ -1032,26 +1036,30 @@ body {
 
 .priority-low {
 	background-color: var(--color-success-light);
-	color: var(--color-success);
-	border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-success);
 }
 
 .priority-medium {
 	background-color: var(--color-warning-light);
-	color: var(--color-warning);
-	border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-warning);
 }
 
 .priority-high {
-	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
-	color: var(--color-accent);
-	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+	background-color: color-mix(in srgb, var(--color-accent) 15%, var(--color-main-background));
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+	border-inline-start: 3px solid var(--color-accent);
 }
 
 .priority-critical {
 	background-color: var(--color-error-light);
-	color: var(--color-error);
-	border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
+	border-inline-start: 3px solid var(--color-error);
 }
 
 /* Project Type Badges */
@@ -1068,8 +1076,9 @@ body {
 
 .project-type-badge.client {
 	background-color: var(--color-success-light);
-	color: var(--color-success);
-	border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-success);
 }
 
 .project-type-badge.admin {
@@ -1080,14 +1089,16 @@ body {
 
 .project-type-badge.sales {
 	background-color: var(--color-warning-light);
-	color: var(--color-warning);
-	border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-warning);
 }
 
 .project-type-badge.customer {
 	background-color: var(--color-info-light);
-	color: var(--color-info);
-	border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-info) 28%, var(--color-border));
+	border-inline-start: 3px solid var(--color-info);
 }
 
 .project-type-badge.product {
@@ -1165,13 +1176,13 @@ body {
 
 .notice-success {
 	background-color: var(--color-success-light);
-	color: var(--color-success);
+	color: var(--color-main-text);
 	border-left-color: var(--color-success);
 }
 
 .notice-error {
 	background-color: var(--color-error-light);
-	color: var(--color-error);
+	color: var(--color-main-text);
 	border-left-color: var(--color-error);
 }
 
@@ -1558,7 +1569,7 @@ body {
 	border-radius: 12px;
 	padding: 2rem;
 	margin-bottom: 2rem;
-	color: white;
+	color: var(--pc-text-on-strong);
 	box-shadow: 0 4px 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
@@ -1638,7 +1649,7 @@ body {
 
 .actions-grid .button.primary {
 	background: var(--color-primary);
-	color: white;
+	color: var(--pc-text-on-strong);
 	border-color: var(--color-primary);
 }
 
@@ -1802,11 +1813,21 @@ body {
 	box-shadow: none !important;
 }
 
+.stats-section__title {
+	margin: 0 0 0.75rem 0;
+	font-size: 1.125rem;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--color-main-text);
+	padding: 0 0 0.65rem 0.15rem;
+	border-bottom: 1px solid var(--color-border);
+}
+
 .stats-container {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 	gap: 1rem;
-	padding: 1.5rem;
+	padding: 0 0 1.5rem 0;
 }
 
 .stat-card {
@@ -2262,7 +2283,7 @@ body {
 }
 
 .entry-cost {
-	color: var(--color-success);
+	color: var(--pc-emphasis-text-success);
 	font-weight: 600;
 	font-size: 0.875rem;
 }
@@ -3399,7 +3420,7 @@ body {
 }
 
 .breakdown-value.remaining {
-	color: var(--color-success);
+	color: var(--pc-emphasis-text-success);
 }
 
 /* Timeline Details */
@@ -3532,15 +3553,15 @@ body {
 
 .budget-remaining {
 	font-weight: 600;
-	color: var(--color-success);
+	color: var(--pc-emphasis-text-success);
 }
 
 .budget-remaining.warning {
-	color: var(--color-warning);
+	color: var(--pc-emphasis-text-warning);
 }
 
 .budget-remaining.critical {
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 }
 
 .budget-secondary {
@@ -3556,11 +3577,11 @@ body {
 }
 
 .budget-percentage.warning {
-	color: var(--color-warning);
+	color: var(--pc-emphasis-text-warning);
 }
 
 .budget-percentage.critical {
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 }
 
 /* Budget Cell Specific Styling */
@@ -3658,7 +3679,7 @@ body {
 
 .year-header {
 	background: var(--color-primary);
-	color: white;
+	color: var(--pc-text-on-strong);
 	padding: 1.5rem;
 	display: flex;
 	justify-content: space-between;
@@ -3820,7 +3841,7 @@ body {
 
 .project-badge {
 	background: var(--color-primary);
-	color: white;
+	color: var(--pc-text-on-strong);
 	padding: 0.25rem 0.5rem;
 	border-radius: 12px;
 	font-size: 0.75rem;
@@ -3857,7 +3878,7 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: white;
+	color: var(--pc-text-on-strong);
 }
 
 .project-stat .stat-icon i {
@@ -4042,7 +4063,7 @@ body {
 
 .popup-close:hover {
 	background: var(--color-error);
-	color: white;
+	color: var(--pc-text-on-strong);
 }
 
 .popup-body {
@@ -4299,7 +4320,7 @@ body {
 
 .employee-badge {
 	background: var(--color-primary);
-	color: white;
+	color: var(--pc-text-on-strong);
 	padding: 0.25rem 0.75rem;
 	border-radius: 20px;
 	font-size: 0.75rem;
@@ -4430,7 +4451,7 @@ body {
 
 .employee-rank {
 	background: var(--color-primary);
-	color: white;
+	color: var(--pc-text-on-strong);
 	padding: 0.25rem 0.75rem;
 	border-radius: 20px;
 	font-size: 0.875rem;
@@ -4462,7 +4483,7 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: white;
+	color: var(--pc-text-on-strong);
 }
 
 .comparison-stat-item .stat-icon i {
@@ -5026,13 +5047,15 @@ body {
 }
 
 .ratio-label.billable {
-	color: var(--color-success);
+	color: var(--color-main-text);
 	background: var(--color-success-light);
+	border: 1px solid color-mix(in srgb, var(--color-success) 28%, var(--color-border));
 }
 
 .ratio-label.overhead {
-	color: var(--color-warning);
+	color: var(--color-main-text);
 	background: var(--color-warning-light);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 28%, var(--color-border));
 }
 
 /* Responsive design for project type statistics */
@@ -5299,7 +5322,7 @@ body {
 	width: 32px;
 	height: 32px;
 	background: var(--color-primary);
-	color: white;
+	color: var(--pc-text-on-strong);
 	border-radius: 50%;
 	font-weight: 600;
 	font-size: 0.8rem;
@@ -5605,7 +5628,7 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: white;
+	color: var(--pc-text-on-strong);
 	flex-shrink: 0;
 }
 
@@ -5673,7 +5696,7 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: white;
+	color: var(--pc-text-on-strong);
 	font-size: 1rem;
 	font-weight: 600;
 	flex-shrink: 0;
@@ -5889,7 +5912,7 @@ body {
 	border-radius: 4px;
 	font-size: 0.85rem;
 	font-weight: 600;
-	color: white;
+	color: var(--pc-text-on-strong);
 }
 
 .project-type-client {

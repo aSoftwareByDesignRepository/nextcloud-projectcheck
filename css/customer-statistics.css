@@ -79,7 +79,7 @@
 .stat-icon .lucide-icon {
     width: 24px;
     height: 24px;
-    color: white;
+    color: var(--pc-text-on-strong);
 }
 
 .stat-content {
@@ -194,15 +194,15 @@
 
 /* Color coding for different metric types */
 .stat-card[data-metric="positive"] .stat-number {
-    color: var(--color-success);
+    color: var(--pc-emphasis-text-success);
 }
 
 .stat-card[data-metric="warning"] .stat-number {
-    color: var(--color-warning);
+    color: var(--pc-emphasis-text-warning);
 }
 
 .stat-card[data-metric="danger"] .stat-number {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 .stat-card[data-metric="neutral"] .stat-number {
@@ -513,7 +513,7 @@
     align-items: center;
     justify-content: center;
     height: 120px;
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
     font-style: italic;
 }
 
@@ -693,7 +693,7 @@
 }
 
 .compact-analytics .error-message {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 /* Responsive Design for Compact */

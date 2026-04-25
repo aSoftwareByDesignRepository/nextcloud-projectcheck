@@ -139,19 +139,19 @@
 }
 
 .toast--success .toast-icon {
-  color: var(--color-success);
+  color: var(--pc-emphasis-text-success);
 }
 
 .toast--error .toast-icon {
-  color: var(--color-error);
+  color: var(--pc-emphasis-text-error);
 }
 
 .toast--warning .toast-icon {
-  color: var(--color-warning);
+  color: var(--pc-emphasis-text-warning);
 }
 
 .toast--info .toast-icon {
-  color: var(--color-info);
+  color: var(--pc-emphasis-text-info);
 }
 
 .toast-title {
@@ -440,12 +440,12 @@
 }
 
 #app-content .notice-success .icon {
-  color: var(--color-success);
+  color: var(--pc-emphasis-text-success);
 }
 
 #app-content .notice-error .icon,
 #app-content .notice .icon.icon-error {
-  color: var(--color-error);
+  color: var(--pc-emphasis-text-error);
 }
 
 #app-content .notice span {

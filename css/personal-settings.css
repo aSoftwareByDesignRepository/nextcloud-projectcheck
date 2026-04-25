@@ -56,7 +56,7 @@
 
 .form-group label.required::after {
     content: ' *';
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 .form-control {
@@ -81,7 +81,7 @@
 }
 
 .error-message {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
     font-size: 12px;
     margin-top: 5px;
 }

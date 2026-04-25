@@ -605,23 +605,31 @@
 }
 
 .status-badge.status-active {
-	color: var(--color-success);
-	border: 1px solid var(--color-success);
+	background-color: var(--color-success-light);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-success);
 }
 
 .status-badge.status-on-hold {
-	color: var(--color-warning);
-	border: 1px solid var(--color-warning);
+	background-color: var(--color-warning-light);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-warning);
 }
 
 .status-badge.status-completed {
-	color: var(--color-info);
-	border: 1px solid var(--color-info);
+	background-color: var(--color-info-light);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-info) 28%, var(--color-border));
+	border-inline-start: 3px solid var(--color-info);
 }
 
 .status-badge.status-cancelled {
-	color: var(--color-error);
-	border: 1px solid var(--color-error);
+	background-color: var(--color-error-light);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
+	border-inline-start: 3px solid var(--color-error);
 }
 
 .status-badge.status-archived {
@@ -683,7 +691,7 @@
 .error-state {
 	text-align: center;
 	padding: 2rem;
-	color: var(--color-error);
+	color: var(--color-main-text);
 	background: color-mix(in srgb, var(--color-error) 10%, transparent);
 	border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
 	border-radius: 8px;
@@ -816,7 +824,7 @@
 	background: linear-gradient(135deg,
 			color-mix(in srgb, var(--color-success) 10%, transparent) 0%,
 			color-mix(in srgb, var(--color-success) 5%, transparent) 100%);
-		color: var(--color-success);
+		color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
 }
 
@@ -830,7 +838,7 @@
 	background: linear-gradient(135deg,
 			color-mix(in srgb, var(--color-error) 10%, transparent) 0%,
 			color-mix(in srgb, var(--color-error) 5%, transparent) 100%);
-		color: var(--color-error);
+		color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
 }
 
@@ -1204,19 +1212,19 @@
 }
 
 .lucide-icon.success {
-	color: var(--color-success);
+	color: var(--pc-emphasis-text-success);
 }
 
 .lucide-icon.warning {
-	color: var(--color-warning);
+	color: var(--pc-emphasis-text-warning);
 }
 
 .lucide-icon.error {
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 }
 
 .lucide-icon.white {
-	color: white;
+	color: var(--pc-text-on-strong);
 }
 
 /* Icon in buttons */
@@ -1391,7 +1399,7 @@
 
 .form-group label.required::after {
 	content: ' *';
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 	font-weight: 700;
 }
 
@@ -1433,7 +1441,6 @@
 	margin-top: 0.5rem;
 	font-size: 0.8rem;
 	color: var(--color-text-maxcontrast);
-	opacity: 0.8;
 	line-height: 1.4;
 }
 
@@ -1441,7 +1448,7 @@
 	display: none;
 	margin-top: 0.5rem;
 	font-size: 0.8rem;
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 	font-weight: 500;
 }
 
@@ -1456,7 +1463,7 @@
 }
 
 .form-group.error label {
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 }
 
 .form-actions {
@@ -1523,11 +1530,10 @@
 	font-size: 0.75rem;
 	color: var(--color-text-maxcontrast);
 	margin-top: 0.25rem;
-	opacity: 0.7;
 }
 
 .character-counter.warning {
-	color: var(--color-warning);
+	color: var(--pc-emphasis-text-warning);
 	font-weight: 500;
 }
 
@@ -1576,13 +1582,15 @@
 }
 
 .form-message.success {
-	color: var(--color-success);
+	color: var(--color-main-text);
+	background-color: var(--color-success-light);
 	border-left-color: var(--color-success);
 	display: block;
 }
 
 .form-message.error {
-	color: var(--color-error);
+	color: var(--color-main-text);
+	background-color: var(--color-error-light);
 	border-left-color: var(--color-error);
 	display: block;
 }

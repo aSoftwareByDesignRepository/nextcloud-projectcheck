@@ -168,19 +168,19 @@
 
 .settings-message.success {
 	background: color-mix(in srgb, var(--color-success) 10%, var(--color-main-background));
-	color: var(--color-success);
+	color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-success) 50%, transparent);
 }
 
 .settings-message.error {
 	background: color-mix(in srgb, var(--color-error) 10%, var(--color-main-background));
-	color: var(--color-error);
+	color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-error) 50%, transparent);
 }
 
 .settings-message.warning {
 	background: color-mix(in srgb, var(--color-warning) 10%, var(--color-main-background));
-	color: var(--color-warning);
+	color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-warning) 50%, transparent);
 }
 
@@ -190,7 +190,7 @@
 }
 
 .form-group.error .error-message {
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 	font-size: 0.9em;
 	margin-top: 5px;
 }

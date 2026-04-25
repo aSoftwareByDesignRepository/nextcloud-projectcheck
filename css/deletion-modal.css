@@ -59,7 +59,7 @@
 .projectcheck-deletion-modal__title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
     margin: 0;
     display: flex;
     align-items: center;
@@ -142,7 +142,7 @@
 .projectcheck-deletion-modal__warning-title {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
     margin: 0 0 0.5rem 0;
     display: flex;
     align-items: center;
@@ -209,7 +209,7 @@
 
 .projectcheck-deletion-modal__impact-total {
     font-weight: 600;
-    color: var(--color-warning);
+    color: var(--pc-emphasis-text-warning);
     font-size: 1rem;
 }
 
@@ -343,7 +343,7 @@
 
 .projectcheck-deletion-modal__btn--delete {
     background: var(--color-error);
-    color: var(--color-primary-element-text);
+    color: var(--pc-text-on-strong);
     border-color: var(--color-error);
 }
 
@@ -364,7 +364,7 @@
 }
 
 .projectcheck-deletion-modal__error h3 {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
     margin: 0 0 1rem 0;
     font-size: 1.125rem;
 }
@@ -422,7 +422,7 @@
     }
 
     .projectcheck-deletion-modal__title {
-        color: var(--color-error);
+        color: var(--pc-emphasis-text-error);
     }
 
     .projectcheck-deletion-modal__close {
@@ -440,7 +440,7 @@
     }
 
     .projectcheck-deletion-modal__warning-title {
-        color: var(--color-error);
+        color: var(--pc-emphasis-text-error);
     }
 
     .projectcheck-deletion-modal__impact,

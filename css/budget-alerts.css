@@ -73,7 +73,7 @@
 }
 
 .budget-alerts-section .alert.alert-warning .alert-icon {
-    color: var(--color-warning);
+    color: var(--pc-emphasis-text-warning);
 }
 
 .budget-alerts-section .alert.alert-critical {
@@ -83,7 +83,7 @@
 }
 
 .budget-alerts-section .alert.alert-critical .alert-icon {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 .budget-alerts-section .alert.alert-none {
@@ -93,7 +93,7 @@
 }
 
 .budget-alerts-section .alert.alert-none .alert-icon {
-    color: var(--color-info);
+    color: var(--pc-emphasis-text-info);
 }
 
 /* Budget percentage styling based on warning levels */
@@ -102,28 +102,16 @@
 }
 
 .budget-percentage.budget-warning {
-    color: var(--color-warning);
+    color: var(--pc-emphasis-text-warning);
 }
 
 .budget-percentage.budget-critical {
-    color: var(--color-error);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.7;
-    }
+    color: var(--pc-emphasis-text-error);
+    font-weight: 700;
 }
 
 .budget-percentage.budget-none {
-    color: var(--color-success);
+    color: var(--pc-emphasis-text-success);
 }
 
 /* Budget progress bar warning levels */
@@ -133,18 +121,6 @@
 
 .budget-progress-fill.budget-critical {
     background-color: var(--color-error);
-}
-
-@keyframes progressPulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.8;
-    }
 }
 
 .budget-progress-fill.budget-none {
@@ -161,14 +137,14 @@
 }
 
 .breakdown-value.over-budget {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
     font-weight: bold;
 }
 
-/* Enhanced stat cards for budget info */
+/* Enhanced stat cards for budget info (no opacity: retains contrast for WCAG) */
 .stat-sub {
     font-size: 11px;
-    opacity: 0.7;
+    color: var(--color-text-maxcontrast);
     margin-top: 4px;
     line-height: 1.2;
 }
@@ -366,15 +342,15 @@
 
 /* Color coding for budget values */
 .budget-stat-value.safe {
-    color: var(--color-success);
+    color: var(--pc-emphasis-text-success);
 }
 
 .budget-stat-value.warning {
-    color: var(--color-warning);
+    color: var(--pc-emphasis-text-warning);
 }
 
 .budget-stat-value.critical {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 /* Animation */
@@ -474,19 +450,24 @@
 }
 
 .budget-status-badge.safe {
-    background-color: color-mix(in srgb, var(--color-success) 10%, transparent);
-    color: var(--color-success);
-    border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+    background-color: var(--color-success-light);
+    color: var(--color-main-text);
+    border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
+    border-inline-start: 3px solid var(--color-success);
 }
 
 .budget-status-badge.warning {
-    background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
-    color: var(--color-warning);
-    border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+    background-color: var(--color-warning-light);
+    color: var(--color-main-text);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+    border-inline-start: 3px solid var(--color-warning);
 }
 
 .budget-status-badge.critical {
-    color: var(--color-error);
+    background-color: var(--color-error-light);
+    color: var(--color-main-text);
+    border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
+    border-inline-start: 3px solid var(--color-error);
 }
 
 /* Project Details Section */
@@ -535,15 +516,15 @@
 }
 
 .budget-remaining.safe {
-    color: var(--color-success);
+    color: var(--pc-emphasis-text-success);
 }
 
 .budget-remaining.warning {
-    color: var(--color-warning);
+    color: var(--pc-emphasis-text-warning);
 }
 
 .budget-remaining.critical {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 .budget-separator {
@@ -604,15 +585,15 @@
 }
 
 .progress-label-center.safe {
-    color: var(--color-success);
+    color: var(--pc-emphasis-text-success);
 }
 
 .progress-label-center.warning {
-    color: var(--color-warning);
+    color: var(--pc-emphasis-text-warning);
 }
 
 .progress-label-center.critical {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 /* Projects Table Budget Styling */
@@ -683,20 +664,25 @@
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
-    background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
-    color: var(--color-warning);
-    border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+    background-color: var(--color-warning-light);
+    color: var(--color-main-text);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+    border-inline-start: 2px solid var(--color-warning);
     font-weight: 500;
 }
 
 .budget-warning-badge.warning {
-    background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
-    color: var(--color-warning);
-    border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+    background-color: var(--color-warning-light);
+    color: var(--color-main-text);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+    border-inline-start: 2px solid var(--color-warning);
 }
 
 .budget-warning-badge.critical {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
+    background-color: var(--color-error-light);
+    border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
+    border-inline-start: 2px solid var(--color-error);
 }
 
 /* Compact Budget Cell */
@@ -722,15 +708,15 @@
 }
 
 .budget-remaining.safe {
-    color: var(--color-success);
+    color: var(--pc-emphasis-text-success);
 }
 
 .budget-remaining.warning {
-    color: var(--color-warning);
+    color: var(--pc-emphasis-text-warning);
 }
 
 .budget-remaining.critical {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 .budget-total {
@@ -748,11 +734,11 @@
 }
 
 .budget-percentage.warning {
-    color: var(--color-warning);
+    color: var(--pc-emphasis-text-warning);
 }
 
 .budget-percentage.critical {
-    color: var(--color-error);
+    color: var(--pc-emphasis-text-error);
 }
 
 /* Progress Cell */
@@ -812,21 +798,24 @@
 }
 
 .priority-badge.priority-medium {
-    background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
-    color: var(--color-warning);
-    border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+    background-color: var(--color-warning-light);
+    color: var(--color-main-text);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+    border-inline-start: 2px solid var(--color-warning);
 }
 
 .priority-badge.priority-high {
-    background-color: color-mix(in srgb, var(--color-warning) 10%, transparent);
-    color: var(--color-warning);
-    border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+    background-color: var(--color-warning-light);
+    color: var(--color-main-text);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+    border-inline-start: 2px solid var(--color-warning);
 }
 
 .priority-badge.priority-critical {
-    background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
-    color: var(--color-error);
-    border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+    background-color: var(--color-error-light);
+    color: var(--color-main-text);
+    border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
+    border-inline-start: 2px solid var(--color-error);
 }
 
 /* Mobile responsive adjustments */

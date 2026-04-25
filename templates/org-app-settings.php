@@ -62,6 +62,7 @@ include __DIR__ . '/common/navigation.php';
 		</section>
 
 		<?php
+		$showSectionNav = true;
 		include __DIR__ . '/parts/org-settings-form.php';
 		?>
 		</div>

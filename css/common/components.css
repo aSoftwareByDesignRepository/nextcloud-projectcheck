@@ -220,7 +220,7 @@
 
 .form-label--required::after {
   content: ' *';
-  color: var(--color-error);
+  color: var(--pc-emphasis-text-error);
 }
 
 /* Form Input */
@@ -391,7 +391,7 @@
 /* Form Validation */
 .form-error {
   font-size: var(--font-size-sm);
-  color: var(--color-error);
+  color: var(--pc-emphasis-text-error);
   margin-top: var(--space-1);
   display: flex;
   align-items: center;
@@ -410,7 +410,7 @@
 
 .form-warning {
   font-size: var(--font-size-sm);
-  color: var(--color-warning);
+  color: var(--pc-emphasis-text-warning);
   margin-top: var(--space-1);
   display: flex;
   align-items: center;
@@ -429,7 +429,7 @@
 
 .form-success {
   font-size: var(--font-size-sm);
-  color: var(--color-success);
+  color: var(--pc-emphasis-text-success);
   margin-top: var(--space-1);
   display: flex;
   align-items: center;
@@ -478,7 +478,7 @@
 .form-errors {
   background-color: var(--color-error-light);
   border: 1px solid var(--color-border-error);
-  color: var(--color-error);
+  color: var(--color-main-text);
 }
 
 .form-errors h4 {
@@ -499,7 +499,7 @@
 .form-warnings {
   background-color: var(--color-warning-light);
   border: 1px solid var(--color-border-warning);
-  color: var(--color-warning);
+  color: var(--color-main-text);
 }
 
 .form-warnings h4 {
@@ -520,7 +520,7 @@
 .form-success {
   background-color: var(--color-success-light);
   border: 1px solid var(--color-border-success);
-  color: var(--color-success);
+  color: var(--color-main-text);
 }
 
 /* Form validation state indicators */
@@ -529,15 +529,15 @@
 }
 
 .form-group--error .form-label {
-  color: var(--color-error);
+  color: var(--pc-emphasis-text-error);
 }
 
 .form-group--warning .form-label {
-  color: var(--color-warning);
+  color: var(--pc-emphasis-text-warning);
 }
 
 .form-group--success .form-label {
-  color: var(--color-success);
+  color: var(--pc-emphasis-text-success);
 }
 
 .form-group--pending .form-label {
@@ -1044,19 +1044,19 @@
 }
 
 .toast--success .toast-icon {
-  color: var(--color-success);
+  color: var(--pc-emphasis-text-success);
 }
 
 .toast--error .toast-icon {
-  color: var(--color-error);
+  color: var(--pc-emphasis-text-error);
 }
 
 .toast--warning .toast-icon {
-  color: var(--color-warning);
+  color: var(--pc-emphasis-text-warning);
 }
 
 .toast--info .toast-icon {
-  color: var(--color-info);
+  color: var(--pc-emphasis-text-info);
 }
 
 /* Toast Content */
@@ -1220,17 +1220,23 @@
 
 .badge--success {
   background-color: var(--color-success-light);
-  color: var(--color-success);
+  color: var(--color-main-text);
+  border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
+  box-shadow: inset 2px 0 0 0 var(--color-success);
 }
 
 .badge--warning {
   background-color: var(--color-warning-light);
-  color: var(--color-warning);
+  color: var(--color-main-text);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+  box-shadow: inset 2px 0 0 0 var(--color-warning);
 }
 
 .badge--error {
   background-color: var(--color-error-light);
-  color: var(--color-error);
+  color: var(--color-main-text);
+  border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
+  box-shadow: inset 2px 0 0 0 var(--color-error);
 }
 
 /* Avatar */

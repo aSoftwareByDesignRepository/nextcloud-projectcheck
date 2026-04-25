@@ -33,6 +33,7 @@ include __DIR__ . '/common/pc-l10n-bootstrap.php';
 	<h2 class="projectcheck-admin__title"><?php p($l->t('ProjectCheck')); ?></h2>
 	<p class="projectcheck-admin__intro"><?php p($l->t('Control who can see and use ProjectCheck, set delegated app administrators, and adjust app defaults. Nextcloud system administrators always have full access.')); ?></p>
 <?php
+$showSectionNav = true;
 include __DIR__ . '/parts/org-settings-form.php';
 ?>
 </div>

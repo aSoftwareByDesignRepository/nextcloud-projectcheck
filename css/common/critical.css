@@ -73,7 +73,7 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     background-color: var(--color-primary);
-    color: white;
+    color: var(--pc-text-on-strong);
 }
 
 .btn:hover {

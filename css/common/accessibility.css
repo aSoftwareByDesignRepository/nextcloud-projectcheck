@@ -197,7 +197,7 @@
 /* Required Field Indicators */
 .form-label--required::after {
   content: ' *';
-  color: var(--color-error);
+  color: var(--pc-emphasis-text-error);
   font-weight: var(--font-weight-bold);
 }
 
@@ -226,7 +226,7 @@
 /* Form Validation Messages */
 .form-error {
   font-size: var(--font-size-sm);
-  color: var(--color-error);
+  color: var(--pc-emphasis-text-error);
   margin-top: var(--space-1);
   font-weight: var(--font-weight-medium);
 }

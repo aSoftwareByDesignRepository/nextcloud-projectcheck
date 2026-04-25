@@ -21,6 +21,7 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
+use OCP\Util;
 
 /**
  * @template-implements IEventListener<BeforeTemplateRenderedEvent>
@@ -47,6 +48,8 @@ class EnrichTemplateNavigationContext implements IEventListener
 		if ($response->getApp() !== Application::APP_ID) {
 			return;
 		}
+		// WCAG / theming: semantic tokens (--pc-*, *-light tints) must load on every view, every theme.
+		Util::addStyle(Application::APP_ID, 'common/colors', true);
 		if (!$event->isLoggedIn()) {
 			return;
 		}

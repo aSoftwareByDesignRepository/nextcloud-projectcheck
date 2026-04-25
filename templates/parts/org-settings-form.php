@@ -21,6 +21,7 @@
  */
 $orgSearchUsersUrl = $orgSearchUsersUrl ?? ($_['orgSearchUsersUrl'] ?? '');
 $orgSearchGroupsUrl = $orgSearchGroupsUrl ?? ($_['orgSearchGroupsUrl'] ?? '');
+$showSectionNav = (bool) ($showSectionNav ?? false);
 if (!isset($restrictOn)) {
 	$restrictOn = !empty($policy['restrictionEnabled']);
 }
@@ -54,6 +55,22 @@ try {
 		novalidate
 		aria-label="<?php p($l->t('ProjectCheck access and defaults')); ?>"
 	>
+		<?php if ($showSectionNav) { ?>
+		<nav class="projectcheck-section-nav" aria-labelledby="pc-onpage-label">
+			<p class="projectcheck-section-nav__kicker" id="pc-onpage-label"><?php p($l->t('On this page')) ?></p>
+			<ol class="projectcheck-section-nav__list" role="list">
+				<li>
+					<a class="projectcheck-section-nav__link" href="#pc-access-heading"><?php p($l->t('Access and visibility')); ?></a>
+				</li>
+				<li>
+					<a class="projectcheck-section-nav__link" href="#pc-admins-heading"><?php p($l->t('App administrators')); ?></a>
+				</li>
+				<li>
+					<a class="projectcheck-section-nav__link" href="#pc-defaults-heading"><?php p($l->t('App defaults')); ?></a>
+				</li>
+			</ol>
+		</nav>
+		<?php } ?>
 		<section class="projectcheck-panel" aria-labelledby="pc-access-heading">
 			<h2 class="projectcheck-panel__title" id="pc-access-heading"><?php p($l->t('Access and visibility')); ?></h2>
 			<?php if ($restrictOn) { ?>

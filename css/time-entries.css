@@ -183,7 +183,7 @@
 
 .notice-success {
 	background: color-mix(in srgb, var(--color-success) 12%, transparent);
-	color: var(--color-success);
+	color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
@@ -193,7 +193,7 @@
 
 .notice-error {
 	background: color-mix(in srgb, var(--color-error) 12%, transparent);
-	color: var(--color-error);
+	color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
 }
 

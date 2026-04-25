@@ -56,7 +56,7 @@
 
 .form-group label.required::after {
 	content: ' *';
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 }
 
 .form-group input,
@@ -132,7 +132,7 @@
 /* Checked/selected option */
 .form-group select option:checked {
 	background-color: var(--color-primary-element, var(--color-primary));
-	color: var(--color-primary-element-text, white);
+	color: var(--pc-text-on-strong);
 }
 
 /* Hover state for options */
@@ -201,16 +201,16 @@
 }
 
 .char-count.warning {
-	color: var(--color-warning);
+	color: var(--pc-emphasis-text-warning);
 }
 
 .char-count.error {
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 }
 
 /* Error messages */
 .error-message {
-	color: var(--color-error);
+	color: var(--pc-emphasis-text-error);
 	font-size: 12px;
 	margin-top: 5px;
 	min-height: 16px;
@@ -253,7 +253,7 @@
 
 .form-actions .btn-primary {
 	background: var(--color-primary);
-	color: white;
+	color: var(--pc-text-on-strong);
 }
 
 .form-actions .btn-primary:hover {
@@ -292,7 +292,7 @@
 /* Success message */
 .success-message {
 	background: var(--color-success);
-	color: white;
+	color: var(--pc-text-on-strong);
 	padding: 15px;
 	border-radius: 4px;
 	margin-bottom: 20px;

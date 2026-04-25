@@ -442,25 +442,33 @@ body {
 	white-space: nowrap;
 }
 
-/* NC32+: use color-mix instead of deprecated --color-*-rgb */
+/* Aligned with projects.css / WCAG: main text on tint + semantic start border */
 .status-active {
-	background: color-mix(in srgb, var(--color-success) 15%, transparent);
-	color: var(--color-success-text);
+	background: var(--color-success-light);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-success);
 }
 
 .status-on-hold {
-	background: color-mix(in srgb, var(--color-warning) 15%, transparent);
-	color: var(--color-warning-text);
+	background: var(--color-warning-light);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-warning);
 }
 
 .status-completed {
-	background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-	color: var(--color-primary-text);
+	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
+	border-inline-start: 3px solid var(--color-primary-element);
 }
 
 .status-cancelled {
-	background: color-mix(in srgb, var(--color-error) 15%, transparent);
-	color: var(--color-error-text);
+	background: var(--color-error-light);
+	color: var(--color-main-text);
+	border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
+	border-inline-start: 3px solid var(--color-error);
 }
 
 .status-archived {

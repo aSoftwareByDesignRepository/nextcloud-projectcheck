@@ -113,7 +113,8 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         <?php endif; ?>
 
         <!-- Project Statistics -->
-        <div class="section stats-section">
+        <div class="section stats-section" aria-labelledby="pc-project-key-figures">
+            <h3 id="pc-project-key-figures" class="stats-section__title"><?php p($l->t('Key figures')); ?></h3>
             <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon">

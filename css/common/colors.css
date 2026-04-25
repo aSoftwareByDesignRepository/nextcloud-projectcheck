@@ -2,6 +2,12 @@
  * Uses ONLY Nextcloud CSS variables - no hardcoded colors.
  * Compatible with light, dark, and high-contrast themes.
  * @see Nextcloud theming: --color-main-text, --color-primary-element, --color-border, etc.
+ *
+ * WCAG / theming contract (do not bypass with raw `white` / pure semantic fills on body text):
+ * - Body & labels: `var(--color-main-text)` or `var(--color-text-maxcontrast)`.
+ * - Meaning on surfaces: `var(--pc-emphasis-text-*)` (blends with main-text for AA on tints).
+ * - Pills / alerts: tint + `main-text` + `border-inline-start` in semantic color.
+ * - Text on solid success/warning/error buttons: `var(--color-primary-element-text)` (Nextcloud “on strong” fill).
  */
 
 :root {
@@ -24,22 +30,34 @@
   --color-accent-active: var(--color-primary-element-hover);
   --color-accent-light: var(--color-primary-element-light, var(--color-background-dark));
 
-  /* Semantic - aliases for app compatibility (Nextcloud defines base vars) */
+  /* Semantic “light” surfaces: real tints (not plain --color-background-dark) so +text patterns stay AA */
   --color-success-hover: var(--color-success);
-  --color-success-light: var(--color-background-dark);
+  --color-success-light: color-mix(in srgb, var(--color-success) 14%, var(--color-main-background));
   --color-success-dark: var(--color-success);
 
   --color-warning-hover: var(--color-warning);
-  --color-warning-light: var(--color-background-dark);
+  --color-warning-light: color-mix(in srgb, var(--color-warning) 14%, var(--color-main-background));
   --color-warning-dark: var(--color-warning);
 
   --color-error-hover: var(--color-error);
-  --color-error-light: var(--color-background-dark);
+  --color-error-light: color-mix(in srgb, var(--color-error) 12%, var(--color-main-background));
   --color-error-dark: var(--color-error);
 
   --color-info-hover: var(--color-info);
-  --color-info-light: var(--color-background-dark);
+  --color-info-light: color-mix(in srgb, var(--color-info) 12%, var(--color-main-background));
   --color-info-dark: var(--color-info);
+
+  /**
+   * WCAG 2.1 AA: emphasis text on main / hover / card surfaces (avoids dark green on dark grey).
+   * Blends semantic hue toward --color-main-text so contrast tracks light and dark themes.
+   */
+  --pc-emphasis-text-success: color-mix(in srgb, var(--color-success) 28%, var(--color-main-text) 72%);
+  --pc-emphasis-text-warning: color-mix(in srgb, var(--color-warning) 28%, var(--color-main-text) 72%);
+  --pc-emphasis-text-error: color-mix(in srgb, var(--color-error) 22%, var(--color-main-text) 78%);
+  --pc-emphasis-text-info: color-mix(in srgb, var(--color-info) 24%, var(--color-main-text) 76%);
+
+  /* Nextcloud: text on primary / saturated action surfaces (replaces ad-hoc `white`) */
+  --pc-text-on-strong: var(--color-primary-element-text);
 
   /* Backgrounds */
   --color-background: var(--color-main-background);
@@ -186,10 +204,10 @@
 .text-tertiary { color: var(--color-text-lighter); }
 .text-muted { color: var(--color-text-lighter); }
 .text-inverse { color: var(--color-primary-element-text); }
-.text-success { color: var(--color-success); }
-.text-warning { color: var(--color-warning); }
-.text-error { color: var(--color-error); }
-.text-info { color: var(--color-info); }
+.text-success { color: var(--pc-emphasis-text-success); }
+.text-warning { color: var(--pc-emphasis-text-warning); }
+.text-error { color: var(--pc-emphasis-text-error); }
+.text-info { color: var(--pc-emphasis-text-info); }
 
 .border-primary { border-color: var(--color-primary-element); }
 .border-secondary { border-color: var(--color-border); }
@@ -198,19 +216,19 @@
 .border-success { border-color: var(--color-success); }
 .border-warning { border-color: var(--color-warning); }
 
-.text-status-online { color: var(--color-success); }
+.text-status-online { color: var(--pc-emphasis-text-success); }
 .text-status-offline { color: var(--color-text-lighter); }
-.text-status-busy { color: var(--color-warning); }
-.text-status-away { color: var(--color-info); }
+.text-status-busy { color: var(--pc-emphasis-text-warning); }
+.text-status-away { color: var(--pc-emphasis-text-info); }
 
-.text-project-active { color: var(--color-success); }
-.text-project-paused { color: var(--color-warning); }
-.text-project-completed { color: var(--color-info); }
-.text-project-cancelled { color: var(--color-error); }
+.text-project-active { color: var(--pc-emphasis-text-success); }
+.text-project-paused { color: var(--pc-emphasis-text-warning); }
+.text-project-completed { color: var(--pc-emphasis-text-info); }
+.text-project-cancelled { color: var(--pc-emphasis-text-error); }
 
-.text-time-entry-billable { color: var(--color-success); }
+.text-time-entry-billable { color: var(--pc-emphasis-text-success); }
 .text-time-entry-non-billable { color: var(--color-text-lighter); }
-.text-time-entry-overtime { color: var(--color-warning); }
+.text-time-entry-overtime { color: var(--pc-emphasis-text-warning); }
 
 .bg-menu { background-color: var(--color-main-background); }
 .border-menu { border-color: var(--color-border); }
@@ -228,7 +246,7 @@
 .border-form-success { border-color: var(--color-success); }
 .text-form-label { color: var(--color-main-text); }
 .text-form-help { color: var(--color-text-maxcontrast); }
-.text-form-required { color: var(--color-error); }
+.text-form-required { color: var(--pc-emphasis-text-error); }
 
 .bg-table { background-color: var(--color-main-background); }
 .border-table { border-color: var(--color-border); }
@@ -243,14 +261,14 @@
 .bg-modal-header { background-color: var(--color-background-dark); }
 .bg-modal-footer { background-color: var(--color-background-dark); }
 
-.bg-notification-success { background-color: var(--color-background-dark); }
-.text-notification-success { color: var(--color-success); }
-.bg-notification-error { background-color: var(--color-background-dark); }
-.text-notification-error { color: var(--color-error); }
-.bg-notification-warning { background-color: var(--color-background-dark); }
-.text-notification-warning { color: var(--color-warning); }
-.bg-notification-info { background-color: var(--color-background-dark); }
-.text-notification-info { color: var(--color-info); }
+.bg-notification-success { background-color: var(--color-success-light); }
+.text-notification-success { color: var(--color-main-text); }
+.bg-notification-error { background-color: var(--color-error-light); }
+.text-notification-error { color: var(--color-main-text); }
+.bg-notification-warning { background-color: var(--color-warning-light); }
+.text-notification-warning { color: var(--color-main-text); }
+.bg-notification-info { background-color: var(--color-info-light); }
+.text-notification-info { color: var(--color-main-text); }
 
 .bg-button-primary { background-color: var(--color-primary-element); }
 .bg-button-primary-hover:hover { background-color: var(--color-primary-element-hover); }
@@ -275,10 +293,10 @@
 .hover\:bg-error:hover { background-color: var(--color-error); }
 .hover\:bg-info:hover { background-color: var(--color-info); }
 .hover\:text-primary:hover { color: var(--color-primary-element-hover); }
-.hover\:text-success:hover { color: var(--color-success); }
-.hover\:text-warning:hover { color: var(--color-warning); }
-.hover\:text-error:hover { color: var(--color-error); }
-.hover\:text-info:hover { color: var(--color-info); }
+.hover\:text-success:hover { color: var(--pc-emphasis-text-success); }
+.hover\:text-warning:hover { color: var(--pc-emphasis-text-warning); }
+.hover\:text-error:hover { color: var(--pc-emphasis-text-error); }
+.hover\:text-info:hover { color: var(--pc-emphasis-text-info); }
 
 .focus\:border-primary:focus { border-color: var(--color-primary-element); }
 .focus\:border-error:focus { border-color: var(--color-error); }
