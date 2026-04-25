@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Search;
 
+use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\TimeEntryService;
@@ -21,6 +22,7 @@ use OCP\Search\IProvider;
 use OCP\Search\ISearchQuery;
 use OCP\Search\SearchResult;
 use OCP\Search\SearchResultEntry;
+use Psr\Log\LoggerInterface;
 
 /**
  * Search provider for projectcheck app
@@ -42,6 +44,12 @@ class ProjectSearchProvider implements IProvider
 	/** @var TimeEntryService */
 	private $timeEntryService;
 
+	/** @var AccessControlService */
+	private $accessControl;
+
+	/** @var LoggerInterface */
+	private $logger;
+
 	/**
 	 * ProjectSearchProvider constructor
 	 *
@@ -50,19 +58,25 @@ class ProjectSearchProvider implements IProvider
 	 * @param ProjectService $projectService
 	 * @param CustomerService $customerService
 	 * @param TimeEntryService $timeEntryService
+	 * @param AccessControlService $accessControl
+	 * @param LoggerInterface $logger
 	 */
 	public function __construct(
 		IL10N $l10n,
 		IURLGenerator $urlGenerator,
 		ProjectService $projectService,
 		CustomerService $customerService,
-		TimeEntryService $timeEntryService
+		TimeEntryService $timeEntryService,
+		AccessControlService $accessControl,
+		LoggerInterface $logger
 	) {
 		$this->l10n = $l10n;
 		$this->urlGenerator = $urlGenerator;
 		$this->projectService = $projectService;
 		$this->customerService = $customerService;
 		$this->timeEntryService = $timeEntryService;
+		$this->accessControl = $accessControl;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -96,6 +110,10 @@ class ProjectSearchProvider implements IProvider
 	 */
 	public function search(IUser $user, ISearchQuery $query): SearchResult
 	{
+		if (!$this->accessControl->canUseApp($user->getUID())) {
+			return SearchResult::complete($this->getName(), []);
+		}
+
 		$searchTerm = $query->getTerm();
 		$limit = $query->getLimit();
 		$offset = $query->getCursor() ?? 0;
@@ -146,8 +164,7 @@ class ProjectSearchProvider implements IProvider
 			}
 
 		} catch (\Exception $e) {
-			// Log error but don't fail the search
-			\OC::$server->getLogger()->error('Error in ProjectControl search: ' . $e->getMessage(), [
+			$this->logger->error('Error in projectcheck search: ' . $e->getMessage(), [
 				'app' => 'projectcheck',
 				'exception' => $e
 			]);

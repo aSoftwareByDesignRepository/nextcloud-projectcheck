@@ -7,6 +7,12 @@
  * @license AGPL-3.0-or-later
  */
 
+\OCP\Util::addStyle('projectcheck', 'common/feedback-system');
+// Patch window.t before other app scripts; keep first in the projectcheck bundle (prepend list).
+\OCP\Util::addScript('projectcheck', 'pc-l10n', 'core', true);
+// SVG icon injection: external app script (CSP via Nextcloud app resource pipeline, not inline).
+\OCP\Util::addScript('projectcheck', 'navigation-icons');
+
 // Get current page to highlight active navigation item
 $currentPage = $_SERVER['REQUEST_URI'] ?? '';
 $isProjects = strpos($currentPage, '/projects') !== false;
@@ -14,9 +20,13 @@ $isCustomers = strpos($currentPage, '/customers') !== false;
 $isEmployees = strpos($currentPage, '/employees') !== false;
 $isTimeEntries = strpos($currentPage, '/time-entries') !== false;
 $isSettings = strpos($currentPage, '/settings') !== false;
+$isOrganization = strpos($currentPage, '/organization') !== false;
+// Injected by EnrichTemplateNavigationContext (BeforeTemplateRendered); safe fallbacks for edge cases.
+$canManageOrg = $canManageOrg ?? ($_['canManageOrg'] ?? false);
+$orgAppSettingsUrl = $orgAppSettingsUrl ?? ($_['orgAppSettingsUrl'] ?? '/index.php/apps/projectcheck/organization');
 // Dashboard is active if URL contains /dashboard OR if it's the base app URL without any specific section
 $isDashboard = strpos($currentPage, '/dashboard') !== false || 
-               (!$isProjects && !$isCustomers && !$isEmployees && !$isTimeEntries && !$isSettings && 
+               (!$isProjects && !$isCustomers && !$isEmployees && !$isTimeEntries && !$isSettings && !$isOrganization && 
                 strpos($currentPage, '/apps/projectcheck') !== false);
 
 // Get stats for the footer (if available)
@@ -35,6 +45,8 @@ if (!isset($_['stats']) || empty($_['stats'])) {
     $customerCount = '...';
     $timeEntryCount = '...';
 }
+
+include __DIR__ . '/pc-l10n-bootstrap.php';
 ?>
 
 <div id="app-navigation" role="navigation">
@@ -89,6 +101,14 @@ if (!isset($_['stats']) || empty($_['stats'])) {
                 <span><?php p($l->t('Settings')); ?></span>
             </a>
         </li>
+        <?php if ($canManageOrg) { ?>
+        <li class="<?php echo $isOrganization ? 'active' : ''; ?>" <?php echo $isOrganization ? 'aria-current="page"' : ''; ?>>
+            <a href="<?php p($orgAppSettingsUrl); ?>">
+                <i data-lucide="shield" class="lucide-icon"></i>
+                <span><?php p($l->t('Organization')); ?></span>
+            </a>
+        </li>
+        <?php } ?>
     </ul>
 
     <!-- Sidebar Footer -->
@@ -105,25 +125,3 @@ if (!isset($_['stats']) || empty($_['stats'])) {
         </div>
     </div>
 </div>
-
-<!-- Initialize Lucide Icons for Navigation -->
-<script nonce="<?php p($_['cspNonce'] ?? ''); ?>">
-    // Local SVG icon library for navigation
-    const navSvgIcons = {
-        folder: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>',
-        home: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>',
-        users: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-        'user-check': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M16 11l2 2 4-4"/></svg>',
-        clock: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>',
-        settings: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>'
-    };
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('[data-lucide]').forEach(function(el) {
-            const iconName = el.getAttribute('data-lucide');
-            if (navSvgIcons[iconName]) {
-                el.innerHTML = navSvgIcons[iconName];
-            }
-        });
-    });
-</script>

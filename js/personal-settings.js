@@ -8,9 +8,10 @@
 (function () {
 	'use strict';
 
-	OCA.ProjectControl = OCA.ProjectControl || {};
+	OCA.ProjectCheck = OCA.ProjectCheck || {};
+	OCA.ProjectControl = OCA.ProjectCheck;
 
-	OCA.ProjectControl.PersonalSettings = {
+	OCA.ProjectCheck.PersonalSettings = {
 		init: function () {
 			this.bindEvents();
 			this.initializeForm();
@@ -138,7 +139,7 @@
 	};
 
 	$(document).ready(function () {
-		OCA.ProjectControl.PersonalSettings.init();
+		OCA.ProjectCheck.PersonalSettings.init();
 	});
 
 })();

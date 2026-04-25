@@ -81,6 +81,8 @@ class ProjectMemberService
             $member->setHourlyRate((float)$row['hourly_rate']);
             $member->setAssignedAt(SafeDateTime::fromRequired($row['assigned_at'] ?? null, 'project_members.assigned_at'));
             $member->setAssignedBy($row['assigned_by']);
+			$member->setMemberState((string)($row['member_state'] ?? ProjectMember::STATE_ACTIVE));
+			$member->setArchivedAt(SafeDateTime::fromOptional($row['archived_at'] ?? null));
 
             return $member;
         } catch (\Exception $e) {
@@ -114,6 +116,8 @@ class ProjectMemberService
             $member->setHourlyRate((float)$row['hourly_rate']);
             $member->setAssignedAt(SafeDateTime::fromRequired($row['assigned_at'] ?? null, 'project_members.assigned_at'));
             $member->setAssignedBy($row['assigned_by']);
+			$member->setMemberState((string)($row['member_state'] ?? ProjectMember::STATE_ACTIVE));
+			$member->setArchivedAt(SafeDateTime::fromOptional($row['archived_at'] ?? null));
 
             $members[] = $member;
         }
@@ -161,7 +165,9 @@ class ProjectMemberService
                 'role' => $qb->createNamedParameter($data['role']),
                 'hourly_rate' => $qb->createNamedParameter((float)($data['hourly_rate'] ?? 0), IQueryBuilder::PARAM_FLOAT),
                 'assigned_at' => $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')),
-                'assigned_by' => $qb->createNamedParameter($data['assigned_by'])
+                'assigned_by' => $qb->createNamedParameter($data['assigned_by']),
+                'member_state' => $qb->createNamedParameter(ProjectMember::STATE_ACTIVE),
+                'archived_at' => $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL),
             ]);
 
         $qb->executeStatement();
@@ -269,6 +275,8 @@ class ProjectMemberService
         $member->setHourlyRate((float)$row['hourly_rate']);
         $member->setAssignedAt(SafeDateTime::fromRequired($row['assigned_at'] ?? null, 'project_members.assigned_at'));
         $member->setAssignedBy($row['assigned_by']);
+		$member->setMemberState((string)($row['member_state'] ?? ProjectMember::STATE_ACTIVE));
+		$member->setArchivedAt(SafeDateTime::fromOptional($row['archived_at'] ?? null));
 
         return $member;
     }

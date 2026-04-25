@@ -17,7 +17,7 @@ Util::addStyle('projectcheck', 'customer-statistics');
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
     <div id="app-content-wrapper">
         <!-- Page Header -->
         <div class="section">
@@ -273,7 +273,5 @@ Util::addStyle('projectcheck', 'customer-statistics');
             }
         });
 
-        // Initialize any customer-specific functionality
-        console.log('Customer page loaded');
     });
 </script>

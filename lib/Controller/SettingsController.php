@@ -26,6 +26,7 @@ use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Traits\StatsTrait;
 use OCP\IL10N;
+use OCP\Util;
 
 /**
  * Settings controller for app configuration
@@ -104,29 +105,20 @@ class SettingsController extends Controller
 			return $this->configureCSP($response, 'guest');
 		}
 
-		// Check if user is admin
-		if (!$this->groupManager->isInGroup($user->getUID(), 'admin')) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('Access denied - Admin privileges required')
-			]);
-			return $this->configureCSP($response, 'guest');
-		}
-
 		$userId = $user->getUID();
 
 		// Get user settings
 		$settings = $this->getUserSettings($userId);
 
 		// Get stats for sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
 
-		// requesttoken/cspNonce: required for templates; use OC internals until OCP exposes these
 		$response = new TemplateResponse($this->appName, 'settings', [
 			'settings' => $settings,
 			'stats' => $stats,
 			'userId' => $userId,
-			'requesttoken' => \OC::$server->getCSRFTokenManager()->getToken()->getEncryptedValue(),
-			'cspNonce' => \OC::$server->getContentSecurityPolicyNonceManager()->getNonce()
+			'requesttoken' => Util::callRegister(),
+			'cspNonce' => '',
 		]);
 
 		// Apply standard main policy
@@ -145,11 +137,6 @@ class SettingsController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
-		}
-
-		// Check if user is admin
-		if (!$this->groupManager->isInGroup($user->getUID(), 'admin')) {
-			return new JSONResponse(['error' => $this->l->t('Access denied - Admin privileges required')], 403);
 		}
 
 		$userId = $user->getUID();

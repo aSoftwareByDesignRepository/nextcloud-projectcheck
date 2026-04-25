@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Db;
 
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
@@ -98,6 +99,19 @@ class CustomerMapper extends QBMapper
 			$qb->andWhere($qb->expr()->eq('created_by', $qb->createNamedParameter($filters['created_by'])));
 		}
 
+		/** @var list<int> $idList */
+		if (isset($filters['id_in']) && is_array($filters['id_in']) && $filters['id_in'] === []) {
+			$qb->andWhere('1=0');
+		} elseif (!empty($filters['id_in']) && is_array($filters['id_in'])) {
+			$ids = array_map('intval', $filters['id_in']);
+			$ids = array_values(array_filter($ids, static fn (int $x): bool => $x > 0));
+			if ($ids === []) {
+				$qb->andWhere('1=0');
+			} else {
+				$qb->andWhere($qb->expr()->in('id', $qb->createNamedParameter($ids, IQueryBuilder::PARAM_INT_ARRAY)));
+			}
+		}
+
 		// Pagination
 		if (!empty($filters['limit'])) {
 			$qb->setMaxResults((int)$filters['limit']);
@@ -152,6 +166,18 @@ class CustomerMapper extends QBMapper
 
 		if (!empty($filters['created_by'])) {
 			$qb->andWhere($qb->expr()->eq('created_by', $qb->createNamedParameter($filters['created_by'])));
+		}
+
+		if (isset($filters['id_in']) && is_array($filters['id_in']) && $filters['id_in'] === []) {
+			$qb->andWhere('1=0');
+		} elseif (!empty($filters['id_in']) && is_array($filters['id_in'])) {
+			$ids = array_map('intval', $filters['id_in']);
+			$ids = array_values(array_filter($ids, static fn (int $x): bool => $x > 0));
+			if ($ids === []) {
+				$qb->andWhere('1=0');
+			} else {
+				$qb->andWhere($qb->expr()->in('id', $qb->createNamedParameter($ids, IQueryBuilder::PARAM_INT_ARRAY)));
+			}
 		}
 
 		$result = $qb->executeQuery();
@@ -252,5 +278,38 @@ class CustomerMapper extends QBMapper
 		$result->closeCursor();
 
 		return $customers;
+	}
+
+	/**
+	 * Customer IDs a non–system-admin user may list: own customers, or any customer with a project
+	 * the user created or is a team member of.
+	 *
+	 * @return list<int>
+	 */
+	public function findAccessibleCustomerIdsForUser(string $userId): array
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->selectDistinct('c.id')
+			->from($this->getTableName(), 'c')
+			->leftJoin('c', 'projects', 'p', $qb->expr()->eq('c.id', 'p.customer_id'))
+			->leftJoin('p', 'project_members', 'pm', $qb->expr()->andX(
+				$qb->expr()->eq('p.id', 'pm.project_id'),
+				$qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)),
+				$qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
+			))
+			->where($qb->expr()->orX(
+				$qb->expr()->eq('c.created_by', $qb->createNamedParameter($userId)),
+				$qb->expr()->eq('p.created_by', $qb->createNamedParameter($userId)),
+				$qb->expr()->isNotNull('pm.id')
+			));
+
+		$result = $qb->executeQuery();
+		$out = [];
+		while ($row = $result->fetch()) {
+			$out[] = (int) $row['id'];
+		}
+		$result->closeCursor();
+
+		return $out;
 	}
 }

@@ -1,9 +1,9 @@
-// Service Worker for ProjectControl App
+// Service Worker for the ProjectCheck app
 // Handles caching, offline functionality, and performance optimization
 
-const CACHE_NAME = 'projectcontrol-v1';
-const STATIC_CACHE = 'projectcontrol-static-v1';
-const DYNAMIC_CACHE = 'projectcontrol-dynamic-v1';
+const CACHE_NAME = 'projectcheck-v1';
+const STATIC_CACHE = 'projectcheck-static-v1';
+const DYNAMIC_CACHE = 'projectcheck-dynamic-v1';
 
 // Files to cache immediately
 const STATIC_FILES = [
@@ -40,44 +40,34 @@ const API_CACHE_PATTERNS = [
 
 // Install event - cache static files
 self.addEventListener('install', event => {
-    console.log('Service Worker installing...');
-    
     event.waitUntil(
         caches.open(STATIC_CACHE)
             .then(cache => {
-                console.log('Caching static files');
                 return cache.addAll(STATIC_FILES);
             })
             .then(() => {
-                console.log('Static files cached successfully');
                 return self.skipWaiting();
             })
             .catch(error => {
-                console.error('Failed to cache static files:', error);
+                console.error('ProjectCheck SW: failed to cache static files', error);
             })
     );
 });
 
-// Activate event - clean up old caches
+// Activate event: drop superseded app caches (previous names or old versions)
 self.addEventListener('activate', event => {
-    console.log('Service Worker activating...');
-    
     event.waitUntil(
         caches.keys()
             .then(cacheNames => {
-                return Promise.all(
-                    cacheNames.map(cacheName => {
-                        if (cacheName !== STATIC_CACHE && 
-                            cacheName !== DYNAMIC_CACHE && 
-                            cacheName.startsWith('projectcontrol-')) {
-                            console.log('Deleting old cache:', cacheName);
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
+                const stale = cacheNames.filter((name) => {
+                    if (name === STATIC_CACHE || name === DYNAMIC_CACHE) {
+                        return false;
+                    }
+                    return name.startsWith('projectcheck-') || name.startsWith('projectcontrol-');
+                });
+                return Promise.all(stale.map((name) => caches.delete(name)));
             })
             .then(() => {
-                console.log('Service Worker activated');
                 return self.clients.claim();
             })
     );
@@ -193,8 +183,6 @@ async function networkOnly(request) {
 
 // Background sync for offline actions
 self.addEventListener('sync', event => {
-    console.log('Background sync triggered:', event.tag);
-    
     if (event.tag === 'background-sync') {
         event.waitUntil(performBackgroundSync());
     }
@@ -243,14 +231,12 @@ async function performAction(action) {
 
 // Remove pending action from IndexedDB
 async function removePendingAction(actionId) {
-    // This would typically remove the action from IndexedDB
-    console.log('Removing pending action:', actionId);
+    // Placeholder for IndexedDB removal when offline queue is implemented
+    void actionId;
 }
 
 // Push notification handling
 self.addEventListener('push', event => {
-    console.log('Push notification received');
-    
     const options = {
         body: event.data ? event.data.text() : 'New notification',
         icon: '/img/notification-icon.png',
@@ -275,14 +261,12 @@ self.addEventListener('push', event => {
     };
     
     event.waitUntil(
-        self.registration.showNotification('ProjectControl', options)
+        self.registration.showNotification('ProjectCheck', options)
     );
 });
 
 // Notification click handling
 self.addEventListener('notificationclick', event => {
-    console.log('Notification clicked:', event.action);
-    
     event.notification.close();
     
     if (event.action === 'explore') {
@@ -294,8 +278,6 @@ self.addEventListener('notificationclick', event => {
 
 // Message handling from main thread
 self.addEventListener('message', event => {
-    console.log('Service Worker received message:', event.data);
-    
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }

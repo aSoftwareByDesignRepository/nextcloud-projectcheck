@@ -624,6 +624,11 @@
 	border: 1px solid var(--color-error);
 }
 
+.status-badge.status-archived {
+	color: var(--color-text-maxcontrast);
+	border: 1px solid var(--color-border);
+}
+
 /* Enhanced Loading and Empty States */
 .loading {
 	text-align: center;

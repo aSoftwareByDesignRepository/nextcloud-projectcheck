@@ -357,11 +357,13 @@
 	});
 
 	// Export functions for global access if needed
-	window.ProjectControlDashboard = {
+	const _dashboardApi = {
 		refreshStats: refreshStats,
 		showNotification: showNotification,
 		showProductivityInfoPopup: showProductivityInfoPopup,
 		hideProductivityInfoPopup: hideProductivityInfoPopup
 	};
+	window.ProjectCheckDashboard = _dashboardApi;
+	window.ProjectControlDashboard = _dashboardApi;
 
 })();

@@ -14,7 +14,7 @@ style('projectcheck', 'navigation');
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
 	<div id="app-content-wrapper">
 		<div class="customer-form-container">
 			<div class="customer-form-header">
@@ -138,20 +138,13 @@ style('projectcheck', 'navigation');
 		settings: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>'
 	};
 
-	// Initialize icons immediatelyich h
+	// Initialize icons on DOM ready
 	document.addEventListener('DOMContentLoaded', function() {
-		console.log('Initializing local SVG icons...');
-
 		document.querySelectorAll('[data-lucide]').forEach(function(el) {
 			const iconName = el.getAttribute('data-lucide');
 			if (svgIcons[iconName]) {
 				el.innerHTML = svgIcons[iconName];
-				console.log('Added icon:', iconName);
-			} else {
-				console.warn('Icon not found:', iconName);
 			}
 		});
-
-		console.log('Icons initialization complete');
 	});
 </script>

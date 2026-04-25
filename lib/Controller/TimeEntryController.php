@@ -198,15 +198,15 @@ class TimeEntryController extends Controller
 		// Get time entries
 		$timeEntries = $this->timeEntryService->getTimeEntriesWithProjectInfo($filters);
 
-		// Get all projects for filter dropdown (excluding cancelled projects)
-		$userProjects = $this->projectService->getProjects(['status' => ['Active', 'On Hold', 'Completed']]);
+		// Get all projects for filter dropdown (incl. archived for viewing historical entries)
+		$userProjects = $this->projectService->getProjectsForUserTimeEntry($user->getUID(), ['status' => ['Active', 'On Hold', 'Completed', 'Archived']]);
 		$userProjects = $this->sortProjectsByName($userProjects);
 
 		// Get all users who have time entries
 		$users = $this->timeEntryService->getUsersWithTimeEntries();
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
 
 		// Get project type statistics for the current filters
 		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType();
@@ -261,16 +261,18 @@ class TimeEntryController extends Controller
 		$userId = $user->getUID();
 
 		// Get all projects for time entry selection (exclude completed/cancelled)
-		$userProjects = $this->projectService->getProjects(['status' => ['Active', 'On Hold']]);
+		$userProjects = $this->projectService->getProjectsForUserTimeEntry($user->getUID(), ['status' => ['Active', 'On Hold']]);
 		$userProjects = array_values(array_filter($userProjects, static function ($project) {
 			$status = trim((string)$project->getStatus());
-			return strcasecmp($status, 'Completed') !== 0 && strcasecmp($status, 'Cancelled') !== 0;
+			return strcasecmp($status, 'Completed') !== 0
+				&& strcasecmp($status, 'Cancelled') !== 0
+				&& strcasecmp($status, 'Archived') !== 0;
 		}));
 
 		$userProjects = $this->sortProjectsByName($userProjects);
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
 
 		$response = new TemplateResponse($this->appName, 'time-entry-form', [
 			'timeEntry' => null,
@@ -279,7 +281,7 @@ class TimeEntryController extends Controller
 			'stats' => $stats,
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'storeUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.store'),
-			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.update', ['id' => 'TIME_ENTRY_ID'])
+			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.update', ['id' => 'TIME_ENTRY_ID']),
 		]);
 
 		return $this->configureCSP($response);
@@ -312,11 +314,12 @@ class TimeEntryController extends Controller
 
 		try {
 			// Validate data
-			$errors = $this->timeEntryService->validateTimeEntryData($data);
-			if (!empty($errors)) {
+			$validation = $this->timeEntryService->validateTimeEntryDataDetailed($data);
+			if (!empty($validation['errors'])) {
 				return new JSONResponse([
 					'success' => false,
-					'errors' => $errors
+					'errors' => $validation['errors'],
+					'errorCodes' => $validation['errorCodes'],
 				], 400);
 			}
 
@@ -330,6 +333,12 @@ class TimeEntryController extends Controller
 			]);
 		} catch (\Throwable $e) {
 			$this->logger->error('Time entry creation failed', ['exception' => $e]);
+			if ($e->getMessage() === 'Access denied') {
+				return new JSONResponse([
+					'success' => false,
+					'error' => $this->l->t('Access denied')
+				], 403);
+			}
 			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
@@ -359,22 +368,33 @@ class TimeEntryController extends Controller
 		$timeEntry = $this->timeEntryService->getTimeEntry($id);
 		if (!$timeEntry) {
 			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'Time entry not found'
+				'message' => $this->l->t('Time entry not found')
 			], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
-		// Get project info for display - no access restrictions for viewing
-		$project = $this->projectService->getProject($timeEntry->getProjectId());
+		$uid = $user->getUID();
+		$isOwner = $timeEntry->getUserId() === $uid;
+		$canAccessProject = $this->projectService->canUserAccessProject($uid, $timeEntry->getProjectId());
+		if (!$isOwner && !$canAccessProject) {
+			$response = new TemplateResponse($this->appName, 'error', [
+				'message' => $this->l->t('Access denied')
+			], 'guest');
+			return $this->configureCSP($response, 'guest');
+		}
 
-		$projectName = $project ? $project->getName() : 'Unknown Project';
+		$project = $this->projectService->getProject($timeEntry->getProjectId());
+		$projectName = $project ? $project->getName() : (string) $this->l->t('Unknown project');
+		$projectShowUrl = $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $timeEntry->getProjectId()]);
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
 
 		$response = new TemplateResponse($this->appName, 'time-entry-detail', [
 			'timeEntry' => $timeEntry,
+			'project' => $project,
 			'projectName' => $projectName,
+			'projectShowUrl' => $projectShowUrl,
 			'stats' => $stats,
 			'urlGenerator' => $this->urlGenerator,
 			'userId' => $user->getUID()
@@ -404,7 +424,7 @@ class TimeEntryController extends Controller
 		$timeEntry = $this->timeEntryService->getTimeEntry($id);
 		if (!$timeEntry) {
 			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'Time entry not found'
+				'message' => $this->l->t('Time entry not found')
 			], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
@@ -418,12 +438,12 @@ class TimeEntryController extends Controller
 		}
 
 		$userId = $user->getUID();
-		// Get all projects for time entry selection (excluding cancelled projects)
-		$userProjects = $this->projectService->getProjects(['status' => ['Active', 'On Hold', 'Completed']]);
+		// Get all projects for time entry selection (incl. archived; moving to a closed project is blocked in the service)
+		$userProjects = $this->projectService->getProjectsForUserTimeEntry($user->getUID(), ['status' => ['Active', 'On Hold', 'Completed', 'Archived']]);
 		$userProjects = $this->sortProjectsByName($userProjects);
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
 
 		$response = new TemplateResponse($this->appName, 'time-entry-form', [
 			'timeEntry' => $timeEntry,
@@ -432,7 +452,7 @@ class TimeEntryController extends Controller
 			'stats' => $stats,
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'storeUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.store'),
-			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.updatePost', ['id' => $timeEntry->getId()])
+			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.updatePost', ['id' => $timeEntry->getId()]),
 		]);
 
 		return $this->configureCSP($response);
@@ -462,11 +482,12 @@ class TimeEntryController extends Controller
 
 		try {
 			// Validate data
-			$errors = $this->timeEntryService->validateTimeEntryData($data);
-			if (!empty($errors)) {
+			$validation = $this->timeEntryService->validateTimeEntryDataDetailed($data);
+			if (!empty($validation['errors'])) {
 				return new JSONResponse([
 					'success' => false,
-					'errors' => $errors
+					'errors' => $validation['errors'],
+					'errorCodes' => $validation['errorCodes'],
 				], 400);
 			}
 
@@ -476,10 +497,16 @@ class TimeEntryController extends Controller
 			return new JSONResponse([
 				'success' => true,
 				'timeEntry' => $timeEntry->getSummary(),
-				'message' => 'Time entry updated successfully'
+				'message' => $this->l->t('Time entry was updated successfully!')
 			]);
 		} catch (\Throwable $e) {
 			$this->logger->error('Time entry update failed', ['exception' => $e]);
+			if ($e->getMessage() === 'Access denied') {
+				return new JSONResponse([
+					'success' => false,
+					'error' => $this->l->t('Access denied')
+				], 403);
+			}
 			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
@@ -515,6 +542,10 @@ class TimeEntryController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		$te = $this->timeEntryService->getTimeEntry($id);
+		if (!$te || $te->getUserId() !== $user->getUID()) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
 		}
 
 		try {
@@ -580,6 +611,10 @@ class TimeEntryController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		$projectId = (int) $projectId;
+		if (!$this->projectService->canUserAccessProject($user->getUID(), $projectId)) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
 		}
 
 		$timeEntries = $this->timeEntryService->getTimeEntriesByProject($projectId);

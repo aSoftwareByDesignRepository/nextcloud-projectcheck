@@ -24,7 +24,6 @@
 
             // Check if elements exist
             if (!menuBar || !menuBarToggle) {
-                console.warn('Menu bar elements not found');
                 return;
             }
 
@@ -36,10 +35,10 @@
 
             // Initialize accessibility features
             initAccessibility();
-
-            console.log('Menu bar initialized successfully');
         } catch (error) {
-            console.error('Error initializing menu bar:', error);
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Error initializing menu bar:', error);
+            }
         }
     }
 
@@ -435,9 +434,9 @@
     }
 
     /**
-     * Check if mobile menu is open
+     * @returns {boolean} whether the mobile menu is open
      */
-    function isMobileMenuOpen() {
+    function getIsMobileMenuOpen() {
         return isMobileMenuOpen;
     }
 
@@ -452,7 +451,7 @@
         setMenuItemLoading: setMenuItemLoading,
         setMenuItemEnabled: setMenuItemEnabled,
         getActiveMenuItem: getActiveMenuItem,
-        isMobileMenuOpen: isMobileMenuOpen
+        isMobileMenuOpen: getIsMobileMenuOpen
     };
 
     // Initialize when DOM is ready

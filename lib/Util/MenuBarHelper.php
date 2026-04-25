@@ -8,6 +8,8 @@ use OCP\IUser;
 use OCP\IGroupManager;
 use OCP\IURLGenerator;
 use OCP\IL10N;
+use OCP\IAppManager;
+use Psr\Log\LoggerInterface;
 
 /**
  * MenuBarHelper Class
@@ -34,6 +36,12 @@ class MenuBarHelper
     /** @var string */
     private $currentApp;
 
+    /** @var LoggerInterface */
+    private $logger;
+
+    /** @var IAppManager */
+    private $appManager;
+
     /**
      * Constructor
      *
@@ -41,17 +49,23 @@ class MenuBarHelper
      * @param IGroupManager $groupManager
      * @param IURLGenerator $urlGenerator
      * @param IL10N $l10n
+     * @param LoggerInterface $logger
+     * @param IAppManager $appManager
      */
     public function __construct(
         IUser $user,
         IGroupManager $groupManager,
         IURLGenerator $urlGenerator,
-        IL10N $l10n
+        IL10N $l10n,
+        LoggerInterface $logger,
+        IAppManager $appManager
     ) {
         $this->user = $user;
         $this->groupManager = $groupManager;
         $this->urlGenerator = $urlGenerator;
         $this->l10n = $l10n;
+        $this->logger = $logger;
+        $this->appManager = $appManager;
         $this->currentPage = $this->getCurrentPage();
         $this->currentApp = $this->getCurrentApp();
     }
@@ -74,8 +88,7 @@ class MenuBarHelper
 
             return $html;
         } catch (\Exception $e) {
-            // Log error and return fallback menu
-            \OC::$server->getLogger()->error('Error generating menu bar: ' . $e->getMessage());
+            $this->logger->error('Error generating menu bar: ' . $e->getMessage(), [ 'app' => 'projectcheck' ]);
             return $this->generateFallbackMenu();
         }
     }
@@ -87,7 +100,7 @@ class MenuBarHelper
      */
     public function generateTopSection(): string
     {
-        $logoPath = \OC::$SERVERROOT . '/apps/projectcontrol/img/logo.png';
+        $logoPath = $this->appManager->getAppPath('projectcheck') . '/img/logo.png';
         $logoUrl = $this->urlGenerator->linkTo('projectcheck', 'img/logo.png');
 
         $html = '<div class="menu-bar-top">';

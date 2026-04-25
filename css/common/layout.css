@@ -471,3 +471,14 @@
     display: none;
   }
 }
+
+/* Responsive data tables: horizontal scroll on narrow viewports */
+.projectcheck-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.projectcheck-table-wrap .grid {
+  min-width: min(100%, 36rem);
+}

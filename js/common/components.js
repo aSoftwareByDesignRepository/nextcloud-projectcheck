@@ -80,8 +80,8 @@ const ProjectControlComponents = {
     modal.setAttribute('aria-hidden', 'false');
 
     // Lock body scroll
-    if (window.ProjectControlLayout) {
-      window.ProjectControlLayout.lockBodyScroll();
+    if (window.ProjectCheckLayout || window.ProjectControlLayout) {
+      (window.ProjectCheckLayout || window.ProjectControlLayout).lockBodyScroll();
     }
 
     // Focus first focusable element
@@ -115,8 +115,8 @@ const ProjectControlComponents = {
     backdrop.remove();
 
     // Unlock body scroll
-    if (window.ProjectControlLayout) {
-      window.ProjectControlLayout.unlockBodyScroll();
+    if (window.ProjectCheckLayout || window.ProjectControlLayout) {
+      (window.ProjectCheckLayout || window.ProjectControlLayout).unlockBodyScroll();
     }
 
     // Dispatch event
@@ -380,15 +380,17 @@ const ProjectControlComponents = {
 
     const alert = document.createElement('div');
     alert.className = `alert alert--${type}`;
-    alert.setAttribute('role', 'alert');
+    alert.setAttribute('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
+    alert.setAttribute('aria-live', type === 'error' || type === 'warning' ? 'assertive' : 'polite');
+    alert.setAttribute('aria-atomic', 'true');
 
     alert.innerHTML = `
-      <div class="alert-icon">${this.getAlertIcon(type)}</div>
+      <div class="alert-icon" aria-hidden="true">${this.getAlertIcon(type)}</div>
       <div class="alert-content">
         ${title ? `<div class="alert-title">${this.escapeHtml(title)}</div>` : ''}
         <div class="alert-message">${this.escapeHtml(message)}</div>
       </div>
-      ${dismissible ? `<button type="button" class="alert-close" aria-label="${t('projectcheck', 'Dismiss alert')}">&times;</button>` : ''}
+      ${dismissible ? `<button type="button" class="alert-close" aria-label="${t('projectcheck', 'Dismiss alert')}"><span aria-hidden="true">&times;</span></button>` : ''}
     `;
 
     if (autoDismiss) {
@@ -431,7 +433,6 @@ const ProjectControlComponents = {
     
     tabContainers.forEach(container => {
       const tabs = container.querySelectorAll('[data-tab]');
-      const panels = container.querySelectorAll('[data-tab-panel]');
       
       tabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
@@ -556,7 +557,6 @@ const ProjectControlComponents = {
     const carousels = document.querySelectorAll('[data-carousel]');
     
     carousels.forEach(carousel => {
-      const slides = carousel.querySelectorAll('[data-carousel-slide]');
       const prevBtn = carousel.querySelector('[data-carousel-prev]');
       const nextBtn = carousel.querySelector('[data-carousel-next]');
       const indicators = carousel.querySelectorAll('[data-carousel-indicator]');
@@ -708,5 +708,6 @@ const ProjectControlComponents = {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ProjectControlComponents;
 } else if (typeof window !== 'undefined') {
+  window.ProjectCheckComponents = ProjectControlComponents;
   window.ProjectControlComponents = ProjectControlComponents;
 }

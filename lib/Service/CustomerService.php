@@ -31,18 +31,103 @@ class CustomerService
 	/** @var TimeEntryMapper */
 	private $timeEntryMapper;
 
+	/** @var AccessControlService */
+	private $accessControl;
+
 	/**
 	 * CustomerService constructor
 	 *
 	 * @param CustomerMapper $customerMapper
 	 * @param ProjectService $projectService
 	 * @param TimeEntryMapper $timeEntryMapper
+	 * @param AccessControlService $accessControl
 	 */
-	public function __construct(CustomerMapper $customerMapper, ProjectService $projectService, TimeEntryMapper $timeEntryMapper)
-	{
+	public function __construct(
+		CustomerMapper $customerMapper,
+		ProjectService $projectService,
+		TimeEntryMapper $timeEntryMapper,
+		AccessControlService $accessControl
+	) {
 		$this->customerMapper = $customerMapper;
 		$this->projectService = $projectService;
 		$this->timeEntryMapper = $timeEntryMapper;
+		$this->accessControl = $accessControl;
+	}
+
+	/**
+	 * System admin or ProjectCheck org admin: can see and manage all customers
+	 */
+	public function isOrganizationStaff(string $userId): bool
+	{
+		if ($this->accessControl->isSystemAdministrator($userId)) {
+			return true;
+		}
+		return $this->accessControl->canManageAppConfiguration($userId);
+	}
+
+	/**
+	 * @return list<int>|null null = all customer IDs
+	 */
+	public function getAccessibleCustomerIdListForList(string $userId): ?array
+	{
+		if ($this->isOrganizationStaff($userId) || $this->projectService->isUserGroupAdmin($userId)) {
+			return null;
+		}
+		return $this->customerMapper->findAccessibleCustomerIdsForUser($userId);
+	}
+
+	/**
+	 * @param array<string, mixed> $baseFilters
+	 * @return array<string, mixed>
+	 */
+	public function getCustomerListFiltersForUser(string $userId, array $baseFilters): array
+	{
+		$scope = $this->getAccessibleCustomerIdListForList($userId);
+		if ($scope === null) {
+			return $baseFilters;
+		}
+		$baseFilters['id_in'] = $scope;
+		return $baseFilters;
+	}
+
+	public function canUserViewCustomer(string $userId, int $customerId): bool
+	{
+		$customer = $this->getCustomer($customerId);
+		if (!$customer) {
+			return false;
+		}
+		if ($this->isOrganizationStaff($userId) || $this->projectService->isUserGroupAdmin($userId)) {
+			return true;
+		}
+		$ids = $this->customerMapper->findAccessibleCustomerIdsForUser($userId);
+		return in_array($customerId, $ids, true);
+	}
+
+	/**
+	 * How many customers appear in the customers list for this user
+	 */
+	public function getVisibleCustomerCountForUser(string $userId): int
+	{
+		$scope = $this->getAccessibleCustomerIdListForList($userId);
+		if ($scope === null) {
+			return $this->getTotalCustomerCount();
+		}
+		return count($scope);
+	}
+
+	/**
+	 * Create/update/delete: creator, or org-wide staff (see isOrganizationStaff)
+	 */
+	public function canUserEditCustomer(string $userId, int $customerId): bool
+	{
+		$customer = $this->getCustomer($customerId);
+		if (!$customer) {
+			return false;
+		}
+		if ($this->isOrganizationStaff($userId) || $this->projectService->isUserGroupAdmin($userId)) {
+			return true;
+		}
+		return $customer->getCreatedBy() === $userId;
 	}
 
 	/**
@@ -240,19 +325,40 @@ class CustomerService
 	}
 
 	/**
-	 * Get customers for dropdown/select
+	 * Search limited to customers the user may see
 	 *
-	 * @return array
+	 * @return Customer[]
 	 */
-	public function getCustomersForSelect(): array
+	public function searchCustomersForUser(string $userId, string $query): array
 	{
-		$customers = $this->getCustomers();
+		$raw = $this->searchCustomers($query);
+		$out = [];
+		foreach ($raw as $c) {
+			if ($this->canUserViewCustomer($userId, (int) $c->getId())) {
+				$out[] = $c;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Get customers for dropdown/select (visibility-scoped, optional exclude for delete-reassign)
+	 *
+	 * @return list<array{id: int, name: string, email: ?string, contactPerson: ?string}>
+	 */
+	public function getCustomersForSelectForUser(string $userId, ?int $excludeCustomerId = null): array
+	{
+		$filters = $this->getCustomerListFiltersForUser($userId, []);
+		$customers = $this->getCustomers($filters);
 		$options = [];
 
 		foreach ($customers as $customer) {
+			if ($excludeCustomerId !== null && $customer->getId() === $excludeCustomerId) {
+				continue;
+			}
 			$options[] = [
 				'id' => $customer->getId(),
-				'name' => $customer->getName(),
+				'name' => $customer->getName() ?? '',
 				'email' => $customer->getEmail(),
 				'contactPerson' => $customer->getContactPerson()
 			];
@@ -262,7 +368,7 @@ class CustomerService
 	}
 
 	/**
-	 * Check if user can delete a customer
+	 * Check if user can delete a customer (same rules as edit)
 	 *
 	 * @param string $userId
 	 * @param int $customerId
@@ -270,13 +376,7 @@ class CustomerService
 	 */
 	public function canUserDeleteCustomer(string $userId, int $customerId): bool
 	{
-		$customer = $this->getCustomer($customerId);
-		if (!$customer) {
-			return false;
-		}
-
-		// Only customer creator can delete
-		return $customer->getCreatedBy() === $userId;
+		return $this->canUserEditCustomer($userId, $customerId);
 	}
 
 	/**

@@ -733,5 +733,6 @@ const ProjectControlUtils = {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ProjectControlUtils;
 } else if (typeof window !== 'undefined') {
+  window.ProjectCheckUtils = ProjectControlUtils;
   window.ProjectControlUtils = ProjectControlUtils;
 }

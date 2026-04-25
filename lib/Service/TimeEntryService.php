@@ -16,6 +16,7 @@ use OCA\ProjectCheck\Db\TimeEntryMapper;
 use OCA\ProjectCheck\Db\ProjectMapper;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
+use OCP\IL10N;
 
 /**
  * TimeEntry service for time tracking business logic
@@ -28,18 +29,30 @@ class TimeEntryService
 	/** @var ProjectMapper */
 	private $projectMapper;
 
+	/** @var ProjectService */
+	private $projectService;
+
+	/** @var IL10N */
+	private $l;
+
 	/**
 	 * TimeEntryService constructor
 	 *
 	 * @param TimeEntryMapper $timeEntryMapper
 	 * @param ProjectMapper $projectMapper
+	 * @param ProjectService $projectService
+	 * @param IL10N $l
 	 */
 	public function __construct(
 		TimeEntryMapper $timeEntryMapper,
-		ProjectMapper $projectMapper
+		ProjectMapper $projectMapper,
+		ProjectService $projectService,
+		IL10N $l
 	) {
 		$this->timeEntryMapper = $timeEntryMapper;
 		$this->projectMapper = $projectMapper;
+		$this->projectService = $projectService;
+		$this->l = $l;
 	}
 
 	/**
@@ -52,15 +65,22 @@ class TimeEntryService
 	 */
 	public function createTimeEntry($data, $userId)
 	{
-		// Validate project exists
+		// Validate project exists and accepts time entries
 		$project = $this->projectMapper->find($data['project_id']);
 		if (!$project) {
-			throw new \Exception('Project not found');
+			throw new \Exception($this->l->t('Project not found'));
+		}
+		if (!$project->allowsTimeTracking()) {
+			throw new \Exception($this->l->t('Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.'));
+		}
+		$pid = (int) $data['project_id'];
+		if (!$this->projectService->canUserAccessProject($userId, $pid)) {
+			throw new \Exception($this->l->t('Access denied'));
 		}
 
 		$parsedDate = $this->parseTimeEntryDateString($data['date'] ?? null);
 		if ($parsedDate === null) {
-			throw new \Exception('Date is required');
+			throw new \Exception($this->l->t('Date is required'));
 		}
 
 		$timeEntry = new TimeEntry();
@@ -160,12 +180,12 @@ class TimeEntryService
 	{
 		$timeEntry = $this->getTimeEntry($id);
 		if (!$timeEntry) {
-			throw new \Exception('Time entry not found');
+			throw new \Exception($this->l->t('Time entry not found'));
 		}
 
 		// Check if user owns this time entry
 		if ($timeEntry->getUserId() !== $userId) {
-			throw new \Exception('Access denied');
+			throw new \Exception($this->l->t('Access denied'));
 		}
 
 		// Update fields with proper types
@@ -192,6 +212,19 @@ class TimeEntryService
 			$timeEntry->setHourlyRate((float)$data['hourly_rate']);
 		}
 
+		if (isset($data['project_id'])) {
+			$targetProject = $this->projectMapper->find($timeEntry->getProjectId());
+			if (!$targetProject) {
+				throw new \Exception($this->l->t('Project not found'));
+			}
+			if (!$targetProject->allowsTimeTracking()) {
+				throw new \Exception($this->l->t('Time entries cannot be moved to a project that is not Active or On Hold.'));
+			}
+			if (!$this->projectService->canUserAccessProject($userId, (int) $timeEntry->getProjectId())) {
+				throw new \Exception($this->l->t('Access denied'));
+			}
+		}
+
 		$timeEntry->setUpdatedAt(new \DateTime());
 
 		return $this->timeEntryMapper->update($timeEntry);
@@ -208,14 +241,27 @@ class TimeEntryService
 	{
 		$timeEntry = $this->getTimeEntry($id);
 		if (!$timeEntry) {
-			throw new \Exception('Time entry not found');
+			throw new \Exception($this->l->t('Time entry not found'));
 		}
 
 		// Check if user owns this time entry
 		if ($timeEntry->getUserId() !== $userId) {
-			throw new \Exception('Access denied');
+			throw new \Exception($this->l->t('Access denied'));
 		}
 
+		$this->timeEntryMapper->delete($timeEntry);
+	}
+
+	/**
+	 * Remove a time entry as part of system maintenance (cron/CLI). No per-user ownership check.
+	 * Do not call from user HTTP controllers.
+	 */
+	public function deleteTimeEntryForMaintenance(int $id): void
+	{
+		$timeEntry = $this->getTimeEntry($id);
+		if (!$timeEntry) {
+			return;
+		}
 		$this->timeEntryMapper->delete($timeEntry);
 	}
 
@@ -448,71 +494,122 @@ class TimeEntryService
 	}
 
 	/**
-	 * Validate time entry data
+	 * Validate time entry data (returns localized messages for API and forms)
 	 *
 	 * @param array $data Time entry data
-	 * @return array Array of validation errors
+	 * @return array<string, string> field => translated message
 	 */
 	public function validateTimeEntryData($data)
 	{
+		return $this->validateTimeEntryDataDetailed($data)['errors'];
+	}
+
+	/**
+	 * Validate time entry data with both localized messages and stable error codes
+	 * (for API clients and audit logs).
+	 *
+	 * @param array $data Time entry data
+	 * @return array{errors: array<string, string>, errorCodes: array<string, string>}
+	 */
+	public function validateTimeEntryDataDetailed(array $data): array
+	{
+		$raw = $this->collectTimeEntryDataValidationCodes($data);
+		$errors = [];
+		foreach ($raw as $field => $code) {
+			$errors[$field] = $this->translateTimeEntryDataValidationCode($field, (string) $code);
+		}
+		return ['errors' => $errors, 'errorCodes' => $raw];
+	}
+
+	/**
+	 * @return array<string, string> field => machine code
+	 */
+	private function collectTimeEntryDataValidationCodes(array $data): array
+	{
 		$errors = [];
 
-		// Required fields
 		if (!isset($data['project_id']) || $data['project_id'] === '' || $data['project_id'] === null) {
-			$errors['project_id'] = 'Project is required';
+			$errors['project_id'] = 'required';
 		} else {
-			// Validate project_id is numeric
 			if (!is_numeric($data['project_id']) || $data['project_id'] <= 0) {
-				$errors['project_id'] = 'Invalid project ID';
+				$errors['project_id'] = 'invalid';
 			}
 		}
 
 		if (!isset($data['date']) || $data['date'] === '' || $data['date'] === null) {
-			$errors['date'] = 'Date is required';
+			$errors['date'] = 'required';
 		} else {
 			$date = $this->parseTimeEntryDateString($data['date']);
 
 			if (!$date) {
-				$errors['date'] = 'Invalid date format';
+				$errors['date'] = 'invalid_format';
 			} else {
-				// Check if date is not in the future (allow today)
 				$today = new \DateTime();
 				$today->setTime(0, 0, 0);
 				$inputDate = clone $date;
 				$inputDate->setTime(0, 0, 0);
 				if ($inputDate > $today) {
-					$errors['date'] = 'Date cannot be in the future';
+					$errors['date'] = 'in_future';
 				}
 			}
 		}
 
 		if (!isset($data['hours']) || $data['hours'] === '' || $data['hours'] === null) {
-			$errors['hours'] = 'Hours are required';
+			$errors['hours'] = 'required';
 		} else {
-			// Validate hours
 			if (!is_numeric($data['hours']) || $data['hours'] <= 0) {
-				$errors['hours'] = 'Hours must be a positive number';
-			}
-			if ($data['hours'] > 24) {
-				$errors['hours'] = 'Hours cannot exceed 24';
+				$errors['hours'] = 'not_positive';
+			} elseif ((float) $data['hours'] > 24) {
+				$errors['hours'] = 'exceeds_24';
 			}
 		}
 
 		if (!isset($data['hourly_rate']) || $data['hourly_rate'] === '' || $data['hourly_rate'] === null) {
-			$errors['hourly_rate'] = 'Hourly rate is required';
+			$errors['hourly_rate'] = 'required';
 		} else {
-			// Validate hourly rate
-			if (!is_numeric($data['hourly_rate']) || $data['hourly_rate'] < 0) {
-				$errors['hourly_rate'] = 'Hourly rate must be a non-negative number';
+			if (!is_numeric($data['hourly_rate']) || (float) $data['hourly_rate'] < 0) {
+				$errors['hourly_rate'] = 'invalid';
 			}
 		}
 
-		// Validate description length
-		if (!empty($data['description']) && strlen($data['description']) > 1000) {
-			$errors['description'] = 'Description cannot exceed 1000 characters';
+		if (!empty($data['description']) && strlen((string) $data['description']) > 1000) {
+			$errors['description'] = 'too_long';
 		}
 
 		return $errors;
+	}
+
+	private function translateTimeEntryDataValidationCode(string $field, string $code): string
+	{
+		return match ($field) {
+			'project_id' => match ($code) {
+				'required' => $this->l->t('Project is required'),
+				'invalid' => $this->l->t('Invalid project ID'),
+				default => $this->l->t('Invalid parameters'),
+			},
+			'date' => match ($code) {
+				'required' => $this->l->t('Date is required'),
+				'invalid_format' => $this->l->t('Invalid date format'),
+				'in_future' => $this->l->t('Date cannot be in the future'),
+				default => $this->l->t('Invalid parameters'),
+			},
+			'hours' => match ($code) {
+				'required' => $this->l->t('Hours are required'),
+				'not_positive' => $this->l->t('Hours must be a positive number'),
+				'exceeds_24' => $this->l->t('Hours cannot exceed 24'),
+				default => $this->l->t('Invalid parameters'),
+			},
+			'hourly_rate' => match ($code) {
+				'required' => $this->l->t('Hourly rate is required'),
+				'invalid' => $this->l->t('Hourly rate must be a non-negative number'),
+				default => $this->l->t('Invalid parameters'),
+			},
+			'description' => match ($code) {
+				'too_long' => $this->l->t('Description cannot exceed 1000 characters'),
+				default => $this->l->t('Invalid parameters'),
+			},
+			default => $this->l->t('Invalid parameters'),
+		};
 	}
 
 	/**
@@ -525,7 +622,17 @@ class TimeEntryService
 	 */
 	public function getTimeEntriesByDateRange($dateFrom, $dateTo, $userId)
 	{
-		return $this->timeEntryMapper->findByDateRange($dateFrom, $dateTo, $userId);
+		$filters = [];
+		if ($dateFrom !== null && $dateFrom !== '') {
+			$filters['date_from'] = $dateFrom;
+		}
+		if ($dateTo !== null && $dateTo !== '') {
+			$filters['date_to'] = $dateTo;
+		}
+		if ($userId !== null && $userId !== '' && $userId !== 'system') {
+			$filters['user_id'] = $userId;
+		}
+		return $this->timeEntryMapper->findAll($filters);
 	}
 
 	/**
@@ -538,6 +645,18 @@ class TimeEntryService
 	public function getTimeEntriesByProjectAndUser($projectId, $userId)
 	{
 		return $this->timeEntryMapper->findByProjectAndUser($projectId, $userId);
+	}
+
+	/**
+	 * @return float Total hours for one user on one project
+	 */
+	public function getTotalHoursForProjectAndUser(int $projectId, string $userId): float
+	{
+		$sum = 0.0;
+		foreach ($this->timeEntryMapper->findByProjectAndUser($projectId, $userId) as $entry) {
+			$sum += $entry->getHours();
+		}
+		return $sum;
 	}
 
 	/**

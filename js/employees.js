@@ -8,8 +8,6 @@
 (function () {
 	'use strict';
 
-	console.log('🚀 EMPLOYEES JS LOADED');
-
 	// DOM elements
 	const elements = {
 		searchInput: document.getElementById('employee-search'),
@@ -23,17 +21,13 @@
 	 * Initialize the application
 	 */
 	function init() {
-		console.log('Employees app initializing...');
 		bindEvents();
-		console.log('Employees app initialized');
 	}
 
 	/**
 	 * Bind event listeners
 	 */
 	function bindEvents() {
-		console.log('Binding events...');
-
 		// Search input - apply on Enter
 		if (elements.searchInput) {
 			elements.searchInput.addEventListener('keydown', function(e) {
@@ -77,8 +71,6 @@
 	 * Clear search and show all rows
 	 */
 	function clearSearch() {
-		console.log('=== CLEARING SEARCH ===');
-		
 		if (elements.searchInput) {
 			elements.searchInput.value = '';
 		}
@@ -87,13 +79,6 @@
 		url.searchParams.delete('search');
 		url.searchParams.set('page', '1');
 		window.location.href = url.toString();
-	}
-
-	/**
-	 * Update empty state visibility
-	 */
-	function updateEmptyState() {
-		// Server-side paging handles empty states on render.
 	}
 
 	// Initialize when DOM is ready

@@ -12,5 +12,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function initializeEmployeeDetail() {
     // Add any employee detail-specific JavaScript functionality here
-    console.log('Employee detail initialized');
 }

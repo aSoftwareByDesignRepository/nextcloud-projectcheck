@@ -16,11 +16,12 @@ Util::addStyle('projectcheck', 'budget-alerts');
 Util::addStyle('projectcheck', 'custom-icons');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/progress-bars');
+Util::addStyle('projectcheck', 'common/accessibility');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
@@ -87,10 +88,10 @@ Util::addStyle('projectcheck', 'common/progress-bars');
 
         <!-- Budget Alerts -->
         <?php if (isset($budgetAlerts) && !empty($budgetAlerts)): ?>
-            <div class="section budget-alerts-section">
+            <div class="section budget-alerts-section pc-section" aria-labelledby="dash-budget-alerts-title">
                 <div class="section-header">
-                    <h3><?php p($l->t('Budget Alerts')); ?></h3>
-                    <p><?php p($l->t('Projects requiring attention')); ?></p>
+                    <h3 class="pc-section__title" id="dash-budget-alerts-title"><?php p($l->t('Budget Alerts')); ?></h3>
+                    <p class="pc-section__intro"><?php p($l->t('Projects requiring attention')); ?></p>
                 </div>
 
                 <?php foreach ($budgetAlerts as $alert): ?>
@@ -118,10 +119,10 @@ Util::addStyle('projectcheck', 'common/progress-bars');
         <?php endif; ?>
 
         <!-- Statistics Overview -->
-        <div class="section stats-overview-section">
+        <div class="section stats-overview-section pc-section" aria-labelledby="dash-overview-stats-title">
             <div class="section-header">
-                <h3><?php p($l->t('Overview Statistics')); ?></h3>
-                <p><?php p($l->t('Key metrics and project insights')); ?></p>
+                <h3 class="pc-section__title" id="dash-overview-stats-title"><?php p($l->t('Overview Statistics')); ?></h3>
+                <p class="pc-section__intro"><?php p($l->t('Key metrics and project insights')); ?></p>
             </div>
 
             <div class="overview-stats-compact">
@@ -707,19 +708,18 @@ Util::addStyle('projectcheck', 'common/progress-bars');
 
     // Temporary popup functions (will be moved to webpack build)
     function showProductivityInfoPopup() {
-        console.log('showProductivityInfoPopup called');
         const popup = document.getElementById('productivity-info-popup');
         if (popup) {
             popup.style.display = 'flex';
             document.body.style.overflow = 'hidden';
-            console.log('Popup should be visible now');
         } else {
-            console.error('Popup element not found!');
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Productivity info popup element not found');
+            }
         }
     }
 
     function hideProductivityInfoPopup() {
-        console.log('hideProductivityInfoPopup called');
         const popup = document.getElementById('productivity-info-popup');
         if (popup) {
             popup.style.display = 'none';
@@ -733,12 +733,9 @@ Util::addStyle('projectcheck', 'common/progress-bars');
 
     // Add event listeners
     document.addEventListener('click', function(event) {
-        console.log('Dashboard click handler - target:', event.target);
-
         // Handle productivity info popup trigger
         if (event.target.matches('.info-popup-trigger') ||
             event.target.matches('[data-action="show-productivity-info"]')) {
-            console.log('Productivity info button clicked!');
             event.preventDefault();
             event.stopPropagation();
             showProductivityInfoPopup();
@@ -748,7 +745,6 @@ Util::addStyle('projectcheck', 'common/progress-bars');
         // Handle popup close button
         if (event.target.matches('.popup-close') ||
             event.target.matches('[data-action="hide-productivity-info"]')) {
-            console.log('Popup close button clicked!');
             event.preventDefault();
             event.stopPropagation();
             hideProductivityInfoPopup();

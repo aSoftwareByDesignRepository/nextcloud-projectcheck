@@ -35,22 +35,17 @@
 	function init() {
 		// Only initialize if we're on the projects page
 		if (!document.getElementById('projects-tbody') && !document.getElementById('project-search') && !document.querySelector('.projects-table')) {
-			console.log('ProjectControl: Not on projects page, skipping initialization');
 			return;
 		}
-		
-		console.log('ProjectControl app initializing...');
 		bindEvents();
 		updateProgressBars();
 		initMessageAutoHide();
-		console.log('ProjectControl app initialized');
 	}
 
 	/**
 	 * Bind event listeners
 	 */
 	function bindEvents() {
-		console.log('Binding events...');
 		// Search functionality (apply on Enter)
 		if (elements.searchInput) {
 			elements.searchInput.addEventListener('keydown', function (e) {
@@ -97,12 +92,10 @@
 
 		// Delete project buttons
 		document.addEventListener('click', function (e) {
-			console.log('Click event detected on:', e.target);
 			if (e.target.closest('.delete-project-btn')) {
 				const button = e.target.closest('.delete-project-btn');
 				const projectId = button.getAttribute('data-project-id');
 				const projectName = button.getAttribute('data-project-name');
-				console.log('Delete button clicked for project:', projectId, projectName);
 				showProjectDeletionModal(projectId, projectName);
 			}
 		});
@@ -240,7 +233,7 @@
 			.then(response => response.json())
 			.then(data => {
 				if (data.success) {
-					renderTeamMembers(data.teamMembers);
+					renderTeamMembers(data.teamMembers, data.teamMembersFormer);
 				} else {
 					elements.teamMembersList.innerHTML = '<p class="error">' + t('projectcheck', 'Error loading team members') + '</p>';
 				}
@@ -252,32 +245,52 @@
 	}
 
 	/**
-	 * Render team members in modal
+	 * Render team members in modal (active = manageable; former = read-only)
 	 */
-	function renderTeamMembers(teamMembers) {
-		if (teamMembers.length === 0) {
+	function renderTeamMembers(teamMembers, teamMembersFormer) {
+		const former = teamMembersFormer || [];
+		if (teamMembers.length === 0 && former.length === 0) {
 			elements.teamMembersList.innerHTML = '<p>' + t('projectcheck', 'No team members assigned to this project.') + '</p>';
 			return;
 		}
 
-		const html = teamMembers.map(member => `
-			<div class="team-member">
+		const row = (member, isFormer) => {
+			const name = escapeHtml(member.name || member.user_id || '');
+			const uid = escapeHtml(member.user_id || '');
+			const role = escapeHtml(member.role || '');
+			const removeBtn = isFormer
+				? ''
+				: `<div class="team-member-actions">
+					<button type="button" class="button secondary small remove-member-btn" data-user-id="${uid}" aria-label="${t('projectcheck', 'Remove from project')}">
+						${t('projectcheck', 'Remove')}
+					</button>
+				</div>`;
+			const badge = isFormer ? ` <span class="pc-badge pc-badge--neutral">${t('projectcheck', 'Former')}</span>` : '';
+			return `
+			<div class="team-member${isFormer ? ' team-member--former' : ''}">
 				<div class="team-member-info">
-					<div class="team-member-name">${escapeHtml(member.user_id)}</div>
-					<div class="team-member-role">${escapeHtml(member.role)}</div>
+					<div class="team-member-name">${name}${badge}</div>
+					<div class="team-member-role">${role}</div>
 					${member.hourly_rate ? `<div class="team-member-rate">${member.hourly_rate} €/h</div>` : ''}
 				</div>
-				<div class="team-member-actions">
-					<button class="button secondary small remove-member-btn" data-user-id="${escapeHtml(member.user_id)}">
-						Remove
-					</button>
-				</div>
-			</div>
-		`).join('');
+				${removeBtn}
+			</div>`;
+		};
 
+		let html = '';
+		if (teamMembers.length > 0) {
+			html += '<div role="group" aria-label="' + escapeHtml(t('projectcheck', 'Current team')) + '">';
+			html += teamMembers.map(m => row(m, false)).join('');
+			html += '</div>';
+		}
+		if (former.length > 0) {
+			html += '<p class="team-modal-former-intro">' + escapeHtml(t('projectcheck', 'Former team members (account removed)')) + '</p>';
+			html += '<div role="group" aria-label="' + escapeHtml(t('projectcheck', 'Former team members')) + '">';
+			html += former.map(m => row(m, true)).join('');
+			html += '</div>';
+		}
 		elements.teamMembersList.innerHTML = html;
 
-		// Bind remove member events
 		elements.teamMembersList.querySelectorAll('.remove-member-btn').forEach(btn => {
 			btn.addEventListener('click', function () {
 				removeTeamMember(currentProjectId, this.dataset.userId);
@@ -289,7 +302,7 @@
 	 * Remove team member
 	 */
 	function removeTeamMember(projectId, userId) {
-		if (!confirm('Are you sure you want to remove this team member?')) {
+		if (!confirm(t('projectcheck', 'Are you sure you want to remove this team member?'))) {
 			return;
 		}
 
@@ -317,24 +330,10 @@
 	}
 
 	/**
-	 * Show delete confirmation modal
-	 */
-	function showDeleteConfirmation(projectId, projectName) {
-		currentProjectId = projectId;
-		elements.projectNameToDelete.textContent = projectName;
-		elements.deleteModal.classList.add('show');
-	}
-
-	/**
-	 * Global function for delete confirmation
-	 */
-	/**
 	 * Show project deletion modal
 	 */
 	function showProjectDeletionModal(projectId, projectName) {
 		if (typeof window.projectcheckDeletionModal === 'undefined') {
-			console.error('Deletion modal not loaded');
-			// Fallback to old method
 			confirmDeleteProject(projectId, projectName);
 			return;
 		}
@@ -355,13 +354,12 @@
 				}
 
 				// Show success message and reload after delay
-				showNotification('Project deleted successfully', 'success');
+				showNotification(t('projectcheck', 'Project deleted successfully'), 'success');
 				setTimeout(() => {
 					window.location.reload();
 				}, 1000);
 			},
 			onCancel: function () {
-				console.log('Project deletion cancelled');
 			}
 		});
 	}
@@ -369,8 +367,12 @@
 	/**
 	 * Confirm delete project function (global) - fallback method
 	 */
-	window.confirmDeleteProject = function (projectId, projectName = 'this project') {
-		if (confirm(`Are you sure you want to delete "${projectName}"? This action cannot be undone.`)) {
+	window.confirmDeleteProject = function (projectId, projectName) {
+		const name = (projectName !== undefined && projectName !== null && String(projectName).length > 0)
+			? String(projectName)
+			: t('projectcheck', 'this project');
+		const template = t('projectcheck', 'Are you sure you want to delete the project "%s"? This action cannot be undone.');
+		if (confirm(String(template).replace(/%s/g, name))) {
 			deleteProject(projectId);
 		}
 	};
@@ -379,10 +381,7 @@
 	 * Delete project function
 	 */
 	function deleteProject(projectId) {
-		console.log('deleteProject called with projectId:', projectId);
-		// Show loading state
 		const deleteBtn = document.querySelector(`button[data-project-id="${projectId}"]`);
-		console.log('Found delete button:', deleteBtn);
 		if (deleteBtn) {
 			const originalContent = deleteBtn.innerHTML;
 			deleteBtn.innerHTML = '<span class="icon icon-loading"></span>';
@@ -585,15 +584,15 @@
 		}
 
 		if (field.hasAttribute('required') && !field.value.trim()) {
-			return 'This field is required';
+			return t('projectcheck', 'This field is required');
 		}
 
 		if (field.type === 'email') {
-			return 'Please enter a valid email address';
+			return t('projectcheck', 'Please enter a valid email address');
 		}
 
 		if (field.type === 'number') {
-			return 'Please enter a valid number';
+			return t('projectcheck', 'Please enter a valid number');
 		}
 
 		return t('projectcheck', 'Invalid value');

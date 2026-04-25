@@ -5,6 +5,7 @@
  * @license AGPL-3.0-or-later
  */
 
+/* global t */
 (function () {
     'use strict';
 
@@ -20,18 +21,14 @@
      * Initialize the application
      */
     function init() {
-        console.log('Customers app initializing...');
         bindEvents();
         initMessageAutoHide();
-        console.log('Customers app initialized');
     }
 
     /**
      * Bind event listeners
      */
     function bindEvents() {
-        console.log('Binding events...');
-
         // Apply search on Enter
         if (elements.searchInput) {
             elements.searchInput.addEventListener('keydown', function (e) {
@@ -62,7 +59,6 @@
                 const customerId = button.getAttribute('data-customer-id');
                 const customerName = button.getAttribute('data-customer-name');
                 const deleteUrl = button.getAttribute('data-delete-url');
-                console.log('Delete button clicked for customer:', customerId, customerName);
                 showCustomerDeletionModal(customerId, customerName, deleteUrl);
             }
         });
@@ -101,8 +97,7 @@
      */
     function showCustomerDeletionModal(customerId, customerName, deleteUrl) {
         if (typeof window.projectcheckDeletionModal === 'undefined') {
-            console.error('Deletion modal not loaded');
-            // Fallback to old method
+            // Fallback to native confirm when the shared modal script is not loaded
             confirmDeleteCustomer(customerId, customerName);
             return;
         }
@@ -132,7 +127,6 @@
                 }
             },
             onCancel: function () {
-                console.log('Customer deletion cancelled');
             }
         });
     }
@@ -141,8 +135,10 @@
      * Fallback: Confirm delete customer (old method)
      */
     function confirmDeleteCustomer(customerId, customerName) {
-        const name = customerName || 'this customer';
-        const message = `Are you sure you want to delete ${name}?`;
+        const displayName = customerName && String(customerName).trim()
+            ? customerName
+            : t('projectcheck', 'this customer');
+        const message = t('projectcheck', 'Are you sure you want to delete %s? This action cannot be undone.', displayName);
 
         if (!confirm(message)) {
             return;
@@ -155,31 +151,21 @@
      * Delete customer via AJAX
      */
     function deleteCustomer(customerId, options = {}) {
-        console.log('deleteCustomer called with customerId:', customerId);
-
         // Try to get the delete URL from a data attribute or generate it
         let url;
         const deleteButton = document.querySelector(`button[data-customer-id="${customerId}"]`);
-        console.log('Delete button found:', deleteButton);
-        console.log('Delete button dataset:', deleteButton ? deleteButton.dataset : 'No button found');
 
         if (deleteButton && deleteButton.dataset.deleteUrl) {
             url = deleteButton.dataset.deleteUrl.replace('CUSTOMER_ID', customerId);
-            console.log('Using URL from data attribute:', url);
         } else {
             // Use Nextcloud's URL generation if available, otherwise fallback to hardcoded URL
             url = typeof OC !== 'undefined' && OC.generateUrl ?
                 OC.generateUrl(`/apps/projectcheck/customers/${customerId}/delete`) :
                 `/index.php/apps/projectcheck/customers/${customerId}/delete`;
-            console.log('Using generated URL:', url);
         }
-
-        console.log('Final Delete URL:', url);
 
         const token = document.querySelector('input[name="requesttoken"]')?.value ||
             (typeof OC !== 'undefined' ? OC.requestToken : '');
-
-        console.log('Request token:', token);
 
         const bodyParams = new URLSearchParams();
         bodyParams.append('_method', 'DELETE');
@@ -200,15 +186,12 @@
             body: bodyParams.toString()
         })
             .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('Response data:', data);
                 if (data.success) {
                     // Remove the row from the table
                     const row = document.querySelector(`tr[data-customer-id="${customerId}"]`);
@@ -218,14 +201,13 @@
                     }
 
                     // Show success message
-                    showMessage('Customer deleted successfully!', 'success');
+                    showMessage(t('projectcheck', 'Customer deleted successfully'), 'success');
                 } else {
                     showMessage(data.error || data.message || t('projectcheck', 'Failed to delete customer'), 'error');
                 }
             })
-            .catch(error => {
-                console.error('Error deleting customer:', error);
-                showMessage('An error occurred while deleting the customer', 'error');
+            .catch(function () {
+                showMessage(t('projectcheck', 'An error occurred while deleting the customer'), 'error');
             });
     }
 
@@ -233,15 +215,26 @@
      * Show message
      */
     function showMessage(message, type) {
+        const level = type || 'info';
         // Remove existing messages
         const existingMessages = document.querySelectorAll('.notice');
         existingMessages.forEach(msg => msg.remove());
 
         // Create new message
         const messageDiv = document.createElement('div');
-        messageDiv.className = `notice notice-${type}`;
+        messageDiv.className = 'notice notice-' + level;
+        messageDiv.setAttribute('role', level === 'error' ? 'alert' : 'status');
+        messageDiv.setAttribute('aria-live', level === 'error' ? 'assertive' : 'polite');
+        messageDiv.setAttribute('aria-atomic', 'true');
         const icon = document.createElement('i');
-        icon.className = `icon icon-${type === 'success' ? 'checkmark' : 'error'}`;
+        let iconName = 'info';
+        if (level === 'success') {
+            iconName = 'checkmark';
+        } else if (level === 'error') {
+            iconName = 'error';
+        }
+        icon.className = 'icon icon-' + iconName;
+        icon.setAttribute('aria-hidden', 'true');
         const span = document.createElement('span');
         span.textContent = message;
         messageDiv.appendChild(icon);

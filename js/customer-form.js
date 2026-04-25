@@ -42,7 +42,6 @@
 	 */
 	function addFormHandlers() {
 		const form = document.getElementById('customer-form');
-		const messageDiv = document.getElementById('form-message');
 
 		if (form) {
 			form.addEventListener('submit', function (e) {
@@ -119,17 +118,6 @@
 			}
 		});
 
-		// Add auto-save functionality (optional)
-		let autoSaveTimeout;
-		textInputs.forEach(function (input) {
-			input.addEventListener('input', function () {
-				clearTimeout(autoSaveTimeout);
-				autoSaveTimeout = setTimeout(function () {
-					// Could implement auto-save here
-					console.log('Auto-save triggered');
-				}, 2000);
-			});
-		});
 	}
 
 	/**
@@ -374,7 +362,6 @@
 	 * Validate individual field
 	 */
 	function validateField(field) {
-		const formGroup = field.closest('.form-group');
 		clearFieldError(field);
 
 		// Validate based on field type
@@ -456,7 +443,7 @@
 		if (loading) {
 			form.classList.add('loading');
 			submitButton.disabled = true;
-			submitButton.textContent = 'Saving...';
+			submitButton.textContent = t('projectcheck', 'Saving…');
 			submitButton.setAttribute('aria-busy', 'true');
 		} else {
 			form.classList.remove('loading');
@@ -489,8 +476,17 @@
 
 		if (messageDiv) {
 			messageDiv.textContent = message;
-			messageDiv.className = `form-message ${type}`;
+			messageDiv.className = 'form-message ' + type;
 			messageDiv.style.display = 'block';
+			if (type === 'error') {
+				messageDiv.setAttribute('role', 'alert');
+				messageDiv.setAttribute('aria-live', 'assertive');
+			} else {
+				messageDiv.setAttribute('role', 'status');
+				messageDiv.setAttribute('aria-live', 'polite');
+			}
+			messageDiv.setAttribute('aria-atomic', 'true');
+			messageDiv.removeAttribute('hidden');
 
 			// Scroll to message
 			messageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -569,11 +565,13 @@
 	}
 
 	// Export functions for global access if needed
-	window.ProjectControlCustomerForm = {
+	const _customerFormApi = {
 		validateFormData: validateFormData,
 		submitCustomerData: submitCustomerData,
 		showMessage: showMessage,
 		validateField: validateField
 	};
+	window.ProjectCheckCustomerForm = _customerFormApi;
+	window.ProjectControlCustomerForm = _customerFormApi;
 
 })();

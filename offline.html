@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offline - ProjectControl</title>
+    <title>Offline — ProjectCheck</title>
     <style>
         :root {
             --color-primary: #0082c9;
@@ -69,7 +69,7 @@
             font-size: 1rem;
             line-height: 1.6;
             margin-bottom: 2rem;
-            color: #666;
+            color: #2e2e2e;
         }
 
         .offline-actions {
@@ -96,6 +96,15 @@
 
         .btn:hover {
             background-color: var(--color-primary-hover);
+        }
+
+        .btn:focus-visible {
+            outline: 3px solid #005fcc;
+            outline-offset: 2px;
+        }
+
+        .btn-secondary:focus-visible {
+            outline-color: var(--color-primary);
         }
 
         .btn-secondary {
@@ -164,31 +173,31 @@
     </style>
 </head>
 <body>
-    <div class="offline-container">
-        <div class="offline-icon">
+    <main class="offline-container" role="main" aria-labelledby="offline-heading">
+        <div class="offline-icon" aria-hidden="true">
             📶
         </div>
         
-        <h1 class="offline-title">You're Offline</h1>
+        <h1 class="offline-title" id="offline-heading">You’re offline</h1>
         
         <p class="offline-message">
-            It looks like you've lost your internet connection. Some features of ProjectControl may not be available while you're offline.
+            There is no internet connection right now. ProjectCheck needs a connection for most features. You can try again in a moment.
         </p>
         
         <div class="offline-actions">
-            <button class="btn" onclick="window.location.reload()">
-                Try Again
+            <button type="button" class="btn" onclick="window.location.reload()">
+                Try again
             </button>
-            <button class="btn btn-secondary" onclick="checkConnection()">
-                Check Connection
+            <button type="button" class="btn btn-secondary" onclick="checkConnection()">
+                Check connection
             </button>
         </div>
         
-        <div class="offline-status">
-            <span class="status-indicator" id="statusIndicator"></span>
-            <span id="statusText">Checking connection...</span>
+        <div class="offline-status" role="status" aria-live="polite">
+            <span class="status-indicator" id="statusIndicator" aria-hidden="true"></span>
+            <span id="statusText">Checking connection…</span>
         </div>
-    </div>
+    </main>
 
     <script>
         // Check connection status
@@ -196,7 +205,7 @@
             const statusIndicator = document.getElementById('statusIndicator');
             const statusText = document.getElementById('statusText');
             
-            statusText.textContent = 'Checking connection...';
+            statusText.textContent = 'Checking connection…';
             statusIndicator.className = 'status-indicator';
             
             // Try to fetch a small resource to test connectivity
@@ -206,7 +215,7 @@
             })
             .then(() => {
                 statusIndicator.className = 'status-indicator online';
-                statusText.textContent = 'Connection restored! Reloading...';
+                statusText.textContent = 'Connection restored. Reloading…';
                 
                 setTimeout(() => {
                     window.location.reload();
@@ -218,21 +227,21 @@
             });
         }
 
-        // Monitor connection status
+        // Monitor connection status (no periodic fetch — avoids noise and battery use)
         function updateConnectionStatus() {
             const statusIndicator = document.getElementById('statusIndicator');
             const statusText = document.getElementById('statusText');
             
             if (navigator.onLine) {
                 statusIndicator.className = 'status-indicator online';
-                statusText.textContent = 'Connection restored! Reloading...';
+                statusText.textContent = 'Connection restored. Reloading…';
                 
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
             } else {
                 statusIndicator.className = 'status-indicator';
-                statusText.textContent = 'You are currently offline.';
+                statusText.textContent = 'You are still offline.';
             }
         }
 
@@ -240,11 +249,17 @@
         window.addEventListener('online', updateConnectionStatus);
         window.addEventListener('offline', updateConnectionStatus);
 
-        // Initial status check
-        updateConnectionStatus();
-
-        // Periodic connection check
-        setInterval(checkConnection, 30000); // Check every 30 seconds
+        // Initial status
+        (function initStatus() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            if (navigator.onLine) {
+                statusText.textContent = 'Browser reports online. If the app does not load, use the Try again button.';
+                statusIndicator.className = 'status-indicator online';
+            } else {
+                updateConnectionStatus();
+            }
+        })();
 
         // Try to reload when connection is restored
         let reloadAttempts = 0;

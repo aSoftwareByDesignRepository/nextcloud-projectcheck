@@ -245,3 +245,625 @@
     font-weight: normal;
     font-size: 14px;
 }
+
+/* Organization / server admin — access policy (WCAG-friendly spacing) */
+.projectcheck-admin {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 0.5rem 0.75rem 1.5rem;
+}
+
+.projectcheck-admin__title {
+    margin: 0 0 0.5rem 0;
+    color: var(--color-main-text);
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+
+.projectcheck-admin__intro {
+    margin: 0 0 1.25rem 0;
+    color: var(--color-text-maxcontrast);
+    line-height: 1.5;
+}
+
+section.projectcheck-panel,
+.projectcheck-panel {
+    display: block;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-main-background);
+    padding: 1.25rem 1.35rem 1.5rem;
+    margin: 0 0 1.5rem 0;
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--color-main-text) 6%, transparent);
+}
+
+/* In-app org: slightly stronger section separation (same form as server admin) */
+.projectcheck-org .projectcheck-panel {
+    border-inline-start: 3px solid var(--color-primary-element);
+}
+
+.projectcheck-panel__title {
+    margin: 0 0 0.9rem 0;
+    font-size: 1.1rem;
+    line-height: 1.3;
+    font-weight: 600;
+    color: var(--color-main-text);
+}
+
+.projectcheck-fieldset {
+    border: none;
+    margin: 0 0 0.75rem 0;
+    padding: 0;
+}
+
+.projectcheck-form-group {
+    margin-bottom: 1rem;
+}
+
+.projectcheck-form-group label,
+.projectcheck-form-row label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--color-main-text);
+}
+
+.projectcheck-form-row--checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.projectcheck-form-row--checkbox input {
+    margin-top: 0.2rem;
+}
+
+.projectcheck-form-row--checkbox input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    min-width: 1.25rem;
+    min-height: 1.25rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: var(--color-primary-element);
+}
+
+.projectcheck-hint {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.9em;
+    color: var(--color-text-maxcontrast);
+    line-height: 1.45;
+}
+
+.projectcheck-textarea,
+.projectcheck-input,
+.projectcheck-select {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-main-background);
+    color: var(--color-main-text);
+    padding: 0.5rem 0.65rem;
+    font: inherit;
+    min-height: 2.5rem;
+}
+
+.projectcheck-textarea {
+    min-height: 6rem;
+    resize: vertical;
+}
+
+.projectcheck-textarea:focus-visible,
+.projectcheck-input:focus-visible,
+.projectcheck-select:focus-visible,
+.projectcheck-save-button:focus-visible {
+    outline: 2px solid var(--color-primary-element);
+    outline-offset: 2px;
+}
+
+.projectcheck-form-status {
+    margin-top: 0.75rem;
+    min-height: 1.25rem;
+    max-width: 48rem;
+}
+
+.projectcheck-form-status[data-state="error"] {
+    color: var(--color-error);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* —— In-app organization page: layout, spacing, responsive —— */
+.projectcheck-app-content {
+    box-sizing: border-box;
+}
+
+#app-content.projectcheck-app-content,
+.projectcheck-app-content#app-content {
+    min-width: 0;
+}
+
+.projectcheck-skip-link {
+    position: absolute;
+    z-index: 20000;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--color-primary-element, #006aa3);
+    color: var(--color-primary-element-text, #fff);
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: var(--border-radius, 6px);
+    transform: translateY(-200%);
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.projectcheck-skip-link:focus {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+    outline: 3px solid var(--color-primary-element, #006aa3);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .projectcheck-skip-link {
+        transition: none;
+    }
+}
+
+/* Main column: same readable width as server admin; padding once on outer wrapper */
+.projectcheck-org {
+    position: relative;
+    max-width: 52rem;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.25rem 1rem 2rem;
+}
+
+/* In-app org page also loads projects.css for the app shell: beat #app-content #app-content-wrapper { max-width: 1400px } + padding. */
+#app-content #app-content-wrapper.projectcheck-org {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 0.25rem 1rem 2rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.projectcheck-org__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    outline: none;
+}
+
+.projectcheck-org__header {
+    padding: 0.5rem 0 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 1.5rem;
+}
+
+.projectcheck-org__kicker {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-maxcontrast);
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+}
+
+.projectcheck-org__title {
+    font-size: clamp(1.35rem, 2.5vw, 1.65rem);
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--color-main-text);
+    margin: 0 0 0.75rem 0;
+}
+
+.projectcheck-org__lede {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--color-text-maxcontrast);
+    max-width: 50em;
+    margin: 0;
+}
+
+/* Trust / information notice: calm, not alarmist; AA contrast on theme vars */
+.projectcheck-org__notice {
+    margin: 0 0 1.5rem 0;
+    padding: 1rem 1.1rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-left-width: 4px;
+    border-left-color: var(--color-primary-element, #006aa3);
+    border-radius: var(--border-radius, 6px);
+    background: var(--color-background-darker, var(--color-background-dark));
+}
+
+.projectcheck-org__notice-title {
+    font-size: 1.05rem;
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+    color: var(--color-main-text);
+}
+
+.projectcheck-org__notice-text {
+    margin: 0;
+    line-height: 1.5;
+    font-size: 0.9rem;
+    color: var(--color-main-text);
+}
+
+/* Access restriction: visible caution when active (not the same as error) */
+.projectcheck-callout {
+    border-radius: var(--border-radius, 6px);
+    padding: 0.9rem 1rem;
+    margin: 0 0 1rem 0;
+}
+
+.projectcheck-callout__p {
+    margin: 0;
+    line-height: 1.5;
+    font-size: 0.9rem;
+}
+
+.projectcheck-callout--caution {
+    background: var(--color-background-dark, rgba(0, 0, 0, 0.04));
+    border: 1px solid var(--color-warning, #a37200);
+    color: var(--color-main-text);
+}
+
+/* Defaults: responsive two-column grid on large screens */
+.projectcheck-defaults-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0 1.5rem;
+}
+
+@media (min-width: 40rem) {
+    .projectcheck-defaults-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .projectcheck-form-group--span {
+        grid-column: 1 / -1;
+        max-width: 20rem;
+    }
+}
+
+/* Primary action: min tap target, clear action bar */
+.projectcheck-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    justify-content: flex-start;
+}
+
+.projectcheck-save-button {
+    min-height: 44px;
+    min-width: 8.5rem;
+    padding: 0.5rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Statusline after save */
+.projectcheck-form-status[hidden] {
+    display: none;
+}
+
+.projectcheck-form-status:not([hidden]) {
+    display: block;
+}
+
+.projectcheck-form-status[data-state="success"] {
+    color: var(--color-success, #0a5);
+}
+
+/* Org page: clear separation between sections (WCAG 2.4.7 / focus visible) */
+.projectcheck-org .projectcheck-panel {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.projectcheck-org .projectcheck-panel a:focus-visible {
+    outline: 2px solid var(--color-primary-element, #006aa3);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* —— Entity pickers: search, chips, suggestions (WCAG: focus, contrast, touch targets) —— */
+.projectcheck-form-group--with-picker {
+    margin-top: 1.25rem;
+    padding: 0.9rem 1rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius, 6px);
+    background: var(--color-background-darker, var(--color-background-dark, rgba(0, 0, 0, 0.02)));
+}
+
+.projectcheck-entity-legend {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.98rem;
+    line-height: 1.35;
+    color: var(--color-main-text);
+    margin: 0 0 0.6rem 0;
+}
+
+.projectcheck-entity-legend__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 9999px;
+    background: var(--color-primary-element, #006aa3);
+    color: var(--color-primary-element-text, #fff);
+    flex-shrink: 0;
+}
+
+.projectcheck-entity-field {
+    min-width: 0;
+}
+
+.projectcheck-entity-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.projectcheck-entity-picker__chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    min-height: 0;
+}
+
+.projectcheck-entity-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    max-width: 100%;
+    min-height: 2.25rem;
+    padding: 0.2rem 0.35rem 0.2rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    background: var(--color-main-background);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--color-main-text) 4%, transparent);
+}
+
+.projectcheck-entity-chip__text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.projectcheck-entity-chip__name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 18rem;
+}
+
+.projectcheck-entity-chip__id {
+    font-size: 0.75rem;
+    color: var(--color-text-maxcontrast);
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 16rem;
+}
+
+.projectcheck-entity-chip__remove {
+    flex-shrink: 0;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    margin: -0.1rem 0.1rem -0.1rem 0;
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--color-text-maxcontrast);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.12s ease, background 0.12s ease;
+}
+
+.projectcheck-entity-chip__remove:hover {
+    color: var(--color-main-text);
+    background: var(--color-background-hover, rgba(0, 0, 0, 0.06));
+}
+
+.projectcheck-entity-chip__remove:focus-visible {
+    outline: 2px solid var(--color-primary-element, #006aa3);
+    outline-offset: 2px;
+}
+
+.projectcheck-entity-picker__search {
+    position: relative;
+    max-width: 32rem;
+}
+
+.projectcheck-entity-picker__q {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 2.75rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius, 6px);
+    background: var(--color-main-background);
+    color: var(--color-main-text);
+    font: inherit;
+}
+
+.projectcheck-entity-picker__q::placeholder {
+    color: var(--color-text-maxcontrast);
+    opacity: 0.9;
+}
+
+.projectcheck-entity-picker__q:focus-visible {
+    outline: 2px solid var(--color-primary-element, #006aa3);
+    outline-offset: 2px;
+}
+
+/* Outer: holds either a status (no match) or an inner listbox */
+.projectcheck-entity-picker__suggest {
+    margin: 0.35rem 0 0 0;
+    max-height: 15rem;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius, 6px);
+    background: var(--color-main-background);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--color-main-text) 10%, transparent);
+    z-index: 5;
+}
+
+.projectcheck-entity-picker__listbox {
+    list-style: none;
+    margin: 0.25rem 0;
+    padding: 0.2rem 0 0.35rem 0;
+}
+
+.projectcheck-entity-suggest__line {
+    font-size: 0.9rem;
+    line-height: 1.3;
+    font-weight: 500;
+    color: var(--color-main-text);
+}
+
+.projectcheck-entity-suggest__id {
+    font-size: 0.8rem;
+    line-height: 1.2;
+    color: var(--color-text-maxcontrast);
+    margin-top: 0.15rem;
+}
+
+.projectcheck-entity-picker__listbox li[role="option"] {
+    padding: 0.5rem 0.65rem;
+    cursor: pointer;
+    min-height: 2.5rem;
+}
+
+.projectcheck-entity-picker__listbox li[role="option"]:hover,
+.projectcheck-entity-picker__listbox li[role="option"][aria-selected="true"] {
+    background: var(--color-background-hover, rgba(0, 0, 0, 0.04));
+}
+
+.projectcheck-entity-picker__listbox li[role="option"]:focus {
+    outline: none;
+}
+
+.projectcheck-entity-picker__noresult {
+    margin: 0.45rem 0.65rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-text-maxcontrast);
+}
+
+.projectcheck-entity-picker__noresult--err {
+    color: var(--color-main-text);
+    border-left: 3px solid var(--color-error, #b30000);
+    margin: 0.4rem 0.5rem 0.5rem 0.5rem;
+    padding: 0.4rem 0.5rem 0.45rem 0.6rem;
+    background: var(--color-background-darker, rgba(0, 0, 0, 0.04));
+    border-radius: 0 6px 6px 0;
+}
+
+.projectcheck-entity-picker__manual {
+    margin-top: 0.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius, 6px);
+    background: var(--color-main-background);
+    padding: 0;
+    overflow: hidden;
+}
+
+.projectcheck-entity-picker__summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-primary-element, #006aa3);
+    cursor: pointer;
+    user-select: none;
+}
+
+.projectcheck-entity-picker__summary::before {
+    content: '';
+    display: inline-block;
+    width: 0.45em;
+    height: 0.45em;
+    border-right: 2px solid var(--color-primary-element, #006aa3);
+    border-bottom: 2px solid var(--color-primary-element, #006aa3);
+    transform: rotate(-45deg);
+    margin-top: 0.1em;
+    flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .projectcheck-entity-picker__summary::before {
+        transition: transform 0.15s ease;
+    }
+}
+
+.projectcheck-entity-picker__manual[open] .projectcheck-entity-picker__summary::before {
+    transform: rotate(45deg);
+    margin-top: 0.2em;
+}
+
+.projectcheck-entity-picker__summary::-webkit-details-marker {
+    display: none;
+}
+
+.projectcheck-entity-picker__manual[open] .projectcheck-entity-picker__summary {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.projectcheck-entity-picker__manual .projectcheck-textarea {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    min-height: 5.5rem;
+}

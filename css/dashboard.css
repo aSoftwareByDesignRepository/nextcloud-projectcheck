@@ -463,6 +463,12 @@ body {
 	color: var(--color-error-text);
 }
 
+.status-archived {
+	background: color-mix(in srgb, var(--color-text-maxcontrast) 12%, transparent);
+	color: var(--color-text-maxcontrast);
+	border: 1px solid var(--color-border);
+}
+
 /* Duration Badge */
 .duration {
 	display: inline-block;

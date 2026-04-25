@@ -295,7 +295,12 @@ class TimeEntryMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 
 		// Base select fields
-		$selectFields = ['t.*', 'p.name as project_name', 'c.name as customer_name', 'u.displayname as user_display_name'];
+		$selectFields = [
+			't.*',
+			'p.name as project_name',
+			'c.name as customer_name',
+			$qb->createFunction('COALESCE(s.display_name, u.displayname, t.user_id) as user_display_name'),
+		];
 
 		// Add project_type fields if column exists
 		if ($this->columnExists('projects', 'project_type')) {
@@ -311,6 +316,7 @@ class TimeEntryMapper extends QBMapper
 			->from($this->getTableName(), 't')
 			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
 			->innerJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
+			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
 			->orderBy('t.date', 'DESC')
 			->addOrderBy('t.created_at', 'DESC');
@@ -390,11 +396,13 @@ class TimeEntryMapper extends QBMapper
 	public function findUsersWithTimeEntries(): array
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('t.user_id', 'u.displayname')
+		$coalesce = "COALESCE(MAX(s.display_name), MAX(u.displayname), t.user_id)";
+		$qb->select('t.user_id', $qb->createFunction($coalesce . ' as displayname'))
 			->from($this->getTableName(), 't')
+			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
-			->groupBy('t.user_id', 'u.displayname')
-			->orderBy('u.displayname', 'ASC');
+			->groupBy('t.user_id')
+			->orderBy($qb->createFunction($coalesce), 'ASC');
 
 		$result = $qb->executeQuery();
 		$users = [];
@@ -624,16 +632,17 @@ class TimeEntryMapper extends QBMapper
 		$qb->select(
 			$qb->createFunction('YEAR(t.date) as year'),
 			't.user_id',
-			'u.displayname as user_display_name',
+			$qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id)) as user_display_name'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
+			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
 			->groupBy($qb->createFunction('YEAR(t.date)'), 't.user_id')
 			->orderBy('year', 'DESC')
-			->addOrderBy('u.displayname', 'ASC');
+			->addOrderBy($qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id))'), 'ASC');
 
 		$result = $qb->executeQuery();
 		$employeeStats = [];
@@ -668,7 +677,7 @@ class TimeEntryMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->select(
 			't.user_id',
-			'u.displayname as user_display_name',
+			$qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id)) as user_display_name'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count'),
@@ -677,6 +686,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->createFunction('MAX(t.date) as last_entry')
 		)
 			->from($this->getTableName(), 't')
+			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
 			->groupBy('t.user_id')
 			->orderBy('total_hours', 'DESC');
@@ -1065,7 +1075,7 @@ class TimeEntryMapper extends QBMapper
 		$qb->select(
 			$qb->createFunction('YEAR(t.date) as year'),
 			't.user_id',
-			'u.displayname as user_display_name',
+			$qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id)) as user_display_name'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
@@ -1073,10 +1083,11 @@ class TimeEntryMapper extends QBMapper
 		)
 			->from($this->getTableName(), 't')
 			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
+			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
 			->groupBy($qb->createFunction('YEAR(t.date)'), 't.user_id', 'p.project_type')
 			->orderBy('year', 'DESC')
-			->addOrderBy('u.displayname', 'ASC')
+			->addOrderBy($qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id))'), 'ASC')
 			->addOrderBy('p.project_type', 'ASC');
 
 		$result = $qb->executeQuery();

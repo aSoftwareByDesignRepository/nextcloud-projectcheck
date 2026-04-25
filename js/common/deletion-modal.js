@@ -436,9 +436,51 @@
         const select = currentModal.querySelector('#reassign-customer');
         if (!select) return;
 
-        // This would typically load from an API endpoint
-        // For now, we'll use a placeholder
-        select.innerHTML = `<option value="">${t('projectcheck', 'Select customer...')}</option>`;
+        if (typeof OC === 'undefined' || !OC.generateUrl) {
+            return;
+        }
+        const token = getRequestToken();
+        const excludeId = currentEntity && currentEntity.id != null ? String(currentEntity.id) : '';
+        const base = OC.generateUrl('/apps/projectcheck/api/customers/select');
+        const url = excludeId
+            ? base + (base.indexOf('?') === -1 ? '?' : '&') + 'exclude=' + encodeURIComponent(excludeId)
+            : base;
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'requesttoken': token,
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+            .then((r) => r.json())
+            .then((data) => {
+                if (!data || !data.success || !Array.isArray(data.customers)) {
+                    return;
+                }
+                while (select.firstChild) {
+                    select.removeChild(select.firstChild);
+                }
+                const empty = document.createElement('option');
+                empty.value = '';
+                empty.textContent = t('projectcheck', 'Select customer...');
+                select.appendChild(empty);
+                data.customers.forEach((c) => {
+                    if (!c || c.id == null) {
+                        return;
+                    }
+                    const opt = document.createElement('option');
+                    opt.value = String(c.id);
+                    const label = c.name && String(c.name) !== '' ? c.name : ('#' + c.id);
+                    opt.textContent = label;
+                    select.appendChild(opt);
+                });
+            })
+            .catch((err) => {
+                console.error('loadCustomerOptions', err);
+            });
     }
 
     /**
@@ -450,7 +492,7 @@
         const deleteBtn = currentModal.querySelector('.projectcheck-deletion-modal__btn--delete');
         if (deleteBtn) {
             deleteBtn.disabled = true;
-            deleteBtn.textContent = t('projectcheck', 'Deleting...');
+            deleteBtn.textContent = t('projectcheck', 'Deleting…');
         }
 
         // Customer deletions use POST with form data, others use DELETE
@@ -467,6 +509,7 @@
         if (isCustomer) {
             // Customers use POST method with form data
             const formData = new FormData();
+            formData.append('requesttoken', requestToken);
             const strategy = currentModal.querySelector('input[name="deletion-strategy"]:checked');
             if (strategy) {
                 formData.append('strategy', strategy.value);
@@ -573,7 +616,7 @@
         if (typeof OC !== 'undefined' && OC.Notification) {
             OC.Notification.showTemporary(message, { type: 'error' });
         } else {
-            alert('Error: ' + message);
+            alert(t('projectcheck', 'Error: %s').replace('%s', String(message)));
         }
     }
 

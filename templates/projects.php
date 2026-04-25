@@ -17,7 +17,7 @@ Util::addStyle('projectcheck', 'navigation');
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
     <div id="app-content-wrapper">
         <!-- Page Header -->
         <div class="section header-section">
@@ -60,9 +60,9 @@ Util::addStyle('projectcheck', 'navigation');
         <?php endif; ?>
 
         <!-- Project Statistics Overview -->
-        <div class="section">
+        <div class="section projects-content-section" aria-label="<?php p($l->t('Summary')); ?>">
             <div class="section-header">
-                <h3><?php p($l->t('Project Statistics')); ?></h3>
+                <h3><?php p($l->t('Project statistics')); ?></h3>
                 <p><?php p($l->t('Overview of your project portfolio and performance')); ?></p>
             </div>
 
@@ -113,12 +113,12 @@ Util::addStyle('projectcheck', 'navigation');
             </div>
         </div>
 
-        <!-- Search and Filter Section -->
-        <div class="section">
+        <!-- Search and filter -->
+        <div class="section projects-filters-section" aria-label="<?php p($l->t('Search and filter')); ?>">
             <div class="filters-container">
                 <div class="searchbox">
-                    <input type="text" id="project-search"
-                        placeholder="<?php p($l->t('Search projects...')); ?>"
+                    <input type="search" id="project-search"
+                        placeholder="<?php p($l->t('Search projects…')); ?>"
                         value="<?php p($_['filters']['search'] ?? ''); ?>"
                         aria-label="<?php p($l->t('Search projects')); ?>"
                         autocomplete="off">
@@ -126,11 +126,12 @@ Util::addStyle('projectcheck', 'navigation');
 
                 <div class="filters-row">
                     <select id="status-filter" aria-label="<?php p($l->t('Filter by status')); ?>">
-                        <option value="all" <?php if (($_['filters']['status'] ?? '') === 'all') echo 'selected'; ?>><?php p($l->t('All Statuses')); ?></option>
+                        <option value="all" <?php if (($_['filters']['status'] ?? '') === 'all') echo 'selected'; ?>><?php p($l->t('All statuses')); ?></option>
                         <option value="Active" <?php if (($_['filters']['status'] ?? 'Active') === 'Active') echo 'selected'; ?>><?php p($l->t('Active')); ?></option>
                         <option value="On Hold" <?php if (($_['filters']['status'] ?? '') === 'On Hold') echo 'selected'; ?>><?php p($l->t('On Hold')); ?></option>
                         <option value="Completed" <?php if (($_['filters']['status'] ?? '') === 'Completed') echo 'selected'; ?>><?php p($l->t('Completed')); ?></option>
                         <option value="Cancelled" <?php if (($_['filters']['status'] ?? '') === 'Cancelled') echo 'selected'; ?>><?php p($l->t('Cancelled')); ?></option>
+                        <option value="Archived" <?php if (($_['filters']['status'] ?? '') === 'Archived') echo 'selected'; ?>><?php p($l->t('Archived')); ?></option>
                     </select>
 
                     <select id="priority-filter" aria-label="<?php p($l->t('Filter by priority')); ?>">
@@ -176,8 +177,8 @@ Util::addStyle('projectcheck', 'navigation');
             </div>
         </div>
 
-        <!-- Projects Table -->
-        <div class="section">
+        <!-- Project list -->
+        <div class="section projects-table-section" aria-label="<?php p($l->t('Project list')); ?>">
             <?php if (empty($_['projects'])): ?>
                 <div class="emptycontent">
                     <div class="icon-folder"></div>
@@ -185,6 +186,7 @@ Util::addStyle('projectcheck', 'navigation');
                     <p><?php p($l->t('Create your first project to get started!')); ?></p>
                 </div>
             <?php else: ?>
+            <div class="projectcheck-table-wrap">
                 <table class="grid projects-table">
                     <thead>
                         <tr>
@@ -218,6 +220,7 @@ Util::addStyle('projectcheck', 'navigation');
                             <?php
                             $project = $projectData['project'] ?? $projectData;
                             $budgetInfo = $projectData['budgetInfo'] ?? null;
+                            $canEditRow = (bool)($projectData['canEdit'] ?? true);
                             ?>
                             <tr class="project-row <?php if ($budgetInfo): ?>budget-status-<?php p($budgetInfo['warning_level']); ?><?php endif; ?>">
                                 <td class="project-name-cell">
@@ -349,16 +352,18 @@ Util::addStyle('projectcheck', 'navigation');
                                     <div class="action-items">
                                         <a href="<?php p(str_replace('PROJECT_ID', $project->getId(), $_['showUrl'])); ?>"
                                             class="action-item"
-                                            title="<?php p($l->t('View Project')); ?>"
+                                            title="<?php p($l->t('View project')); ?>"
                                             aria-label="<?php p($l->t('View project %s', [$project->getName()])); ?>">
                                             <span class="icon icon-details" aria-hidden="true"></span>
                                         </a>
+                                        <?php if ($canEditRow) { ?>
                                         <a href="<?php p(str_replace('PROJECT_ID', $project->getId(), $_['editUrl'])); ?>"
                                             class="action-item"
-                                            title="<?php p($l->t('Edit Project')); ?>"
+                                            title="<?php p($l->t('Edit project')); ?>"
                                             aria-label="<?php p($l->t('Edit project %s', [$project->getName()])); ?>">
                                             <span class="icon icon-rename" aria-hidden="true"></span>
                                         </a>
+                                        <?php } ?>
                                         <button type="button" class="action-item delete-project-btn"
                                             data-project-id="<?php p($project->getId()); ?>"
                                             data-project-name="<?php p($project->getName()); ?>"
@@ -372,6 +377,7 @@ Util::addStyle('projectcheck', 'navigation');
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
                 <?php
                     $pagination = $_['pagination'] ?? ['page' => 1, 'totalPages' => 1, 'totalEntries' => count($_['projects'] ?? []), 'perPage' => count($_['projects'] ?? [])];
                     $currentPage = max(1, (int)($pagination['page'] ?? 1));

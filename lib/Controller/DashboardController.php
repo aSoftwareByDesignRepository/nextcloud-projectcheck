@@ -122,7 +122,7 @@ class DashboardController extends Controller
 		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis();
 
 		// Get common stats for the sidebar
-		$commonStats = $this->getCommonStats($this->projectService, $this->customerService);
+		$commonStats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
 
 		// Merge stats, with comprehensive stats taking precedence
 		$stats = array_merge($commonStats, $comprehensiveStats);
@@ -184,7 +184,7 @@ class DashboardController extends Controller
 		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis();
 
 		// Get common stats for the sidebar
-		$commonStats = $this->getCommonStats($this->projectService, $this->customerService);
+		$commonStats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
 
 		// Merge stats, with comprehensive stats taking precedence
 		$stats = array_merge($commonStats, $comprehensiveStats);

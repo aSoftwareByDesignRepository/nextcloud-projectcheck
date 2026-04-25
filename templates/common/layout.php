@@ -12,50 +12,63 @@ if (!defined('OCP\AppFramework\App::class')) {
     die('Direct access not allowed');
 }
 
-// Get the current user and app context
-$user = \OC::$server->getUserSession()->getUser();
+$user = \OCP\Server::get(\OCP\IUserSession::class)->getUser();
 $appName = 'projectcheck';
-$appVersion = \OC::$server->getAppManager()->getAppVersion($appName);
+$appVersion = \OCP\Server::get(\OCP\IAppManager::class)->getAppVersion($appName);
+$urlGen = \OCP\Server::get(\OCP\IURLGenerator::class);
 
 // Get the page title and meta information
 $pageTitle = isset($pageTitle) ? $pageTitle : $l->t('ProjectCheck');
 $pageDescription = isset($pageDescription) ? $pageDescription : $l->t('Project and time management for Nextcloud');
 $pageKeywords = isset($pageKeywords) ? $pageKeywords : $l->t('project, time, management, nextcloud');
 
-// Inherit theme from Nextcloud without app overrides; fallback to light
-$theme = 'light';
+// Mirror core TemplateLayout: OCA\Theming enabled theme layers; body data-theme-* matches all NC skins.
+$am = \OCP\Server::get(\OCP\App\IAppManager::class);
+$enabledThemes = [ 'default' ];
 try {
-    $theming = \OC::$server->getThemingDefaults();
-    $primary = $theming->getColorPrimary();
-    // Compute simple luminance heuristic from hex color to decide dark vs light
-    if (is_string($primary) && preg_match('/^#?([0-9a-fA-F]{6})$/', $primary, $m)) {
-        $hex = $m[1];
-        $r = hexdec(substr($hex, 0, 2));
-        $g = hexdec(substr($hex, 2, 2));
-        $b = hexdec(substr($hex, 4, 2));
-        $luminance = 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
-        $theme = ($luminance < 96) ? 'dark' : 'light';
-    }
-    // Optional admin-only QA override via app config and query param
-    try {
-        /** @var \OCP\IConfig $config */
-        $config = \OC::$server->getConfig();
-        $allowOverride = $config->getAppValue($appName, 'theme_dev_override', 'no') === 'yes';
-        if ($allowOverride && isset($_GET['theme'])) {
-            $q = $_GET['theme'];
-            if ($q === 'dark' || $q === 'light') {
-                $theme = $q;
-            }
-        }
-    } catch (\Throwable $ie) {
-        // ignore
-    }
+	if ($am->isAppEnabled('theming', true)) {
+		$enabledThemes = \OCP\Server::get(\OCA\Theming\Service\ThemesService::class)->getEnabledThemes();
+	}
 } catch (\Throwable $e) {
-    $theme = 'light';
+	$enabledThemes = [ 'default' ];
 }
+if (!\is_array($enabledThemes) || $enabledThemes === [] ) {
+	$enabledThemes = [ 'default' ];
+}
+$isBodyDark = \in_array('dark', $enabledThemes, true) || \in_array('dark-highcontrast', $enabledThemes, true);
+$theme = $isBodyDark ? 'dark' : 'light';
+if (! $am->isAppEnabled('theming', true)) {
+	try {
+		$theming = \OCP\Server::get('ThemingDefaults');
+		$primary = $theming->getColorPrimary();
+		if (is_string($primary) && preg_match('/^#?([0-9a-fA-F]{6})$/', $primary, $m)) {
+			$hex = $m[1];
+			$r = hexdec(substr($hex, 0, 2));
+			$g = hexdec(substr($hex, 2, 2));
+			$b = hexdec(substr($hex, 4, 2));
+			$luminance = 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
+			$theme = ($luminance < 96) ? 'dark' : 'light';
+		}
+	} catch (\Throwable $e) {
+		$theme = 'light';
+	}
+}
+// Optional dev override (unchanged; does not add fake theme layers)
+try {
+	$config = \OCP\Server::get(\OCP\IConfig::class);
+	if ($config->getAppValue($appName, 'theme_dev_override', 'no') === 'yes' && isset($_GET['theme'])) {
+		$q = (string) $_GET['theme'];
+		if ($q === 'dark' || $q === 'light') {
+			$theme = $q;
+		}
+	}
+} catch (\Throwable $e) {
+	// ignore
+}
+// data-theme is a light|dark hint for legacy selectors; actual colors come from OCA\Theming CSS variables and body data-theme-* layers.
 ?>
 <!DOCTYPE html>
-<html lang="<?php p($_['language']); ?>" data-theme="<?php p($theme); ?>">
+<html lang="<?php p($_['language']); ?>" data-theme="<?php p($theme); ?>" data-themes="<?php p(\implode(',', $enabledThemes)); ?>">
 
 <head>
     <meta charset="utf-8">
@@ -70,9 +83,7 @@ try {
     <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#0082c9">
-    <meta name="msapplication-TileColor" content="#0082c9">
+    <meta name="color-scheme" content="light dark">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <!-- Favicon -->
@@ -95,6 +106,7 @@ try {
     <link rel="stylesheet" href="<?php print_unescaped(link_to($appName, 'css/common/layout.css')); ?>">
     <link rel="stylesheet" href="<?php print_unescaped(link_to($appName, 'css/common/components.css')); ?>">
     <link rel="stylesheet" href="<?php print_unescaped(link_to($appName, 'css/common/accessibility.css')); ?>">
+    <link rel="stylesheet" href="<?php print_unescaped($urlGen->linkTo($appName, 'css/common/legacy-header.css')); ?>">
 
     <!-- Page Specific Styles -->
     <?php if (isset($pageStyles)): ?>
@@ -115,6 +127,7 @@ try {
     <script src="<?php print_unescaped(link_to($appName, 'js/common/theme.js')); ?>"></script>
     <script src="<?php print_unescaped(link_to($appName, 'js/common/validation.js')); ?>"></script>
     <script src="<?php print_unescaped(link_to($appName, 'js/common/messaging.js')); ?>"></script>
+    <script src="<?php print_unescaped($urlGen->linkTo($appName, 'js/common/legacy-header.js')); ?>"></script>
 
     <!-- Page Specific Scripts -->
     <?php if (isset($pageScripts)): ?>
@@ -177,16 +190,24 @@ try {
     </style>
 </head>
 
-<body id="<?php p($_['bodyid']); ?>" class="<?php p($_['bodyclass']); ?>">
+<body id="<?php p($_['bodyid']); ?>" class="<?php p($_['bodyclass']); ?>"<?php
+foreach ($enabledThemes as $themeId) {
+	$tid = (string) preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $themeId);
+	if ($tid === '') {
+		continue;
+	}
+	// Same pattern as core/templates/layout.user.php: presence attributes per enabled theme layer
+	p("data-theme-$tid ");
+} ?> data-themes="<?php p(\implode(',', $enabledThemes)); ?>">
     <!-- Skip Link for Accessibility -->
     <a href="#main-content" class="skip-link"><?php p($l->t('Skip to main content')); ?></a>
 
     <!-- Page Layout Container -->
     <div class="page-layout">
         <!-- Header -->
-        <header class="page-header">
+        <div class="page-header" role="presentation">
             <?php include 'header.php'; ?>
-        </header>
+        </div>
 
         <!-- Main Content -->
         <main id="main-content" class="page-main">

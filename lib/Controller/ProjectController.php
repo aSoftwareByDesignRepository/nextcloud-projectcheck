@@ -19,6 +19,7 @@ use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\ProjectFileService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -33,6 +34,9 @@ use OCP\IURLGenerator;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCA\ProjectCheck\Traits\StatsTrait;
+use OCA\ProjectCheck\Db\ProjectMember;
+use OCA\ProjectCheck\Db\UserAccountSnapshotMapper;
+use OCP\IUserManager;
 
 /**
  * Class ProjectController
@@ -77,6 +81,15 @@ class ProjectController extends Controller
 	/** @var IL10N */
 	private $l;
 
+	/** @var IRequestTokenProvider */
+	private $requestTokenProvider;
+
+	/** @var IUserManager */
+	private $userManager;
+
+	/** @var UserAccountSnapshotMapper */
+	private $userAccountSnapshotMapper;
+
 	/**
 	 * ProjectController constructor
 	 *
@@ -93,7 +106,10 @@ class ProjectController extends Controller
 	 * @param IURLGenerator $urlGenerator
 	 * @param IConfig $config
 	 * @param CSPService $cspService
+	 * @param IRequestTokenProvider $requestTokenProvider
 	 * @param IL10N $l
+	 * @param IUserManager $userManager
+	 * @param UserAccountSnapshotMapper $userAccountSnapshotMapper
 	 */
 	public function __construct(
 		string $appName,
@@ -109,7 +125,10 @@ class ProjectController extends Controller
 		IURLGenerator $urlGenerator,
 		IConfig $config,
 		CSPService $cspService,
-		IL10N $l
+		IRequestTokenProvider $requestTokenProvider,
+		IL10N $l,
+		IUserManager $userManager,
+		UserAccountSnapshotMapper $userAccountSnapshotMapper
 	) {
 		parent::__construct($appName, $request);
 		$this->projectService = $projectService;
@@ -122,8 +141,53 @@ class ProjectController extends Controller
 		$this->userSession = $userSession;
 		$this->urlGenerator = $urlGenerator;
 		$this->config = $config;
+		$this->requestTokenProvider = $requestTokenProvider;
 		$this->l = $l;
+		$this->userManager = $userManager;
+		$this->userAccountSnapshotMapper = $userAccountSnapshotMapper;
 		$this->setCspService($cspService);
+	}
+
+	/**
+	 * Roster rows for project-detail: active first; former with read-only display.
+	 *
+	 * @return array{0: list<array<string, mixed>>, 1: list<array<string, mixed>>}
+	 */
+	private function buildProjectTeamRosterForTemplate(int $projectId): array
+	{
+		$g = $this->projectService->getProjectTeamGrouped($projectId);
+		return [
+			$this->mapProjectMembersToRoster($projectId, $g['active'], false),
+			$this->mapProjectMembersToRoster($projectId, $g['former'], true),
+		];
+	}
+
+	/**
+	 * @param list<ProjectMember> $members
+	 * @return list<array<string, mixed>>
+	 */
+	private function mapProjectMembersToRoster(int $projectId, array $members, bool $isFormer): array
+	{
+		$roster = [];
+		foreach ($members as $m) {
+			$uid = $m->getUserId();
+			$live = $this->userManager->get($uid);
+			$display = $live && $live->getDisplayName() !== '' ? $live->getDisplayName() : null;
+			if ($display === null) {
+				$s = $this->userAccountSnapshotMapper->findByUserId($uid);
+				$display = $s !== null ? $s->getDisplayName() : $uid;
+			}
+			$hours = $this->timeEntryService->getTotalHoursForProjectAndUser($projectId, $uid);
+			$roster[] = [
+				'id' => $m->getId(),
+				'user_id' => $uid,
+				'name' => $display,
+				'role' => $m->getRole(),
+				'hours' => round($hours, 2),
+				'is_former' => $isFormer,
+			];
+		}
+		return $roster;
 	}
 
 	/**
@@ -189,10 +253,10 @@ class ProjectController extends Controller
 		}
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $userId);
 
 		// Get customers for the filter dropdown
-		$customers = $this->customerService->getCustomersForSelect();
+		$customers = $this->customerService->getCustomersForSelectForUser($userId);
 
 		$response = new TemplateResponse($this->appName, 'projects', [
 			'projects' => $enrichedProjects,
@@ -244,13 +308,13 @@ class ProjectController extends Controller
 		];
 
 		// Get customers for the dropdown
-		$customers = $this->customerService->getCustomersForSelect();
+		$customers = $this->customerService->getCustomersForSelectForUser($userId);
 
 		// Get pre-selected customer ID from URL parameter
 		$selectedCustomerId = $this->request->getParam('customer_id', null);
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
 
 		$response = new TemplateResponse($this->appName, 'project-form', [
 			'project' => null,
@@ -338,8 +402,9 @@ class ProjectController extends Controller
 			return $this->configureCSP($response, 'guest');
 		}
 
-		// Get additional project data
-		$teamMembers = $this->projectService->getProjectTeam($id);
+		// Get additional project data (roster: active = current team; former = account removed, read-only)
+		[ $teamMembersActive, $teamMembersFormer ] = $this->buildProjectTeamRosterForTemplate($id);
+		$teamMembers = array_merge($teamMembersActive, $teamMembersFormer);
 
 		// Get real time entry data
 		$timeEntries = $this->timeEntryService->getTimeEntriesByProject($id);
@@ -359,7 +424,7 @@ class ProjectController extends Controller
 		// Get customer name from the project data
 		$customerName = $project->getCustomerName() ?: 'Customer #' . $project->getCustomerId();
 		$createdBy = $project->getCreatedBy();
-		$teamMembersCount = count($teamMembers) ?: 1;
+		$teamMembersCount = count($teamMembers) > 0 ? count($teamMembers) : 1;
 
 		// Calculate project progress based on time entries vs available hours
 		$projectProgress = 0;
@@ -371,14 +436,26 @@ class ProjectController extends Controller
 		$warningLevel = $project->getBudgetWarningLevel($totalHours);
 
 		$projectFiles = $this->projectFileService->listFiles($id, $user->getUID());
-		$canManageFiles = $this->projectService->canUserEditProject($user->getUID(), $id);
+		$uid = $user->getUID();
+		$canEdit = $this->projectService->canUserEditProject($uid, $id);
+		$canChangeStatus = $this->projectService->canUserChangeProjectStatus($uid, $id);
+		$canManageFiles = $canEdit;
+		$canManageMembers = $this->projectService->canUserManageMembers($uid, $id) && $project->isEditableState();
+		$canAddTimeEntry = $project->allowsTimeTracking() && $this->projectService->canUserAccessProject($uid, $id);
+
+		$allowedStatusTargets = $this->projectService->getAllowedStatusTargets($project->getStatus());
+		// Expose to JS as JSON
+		$statusTargetsJson = json_encode($allowedStatusTargets) ?: '[]';
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $uid);
 
+		$requestToken = $this->requestTokenProvider->getEncryptedRequestToken();
 		$response = new TemplateResponse($this->appName, 'project-detail', [
 			'project' => $project,
 			'teamMembers' => $teamMembers,
+			'teamMembersActive' => $teamMembersActive,
+			'teamMembersFormer' => $teamMembersFormer,
 			'timeEntries' => $recentTimeEntries,
 			'customerName' => $customerName,
 			'createdBy' => $createdBy,
@@ -395,10 +472,16 @@ class ProjectController extends Controller
 			'canManageFiles' => $canManageFiles,
 			'projectId' => $id,
 			'urlGenerator' => $this->urlGenerator,
-			'canEdit' => true, // Open for now - can be restricted later if needed
-			'canChangeStatus' => true, // Open for now - can be restricted later if needed  
-			'canAddTeamMember' => true, // Open for now - can be restricted later if needed
-			'canDelete' => $this->projectService->canUserDeleteProject($user->getUID(), $id), // Keep delete restrictions
+			'addTeamMemberUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.addTeamMember', ['id' => $id]),
+			'canEdit' => $canEdit,
+			'canChangeStatus' => $canChangeStatus,
+			'canAddTeamMember' => $canManageMembers,
+			'canManageMembers' => $canManageMembers,
+			'canAddTimeEntry' => $canAddTimeEntry,
+			'allowedStatusTargets' => $allowedStatusTargets,
+			'statusTargetsJson' => $statusTargetsJson,
+			'canDelete' => $this->projectService->canUserDeleteProject($uid, $id),
+			'requesttoken' => $requestToken,
 		]);
 
 		return $this->configureCSP($response);
@@ -526,10 +609,10 @@ class ProjectController extends Controller
 		}
 
 		// Get customers for the dropdown
-		$customers = $this->customerService->getCustomersForSelect();
+		$customers = $this->customerService->getCustomersForSelectForUser($user->getUID());
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $user->getUID());
 
 		$response = new TemplateResponse($this->appName, 'project-form', [
 			'project' => $project,
@@ -745,7 +828,7 @@ class ProjectController extends Controller
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
-		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
+		if (!$this->projectService->canUserChangeProjectStatus($user->getUID(), $id)) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
 				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 			}
@@ -754,7 +837,10 @@ class ProjectController extends Controller
 
 		try {
 			$status = $this->request->getParam('status');
-			$project = $this->projectService->updateProject($id, ['status' => $status]);
+			if (!is_string($status) || $status === '') {
+				throw new \Exception('Status is required');
+			}
+			$project = $this->projectService->changeProjectStatus($id, $status);
 
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
@@ -794,11 +880,14 @@ class ProjectController extends Controller
 		}
 
 		try {
-			$teamMembers = $this->projectService->getProjectTeam($id);
+			$g = $this->projectService->getProjectTeamGrouped($id);
+			$rosterA = $this->mapProjectMembersToRoster($id, $g['active'], false);
+			$rosterF = $this->mapProjectMembersToRoster($id, $g['former'], true);
 
 			return new DataResponse([
 				'success' => true,
-				'teamMembers' => $teamMembers,
+				'teamMembers' => $rosterA,
+				'teamMembersFormer' => $rosterF,
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
@@ -1069,13 +1158,44 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
-		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
+		$uid = $user->getUID();
+		if (!$this->projectService->canUserAccessProject($uid, $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+
+		$raw = $this->request->getParams();
+		$staged = $this->extractProjectApiUpdatePayload($raw);
+		if ($staged === []) {
+			return new DataResponse(['error' => $this->l->t('No update data')], 400);
+		}
+
+		$isStatusOnly = count($staged) === 1 && \array_key_exists('status', $staged);
+		if ($isStatusOnly) {
+			if (!$this->projectService->canUserChangeProjectStatus($uid, $id)) {
+				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			}
+			try {
+				$this->projectService->changeProjectStatus($id, (string)$staged['status']);
+				$project = $this->projectService->getProject($id);
+				if (!$project) {
+					return new DataResponse(['error' => $this->l->t('Project not found')], 404);
+				}
+				return new DataResponse([
+					'success' => true,
+					'project' => $project,
+					'message' => $this->l->t('Project updated successfully'),
+				]);
+			} catch (\Exception $e) {
+				return new DataResponse(['error' => $e->getMessage()], 400);
+			}
+		}
+
+		if (!$this->projectService->canUserEditProject($uid, $id)) {
 			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
 		try {
-			$data = $this->request->getParams();
-			$project = $this->projectService->updateProject($id, $data);
+			$project = $this->projectService->updateProject($id, $staged);
 
 			return new DataResponse([
 				'success' => true,
@@ -1085,6 +1205,39 @@ class ProjectController extends Controller
 		} catch (\Exception $e) {
 			return new DataResponse(['error' => $e->getMessage()], 400);
 		}
+	}
+
+	/**
+	 * @param array<string, mixed> $raw
+	 * @return array<string, mixed>
+	 */
+	private function extractProjectApiUpdatePayload(array $raw): array
+	{
+		$internal = ['requesttoken', '_method', 'format', 'g'];
+		$allowed = [
+			'name', 'short_description', 'detailed_description', 'customer_id', 'hourly_rate', 'total_budget',
+			'available_hours', 'category', 'priority', 'status', 'start_date', 'end_date', 'tags', 'project_type',
+		];
+		$staged = [];
+		foreach ($raw as $k => $v) {
+			if (!\is_string($k) || \in_array($k, $internal, true) || !\in_array($k, $allowed, true)) {
+				continue;
+			}
+			if ($k === 'status') {
+				if (\is_string($v) && $v !== '') {
+					$staged[$k] = $v;
+				}
+				continue;
+			}
+			if ($v === null) {
+				continue;
+			}
+			if (\is_string($v) && $v === '') {
+				continue;
+			}
+			$staged[$k] = $v;
+		}
+		return $staged;
 	}
 
 	/**

@@ -26,7 +26,7 @@ style('projectcheck', 'customer-statistics');
 	};
 </script>
 
-<div id="app-content">
+<div id="app-content" role="main">
 	<div id="app-content-wrapper">
 		<!-- Breadcrumb Navigation -->
 		<div class="breadcrumb-container">

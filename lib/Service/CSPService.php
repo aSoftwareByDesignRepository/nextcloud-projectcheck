@@ -7,11 +7,17 @@ namespace OCA\ProjectCheck\Service;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\TemplateResponse;
 
+use OC\Security\CSP\ContentSecurityPolicyNonceManager;
+
 /**
- * Centralized CSP policy management for ProjectControl
+ * Centralized CSP policy management for ProjectCheck.
  */
 class CSPService
 {
+	public function __construct(
+		private readonly ContentSecurityPolicyNonceManager $cspNonceManager
+	) {
+	}
     /**
      * Base policy shared by all contexts (no external CDNs)
      */
@@ -57,30 +63,29 @@ class CSPService
     /**
      * Apply CSP and inject a template nonce parameter.
      * Note: Core middleware will attach the CSP header and JS nonce as needed.
-     * Nonce is obtained via OC internal API until OCP exposes a public interface.
+     * Nonce from ContentSecurityPolicyNonceManager (DI).
      */
-    public function applyPolicyWithNonce(TemplateResponse $response, string $context): TemplateResponse
-    {
-        switch ($context) {
-            case 'modal':
-                $policy = $this->getModalPolicy();
-                break;
-            case 'guest':
-                $policy = $this->getGuestPolicy();
-                break;
-            case 'main':
-            default:
-                $policy = $this->getMainAppPolicy();
-                break;
-        }
+	public function applyPolicyWithNonce(TemplateResponse $response, string $context): TemplateResponse
+	{
+		switch ($context) {
+			case 'modal':
+				$policy = $this->getModalPolicy();
+				break;
+			case 'guest':
+				$policy = $this->getGuestPolicy();
+				break;
+			case 'main':
+			default:
+				$policy = $this->getMainAppPolicy();
+				break;
+		}
 
-        // Expose nonce to templates that use inline tags (OC internal until OCP provides interface)
-        $params = $response->getParams();
-        $params['cspNonce'] = \OC::$server->getContentSecurityPolicyNonceManager()->getNonce();
-        $response->setParams($params);
+		$params = $response->getParams();
+		$params['cspNonce'] = $this->cspNonceManager->getNonce();
+		$response->setParams($params);
 
-        $response->setContentSecurityPolicy($policy);
-        return $response;
-    }
+		$response->setContentSecurityPolicy($policy);
+		return $response;
+	}
 }
 

@@ -14,6 +14,10 @@ namespace OCA\ProjectCheck\Settings;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Settings\ISettings;
 use OCP\IConfig;
+use OCP\IURLGenerator;
+use OCP\L10N\IFactory;
+use OCA\ProjectCheck\Service\AccessControlService;
+use OCA\ProjectCheck\Service\SavePolicyUiStrings;
 
 /**
  * Admin settings for projectcheck app
@@ -23,14 +27,21 @@ class AdminSettings implements ISettings
     /** @var IConfig */
     private $config;
 
-    /**
-     * AdminSettings constructor
-     *
-     * @param IConfig $config
-     */
-    public function __construct(IConfig $config)
+    /** @var IFactory */
+    private $l10nFactory;
+
+    /** @var AccessControlService */
+    private $accessControl;
+
+    /** @var IURLGenerator */
+    private $urlGenerator;
+
+    public function __construct(IConfig $config, IFactory $l10nFactory, IURLGenerator $urlGenerator, AccessControlService $accessControl)
     {
         $this->config = $config;
+        $this->l10nFactory = $l10nFactory;
+        $this->urlGenerator = $urlGenerator;
+        $this->accessControl = $accessControl;
     }
 
     /**
@@ -38,6 +49,8 @@ class AdminSettings implements ISettings
      */
     public function getForm()
     {
+        $l = $this->l10nFactory->get('projectcheck');
+        $policy = $this->accessControl->getPolicyState();
         $defaultHourlyRate = $this->config->getAppValue('projectcheck', 'default_hourly_rate', '50.00');
         $budgetWarningThreshold = $this->config->getAppValue('projectcheck', 'budget_warning_threshold', '80');
         $maxProjectsPerUser = $this->config->getAppValue('projectcheck', 'max_projects_per_user', '100');
@@ -46,12 +59,21 @@ class AdminSettings implements ISettings
         $enableBudgetTracking = $this->config->getAppValue('projectcheck', 'enable_budget_tracking', 'yes');
 
         $parameters = [
+            'l' => $l,
+            'formUiStrings' => SavePolicyUiStrings::forForm($l),
+            'policy' => $policy,
+            'allowedUserLines' => implode("\n", $policy['allowedUserIds'] ?? []),
+            'allowedGroupLines' => implode("\n", $policy['allowedGroupIds'] ?? []),
+            'appAdminLines' => implode("\n", $policy['appAdminUserIds'] ?? []),
             'default_hourly_rate' => $defaultHourlyRate,
             'budget_warning_threshold' => $budgetWarningThreshold,
             'max_projects_per_user' => $maxProjectsPerUser,
             'enable_time_tracking' => $enableTimeTracking,
             'enable_customer_management' => $enableCustomerManagement,
-            'enable_budget_tracking' => $enableBudgetTracking
+            'enable_budget_tracking' => $enableBudgetTracking,
+            'saveUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.savePolicy'),
+            'orgSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
+            'orgSearchGroupsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchGroups'),
         ];
 
         return new TemplateResponse('projectcheck', 'admin-settings', $parameters);

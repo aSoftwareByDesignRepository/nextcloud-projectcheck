@@ -18,6 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\CustomerService;
+use OCP\IConfig;
 
 /**
  * Console command for cleanup tasks
@@ -33,22 +34,28 @@ class CleanupCommand extends Command
     /** @var CustomerService */
     private $customerService;
 
+	/** @var IConfig */
+	private $config;
+
     /**
      * CleanupCommand constructor
      *
      * @param ProjectService $projectService
      * @param TimeEntryService $timeEntryService
      * @param CustomerService $customerService
+	 * @param IConfig $config
      */
     public function __construct(
         ProjectService $projectService,
         TimeEntryService $timeEntryService,
-        CustomerService $customerService
+        CustomerService $customerService,
+		IConfig $config
     ) {
         parent::__construct();
         $this->projectService = $projectService;
         $this->timeEntryService = $timeEntryService;
         $this->customerService = $customerService;
+		$this->config = $config;
     }
 
     /**
@@ -148,10 +155,15 @@ class CleanupCommand extends Command
      */
     private function cleanupOldTimeEntries(OutputInterface $output, bool $dryRun)
     {
+		$years = (int) $this->config->getAppValue('projectcheck', 'retention_time_entries_years', '0');
+		if ($years <= 0) {
+			$output->writeln('Skipping old time entries (config retention_time_entries_years=0, unlimited retention).');
+			return;
+		}
         $output->writeln('Cleaning up old time entries...');
 
         $cutoffDate = new \DateTime();
-        $cutoffDate->modify('-2 years');
+        $cutoffDate->modify('-' . $years . ' years');
 
         $oldTimeEntries = $this->timeEntryService->getTimeEntriesByDateRange(
             null,
@@ -166,7 +178,7 @@ class CleanupCommand extends Command
             $deletedCount = 0;
             foreach ($oldTimeEntries as $timeEntry) {
                 try {
-                    $this->timeEntryService->deleteTimeEntry($timeEntry->getId(), 'system');
+                    $this->timeEntryService->deleteTimeEntryForMaintenance($timeEntry->getId());
                     $deletedCount++;
                 } catch (\Exception $e) {
                     $output->writeln("<error>Error deleting time entry {$timeEntry->getId()}: {$e->getMessage()}</error>");
@@ -188,21 +200,26 @@ class CleanupCommand extends Command
 
         $cutoffDate = new \DateTime();
         $cutoffDate->modify('-1 year');
+        $cutoffTs = $cutoffDate->getTimestamp();
 
-        $projects = $this->projectService->getProjectsByUser('system', 1000);
+        $projects = $this->projectService->getAllProjects();
         $orphanedCount = 0;
 
         foreach ($projects as $project) {
-            $recentTimeEntries = $this->timeEntryService->getTimeEntriesByProject(
-                $project->getId(),
-                $cutoffDate->format('Y-m-d')
-            );
+            $entries = $this->timeEntryService->getTimeEntriesByProject($project->getId());
+            $hasRecent = false;
+            foreach ($entries as $e) {
+                if ($e->getDate() && $e->getDate()->getTimestamp() >= $cutoffTs) {
+                    $hasRecent = true;
+                    break;
+                }
+            }
 
-            if (empty($recentTimeEntries) && $project->getStatus() === 'Completed') {
+            if (!$hasRecent && $project->getStatus() === 'Completed') {
                 $orphanedCount++;
                 if (!$dryRun) {
                     try {
-                        $this->projectService->deleteProject($project->getId(), 'system');
+                        $this->projectService->deleteProject($project->getId());
                         $output->writeln("Deleted orphaned project: {$project->getName()}");
                     } catch (\Exception $e) {
                         $output->writeln("<error>Error deleting project {$project->getId()}: {$e->getMessage()}</error>");
@@ -226,23 +243,17 @@ class CleanupCommand extends Command
     {
         $output->writeln('Cleaning up orphaned customers...');
 
-        $cutoffDate = new \DateTime();
-        $cutoffDate->modify('-1 year');
-
-        $customers = $this->customerService->getCustomersByUser('system', 1000);
+        $customers = $this->customerService->getAllCustomers();
         $orphanedCount = 0;
 
         foreach ($customers as $customer) {
-            $recentProjects = $this->projectService->getProjectsByCustomer(
-                $customer->getId(),
-                $cutoffDate->format('Y-m-d')
-            );
+            $customerProjects = $this->projectService->getProjectsByCustomer($customer->getId());
 
-            if (empty($recentProjects)) {
+            if (empty($customerProjects)) {
                 $orphanedCount++;
                 if (!$dryRun) {
                     try {
-                        $this->customerService->deleteCustomer($customer->getId(), 'system');
+                        $this->customerService->deleteCustomer($customer->getId());
                         $output->writeln("Deleted orphaned customer: {$customer->getName()}");
                     } catch (\Exception $e) {
                         $output->writeln("<error>Error deleting customer {$customer->getId()}: {$e->getMessage()}</error>");
@@ -266,26 +277,23 @@ class CleanupCommand extends Command
     {
         $output->writeln('Updating project statistics...');
 
-        $projects = $this->projectService->getProjectsByUser('system', 1000);
+        $projects = $this->projectService->getAllProjects();
         $updatedCount = 0;
 
         foreach ($projects as $project) {
             if (!$dryRun) {
                 try {
-                    // Update project statistics (simplified for now)
-                    $this->projectService->updateProject($project->getId(), [
-                        'updated_at' => new \DateTime()
-                    ], 'system');
+                    $this->projectService->touchProjectRowTimestampForMaintenance($project->getId());
                     $updatedCount++;
                 } catch (\Exception $e) {
                     $output->writeln("<error>Error updating project {$project->getId()}: {$e->getMessage()}</error>");
                 }
             } else {
-                $output->writeln("Would update statistics for project: {$project->getName()}");
+                $output->writeln("Would update project row timestamp: {$project->getName()}");
                 $updatedCount++;
             }
         }
 
-        $output->writeln("Updated statistics for {$updatedCount} projects");
+        $output->writeln("Touched project timestamps (maintenance) for {$updatedCount} projects");
     }
 }

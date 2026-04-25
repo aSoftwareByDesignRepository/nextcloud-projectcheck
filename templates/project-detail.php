@@ -24,11 +24,14 @@ $statusClass = 'status-' . strtolower(str_replace(' ', '-', $project->getStatus(
 $priorityClass = 'priority-' . strtolower($project->getPriority());
 $budgetConsumption = isset($budgetConsumption) ? $budgetConsumption : 0;
 $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
+$allowedStatusTargets = $_['allowedStatusTargets'] ?? [];
+$canAddTimeEntry = $_['canAddTimeEntry'] ?? $project->allowsTimeTracking();
+$addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
@@ -40,17 +43,23 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
             </nav>
         </div>
 
-        <!-- Page Header -->
-        <div class="section page-header-section">
+        <?php if ($project->isArchived()): ?>
+            <div class="project-detail__notice project-detail__notice--archived" role="status" aria-live="polite">
+                <i class="icon-pause" aria-hidden="true"></i>
+                <p><?php p($l->t('This project is archived. It is read-only. To log time or edit details, reactivate it to Active or On Hold using "Change status".')); ?></p>
+            </div>
+        <?php endif; ?>
+
+        <!-- Page Header: title + key actions (single focal area) -->
+        <div class="section page-header-section project-detail-hero">
             <div class="header-content">
                 <div class="header-text">
-
                     <div class="header-details">
-                        <h2><?php p($project->getName()); ?></h2>
-                        <p><?php p($l->t('Project details and associated information')); ?></p>
+                        <h2 class="project-detail-hero__title"><?php p($project->getName()); ?></h2>
+                        <p class="project-detail-hero__lede"><?php p($l->t('Status, customer, and time tracking in one place.')); ?></p>
                         <div class="project-meta">
                             <div class="meta-item">
-                                <i class="icon-user-custom"></i>
+                                <i class="icon-user-custom" aria-hidden="true"></i>
                                 <?php if ($customerName && $project->getCustomerId()): ?>
                                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => $project->getCustomerId()])); ?>" class="customer-link">
                                         <?php p($customerName); ?>
@@ -60,17 +69,22 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                                 <?php endif; ?>
                             </div>
                             <div class="meta-item">
-                                <i class="icon-calendar-custom"></i>
+                                <i class="icon-calendar-custom" aria-hidden="true"></i>
                                 <span><?php p($project->getCreatedAt() ? $project->getCreatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="header-actions">
-                    <?php if ($canEdit): ?>
-                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.edit', ['id' => $projectId])); ?>" class="button secondary">
-                            <i class="icon-edit-custom"></i>
-                            <?php p($l->t('Edit Project')); ?>
+                <div class="header-actions project-detail-hero__actions" role="group" aria-label="<?php p($l->t('Project actions')); ?>">
+                    <?php if (!empty($canChangeStatus) && $canChangeStatus && $allowedStatusTargets !== []): ?>
+                        <button type="button" class="button" id="open-status-modal-btn">
+                            <?php p($l->t('Change status')); ?>
+                        </button>
+                    <?php endif; ?>
+                    <?php if (!empty($canEdit) && $canEdit): ?>
+                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.edit', ['id' => $projectId])); ?>" class="button primary">
+                            <i class="icon-edit-custom" aria-hidden="true"></i>
+                            <?php p($l->t('Edit project')); ?>
                         </a>
                     <?php endif; ?>
                 </div>
@@ -573,14 +587,16 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
 
         <!-- Recent Time Entries -->
         <?php if (!empty($timeEntries)): ?>
-            <div class="section">
+            <div class="section" id="time-entries-section">
                 <div class="section-header">
-                    <h3><i class="icon-time-custom"></i> <?php p($l->t('Recent Time Entries')); ?></h3>
+                    <h3><i class="icon-time-custom" aria-hidden="true"></i> <?php p($l->t('Recent Time Entries')); ?></h3>
                     <div class="section-header-actions">
-                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId])); ?>" class="button primary">
-                            <i class="icon-add-custom"></i>
-                            <?php p($l->t('Add Time Entry')); ?>
-                        </a>
+                        <?php if ($canAddTimeEntry): ?>
+                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId])); ?>" class="button primary">
+                                <i class="icon-add-custom" aria-hidden="true"></i>
+                                <?php p($l->t('Add time entry')); ?>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="section-content">
@@ -616,48 +632,62 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
             </div>
         <?php else: ?>
             <!-- Empty Time Entries State -->
-            <div class="section">
+            <div class="section" id="time-entries-section">
                 <div class="section-header">
-                    <h3><i class="icon-time-custom"></i> <?php p($l->t('Time Entries')); ?></h3>
+                    <h3><i class="icon-time-custom" aria-hidden="true"></i> <?php p($l->t('Time Entries')); ?></h3>
                     <div class="section-header-actions">
-                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId])); ?>" class="button primary">
-                            <i class="icon-add-custom"></i>
-                            <?php p($l->t('Add Time Entry')); ?>
-                        </a>
+                        <?php if ($canAddTimeEntry): ?>
+                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId])); ?>" class="button primary">
+                                <i class="icon-add-custom" aria-hidden="true"></i>
+                                <?php p($l->t('Add time entry')); ?>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="section-content">
                     <div class="empty-state">
-                        <i class="icon-time-custom icon-large"></i>
+                        <i class="icon-time-custom icon-large" aria-hidden="true"></i>
                         <h3><?php p($l->t('No time entries yet')); ?></h3>
                         <p><?php p($l->t('Start tracking time for this project by adding your first time entry.')); ?></p>
-                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId])); ?>" class="button primary">
-                            <i class="icon-add-custom"></i>
-                            <?php p($l->t('Add First Time Entry')); ?>
-                        </a>
+                        <?php if ($canAddTimeEntry): ?>
+                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId])); ?>" class="button primary">
+                                <i class="icon-add-custom" aria-hidden="true"></i>
+                                <?php p($l->t('Add first time entry')); ?>
+                            </a>
+                        <?php else: ?>
+                            <p class="empty-state-hint"><?php p($l->t('Time tracking is not available for this project status. Change status to Active or On Hold to add entries.')); ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         <?php endif; ?>
 
         <!-- Team Members -->
-        <?php if (!empty($teamMembers)): ?>
-            <div class="section">
+        <?php
+        $teamMembersActive = $_['teamMembersActive'] ?? [];
+        $teamMembersFormer = $_['teamMembersFormer'] ?? [];
+        $hasAnyTeam = !empty($teamMembersActive) || !empty($teamMembersFormer);
+        ?>
+        <?php if ($hasAnyTeam): ?>
+            <div class="section" id="team-section">
                 <div class="section-header">
-                    <h3><i class="icon-user-custom"></i> <?php p($l->t('Team Members')); ?></h3>
+                    <h3><i class="icon-user-custom" aria-hidden="true"></i> <?php p($l->t('Team Members')); ?></h3>
                     <div class="section-header-actions">
-                        <button type="button" class="button primary" id="add-team-member-btn">
-                            <i class="icon-add-custom"></i>
-                            <?php p($l->t('Add Team Member')); ?>
-                        </button>
+                        <?php if (!empty($canAddTeamMember) && $canAddTeamMember): ?>
+                            <button type="button" class="button primary" id="add-team-member-btn" aria-haspopup="dialog" aria-controls="addTeamMemberModal" aria-expanded="false">
+                                <i class="icon-add-custom" aria-hidden="true"></i>
+                                <?php p($l->t('Add team member')); ?>
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="section-content">
-                    <div class="team-members-list">
-                        <?php foreach ($teamMembers as $member): ?>
-                            <div class="team-member-item">
+                    <?php if (!empty($teamMembersActive)): ?>
+                    <div class="team-members-list" role="list" aria-label="<?php p($l->t('Current team')); ?>">
+                        <?php foreach ($teamMembersActive as $member): ?>
+                            <div class="team-member-item" role="listitem">
                                 <div class="member-avatar">
-                                    <div class="avatar-initial"><?php p(strtoupper(substr($member['name'] ?? 'U', 0, 1))); ?></div>
+                                    <div class="avatar-initial" aria-hidden="true"><?php p(strtoupper(substr($member['name'] ?? 'U', 0, 1))); ?></div>
                                 </div>
                                 <div class="member-info">
                                     <span class="member-name"><?php p($member['name'] ?? $l->t('Unknown')); ?></span>
@@ -668,7 +698,7 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                                     <span class="hours-value"><?php p($member['hours'] ?? 0); ?></span>
                                 </div>
                                 <div class="member-actions">
-                                    <?php if ($canManageMembers): ?>
+                                    <?php if (!empty($canManageMembers) && $canManageMembers && empty($member['is_former'])): ?>
                                         <button type="button" class="action-btn remove-member-btn"
                                             data-member-id="<?php p($member['id'] ?? ''); ?>"
                                             data-member-name="<?php p($member['name'] ?? $l->t('Unknown')); ?>"
@@ -681,47 +711,235 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                             </div>
                         <?php endforeach; ?>
                     </div>
+                    <?php endif; ?>
+                    <?php if (!empty($teamMembersFormer)): ?>
+                    <div class="team-former-section" role="region" aria-labelledby="team-former-heading">
+                        <h4 class="team-former-heading" id="team-former-heading"><?php p($l->t('Former team members (account removed)')); ?></h4>
+                        <p class="team-former-help" id="team-former-desc"><?php p($l->t('Historical list — time entries and roles are kept. These accounts no longer sign in to Nextcloud.')); ?></p>
+                    <div class="team-members-list team-members-list--former" role="list" aria-describedby="team-former-desc" aria-label="<?php p($l->t('Former team members')); ?>">
+                        <?php foreach ($teamMembersFormer as $member): ?>
+                            <div class="team-member-item team-member-item--former" role="listitem">
+                                <div class="member-avatar">
+                                    <div class="avatar-initial" aria-hidden="true"><?php p(strtoupper(substr($member['name'] ?? 'U', 0, 1))); ?></div>
+                                </div>
+                                <div class="member-info">
+                                    <span class="member-name"><?php p($member['name'] ?? $l->t('Unknown')); ?>
+                                        <span class="pc-badge pc-badge--neutral"><?php p($l->t('Former')); ?></span>
+                                    </span>
+                                    <span class="member-role"><?php p($member['role'] ?? 'Team Member'); ?></span>
+                                </div>
+                                <div class="member-hours">
+                                    <span class="hours-label"><?php p($l->t('Hours:')); ?></span>
+                                    <span class="hours-value"><?php p($member['hours'] ?? 0); ?></span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- Status Change Modal -->
-<div id="statusChangeModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><?php p($l->t('Change Project Status')); ?></h3>
-            <button type="button" class="close" id="close-status-modal" aria-label="<?php p($l->t('Close')); ?>">&times;</button>
+<?php
+    $hasStatusModal = !empty($canChangeStatus) && $canChangeStatus && $allowedStatusTargets !== [];
+?>
+<?php if ($hasStatusModal): ?>
+<div id="statusChangeModal" class="modal projectcheck-dialog" style="display: none;" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="statusChangeModalTitle">
+    <div class="modal-content projectcheck-dialog__panel" onclick="event.stopPropagation();">
+        <div class="modal-header projectcheck-dialog__header">
+            <h3 id="statusChangeModalTitle"><?php p($l->t('Change project status')); ?></h3>
+            <button type="button" class="close" id="close-status-modal" aria-label="<?php p($l->t('Close')); ?>"><span aria-hidden="true">&times;</span></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body projectcheck-dialog__body">
+            <p class="projectcheck-dialog__help" id="statusChangeHelp"><?php p($l->t('Choose the next state. Archived projects are hidden from your default list and do not accept new time until reactivated.')); ?></p>
             <form id="statusChangeForm">
                 <div class="form-group">
-                    <label for="newStatus"><?php p($l->t('New Status')); ?></label>
-                    <select id="newStatus" name="status" required>
-                        <option value="Active"><?php p($l->t('Active')); ?></option>
-                        <option value="On Hold"><?php p($l->t('On Hold')); ?></option>
-                        <option value="Completed"><?php p($l->t('Completed')); ?></option>
-                        <option value="Cancelled"><?php p($l->t('Cancelled')); ?></option>
+                    <label for="newStatus"><?php p($l->t('New status')); ?></label>
+                    <select id="newStatus" name="status" required aria-describedby="statusChangeHelp">
+                        <?php foreach ($allowedStatusTargets as $target): ?>
+                            <option value="<?php p($target); ?>"><?php p($l->t($target)); ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="statusReason"><?php p($l->t('Reason (optional)')); ?></label>
-                    <textarea id="statusReason" name="reason" rows="3"></textarea>
+                    <label for="statusReason"><?php p($l->t('Note (optional)')); ?></label>
+                    <textarea id="statusReason" name="reason" rows="3" maxlength="2000" autocomplete="off"></textarea>
                 </div>
             </form>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer projectcheck-dialog__footer">
             <button type="button" class="button secondary" id="cancel-status-change"><?php p($l->t('Cancel')); ?></button>
-            <button type="button" class="button primary" id="submit-status-change"><?php p($l->t('Update Status')); ?></button>
+            <button type="button" class="button primary" id="submit-status-change"><?php p($l->t('Update status')); ?></button>
         </div>
     </div>
 </div>
+<?php endif; ?>
 
-<script nonce="<?php p($_['cspNonce']) ?>">
-    // Event listeners for buttons
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set widths for progress bars using data attributes
+<?php
+    $addTeamUrl = $addTeamMemberUrl !== null
+        ? $addTeamMemberUrl
+        : $urlGenerator->linkToRoute('projectcheck.project.addTeamMember', ['id' => $projectId]);
+?>
+<?php if (!empty($canAddTeamMember) && $canAddTeamMember): ?>
+<div id="addTeamMemberModal" class="modal projectcheck-dialog" style="display: none;" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="addTeamMemberTitle">
+    <div class="modal-content projectcheck-dialog__panel" onclick="event.stopPropagation();">
+        <div class="modal-header projectcheck-dialog__header">
+            <h3 id="addTeamMemberTitle"><?php p($l->t('Add team member')); ?></h3>
+            <button type="button" class="close" id="close-add-member-modal" aria-label="<?php p($l->t('Close')); ?>"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body projectcheck-dialog__body">
+            <p class="projectcheck-dialog__help" id="addMemberHelp"><?php p($l->t('Enter the person\'s Nextcloud user ID (login name), then pick a role.')); ?></p>
+            <form id="addTeamMemberForm" method="post">
+                <div class="form-group">
+                    <label for="teamMemberUserId"><?php p($l->t('User ID')); ?> <span class="required-star" aria-hidden="true">*</span></label>
+                    <input type="text" id="teamMemberUserId" name="user_id" required autocomplete="username" inputmode="text" aria-describedby="addMemberHelp" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label for="teamMemberRole"><?php p($l->t('Role')); ?> <span class="required-star" aria-hidden="true">*</span></label>
+                    <select id="teamMemberRole" name="role" class="form-input form-select" required>
+                        <option value="Project Manager"><?php p($l->t('Project Manager')); ?></option>
+                        <option value="Developer" selected><?php p($l->t('Developer')); ?></option>
+                        <option value="Tester"><?php p($l->t('Tester')); ?></option>
+                        <option value="Consultant"><?php p($l->t('Consultant')); ?></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="teamMemberRate"><?php p($l->t('Hourly rate (optional)')); ?></label>
+                    <input type="text" id="teamMemberRate" name="hourly_rate" class="form-input" inputmode="decimal" placeholder="<?php p($l->t('e.g. 75.00')); ?>" autocomplete="off" />
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer projectcheck-dialog__footer">
+            <button type="button" class="button secondary" id="cancel-add-member"><?php p($l->t('Cancel')); ?></button>
+            <button type="button" class="button primary" id="submit-add-team-member"><?php p($l->t('Add to project')); ?></button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<script nonce="<?php p($_['cspNonce'] ?? ''); ?>">
+    (function() {
+        const projectcheckToken = <?php echo json_encode($_['requesttoken'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+        const changeStatusUrl = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.changeStatus', ['id' => $projectId])); ?>;
+        const addTeamUrl = <?php echo json_encode($addTeamUrl ?? $urlGenerator->linkToRoute('projectcheck.project.addTeamMember', ['id' => $projectId])); ?>;
+        const errorStatusMsg = <?php echo json_encode($l->t('Error updating status')); ?>;
+        const errorGeneric = <?php echo json_encode($l->t('Something went wrong. Please try again.')); ?>;
+        const addMemberError = <?php echo json_encode($l->t('Could not add team member')); ?>;
+
+        function setModalOpen(modal, open, openBtn) {
+            if (!modal) {
+                return;
+            }
+            modal.style.display = open ? 'block' : 'none';
+            modal.setAttribute('aria-hidden', open ? 'false' : 'true');
+            if (openBtn) {
+                openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+        }
+
+        function showStatusChangeModal() {
+            const m = document.getElementById('statusChangeModal');
+            const b = document.getElementById('open-status-modal-btn');
+            setModalOpen(m, true, b);
+            const sel = document.getElementById('newStatus');
+            if (sel) {
+                sel.focus();
+            }
+        }
+
+        function closeStatusChangeModal() {
+            const m = document.getElementById('statusChangeModal');
+            const b = document.getElementById('open-status-modal-btn');
+            setModalOpen(m, false, b);
+        }
+
+        function showAddTeamMemberModal() {
+            const m = document.getElementById('addTeamMemberModal');
+            const b = document.getElementById('add-team-member-btn');
+            setModalOpen(m, true, b);
+            const u = document.getElementById('teamMemberUserId');
+            if (u) {
+                u.value = '';
+                u.focus();
+            }
+        }
+
+        function closeAddTeamMemberModal() {
+            const m = document.getElementById('addTeamMemberModal');
+            const b = document.getElementById('add-team-member-btn');
+            setModalOpen(m, false, b);
+        }
+
+        function submitStatusChangeFunc() {
+            const form = document.getElementById('statusChangeForm');
+            if (!form) {
+                return;
+            }
+            const formData = new FormData(form);
+
+            fetch(changeStatusUrl, {
+                    method: 'PUT',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'requesttoken': projectcheckToken
+                    }
+                })
+                .then(r => r.json().then(d => ({ ok: r.ok, d })))
+                .then(res => {
+                    if (res.d && res.d.success) {
+                        window.location.reload();
+                    } else {
+                        const err = (res.d && (res.d.error || res.d.message)) ? (res.d.error || res.d.message) : errorStatusMsg;
+                        window.alert(errorStatusMsg + (err ? ': ' + err : ''));
+                    }
+                })
+                .catch(() => {
+                    window.alert(errorGeneric);
+                });
+        }
+
+        function submitAddTeamMember() {
+            const uid = (document.getElementById('teamMemberUserId') && document.getElementById('teamMemberUserId').value || '').trim();
+            const role = document.getElementById('teamMemberRole') && document.getElementById('teamMemberRole').value;
+            if (!uid || !role) {
+                return;
+            }
+            const formData = new FormData();
+            formData.append('user_id', uid);
+            formData.append('role', role);
+            const rateEl = document.getElementById('teamMemberRate');
+            if (rateEl && String(rateEl.value).trim() !== '') {
+                formData.append('hourly_rate', String(rateEl.value).trim());
+            }
+            formData.append('requesttoken', projectcheckToken);
+
+            fetch(addTeamUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json().then(d => ({ ok: r.ok, d })))
+                .then(res => {
+                    if (res.d && res.d.success) {
+                        window.location.reload();
+                    } else {
+                        const err = (res.d && (res.d.error)) ? res.d.error : addMemberError;
+                        window.alert(err);
+                    }
+                })
+                .catch(() => window.alert(errorGeneric));
+        }
+
+        function confirmDelete() {
+            if (window.confirm(<?php echo json_encode($l->t('Are you sure you want to delete this project? This action cannot be undone.')); ?>)) {
+                window.location.href = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.delete', ['id' => $projectId])); ?>;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('[data-width]').forEach(function(el) {
             el.style.width = el.getAttribute('data-width') + '%';
         });
@@ -730,73 +948,50 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
         if (addTeamMemberBtn) {
             addTeamMemberBtn.addEventListener('click', showAddTeamMemberModal);
         }
-
+        const openStatusBtn = document.getElementById('open-status-modal-btn');
+        if (openStatusBtn) {
+            openStatusBtn.addEventListener('click', showStatusChangeModal);
+        }
+        const closeAddMember = document.getElementById('close-add-member-modal');
+        if (closeAddMember) {
+            closeAddMember.addEventListener('click', closeAddTeamMemberModal);
+        }
+        const cancelAddMember = document.getElementById('cancel-add-member');
+        if (cancelAddMember) {
+            cancelAddMember.addEventListener('click', closeAddTeamMemberModal);
+        }
+        const subAdd = document.getElementById('submit-add-team-member');
+        if (subAdd) {
+            subAdd.addEventListener('click', submitAddTeamMember);
+        }
         const closeStatusModal = document.getElementById('close-status-modal');
         if (closeStatusModal) {
             closeStatusModal.addEventListener('click', closeStatusChangeModal);
         }
-
         const cancelStatusChange = document.getElementById('cancel-status-change');
         if (cancelStatusChange) {
             cancelStatusChange.addEventListener('click', closeStatusChangeModal);
         }
-
         const submitStatusChange = document.getElementById('submit-status-change');
         if (submitStatusChange) {
             submitStatusChange.addEventListener('click', submitStatusChangeFunc);
         }
+        const teamModal = document.getElementById('addTeamMemberModal');
+        if (teamModal) {
+            teamModal.addEventListener('click', e => { if (e.target === teamModal) closeAddTeamMemberModal(); });
+        }
+        const statusModal = document.getElementById('statusChangeModal');
+        if (statusModal) {
+            statusModal.addEventListener('click', e => { if (e.target === statusModal) closeStatusChangeModal(); });
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeStatusChangeModal();
+                closeAddTeamMemberModal();
+            }
+        });
     });
-
-    function showStatusChangeModal() {
-        const modal = document.getElementById('statusChangeModal');
-        if (modal) {
-            modal.style.display = 'block';
-        }
-    }
-
-    function closeStatusChangeModal() {
-        const modal = document.getElementById('statusChangeModal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-
-    function submitStatusChangeFunc() {
-        const form = document.getElementById('statusChangeForm');
-        const formData = new FormData(form);
-
-        fetch('<?php p($urlGenerator->linkToRoute('projectcheck.project.changeStatus', ['id' => $projectId])); ?>', {
-                method: 'PUT',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'requesttoken': '<?php p($_['requesttoken']) ?>'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('<?php p($l->t('Error updating status')); ?>: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('<?php p($l->t('Error updating status')); ?>');
-            });
-    }
-
-    function confirmDelete() {
-        if (confirm('<?php p($l->t('Are you sure you want to delete this project? This action cannot be undone.')); ?>')) {
-            window.location.href = '<?php p($urlGenerator->linkToRoute('projectcheck.project.delete', ['id' => $projectId])); ?>';
-        }
-    }
-
-    function showAddTeamMemberModal() {
-        // Implement team member modal functionality
-        alert('<?php p($l->t('Add team member functionality will be implemented here')); ?>');
-    }
+    })();
 
     // Member removal functionality
     document.addEventListener('click', function(e) {
@@ -841,7 +1036,6 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
                 }
             },
             onCancel: function() {
-                console.log('Member removal cancelled');
             }
         });
     }

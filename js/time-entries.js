@@ -59,20 +59,18 @@
 	 * Initialize the application
 	 */
 	function init() {
-		console.log('TimeEntries app initializing...');
 		bindEvents();
 		
 		// Initialize datepicker immediately (using inline implementation if needed)
 		initCalendarIcons();
 		
 		initMessageAutoHide();
-		console.log('TimeEntries app initialized');
 	}
 
 	/**
 	 * Initialize mutation observer to handle dynamic content
 	 */
-	function initMutationObserver() {
+	function _initMutationObserver() {
 		const observer = new MutationObserver(function (mutations) {
 			mutations.forEach(function (mutation) {
 				if (mutation.type === 'childList') {
@@ -116,8 +114,6 @@
 	 * Bind event listeners
 	 */
 	function bindEvents() {
-		console.log('Binding events...');
-
 		// Apply filters button (navigate with query params)
 		if (elements.applyFiltersBtn) {
 			elements.applyFiltersBtn.addEventListener('click', applyFilters);
@@ -154,7 +150,6 @@
 				const button = e.target.closest('.delete-entry-btn');
 				const entryId = button.getAttribute('data-entry-id');
 				const entryDescription = button.getAttribute('data-entry-description');
-				console.log('Delete button clicked for time entry:', entryId, entryDescription);
 				showTimeEntryDeletionModal(entryId, entryDescription);
 			}
 		});
@@ -201,8 +196,6 @@
 	 * Clear all filters and reload
 	 */
 	function clearFilters() {
-		console.log('=== CLEARING ALL FILTERS ===');
-		
 		const url = new URL(window.location.href);
 		url.searchParams.delete('search');
 		url.searchParams.delete('project_id');
@@ -226,19 +219,17 @@
 	 */
 	function showTimeEntryDeletionModal(entryId, entryDescription) {
 		if (typeof window.projectcheckDeletionModal === 'undefined') {
-			console.error('Deletion modal not loaded');
-			// Fallback to old method
-			confirmDeleteTimeEntry(entryId, entryDescription);
+			confirmDeleteTimeEntry(entryId);
 			return;
 		}
 
-		const deleteUrl = `/index.php/apps/projectcheck/time-entries/${entryId}`;
+		const deleteUrl = OC.generateUrl('/apps/projectcheck/time-entries/' + entryId);
 
 		// Show the modal
 		window.projectcheckDeletionModal.show({
 			entityType: 'time_entry',
 			entityId: entryId,
-			entityName: entryDescription || 'Time Entry',
+			entityName: entryDescription || t('projectcheck', 'Time entry'),
 			deleteUrl: deleteUrl,
 			onSuccess: function (entity) {
 				// Remove the row from the table
@@ -249,10 +240,9 @@
 				}
 
 				// Show success message
-				showMessage('Time entry deleted successfully!', 'success');
+				showMessage(t('projectcheck', 'Time entry was deleted successfully!'), 'success');
 			},
 			onCancel: function () {
-				console.log('Time entry deletion cancelled');
 			}
 		});
 	}
@@ -260,11 +250,8 @@
 	/**
 	 * Confirm delete time entry - fallback method
 	 */
-	function confirmDeleteTimeEntry(entryId, entryDescription) {
-		const description = entryDescription || 'this time entry';
-		const message = `Are you sure you want to delete ${description}? This action cannot be undone.`;
-
-		if (confirm(message)) {
+	function confirmDeleteTimeEntry(entryId) {
+		if (confirm(t('projectcheck', 'Are you sure you want to delete this time entry? This action cannot be undone.'))) {
 			deleteTimeEntry(entryId);
 		}
 	}
@@ -273,10 +260,8 @@
 	 * Delete time entry via AJAX
 	 */
 	function deleteTimeEntry(entryId) {
-		const url = `/index.php/apps/projectcheck/time-entries/${entryId}`;
-		const token = document.querySelector('input[name="requesttoken"]')?.value ||
-			document.querySelector('meta[name="requesttoken"]')?.content ||
-			(window.OC && window.OC.requestToken);
+		const url = OC.generateUrl('/apps/projectcheck/time-entries/' + entryId);
+		const token = (typeof OC !== 'undefined' && OC.requestToken) ? OC.requestToken : (document.querySelector('input[name="requesttoken"]')?.value || document.querySelector('meta[name="requesttoken"]')?.content || '');
 
 		fetch(url, {
 			method: 'DELETE',
@@ -298,14 +283,13 @@
 					}
 
 					// Show success message
-					showMessage('Time entry deleted successfully!', 'success');
+					showMessage(t('projectcheck', 'Time entry was deleted successfully!'), 'success');
 				} else {
 					showMessage(data.message || t('projectcheck', 'Failed to delete time entry'), 'error');
 				}
 			})
-			.catch(error => {
-				console.error('Error deleting time entry:', error);
-				showMessage('An error occurred while deleting the time entry', 'error');
+			.catch(() => {
+				showMessage(t('projectcheck', 'An error occurred while deleting the time entry'), 'error');
 			});
 	}
 
@@ -313,25 +297,30 @@
 	 * Show message
 	 */
 	function showMessage(message, type) {
+		const level = type || 'info';
 		// Remove existing messages
 		const existingMessages = document.querySelectorAll('.notice');
 		existingMessages.forEach(msg => msg.remove());
 
 		// Create new message
 		const messageDiv = document.createElement('div');
-		messageDiv.className = `notice notice-${type}`;
+		messageDiv.className = 'notice notice-' + level;
+		messageDiv.setAttribute('role', level === 'error' ? 'alert' : 'status');
+		messageDiv.setAttribute('aria-live', level === 'error' ? 'assertive' : 'polite');
+		messageDiv.setAttribute('aria-atomic', 'true');
 
 		// Choose appropriate icon based on message type
 		let iconClass = 'icon-info';
-		if (type === 'success') {
+		if (level === 'success') {
 			iconClass = 'icon-checkmark';
-		} else if (type === 'error') {
+		} else if (level === 'error') {
 			iconClass = 'icon-error';
 		}
 
 		// Create icon element
 		const icon = document.createElement('i');
 		icon.className = 'icon ' + iconClass;
+		icon.setAttribute('aria-hidden', 'true');
 		messageDiv.appendChild(icon);
 
 		// Create message span
@@ -346,7 +335,7 @@
 		}
 
 		// Auto-hide after 3 seconds for info messages, 5 seconds for others
-		const hideDelay = type === 'info' ? 3000 : 5000;
+		const hideDelay = level === 'info' ? 3000 : 5000;
 		setTimeout(() => {
 			if (messageDiv.parentNode) {
 				messageDiv.remove();
@@ -428,7 +417,7 @@
 		const originalText = exportBtn ? exportBtn.textContent : '';
 		if (exportBtn) {
 			exportBtn.disabled = true;
-			exportBtn.textContent = t('projectcheck', 'Exporting...');
+			exportBtn.textContent = t('projectcheck', 'Exporting…');
 		}
 
 		// Fetch CSV data from backend
@@ -441,7 +430,9 @@
 		.then(response => {
 			if (!response.ok) {
 				return response.json().then(data => {
-					throw new Error(data.error || 'Export failed');
+					throw new Error(data.error != null && data.error !== ''
+						? data.error
+						: t('projectcheck', 'Export failed'));
 				});
 			}
 			return response.json();
@@ -504,7 +495,7 @@
 	/**
 	 * Initialize description truncation for table cells
 	 */
-	function initDescriptionTruncation() {
+	function _initDescriptionTruncation() {
 		// Run immediately to prevent flash of full text
 		const descriptionCells = document.querySelectorAll('.grid .description-cell, .grid td:nth-child(6)');
 		const maxLength = 20; // Maximum characters before truncation
@@ -544,7 +535,7 @@
 	/**
 	 * Force immediate truncation on page load
 	 */
-	function forceImmediateTruncation() {
+	function _forceImmediateTruncation() {
 		// Run as soon as possible
 		const descriptionCells = document.querySelectorAll('.grid .description-cell, .grid td:nth-child(6)');
 		descriptionCells.forEach(cell => {
@@ -578,7 +569,7 @@
 	/**
 	 * Additional truncation check for dynamic content
 	 */
-	function checkAndTruncateDescriptions() {
+	function _checkAndTruncateDescriptions() {
 		const descriptionCells = document.querySelectorAll('.grid .description-cell, .grid td:nth-child(6)');
 		descriptionCells.forEach(cell => {
 			if (!cell.hasAttribute('data-processed')) {

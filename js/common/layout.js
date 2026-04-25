@@ -573,5 +573,6 @@ const ProjectControlLayout = {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ProjectControlLayout;
 } else if (typeof window !== 'undefined') {
+  window.ProjectCheckLayout = ProjectControlLayout;
   window.ProjectControlLayout = ProjectControlLayout;
 }

@@ -30,6 +30,8 @@ use OCP\IGroupManager;
  */
 class ProjectService
 {
+	/** @var list<string> All stored project status values */
+	public const PROJECT_STATUSES = ['Active', 'On Hold', 'Completed', 'Cancelled', 'Archived'];
 
 	/** @var IDBConnection */
 	private $db;
@@ -57,6 +59,9 @@ class ProjectService
 	/** @var BudgetService|null */
 	private $budgetService;
 
+	/** @var AccessControlService|null */
+	private $accessControl;
+
 	/**
 	 * ProjectService constructor
 	 *
@@ -67,8 +72,9 @@ class ProjectService
 	 * @param IGroupManager $groupManager
 	 * @param ProjectMapper|null $projectMapper
 	 * @param BudgetService|null $budgetService
+	 * @param AccessControlService|null $accessControl
 	 */
-	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config, IGroupManager $groupManager, ?ProjectMapper $projectMapper = null, ?BudgetService $budgetService = null)
+	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config, IGroupManager $groupManager, ?ProjectMapper $projectMapper = null, ?BudgetService $budgetService = null, ?AccessControlService $accessControl = null)
 	{
 		$this->db = $db;
 		$this->userSession = $userSession;
@@ -77,7 +83,86 @@ class ProjectService
 		$this->groupManager = $groupManager;
 		$this->projectMapper = $projectMapper ?? new ProjectMapper($db);
 		$this->budgetService = $budgetService;
+		$this->accessControl = $accessControl;
 		$this->calculator = new ProjectCalculator();
+	}
+
+	/**
+	 * null = all projects (system or app org admin / NC group admin)
+	 * otherwise: project IDs the user may use for scoped stats
+	 *
+	 * @return list<int>|null
+	 */
+	public function getAccessibleProjectIdListForUser(string $userId): ?array
+	{
+		if ($this->isUserAdmin($userId)) {
+			return null;
+		}
+		if ($this->accessControl !== null) {
+			if ($this->accessControl->isSystemAdministrator($userId) || $this->accessControl->canManageAppConfiguration($userId)) {
+				return null;
+			}
+		}
+		$ids = [];
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('p.id')
+			->from('projects', 'p')
+			->where($qb->expr()->eq('p.created_by', $qb->createNamedParameter($userId)));
+		$rs = $qb->executeQuery();
+		while ($r = $rs->fetch()) {
+			$ids[] = (int) $r['id'];
+		}
+		$rs->closeCursor();
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('p2.id')
+			->from('project_members', 'm')
+			->innerJoin('m', 'projects', 'p2', $qb->expr()->eq('m.project_id', 'p2.id'))
+			->where($qb->expr()->eq('m.user_id', $qb->createNamedParameter($userId)))
+			->andWhere($qb->expr()->eq('m.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE)));
+		$rs = $qb->executeQuery();
+		while ($r = $rs->fetch()) {
+			$ids[] = (int) $r['id'];
+		}
+		$rs->closeCursor();
+		$ids = array_values(array_unique($ids));
+		return $ids;
+	}
+
+	/**
+	 * @param list<int> $ids
+	 * @return list<Project>
+	 */
+	public function getProjectsByIdList(array $ids): array
+	{
+		if ($ids === []) {
+			return [];
+		}
+		$out = [];
+		foreach ($ids as $id) {
+			$p = $this->getProject((int) $id);
+			if ($p !== null) {
+				$out[] = $p;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * getProjects() result restricted to projects the user may access (time entry pickers, etc.)
+	 *
+	 * @param array<string, mixed> $filters
+	 * @return list<Project>
+	 */
+	public function getProjectsForUserTimeEntry(string $userId, array $filters = []): array
+	{
+		$all = $this->getProjects($filters);
+		$out = [];
+		foreach ($all as $p) {
+			if ($this->canUserAccessProject($userId, (int) $p->getId())) {
+				$out[] = $p;
+			}
+		}
+		return $out;
 	}
 
 	/**
@@ -103,6 +188,11 @@ class ProjectService
 		$defaultStatus = $this->config->getUserValue($userId, 'projectcheck', 'default_project_status', 'Active');
 		$defaultPriority = $this->config->getUserValue($userId, 'projectcheck', 'default_project_priority', 'Medium');
 
+		$requestedStatus = $data['status'] ?? $defaultStatus;
+		if ($requestedStatus === 'Archived') {
+			throw new \Exception('New projects cannot be created as archived. Create an active project and use “Archive” from the project view.');
+		}
+
 		// Calculate available hours from budget and rate (if provided)
 		$hourlyRate = isset($data['hourly_rate']) && $data['hourly_rate'] !== '' ? (float)$data['hourly_rate'] : (float)$defaultHourlyRate;
 		$totalBudget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float)$data['total_budget'] : 0.0;
@@ -123,7 +213,7 @@ class ProjectService
 		$project->setAvailableHours($availableHours);
 		$project->setCategory($data['category'] ?? '');
 		$project->setPriority($data['priority'] ?? $defaultPriority);
-		$project->setStatus($data['status'] ?? $defaultStatus);
+		$project->setStatus($requestedStatus);
 		$project->setStartDate($this->parseEuropeanDate($data['start_date'] ?? null));
 		$project->setEndDate($this->parseEuropeanDate($data['end_date'] ?? null));
 		$project->setTags($data['tags'] ?? '');
@@ -386,7 +476,11 @@ class ProjectService
 		foreach ($projects as $project) {
 			try {
 				$budgetInfo = $this->budgetService->getProjectBudgetInfo($project, $userId);
-				$enriched[] = ['project' => $project, 'budgetInfo' => $budgetInfo];
+				$enriched[] = [
+					'project' => $project,
+					'budgetInfo' => $budgetInfo,
+					'canEdit' => $this->canUserEditProject($userId, $project->getId()),
+				];
 			} catch (\Exception $e) {
 				$enriched[] = [
 					'project' => $project,
@@ -398,6 +492,7 @@ class ProjectService
 						'warning_level' => 'safe',
 						'used_hours' => 0,
 					],
+					'canEdit' => $this->canUserEditProject($userId, $project->getId()),
 				];
 			}
 		}
@@ -437,14 +532,19 @@ class ProjectService
 			throw new \Exception('Project not found');
 		}
 
-		if ($project->isCompleted() || $project->isCancelled()) {
-			throw new \Exception('Cannot edit completed or cancelled projects');
+		if ($project->isCompleted() || $project->isCancelled() || $project->isArchived()) {
+			throw new \Exception('Cannot edit completed, cancelled, or archived projects. To work on an archived project again, reactivate it from the project page.');
 		}
 
+		$previousStatus = $project->getStatus();
 		// Merge incoming data with existing project to allow partial updates (e.g. status-only or rate-only changes)
 		$data = $this->mergeWithExistingProjectData($project, $data);
 
 		$this->validateProjectData($data, $id);
+
+		if (isset($data['status']) && (string)$data['status'] !== (string)$previousStatus) {
+			$this->assertStatusTransitionAllowed((string)$previousStatus, (string)$data['status']);
+		}
 
 		// Recalculate available hours if budget or rate changed
 		if (isset($data['total_budget']) || isset($data['hourly_rate'])) {
@@ -590,6 +690,40 @@ class ProjectService
 	 * @return bool
 	 * @throws \Exception
 	 */
+	/**
+	 * Maintenance only: update projects.updated_at (does not run user-edit or workflow rules).
+	 * Used by cron/CLI; never expose as a user-facing HTTP action.
+	 */
+	public function touchProjectRowTimestampForMaintenance(int $id): void
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->update('projects')
+			->set('updated_at', $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')))
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
+		$qb->executeStatement();
+	}
+
+	/**
+	 * System event: force project to Cancelled (e.g. when owner account is removed).
+	 * Bypasses normal status transitions. Does not apply to already Completed/Cancelled.
+	 */
+	public function cancelProjectForUserAccountRemoval(int $id): void
+	{
+		$project = $this->getProject($id);
+		if (!$project) {
+			return;
+		}
+		if ($project->isCompleted() || $project->isCancelled()) {
+			return;
+		}
+		$qb = $this->db->getQueryBuilder();
+		$qb->update('projects')
+			->set('status', $qb->createNamedParameter('Cancelled'))
+			->set('updated_at', $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')))
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
+		$qb->executeStatement();
+	}
+
 	public function deleteProject(int $id): bool
 	{
 		$project = $this->getProject($id);
@@ -597,9 +731,9 @@ class ProjectService
 			throw new \Exception('Project not found');
 		}
 
-		// Check if project has active team members
-		$teamMembers = $this->getProjectTeam($id);
-		if (!empty($teamMembers) && $project->isActive()) {
+		// Check if project has active team members (former/archived do not block deletion)
+		$activeTeam = $this->getProjectTeamGrouped($id)['active'] ?? [];
+		if ($activeTeam !== [] && $project->isActive()) {
 			throw new \Exception('Cannot delete project with active team members');
 		}
 
@@ -765,8 +899,8 @@ class ProjectService
 			return false;
 		}
 
-		// Cannot edit completed or cancelled projects
-		if ($project->isCompleted() || $project->isCancelled()) {
+		// Cannot edit completed, cancelled, or archived project metadata (reactivation is a separate action)
+		if ($project->isCompleted() || $project->isCancelled() || $project->isArchived()) {
 			return false;
 		}
 
@@ -785,6 +919,89 @@ class ProjectService
 		return $member && $member->getRole() === 'Project Manager';
 	}
 
+	/**
+	 * Map of allowed status transitions (single source of truth for workflow)
+	 *
+	 * @return array<string, list<string>>
+	 */
+	private function getStatusTransitionMap(): array
+	{
+		return [
+			'Active' => ['On Hold', 'Completed', 'Cancelled', 'Archived'],
+			'On Hold' => ['Active', 'Completed', 'Cancelled', 'Archived'],
+			'Archived' => ['Active', 'On Hold'],
+			'Completed' => [],
+			'Cancelled' => [],
+		];
+	}
+
+	/**
+	 * @param string $from
+	 * @param string $to
+	 * @return bool
+	 */
+	public function isStatusTransitionAllowed(string $from, string $to): bool
+	{
+		$map = $this->getStatusTransitionMap();
+		if (!isset($map[$from])) {
+			return false;
+		}
+		return in_array($to, $map[$from], true);
+	}
+
+	/**
+	 * @param string $from
+	 * @param string $to
+	 * @throws \Exception
+	 */
+	private function assertStatusTransitionAllowed(string $from, string $to): void
+	{
+		if (!$this->isStatusTransitionAllowed($from, $to)) {
+			throw new \Exception("Invalid status transition from '{$from}' to '{$to}'");
+		}
+	}
+
+	/**
+	 * Status values a project may change to from its current state
+	 *
+	 * @param string $currentStatus
+	 * @return list<string>
+	 */
+	public function getAllowedStatusTargets(string $currentStatus): array
+	{
+		$map = $this->getStatusTransitionMap();
+
+		return $map[$currentStatus] ?? [];
+	}
+
+	/**
+	 * Whether the user may change this project's status (including reactivating from Archived)
+	 *
+	 * @param string $userId
+	 * @param int $projectId
+	 * @return bool
+	 */
+	public function canUserChangeProjectStatus(string $userId, int $projectId): bool
+	{
+		$project = $this->getProject($projectId);
+		if (!$project) {
+			return false;
+		}
+
+		// No transitions out of final states
+		if ($project->isCompleted() || $project->isCancelled()) {
+			return false;
+		}
+
+		// Archiving and other transitions use the same authority as project edit (creator / admin / project manager)
+		// Reactivating an archived project uses the same rules
+		if ($project->isArchived()) {
+			// Same privilege level as deleting or fully managing the project
+			return $this->canUserDeleteProject($userId, $projectId);
+		}
+
+		return $this->canUserEditProject($userId, $projectId);
+	}
 
 	/**
 	 * Check if user is admin
@@ -796,6 +1013,14 @@ class ProjectService
 	{
 		// Use Nextcloud's group-based admin check (users in the admin group)
 		return $this->groupManager->isAdmin($userId);
+	}
+
+	/**
+	 * Nextcloud "admin" group (not ProjectCheck org admin)
+	 */
+	public function isUserGroupAdmin(string $userId): bool
+	{
+		return $this->isUserAdmin($userId);
 	}
 
 	/**
@@ -811,6 +1036,7 @@ class ProjectService
 			->from('projects', 'p')
 			->innerJoin('p', 'project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
+			->andWhere($qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE)))
 			->orderBy('p.created_at', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -893,9 +1119,13 @@ class ProjectService
 			throw new \Exception('Project not found');
 		}
 
+		if (!$project->isEditableState()) {
+			throw new \Exception('Cannot change the team for a completed, cancelled, or archived project');
+		}
+
 		// Validate that user exists
-		$user = $this->userManager->get($userId);
-		if (!$user) {
+		$targetUser = $this->userManager->get($userId);
+		if (!$targetUser) {
 			throw new \Exception('User not found');
 		}
 
@@ -905,15 +1135,32 @@ class ProjectService
 			throw new \Exception('Invalid role value');
 		}
 
-		// Check if user is already assigned
-		$existingMember = $this->getProjectMember($projectId, $userId);
-		if ($existingMember) {
-			throw new \Exception('User is already assigned to this project');
+		$sessionUser = $this->userSession->getUser();
+		if (!$sessionUser) {
+			throw new \Exception('User not authenticated');
 		}
 
-		$user = $this->userSession->getUser();
-		if (!$user) {
-			throw new \Exception('User not authenticated');
+		$existingMember = $this->getProjectMember($projectId, $userId);
+		if ($existingMember !== null) {
+			if ($existingMember->isActiveMember()) {
+				throw new \Exception('User is already assigned to this project');
+			}
+			$now = new \DateTime();
+			$qb = $this->db->getQueryBuilder();
+			$qb->update('project_members')
+				->set('member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
+				->set('archived_at', $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL))
+				->set('role', $qb->createNamedParameter($role))
+				->set('hourly_rate', $qb->createNamedParameter($hourlyRate))
+				->set('assigned_at', $qb->createNamedParameter($now, IQueryBuilder::PARAM_DATETIME_MUTABLE))
+				->set('assigned_by', $qb->createNamedParameter($sessionUser->getUID()))
+				->where($qb->expr()->eq('id', $qb->createNamedParameter($existingMember->getId(), IQueryBuilder::PARAM_INT)));
+			$qb->executeStatement();
+			$ref = $this->getProjectMember($projectId, $userId);
+			if ($ref !== null) {
+				return $ref;
+			}
+			return $existingMember;
 		}
 
 		$member = new ProjectMember();
@@ -922,21 +1169,26 @@ class ProjectService
 		$member->setRole($role);
 		$member->setHourlyRate($hourlyRate);
 		$member->setAssignedAt(new \DateTime());
-		$member->setAssignedBy($user->getUID());
+		$member->setAssignedBy($sessionUser->getUID());
+		$member->setMemberState(ProjectMember::STATE_ACTIVE);
+		$member->setArchivedAt(null);
 
 		$qb = $this->db->getQueryBuilder();
+		$ins = [
+			'project_id' => $qb->createNamedParameter($member->getProjectId(), IQueryBuilder::PARAM_INT),
+			'user_id' => $qb->createNamedParameter($member->getUserId()),
+			'role' => $qb->createNamedParameter($member->getRole()),
+			'hourly_rate' => $qb->createNamedParameter($member->getHourlyRate()),
+			'assigned_at' => $qb->createNamedParameter($member->getAssignedAt()),
+			'assigned_by' => $qb->createNamedParameter($member->getAssignedBy()),
+			'member_state' => $qb->createNamedParameter(ProjectMember::STATE_ACTIVE),
+			'archived_at' => $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL),
+		];
 		$qb->insert('project_members')
-			->values([
-				'project_id' => $qb->createNamedParameter($member->getProjectId(), IQueryBuilder::PARAM_INT),
-				'user_id' => $qb->createNamedParameter($member->getUserId()),
-				'role' => $qb->createNamedParameter($member->getRole()),
-				'hourly_rate' => $qb->createNamedParameter($member->getHourlyRate()),
-				'assigned_at' => $qb->createNamedParameter($member->getAssignedAt()),
-				'assigned_by' => $qb->createNamedParameter($member->getAssignedBy()),
-			]);
+			->values($ins);
 
 		$qb->executeStatement();
-		$member->setId($this->db->lastInsertId('project_members'));
+		$member->setId((int) $this->db->lastInsertId('project_members'));
 
 		return $member;
 	}
@@ -951,6 +1203,14 @@ class ProjectService
 	 */
 	public function removeTeamMember(int $projectId, string $userId): bool
 	{
+		$project = $this->getProject($projectId);
+		if (!$project) {
+			throw new \Exception('Project not found');
+		}
+		if (!$project->isEditableState()) {
+			throw new \Exception('Cannot change the team for a completed, cancelled, or archived project');
+		}
+
 		$member = $this->getProjectMember($projectId, $userId);
 		if (!$member) {
 			throw new \Exception('Team member not found');
@@ -966,6 +1226,24 @@ class ProjectService
 		$qb->executeStatement();
 
 		return true;
+	}
+
+	/**
+	 * Mark all active project team rows for a user as former (account removed). Preserves which projects they were on.
+	 */
+	public function archiveProjectMembershipsForDeletedUser(string $userId, \DateTimeInterface $at): int
+	{
+		if ($userId === '') {
+			return 0;
+		}
+		$qb = $this->db->getQueryBuilder();
+		$qb->update('project_members')
+			->set('member_state', $qb->createNamedParameter(ProjectMember::STATE_FORMER))
+			->set('archived_at', $qb->createNamedParameter($at, IQueryBuilder::PARAM_DATETIME_MUTABLE))
+			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+			->andWhere($qb->expr()->eq('member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE)));
+		$result = $qb->executeStatement();
+		return is_int($result) ? $result : 0;
 	}
 
 	/**
@@ -991,7 +1269,85 @@ class ProjectService
 
 		$result->closeCursor();
 
+		usort($members, static function (ProjectMember $a, ProjectMember $b): int {
+			$fa = $a->isFormerMember() ? 1 : 0;
+			$fb = $b->isFormerMember() ? 1 : 0;
+			if ($fa !== $fb) {
+				return $fa <=> $fb;
+			}
+			return $a->getRolePriority() <=> $b->getRolePriority();
+		});
+
 		return $members;
+	}
+
+	/**
+	 * Active vs former team members (e.g. project detail UI).
+	 *
+	 * @return array{active: list<ProjectMember>, former: list<ProjectMember>}
+	 */
+	public function getProjectTeamGrouped(int $projectId): array
+	{
+		$all = $this->getProjectTeam($projectId);
+		$active = [];
+		$former = [];
+		foreach ($all as $m) {
+			if ($m->isFormerMember()) {
+				$former[] = $m;
+			} else {
+				$active[] = $m;
+			}
+		}
+		return ['active' => $active, 'former' => $former];
+	}
+
+	/**
+	 * @return string a valid `users.uid` in the instance, or `system` as last resort
+	 */
+	public function getSuccessorUserIdForReassignment(string $excludedUserId): string
+	{
+		if ($this->accessControl !== null) {
+			foreach ($this->accessControl->getAppAdminUserIds() as $id) {
+				if ($id === $excludedUserId) {
+					continue;
+				}
+				if ($this->userManager->get($id) !== null) {
+					return $id;
+				}
+			}
+		}
+		$g = $this->groupManager->get('admin');
+		if ($g !== null) {
+			foreach ($g->getUsers() as $u) {
+				$id = $u->getUID();
+				if ($id === $excludedUserId) {
+					continue;
+				}
+				return $id;
+			}
+		}
+		return 'system';
+	}
+
+	/**
+	 * Reassign `created_by` for projects and customers that pointed at a deleted account.
+	 */
+	public function reassignCreatorshipFromDeletedUser(string $deletedId, string $newOwnerId): void
+	{
+		$now = (new \DateTime())->format('Y-m-d H:i:s');
+		$qb = $this->db->getQueryBuilder();
+		$qb->update('projects')
+			->set('created_by', $qb->createNamedParameter($newOwnerId))
+			->set('updated_at', $qb->createNamedParameter($now, IQueryBuilder::PARAM_STR))
+			->where($qb->expr()->eq('created_by', $qb->createNamedParameter($deletedId)));
+		$qb->executeStatement();
+
+		$qb2 = $this->db->getQueryBuilder();
+		$qb2->update('customers')
+			->set('created_by', $qb2->createNamedParameter($newOwnerId))
+			->set('updated_at', $qb2->createNamedParameter($now, IQueryBuilder::PARAM_STR))
+			->where($qb2->expr()->eq('created_by', $qb2->createNamedParameter($deletedId)));
+		$qb2->executeStatement();
 	}
 
 	/**
@@ -1037,24 +1393,14 @@ class ProjectService
 			throw new \Exception('Project not found');
 		}
 
-		// Validate status transition
-		$currentStatus = $project->getStatus();
-		$validTransitions = [
-			'Active' => ['On Hold', 'Completed', 'Cancelled'],
-			'On Hold' => ['Active', 'Completed', 'Cancelled'],
-			'Completed' => [], // No transitions allowed from completed
-			'Cancelled' => []  // No transitions allowed from cancelled
-		];
+		$newStatus = trim($newStatus);
+		$currentStatus = (string)$project->getStatus();
 
-		if (!isset($validTransitions[$currentStatus]) || !in_array($newStatus, $validTransitions[$currentStatus])) {
-			throw new \Exception("Invalid status transition from '{$currentStatus}' to '{$newStatus}'");
-		}
-
-		// Validate new status value
-		$validStatuses = ['Active', 'On Hold', 'Completed', 'Cancelled'];
-		if (!in_array($newStatus, $validStatuses)) {
+		if (!in_array($newStatus, self::PROJECT_STATUSES, true)) {
 			throw new \Exception('Invalid status value');
 		}
+
+		$this->assertStatusTransitionAllowed($currentStatus, $newStatus);
 
 		$user = $this->userSession->getUser();
 		if (!$user) {
@@ -1091,6 +1437,9 @@ class ProjectService
 		$member = $this->getProjectMember($projectId, $userId);
 		if (!$member) {
 			throw new \Exception('Team member not found');
+		}
+		if ($member->isFormerMember()) {
+			throw new \Exception('Cannot change the role of a former team member');
 		}
 
 		// Validate role
@@ -1129,6 +1478,7 @@ class ProjectService
 			->from('projects', 'p')
 			->innerJoin('p', 'project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
+			->andWhere($qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE)))
 			->orderBy('p.created_at', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -1270,8 +1620,7 @@ class ProjectService
 			}
 		}
 
-		$validStatuses = ['Active', 'On Hold', 'Completed', 'Cancelled'];
-		if (isset($data['status']) && !in_array($data['status'], $validStatuses)) {
+		if (isset($data['status']) && !in_array($data['status'], self::PROJECT_STATUSES, true)) {
 			throw new \Exception('Invalid status value');
 		}
 
@@ -1380,6 +1729,8 @@ class ProjectService
 		$member->setHourlyRate($row['hourly_rate']);
 		$member->setAssignedAt(SafeDateTime::fromRequired($row['assigned_at'] ?? null, 'project_members.assigned_at'));
 		$member->setAssignedBy($row['assigned_by']);
+		$member->setMemberState((string)($row['member_state'] ?? ProjectMember::STATE_ACTIVE));
+		$member->setArchivedAt(SafeDateTime::fromOptional($row['archived_at'] ?? null));
 
 		return $member;
 	}

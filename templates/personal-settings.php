@@ -16,7 +16,7 @@ Util::addStyle('projectcheck', 'navigation');
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
     <div id="app-content-wrapper">
         <div class="section">
             <h2><?php p($l->t('Project Control Preferences')); ?></h2>

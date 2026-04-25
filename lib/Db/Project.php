@@ -257,6 +257,37 @@ class Project extends Entity
 	}
 
 	/**
+	 * Check if project is archived (reversible: can be reactivated to Active/On Hold)
+	 *
+	 * @return bool
+	 */
+	public function isArchived(): bool
+	{
+		return $this->getStatus() === 'Archived';
+	}
+
+	/**
+	 * Whether the project is open for full metadata edits (name, budget, team, files, etc.)
+	 *
+	 * @return bool
+	 */
+	public function isEditableState(): bool
+	{
+		return !$this->isCompleted() && !$this->isCancelled() && !$this->isArchived();
+	}
+
+	/**
+	 * Whether new time can be logged on this project
+	 *
+	 * @return bool
+	 */
+	public function allowsTimeTracking(): bool
+	{
+		$s = (string)$this->getStatus();
+		return $s === 'Active' || $s === 'On Hold';
+	}
+
+	/**
 	 * Get tags as array
 	 *
 	 * @return array
@@ -304,7 +335,7 @@ class Project extends Entity
 	 */
 	public function isOverdue(): bool
 	{
-		if (!$this->getEndDate() || $this->isCompleted() || $this->isCancelled()) {
+		if (!$this->getEndDate() || $this->isCompleted() || $this->isCancelled() || $this->isArchived()) {
 			return false;
 		}
 

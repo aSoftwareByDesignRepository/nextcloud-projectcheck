@@ -14,7 +14,7 @@ style('projectcheck', 'navigation');
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
 	<div id="app-content-wrapper">
 		<div class="settings-container">
 			<div class="settings-header">
@@ -22,7 +22,7 @@ style('projectcheck', 'navigation');
 				<p><?php p($l->t('Configure your project management preferences')); ?></p>
 			</div>
 
-			<div id="settings-message" class="settings-message" style="display: none;"></div>
+			<div id="settings-message" class="settings-message" style="display: none;" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
 			<form id="settings-form" class="settings-form">
 				<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']) ?>">

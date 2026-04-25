@@ -19,171 +19,7 @@ Util::addStyle('projectcheck', 'time-entries');
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<style nonce="<?php p($_['cspNonce'] ?? '') ?>">
-    /* Search and Filter Styles */
-    .filters-container {
-        background: linear-gradient(135deg, var(--color-main-background) 0%, var(--color-background-hover) 100%);
-        border: 2px solid var(--color-border);
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 24px;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    }
-
-    .search-input-wrapper {
-        position: relative;
-        flex: 1;
-        min-width: 320px;
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 12px 16px;
-        border: 2px solid var(--color-border);
-        border-radius: 8px;
-        font-size: 15px;
-        background: var(--color-main-background);
-        color: var(--color-text);
-        transition: all 0.3s ease;
-    }
-
-    .search-input:focus {
-        outline: none;
-        border-color: var(--color-primary-element);
-        box-shadow: 0 0 0 3px rgba(0, 130, 201, 0.1);
-    }
-
-    .filter-actions {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    /* Table Styles */
-    .employees-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        background: var(--color-main-background);
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    }
-
-    .employees-table thead {
-        background: var(--color-background-hover);
-    }
-
-    .employees-table th {
-        padding: 16px;
-        text-align: left;
-        font-weight: 600;
-        color: var(--color-main-text);
-        border-bottom: 2px solid var(--color-border);
-    }
-
-    .employees-table tbody tr {
-        border-bottom: 1px solid var(--color-border);
-        transition: background-color 0.2s ease;
-    }
-
-    .employees-table tbody tr:hover {
-        background: var(--color-background-hover);
-    }
-
-    .employees-table td {
-        padding: 16px;
-        vertical-align: middle;
-    }
-
-    /* Icon alignment in table cells */
-    .employees-table td .lucide-icon {
-        width: 16px;
-        height: 16px;
-        display: inline-block;
-        vertical-align: middle;
-        margin-right: 4px;
-        position: relative;
-        top: -2px;
-    }
-
-    .employees-table .button .lucide-icon {
-        width: 16px;
-        height: 16px;
-        margin-right: 6px;
-        vertical-align: middle;
-        position: relative;
-        top: -2px;
-    }
-
-    .employee-name-cell {
-        font-weight: 500;
-    }
-
-    .employee-name-cell a {
-        color: var(--color-primary-element);
-        text-decoration: none;
-    }
-
-    .employee-name-cell a:hover {
-        text-decoration: underline;
-    }
-
-    /* Overview cards icon alignment */
-    .overview-card .lucide-icon {
-        width: 24px;
-        height: 24px;
-        display: inline-block;
-    }
-
-    /* Header actions icon alignment */
-    .header-actions .button .lucide-icon {
-        width: 18px;
-        height: 18px;
-        vertical-align: middle;
-        position: relative;
-        top: -2px;
-        margin-right: 6px;
-    }
-
-    /* No results message */
-    #no-results-row {
-        background: var(--color-background-hover);
-    }
-
-    .no-results-message {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 40px 20px;
-    }
-
-    .no-results-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-    }
-
-    .no-results-message h3 {
-        margin: 0 0 8px 0;
-        color: var(--color-main-text);
-        font-size: 18px;
-        font-weight: 600;
-    }
-
-    .no-results-message p {
-        margin: 0 0 16px 0;
-        color: var(--color-text-lighter);
-        font-size: 14px;
-    }
-</style>
-
-<div id="app-content">
+<div id="app-content" role="main" class="employees-page">
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
@@ -270,11 +106,13 @@ Util::addStyle('projectcheck', 'time-entries');
         <!-- Search and Filters -->
         <div class="section">
             <div class="filters-container">
-                <!-- Search Input -->
                 <div class="search-input-wrapper">
-                    <input type="text" id="employee-search" class="search-input"
+					<label class="u-visually-hidden" for="employee-search"><?php p($l->t('Search employees...')); ?></label>
+                    <input type="search" id="employee-search" class="search-input" autocomplete="off"
                         placeholder="<?php p($l->t('Search employees...')); ?>"
-                        value="<?php p($_['filters']['search'] ?? ''); ?>">
+                        value="<?php p($_['filters']['search'] ?? ''); ?>"
+                        aria-describedby="employee-search-hint">
+					<p class="u-visually-hidden" id="employee-search-hint"><?php p($l->t('Filters the table below. Use Apply to search on the server.')); ?></p>
                 </div>
 
                 <!-- Action Buttons -->
@@ -300,8 +138,8 @@ Util::addStyle('projectcheck', 'time-entries');
                     <p><?php p($l->t('No employees have logged time entries yet.')); ?></p>
                 </div>
             <?php else: ?>
-                <div class="grid-container">
-                    <table class="employees-table">
+                <div class="grid-container employees-table-wrap">
+					<table class="employees-table" role="table" aria-label="<?php p($l->t('Employees')); ?>">
                         <thead>
                             <tr>
                                 <th><?php p($l->t('Rank')); ?></th>

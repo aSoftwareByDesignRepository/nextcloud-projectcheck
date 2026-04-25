@@ -20,6 +20,7 @@ use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\ProjectFileService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCP\AppFramework\Http\DataResponse;
@@ -80,6 +81,10 @@ class ProjectControllerTest extends TestCase {
 		$config = $this->createMock(IConfig::class);
 		$cspService = $this->createMock(CSPService::class);
 		$cspService->method('applyPolicyWithNonce')->willReturnArgument(0);
+		$requestToken = $this->createMock(IRequestTokenProvider::class);
+		$requestToken->method('getEncryptedRequestToken')->willReturn('mock-encrypted-csrf');
+		$userManager = $this->createMock(\OCP\IUserManager::class);
+		$userAccountSnapshot = $this->createMock(\OCA\ProjectCheck\Db\UserAccountSnapshotMapper::class);
 
 		$this->controller = new ProjectController(
 			'projectcheck',
@@ -95,7 +100,10 @@ class ProjectControllerTest extends TestCase {
 			$urlGenerator,
 			$config,
 			$cspService,
-			$this->l10n
+			$requestToken,
+			$this->l10n,
+			$userManager,
+			$userAccountSnapshot
 		);
 	}
 
@@ -336,6 +344,90 @@ class ProjectControllerTest extends TestCase {
 	}
 
 	/**
+	 * API: full project update still requires canUserEdit
+	 */
+	public function testApiUpdateFullProject(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+
+		$existing = new Project();
+		$existing->setId(1);
+		$existing->setName('N');
+		$existing->setStatus('Active');
+
+		$this->projectService->method('canUserAccessProject')->with('testuser', 1)->willReturn(true);
+		$this->projectService->method('canUserEditProject')->with('testuser', 1)->willReturn(true);
+
+		$payload = ['name' => 'Updated', 'requesttoken' => 'tok'];
+		$this->request->method('getParams')->willReturn($payload);
+
+		$updated = clone $existing;
+		$updated->setName('Updated');
+		$this->projectService->method('updateProject')->with(1, $this->equalTo(['name' => 'Updated']))->willReturn($updated);
+
+		$response = $this->controller->apiUpdate(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+	}
+
+	/**
+	 * API: status-only update works with canUserChange (e.g. reactivate Archived) when canUserEdit is false
+	 */
+	public function testApiUpdateStatusOnlyWithoutEditPermission(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+
+		$active = new Project();
+		$active->setId(1);
+		$active->setName('P');
+		$active->setStatus('Active');
+
+		$this->projectService->method('canUserAccessProject')->with('testuser', 1)->willReturn(true);
+		$this->projectService->method('canUserEditProject')->with('testuser', 1)->willReturn(false);
+		$this->projectService->method('canUserChangeProjectStatus')->with('testuser', 1)->willReturn(true);
+		$this->request->method('getParams')->willReturn(['status' => 'Active', 'requesttoken' => 'tok']);
+
+		$this->projectService->method('changeProjectStatus')->with(1, 'Active')->willReturn($active);
+		$this->projectService->method('getProject')->with(1)->willReturn($active);
+
+		$response = $this->controller->apiUpdate(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+	}
+
+	/**
+	 * API: no access to project
+	 */
+	public function testApiUpdateAccessDeniedNoProjectAccess(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('canUserAccessProject')->with('testuser', 1)->willReturn(false);
+		$this->request->method('getParams')->willReturn(['name' => 'X']);
+
+		$response = $this->controller->apiUpdate(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(403, $response->getStatus());
+	}
+
+	/**
+	 * API: no payload after stripping internal keys
+	 */
+	public function testApiUpdateNoData(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('canUserAccessProject')->with('testuser', 1)->willReturn(true);
+		$this->request->method('getParams')->willReturn(['requesttoken' => 'tok']);
+
+		$response = $this->controller->apiUpdate(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+	}
+
+	/**
 	 * Test project status change functionality
 	 */
 	public function testProjectStatusChangeFunctionality(): void {
@@ -348,15 +440,15 @@ class ProjectControllerTest extends TestCase {
 		$project->setStatus('Active');
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
-		$this->projectService->method('canUserEditProject')->with('testuser', 1)->willReturn(true);
+		$this->projectService->method('canUserChangeProjectStatus')->with('testuser', 1)->willReturn(true);
 		$this->request->method('getParam')->with('status')->willReturn('On Hold');
 		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
 
 		$updatedProject = clone $project;
 		$updatedProject->setStatus('On Hold');
 
-		$this->projectService->method('updateProject')
-			->with(1, ['status' => 'On Hold'])
+		$this->projectService->method('changeProjectStatus')
+			->with(1, 'On Hold')
 			->willReturn($updatedProject);
 
 		$response = $this->controller->changeStatus(1);

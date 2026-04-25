@@ -12,6 +12,7 @@ use OCP\Util;
 Util::addScript('projectcheck', 'common/datepicker');
 Util::addScript('projectcheck', 'time-entries');
 Util::addStyle('projectcheck', 'time-entries');
+Util::addStyle('projectcheck', 'common/datepicker');
 Util::addStyle('projectcheck', 'navigation');
 ?>
 
@@ -326,7 +327,7 @@ Util::addStyle('projectcheck', 'navigation');
     }
 </style>
 
-<div id="app-content" data-date-format="<?php p($_['dateFormat']); ?>">
+<div id="app-content" role="main" data-date-format="<?php p($_['dateFormat']); ?>">
     <div id="app-content-wrapper">
         <!-- Page Header -->
         <div class="section">

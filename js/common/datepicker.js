@@ -6,6 +6,11 @@
  * @license AGPL-3.0-or-later
  */
 
+/* global t */
+function projectcheckT(key) {
+	return (typeof t === 'function') ? t('projectcheck', key) : key;
+}
+
 /**
  * Convert European date format (dd.mm.yyyy) to ISO format (yyyy-mm-dd)
  * 
@@ -71,20 +76,28 @@ function convertISOToEuropean(dateString) {
 function initializeDatepicker(input, options = {}) {
 	const element = typeof input === 'string' ? document.querySelector(input) : input;
 	if (!element) {
-		console.error('Datepicker: Input element not found');
 		return null;
 	}
 
-	// German month names
-	const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 
-		'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-	// German locale week layout: Monday -> Sunday
-	const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+	const loc = (typeof OC !== 'undefined' && typeof OC.getLocale === 'function')
+		? OC.getLocale().replace(/_/g, '-')
+		: ((typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'en');
+	const monthYearFor = function (d) {
+		return new Intl.DateTimeFormat(loc, { month: 'long', year: 'numeric' }).format(d);
+	};
+	const dayNames = [];
+	for (let wi = 0; wi < 7; wi++) {
+		dayNames.push(
+			new Intl.DateTimeFormat(loc, { weekday: 'short' }).format(new Date(2024, 0, 1 + wi))
+		);
+	}
 
 	let currentDate = null;
 	let selectedDate = null;
 	let calendarOpen = false;
 	let calendarElement = null;
+	/** @type {null|((e: KeyboardEvent) => void)} */
+	let onDocEscape = null;
 
 	// Parse current value if exists
 	if (element.value && /^\d{2}\.\d{2}\.\d{4}$/.test(element.value)) {
@@ -99,14 +112,15 @@ function initializeDatepicker(input, options = {}) {
 	function createCalendar() {
 		const container = document.createElement('div');
 		container.className = 'projectcheck-datepicker';
-		container.style.cssText = 'position: absolute; z-index: 10000; background: var(--color-main-background); border: 1px solid var(--color-border); border-radius: 8px; padding: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 280px;';
 
 		// Header
 		const header = document.createElement('div');
 		header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;';
 
 		const prevBtn = document.createElement('button');
-		prevBtn.innerHTML = '‹';
+		prevBtn.type = 'button';
+		prevBtn.setAttribute('aria-label', projectcheckT('Previous month'));
+		prevBtn.textContent = '‹';
 		prevBtn.style.cssText = 'background: none; border: none; font-size: 20px; cursor: pointer; padding: 4px 8px; color: var(--color-main-text);';
 		prevBtn.addEventListener('click', () => {
 			currentDate.setMonth(currentDate.getMonth() - 1);
@@ -114,7 +128,9 @@ function initializeDatepicker(input, options = {}) {
 		});
 
 		const nextBtn = document.createElement('button');
-		nextBtn.innerHTML = '›';
+		nextBtn.type = 'button';
+		nextBtn.setAttribute('aria-label', projectcheckT('Next month'));
+		nextBtn.textContent = '›';
 		nextBtn.style.cssText = 'background: none; border: none; font-size: 20px; cursor: pointer; padding: 4px 8px; color: var(--color-main-text);';
 		nextBtn.addEventListener('click', () => {
 			currentDate.setMonth(currentDate.getMonth() + 1);
@@ -136,8 +152,7 @@ function initializeDatepicker(input, options = {}) {
 		container.appendChild(calendar);
 
 		function renderCalendar() {
-			// Update month/year display
-			monthYear.textContent = monthNames[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
+			monthYear.textContent = monthYearFor(currentDate);
 
 			// Clear calendar
 			calendar.innerHTML = '';
@@ -155,7 +170,6 @@ function initializeDatepicker(input, options = {}) {
 
 			// Get first day of month and days in month
 			const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-			const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 			const startDate = new Date(firstDay);
 			startDate.setDate(startDate.getDate() - (firstDay.getDay() || 7) + 1); // Monday = 0
 
@@ -227,6 +241,10 @@ function initializeDatepicker(input, options = {}) {
 		}
 
 		function closeCalendar() {
+			if (onDocEscape) {
+				document.removeEventListener('keydown', onDocEscape, true);
+				onDocEscape = null;
+			}
 			if (calendarElement && calendarElement.parentNode) {
 				calendarElement.parentNode.removeChild(calendarElement);
 				calendarOpen = false;
@@ -251,7 +269,6 @@ function initializeDatepicker(input, options = {}) {
 			// Re-initialize event listeners
 			const prevBtn = calendarElement.querySelector('button:first-child');
 			const nextBtn = calendarElement.querySelector('button:last-child');
-			const calendar = calendarElement.querySelector('.projectcheck-datepicker-calendar');
 
 			prevBtn.addEventListener('click', () => {
 				currentDate.setMonth(currentDate.getMonth() - 1);
@@ -266,7 +283,7 @@ function initializeDatepicker(input, options = {}) {
 			function renderCalendarForElement(calEl) {
 				const monthYear = calEl.querySelector('div:nth-child(2)');
 				const calGrid = calEl.querySelector('.projectcheck-datepicker-calendar');
-				monthYear.textContent = monthNames[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
+				monthYear.textContent = monthYearFor(currentDate);
 				calGrid.innerHTML = '';
 
 				// Day headers
@@ -348,6 +365,13 @@ function initializeDatepicker(input, options = {}) {
 
 			renderCalendarForElement(calendarElement);
 			calendarOpen = true;
+			onDocEscape = function (e) {
+				if (e.key === 'Escape') {
+					e.preventDefault();
+					closeCalendar();
+				}
+			};
+			document.addEventListener('keydown', onDocEscape, true);
 
 			// Close on outside click
 			setTimeout(() => {
@@ -383,12 +407,16 @@ function initializeDatepicker(input, options = {}) {
 	element.setAttribute('autocomplete', 'off');
 	element.readOnly = true;
 
-	// Prevent any keyboard input (allow only Tab, Escape, Enter for accessibility)
+	// Allow Tab, Escape, Enter; other keys open the calendar; Escape also closes
 	element.addEventListener('keydown', function(e) {
-		const allow = e.key === 'Tab' || e.key === 'Escape' || e.key === 'Enter';
+		if (e.key === 'Escape') {
+			e.preventDefault();
+			datepicker.close();
+			return;
+		}
+		const allow = e.key === 'Tab' || e.key === 'Enter';
 		if (!allow) {
 			e.preventDefault();
-			// Open calendar on any keypress so keyboard users can pick a date
 			datepicker.open();
 		}
 	});
@@ -412,13 +440,17 @@ function initializeDatepicker(input, options = {}) {
 
 	// Add calendar icon button
 	const wrapper = document.createElement('div');
+	wrapper.className = 'projectcheck-datepicker__wrap';
 	wrapper.style.cssText = 'position: relative; display: inline-block; width: 100%;';
 	element.parentNode.insertBefore(wrapper, element);
 	wrapper.appendChild(element);
 
 	const toggleBtn = document.createElement('button');
 	toggleBtn.type = 'button';
-	toggleBtn.innerHTML = '📅';
+	toggleBtn.setAttribute('aria-label', projectcheckT('Open calendar'));
+	toggleBtn.setAttribute('aria-haspopup', 'dialog');
+	toggleBtn.innerHTML = '<span aria-hidden="true" class="projectcheck-datepicker__icon">&#128198;</span>';
+	toggleBtn.className = 'projectcheck-datepicker__toggle';
 	toggleBtn.style.cssText = 'position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px;';
 	toggleBtn.addEventListener('click', (e) => {
 		e.preventDefault();
@@ -439,14 +471,14 @@ function initializeDatepicker(input, options = {}) {
 				const date = new Date(year, month - 1, day);
 				
 				if (date.getDate() !== day || date.getMonth() !== (month - 1) || date.getFullYear() !== year) {
-					this.setCustomValidity('Invalid date');
+					this.setCustomValidity(projectcheckT('Invalid date'));
 				} else if (options.maxDate && date > options.maxDate) {
-					this.setCustomValidity('Date cannot be in the future');
+					this.setCustomValidity(projectcheckT('Date cannot be in the future'));
 				} else {
 					this.setCustomValidity('');
 				}
 			} else {
-				this.setCustomValidity('Please enter date in format dd.mm.yyyy');
+				this.setCustomValidity(projectcheckT('Please enter the date in the format dd.mm.yyyy.'));
 			}
 		}
 	});
@@ -463,7 +495,6 @@ function initializeDatepicker(input, options = {}) {
 			convertEuropeanToISO: convertEuropeanToISO,
 			convertISOToEuropean: convertISOToEuropean
 		};
-		console.log('[ProjectCheck] Datepicker initialized and available globally');
 	}
 })();
 

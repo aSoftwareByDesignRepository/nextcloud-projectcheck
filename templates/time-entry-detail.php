@@ -21,11 +21,26 @@ if (!isset($timeEntry) || !($timeEntry instanceof \OCA\ProjectCheck\Db\TimeEntry
 
 $timeEntryId = $timeEntry->getId();
 $totalCost = $timeEntry->getCost() ?? ($timeEntry->getHours() * $timeEntry->getHourlyRate());
+
+$project = $project ?? null;
+$projectStatus = ($project && $project instanceof \OCA\ProjectCheck\Db\Project) ? (string) $project->getStatus() : '';
+$statusClassByProject = [
+	'Active' => 'status-active',
+	'On Hold' => 'status-on-hold',
+	'Completed' => 'status-completed',
+	'Cancelled' => 'status-cancelled',
+	'Archived' => 'status-archived',
+];
+$projectStatusClass = $statusClassByProject[$projectStatus] ?? 'status-on-hold';
+$projectStatusLabel = $projectStatus !== ''
+	? $l->t($projectStatus)
+	: $l->t('Unknown');
+$projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) $urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $timeEntry->getProjectId()]);
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
@@ -132,7 +147,11 @@ $totalCost = $timeEntry->getCost() ?? ($timeEntry->getHours() * $timeEntry->getH
                     <div class="info-grid">
                         <div class="info-item">
                             <label><?php p($l->t('PROJECT')); ?></label>
-                            <span><a href="/index.php/apps/projectcheck/projects/<?php p($timeEntry->getProjectId()); ?>" class="project-link"><?php p($projectName); ?></a></span>
+                            <span>
+                                <a href="<?php p($projectLinkHref); ?>" class="project-link">
+                                    <?php p($projectName); ?>
+                                </a>
+                            </span>
                         </div>
                         <div class="info-item">
                             <label><?php p($l->t('DATE')); ?></label>
@@ -183,10 +202,10 @@ $totalCost = $timeEntry->getCost() ?? ($timeEntry->getHours() * $timeEntry->getH
                         <div class="overview-header">
                             <div class="overview-title">
                                 <h4><?php p($projectName); ?></h4>
-                                <p class="overview-description"><?php p($timeEntry->getDescription() ?: 'No description provided'); ?></p>
+                                <p class="overview-description"><?php p($timeEntry->getDescription() ?: $l->t('No description provided')); ?></p>
                             </div>
                             <div class="overview-status">
-                                <span class="status-badge status-active"><?php p($l->t('Active')); ?></span>
+                                <span class="status-badge <?php p($projectStatusClass); ?>"><?php p($projectStatusLabel); ?></span>
                             </div>
                         </div>
 

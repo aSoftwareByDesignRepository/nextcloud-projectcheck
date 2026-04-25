@@ -12,10 +12,8 @@ if (!defined('OCP\AppFramework\App::class')) {
     die('Direct access not allowed');
 }
 
-// Get the current user and app context
-$user = \OC::$server->getUserSession()->getUser();
 $appName = 'projectcheck';
-$appVersion = \OC::$server->getAppManager()->getAppVersion($appName);
+$appVersion = \OCP\Server::get(\OCP\IAppManager::class)->getAppVersion($appName);
 $currentYear = date('Y');
 ?>
 <footer class="footer">

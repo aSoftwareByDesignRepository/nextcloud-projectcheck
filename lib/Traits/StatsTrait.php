@@ -25,15 +25,38 @@ trait StatsTrait
      * @param TimeEntryService|null $timeEntryService
      * @return array
      */
-    protected function getCommonStats(ProjectService $projectService, CustomerService $customerService, TimeEntryService $timeEntryService = null): array
+    /**
+     * @param string|null $forUserId When set, only projects/customers this user may access
+     */
+    protected function getCommonStats(ProjectService $projectService, CustomerService $customerService, TimeEntryService $timeEntryService = null, ?string $forUserId = null): array
     {
         try {
-            // Get total counts (not filtered)
-            $totalProjects = $projectService->getTotalProjectCount();
-            $totalCustomers = $customerService->getTotalCustomerCount();
+            if ($forUserId !== null) {
+                $pList = $projectService->getAccessibleProjectIdListForUser($forUserId);
+                $totalProjects = 0;
+                if ($pList === null) {
+                    $totalProjects = $projectService->getTotalProjectCount();
+                } else {
+                    $totalProjects = count($pList);
+                }
+                $totalCustomers = $customerService->getVisibleCustomerCountForUser($forUserId);
+            } else {
+                $totalProjects = $projectService->getTotalProjectCount();
+                $totalCustomers = $customerService->getTotalCustomerCount();
+            }
 
-            // Get all projects for detailed stats
-            $allProjects = $projectService->getAllProjects();
+            if ($forUserId !== null) {
+                $pList = $projectService->getAccessibleProjectIdListForUser($forUserId);
+                if ($pList === null) {
+                    $allProjects = $projectService->getAllProjects();
+                } elseif ($pList === []) {
+                    $allProjects = [];
+                } else {
+                    $allProjects = $projectService->getProjectsByIdList($pList);
+                }
+            } else {
+                $allProjects = $projectService->getAllProjects();
+            }
 
             // Initialize counters
             $activeProjects = 0;

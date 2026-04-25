@@ -14,14 +14,24 @@ Util::addScript('projectcheck', 'time-entry-form');
 Util::addScript('projectcheck', 'budget-warnings');
 Util::addScript('projectcheck', 'budget-info');
 Util::addStyle('projectcheck', 'time-entry-form');
+Util::addStyle('projectcheck', 'common/datepicker');
 Util::addStyle('projectcheck', 'budget-alerts');
 Util::addStyle('projectcheck', 'navigation');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
 	<div id="app-content-wrapper">
+		<?php
+		// Server IL10N for budget-warnings.js: browser t() does not resolve app l10n; embed text in DOM (not script order sensitive).
+		?>
+		<div id="pc-budget-l10n" class="pc-budget-l10n-source" hidden aria-hidden="true">
+			<span data-budget-tpl="exceed"><?php p($l->t('This entry would exceed the project budget by {amount}.')); ?></span>
+			<span data-budget-tpl="threshold"><?php p($l->t('After this entry, the project would be at {usage} of the budget. Additional cost: {cost}.')); ?></span>
+			<span data-budget-tpl="ok"><?php p($l->t('Entry cost: {entryCost}. Remaining budget: {remaining}.')); ?></span>
+			<span data-budget-tpl="error"><?php p($l->t('Could not check budget. Try again.')); ?></span>
+		</div>
 		<div class="time-entry-form-container">
 			<div class="time-entry-form-header">
 				<h2><?php p($isEdit ? $l->t('Edit Time Entry') : $l->t('Add Time Entry')); ?></h2>

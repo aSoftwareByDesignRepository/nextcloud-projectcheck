@@ -190,14 +190,14 @@
 
 		// Required fields
 		if (!data.project_id) {
-			errors.project_id = 'Project is required';
+			errors.project_id = t('projectcheck', 'Project is required');
 		}
 
 		// Use raw date value for validation (before conversion to ISO)
 		const rawDate = data._raw && data._raw.date ? data._raw.date : '';
 		
 		if (!rawDate) {
-			errors.date = 'Date is required';
+			errors.date = t('projectcheck', 'Date is required');
 		} else {
 			// Validate date format - expect European format (dd.mm.yyyy)
 			let date = null;
@@ -232,28 +232,28 @@
 		}
 
 		if (!data.hours) {
-			errors.hours = 'Hours are required';
+			errors.hours = t('projectcheck', 'Hours are required');
 		} else {
 			const hours = parseFloat(data.hours);
 			if (isNaN(hours) || hours <= 0) {
-				errors.hours = 'Hours must be a positive number';
+				errors.hours = t('projectcheck', 'Hours must be a positive number');
 			} else if (hours > 24) {
-				errors.hours = 'Hours cannot exceed 24';
+				errors.hours = t('projectcheck', 'Hours cannot exceed 24');
 			}
 		}
 
 		if (!data.hourly_rate) {
-			errors.hourly_rate = 'Hourly rate is required';
+			errors.hourly_rate = t('projectcheck', 'Hourly rate is required');
 		} else {
 			const rate = parseFloat(data.hourly_rate);
 			if (isNaN(rate) || rate < 0) {
-				errors.hourly_rate = 'Hourly rate must be a non-negative number';
+				errors.hourly_rate = t('projectcheck', 'Hourly rate must be a non-negative number');
 			}
 		}
 
 		// Validate description length
 		if (data.description && data.description.length > 1000) {
-			errors.description = 'Description cannot exceed 1000 characters';
+			errors.description = t('projectcheck', 'Description cannot exceed 1000 characters');
 		}
 
 		return errors;
@@ -301,7 +301,6 @@
 	 * Submit time entry data
 	 */
 	function submitTimeEntryData(data, form) {
-		const submitButton = form.querySelector('#submit-btn');
 		const isEdit = window.timeEntryFormData && window.timeEntryFormData.isEdit;
 		const url = isEdit
 			? OC.generateUrl('/apps/projectcheck/time-entries/' + window.timeEntryFormData.timeEntryId)
@@ -324,7 +323,7 @@
 			.then(response => response.json())
 			.then(result => {
 				if (result.success) {
-					showNotification(result.message || 'Time entry saved successfully', 'success');
+					showNotification(result.message || t('projectcheck', 'Time entry saved successfully'), 'success');
 
 					// Redirect to time entries list after a short delay
 					setTimeout(() => {
@@ -342,8 +341,7 @@
 				}
 			})
 			.catch(error => {
-				console.error('Error submitting time entry:', error);
-				showNotification('An error occurred while saving the time entry', 'error');
+				showNotification(t('projectcheck', 'An error occurred while saving the time entry'), 'error');
 				// Re-enable form on error
 				form.classList.remove('submitting');
 				showLoadingState(form, false);
@@ -361,14 +359,16 @@
 			if (submitButton) {
 				submitButton.disabled = true;
 				submitButton.innerHTML = '<span class="icon icon-loading-small"></span> ' +
-					(window.timeEntryFormData && window.timeEntryFormData.isEdit ? 'Updating...' : 'Creating...');
+					(window.timeEntryFormData && window.timeEntryFormData.isEdit
+						? t('projectcheck', 'Updating…') : t('projectcheck', 'Creating…'));
 			}
 		} else {
 			form.classList.remove('loading');
 			if (submitButton) {
 				submitButton.disabled = false;
-				submitButton.innerHTML = window.timeEntryFormData && window.timeEntryFormData.isEdit ?
-					'Update Time Entry' : 'Create Time Entry';
+				submitButton.innerHTML = window.timeEntryFormData && window.timeEntryFormData.isEdit
+					? t('projectcheck', 'Update Time Entry')
+					: t('projectcheck', 'Create Time Entry');
 			}
 		}
 	}
@@ -411,11 +411,11 @@
 
 		switch (fieldName) {
 			case 'project_id':
-				if (!value) error = 'Project is required';
+				if (!value) { error = t('projectcheck', 'Project is required'); }
 				break;
 			case 'date':
 				if (!value) {
-					error = 'Date is required';
+					error = t('projectcheck', 'Date is required');
 				} else if (!/^\d{2}\.\d{2}\.\d{4}$/.test(value)) {
 					error = t('projectcheck', 'Invalid date format (dd.mm.yyyy)');
 				} else {
@@ -438,29 +438,29 @@
 				break;
 			case 'hours':
 				if (!value) {
-					error = 'Hours are required';
+					error = t('projectcheck', 'Hours are required');
 				} else {
 					const hours = parseFloat(value);
 					if (isNaN(hours) || hours <= 0) {
-						error = 'Hours must be a positive number';
+						error = t('projectcheck', 'Hours must be a positive number');
 					} else if (hours > 24) {
-						error = 'Hours cannot exceed 24';
+						error = t('projectcheck', 'Hours cannot exceed 24');
 					}
 				}
 				break;
 			case 'hourly_rate':
 				if (!value) {
-					error = 'Hourly rate is required';
+					error = t('projectcheck', 'Hourly rate is required');
 				} else {
 					const rate = parseFloat(value);
 					if (isNaN(rate) || rate < 0) {
-						error = 'Hourly rate must be a non-negative number';
+						error = t('projectcheck', 'Hourly rate must be a non-negative number');
 					}
 				}
 				break;
 			case 'description':
 				if (value && value.length > 1000) {
-					error = 'Description cannot exceed 1000 characters';
+					error = t('projectcheck', 'Description cannot exceed 1000 characters');
 				}
 				break;
 		}
@@ -526,7 +526,7 @@
 						rateInput.value = projectHourlyRate;
 						rateInput.readOnly = true;
 						rateInput.classList.add('readonly');
-						rateInput.title = 'Hourly rate is set by the project and cannot be changed';
+						rateInput.title = t('projectcheck', 'Hourly rate is set by the project and cannot be changed');
 					} else if (!rateInput.value) {
 						// Project has no hourly rate or it's 0, and field is empty
 						rateInput.value = projectHourlyRate;
@@ -554,7 +554,7 @@
 				rateInput.value = projectHourlyRate;
 				rateInput.readOnly = true;
 				rateInput.classList.add('readonly');
-				rateInput.title = 'Hourly rate is set by the project and cannot be changed';
+				rateInput.title = t('projectcheck', 'Hourly rate is set by the project and cannot be changed');
 			} else {
 				// Project has no hourly rate or it's 0, allow editing
 				rateInput.readOnly = false;

@@ -15,6 +15,7 @@ use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Settings\ISettings;
 use OCP\IConfig;
 use OCP\IUserSession;
+use OCA\ProjectCheck\Service\AccessControlService;
 
 /**
  * Personal settings for projectcheck app
@@ -27,16 +28,21 @@ class PersonalSettings implements ISettings
     /** @var IUserSession */
     private $userSession;
 
+    /** @var AccessControlService */
+    private $accessControl;
+
     /**
      * PersonalSettings constructor
      *
      * @param IConfig $config
      * @param IUserSession $userSession
+     * @param AccessControlService $accessControl
      */
-    public function __construct(IConfig $config, IUserSession $userSession)
+    public function __construct(IConfig $config, IUserSession $userSession, AccessControlService $accessControl)
     {
         $this->config = $config;
         $this->userSession = $userSession;
+        $this->accessControl = $accessControl;
     }
 
     /**
@@ -46,6 +52,9 @@ class PersonalSettings implements ISettings
     {
         $user = $this->userSession->getUser();
         if (!$user) {
+            return new TemplateResponse('projectcheck', 'personal-settings', []);
+        }
+        if (!$this->accessControl->canUseApp($user->getUID())) {
             return new TemplateResponse('projectcheck', 'personal-settings', []);
         }
 
@@ -78,6 +87,13 @@ class PersonalSettings implements ISettings
      */
     public function getSection()
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return 'projectcheck';
+        }
+        if (!$this->accessControl->canUseApp($user->getUID())) {
+            return null;
+        }
         return 'projectcheck';
     }
 

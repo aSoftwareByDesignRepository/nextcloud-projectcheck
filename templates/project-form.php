@@ -13,6 +13,7 @@ Util::addScript('projectcheck', 'common/datepicker');
 Util::addScript('projectcheck', 'projects');
 Util::addScript('projectcheck', 'project-form');
 Util::addStyle('projectcheck', 'projects');
+Util::addStyle('projectcheck', 'common/datepicker');
 Util::addStyle('projectcheck', 'navigation');
 
 $isEdit = isset($project) && $project instanceof \OCA\ProjectCheck\Db\Project;
@@ -23,7 +24,7 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content">
+<div id="app-content" role="main">
     <div id="app-content-wrapper">
         <!-- Page Header -->
         <div class="section">
@@ -150,7 +151,15 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
                             <option value="Cancelled" <?php echo ($isEdit && $project->getStatus() === 'Cancelled') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Cancelled') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Cancelled')); ?>
                             </option>
+                            <?php if ($isEdit) { ?>
+                            <option value="Archived" <?php echo $project->getStatus() === 'Archived' ? 'selected' : ''; ?>>
+                                <?php p($l->t('Archived')); ?>
+                            </option>
+                            <?php } ?>
                         </select>
+                        <?php if ($isEdit) { ?>
+                        <p class="form-hint" id="status-hint"><?php p($l->t('To avoid mistakes, use “Change status” on the project page: transitions are validated there. Archiving removes the project from the default list and stops new time entries until you reactivate.')); ?></p>
+                        <?php } ?>
                     </div>
 
                     <div class="form-group">

@@ -1,0 +1,103 @@
+/* ProjectCheck datepicker — use theme variables only (no hardcoded rgb) */
+
+.projectcheck-datepicker {
+	position: absolute;
+	z-index: 10000;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 8px);
+	padding: 12px;
+	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-main-text) 15%, transparent);
+	min-width: 280px;
+}
+
+.projectcheck-datepicker__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+}
+
+.projectcheck-datepicker__nav {
+	background: none;
+	border: none;
+	font-size: 20px;
+	cursor: pointer;
+	padding: 4px 8px;
+	color: var(--color-main-text);
+}
+
+.projectcheck-datepicker__month {
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.projectcheck-datepicker__weekdays,
+.projectcheck-datepicker__days {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 4px;
+}
+
+.projectcheck-datepicker__weekdays {
+	margin-bottom: 8px;
+}
+
+.projectcheck-datepicker__wd {
+	text-align: center;
+	font-weight: 600;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
+	padding: 4px;
+}
+
+.projectcheck-datepicker__day {
+	padding: 8px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	border-radius: 4px;
+	color: var(--color-main-text);
+}
+
+.projectcheck-datepicker__day--muted {
+	opacity: 0.3;
+}
+
+.projectcheck-datepicker__day--today {
+	font-weight: bold;
+	background: var(--color-primary-element-light);
+}
+
+.projectcheck-datepicker__day--selected {
+	background: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+}
+
+.projectcheck-datepicker__day--disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+}
+
+.projectcheck-datepicker__day:not(.projectcheck-datepicker__day--selected):not(.projectcheck-datepicker__day--disabled):hover,
+.projectcheck-datepicker__day:focus-visible {
+	background: var(--color-background-hover);
+}
+
+.projectcheck-datepicker__toggle {
+	position: absolute;
+	right: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 18px;
+	padding: 4px 8px;
+}
+
+.projectcheck-datepicker__wrap {
+	position: relative;
+	display: inline-block;
+	width: 100%;
+}

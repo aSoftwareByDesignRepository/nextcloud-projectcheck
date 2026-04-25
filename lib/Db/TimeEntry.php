@@ -151,50 +151,44 @@ class TimeEntry extends Entity
 	}
 
 	/**
-	 * Validate time entry data
+	 * Validate time entry data. Values are machine-readable codes; translate in the service layer.
 	 *
-	 * @return array Array of validation errors
+	 * @return array field name => error code
 	 */
 	public function validate()
 	{
 		$errors = [];
 
-		// Validate project ID
 		if ($this->getProjectId() <= 0) {
-			$errors['projectId'] = 'Valid project ID is required';
+			$errors['projectId'] = 'invalid';
 		}
 
-		// Validate user ID
 		if (empty($this->getUserId())) {
-			$errors['userId'] = 'User ID is required';
+			$errors['userId'] = 'required';
 		}
 
-		// Validate date
 		if (!$this->getDate()) {
-			$errors['date'] = 'Date is required';
+			$errors['date'] = 'required';
 		} else {
 			$today = new \DateTime();
 			$entryDate = $this->getDate();
 			if ($entryDate > $today) {
-				$errors['date'] = 'Date cannot be in the future';
+				$errors['date'] = 'in_future';
 			}
 		}
 
-		// Validate hours
 		if ($this->getHours() <= 0) {
-			$errors['hours'] = 'Hours must be greater than 0';
+			$errors['hours'] = 'not_positive';
 		} elseif ($this->getHours() > 24) {
-			$errors['hours'] = 'Hours cannot exceed 24 per day';
+			$errors['hours'] = 'exceeds_24';
 		}
 
-		// Validate description
 		if (!empty($this->getDescription()) && strlen($this->getDescription()) > 1000) {
-			$errors['description'] = 'Description must be 1000 characters or less';
+			$errors['description'] = 'too_long';
 		}
 
-		// Validate hourly rate
 		if ($this->getHourlyRate() <= 0) {
-			$errors['hourlyRate'] = 'Hourly rate must be greater than 0';
+			$errors['hourlyRate'] = 'not_positive';
 		}
 
 		return $errors;

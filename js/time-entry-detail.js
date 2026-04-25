@@ -48,18 +48,17 @@
         const confirmMessage = button.getAttribute('data-confirm');
 
         if (!timeEntryId) {
-            console.error('Time entry ID not found');
             return;
         }
 
         // Show confirmation dialog
-        if (confirm(confirmMessage || 'Are you sure you want to delete this time entry?')) {
+        if (confirm(confirmMessage || t('projectcheck', 'Are you sure you want to delete this time entry? This action cannot be undone.'))) {
             // Show loading state
             button.disabled = true;
-            button.textContent = 'Deleting...';
+            button.textContent = t('projectcheck', 'Deleting…');
 
             // Make delete request
-            fetch(`/apps/projectcheck/time-entries/${timeEntryId}`, {
+            fetch(OC.generateUrl('/apps/projectcheck/time-entries/' + timeEntryId), {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -75,18 +74,17 @@
                 .then(data => {
                     if (data.success) {
                         // Redirect to time entries list
-                        window.location.href = '/apps/projectcheck/time-entries';
+                        window.location.href = OC.generateUrl('/apps/projectcheck/time-entries');
                     } else {
                         throw new Error(data.error || t('projectcheck', 'Failed to delete time entry'));
                     }
                 })
                 .catch(error => {
-                    console.error('Error deleting time entry:', error);
                     showError(t('projectcheck', 'Failed to delete time entry') + ': ' + error.message);
 
                     // Reset button state
                     button.disabled = false;
-                    button.textContent = 'Delete Time Entry';
+                    button.textContent = t('projectcheck', 'Delete Time Entry');
                 });
         }
     }

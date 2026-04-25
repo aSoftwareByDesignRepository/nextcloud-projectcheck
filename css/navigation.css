@@ -6,10 +6,8 @@
  * @license AGPL-3.0-or-later
  */
 
-/* Navigation container */
-#app-navigation {
-	position: relative;
-}
+/* Navigation container: do not set position: relative — it can override core’s
+   #app-navigation { position: sticky } and break scroll behavior on long pages. */
 
 /* Navigation menu */
 #app-navigation .nav-menu {

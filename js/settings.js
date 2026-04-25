@@ -35,7 +35,6 @@
 	 */
 	function addFormHandlers() {
 		const form = document.getElementById('settings-form');
-		const messageDiv = document.getElementById('settings-message');
 
 		if (form) {
 			form.addEventListener('submit', function (e) {
@@ -126,7 +125,7 @@
 
 		// Show errors if any
 		if (errors.length > 0) {
-			showMessage(errors.join('<br>'), 'error');
+			showMessage(errors.join('\n'), 'error');
 			return false;
 		}
 
@@ -353,7 +352,7 @@
 		if (loading) {
 			form.classList.add('loading');
 			submitButton.disabled = true;
-			submitButton.textContent = t('projectcheck', 'Saving...');
+			submitButton.textContent = t('projectcheck', 'Saving…');
 		} else {
 			form.classList.remove('loading');
 			submitButton.disabled = false;
@@ -368,38 +367,42 @@
 		const messageDiv = document.getElementById('settings-message');
 
 		if (messageDiv) {
+			messageDiv.removeAttribute('aria-hidden');
+			messageDiv.removeAttribute('hidden');
 			messageDiv.textContent = message;
-			messageDiv.className = `settings-message ${type}`;
+			messageDiv.className = 'settings-message ' + type;
 			messageDiv.style.display = 'block';
+
+			if (type === 'error') {
+				messageDiv.setAttribute('role', 'alert');
+				messageDiv.setAttribute('aria-live', 'assertive');
+			} else {
+				messageDiv.setAttribute('role', 'status');
+				messageDiv.setAttribute('aria-live', 'polite');
+			}
+			messageDiv.setAttribute('aria-atomic', 'true');
 
 			// Auto-hide success messages after 3 seconds
 			if (type === 'success') {
 				setTimeout(function () {
 					messageDiv.style.display = 'none';
+					messageDiv.textContent = '';
+					messageDiv.setAttribute('hidden', '');
+					messageDiv.setAttribute('aria-hidden', 'true');
 				}, 3000);
+			} else {
+				messageDiv.removeAttribute('aria-hidden');
 			}
 		}
 	}
 
-	/**
-	 * Format currency value
-	 */
-	function formatCurrency(value) {
-		return parseFloat(value).toFixed(2);
-	}
-
-	/**
-	 * Format percentage value
-	 */
-	function formatPercentage(value) {
-		return parseInt(value);
-	}
-
 	// Export functions for global access if needed
-	window.ProjectControlSettings = {
+	const _settingsApi = {
 		submitSettings: submitSettings,
 		resetSettings: resetSettings,
 		showMessage: showMessage
 	};
+	window.ProjectCheckSettings = _settingsApi;
+	window.ProjectControlSettings = _settingsApi;
 
 })();

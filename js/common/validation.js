@@ -2,6 +2,7 @@
  * Client-Side Validation Framework for ProjectControl App
  * Provides comprehensive form validation with real-time feedback
  */
+/* global t */
 
 function escapeHtml(text) {
 	if (text == null) return '';
@@ -331,9 +332,9 @@ const ProjectControlValidation = {
   setupCustomValidators() {
     this.addRule('validCustomerEmail', {
       test: (value) => {
-        return ProjectControlUtils.isEmail(value) && !value.includes('test');
+        return ProjectControlUtils.isEmail(value);
       },
-      message: 'Please enter a valid customer email address'
+      message: t('projectcheck', 'Please enter a valid customer email address')
     });
   },
 
@@ -1219,5 +1220,6 @@ const ProjectControlValidation = {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ProjectControlValidation;
 } else if (typeof window !== 'undefined') {
+  window.ProjectCheckValidation = ProjectControlValidation;
   window.ProjectControlValidation = ProjectControlValidation;
 }

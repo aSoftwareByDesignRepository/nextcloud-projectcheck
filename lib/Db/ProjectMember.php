@@ -30,8 +30,15 @@ use OCP\AppFramework\Db\Entity;
  * @method void setAssignedAt(\DateTime $assignedAt)
  * @method string getAssignedBy()
  * @method void setAssignedBy(string $assignedBy)
+ * @method string getMemberState()
+ * @method void setMemberState(string $state)
+ * @method \DateTime|null getArchivedAt()
+ * @method void setArchivedAt(\DateTime|null $archivedAt)
  */
 class ProjectMember extends Entity {
+	public const STATE_ACTIVE = 'active';
+	public const STATE_FORMER = 'former';
+
 	protected $tableName = 'project_members';
 	protected $projectId;
 	protected $userId;
@@ -39,6 +46,10 @@ class ProjectMember extends Entity {
 	protected $hourlyRate;
 	protected $assignedAt;
 	protected $assignedBy;
+	/** @var string */
+	protected $memberState;
+	/** @var \DateTime|null */
+	protected $archivedAt;
 
 	/**
 	 * ProjectMember constructor
@@ -50,6 +61,18 @@ class ProjectMember extends Entity {
 		$this->addType('hourlyRate', 'float');
 		$this->addType('assignedAt', 'datetime');
 		$this->addType('assignedBy', 'string');
+		$this->addType('memberState', 'string');
+		$this->addType('archivedAt', 'datetime');
+	}
+
+	public function isActiveMember(): bool {
+		$s = (string)($this->getMemberState() ?? self::STATE_ACTIVE);
+		return $s === self::STATE_ACTIVE;
+	}
+
+	public function isFormerMember(): bool {
+		$s = (string)($this->getMemberState() ?? self::STATE_ACTIVE);
+		return $s === self::STATE_FORMER;
 	}
 
 	/**

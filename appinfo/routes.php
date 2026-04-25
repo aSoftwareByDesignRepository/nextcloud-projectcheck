@@ -56,6 +56,13 @@ return [
 		['name' => 'settings#index', 'url' => '/settings', 'verb' => 'GET'],
 		['name' => 'settings#update', 'url' => '/settings', 'verb' => 'POST'],
 
+		// Organization (app) configuration — access policy and app defaults
+		// Must be app_config# (underscore) so routing maps to AppConfigController, not AppconfigController.
+		['name' => 'app_config#orgIndex', 'url' => '/organization', 'verb' => 'GET'],
+		['name' => 'app_config#savePolicy', 'url' => '/api/config/save', 'verb' => 'POST'],
+		['name' => 'app_config#searchUsers', 'url' => '/api/config/search/users', 'verb' => 'GET'],
+		['name' => 'app_config#searchGroups', 'url' => '/api/config/search/groups', 'verb' => 'GET'],
+
 		// Customer management routes
 		['name' => 'customer#index', 'url' => '/customers', 'verb' => 'GET'],
 		['name' => 'customer#create', 'url' => '/customers/create', 'verb' => 'GET'],

@@ -84,11 +84,19 @@ class CustomerController extends Controller
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		$uid = $user->getUID();
+		if (!$this->customerService->canUserEditCustomer($uid, $id)) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
+		}
+		if (!$this->customerService->getCustomer($id)) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Customer not found')], 404);
+		}
 
 		try {
 			$impact = $this->deletionService->getCustomerDeletionImpact((int)$id);
 			return new JSONResponse(['success' => true, 'impact' => $impact]);
 		} catch (\Exception $e) {
+			$this->logger->error('Customer deletion impact failed', ['exception' => $e, 'customerId' => $id]);
 			return new JSONResponse(['success' => false, 'error' => $e->getMessage()], 400);
 		}
 	}
@@ -174,6 +182,7 @@ class CustomerController extends Controller
 			'limit' => $perPage,
 			'offset' => ($page - 1) * $perPage,
 		];
+		$filters = $this->customerService->getCustomerListFiltersForUser($userId, $filters);
 		$customers = $this->customerService->getCustomers($filters);
 
 		$totalCustomers = $this->customerService->countCustomers($filters);
@@ -184,16 +193,20 @@ class CustomerController extends Controller
 			$customers = $this->customerService->getCustomers($filters);
 		}
 
-		// Add deletion permission info to each customer
+		// Add deletion permission: no projects blocking *and* user may delete
 		foreach ($customers as $customer) {
-			$customer->setCanDelete($this->customerService->canDeleteCustomer($customer->getId()));
+			$cid = (int) $customer->getId();
+			$customer->setCanDelete(
+				$this->customerService->canDeleteCustomer($cid)
+				&& $this->customerService->canUserDeleteCustomer($userId, $cid)
+			);
 		}
 
 		// Get comprehensive statistics for all customers
 		$comprehensiveStats = $this->getComprehensiveCustomerStats($userId);
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $userId);
 
 		$deleteUrl = $this->urlGenerator->linkToRoute('projectcheck.customer.deletePost', ['id' => 'CUSTOMER_ID']);
 
@@ -237,7 +250,7 @@ class CustomerController extends Controller
 		}
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $user->getUID());
 
 		$response = new TemplateResponse($this->appName, 'customer-form', [
 			'customer' => null,
@@ -319,6 +332,13 @@ class CustomerController extends Controller
 			], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
+		if (!$this->customerService->canUserViewCustomer($user->getUID(), (int) $id)) {
+			$response = new TemplateResponse($this->appName, 'error', [
+				'message' => $this->l->t('Access denied'),
+				'urlGenerator' => $this->urlGenerator
+			]);
+			return $this->configureCSP($response, 'main');
+		}
 
 		// Get projects for this customer with budget information
 		$projects = $this->projectService->getProjectsByCustomer($id);
@@ -333,7 +353,7 @@ class CustomerController extends Controller
 		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis();
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $user->getUID());
 
 		$response = new TemplateResponse($this->appName, 'customer-detail', [
 			'customer' => $customer,
@@ -376,9 +396,16 @@ class CustomerController extends Controller
 			], 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
+		if (!$this->customerService->canUserEditCustomer($user->getUID(), (int) $id)) {
+			$response = new TemplateResponse($this->appName, 'error', [
+				'message' => $this->l->t('Access denied'),
+				'urlGenerator' => $this->urlGenerator
+			]);
+			return $this->configureCSP($response, 'main');
+		}
 
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService);
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $user->getUID());
 
 		$response = new TemplateResponse($this->appName, 'customer-form', [
 			'customer' => $customer,
@@ -418,6 +445,11 @@ class CustomerController extends Controller
 		}
 
 		$data = $this->request->getParams();
+		$uid = $user->getUID();
+		$id = (int) $id;
+		if (!$this->customerService->canUserEditCustomer($uid, $id)) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
+		}
 
 		try {
 			// Validate data
@@ -472,6 +504,12 @@ class CustomerController extends Controller
 			return new JSONResponse(['error' => $this->l->t('Method not allowed')], 405);
 		}
 
+		$uid = $user->getUID();
+		$id = (int) $id;
+		if (!$this->customerService->canUserDeleteCustomer($uid, $id)) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
+		}
+
 		try {
 			// Get customer info before deletion for activity logging
 			$customer = $this->customerService->getCustomer($id);
@@ -482,7 +520,11 @@ class CustomerController extends Controller
 			$reassignCustomerId = $this->request->getParam('reassign_customer_id');
 			$options = ['strategy' => $strategy];
 			if ($strategy === 'reassign' && $reassignCustomerId !== null) {
-				$options['reassignCustomerId'] = (int) $reassignCustomerId;
+				$rid = (int) $reassignCustomerId;
+				if ($rid > 0 && !$this->customerService->canUserViewCustomer($uid, $rid)) {
+					return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
+				}
+				$options['reassignCustomerId'] = $rid;
 			}
 
 			$this->deletionService->deleteCustomerWithStrategy($id, $options);
@@ -534,13 +576,22 @@ class CustomerController extends Controller
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		$uid = $user->getUID();
+		$id = (int) $id;
+		if (!$this->customerService->canUserDeleteCustomer($uid, $id)) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
+		}
 
 		try {
 			$strategy = $this->request->getParam('strategy', 'restrict');
 			$reassignCustomerId = $this->request->getParam('reassign_customer_id');
 			$options = ['strategy' => $strategy];
 			if ($strategy === 'reassign' && $reassignCustomerId !== null) {
-				$options['reassignCustomerId'] = (int) $reassignCustomerId;
+				$rid = (int) $reassignCustomerId;
+				if ($rid > 0 && !$this->customerService->canUserViewCustomer($uid, $rid)) {
+					return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
+				}
+				$options['reassignCustomerId'] = $rid;
 			}
 
 			$this->deletionService->deleteCustomerWithStrategy($id, $options);
@@ -574,7 +625,7 @@ class CustomerController extends Controller
 		}
 
 		$query = $this->request->getParam('q', '');
-		$customers = $this->customerService->searchCustomers($query);
+		$customers = $this->customerService->searchCustomersForUser($user->getUID(), $query);
 
 		$results = [];
 		foreach ($customers as $customer) {
@@ -600,8 +651,10 @@ class CustomerController extends Controller
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
-
-		$customers = $this->customerService->getCustomersForSelect();
+		$ex = $this->request->getParam('exclude', $this->request->getParam('exclude_customer_id'));
+		$excludeId = ($ex !== null && $ex !== '') ? (int) $ex : null;
+		$excludeId = ($excludeId > 0) ? $excludeId : null;
+		$customers = $this->customerService->getCustomersForSelectForUser($user->getUID(), $excludeId);
 
 		return new JSONResponse([
 			'success' => true,
@@ -624,10 +677,14 @@ class CustomerController extends Controller
 		}
 
 		$customerId = $this->request->getParam('customer_id', null);
+		$uid = $user->getUID();
 
 		if ($customerId) {
-			// Get customer-specific statistics
-			$stats = $this->customerService->getCustomerSpecificStats((int) $customerId);
+			$cid = (int) $customerId;
+			if (!$this->customerService->canUserViewCustomer($uid, $cid)) {
+				return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
+			}
+			$stats = $this->customerService->getCustomerSpecificStats($cid);
 		} else {
 			// Get general customer statistics
 			$stats = $this->customerService->getCustomerStats();
@@ -677,9 +734,9 @@ class CustomerController extends Controller
 	 */
 	private function getCustomerAnalytics(string $userId): array
 	{
-		// Get all customers with their projects and time entries
-		$allCustomers = $this->customerService->getAllCustomers();
-		$allProjects = $this->projectService->getAllProjects();
+		$scope = $this->getAnalyticsDataScope($userId);
+		$allCustomers = $scope['customers'];
+		$allProjects = $scope['projects'];
 
 		// Calculate basic statistics
 		$totalProjects = count($allProjects);
@@ -707,7 +764,7 @@ class CustomerController extends Controller
 		$topCustomer = $topCustomersByRevenue[0] ?? null;
 
 		// Get recent activity
-		$recentActivity = $this->getRecentActivity();
+		$recentActivity = $this->getRecentActivity($userId);
 
 		return [
 			'total_projects' => $totalProjects,
@@ -717,6 +774,44 @@ class CustomerController extends Controller
 			'total_revenue' => $totalRevenue,
 			'topCustomersByRevenue' => $topCustomersByRevenue,
 			'recentActivity' => $recentActivity
+		];
+	}
+
+	/**
+	 * Customers and projects the user is allowed to aggregate in analytics
+	 *
+	 * @return array{customers: \OCA\ProjectCheck\Db\Customer[], projects: \OCA\ProjectCheck\Db\Project[]}
+	 */
+	private function getAnalyticsDataScope(string $userId): array
+	{
+		$pList = $this->projectService->getAccessibleProjectIdListForUser($userId);
+		if ($pList === null) {
+			return [
+				'customers' => $this->customerService->getAllCustomers(),
+				'projects' => $this->projectService->getAllProjects(),
+			];
+		}
+		if ($pList === []) {
+			return ['customers' => [], 'projects' => []];
+		}
+		$projects = $this->projectService->getProjectsByIdList($pList);
+		$customerIdMap = [];
+		foreach ($projects as $p) {
+			$cid = (int) $p->getCustomerId();
+			if ($cid > 0) {
+				$customerIdMap[$cid] = true;
+			}
+		}
+		$customers = [];
+		foreach (array_keys($customerIdMap) as $cid) {
+			$c = $this->customerService->getCustomer((int) $cid);
+			if ($c !== null) {
+				$customers[] = $c;
+			}
+		}
+		return [
+			'customers' => $customers,
+			'projects' => $projects,
 		];
 	}
 
@@ -906,9 +1001,23 @@ class CustomerController extends Controller
 	 *
 	 * @return array
 	 */
-	private function getRecentActivity(): array
+	private function getRecentActivity(string $userId): array
 	{
+		$pList = $this->projectService->getAccessibleProjectIdListForUser($userId);
+		$allowProject = null;
+		if ($pList !== null) {
+			if ($pList === []) {
+				return [];
+			}
+			$allowProject = array_fill_keys($pList, true);
+		}
 		$recentEntries = $this->timeEntryService->getAllTimeEntries();
+		if ($allowProject !== null) {
+			$recentEntries = array_values(array_filter(
+				$recentEntries,
+				static fn ($e) => isset($allowProject[$e->getProjectId()])
+			));
+		}
 
 		// Sort by date descending and take the 5 most recent
 		usort($recentEntries, function ($a, $b) {
@@ -940,11 +1049,9 @@ class CustomerController extends Controller
 	private function getComprehensiveCustomerStats(string $userId): array
 	{
 		try {
-			// Get all customers
-			$allCustomers = $this->customerService->getAllCustomers();
-
-			// Get all projects
-			$allProjects = $this->projectService->getAllProjects();
+			$scope = $this->getAnalyticsDataScope($userId);
+			$allCustomers = $scope['customers'];
+			$allProjects = $scope['projects'];
 
 			// Initialize counters
 			$totalCustomers = count($allCustomers);

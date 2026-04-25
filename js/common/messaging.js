@@ -46,7 +46,6 @@ const ProjectControlMessaging = {
       title = '',
       duration = 5000,
       dismissible = true,
-      position = 'top-right',
       actions = []
     } = options;
 
@@ -81,19 +80,23 @@ const ProjectControlMessaging = {
   createToast(type, title, message, dismissible, actions) {
     const toast = document.createElement('div');
     toast.className = `toast toast--${type}`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
+    const live = (type === 'error' || type === 'warning') ? 'assertive' : 'polite';
+    toast.setAttribute('aria-live', live);
+    toast.setAttribute('aria-atomic', 'true');
+    toast.setAttribute('tabindex', '-1');
     
     const icon = this.getToastIcon(type);
+    const hasTitle = Boolean(title);
     
     toast.innerHTML = `
-      <div class="toast-icon">${icon}</div>
+      <span class="toast-icon" aria-hidden="true">${icon}</span>
       <div class="toast-content">
-        ${title ? `<div class="toast-title">${this.escapeHtml(title)}</div>` : ''}
+        ${hasTitle ? `<div class="toast-title">${this.escapeHtml(title)}</div>` : ''}
         <div class="toast-message">${this.escapeHtml(message)}</div>
         ${actions.length > 0 ? this.createToastActions(actions) : ''}
       </div>
-      ${dismissible ? `<button type="button" class="toast-close" aria-label="${t('projectcheck', 'Close notification')}">&times;</button>` : ''}
+      ${dismissible ? `<button type="button" class="toast-close" aria-label="${t('projectcheck', 'Close notification')}"><span aria-hidden="true">&times;</span></button>` : ''}
     `;
     
     // Add event listeners
@@ -224,7 +227,9 @@ const ProjectControlMessaging = {
 
     const alert = document.createElement('div');
     alert.className = `alert alert--${type}`;
-    alert.setAttribute('role', 'alert');
+    alert.setAttribute('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
+    alert.setAttribute('aria-live', type === 'error' || type === 'warning' ? 'assertive' : 'polite');
+    alert.setAttribute('aria-atomic', 'true');
     
     if (autoDismiss) {
       alert.dataset.autoDismiss = autoDismiss;
@@ -233,12 +238,12 @@ const ProjectControlMessaging = {
     const icon = this.getAlertIcon(type);
     
     alert.innerHTML = `
-      <div class="alert-icon">${icon}</div>
+      <div class="alert-icon" aria-hidden="true">${icon}</div>
       <div class="alert-content">
         ${title ? `<div class="alert-title">${this.escapeHtml(title)}</div>` : ''}
         <div class="alert-message">${this.escapeHtml(message)}</div>
       </div>
-      ${dismissible ? `<button type="button" class="alert-close" aria-label="${t('projectcheck', 'Dismiss alert')}">&times;</button>` : ''}
+      ${dismissible ? `<button type="button" class="alert-close" aria-label="${t('projectcheck', 'Dismiss alert')}"><span aria-hidden="true">&times;</span></button>` : ''}
     `;
 
     container.appendChild(alert);
@@ -365,8 +370,8 @@ const ProjectControlMessaging = {
     modal.setAttribute('aria-hidden', 'false');
 
     // Lock body scroll
-    if (window.ProjectControlLayout) {
-      window.ProjectControlLayout.lockBodyScroll();
+    if (window.ProjectCheckLayout || window.ProjectControlLayout) {
+      (window.ProjectCheckLayout || window.ProjectControlLayout).lockBodyScroll();
     }
 
     // Focus first focusable element
@@ -389,8 +394,8 @@ const ProjectControlMessaging = {
     backdrop.remove();
 
     // Unlock body scroll
-    if (window.ProjectControlLayout) {
-      window.ProjectControlLayout.unlockBodyScroll();
+    if (window.ProjectCheckLayout || window.ProjectControlLayout) {
+      (window.ProjectCheckLayout || window.ProjectControlLayout).unlockBodyScroll();
     }
   },
 
@@ -784,13 +789,16 @@ const ProjectControlMessaging = {
    */
   createPersistentNotification(messageData) {
     const notification = document.createElement('div');
-    notification.className = `persistent-notification persistent-notification--${messageData.type}`;
+    const nType = messageData.type || 'info';
+    notification.className = `persistent-notification persistent-notification--${nType}`;
     notification.setAttribute('data-message-id', messageData.id);
-    notification.setAttribute('role', 'alert');
+    notification.setAttribute('role', nType === 'error' || nType === 'warning' ? 'alert' : 'status');
+    notification.setAttribute('aria-live', nType === 'error' || nType === 'warning' ? 'assertive' : 'polite');
+    notification.setAttribute('aria-atomic', 'true');
     
     notification.innerHTML = `
-      <div class="persistent-notification__icon">
-        ${this.getToastIcon(messageData.type)}
+      <div class="persistent-notification__icon" aria-hidden="true">
+        ${this.getToastIcon(nType)}
       </div>
       <div class="persistent-notification__content">
         <div class="persistent-notification__title">${this.escapeHtml(messageData.title || '')}</div>
@@ -798,10 +806,10 @@ const ProjectControlMessaging = {
       </div>
       <div class="persistent-notification__actions">
         <button type="button" class="persistent-notification__acknowledge" aria-label="${t('projectcheck', 'Acknowledge')}">
-          ✓
+          <span aria-hidden="true">✓</span>
         </button>
         <button type="button" class="persistent-notification__dismiss" aria-label="${t('projectcheck', 'Dismiss')}">
-          ×
+          <span aria-hidden="true">×</span>
         </button>
       </div>
     `;
@@ -949,5 +957,6 @@ const ProjectControlMessaging = {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ProjectControlMessaging;
 } else if (typeof window !== 'undefined') {
+  window.ProjectCheckMessaging = ProjectControlMessaging;
   window.ProjectControlMessaging = ProjectControlMessaging;
 }

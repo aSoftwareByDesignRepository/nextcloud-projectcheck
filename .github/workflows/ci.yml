@@ -1,0 +1,46 @@
+# ProjectCheck — unit tests + supply-chain audit (no live Nextcloud for E2E)
+name: CI
+
+on:
+  push:
+    paths:
+      - '**'
+  pull_request:
+    paths:
+      - '**'
+
+defaults:
+  run:
+    working-directory: .
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - name: Composer install
+        run: composer install
+        working-directory: .
+      - name: Composer audit
+        run: composer audit
+        working-directory: .
+      - name: PHPUnit
+        run: ./vendor/bin/phpunit
+        working-directory: .
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: npm audit (fails on critical; dev toolchains often report high — triage with npm audit fix)
+        run: npm audit --audit-level=critical
+      - run: npm test

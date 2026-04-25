@@ -24,6 +24,9 @@ use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCA\ProjectCheck\Service\AccessControlService;
+use OCA\ProjectCheck\Db\UserAccountSnapshotMapper;
+use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCA\ProjectCheck\Traits\StatsTrait;
@@ -60,6 +63,15 @@ class EmployeeController extends Controller
 	/** @var IL10N */
 	private $l;
 
+	/** @var UserAccountSnapshotMapper */
+	private $userAccountSnapshotMapper;
+
+	/** @var AccessControlService */
+	private $accessControlService;
+
+	/** @var IRequestTokenProvider */
+	private $requestTokenProvider;
+
     /**
      * EmployeeController constructor
      *
@@ -73,7 +85,10 @@ class EmployeeController extends Controller
 	 * @param IURLGenerator $urlGenerator
 	 * @param IConfig $config
      * @param CSPService $cspService
-     * @param IL10N $l
+	 * @param IL10N $l
+	 * @param UserAccountSnapshotMapper $userAccountSnapshotMapper
+	 * @param AccessControlService $accessControlService
+	 * @param IRequestTokenProvider $requestTokenProvider
      */
     public function __construct(
         $appName,
@@ -83,10 +98,13 @@ class EmployeeController extends Controller
         TimeEntryService $timeEntryService,
         ProjectService $projectService,
         CustomerService $customerService,
-        IURLGenerator $urlGenerator,
+		IURLGenerator $urlGenerator,
 		IConfig $config,
         CSPService $cspService,
-        IL10N $l
+        IL10N $l,
+		UserAccountSnapshotMapper $userAccountSnapshotMapper,
+		AccessControlService $accessControlService,
+		IRequestTokenProvider $requestTokenProvider
     ) {
         parent::__construct($appName, $request);
         $this->userSession = $userSession;
@@ -97,6 +115,9 @@ class EmployeeController extends Controller
         $this->urlGenerator = $urlGenerator;
 		$this->config = $config;
 		$this->l = $l;
+		$this->userAccountSnapshotMapper = $userAccountSnapshotMapper;
+		$this->accessControlService = $accessControlService;
+		$this->requestTokenProvider = $requestTokenProvider;
         $this->setCspService($cspService);
     }
 
@@ -157,7 +178,7 @@ class EmployeeController extends Controller
         $usersWithTimeEntries = $this->timeEntryService->getUsersWithTimeEntries();
 
         // Get common stats for the sidebar
-        $stats = $this->getCommonStats($this->projectService, $this->customerService);
+        $stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $userId);
 
         $response = new TemplateResponse($this->appName, 'employees', [
             'employeeYearlyStats' => $employeeYearlyStats,
@@ -200,14 +221,17 @@ class EmployeeController extends Controller
             return $this->configureCSP($response, 'guest');
         }
 
-        // Get the employee user
         $employeeUser = $this->userManager->get($userId);
-        if (!$employeeUser) {
-            $response = new TemplateResponse($this->appName, 'error', [
-                'message' => 'Employee not found'
-            ], 'guest');
-            return $this->configureCSP($response, 'guest');
-        }
+        $snapshot = $this->userAccountSnapshotMapper->findByUserId($userId);
+        if ($employeeUser === null && $snapshot === null) {
+			$hasHistory = $this->timeEntryService->getTimeEntriesByUser($userId) !== [];
+			if (!$hasHistory) {
+				$response = new TemplateResponse($this->appName, 'error', [
+					'message' => $this->l->t('Employee not found')
+				], 'guest');
+				return $this->configureCSP($response, 'guest');
+			}
+		}
 
         // Get yearly statistics for this employee
         $yearlyStats = $this->timeEntryService->getYearlyStatsForEmployee($userId);
@@ -217,15 +241,24 @@ class EmployeeController extends Controller
         $employeeProductivityAnalysis = $this->timeEntryService->getProductivityAnalysisForEmployee($userId);
 
         // Get common stats for the sidebar
-        $stats = $this->getCommonStats($this->projectService, $this->customerService);
+        $stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
 
+		$formerDisplay = null;
+		if ($employeeUser === null) {
+			$formerDisplay = $snapshot !== null ? $snapshot->getDisplayName() : $userId;
+		}
+		$requestToken = $this->requestTokenProvider->getEncryptedRequestToken();
         $response = new TemplateResponse($this->appName, 'employee-detail', [
             'employee' => $employeeUser,
+			'employeeId' => $userId,
+			'formerAccountDisplayName' => $formerDisplay,
+			'isFormerAccount' => $employeeUser === null,
             'yearlyStats' => $yearlyStats,
             'employeeProjectTypeStats' => $employeeProjectTypeStats,
             'employeeProductivityAnalysis' => $employeeProductivityAnalysis,
             'stats' => $stats,
-            'urlGenerator' => $this->urlGenerator
+            'urlGenerator' => $this->urlGenerator,
+			'requesttoken' => $requestToken,
         ]);
 
         return $this->configureCSP($response);
@@ -246,6 +279,12 @@ class EmployeeController extends Controller
         }
 
         $userId = $this->request->getParam('user_id', null);
+		$viewerId = $user->getUID();
+		if (is_string($userId) && $userId !== '' && $userId !== $viewerId) {
+			if (!$this->accessControlService->isSystemAdministrator($viewerId) && !$this->accessControlService->canManageAppConfiguration($viewerId)) {
+				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+			}
+		}
 
         if ($userId) {
             // Get employee-specific statistics

@@ -24,18 +24,12 @@ class CacheManager {
     }
 
     /**
-     * Setup service worker for caching
+     * Service worker: intentionally not registered. The previous code called
+     * `navigator.serviceWorker.register('/sw.js')` (Nextcloud web root), not this app, which
+     * was wrong, caused failed registrations, and could affect unrelated pages. A future SW
+     * for ProjectCheck must be served under the app and reviewed for caching and CSP.
      */
     setupServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(registration => {
-                    console.log('Service Worker registered:', registration);
-                })
-                .catch(error => {
-                    console.error('Service Worker registration failed:', error);
-                });
-        }
     }
 
     /**

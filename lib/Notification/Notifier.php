@@ -16,6 +16,7 @@ use OCP\IURLGenerator;
 use OCP\IUserManager;
 use OCP\Notification\INotification;
 use OCP\Notification\INotifier;
+use OCA\ProjectCheck\Service\AccessControlService;
 
 /**
  * Notification notifier for project events
@@ -31,21 +32,27 @@ class Notifier implements INotifier
 	/** @var IUserManager */
 	private $userManager;
 
+	/** @var AccessControlService */
+	private $accessControl;
+
 	/**
 	 * Notifier constructor
 	 *
 	 * @param IL10N $l10n
 	 * @param IURLGenerator $urlGenerator
 	 * @param IUserManager $userManager
+	 * @param AccessControlService $accessControl
 	 */
 	public function __construct(
 		IL10N $l10n,
 		IURLGenerator $urlGenerator,
-		IUserManager $userManager
+		IUserManager $userManager,
+		AccessControlService $accessControl
 	) {
 		$this->l10n = $l10n;
 		$this->urlGenerator = $urlGenerator;
 		$this->userManager = $userManager;
+		$this->accessControl = $accessControl;
 	}
 
 	/**
@@ -84,15 +91,47 @@ class Notifier implements INotifier
 		$message = $this->getMessage($notification);
 		$richSubject = $this->getRichSubject($notification);
 		$richMessage = $this->getRichMessage($notification);
+		$link = $this->getLink($notification);
+
+		$uid = $notification->getUser();
+		if (!$this->accessControl->canUseApp($uid)) {
+			$link = $this->urlGenerator->linkToDefaultPageUrl();
+			$richSubject = [
+				'subject' => $subject,
+				'parameters' => $this->richParametersToHighlightsOnly($richSubject['parameters'] ?? []),
+			];
+		}
 
 		$notification->setParsedSubject($subject)
 			->setRichSubject($richSubject['subject'], $richSubject['parameters'])
 			->setParsedMessage($message)
 			->setRichMessage($richMessage['message'], $richMessage['parameters'])
 			->setIcon($this->getIcon($notification))
-			->setLink($this->getLink($notification));
+			->setLink($link);
 
 		return $notification;
+	}
+
+	/**
+	 * Replace navigable types with non-link highlights when the user has no app access.
+	 *
+	 * @param array<string, array<string, mixed>> $params
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function richParametersToHighlightsOnly(array $params): array
+	{
+		$out = [];
+		foreach ($params as $key => $param) {
+			if (!is_array($param) || !isset($param['name'])) {
+				continue;
+			}
+			$out[$key] = [
+				'type' => 'highlight',
+				'id' => (string) ($param['id'] ?? $param['name']),
+				'name' => (string) $param['name'],
+			];
+		}
+		return $out;
 	}
 
 	/**

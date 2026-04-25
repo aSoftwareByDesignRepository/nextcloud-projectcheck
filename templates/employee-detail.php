@@ -16,23 +16,32 @@ style('projectcheck', 'common/progress-bars');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
+<?php
+$emp = $_['employee'] ?? null;
+$eid = (string) ($_['employeeId'] ?? '');
+$isFormer = !empty($_['isFormerAccount']);
+$empDisplay = $isFormer
+	? (string) ($_['formerAccountDisplayName'] ?? $eid)
+	: ($emp ? $emp->getDisplayName() : $eid);
+$empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
+?>
 
 <script nonce="<?php p($_['cspNonce']) ?>">
     // Pass PHP variables to JavaScript
     window.projectControlData = {
         requestToken: '<?php p($_['requesttoken']) ?>',
-        employeeId: '<?php p($employee->getUID()); ?>'
+        employeeId: '<?php p($eid); ?>'
     };
 </script>
 
-<div id="app-content">
+<div id="app-content" role="main">
     <div id="app-content-wrapper">
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
                 <ol>
                     <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.index')); ?>"><?php p($l->t('Employees')); ?></a></li>
-                    <li aria-current="page"><?php p($employee->getDisplayName()); ?></li>
+                    <li aria-current="page"><?php p($empDisplay); ?></li>
                 </ol>
             </nav>
         </div>
@@ -42,17 +51,21 @@ style('projectcheck', 'common/progress-bars');
             <div class="header-content">
                 <div class="header-text">
                     <div class="header-details">
-                        <h2><?php p($employee->getDisplayName()); ?></h2>
+                        <h2><?php p($empDisplay); ?><?php if ($isFormer): ?>
+                            <span class="pc-badge pc-badge--neutral" role="status" aria-label="<?php p($l->t('Former user — account was removed. Statistics are historical data.')); ?>"><?php p($l->t('Former user')); ?></span>
+                        <?php endif; ?></h2>
                         <p><?php p($l->t('Employee performance and time tracking statistics')); ?></p>
                         <div class="employee-meta">
                             <span class="meta-item">
-                                <i data-lucide="user" class="lucide-icon primary"></i>
-                                <span><?php p($employee->getUID()); ?></span>
+                                <i data-lucide="user" class="lucide-icon primary" aria-hidden="true"></i>
+                                <span><?php p($eid); ?></span>
                             </span>
+                            <?php if (!$isFormer): ?>
                             <span class="meta-item">
-                                <i data-lucide="mail" class="lucide-icon primary"></i>
-                                <span><?php p($employee->getEMailAddress() ?: $l->t('No email')); ?></span>
+                                <i data-lucide="mail" class="lucide-icon primary" aria-hidden="true"></i>
+                                <span><?php p($empEmail !== '' && $empEmail !== null ? $empEmail : $l->t('No email')); ?></span>
                             </span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -148,38 +161,40 @@ style('projectcheck', 'common/progress-bars');
                     <div class="info-grid">
                         <div class="info-item">
                             <label><?php p($l->t('Display Name')); ?></label>
-                            <span><?php p($employee->getDisplayName()); ?></span>
+                            <span><?php p($empDisplay); ?></span>
                         </div>
 
                         <div class="info-item">
                             <label><?php p($l->t('User ID')); ?></label>
-                            <span><?php p($employee->getUID()); ?></span>
+                            <span><?php p($eid); ?></span>
                         </div>
 
-                        <?php if ($employee->getEMailAddress()): ?>
+                        <?php if (!$isFormer && $emp && $emp->getEMailAddress()): ?>
                             <div class="info-item">
                                 <label><?php p($l->t('Email')); ?></label>
-                                <span><a href="mailto:<?php p($employee->getEMailAddress()); ?>"><?php p($employee->getEMailAddress()); ?></a></span>
+                                <span><a href="mailto:<?php p($emp->getEMailAddress()); ?>"><?php p($emp->getEMailAddress()); ?></a></span>
                             </div>
                         <?php endif; ?>
 
                         <div class="info-item">
                             <label><?php p($l->t('Last Login')); ?></label>
                             <span><?php
-                                    $lastLogin = $employee->getLastLogin();
+								if ($isFormer || !$emp) {
+									p($l->t('Not available (account removed)'));
+								} else {
+                                    $lastLogin = $emp->getLastLogin();
                                     if ($lastLogin && $lastLogin > 0) {
                                         if (is_int($lastLogin) || is_numeric($lastLogin)) {
-                                            // Handle timestamp
                                             echo date('d.m.Y H:i', (int)$lastLogin);
                                         } elseif (is_object($lastLogin) && method_exists($lastLogin, 'format')) {
-                                            // Handle DateTime object
                                             echo $lastLogin->format('d.m.Y H:i');
                                         } else {
-                                            echo $l->t('Unknown');
+                                            p($l->t('Unknown'));
                                         }
                                     } else {
-                                        echo $l->t('Never');
+                                        p($l->t('Never'));
                                     }
+								}
                                     ?></span>
                         </div>
                     </div>

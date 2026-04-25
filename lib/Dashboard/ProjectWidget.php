@@ -20,8 +20,9 @@ use OCP\Dashboard\Model\WidgetItem;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
+use OCA\ProjectCheck\Service\AccessControlService;
+use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\ProjectService;
-use OCA\ProjectCheck\Service\TimeEntryService;
 
 /**
  * Dashboard widget for project overview
@@ -40,8 +41,11 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
     /** @var ProjectService */
     private $projectService;
 
-    /** @var TimeEntryService */
-    private $timeEntryService;
+    /** @var AccessControlService */
+    private $accessControl;
+
+    /** @var BudgetService */
+    private $budgetService;
 
     /**
      * ProjectWidget constructor
@@ -50,20 +54,27 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
      * @param IURLGenerator $urlGenerator
      * @param IUserSession $userSession
      * @param ProjectService $projectService
-     * @param TimeEntryService $timeEntryService
+     * @param AccessControlService $accessControl
+     * @param BudgetService $budgetService
      */
     public function __construct(
         IL10N $l10n,
         IURLGenerator $urlGenerator,
         IUserSession $userSession,
         ProjectService $projectService,
-        TimeEntryService $timeEntryService
+        AccessControlService $accessControl,
+        BudgetService $budgetService
     ) {
         $this->l10n = $l10n;
         $this->urlGenerator = $urlGenerator;
         $this->userSession = $userSession;
         $this->projectService = $projectService;
-        $this->timeEntryService = $timeEntryService;
+        $this->accessControl = $accessControl;
+        $this->budgetService = $budgetService;
+    }
+
+    public function load(): void
+    {
     }
 
     /**
@@ -111,6 +122,9 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
      */
     public function getWidgetButtons(string $userId, ?string $since = null): array
     {
+        if (!$this->accessControl->canUseApp($userId)) {
+            return [];
+        }
         return [
             new WidgetButton(
                 WidgetButton::TYPE_MORE,
@@ -135,21 +149,24 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
             return [];
         }
 
+        if (!$this->accessControl->canUseApp($userId)) {
+            return [];
+        }
+
         try {
-            // Get user's projects
             $projects = $this->projectService->getProjectsByUser($userId, $limit);
             $items = [];
 
             foreach ($projects as $project) {
-                // Calculate budget consumption (simplified for now)
-                $budgetConsumption = 0; // TODO: Implement proper calculation
+                $budget = $this->budgetService->getProjectBudgetInfo($project, $userId);
+                $budgetConsumption = $budget['consumption_percentage'] ?? 0.0;
                 $status = $this->getProjectStatus($project->getStatus());
                 $icon = $this->getProjectIcon($project->getStatus());
 
                 $items[] = new WidgetItem(
                     $icon,
                     $project->getName(),
-                    $this->l10n->t('Budget: %1$s%% consumed', [$budgetConsumption]),
+                    $this->l10n->t('Budget: %1$s%% consumed', [round($budgetConsumption, 1)]),
                     $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $project->getId()]),
                     $status
                 );
@@ -178,6 +195,8 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
                 return $this->l10n->t('On Hold');
             case 'Cancelled':
                 return $this->l10n->t('Cancelled');
+            case 'Archived':
+                return $this->l10n->t('Archived');
             default:
                 return $status;
         }
@@ -200,6 +219,8 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
                 return 'icon-pause';
             case 'Cancelled':
                 return 'icon-close';
+            case 'Archived':
+                return 'icon-files';
             default:
                 return 'icon-projectcontrol';
         }
@@ -213,13 +234,4 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
         return $this->urlGenerator->imagePath('projectcheck', 'app-dark.svg');
     }
 
-    /**
-     * @param string $userId
-     * @param array $widgetData
-     * @return array
-     */
-    public function load(string $userId, array $widgetData): array
-    {
-        return $this->getItems($userId);
-    }
 }
