@@ -14,7 +14,7 @@ Sections you will use:
 | App Metadata (`info.xml`, `CHANGELOG.md`) | [#app-metadata](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#app-metadata) |
 | Blacklisted Files | [#blacklisted-files](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#blacklisted-files) |
 
-Replace `X.Y.Z` with the real version (e.g. `2.0.24`). App id is **`projectcheck`** (lowercase, matches the top-level folder inside the `.tar.gz`).
+Replace `X.Y.Z` with the real version (e.g. `2.0.27`). App id is **`projectcheck`** (lowercase, matches the top-level folder inside the `.tar.gz`).
 
 **Repository:** build and release from **[`nextcloud-projectcheck`](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck)** — that GitHub repo contains **only** ProjectCheck. A private monorepo path is optional for some teams (see §4).
 
