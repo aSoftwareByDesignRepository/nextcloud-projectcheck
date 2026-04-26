@@ -23,6 +23,7 @@ use OCP\IUserSession;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\ProjectService;
+use RuntimeException;
 
 /**
  * Dashboard widget for project overview
@@ -231,7 +232,28 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
      */
     public function getIconUrl(): string
     {
-        return $this->urlGenerator->imagePath('projectcheck', 'app-dark.svg');
+        return $this->resolveAppIconPath();
+    }
+
+    /**
+     * Resolve a stable icon path and never throw in dashboard context.
+     */
+    private function resolveAppIconPath(): string
+    {
+        foreach (['app-dark.svg', 'app.svg'] as $iconFile) {
+            try {
+                return $this->urlGenerator->imagePath('projectcheck', $iconFile);
+            } catch (RuntimeException $e) {
+                // Continue with fallback icon candidates.
+            }
+        }
+
+        try {
+            return $this->urlGenerator->imagePath('core', 'actions/folder.svg');
+        } catch (RuntimeException $e) {
+            // Absolute fallback: keep UI rendering alive even without an icon.
+            return '';
+        }
     }
 
 }

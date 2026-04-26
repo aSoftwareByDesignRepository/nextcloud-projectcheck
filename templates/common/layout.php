@@ -87,8 +87,8 @@ try {
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?php print_unescaped(image_path($appName, 'favicon.png')); ?>">
-    <link rel="apple-touch-icon" href="<?php print_unescaped(image_path($appName, 'apple-touch-icon.png')); ?>">
+    <link rel="icon" type="image/svg+xml" href="<?php print_unescaped(image_path($appName, 'app.svg')); ?>">
+    <link rel="apple-touch-icon" href="<?php print_unescaped(image_path($appName, 'app.svg')); ?>">
 
     <!-- Page Title -->
     <title><?php p($pageTitle); ?> - <?php p($l->t('ProjectCheck')); ?></title>

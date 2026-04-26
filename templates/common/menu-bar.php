@@ -19,7 +19,7 @@ $isLoggedIn = $user !== null;
 $canManageProjects = $isLoggedIn;
 $canManageCustomers = $isLoggedIn;
 $canViewTime = $isLoggedIn;
-$logoFile = $appManager->getAppPath('projectcheck') . '/img/logo.png';
+$logoFile = $appManager->getAppPath('projectcheck') . '/img/logo.svg';
 ?>
 <button class="menu-bar-toggle" id="menu-bar-toggle" type="button" aria-label="<?php p($l->t('Toggle menu')); ?>"
 	aria-controls="menu-bar" aria-expanded="false">
@@ -35,7 +35,7 @@ $logoFile = $appManager->getAppPath('projectcheck') . '/img/logo.png';
 	<div class="menu-bar-top">
 		<div class="logo">
 			<?php if (is_file($logoFile)) { ?>
-				<img src="<?php p($gen->linkTo('projectcheck', 'img/logo.png')); ?>"
+				<img src="<?php p($gen->linkTo('projectcheck', 'img/logo.svg')); ?>"
 					alt="<?php p($l->t('ProjectCheck')); ?>" width="32" height="32" />
 			<?php } else { ?>
 				<div class="logo-placeholder" aria-hidden="true">

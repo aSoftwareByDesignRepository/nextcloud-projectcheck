@@ -360,7 +360,10 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                                     ?>
                                                     <span class="project-type-icon"
                                                         data-project-type="<?php p($projectType); ?>"
-                                                        title="<?php p($displayName); ?>">
+                                                        title="<?php p($displayName); ?>"
+                                                        tabindex="0"
+                                                        role="img"
+                                                        aria-label="<?php p($displayName); ?>">
                                                         <?php p($icon); ?>
                                                     </span>
                                                     <span class="project-type-label"><?php p($displayName); ?></span>
@@ -541,7 +544,10 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                         ?>
                                         <span class="project-type-icon"
                                             data-project-type="<?php p($projectType); ?>"
-                                            title="<?php p($displayName); ?>">
+                                            title="<?php p($displayName); ?>"
+                                            tabindex="0"
+                                            role="img"
+                                            aria-label="<?php p($displayName); ?>">
                                             <?php p($icon); ?>
                                         </span>
                                         <span class="status-badge status-<?php p(strtolower(str_replace(' ', '-', $project->getStatus()))); ?>">

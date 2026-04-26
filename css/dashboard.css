@@ -728,6 +728,13 @@ body {
 	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
+.project-type-icon:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+	background: var(--color-primary-element-light);
+	border-color: var(--color-primary-element);
+}
+
 /* Enhanced tooltip for project type icons */
 .project-type-icon::after {
 	content: attr(title);
@@ -753,6 +760,12 @@ body {
 }
 
 .project-type-icon:hover::after {
+	opacity: 1;
+	visibility: visible;
+	transform: translateX(-50%) translateY(-4px);
+}
+
+.project-type-icon:focus-visible::after {
 	opacity: 1;
 	visibility: visible;
 	transform: translateX(-50%) translateY(-4px);

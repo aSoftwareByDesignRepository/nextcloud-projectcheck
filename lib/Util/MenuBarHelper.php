@@ -100,8 +100,8 @@ class MenuBarHelper
      */
     public function generateTopSection(): string
     {
-        $logoPath = $this->appManager->getAppPath('projectcheck') . '/img/logo.png';
-        $logoUrl = $this->urlGenerator->linkTo('projectcheck', 'img/logo.png');
+        $logoPath = $this->appManager->getAppPath('projectcheck') . '/img/logo.svg';
+        $logoUrl = $this->urlGenerator->linkTo('projectcheck', 'img/logo.svg');
 
         $html = '<div class="menu-bar-top">';
         $html .= '<div class="logo">';

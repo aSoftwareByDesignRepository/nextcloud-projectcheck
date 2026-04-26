@@ -23,6 +23,7 @@ use OCP\Search\ISearchQuery;
 use OCP\Search\SearchResult;
 use OCP\Search\SearchResultEntry;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Search provider for projectcheck app
@@ -119,13 +120,14 @@ class ProjectSearchProvider implements IProvider
 		$offset = $query->getCursor() ?? 0;
 
 		$results = [];
+		$appIcon = $this->resolveAppIconPath();
 
 		try {
 			// Search projects
 			$projects = $this->projectService->searchProjects($searchTerm, $user->getUID(), $limit);
 			foreach ($projects as $project) {
 				$results[] = new SearchResultEntry(
-					$this->urlGenerator->imagePath('projectcheck', 'app-dark.svg'),
+					$appIcon,
 					$this->l10n->t('Project: %s', [$project->getName()]),
 					$project->getShortDescription() ?: $this->l10n->t('No description'),
 					$this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $project->getId()]),
@@ -138,7 +140,7 @@ class ProjectSearchProvider implements IProvider
 			$customers = $this->customerService->searchCustomers($searchTerm, $user->getUID(), $limit);
 			foreach ($customers as $customer) {
 				$results[] = new SearchResultEntry(
-					$this->urlGenerator->imagePath('projectcheck', 'app-dark.svg'),
+					$appIcon,
 					$this->l10n->t('Customer: %s', [$customer->getName()]),
 					$customer->getEmail() ?: $this->l10n->t('No email'),
 					$this->urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => $customer->getId()]),
@@ -154,7 +156,7 @@ class ProjectSearchProvider implements IProvider
 				$projectName = $project ? $project->getName() : $this->l10n->t('Unknown Project');
 				
 				$results[] = new SearchResultEntry(
-					$this->urlGenerator->imagePath('projectcheck', 'app-dark.svg'),
+					$appIcon,
 					$this->l10n->t('Time Entry: %s hours on %s', [$timeEntry->getHours(), $projectName]),
 					$timeEntry->getDescription() ?: $this->l10n->t('No description'),
 					$this->urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => $timeEntry->getId()]),
@@ -196,5 +198,25 @@ class ProjectSearchProvider implements IProvider
 			$this->getName(),
 			$results
 		);
+	}
+
+	/**
+	 * Resolve icon path with fallbacks to avoid breaking global search.
+	 */
+	private function resolveAppIconPath(): string
+	{
+		foreach (['app-dark.svg', 'app.svg'] as $iconFile) {
+			try {
+				return $this->urlGenerator->imagePath('projectcheck', $iconFile);
+			} catch (RuntimeException $e) {
+				// Continue with fallback icon candidates.
+			}
+		}
+
+		try {
+			return $this->urlGenerator->imagePath('core', 'actions/folder.svg');
+		} catch (RuntimeException $e) {
+			return '';
+		}
 	}
 }

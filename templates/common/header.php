@@ -29,7 +29,22 @@ $appSettingsUrl = $url->linkToRoute('projectcheck.settings.index');
 $serverAdminUrl = $url->linkToRoute('settings.AdminSettings.index', [ 'section' => 'server' ]);
 $helpUrl = $url->linkToDocs('user');
 $appearanceUrl = $url->linkToRoute('settings.PersonalSettings.index', [ 'section' => 'theming' ]);
-$logoSrc = $url->imagePath($appName, 'logo.svg');
+$logoSrc = '';
+foreach (['logo.svg', 'app-dark.svg', 'app.svg'] as $iconFile) {
+	try {
+		$logoSrc = $url->imagePath($appName, $iconFile);
+		break;
+	} catch (\RuntimeException $e) {
+		// Continue with fallback candidates.
+	}
+}
+if ($logoSrc === '') {
+	try {
+		$logoSrc = $url->imagePath('core', 'actions/folder.svg');
+	} catch (\RuntimeException $e) {
+		$logoSrc = '';
+	}
+}
 $avatarUrl = $isLogged
 	? $url->linkToRoute('core.avatar.getAvatar', [ 'userId' => $userId, 'size' => 64 ])
 	: '';
