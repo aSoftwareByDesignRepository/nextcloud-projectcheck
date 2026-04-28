@@ -41,6 +41,9 @@ Util::addStyle('projectcheck', 'navigation');
 					</a>
 				</div>
 			</div>
+			<p class="time-entry-form-intro">
+				<?php p($l->t('You can log time only for projects with status Active or On Hold that you can access (creator, admin, or active team member).')); ?>
+			</p>
 
 			<form id="time-entry-form" class="time-entry-form" method="POST" action="<?php p($isEdit ? $_['updateUrl'] : $_['storeUrl']); ?>">
 				<?php if ($isEdit && isset($timeEntry)): ?>
@@ -74,6 +77,11 @@ Util::addStyle('projectcheck', 'navigation');
 						<div class="error-message" id="project_id-error"></div>
 					</div>
 				</div>
+				<?php if (empty($projects)): ?>
+					<div class="time-entry-form-note" role="status" aria-live="polite">
+						<?php p($l->t('No selectable project found. Check project status and team assignment.')); ?>
+					</div>
+				<?php endif; ?>
 
 				<!-- Project Budget Information -->
 				<div id="budget-info-section" class="form-row" style="display: none;">
@@ -167,79 +175,8 @@ Util::addStyle('projectcheck', 'navigation');
 						<?php p($l->t('Cancel')); ?>
 					</a>
 				</div>
+				<div id="time-entry-form-errors" class="time-entry-form-errors" role="alert" aria-live="assertive"></div>
 			</form>
 		</div>
 	</div>
 </div>
-
-<script nonce="<?php p($_['cspNonce']) ?>">
-	// Time entry form JavaScript
-	document.addEventListener('DOMContentLoaded', function() {
-		const form = document.getElementById('time-entry-form');
-		const projectSelect = document.getElementById('project_id');
-		const hoursInput = document.getElementById('hours');
-		const hourlyRateInput = document.getElementById('hourly_rate');
-		const totalCostInput = document.getElementById('total_cost');
-		const descriptionTextarea = document.getElementById('description');
-		const charCount = document.getElementById('char-count');
-
-		// Calculate total cost
-		function calculateTotalCost() {
-			const hours = parseFloat(hoursInput.value) || 0;
-			const hourlyRate = parseFloat(hourlyRateInput.value) || 0;
-			const totalCost = hours * hourlyRate;
-			totalCostInput.value = '€' + totalCost.toFixed(2);
-		}
-
-		// Update hourly rate when project is selected
-		projectSelect.addEventListener('change', function() {
-			const selectedOption = this.options[this.selectedIndex];
-			const hourlyRate = selectedOption.getAttribute('data-hourly-rate');
-			if (hourlyRate) {
-				hourlyRateInput.value = hourlyRate;
-				calculateTotalCost();
-			}
-		});
-
-		// Recalculate total cost when hours or hourly rate changes
-		hoursInput.addEventListener('input', calculateTotalCost);
-		hourlyRateInput.addEventListener('input', calculateTotalCost);
-
-		// Character count for description
-		descriptionTextarea.addEventListener('input', function() {
-			const count = this.value.length;
-			charCount.textContent = count;
-		});
-
-		// Form validation
-		form.addEventListener('submit', function(e) {
-			let isValid = true;
-
-			// Clear previous error messages
-			document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
-
-			// Validate required fields
-			if (!projectSelect.value) {
-				document.getElementById('project_id-error').textContent = '<?php p($l->t('Please select a project')); ?>';
-				isValid = false;
-			}
-
-			if (!hoursInput.value || parseFloat(hoursInput.value) <= 0) {
-				document.getElementById('hours-error').textContent = '<?php p($l->t('Please enter valid hours')); ?>';
-				isValid = false;
-			}
-
-			if (!hourlyRateInput.value || parseFloat(hourlyRateInput.value) < 0) {
-				document.getElementById('hourly_rate-error').textContent = '<?php p($l->t('Please enter a valid hourly rate')); ?>';
-				isValid = false;
-			}
-
-			if (!isValid) {
-				e.preventDefault();
-			}
-		});
-
-		// Initialize character count
-		charCount.textContent = descriptionTextarea.value.length;
-	});
-</script>

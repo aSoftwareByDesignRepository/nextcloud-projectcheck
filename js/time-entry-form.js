@@ -22,6 +22,7 @@
 		}
 		element.readOnly = false;
 		element.removeAttribute('readonly');
+		element.classList.remove('datepicker-only');
 		element.setAttribute('inputmode', 'numeric');
 	}
 
@@ -265,17 +266,27 @@
 	function displayErrors(errors) {
 		// Clear previous errors
 		clearErrors();
+		const errorSummary = document.getElementById('time-entry-form-errors');
+		const messages = [];
 
 		// Display new errors
 		Object.keys(errors).forEach(fieldName => {
 			const field = document.getElementById(fieldName);
 			const errorElement = document.getElementById(fieldName + '-error');
+			const formGroup = field ? field.closest('.form-group') : null;
 
 			if (field && errorElement) {
 				field.classList.add('has-error');
+				if (formGroup) {
+					formGroup.classList.add('has-error');
+				}
 				errorElement.textContent = errors[fieldName];
+				messages.push(errors[fieldName]);
 			}
 		});
+		if (errorSummary) {
+			errorSummary.textContent = messages.join(' ');
+		}
 
 		// Show error notification
 		const firstError = Object.values(errors)[0];
@@ -288,12 +299,22 @@
 	 * Clear all error messages
 	 */
 	function clearErrors() {
+		const errorSummary = document.getElementById('time-entry-form-errors');
 		document.querySelectorAll('.error-message').forEach(element => {
 			element.textContent = '';
 		});
+		if (errorSummary) {
+			errorSummary.textContent = '';
+		}
 
 		document.querySelectorAll('.form-group').forEach(group => {
 			group.classList.remove('has-error');
+		});
+		document.querySelectorAll('.has-error').forEach(element => {
+			if (element.classList.contains('form-group')) {
+				return;
+			}
+			element.classList.remove('has-error');
 		});
 	}
 
@@ -467,9 +488,17 @@
 
 		if (error) {
 			field.classList.add('has-error');
+			const formGroup = field.closest('.form-group');
+			if (formGroup) {
+				formGroup.classList.add('has-error');
+			}
 			errorElement.textContent = error;
 		} else {
 			field.classList.remove('has-error');
+			const formGroup = field.closest('.form-group');
+			if (formGroup) {
+				formGroup.classList.remove('has-error');
+			}
 			errorElement.textContent = '';
 		}
 	}

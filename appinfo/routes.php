@@ -34,6 +34,7 @@ return [
 		['name' => 'project#addTeamMember', 'url' => '/projects/{id}/members', 'verb' => 'POST'],
 		['name' => 'project#updateTeamMember', 'url' => '/projects/{id}/members/{userId}', 'verb' => 'PUT'],
 		['name' => 'project#removeTeamMember', 'url' => '/projects/{id}/members/{userId}', 'verb' => 'DELETE'],
+		['name' => 'project#searchAssignableUsers', 'url' => '/projects/{id}/members/search-users', 'verb' => 'GET'],
 
 		// Search and filtering routes
 		['name' => 'project#search', 'url' => '/projects/search', 'verb' => 'GET'],
@@ -91,6 +92,8 @@ return [
 		['name' => 'employee#index', 'url' => '/employees', 'verb' => 'GET'],
 		['name' => 'employee#show', 'url' => '/employees/{userId}', 'verb' => 'GET'],
 		['name' => 'employee#getStats', 'url' => '/api/employees/stats', 'verb' => 'GET'],
+		['name' => 'employee#assignProject', 'url' => '/employees/{userId}/projects', 'verb' => 'POST'],
+		['name' => 'employee#unassignProject', 'url' => '/employees/{userId}/projects/{projectId}', 'verb' => 'DELETE'],
 		['name' => 'timeentry#show', 'url' => '/time-entries/{id}', 'verb' => 'GET'],
 		['name' => 'timeentry#edit', 'url' => '/time-entries/{id}/edit', 'verb' => 'GET'],
 		['name' => 'timeentry#update', 'url' => '/time-entries/{id}', 'verb' => 'PUT'],

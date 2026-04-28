@@ -125,7 +125,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                         <div class="stat-label"><?php p($l->t('TOTAL HOURS')); ?></div>
                         <?php if (isset($budgetInfo['available_hours']) && $budgetInfo['available_hours'] > 0): ?>
                             <div class="stat-sub">
-                                <?php p(number_format($budgetInfo['remaining_hours'], 1)); ?>h remaining
+                                <?php p($l->t('%sh remaining', [number_format((float)$budgetInfo['remaining_hours'], 1, '.', '')])); ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -139,7 +139,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                         <div class="stat-label"><?php p($l->t('BUDGET USED')); ?></div>
                         <?php if (isset($budgetInfo['total_budget']) && $budgetInfo['total_budget'] > 0): ?>
                             <div class="stat-sub">
-                                €<?php p(number_format($budgetInfo['remaining_budget'], 2)); ?> remaining
+                                <?php p($l->t('€%s remaining', [number_format((float)$budgetInfo['remaining_budget'], 2, '.', '')])); ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -247,11 +247,11 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                         </div>
                         <div class="info-item">
                             <label><?php p($l->t('STATUS')); ?></label>
-                            <span class="status-badge <?php p($statusClass); ?>"><?php p($project->getStatus()); ?></span>
+                            <span class="status-badge <?php p($statusClass); ?>"><?php p($l->t((string)$project->getStatus())); ?></span>
                         </div>
                         <div class="info-item">
                             <label><?php p($l->t('PRIORITY')); ?></label>
-                            <span class="priority-badge <?php p($priorityClass); ?>"><?php p($project->getPriority()); ?></span>
+                            <span class="priority-badge <?php p($priorityClass); ?>"><?php p($l->t((string)$project->getPriority())); ?></span>
                         </div>
                         <div class="info-item">
                             <label><?php p($l->t('PROJECT TYPE')); ?></label>
@@ -276,10 +276,10 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                             <div class="project-type-display">
                                 <span class="project-type-icon"
                                     data-project-type="<?php p($projectType); ?>"
-                                    title="<?php p($displayName); ?>">
+                                    title="<?php p($l->t((string)$displayName)); ?>">
                                     <?php p($icon); ?>
                                 </span>
-                                <span class="project-type-label"><?php p($displayName); ?></span>
+                                <span class="project-type-label"><?php p($l->t((string)$displayName)); ?></span>
                             </div>
                         </div>
                         <div class="info-item">
@@ -306,7 +306,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                         </div>
                         <div class="info-item full-width">
                             <label><?php p($l->t('SHORT DESCRIPTION')); ?></label>
-                            <span><?php p($project->getShortDescription() ?: 'No description provided'); ?></span>
+                            <span><?php p($project->getShortDescription() ?: $l->t('No description provided')); ?></span>
                         </div>
                         <?php if ($project->getDetailedDescription()): ?>
                             <div class="info-item full-width">
@@ -329,10 +329,10 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                         <div class="overview-header">
                             <div class="overview-title">
                                 <h4><?php p($project->getName()); ?></h4>
-                                <p class="overview-description"><?php p($project->getShortDescription() ?: 'No description provided'); ?></p>
+                                <p class="overview-description"><?php p($project->getShortDescription() ?: $l->t('No description provided')); ?></p>
                             </div>
                             <div class="overview-status">
-                                <span class="status-badge <?php p($statusClass); ?>"><?php p($project->getStatus()); ?></span>
+                                <span class="status-badge <?php p($statusClass); ?>"><?php p($l->t((string)$project->getStatus())); ?></span>
                             </div>
                         </div>
 
@@ -389,12 +389,12 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                             <div class="progress-stats">
                                 <?php if (isset($budgetInfo['consumption_percentage'])): ?>
                                     <span class="budget-percentage budget-<?php p($budgetInfo['warning_level']); ?>">
-                                        <?php p($budgetInfo['consumption_percentage']); ?>% used
+                                        <?php p($l->t('%s%% used', [number_format((float)$budgetInfo['consumption_percentage'], 1, '.', '')])); ?>
                                     </span>
-                                    <span class="budget-remaining">€<?php p(number_format($budgetInfo['remaining_budget'], 2)); ?> remaining</span>
+                                    <span class="budget-remaining"><?php p($l->t('€%s remaining', [number_format((float)$budgetInfo['remaining_budget'], 2, '.', '')])); ?></span>
                                 <?php else: ?>
-                                    <span class="budget-percentage"><?php p(round(($budgetConsumption / max(1, $project->getTotalBudget() ?? 1)) * 100, 1)); ?>% used</span>
-                                    <span class="budget-remaining">€<?php p(number_format(($project->getTotalBudget() ?? 0) - $budgetConsumption, 2)); ?> remaining</span>
+                                    <span class="budget-percentage"><?php p($l->t('%s%% used', [number_format((float)round(($budgetConsumption / max(1, $project->getTotalBudget() ?? 1)) * 100, 1), 1, '.', '')])); ?></span>
+                                    <span class="budget-remaining"><?php p($l->t('€%s remaining', [number_format((float)(($project->getTotalBudget() ?? 0) - $budgetConsumption), 2, '.', '')])); ?></span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -439,7 +439,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                                 </div>
                                 <div class="timeline-content">
                                     <label><?php p($l->t('Start Date')); ?></label>
-                                    <span><?php p($project->getStartDate() ? $project->getStartDate()->format('d.m.Y') : 'Not set'); ?></span>
+                                    <span><?php p($project->getStartDate() ? $project->getStartDate()->format('d.m.Y') : $l->t('Not set')); ?></span>
                                 </div>
                             </div>
                             <div class="timeline-item">
@@ -448,7 +448,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                                 </div>
                                 <div class="timeline-content">
                                     <label><?php p($l->t('End Date')); ?></label>
-                                    <span><?php p($project->getEndDate() ? $project->getEndDate()->format('d.m.Y') : 'Not set'); ?></span>
+                                    <span><?php p($project->getEndDate() ? $project->getEndDate()->format('d.m.Y') : $l->t('Not set')); ?></span>
                                 </div>
                             </div>
                             <div class="timeline-item">
@@ -462,9 +462,9 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                                                 $start = $project->getStartDate();
                                                 $end = $project->getEndDate();
                                                 $diff = $start->diff($end);
-                                                echo $diff->days . ' days';
+                                                p($l->t('%d days', [$diff->days]));
                                             } else {
-                                                echo 'Not set';
+                                                p($l->t('Not set'));
                                             }
                                             ?></span>
                                 </div>
@@ -525,6 +525,9 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
 							multiple
 							required>
 					</form>
+					<div class="project-files-dropzone" id="project-files-dropzone" tabindex="0" role="button" aria-label="<?php p($l->t('Drag files here to upload')); ?>">
+						<span class="project-files-dropzone__text"><?php p($l->t('Drag files here to upload')); ?></span>
+					</div>
 				<?php endif; ?>
             </div>
             <div class="section-content">
@@ -668,8 +671,9 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         $teamMembersActive = $_['teamMembersActive'] ?? [];
         $teamMembersFormer = $_['teamMembersFormer'] ?? [];
         $hasAnyTeam = !empty($teamMembersActive) || !empty($teamMembersFormer);
+        $showTeamSection = $hasAnyTeam || (!empty($canAddTeamMember) && $canAddTeamMember);
         ?>
-        <?php if ($hasAnyTeam): ?>
+        <?php if ($showTeamSection): ?>
             <div class="section" id="team-section">
                 <div class="section-header">
                     <h3><i class="icon-user-custom" aria-hidden="true"></i> <?php p($l->t('Team Members')); ?></h3>
@@ -692,16 +696,34 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                                 </div>
                                 <div class="member-info">
                                     <span class="member-name"><?php p($member['name'] ?? $l->t('Unknown')); ?></span>
-                                    <span class="member-role"><?php p($member['role'] ?? 'Team Member'); ?></span>
                                 </div>
                                 <div class="member-hours">
                                     <span class="hours-label"><?php p($l->t('Hours:')); ?></span>
                                     <span class="hours-value"><?php p($member['hours'] ?? 0); ?></span>
                                 </div>
                                 <div class="member-actions">
+                                    <?php if (!empty($canViewMemberProfiles) && !empty($member['profile_url'])): ?>
+                                        <a class="action-btn member-profile-btn"
+                                            href="<?php p((string)$member['profile_url']); ?>"
+                                            title="<?php p($l->t('Open profile of %s', [$member['name'] ?? $l->t('Unknown')])); ?>"
+                                            aria-label="<?php p($l->t('Open profile of %s', [$member['name'] ?? $l->t('Unknown')])); ?>">
+                                            <i class="icon-user-custom" aria-hidden="true"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if (!empty($canViewMemberTimeEntries) && !empty($member['user_id'])): ?>
+                                        <a class="action-btn member-timeentries-btn"
+                                            href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index', ['project_id' => $projectId, 'user_id' => (string)($member['user_id'] ?? '')])); ?>"
+                                            title="<?php p($l->t('View time entries for %s', [$member['name'] ?? $l->t('Unknown')])); ?>"
+                                            aria-label="<?php p($l->t('View time entries for %s', [$member['name'] ?? $l->t('Unknown')])); ?>">
+                                            <i class="icon-time-custom" aria-hidden="true"></i>
+                                        </a>
+                                    <?php endif; ?>
                                     <?php if (!empty($canManageMembers) && $canManageMembers && empty($member['is_former'])): ?>
                                         <button type="button" class="action-btn remove-member-btn"
                                             data-member-id="<?php p($member['id'] ?? ''); ?>"
+                                            data-user-id="<?php p($member['user_id'] ?? ''); ?>"
+                                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.project.removeTeamMember', ['id' => $projectId, 'userId' => (string)($member['user_id'] ?? '')])); ?>"
+                                            data-impact-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectmember.getDeletionImpact', ['id' => (int)($member['id'] ?? 0)])); ?>"
                                             data-member-name="<?php p($member['name'] ?? $l->t('Unknown')); ?>"
                                             title="<?php p($l->t('Remove from project')); ?>"
                                             aria-label="<?php p($l->t('Remove %s from project', [$member['name'] ?? $l->t('Unknown')])); ?>">
@@ -727,7 +749,6 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                                     <span class="member-name"><?php p($member['name'] ?? $l->t('Unknown')); ?>
                                         <span class="pc-badge pc-badge--neutral"><?php p($l->t('Former')); ?></span>
                                     </span>
-                                    <span class="member-role"><?php p($member['role'] ?? 'Team Member'); ?></span>
                                 </div>
                                 <div class="member-hours">
                                     <span class="hours-label"><?php p($l->t('Hours:')); ?></span>
@@ -736,6 +757,13 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                             </div>
                         <?php endforeach; ?>
                     </div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (empty($teamMembersActive) && empty($teamMembersFormer)): ?>
+                    <div class="empty-state" role="status" aria-live="polite">
+                        <i class="icon-user-custom icon-large" aria-hidden="true"></i>
+                        <h3><?php p($l->t('No team members yet')); ?></h3>
+                        <p><?php p($l->t('Add the first person to this project to start collaboration and time tracking.')); ?></p>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -785,37 +813,43 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         : $urlGenerator->linkToRoute('projectcheck.project.addTeamMember', ['id' => $projectId]);
 ?>
 <?php if (!empty($canAddTeamMember) && $canAddTeamMember): ?>
-<div id="addTeamMemberModal" class="modal projectcheck-dialog" style="display: none;" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="addTeamMemberTitle">
-    <div class="modal-content projectcheck-dialog__panel" onclick="event.stopPropagation();">
+<div id="addTeamMemberModal" class="modal projectcheck-dialog" style="display: none;" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="addTeamMemberTitle" aria-describedby="addMemberHelp addMemberSteps">
+    <div class="modal-content projectcheck-dialog__panel projectcheck-dialog__panel--member">
         <div class="modal-header projectcheck-dialog__header">
-            <h3 id="addTeamMemberTitle"><?php p($l->t('Add team member')); ?></h3>
+            <div class="projectcheck-dialog__title-group">
+                <span class="projectcheck-dialog__eyebrow"><?php p($l->t('Project team')); ?></span>
+                <h3 id="addTeamMemberTitle"><?php p($l->t('Add team member')); ?></h3>
+            </div>
             <button type="button" class="close" id="close-add-member-modal" aria-label="<?php p($l->t('Close')); ?>"><span aria-hidden="true">&times;</span></button>
         </div>
         <div class="modal-body projectcheck-dialog__body">
-            <p class="projectcheck-dialog__help" id="addMemberHelp"><?php p($l->t('Enter the person\'s Nextcloud user ID (login name), then pick a role.')); ?></p>
-            <form id="addTeamMemberForm" method="post">
-                <div class="form-group">
-                    <label for="teamMemberUserId"><?php p($l->t('User ID')); ?> <span class="required-star" aria-hidden="true">*</span></label>
-                    <input type="text" id="teamMemberUserId" name="user_id" required autocomplete="username" inputmode="text" aria-describedby="addMemberHelp" class="form-input" />
+            <div class="projectcheck-dialog__intro">
+                <p class="projectcheck-dialog__help" id="addMemberHelp"><?php p($l->t('Search the Nextcloud user directory and choose exactly one active account. Existing project members are hidden.')); ?></p>
+                <ol class="projectcheck-dialog__steps" id="addMemberSteps">
+                    <li><?php p($l->t('Search')); ?></li>
+                    <li><?php p($l->t('Select')); ?></li>
+                    <li><?php p($l->t('Add')); ?></li>
+                </ol>
+            </div>
+            <form id="addTeamMemberForm" method="post" class="team-user-picker" autocomplete="off" novalidate>
+                <div class="form-group team-user-picker__search-card">
+                    <label for="teamMemberSearch" class="team-user-picker__label"><?php p($l->t('Find a person')); ?> <span class="required-star" aria-hidden="true">*</span></label>
+                    <input type="text" id="teamMemberSearch" required autocomplete="off" inputmode="search" aria-describedby="addMemberHelp teamMemberHint add-team-member-error" aria-errormessage="add-team-member-error" class="form-input team-user-picker__input" placeholder="<?php p($l->t('Type at least 2 characters…')); ?>" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="teamMemberSearchResults" />
+                    <input type="hidden" id="teamMemberUserId" name="user_id" />
+                    <p class="form-hint" id="teamMemberHint"><?php p($l->t('Start typing, then select one person from the list.')); ?></p>
+                    <div id="teamMemberSearchResults" class="team-user-search-results" role="listbox" aria-label="<?php p($l->t('Matching users')); ?>" aria-live="polite" hidden></div>
+                    <div id="teamMemberSelected" class="team-user-selected" hidden>
+                        <span class="team-user-selected__label"><?php p($l->t('Selected:')); ?></span>
+                        <span id="teamMemberSelectedText" class="team-user-selected__text"></span>
+                        <button type="button" id="teamMemberSelectedClear" class="team-user-selected__clear"><?php p($l->t('Change')); ?></button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="teamMemberRole"><?php p($l->t('Role')); ?> <span class="required-star" aria-hidden="true">*</span></label>
-                    <select id="teamMemberRole" name="role" class="form-input form-select" required>
-                        <option value="Project Manager"><?php p($l->t('Project Manager')); ?></option>
-                        <option value="Developer" selected><?php p($l->t('Developer')); ?></option>
-                        <option value="Tester"><?php p($l->t('Tester')); ?></option>
-                        <option value="Consultant"><?php p($l->t('Consultant')); ?></option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="teamMemberRate"><?php p($l->t('Hourly rate (optional)')); ?></label>
-                    <input type="text" id="teamMemberRate" name="hourly_rate" class="form-input" inputmode="decimal" placeholder="<?php p($l->t('e.g. 75.00')); ?>" autocomplete="off" />
-                </div>
+                <p id="add-team-member-error" class="projectcheck-dialog__error" role="status" aria-live="polite"></p>
             </form>
         </div>
         <div class="modal-footer projectcheck-dialog__footer">
             <button type="button" class="button secondary" id="cancel-add-member"><?php p($l->t('Cancel')); ?></button>
-            <button type="button" class="button primary" id="submit-add-team-member"><?php p($l->t('Add to project')); ?></button>
+            <button type="button" class="button primary" id="submit-add-team-member" disabled title="<?php p($l->t('Select one user first')); ?>" data-default-label="<?php p($l->t('Add to project')); ?>" data-busy-label="<?php p($l->t('Adding…')); ?>"><?php p($l->t('Add to project')); ?></button>
         </div>
     </div>
 </div>
@@ -826,19 +860,363 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         const projectcheckToken = <?php echo json_encode($_['requesttoken'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
         const changeStatusUrl = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.changeStatus', ['id' => $projectId])); ?>;
         const addTeamUrl = <?php echo json_encode($addTeamUrl ?? $urlGenerator->linkToRoute('projectcheck.project.addTeamMember', ['id' => $projectId])); ?>;
+        const searchUsersUrl = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.searchAssignableUsers', ['id' => $projectId])); ?>;
         const errorStatusMsg = <?php echo json_encode($l->t('Error updating status')); ?>;
         const errorGeneric = <?php echo json_encode($l->t('Something went wrong. Please try again.')); ?>;
         const addMemberError = <?php echo json_encode($l->t('Could not add team member')); ?>;
+        const noUsersFoundMsg = <?php echo json_encode($l->t('No matching users found')); ?>;
+        const chooseUserMsg = <?php echo json_encode($l->t('Choose a user from the list')); ?>;
+        const loadingUsersMsg = <?php echo json_encode($l->t('Searching users…')); ?>;
+        const enterMoreCharsMsg = <?php echo json_encode($l->t('Type at least 2 characters to search.')); ?>;
+        const searchUsersErrorMsg = <?php echo json_encode($l->t('User search failed. Check your connection and try again.')); ?>;
+        let lastFocusedElement = null;
+        let memberSearchTimeout = null;
+        let memberSearchAbort = null;
+        let memberSearchRequestId = 0;
+        let memberSearchActiveIndex = -1;
+        let memberSearchItems = [];
+        let memberAddSubmitting = false;
+
+        function setSearchExpanded(expanded) {
+            const searchInput = document.getElementById('teamMemberSearch');
+            const results = document.getElementById('teamMemberSearchResults');
+            if (searchInput) {
+                searchInput.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            }
+            if (results) {
+                results.hidden = !expanded;
+            }
+        }
+
+        function updateAddMemberSubmitState() {
+            const submitButton = document.getElementById('submit-add-team-member');
+            if (!(submitButton instanceof HTMLButtonElement)) {
+                return;
+            }
+            const canSubmit = resolveSelectedUserId() !== '';
+            submitButton.disabled = !canSubmit || memberAddSubmitting;
+            submitButton.title = canSubmit ? '' : chooseUserMsg;
+        }
+
+        function updateSelectedUserSummary(uid, label) {
+            const summary = document.getElementById('teamMemberSelected');
+            const summaryText = document.getElementById('teamMemberSelectedText');
+            if (!summary || !summaryText) {
+                return;
+            }
+            if (!uid) {
+                summary.hidden = true;
+                summaryText.textContent = '';
+                return;
+            }
+            summaryText.textContent = label || uid;
+            summary.hidden = false;
+        }
 
         function setModalOpen(modal, open, openBtn) {
             if (!modal) {
                 return;
+            }
+            if (open) {
+                lastFocusedElement = document.activeElement;
             }
             modal.style.display = open ? 'block' : 'none';
             modal.setAttribute('aria-hidden', open ? 'false' : 'true');
             if (openBtn) {
                 openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
             }
+            if (!open && lastFocusedElement instanceof HTMLElement) {
+                lastFocusedElement.focus();
+                lastFocusedElement = null;
+            }
+        }
+
+        function isModalOpen(modal) {
+            return modal && modal.getAttribute('aria-hidden') === 'false';
+        }
+
+        function getOpenProjectcheckModal() {
+            const addMemberModal = document.getElementById('addTeamMemberModal');
+            if (isModalOpen(addMemberModal)) {
+                return addMemberModal;
+            }
+            const statusModal = document.getElementById('statusChangeModal');
+            if (isModalOpen(statusModal)) {
+                return statusModal;
+            }
+            return null;
+        }
+
+        function getFocusableElements(container) {
+            if (!container) {
+                return [];
+            }
+            return Array.from(container.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+                .filter((el) => el instanceof HTMLElement && !el.hidden && el.offsetParent !== null);
+        }
+
+        function trapFocusInModal(e) {
+            if (e.key !== 'Tab') {
+                return;
+            }
+            const modal = getOpenProjectcheckModal();
+            if (!modal) {
+                return;
+            }
+            const focusable = getFocusableElements(modal);
+            if (focusable.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+
+        function showError(message) {
+            const msg = message || errorGeneric;
+            const errorSlot = document.getElementById('add-team-member-error');
+            const uidInput = document.getElementById('teamMemberSearch');
+            if (errorSlot) {
+                errorSlot.textContent = msg;
+            }
+            if (uidInput) {
+                uidInput.setAttribute('aria-invalid', 'true');
+            }
+            if (typeof OC !== 'undefined' && OC.Notification) {
+                OC.Notification.showTemporary(msg);
+                return;
+            }
+            window.alert(msg);
+        }
+
+        function clearMemberSearchResults() {
+            const results = document.getElementById('teamMemberSearchResults');
+            const searchInput = document.getElementById('teamMemberSearch');
+            if (results) {
+                results.replaceChildren();
+            }
+            if (searchInput) {
+                searchInput.removeAttribute('aria-activedescendant');
+            }
+            memberSearchItems = [];
+            memberSearchActiveIndex = -1;
+            setSearchExpanded(false);
+            updateAddMemberSubmitState();
+        }
+
+        function renderMemberSearchMessage(message, expanded) {
+            const results = document.getElementById('teamMemberSearchResults');
+            const searchInput = document.getElementById('teamMemberSearch');
+            if (!results) {
+                return;
+            }
+            results.replaceChildren();
+            if (searchInput) {
+                searchInput.removeAttribute('aria-activedescendant');
+            }
+            if (message) {
+                const empty = document.createElement('div');
+                empty.className = 'team-user-search-empty';
+                empty.textContent = message;
+                results.appendChild(empty);
+            }
+            memberSearchItems = [];
+            memberSearchActiveIndex = -1;
+            setSearchExpanded(expanded);
+            updateAddMemberSubmitState();
+        }
+
+        function setSelectedUser(uid, label) {
+            const hiddenInput = document.getElementById('teamMemberUserId');
+            const searchInput = document.getElementById('teamMemberSearch');
+            if (hiddenInput) {
+                hiddenInput.value = uid;
+            }
+            if (searchInput) {
+                searchInput.value = label;
+                searchInput.setAttribute('aria-invalid', 'false');
+            }
+            updateSelectedUserSummary(uid, label);
+            clearMemberSearchResults();
+            updateAddMemberSubmitState();
+        }
+
+        function setActiveSearchResult(index) {
+            const searchInput = document.getElementById('teamMemberSearch');
+            if (!searchInput || memberSearchItems.length === 0) {
+                return;
+            }
+            memberSearchActiveIndex = Math.max(0, Math.min(index, memberSearchItems.length - 1));
+            memberSearchItems.forEach((item, idx) => {
+                const active = idx === memberSearchActiveIndex;
+                item.setAttribute('aria-selected', active ? 'true' : 'false');
+                item.classList.toggle('team-user-search-option--active', active);
+                if (active) {
+                    searchInput.setAttribute('aria-activedescendant', item.id);
+                    item.scrollIntoView({ block: 'nearest' });
+                }
+            });
+        }
+
+        function renderMemberSearchResults(items) {
+            const results = document.getElementById('teamMemberSearchResults');
+            const searchInput = document.getElementById('teamMemberSearch');
+            if (!results) {
+                return;
+            }
+            results.replaceChildren();
+            if (searchInput) {
+                searchInput.removeAttribute('aria-activedescendant');
+            }
+            if (!items || items.length === 0) {
+                renderMemberSearchMessage(noUsersFoundMsg, true);
+                return;
+            }
+            items.forEach((item, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'team-user-search-option';
+                btn.setAttribute('role', 'option');
+                btn.id = 'team-user-option-' + idx;
+                btn.setAttribute('aria-selected', 'false');
+                btn.tabIndex = -1;
+                const label = document.createElement('span');
+                label.className = 'team-user-search-option__label';
+                label.textContent = item.displayName || item.label || item.uid;
+                btn.appendChild(label);
+                if (item.uid && item.uid !== item.displayName) {
+                    const meta = document.createElement('span');
+                    meta.className = 'team-user-search-option__meta';
+                    meta.textContent = item.uid;
+                    btn.appendChild(meta);
+                }
+                btn.addEventListener('click', function() {
+                    setSelectedUser(item.uid, item.label || item.uid);
+                });
+                results.appendChild(btn);
+            });
+            memberSearchItems = Array.from(results.querySelectorAll('.team-user-search-option'));
+            memberSearchActiveIndex = -1;
+            setSearchExpanded(true);
+            updateAddMemberSubmitState();
+        }
+
+        function searchAssignableUsers(query) {
+            if (memberSearchAbort) {
+                memberSearchAbort.abort();
+            }
+            const requestId = ++memberSearchRequestId;
+            memberSearchAbort = new AbortController();
+            renderMemberSearchMessage(loadingUsersMsg, true);
+            fetch(searchUsersUrl + '?q=' + encodeURIComponent(query), {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'requesttoken': projectcheckToken,
+                    'Accept': 'application/json'
+                },
+                signal: memberSearchAbort.signal
+            })
+            .then(r => r.json().then(d => ({ ok: r.ok, status: r.status, d })))
+            .then(data => {
+                if (requestId !== memberSearchRequestId) {
+                    return;
+                }
+                if (data.ok && data.d && data.d.success) {
+                    renderMemberSearchResults(Array.isArray(data.d.items) ? data.d.items : []);
+                } else {
+                    renderMemberSearchMessage((data.d && (data.d.error || data.d.message)) || searchUsersErrorMsg, true);
+                }
+            })
+            .catch((err) => {
+                if (err && err.name === 'AbortError') {
+                    return;
+                }
+                if (requestId === memberSearchRequestId) {
+                    renderMemberSearchMessage(searchUsersErrorMsg, true);
+                }
+            });
+        }
+
+        function bindMemberSearch() {
+            const searchInput = document.getElementById('teamMemberSearch');
+            const hiddenInput = document.getElementById('teamMemberUserId');
+            if (!searchInput || !hiddenInput) {
+                return;
+            }
+            searchInput.addEventListener('input', function() {
+                hiddenInput.value = '';
+                searchInput.removeAttribute('aria-invalid');
+                updateSelectedUserSummary('', '');
+                const query = String(searchInput.value || '').trim();
+                if (memberSearchTimeout) {
+                    window.clearTimeout(memberSearchTimeout);
+                    memberSearchTimeout = null;
+                }
+                if (query.length < 2) {
+                    memberSearchRequestId++;
+                    if (memberSearchAbort) {
+                        memberSearchAbort.abort();
+                    }
+                    if (query.length === 0) {
+                        clearMemberSearchResults();
+                    } else {
+                        renderMemberSearchMessage(enterMoreCharsMsg, true);
+                    }
+                    return;
+                }
+                memberSearchTimeout = window.setTimeout(function() {
+                    searchAssignableUsers(query);
+                }, 180);
+                updateAddMemberSubmitState();
+            });
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown' && memberSearchItems.length > 0) {
+                    e.preventDefault();
+                    setActiveSearchResult(memberSearchActiveIndex + 1);
+                    return;
+                }
+                if (e.key === 'ArrowUp' && memberSearchItems.length > 0) {
+                    e.preventDefault();
+                    setActiveSearchResult(memberSearchActiveIndex <= 0 ? 0 : memberSearchActiveIndex - 1);
+                    return;
+                }
+                if (e.key === 'Enter' && memberSearchItems.length > 0 && memberSearchActiveIndex >= 0) {
+                    e.preventDefault();
+                    memberSearchItems[memberSearchActiveIndex].click();
+                    return;
+                }
+                if (e.key === 'Enter' && memberSearchItems.length === 1) {
+                    e.preventDefault();
+                    memberSearchItems[0].click();
+                    return;
+                }
+                if (e.key === 'Escape') {
+                    if (searchInput.getAttribute('aria-expanded') === 'true') {
+                        e.stopPropagation();
+                    }
+                    clearMemberSearchResults();
+                }
+            });
+            document.addEventListener('click', function(e) {
+                const container = document.getElementById('teamMemberSearchResults');
+                if (!container || e.target === searchInput || container.contains(e.target)) {
+                    return;
+                }
+                clearMemberSearchResults();
+            });
+        }
+
+        function resolveSelectedUserId() {
+            const hiddenInput = document.getElementById('teamMemberUserId');
+            const selectedUid = hiddenInput ? String(hiddenInput.value || '').trim() : '';
+            return selectedUid;
         }
 
         function showStatusChangeModal() {
@@ -861,16 +1239,36 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
             const m = document.getElementById('addTeamMemberModal');
             const b = document.getElementById('add-team-member-btn');
             setModalOpen(m, true, b);
+            const errorSlot = document.getElementById('add-team-member-error');
+            if (errorSlot) {
+                errorSlot.textContent = '';
+            }
             const u = document.getElementById('teamMemberUserId');
+            const s = document.getElementById('teamMemberSearch');
             if (u) {
                 u.value = '';
-                u.focus();
             }
+            if (s) {
+                s.value = '';
+                s.removeAttribute('aria-invalid');
+                s.focus();
+            }
+            updateSelectedUserSummary('', '');
+            clearMemberSearchResults();
+            updateAddMemberSubmitState();
         }
 
         function closeAddTeamMemberModal() {
             const m = document.getElementById('addTeamMemberModal');
             const b = document.getElementById('add-team-member-btn');
+            if (memberSearchTimeout) {
+                window.clearTimeout(memberSearchTimeout);
+                memberSearchTimeout = null;
+            }
+            if (memberSearchAbort) {
+                memberSearchAbort.abort();
+            }
+            memberSearchRequestId++;
             setModalOpen(m, false, b);
         }
 
@@ -904,40 +1302,78 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         }
 
         function submitAddTeamMember() {
-            const uid = (document.getElementById('teamMemberUserId') && document.getElementById('teamMemberUserId').value || '').trim();
-            const role = document.getElementById('teamMemberRole') && document.getElementById('teamMemberRole').value;
-            if (!uid || !role) {
+            if (memberAddSubmitting) {
                 return;
+            }
+            const uid = resolveSelectedUserId();
+            if (!uid) {
+                showError(chooseUserMsg);
+                const searchInput = document.getElementById('teamMemberSearch');
+                if (searchInput) {
+                    searchInput.setAttribute('aria-invalid', 'true');
+                    searchInput.focus();
+                }
+                return;
+            }
+            const hiddenInput = document.getElementById('teamMemberUserId');
+            if (hiddenInput) {
+                hiddenInput.value = uid;
+            }
+            const errorSlot = document.getElementById('add-team-member-error');
+            if (errorSlot) {
+                errorSlot.textContent = '';
             }
             const formData = new FormData();
             formData.append('user_id', uid);
-            formData.append('role', role);
-            const rateEl = document.getElementById('teamMemberRate');
-            if (rateEl && String(rateEl.value).trim() !== '') {
-                formData.append('hourly_rate', String(rateEl.value).trim());
-            }
             formData.append('requesttoken', projectcheckToken);
+            const submitButton = document.getElementById('submit-add-team-member');
+            memberAddSubmitting = true;
+            if (submitButton instanceof HTMLButtonElement) {
+                submitButton.disabled = true;
+                submitButton.setAttribute('aria-busy', 'true');
+                submitButton.textContent = submitButton.dataset.busyLabel || submitButton.textContent;
+            }
 
             fetch(addTeamUrl, {
                     method: 'POST',
                     body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'requesttoken': projectcheckToken
+                    },
+                    credentials: 'same-origin'
                 })
-                .then(r => r.json().then(d => ({ ok: r.ok, d })))
+                .then(r => r.json().then(d => ({ ok: r.ok, d })).catch(() => ({ ok: r.ok, d: {} })))
                 .then(res => {
                     if (res.d && res.d.success) {
                         window.location.reload();
+                        return;
                     } else {
                         const err = (res.d && (res.d.error)) ? res.d.error : addMemberError;
-                        window.alert(err);
+                        showError(err);
                     }
                 })
-                .catch(() => window.alert(errorGeneric));
+                .catch(() => showError(errorGeneric))
+                .finally(() => {
+                    memberAddSubmitting = false;
+                    if (submitButton instanceof HTMLButtonElement) {
+                        submitButton.textContent = submitButton.dataset.defaultLabel || submitButton.textContent;
+                        submitButton.removeAttribute('aria-busy');
+                    }
+                    updateAddMemberSubmitState();
+                });
         }
 
-        function confirmDelete() {
-            if (window.confirm(<?php echo json_encode($l->t('Are you sure you want to delete this project? This action cannot be undone.')); ?>)) {
-                window.location.href = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.delete', ['id' => $projectId])); ?>;
+        function handleAddMemberFormSubmit(e) {
+            e.preventDefault();
+            submitAddTeamMember();
+        }
+
+        function closeOnBackdropClick(e, closeHandler, modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal && e.target === modal) {
+                closeHandler();
             }
         }
         document.addEventListener('DOMContentLoaded', function() {
@@ -965,6 +1401,29 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         if (subAdd) {
             subAdd.addEventListener('click', submitAddTeamMember);
         }
+        const addMemberForm = document.getElementById('addTeamMemberForm');
+        if (addMemberForm) {
+            addMemberForm.addEventListener('submit', handleAddMemberFormSubmit);
+        }
+        const clearSelectedUserBtn = document.getElementById('teamMemberSelectedClear');
+        if (clearSelectedUserBtn) {
+            clearSelectedUserBtn.addEventListener('click', function() {
+                const hiddenInput = document.getElementById('teamMemberUserId');
+                const searchInput = document.getElementById('teamMemberSearch');
+                if (hiddenInput) {
+                    hiddenInput.value = '';
+                }
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.removeAttribute('aria-invalid');
+                    searchInput.focus();
+                }
+                updateSelectedUserSummary('', '');
+                clearMemberSearchResults();
+                updateAddMemberSubmitState();
+            });
+        }
+        bindMemberSearch();
         const closeStatusModal = document.getElementById('close-status-modal');
         if (closeStatusModal) {
             closeStatusModal.addEventListener('click', closeStatusChangeModal);
@@ -979,16 +1438,26 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         }
         const teamModal = document.getElementById('addTeamMemberModal');
         if (teamModal) {
-            teamModal.addEventListener('click', e => { if (e.target === teamModal) closeAddTeamMemberModal(); });
+            teamModal.addEventListener('click', e => closeOnBackdropClick(e, closeAddTeamMemberModal, 'addTeamMemberModal'));
         }
         const statusModal = document.getElementById('statusChangeModal');
         if (statusModal) {
-            statusModal.addEventListener('click', e => { if (e.target === statusModal) closeStatusChangeModal(); });
+            statusModal.addEventListener('click', e => closeOnBackdropClick(e, closeStatusChangeModal, 'statusChangeModal'));
         }
         document.addEventListener('keydown', function(e) {
+            trapFocusInModal(e);
             if (e.key === 'Escape') {
-                closeStatusChangeModal();
-                closeAddTeamMemberModal();
+                const modal = getOpenProjectcheckModal();
+                if (!modal) {
+                    return;
+                }
+                if (modal.id === 'addTeamMemberModal') {
+                    closeAddTeamMemberModal();
+                    return;
+                }
+                if (modal.id === 'statusChangeModal') {
+                    closeStatusChangeModal();
+                }
             }
         });
     });
@@ -996,97 +1465,83 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
 
     // Member removal functionality
     document.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-member-btn')) {
-            const button = e.target.closest('.remove-member-btn');
-            const memberId = button.getAttribute('data-member-id');
-            const memberName = button.getAttribute('data-member-name');
-            showMemberRemovalModal(memberId, memberName);
-        }
-    });
-
-    function showMemberRemovalModal(memberId, memberName) {
-        if (typeof window.projectcheckDeletionModal === 'undefined') {
-            console.error('Deletion modal not loaded');
-            // Fallback to confirm dialog
-            if (confirm(`Are you sure you want to remove ${memberName} from this project?`)) {
-                removeMember(memberId);
-            }
+        const button = e.target.closest('.remove-member-btn');
+        if (!button) {
             return;
         }
+        const memberId = button.getAttribute('data-member-id');
+        const userId = button.getAttribute('data-user-id');
+        const deleteUrl = button.getAttribute('data-delete-url');
+        const impactUrl = button.getAttribute('data-impact-url');
+        const memberName = button.getAttribute('data-member-name');
+        if (!memberId || !userId || !deleteUrl) {
+            return;
+        }
+        showMemberRemovalModal(button, memberId, userId, memberName || '', deleteUrl, impactUrl || '');
+    });
 
-        const deleteUrl = `/index.php/apps/projectcheck/api/project-members/${memberId}/remove`;
-
-        // Show the modal
-        window.projectcheckDeletionModal.show({
-            entityType: 'member',
-            entityId: memberId,
-            entityName: memberName,
-            deleteUrl: deleteUrl,
-            onSuccess: function(entity) {
-                // Remove the member item from the DOM
-                const memberItem = document.querySelector(`.remove-member-btn[data-member-id="${entity.id}"]`)?.closest('.team-member-item');
-                if (memberItem) {
-                    memberItem.remove();
-                }
-
-                // Show success message
-                if (typeof OC !== 'undefined' && OC.Notification) {
-                    OC.Notification.showTemporary('<?php p($l->t('Team member removed successfully')); ?>');
-                } else {
-                    alert('<?php p($l->t('Team member removed successfully')); ?>');
-                }
-            },
-            onCancel: function() {
+    function notify(message, type) {
+        if (typeof OC !== 'undefined' && OC.Notification) {
+            if (type === 'error') {
+                OC.Notification.showTemporary(message, { type: 'error' });
+                return;
             }
-        });
+            OC.Notification.showTemporary(message);
+            return;
+        }
+        window.alert(message);
     }
 
-    function removeMember(memberId) {
-        const deleteUrl = `/index.php/apps/projectcheck/api/project-members/${memberId}/remove`;
-        const token = document.querySelector('input[name="requesttoken"]')?.value ||
-            (typeof OC !== 'undefined' ? OC.requestToken : '');
+    function removeMemberRow(button) {
+        const row = button.closest('.team-member-item');
+        if (row) {
+            row.remove();
+        }
+    }
 
-        fetch(deleteUrl, {
+    function showMemberRemovalModal(button, memberId, userId, memberName, deleteUrl, impactUrl) {
+        if (typeof window.projectcheckDeletionModal === 'undefined') {
+            const shouldDelete = window.confirm('<?php p($l->t('Are you sure you want to remove this team member?')); ?>');
+            if (!shouldDelete) {
+                return;
+            }
+            const token = document.querySelector('input[name="requesttoken"]')?.value || (typeof OC !== 'undefined' ? OC.requestToken : '');
+            fetch(deleteUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'X-Requested-With': 'XMLHttpRequest',
                     'requesttoken': token
                 },
-                body: '_method=DELETE'
+                body: '_method=DELETE&requesttoken=' + encodeURIComponent(token)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Remove the member item from the DOM
-                    const memberItem = document.querySelector(`.remove-member-btn[data-member-id="${memberId}"]`)?.closest('.team-member-item');
-                    if (memberItem) {
-                        memberItem.remove();
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.success) {
+                        removeMemberRow(button);
+                        notify('<?php p($l->t('Team member removed successfully')); ?>');
+                        return;
                     }
-
-                    // Show success message
-                    if (typeof OC !== 'undefined' && OC.Notification) {
-                        OC.Notification.showTemporary('<?php p($l->t('Team member removed successfully')); ?>');
-                    } else {
-                        alert('<?php p($l->t('Team member removed successfully')); ?>');
-                    }
-                } else {
-                    alert('<?php p($l->t('Error')); ?>: ' + (data.error || '<?php p($l->t('Failed to remove team member')); ?>'));
-                }
-            })
-            .catch(error => {
-                console.error('Error removing member:', error);
-                alert('<?php p($l->t('Error removing team member. Please try again.')); ?>');
-            });
-    }
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const modal = document.getElementById('statusChangeModal');
-        if (event.target === modal) {
-            closeStatusChangeModal();
+                    notify((data && data.error) ? data.error : '<?php p($l->t('Failed to remove team member')); ?>', 'error');
+                })
+                .catch(() => notify('<?php p($l->t('Error removing team member. Please try again.')); ?>', 'error'));
+            return;
         }
+
+        window.projectcheckDeletionModal.show({
+            entityType: 'member',
+            entityId: memberId,
+            entityName: memberName,
+            deleteUrl: deleteUrl,
+            impactUrl: impactUrl,
+            onSuccess: function() {
+                removeMemberRow(button);
+                notify('<?php p($l->t('Team member removed successfully')); ?>');
+            },
+            onCancel: function() {}
+        });
     }
+
 </script>
 
 <script nonce="<?php p($_['cspNonce'] ?? '') ?>">
@@ -1096,6 +1551,13 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         const requestToken = requestTokenInput ? requestTokenInput.value : (typeof OC !== 'undefined' ? OC.requestToken : '');
         const fileInput = document.getElementById('project_files_upload');
         const uploadForm = document.getElementById('project-file-upload-form');
+        const dropzone = document.getElementById('project-files-dropzone');
+        const maxFilesPerUpload = 20;
+        const maxFileSizeBytes = 52428800;
+        const msgTooManyFiles = '<?php p($l->t('You can upload up to 20 files at once.')); ?>';
+        const msgFileTooLarge = '<?php p($l->t('One or more files exceed the 50 MB limit.')); ?>';
+        const msgUploadFailed = '<?php p($l->t('Upload failed. Please try again.')); ?>';
+        const msgUploading = '<?php p($l->t('Uploading files…')); ?>';
 
         if (filesList) {
             filesList.addEventListener('click', async (event) => {
@@ -1142,10 +1604,113 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
             });
         }
 
+        async function submitFiles(files) {
+            if (!uploadForm || !files || files.length === 0) {
+                return;
+            }
+
+            if (files.length > maxFilesPerUpload) {
+                alert(msgTooManyFiles);
+                return;
+            }
+            const hasTooLargeFile = Array.from(files).some(file => file.size > maxFileSizeBytes);
+            if (hasTooLargeFile) {
+                alert(msgFileTooLarge);
+                return;
+            }
+
+            const formData = new FormData();
+            Array.from(files).forEach(file => formData.append('project_files[]', file, file.name));
+            if (requestToken) {
+                formData.append('requesttoken', requestToken);
+            }
+
+            if (dropzone) {
+                dropzone.classList.add('is-uploading');
+                dropzone.setAttribute('aria-busy', 'true');
+                dropzone.dataset.originalText = dropzone.textContent || '';
+                dropzone.textContent = msgUploading;
+            }
+
+            try {
+                const response = await fetch(uploadForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'requesttoken': requestToken
+                    },
+                    credentials: 'same-origin'
+                });
+
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || payload.success !== true) {
+                    const message = payload.error || msgUploadFailed;
+                    throw new Error(message);
+                }
+
+                window.location.reload();
+            } catch (error) {
+                console.error(error);
+                alert(error?.message || msgUploadFailed);
+            } finally {
+                if (dropzone) {
+                    dropzone.classList.remove('is-uploading');
+                    dropzone.removeAttribute('aria-busy');
+                    if (dropzone.dataset.originalText) {
+                        dropzone.textContent = dropzone.dataset.originalText;
+                    }
+                }
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+            }
+        }
+
         if (fileInput && uploadForm) {
             fileInput.addEventListener('change', () => {
                 if (fileInput.files && fileInput.files.length > 0) {
-                    uploadForm.submit();
+                    submitFiles(fileInput.files);
+                }
+            });
+        }
+
+        if (dropzone && fileInput) {
+            const activateInput = () => fileInput.click();
+            dropzone.addEventListener('click', activateInput);
+            dropzone.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    activateInput();
+                }
+            });
+
+            ['dragenter', 'dragover'].forEach((name) => {
+                dropzone.addEventListener(name, (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropzone.classList.add('is-dragover');
+                });
+            });
+
+            ['dragleave', 'dragend'].forEach((name) => {
+                dropzone.addEventListener(name, (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (!dropzone.contains(event.relatedTarget)) {
+                        dropzone.classList.remove('is-dragover');
+                    }
+                });
+            });
+
+            dropzone.addEventListener('drop', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                dropzone.classList.remove('is-dragover');
+                const files = event.dataTransfer?.files;
+                if (files && files.length > 0) {
+                    submitFiles(files);
                 }
             });
         }
@@ -1188,10 +1753,24 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         background: var(--color-background-hover);
         color: var(--color-error);
     }
+    .action-btn:focus-visible {
+        outline: 2px solid var(--color-primary-element);
+        outline-offset: 2px;
+    }
 
     .remove-member-btn:hover {
         background: var(--color-error-background);
         color: var(--color-error);
+    }
+
+    .member-timeentries-btn:hover {
+        background: var(--color-background-hover);
+        color: var(--color-primary-element);
+    }
+
+    .member-profile-btn:hover {
+        background: var(--color-background-hover);
+        color: var(--color-primary-element);
     }
 
     .member-avatar {
@@ -1210,5 +1789,38 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         flex-direction: column;
         gap: 0.25rem;
         text-align: right;
+    }
+
+    .projectcheck-dialog__error {
+        min-height: 1.25rem;
+        margin-top: 0.5rem;
+        color: var(--color-error);
+        font-size: 0.875rem;
+    }
+
+    .project-files-dropzone {
+        margin-top: 0.75rem;
+        padding: 0.9rem 1rem;
+        border: 1px dashed var(--color-border);
+        border-radius: 8px;
+        background: var(--color-main-background);
+        color: var(--color-text-maxcontrast);
+        cursor: pointer;
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .project-files-dropzone:focus-visible {
+        outline: 2px solid var(--color-primary-element);
+        outline-offset: 2px;
+    }
+
+    .project-files-dropzone.is-dragover {
+        border-color: var(--color-primary-element);
+        background: var(--color-background-hover);
+    }
+
+    .project-files-dropzone.is-uploading {
+        opacity: 0.7;
+        cursor: wait;
     }
 </style>

@@ -13,6 +13,7 @@
             <file>tests/Unit/Service/OrgPolicySaveAuditTest.php</file>
             <file>tests/Unit/Service/TimeEntryServiceValidationTest.php</file>
             <file>tests/Unit/Service/JsL10nCatalogBuilderTest.php</file>
+            <file>tests/Unit/Controller/TimeEntryControllerTest.php</file>
         </testsuite>
     </testsuites>
 

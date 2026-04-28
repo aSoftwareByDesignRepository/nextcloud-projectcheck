@@ -122,7 +122,7 @@ class TimeEntryMapper extends QBMapper
 	 * @param int $limit Optional limit
 	 * @return TimeEntry[]
 	 */
-	public function findByUser(string $userId, int $limit = null): array
+	public function findByUser(string $userId, ?int $limit = null): array
 	{
 		$filters = ['user_id' => $userId];
 		if ($limit) {

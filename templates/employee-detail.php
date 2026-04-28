@@ -8,6 +8,7 @@
  */
 
 script('projectcheck', 'employee-detail');
+script('projectcheck', 'common/deletion-modal');
 style('projectcheck', 'dashboard');
 style('projectcheck', 'projects');
 style('projectcheck', 'custom-icons');
@@ -30,7 +31,9 @@ $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
     // Pass PHP variables to JavaScript
     window.projectControlData = {
         requestToken: '<?php p($_['requesttoken']) ?>',
-        employeeId: '<?php p($eid); ?>'
+        employeeId: '<?php p($eid); ?>',
+        assignProjectUrl: '<?php p($_['assignProjectUrl'] ?? ''); ?>',
+        unassignProjectUrlTemplate: '<?php p($urlGenerator->linkToRoute('projectcheck.employee.unassignProject', ['userId' => 'USER_ID', 'projectId' => 'PROJECT_ID'])); ?>'
     };
 </script>
 
@@ -152,6 +155,75 @@ $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
 
         <!-- Main Content Grid -->
         <div class="content-grid">
+            <?php
+            $assignedProjects = $_['employeeAssignedProjects'] ?? [];
+            $manageableProjects = $_['manageableProjects'] ?? [];
+            $canManageAssignments = !empty($_['canManageAssignments']);
+            ?>
+            <div class="section" id="employee-project-assignments">
+                <div class="section-header employee-assignments-header">
+                    <h3><i data-lucide="users" class="lucide-icon primary"></i> <?php p($l->t('Project assignments')); ?></h3>
+                </div>
+                <div class="section-content">
+                    <div class="employee-assignments-grid">
+                        <div class="employee-assignments-panel employee-assignments-panel--form">
+                            <h4 class="employee-assignments-panel__title"><?php p($l->t('Add to project')); ?></h4>
+                            <?php if ($canManageAssignments): ?>
+                            <form id="assign-project-form" class="employee-assignments-form" method="post">
+                                <div class="form-group">
+                                    <label for="assignProjectId"><?php p($l->t('Project')); ?></label>
+                                    <select id="assignProjectId" name="project_id" class="form-input form-select" required aria-describedby="assign-project-help assign-project-error">
+                                        <option value=""><?php p($l->t('Select project')); ?></option>
+                                        <?php foreach ($manageableProjects as $project): ?>
+                                            <option value="<?php p((int)$project->getId()); ?>"><?php p($project->getName()); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <p id="assign-project-help" class="form-help-text"><?php p($l->t('Only projects you can manage are shown.')); ?></p>
+                                <p id="assign-project-error" class="form-error-text" role="status" aria-live="polite"></p>
+                                <button type="submit" class="button primary" id="assign-project-submit"><?php p($l->t('Add to project')); ?></button>
+                            </form>
+                            <?php else: ?>
+                            <p class="empty-state-hint"><?php p($l->t('Project assignments can only be managed for active user accounts.')); ?></p>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="employee-assignments-panel employee-assignments-panel--list">
+                            <h4 class="employee-assignments-panel__title"><?php p($l->t('Assigned projects')); ?></h4>
+                            <div class="team-members-list" role="list" aria-label="<?php p($l->t('Assigned projects')); ?>">
+                                <?php if (!empty($assignedProjects)): ?>
+                                    <?php foreach ($assignedProjects as $project): ?>
+                                    <div class="team-member-item" role="listitem">
+                                        <div class="member-info">
+                                            <span class="member-name"><?php p($project->getName()); ?></span>
+                                            <span class="member-role"><?php p($l->t('Status')); ?>: <?php p($l->t((string)$project->getStatus())); ?></span>
+                                        </div>
+                                        <div class="member-actions">
+                                            <?php if ($canManageAssignments && $project->isEditableState()): ?>
+                                            <button type="button"
+                                                    class="action-btn employee-unassign-project-btn"
+                                                    data-project-id="<?php p((int)$project->getId()); ?>"
+                                                    data-project-name="<?php p($project->getName()); ?>"
+                                                    aria-label="<?php p($l->t('Remove from project')); ?>">
+                                                <i class="icon-delete-custom" aria-hidden="true"></i>
+                                            </button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="empty-state">
+                                        <i class="icon-user-custom icon-large" aria-hidden="true"></i>
+                                        <h3><?php p($l->t('No projects assigned yet')); ?></h3>
+                                        <p><?php p($l->t('Use the form above to assign this person to a project.')); ?></p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Employee Information -->
             <div class="section info-section">
                 <div class="section-header">

@@ -239,6 +239,15 @@ class EmployeeController extends Controller
         // Get project type statistics for this employee
         $employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId);
         $employeeProductivityAnalysis = $this->timeEntryService->getProductivityAnalysisForEmployee($userId);
+		$employeeAssignedProjects = $this->projectService->getUserProjects((string)$userId);
+		$viewerId = $user->getUID();
+		$manageableProjects = [];
+		foreach ($this->projectService->getProjects(['limit' => 500]) as $project) {
+			$pid = (int)$project->getId();
+			if ($this->projectService->canUserManageMembers($viewerId, $pid) && $project->isEditableState()) {
+				$manageableProjects[] = $project;
+			}
+		}
 
         // Get common stats for the sidebar
         $stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
@@ -256,13 +265,97 @@ class EmployeeController extends Controller
             'yearlyStats' => $yearlyStats,
             'employeeProjectTypeStats' => $employeeProjectTypeStats,
             'employeeProductivityAnalysis' => $employeeProductivityAnalysis,
+			'employeeAssignedProjects' => $employeeAssignedProjects,
+			'manageableProjects' => $manageableProjects,
+			'canManageAssignments' => $employeeUser !== null,
             'stats' => $stats,
             'urlGenerator' => $this->urlGenerator,
 			'requesttoken' => $requestToken,
+			'assignProjectUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.assignProject', ['userId' => (string)$userId]),
         ]);
 
         return $this->configureCSP($response);
     }
+
+	#[NoAdminRequired]
+	public function assignProject(string $userId): JSONResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		if ($this->userManager->get($userId) === null) {
+			return new JSONResponse(['error' => $this->l->t('Employee not found')], 404);
+		}
+
+		$projectId = (int)$this->request->getParam('project_id', 0);
+		$role = \OCA\ProjectCheck\Service\ProjectService::DEFAULT_MEMBER_ROLE;
+		$hourlyRateRaw = $this->request->getParam('hourly_rate', null);
+		$hourlyRate = null;
+		if ($hourlyRateRaw !== null && $hourlyRateRaw !== '') {
+			if (!is_numeric($hourlyRateRaw)) {
+				return new JSONResponse(['error' => $this->l->t('Hourly rate must be a non-negative number')], 400);
+			}
+			$hourlyRate = (float)$hourlyRateRaw;
+			if ($hourlyRate < 0) {
+				return new JSONResponse(['error' => $this->l->t('Hourly rate must be a non-negative number')], 400);
+			}
+		}
+		if ($projectId <= 0) {
+			return new JSONResponse(['error' => $this->l->t('Invalid parameters')], 400);
+		}
+
+		$project = $this->projectService->getProject($projectId);
+		if ($project === null) {
+			return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
+		}
+		if (!$project->isEditableState()) {
+			return new JSONResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $projectId)) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+
+		try {
+			$member = $this->projectService->addTeamMember($projectId, $userId, $role, $hourlyRate);
+			return new JSONResponse([
+				'success' => true,
+				'member' => $member,
+				'message' => $this->l->t('Team member added successfully'),
+			]);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 400);
+		}
+	}
+
+	#[NoAdminRequired]
+	public function unassignProject(string $userId, int $projectId): JSONResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		$project = $this->projectService->getProject($projectId);
+		if ($project === null) {
+			return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
+		}
+		if (!$project->isEditableState()) {
+			return new JSONResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $projectId)) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+
+		try {
+			$this->projectService->removeTeamMember($projectId, $userId);
+			return new JSONResponse([
+				'success' => true,
+				'message' => $this->l->t('Team member removed successfully'),
+			]);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 400);
+		}
+	}
 
     /**
      * Get employee statistics via API

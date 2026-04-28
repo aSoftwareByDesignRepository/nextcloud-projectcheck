@@ -26,7 +26,7 @@ $appName = 'projectcheck';
     <div class="page-header__content">
         <!-- Breadcrumbs -->
         <?php if ($showBreadcrumbs && !empty($breadcrumbs)): ?>
-            <nav class="page-header__breadcrumbs" aria-label="Breadcrumb navigation">
+            <nav class="page-header__breadcrumbs" aria-label="<?php p($l->t('Breadcrumb navigation')); ?>">
                 <ol class="page-header__breadcrumb-list">
                     <li class="page-header__breadcrumb-item">
                         <a href="<?php print_unescaped(link_to($appName, 'index.php')); ?>"

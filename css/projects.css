@@ -1003,22 +1003,376 @@ body {
 }
 
 .projectcheck-dialog[role="dialog"] {
-	background: color-mix(in srgb, var(--color-main-text) 40%, transparent);
+	background: color-mix(in srgb, var(--color-main-text) 52%, transparent);
+	position: fixed;
+	inset: 0;
+	z-index: 3000;
+	padding: clamp(0.75rem, 3vw, 1.5rem);
+	overflow-y: auto;
+}
+
+.projectcheck-dialog[role="dialog"][aria-hidden="false"] {
+	display: flex !important;
+	align-items: flex-start;
+	justify-content: center;
 }
 
 .projectcheck-dialog__panel {
 	max-width: 32rem;
-	margin: 10vh auto;
-	border-radius: var(--border-radius-large, 12px);
+	width: min(100%, 32rem);
+	margin: clamp(1rem, 8vh, 5.5rem) auto;
+	border-radius: calc(var(--border-radius-large, 12px) * 1.25);
 	background: var(--color-main-background);
 	border: 1px solid var(--color-border);
+	box-shadow: 0 24px 64px color-mix(in srgb, var(--color-main-text) 30%, transparent);
+	overflow: hidden;
+}
+
+.projectcheck-dialog__panel--member {
+	max-width: 38rem;
+	width: min(100%, 38rem);
+}
+
+.projectcheck-dialog__header,
+.projectcheck-dialog__body,
+.projectcheck-dialog__footer {
+	padding-inline: clamp(1rem, 3vw, 1.5rem);
+}
+
+.projectcheck-dialog__header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	padding-top: 1.1rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid var(--color-border);
+	background:
+		linear-gradient(135deg, color-mix(in srgb, var(--color-primary-element-light) 55%, transparent), transparent 64%),
+		color-mix(in srgb, var(--color-main-background) 90%, var(--color-background-hover));
+}
+
+.projectcheck-dialog__title-group {
+	display: grid;
+	gap: 0.2rem;
+}
+
+.projectcheck-dialog__header h3 {
+	margin: 0;
+	font-size: clamp(1.15rem, 2vw, 1.35rem);
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.projectcheck-dialog__eyebrow {
+	color: var(--color-primary-element);
+	font-size: 0.78rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.projectcheck-dialog__header .close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 999px;
+	border: 1px solid transparent;
+	background: transparent;
+	color: var(--color-text-maxcontrast);
+	cursor: pointer;
+}
+
+.projectcheck-dialog__header .close:hover {
+	background: var(--color-background-hover);
+}
+
+.projectcheck-dialog__header .close:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+	border-color: color-mix(in srgb, var(--color-primary-element) 40%, var(--color-border));
+}
+
+.projectcheck-dialog__body {
+	padding-top: 1.25rem;
+	padding-bottom: 1.25rem;
+}
+
+.projectcheck-dialog__body .form-group {
+	display: grid;
+	gap: 0.45rem;
+	margin-bottom: 0;
+}
+
+.projectcheck-dialog__footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	padding-top: 1rem;
+	padding-bottom: 1.1rem;
+	border-top: 1px solid var(--color-border);
+	background: color-mix(in srgb, var(--color-main-background) 92%, var(--color-background-hover));
+}
+
+.projectcheck-dialog__footer .button {
+	min-width: 9.5rem;
+	min-height: 2.4rem;
+	border-radius: var(--border-radius-element, 6px);
+	box-shadow: none;
+	transform: none;
+	transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.projectcheck-dialog__footer .button.primary {
+	background: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+	border: 1px solid var(--color-primary-element);
+	box-shadow: none;
+}
+
+.projectcheck-dialog__footer .button.primary:hover,
+.projectcheck-dialog__footer .button.primary:focus-visible {
+	background: var(--color-primary-element-hover);
+	border-color: var(--color-primary-element-hover);
+	box-shadow: none;
+	transform: none;
+}
+
+.projectcheck-dialog__footer .button.secondary {
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border);
+	box-shadow: none;
+}
+
+.projectcheck-dialog__footer .button.secondary:hover,
+.projectcheck-dialog__footer .button.secondary:focus-visible {
+	background: var(--color-background-hover);
+	border-color: var(--color-text-maxcontrast);
+	color: var(--color-main-text);
+	box-shadow: none;
+	transform: none;
+}
+
+.projectcheck-dialog__footer .button[disabled],
+.projectcheck-dialog__footer .button[aria-busy="true"] {
+	opacity: 0.7;
+	cursor: not-allowed;
+	box-shadow: none;
+	transform: none;
 }
 
 .projectcheck-dialog__help {
-	margin: 0 0 1rem 0;
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.95rem;
+	line-height: 1.5;
+}
+
+.projectcheck-dialog__intro {
+	display: grid;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.projectcheck-dialog__steps {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	counter-reset: projectcheck-dialog-step;
+}
+
+.projectcheck-dialog__steps li {
+	counter-increment: projectcheck-dialog-step;
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	width: fit-content;
+	max-width: 100%;
+	padding: 0.55rem 0.65rem;
+	border: 1px solid var(--color-border);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--color-background-hover) 64%, var(--color-main-background));
+	color: var(--color-main-text);
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.projectcheck-dialog__steps li::before {
+	content: counter(projectcheck-dialog-step);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 1.35rem;
+	width: 1.35rem;
+	height: 1.35rem;
+	border-radius: 999px;
+	background: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+	font-size: 0.78rem;
+	font-weight: 700;
+}
+
+.team-user-picker {
+	margin: 0;
+}
+
+.team-user-picker__search-card {
+	padding: 1rem;
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 24%, var(--color-border));
+	border-radius: var(--border-radius-large, 12px);
+	background: color-mix(in srgb, var(--color-main-background) 92%, var(--color-background-hover));
+}
+
+.team-user-picker__label {
+	font-weight: 700;
+	color: var(--color-main-text);
+}
+
+.team-user-picker__input {
+	width: 100%;
+	min-height: 2.75rem;
+	font-size: 1rem;
+}
+
+.team-user-picker__input:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+.team-user-search-results {
+	margin-top: 0.75rem;
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
+	border-radius: var(--border-radius-large, 12px);
+	background: var(--color-main-background);
+	max-height: min(18rem, 42vh);
+	overflow-y: auto;
+	box-shadow: 0 12px 30px color-mix(in srgb, var(--color-main-text) 14%, transparent);
+}
+
+.team-user-search-results:empty {
+	display: none;
+}
+
+.team-user-search-option {
+	width: 100%;
+	text-align: left;
+	padding: 0.85rem 0.9rem;
+	border: 0;
+	background: transparent;
+	color: var(--color-main-text);
+	cursor: pointer;
+	font-size: 0.95rem;
+	display: grid;
+	gap: 0.2rem;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.team-user-search-option:last-child {
+	border-bottom: 0;
+}
+
+.team-user-search-option:hover,
+.team-user-search-option:focus-visible {
+	background: var(--color-background-hover);
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: -2px;
+}
+
+.team-user-search-option--active {
+	background: color-mix(in srgb, var(--color-primary-element-light) 72%, var(--color-main-background));
+	box-shadow: inset 0.25rem 0 0 var(--color-primary-element);
+}
+
+.team-user-search-option__label {
+	font-weight: 600;
+}
+
+.team-user-search-option__meta {
+	font-size: 0.82rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.team-user-search-empty {
+	padding: 0.9rem;
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9rem;
 	line-height: 1.45;
+}
+
+.team-user-selected {
+	margin-top: 0.9rem;
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.6rem;
+	width: 100%;
+	padding: 0.75rem 0.85rem;
+	border-radius: var(--border-radius-large, 12px);
+	border: 1px solid color-mix(in srgb, var(--color-success) 35%, var(--color-border));
+	background: color-mix(in srgb, var(--color-success-light) 65%, var(--color-main-background));
+}
+
+.team-user-selected__label {
+	font-size: 0.82rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.team-user-selected__text {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.team-user-selected__clear {
+	border: 1px solid transparent;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--color-main-background) 65%, transparent);
+	color: var(--color-primary-element);
+	font-size: 0.82rem;
+	font-weight: 600;
+	cursor: pointer;
+	padding: 0.25rem 0.55rem;
+	margin-inline-start: auto;
+}
+
+.team-user-selected__clear:hover,
+.team-user-selected__clear:focus-visible {
+	color: var(--color-primary-element-hover);
+	border-color: color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+	.projectcheck-dialog__header,
+	.projectcheck-dialog__body,
+	.projectcheck-dialog__footer {
+		padding-inline: 1rem;
+	}
+
+	.projectcheck-dialog__footer {
+		flex-direction: column-reverse;
+	}
+
+	.projectcheck-dialog__steps {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.projectcheck-dialog__footer .button {
+		width: 100%;
+		min-width: 0;
+	}
 }
 
 .empty-state-hint {
@@ -6288,6 +6642,279 @@ body {
 	opacity: 0.95;
 }
 
+/* Membership UX hardening: clearer section separation and stable responsive cards */
+#team-section .section-content {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+#team-section {
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	background: var(--color-main-background);
+}
+
+#team-section .section-header {
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid var(--color-border);
+}
+
+#team-section .section-header h3 {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+#team-section .section-header h3 .icon-user-custom {
+	background-image: none;
+	background-color: currentColor;
+	width: 20px;
+	height: 20px;
+	mask: url('../img/icons/user.svg') no-repeat center;
+	-webkit-mask: url('../img/icons/user.svg') no-repeat center;
+	mask-size: contain;
+	-webkit-mask-size: contain;
+	color: var(--color-primary-element);
+}
+
+#team-section #add-team-member-btn .icon-add-custom {
+	background-image: none;
+	background-color: currentColor;
+	width: 16px;
+	height: 16px;
+	mask: url('../img/icons/add.svg') no-repeat center;
+	-webkit-mask: url('../img/icons/add.svg') no-repeat center;
+	mask-size: contain;
+	-webkit-mask-size: contain;
+	color: currentColor;
+}
+
+#team-section #add-team-member-btn {
+	color: var(--color-primary-text, #fff);
+	border-color: color-mix(in srgb, var(--color-primary) 70%, var(--color-border));
+}
+
+#team-section #add-team-member-btn:hover,
+#team-section #add-team-member-btn:focus-visible {
+	color: var(--color-primary-text, #fff);
+}
+
+#team-section .team-member-item {
+	border-radius: 12px;
+	border: 1px solid var(--color-border);
+	background: var(--color-main-background);
+}
+
+#team-section .member-name {
+	font-weight: 600;
+	line-height: 1.35;
+	word-break: break-word;
+}
+
+#team-section .member-role,
+#team-section .hours-label,
+#team-section .hours-value {
+	line-height: 1.35;
+}
+
+#team-section .member-actions .action-btn {
+	min-width: 44px;
+	min-height: 44px;
+}
+
+#team-section .team-former-section {
+	background: var(--color-background-hover);
+	border: 1px dashed var(--color-border);
+	border-radius: 12px;
+	padding: 0.85rem;
+}
+
+#team-section .team-former-help {
+	max-width: 70ch;
+}
+
+#team-section .team-member-item:focus-within {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+#team-section .empty-state {
+	border: 1px dashed var(--color-border);
+	border-radius: 12px;
+	background: var(--color-background-hover);
+	padding: 1.5rem 1rem;
+}
+
+#team-section .empty-state i {
+	color: var(--color-primary-element);
+	opacity: 0.85;
+}
+
+/* Employee project assignment UI */
+#employee-project-assignments .section-content {
+	padding-top: 1.25rem;
+	padding-bottom: 1.25rem;
+}
+
+#employee-project-assignments .employee-assignments-header {
+	padding-top: 0;
+	padding-bottom: 0;
+	border-bottom: none;
+}
+
+#employee-project-assignments .employee-assignments-header h3 {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0;
+}
+
+.employee-assignments-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+	align-items: start;
+}
+
+.employee-assignments-panel {
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	padding: 0;
+	box-shadow: none;
+}
+
+.employee-assignments-panel__title {
+	margin: 0 0 0.75rem 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+	letter-spacing: normal;
+	text-transform: none;
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.employee-assignments-form {
+	display: flex;
+	flex-direction: column;
+	gap: 0.9rem;
+}
+
+.employee-assignments-form .form-group {
+	margin: 0;
+}
+
+.employee-assignments-form .button {
+	align-self: stretch;
+	min-height: 42px;
+	padding-inline: 16px;
+	justify-content: center;
+}
+
+.employee-assignments-form .form-help-text {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.employee-assignments-form .form-error-text {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--color-error);
+}
+
+.employee-assignments-form .form-error-text:empty {
+	display: none;
+}
+
+#employee-project-assignments [aria-invalid="true"] {
+	border-color: var(--color-error);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error) 22%, transparent);
+}
+
+#employee-project-assignments .team-members-list {
+	gap: 0.7rem;
+}
+
+#employee-project-assignments .team-member-item {
+	padding: 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	background: var(--color-background-hover);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+#employee-project-assignments .empty-state {
+	padding: 2rem 1.25rem;
+}
+
+#employee-project-assignments .member-name {
+	font-weight: 600;
+	line-height: 1.35;
+}
+
+#employee-project-assignments .member-role {
+	line-height: 1.35;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9rem;
+}
+
+#employee-project-assignments .member-actions .action-btn {
+	width: 40px;
+	height: 40px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	line-height: 1;
+}
+
+#employee-project-assignments .member-actions .action-btn .icon-delete-custom {
+	width: 18px;
+	height: 18px;
+	display: block;
+}
+
+@media (max-width: 1024px) {
+	.employee-assignments-grid {
+		grid-template-columns: 1fr;
+		gap: 1.25rem;
+	}
+
+	.employee-assignments-form .button {
+		width: 100%;
+		justify-content: center;
+	}
+}
+
+@media (max-width: 768px) {
+	#team-section .team-member-item {
+		align-items: flex-start;
+		text-align: left;
+	}
+
+	#team-section .member-info,
+	#team-section .member-hours,
+	#team-section .member-actions {
+		width: 100%;
+	}
+
+	#team-section .member-actions {
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	#employee-project-assignments .team-member-item {
+		align-items: flex-start;
+	}
+}
+
 .employees-filters--accessible {
 	margin-bottom: 1.25rem;
 }
@@ -6407,6 +7034,23 @@ body {
 	display: inline-block;
 	vertical-align: middle;
 	margin-right: 4px;
+}
+
+.employees-page .employees-table td .button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.45rem;
+}
+
+.employees-page .employees-table td .button .lucide-icon {
+	display: block;
+	flex: 0 0 auto;
+	margin-right: 0;
+}
+
+.employees-page .employees-table td .button .lucide-icon svg {
+	display: block;
 }
 
 .employees-page .employee-name-cell {

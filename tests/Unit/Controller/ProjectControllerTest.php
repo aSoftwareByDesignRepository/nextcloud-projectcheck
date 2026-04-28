@@ -58,6 +58,9 @@ class ProjectControllerTest extends TestCase {
 	/** @var IL10N|\PHPUnit\Framework\MockObject\MockObject */
 	private $l10n;
 
+	/** @var \OCP\IUserManager|\PHPUnit\Framework\MockObject\MockObject */
+	private $userManager;
+
 	protected function setUp(): void {
 		parent::setUp();
 
@@ -83,7 +86,7 @@ class ProjectControllerTest extends TestCase {
 		$cspService->method('applyPolicyWithNonce')->willReturnArgument(0);
 		$requestToken = $this->createMock(IRequestTokenProvider::class);
 		$requestToken->method('getEncryptedRequestToken')->willReturn('mock-encrypted-csrf');
-		$userManager = $this->createMock(\OCP\IUserManager::class);
+		$this->userManager = $this->createMock(\OCP\IUserManager::class);
 		$userAccountSnapshot = $this->createMock(\OCA\ProjectCheck\Db\UserAccountSnapshotMapper::class);
 
 		$this->controller = new ProjectController(
@@ -102,7 +105,7 @@ class ProjectControllerTest extends TestCase {
 			$cspService,
 			$requestToken,
 			$this->l10n,
-			$userManager,
+			$this->userManager,
 			$userAccountSnapshot
 		);
 	}
@@ -131,6 +134,8 @@ class ProjectControllerTest extends TestCase {
 		$project = new Project();
 		$project->setId(1);
 		$project->setName('Test Project');
+		$project->setStatus('Active');
+		$project->setStatus('Active');
 		$project->setShortDescription('A test project');
 		$project->setCustomerId(1);
 		$project->setHourlyRate(50.0);
@@ -218,8 +223,7 @@ class ProjectControllerTest extends TestCase {
 
 		$this->request->method('getParam')
 			->willReturnMap([
-				['user_id', null, 'newuser'],
-				['role', null, 'Developer'],
+				['user_id', '', 'newuser'],
 				['hourly_rate', null, 45.0]
 			]);
 
@@ -227,7 +231,7 @@ class ProjectControllerTest extends TestCase {
 		$member->setId(1);
 		$member->setProjectId(1);
 		$member->setUserId('newuser');
-		$member->setRole('Developer');
+		$member->setRole('Member');
 		$member->setHourlyRate(45.0);
 
 		$this->projectService->method('addTeamMember')->willReturn($member);
@@ -241,6 +245,152 @@ class ProjectControllerTest extends TestCase {
 		$this->assertTrue($data['success']);
 		$this->assertEquals('Team member added successfully', $data['message']);
 		$this->assertInstanceOf(ProjectMember::class, $data['member']);
+	}
+
+	public function testAddTeamMemberRejectsInvalidHourlyRate(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Active');
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+
+		$this->request->method('getParam')
+			->willReturnMap([
+				['user_id', '', 'newuser'],
+				['hourly_rate', null, 'abc'],
+			]);
+
+		$this->projectService->expects($this->never())->method('addTeamMember');
+
+		$response = $this->controller->addTeamMember(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
+		$this->assertEquals('Hourly rate must be a non-negative number', $data['error']);
+	}
+
+	public function testAddTeamMemberRejectsEmptyUserId(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Active');
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+
+		$this->request->method('getParam')
+			->willReturnMap([
+				['user_id', '', '   '],
+				['hourly_rate', null, null],
+			]);
+
+		$this->projectService->expects($this->never())->method('addTeamMember');
+
+		$response = $this->controller->addTeamMember(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
+		$this->assertEquals('Invalid parameters', $data['error']);
+	}
+
+	public function testAddTeamMemberRejectsNonEditableProjectState(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Archived');
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+		$this->projectService->expects($this->never())->method('addTeamMember');
+
+		$response = $this->controller->addTeamMember(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(403, $response->getStatus());
+		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
+		$this->assertEquals('Cannot change the team for a completed, cancelled, or archived project', $data['error']);
+	}
+
+	public function testSearchAssignableUsersRejectsShortQueryWithoutDirectorySearch(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Active');
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+		$this->request->method('getParam')->with('q', '')->willReturn('a');
+		$this->userManager->expects($this->never())->method('search');
+		$this->userManager->expects($this->never())->method('searchDisplayName');
+
+		$response = $this->controller->searchAssignableUsers(1);
+
+		$this->assertEquals(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+		$this->assertSame([], $data['items']);
+	}
+
+	public function testSearchAssignableUsersFiltersActiveMembersAndMergesMatches(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Active');
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+
+		$existing = new ProjectMember();
+		$existing->setUserId('existing');
+		$this->projectService->method('getProjectTeamGrouped')->with(1)->willReturn(['active' => [$existing], 'former' => []]);
+		$this->request->method('getParam')->with('q', '')->willReturn('al');
+
+		$existingUser = $this->createMock(IUser::class);
+		$existingUser->method('getUID')->willReturn('existing');
+		$existingUser->method('getDisplayName')->willReturn('Existing Person');
+		$existingUser->method('isEnabled')->willReturn(true);
+		$alice = $this->createMock(IUser::class);
+		$alice->method('getUID')->willReturn('alice');
+		$alice->method('getDisplayName')->willReturn('Alice Example');
+		$alice->method('isEnabled')->willReturn(true);
+		$alex = $this->createMock(IUser::class);
+		$alex->method('getUID')->willReturn('alex');
+		$alex->method('getDisplayName')->willReturn('');
+		$alex->method('isEnabled')->willReturn(true);
+		$this->userManager->method('search')->with('al', 20, 0)->willReturn([$existingUser, $alice]);
+		$this->userManager->method('searchDisplayName')->with('al', 20, 0)->willReturn([$alice, $alex]);
+
+		$response = $this->controller->searchAssignableUsers(1);
+
+		$this->assertEquals(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+		$this->assertCount(2, $data['items']);
+		$this->assertSame('alice', $data['items'][0]['uid']);
+		$this->assertSame('Alice Example (alice)', $data['items'][0]['label']);
+		$this->assertSame('alex', $data['items'][1]['uid']);
+	}
+
+	public function testRemoveTeamMemberRejectsNonEditableProjectState(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Completed');
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+		$this->projectService->expects($this->never())->method('removeTeamMember');
+
+		$response = $this->controller->removeTeamMember(1, 'member1');
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(403, $response->getStatus());
+		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
+		$this->assertEquals('Cannot change the team for a completed, cancelled, or archived project', $data['error']);
 	}
 
 	/**

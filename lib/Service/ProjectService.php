@@ -32,6 +32,7 @@ class ProjectService
 {
 	/** @var list<string> All stored project status values */
 	public const PROJECT_STATUSES = ['Active', 'On Hold', 'Completed', 'Cancelled', 'Archived'];
+	public const DEFAULT_MEMBER_ROLE = 'Member';
 
 	/** @var IDBConnection */
 	private $db;
@@ -95,13 +96,8 @@ class ProjectService
 	 */
 	public function getAccessibleProjectIdListForUser(string $userId): ?array
 	{
-		if ($this->isUserAdmin($userId)) {
+		if ($this->hasGlobalProjectAccess($userId)) {
 			return null;
-		}
-		if ($this->accessControl !== null) {
-			if ($this->accessControl->isSystemAdministrator($userId) || $this->accessControl->canManageAppConfiguration($userId)) {
-				return null;
-			}
 		}
 		$ids = [];
 		$qb = $this->db->getQueryBuilder();
@@ -118,7 +114,7 @@ class ProjectService
 			->from('project_members', 'm')
 			->innerJoin('m', 'projects', 'p2', $qb->expr()->eq('m.project_id', 'p2.id'))
 			->where($qb->expr()->eq('m.user_id', $qb->createNamedParameter($userId)))
-			->andWhere($qb->expr()->eq('m.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE)));
+			->andWhere($this->buildActiveMemberExpression($qb, 'm'));
 		$rs = $qb->executeQuery();
 		while ($r = $rs->fetch()) {
 			$ids[] = (int) $r['id'];
@@ -795,17 +791,14 @@ class ProjectService
 			return false;
 		}
 
-		// Project creator can delete
-		if ($project->getCreatedBy() === $userId) {
+		// System and app-level admins can delete all projects.
+		if ($this->hasGlobalProjectAccess($userId)) {
 			return true;
 		}
 
-		// Check if user is a Project Manager
-		$teamMembers = $this->getProjectTeam($projectId);
-		foreach ($teamMembers as $member) {
-			if ($member->getUserId() === $userId && $member->isProjectManager()) {
-				return true;
-			}
+		// Project creator can delete
+		if ($project->getCreatedBy() === $userId) {
+			return true;
 		}
 
 		return false;
@@ -870,8 +863,8 @@ class ProjectService
 			return false;
 		}
 
-		// Admin can access all projects
-		if ($this->isUserAdmin($userId)) {
+		// System and app-level admins can access all projects.
+		if ($this->hasGlobalProjectAccess($userId)) {
 			return true;
 		}
 
@@ -881,7 +874,7 @@ class ProjectService
 		}
 
 		// Team members can access
-		$member = $this->getProjectMember($projectId, $userId);
+		$member = $this->getProjectMemberActive($projectId, $userId);
 		return $member !== null;
 	}
 
@@ -904,8 +897,8 @@ class ProjectService
 			return false;
 		}
 
-		// Admin can edit all projects
-		if ($this->isUserAdmin($userId)) {
+		// System and app-level admins can edit all projects
+		if ($this->hasGlobalProjectAccess($userId)) {
 			return true;
 		}
 
@@ -914,9 +907,22 @@ class ProjectService
 			return true;
 		}
 
-		// Project managers can edit
-		$member = $this->getProjectMember($projectId, $userId);
-		return $member && $member->getRole() === 'Project Manager';
+		return false;
+	}
+
+	/**
+	 * Unified global-access check: Nextcloud system admins and delegated app administrators.
+	 */
+	private function hasGlobalProjectAccess(string $userId): bool
+	{
+		if ($this->isUserAdmin($userId)) {
+			return true;
+		}
+		if ($this->accessControl === null) {
+			return false;
+		}
+		return $this->accessControl->isSystemAdministrator($userId)
+			|| $this->accessControl->canManageAppConfiguration($userId);
 	}
 
 	/**
@@ -1036,7 +1042,7 @@ class ProjectService
 			->from('projects', 'p')
 			->innerJoin('p', 'project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
-			->andWhere($qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE)))
+			->andWhere($this->buildActiveMemberExpression($qb, 'pm'))
 			->orderBy('p.created_at', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -1112,8 +1118,17 @@ class ProjectService
 	 * @return ProjectMember
 	 * @throws \Exception
 	 */
-	public function addTeamMember(int $projectId, string $userId, string $role, ?float $hourlyRate = null): ProjectMember
+	public function addTeamMember(int $projectId, string $userId, string $role = self::DEFAULT_MEMBER_ROLE, ?float $hourlyRate = null): ProjectMember
 	{
+		$userId = trim($userId);
+		$role = self::DEFAULT_MEMBER_ROLE;
+		if ($userId === '') {
+			throw new \Exception('User ID is required');
+		}
+		if ($hourlyRate !== null && $hourlyRate < 0) {
+			throw new \Exception('Hourly rate must be a non-negative number');
+		}
+
 		$project = $this->getProject($projectId);
 		if (!$project) {
 			throw new \Exception('Project not found');
@@ -1129,18 +1144,12 @@ class ProjectService
 			throw new \Exception('User not found');
 		}
 
-		// Validate role
-		$validRoles = ['Project Manager', 'Developer', 'Tester', 'Consultant'];
-		if (!in_array($role, $validRoles)) {
-			throw new \Exception('Invalid role value');
-		}
-
 		$sessionUser = $this->userSession->getUser();
 		if (!$sessionUser) {
 			throw new \Exception('User not authenticated');
 		}
 
-		$existingMember = $this->getProjectMember($projectId, $userId);
+		$existingMember = $this->getProjectMemberAnyState($projectId, $userId);
 		if ($existingMember !== null) {
 			if ($existingMember->isActiveMember()) {
 				throw new \Exception('User is already assigned to this project');
@@ -1150,13 +1159,13 @@ class ProjectService
 			$qb->update('project_members')
 				->set('member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
 				->set('archived_at', $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL))
-				->set('role', $qb->createNamedParameter($role))
+				->set('role', $qb->createNamedParameter(self::DEFAULT_MEMBER_ROLE))
 				->set('hourly_rate', $qb->createNamedParameter($hourlyRate))
 				->set('assigned_at', $qb->createNamedParameter($now, IQueryBuilder::PARAM_DATETIME_MUTABLE))
 				->set('assigned_by', $qb->createNamedParameter($sessionUser->getUID()))
 				->where($qb->expr()->eq('id', $qb->createNamedParameter($existingMember->getId(), IQueryBuilder::PARAM_INT)));
 			$qb->executeStatement();
-			$ref = $this->getProjectMember($projectId, $userId);
+			$ref = $this->getProjectMemberAnyState($projectId, $userId);
 			if ($ref !== null) {
 				return $ref;
 			}
@@ -1166,7 +1175,7 @@ class ProjectService
 		$member = new ProjectMember();
 		$member->setProjectId($projectId);
 		$member->setUserId($userId);
-		$member->setRole($role);
+		$member->setRole(self::DEFAULT_MEMBER_ROLE);
 		$member->setHourlyRate($hourlyRate);
 		$member->setAssignedAt(new \DateTime());
 		$member->setAssignedBy($sessionUser->getUID());
@@ -1179,7 +1188,7 @@ class ProjectService
 			'user_id' => $qb->createNamedParameter($member->getUserId()),
 			'role' => $qb->createNamedParameter($member->getRole()),
 			'hourly_rate' => $qb->createNamedParameter($member->getHourlyRate()),
-			'assigned_at' => $qb->createNamedParameter($member->getAssignedAt()),
+			'assigned_at' => $qb->createNamedParameter($member->getAssignedAt(), IQueryBuilder::PARAM_DATETIME_MUTABLE),
 			'assigned_by' => $qb->createNamedParameter($member->getAssignedBy()),
 			'member_state' => $qb->createNamedParameter(ProjectMember::STATE_ACTIVE),
 			'archived_at' => $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL),
@@ -1211,7 +1220,7 @@ class ProjectService
 			throw new \Exception('Cannot change the team for a completed, cancelled, or archived project');
 		}
 
-		$member = $this->getProjectMember($projectId, $userId);
+		$member = $this->getProjectMemberActive($projectId, $userId);
 		if (!$member) {
 			throw new \Exception('Team member not found');
 		}
@@ -1258,7 +1267,7 @@ class ProjectService
 		$qb->select('*')
 			->from('project_members')
 			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)))
-			->orderBy('role', 'ASC');
+			->orderBy('user_id', 'ASC');
 
 		$result = $qb->executeQuery();
 		$members = [];
@@ -1275,7 +1284,7 @@ class ProjectService
 			if ($fa !== $fb) {
 				return $fa <=> $fb;
 			}
-			return $a->getRolePriority() <=> $b->getRolePriority();
+			return strcasecmp((string)$a->getUserId(), (string)$b->getUserId());
 		});
 
 		return $members;
@@ -1357,7 +1366,17 @@ class ProjectService
 	 * @param string $userId
 	 * @return ProjectMember|null
 	 */
-	private function getProjectMember(int $projectId, string $userId): ?ProjectMember
+	private function getProjectMemberActive(int $projectId, string $userId): ?ProjectMember
+	{
+		return $this->getProjectMemberByState($projectId, $userId, ProjectMember::STATE_ACTIVE);
+	}
+
+	private function getProjectMemberAnyState(int $projectId, string $userId): ?ProjectMember
+	{
+		return $this->getProjectMemberByState($projectId, $userId, null);
+	}
+
+	private function getProjectMemberByState(int $projectId, string $userId, ?string $memberState): ?ProjectMember
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')
@@ -1366,6 +1385,13 @@ class ProjectService
 				$qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)),
 				$qb->expr()->eq('user_id', $qb->createNamedParameter($userId))
 			));
+		if ($memberState !== null) {
+			if ($memberState === ProjectMember::STATE_ACTIVE) {
+				$qb->andWhere($this->buildActiveMemberExpression($qb));
+			} else {
+				$qb->andWhere($qb->expr()->eq('member_state', $qb->createNamedParameter($memberState)));
+			}
+		}
 
 		$result = $qb->executeQuery();
 		$row = $result->fetch();
@@ -1434,7 +1460,7 @@ class ProjectService
 	 */
 	public function updateTeamMemberRole(int $projectId, string $userId, string $newRole): ProjectMember
 	{
-		$member = $this->getProjectMember($projectId, $userId);
+		$member = $this->getProjectMemberActive($projectId, $userId);
 		if (!$member) {
 			throw new \Exception('Team member not found');
 		}
@@ -1442,11 +1468,7 @@ class ProjectService
 			throw new \Exception('Cannot change the role of a former team member');
 		}
 
-		// Validate role
-		$validRoles = ['Project Manager', 'Developer', 'Tester', 'Consultant'];
-		if (!in_array($newRole, $validRoles)) {
-			throw new \Exception('Invalid role value');
-		}
+		$newRole = self::DEFAULT_MEMBER_ROLE;
 
 		$qb = $this->db->getQueryBuilder();
 		$qb->update('project_members')
@@ -1478,7 +1500,7 @@ class ProjectService
 			->from('projects', 'p')
 			->innerJoin('p', 'project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
-			->andWhere($qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE)))
+			->andWhere($this->buildActiveMemberExpression($qb, 'pm'))
 			->orderBy('p.created_at', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -1494,7 +1516,21 @@ class ProjectService
 	}
 
 	/**
-	 * Get all team members for a manager across all projects they manage
+	 * Backward-compatible active-member check.
+	 * Legacy rows from pre-member_state rollout can have NULL/empty state and must count as active.
+	 */
+	private function buildActiveMemberExpression(IQueryBuilder $qb, string $alias = ''): \OCP\DB\QueryBuilder\ICompositeExpression
+	{
+		$field = $alias !== '' ? $alias . '.member_state' : 'member_state';
+		return $qb->expr()->orX(
+			$qb->expr()->eq($field, $qb->createNamedParameter(ProjectMember::STATE_ACTIVE)),
+			$qb->expr()->isNull($field),
+			$qb->expr()->eq($field, $qb->createNamedParameter(''))
+		);
+	}
+
+	/**
+	 * Get all team members for projects created by the given user.
 	 *
 	 * @param string $managerId
 	 * @return array
@@ -1505,28 +1541,7 @@ class ProjectService
 		$qb->select('pm.user_id', 'pm.role', 'pm.hourly_rate', 'p.name as project_name')
 			->from('project_members', 'pm')
 			->innerJoin('pm', 'projects', 'p', $qb->expr()->eq('pm.project_id', 'p.id'))
-			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($managerId)))
-			->andWhere($qb->expr()->eq('pm.role', $qb->createNamedParameter('Project Manager')));
-
-		$result = $qb->executeQuery();
-		$managedProjects = [];
-
-		while ($row = $result->fetch()) {
-			$managedProjects[] = $row['project_id'];
-		}
-
-		$result->closeCursor();
-
-		if (empty($managedProjects)) {
-			return [];
-		}
-
-		// Get all team members from projects managed by this manager
-		$qb = $this->db->getQueryBuilder();
-		$qb->select('pm.user_id', 'pm.role', 'pm.hourly_rate', 'p.name as project_name')
-			->from('project_members', 'pm')
-			->innerJoin('pm', 'projects', 'p', $qb->expr()->eq('pm.project_id', 'p.id'))
-			->where($qb->expr()->in('pm.project_id', $qb->createNamedParameter($managedProjects, IQueryBuilder::PARAM_INT_ARRAY)))
+			->where($qb->expr()->eq('p.created_by', $qb->createNamedParameter($managerId)))
 			->andWhere($qb->expr()->neq('pm.user_id', $qb->createNamedParameter($managerId)))
 			->orderBy('pm.user_id', 'ASC');
 

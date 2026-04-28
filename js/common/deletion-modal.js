@@ -12,6 +12,10 @@
     let currentModal = null;
     let currentEntity = null;
     let currentDependencies = null;
+    let currentCallbacks = {
+        onSuccess: null,
+        onCancel: null
+    };
 
     /**
      * Show deletion modal for an entity
@@ -32,7 +36,14 @@
             type: options.entityType,
             id: options.entityId,
             name: options.entityName,
-            deleteUrl: options.deleteUrl
+            deleteUrl: options.deleteUrl,
+            impactUrl: options.impactUrl || null,
+            simpleConfirm: options.simpleConfirm === true,
+            confirmMessage: options.confirmMessage || null
+        };
+        currentCallbacks = {
+            onSuccess: typeof options.onSuccess === 'function' ? options.onSuccess : null,
+            onCancel: typeof options.onCancel === 'function' ? options.onCancel : null
         };
 
         // Create modal HTML
@@ -56,6 +67,11 @@
         const firstFocusable = currentModal.querySelector('.projectcheck-deletion-modal__close');
         if (firstFocusable) {
             firstFocusable.focus();
+        }
+
+        if (currentEntity.simpleConfirm) {
+            displaySimpleConfirm();
+            return;
         }
 
         // Load dependencies
@@ -100,7 +116,7 @@
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 closeDeletionModal();
-                if (options.onCancel) options.onCancel();
+                if (currentCallbacks.onCancel) currentCallbacks.onCancel();
             });
         }
 
@@ -109,7 +125,7 @@
         if (backdrop) {
             backdrop.addEventListener('click', () => {
                 closeDeletionModal();
-                if (options.onCancel) options.onCancel();
+                if (currentCallbacks.onCancel) currentCallbacks.onCancel();
             });
         }
 
@@ -192,6 +208,9 @@
      * Get impact URL based on entity type
      */
     function getImpactUrl(entityType, entityId) {
+        if (currentEntity && typeof currentEntity.impactUrl === 'string' && currentEntity.impactUrl !== '') {
+            return currentEntity.impactUrl;
+        }
         switch (entityType) {
             case 'project':
                 return OC.generateUrl(`/apps/projectcheck/api/projects/${entityId}/deletion-impact`);
@@ -230,7 +249,7 @@
      * Create dependency content based on entity type and impact
      */
     function createDependencyContent(impact) {
-        const entityName = escapeHtml(currentEntity.name || 'this item');
+        const entityName = escapeHtml(currentEntity.name || t('projectcheck', 'this item'));
         let content = `
             <div class="projectcheck-deletion-modal__warning">
                 <h3 class="projectcheck-deletion-modal__warning-title">${t('projectcheck', 'Warning')}</h3>
@@ -273,6 +292,36 @@
         `;
 
         return content;
+    }
+
+    /**
+     * Display a simple confirmation body (no dependency fetch).
+     */
+    function displaySimpleConfirm() {
+        if (!currentModal || !currentEntity) return;
+        const body = currentModal.querySelector('.projectcheck-deletion-modal__body');
+        if (!body) return;
+
+        const entityName = escapeHtml(currentEntity.name || t('projectcheck', 'this item'));
+        const customMessage = currentEntity.confirmMessage
+            ? escapeHtml(String(currentEntity.confirmMessage))
+            : `${t('projectcheck', 'Are you sure you want to delete')} <strong>${entityName}</strong>? ${t('projectcheck', 'This action cannot be undone.')}`;
+
+        body.innerHTML = `
+            <div class="projectcheck-deletion-modal__warning">
+                <h3 class="projectcheck-deletion-modal__warning-title">${t('projectcheck', 'Warning')}</h3>
+                <p class="projectcheck-deletion-modal__warning-message">${customMessage}</p>
+            </div>
+            <div class="projectcheck-deletion-modal__actions">
+                <button type="button" class="projectcheck-deletion-modal__btn projectcheck-deletion-modal__btn--cancel">
+                    ${t('projectcheck', 'Cancel')}
+                </button>
+                <button type="button" class="projectcheck-deletion-modal__btn projectcheck-deletion-modal__btn--delete">
+                    ${t('projectcheck', 'Delete')}
+                </button>
+            </div>
+        `;
+        addActionEventListeners();
     }
 
     /**
@@ -487,7 +536,7 @@
      * Perform the deletion
      */
     function performDeletion() {
-        if (!currentEntity || !currentDependencies) return;
+        if (!currentEntity) return;
 
         const deleteBtn = currentModal.querySelector('.projectcheck-deletion-modal__btn--delete');
         if (deleteBtn) {
@@ -540,13 +589,18 @@
             })
             .then(data => {
                 if (data.success) {
+                    const onSuccessCallback = currentCallbacks.onSuccess;
+                    const deletedEntity = currentEntity ? { ...currentEntity } : null;
                     showSuccessMessage(data.message || t('projectcheck', 'Item deleted successfully'));
-                    closeDeletionModal();
 
-                    // Trigger success callback
-                    if (window.projectcheckDeletionModal && window.projectcheckDeletionModal.onSuccess) {
-                        window.projectcheckDeletionModal.onSuccess(currentEntity);
+                    // Trigger success callback before state reset; otherwise current callbacks/entity are lost.
+                    if (typeof onSuccessCallback === 'function') {
+                        onSuccessCallback(deletedEntity);
+                    } else {
+                        window.location.reload();
                     }
+
+                    closeDeletionModal();
                 } else {
                     showErrorMessage(data.error || t('projectcheck', 'Failed to delete item'));
                     resetDeleteButton();
@@ -640,6 +694,10 @@
         currentModal = null;
         currentEntity = null;
         currentDependencies = null;
+        currentCallbacks = {
+            onSuccess: null,
+            onCancel: null
+        };
     }
 
     /**

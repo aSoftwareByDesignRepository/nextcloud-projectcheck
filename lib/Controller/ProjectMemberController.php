@@ -20,6 +20,7 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\ProjectMemberService;
+use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCP\IL10N;
@@ -39,6 +40,9 @@ class ProjectMemberController extends Controller
 
     /** @var DeletionService */
     private $deletionService;
+
+    /** @var ProjectService */
+    private $projectService;
 
     /** @var ActivityService */
     private $activityService;
@@ -61,17 +65,30 @@ class ProjectMemberController extends Controller
         IRequest $request,
         IUserSession $userSession,
         ProjectMemberService $projectMemberService,
+        ProjectService $projectService,
         DeletionService $deletionService,
         ActivityService $activityService,
-        CSPService $cspService
+        CSPService $cspService,
+        IL10N $l
     ) {
         parent::__construct($appName, $request);
         $this->userSession = $userSession;
         $this->projectMemberService = $projectMemberService;
+        $this->projectService = $projectService;
         $this->deletionService = $deletionService;
         $this->activityService = $activityService;
         $this->l = $l;
         $this->setCspService($cspService);
+    }
+
+    private function canManageMemberId(string $userId, int $memberId): bool
+    {
+        $member = $this->projectMemberService->getProjectMember($memberId);
+        if ($member === null) {
+            return false;
+        }
+
+        return $this->projectService->canUserManageMembers($userId, (int)$member->getProjectId());
     }
 
     /**
@@ -86,7 +103,11 @@ class ProjectMemberController extends Controller
     {
         $user = $this->userSession->getUser();
         if (!$user) {
-            return new JSONResponse(['error' => 'User not authenticated'], 401);
+            return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+        }
+
+        if (!$this->canManageMemberId($user->getUID(), $id)) {
+            return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
         }
 
         try {
@@ -109,7 +130,7 @@ class ProjectMemberController extends Controller
     {
         $user = $this->userSession->getUser();
         if (!$user) {
-            return new JSONResponse(['error' => 'User not authenticated'], 401);
+            return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
         }
 
         // Handle method override for HTML forms
@@ -127,11 +148,14 @@ class ProjectMemberController extends Controller
             // Get member info before deletion for activity logging
             $member = $this->projectMemberService->getProjectMember($id);
             if (!$member) {
-                return new JSONResponse(['error' => 'Project member not found'], 404);
+                return new JSONResponse(['error' => $this->l->t('Project member not found')], 404);
+            }
+            if (!$this->projectService->canUserManageMembers($user->getUID(), (int)$member->getProjectId())) {
+                return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
             }
 
-            // Remove the member
-            $this->deletionService->deleteProjectMember($id, $user->getUID());
+            // Remove the member using canonical project workflow
+            $this->projectService->removeTeamMember((int)$member->getProjectId(), (string)$member->getUserId());
 
             // Log activity
             $this->activityService->logMemberRemoved($user->getUID(), $member);

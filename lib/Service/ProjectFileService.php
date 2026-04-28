@@ -21,10 +21,12 @@ use OCP\Files\SimpleFS\ISimpleFolder;
 use Psr\Log\LoggerInterface;
 use OCP\IRequest;
 use OCP\IUserSession;
-use OCP\Util;
 
 class ProjectFileService
 {
+	private const MAX_FILES_PER_UPLOAD = 20;
+	private const MAX_FILE_SIZE_BYTES = 52428800; // 50 MiB per file
+
 	private ProjectFileMapper $mapper;
 	private ProjectService $projectService;
 	private IAppData $appData;
@@ -53,7 +55,7 @@ class ProjectFileService
 	 */
 	public function addFilesFromUpload(int $projectId, array $uploads, string $userId): array
 	{
-		$this->assertProjectAccess($projectId, $userId);
+		$this->assertProjectManage($projectId, $userId);
 
 		if (empty($uploads)) {
 			return [];
@@ -76,13 +78,29 @@ class ProjectFileService
 			$uploads = [$uploads];
 		}
 
+		if (count($uploads) > self::MAX_FILES_PER_UPLOAD) {
+			throw new \InvalidArgumentException('Too many files in one upload request');
+		}
+
 		$stored = [];
+		$hadUploadError = false;
+		$lastUploadError = null;
 		foreach ($uploads as $upload) {
-			if (empty($upload['tmp_name']) || $upload['error'] !== UPLOAD_ERR_OK) {
+			$errorCode = (int)($upload['error'] ?? UPLOAD_ERR_NO_FILE);
+			if ($errorCode !== UPLOAD_ERR_OK) {
+				$hadUploadError = true;
+				$lastUploadError = $this->mapUploadErrorCode($errorCode);
+				continue;
+			}
+			if (empty($upload['tmp_name'])) {
 				continue;
 			}
 
 			$stored[] = $this->storeSingleFile($projectId, $upload, $userId);
+		}
+
+		if ($stored === [] && $hadUploadError) {
+			throw new \RuntimeException($lastUploadError ?? 'Upload failed');
 		}
 
 		return $stored;
@@ -167,21 +185,41 @@ class ProjectFileService
 		$cleanName = $this->sanitizeFileName($originalName);
 		$uniqueName = uniqid('file_', true) . '_' . $cleanName;
 
+		$tmpName = (string)($upload['tmp_name'] ?? '');
+		if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+			throw new \InvalidArgumentException('Invalid uploaded file');
+		}
+
+		$size = (int)($upload['size'] ?? 0);
+		if ($size < 0) {
+			throw new \InvalidArgumentException('Invalid file size');
+		}
+		if ($size > self::MAX_FILE_SIZE_BYTES) {
+			throw new \InvalidArgumentException('File is too large');
+		}
+
 		$file = $folder->newFile($uniqueName);
-		$content = fopen($upload['tmp_name'], 'rb');
-		$file->putContent(stream_get_contents($content));
+		$content = @fopen($tmpName, 'rb');
+		if ($content === false) {
+			throw new \RuntimeException('Could not read uploaded file');
+		}
+		$rawContent = stream_get_contents($content);
 		fclose($content);
+		if ($rawContent === false) {
+			throw new \RuntimeException('Could not read uploaded file');
+		}
+		$file->putContent($rawContent);
 
 		$entity = new ProjectFile();
 		$entity->setProjectId($projectId);
 		$entity->setStoragePath('project_files/' . $projectId . '/' . $uniqueName);
 		$entity->setDisplayName($originalName);
-		$mimeType = $upload['type'] ?? null;
-		if (!$mimeType && !empty($upload['tmp_name'])) {
-			$mimeType = Util::getMimeType($upload['tmp_name']);
-		}
-		$entity->setMimeType($mimeType ?: Util::getMimeType($originalName));
-		$entity->setSize((int) ($upload['size'] ?? 0));
+		$mimeType = $this->detectMimeType(
+			$tmpName,
+			is_string($upload['type'] ?? null) ? (string)$upload['type'] : null
+		);
+		$entity->setMimeType($mimeType);
+		$entity->setSize($size);
 		$entity->setUploadedBy($userId);
 		$entity->setCreatedAt(new \DateTime());
 
@@ -207,8 +245,45 @@ class ProjectFileService
 	{
 		// Keep it readable while removing path separators
 		$name = preg_replace('/[\\\\\\/]+/', '-', $name);
+		$name = preg_replace('/[\x00-\x1f\x7f]+/', '', $name);
 		$name = trim($name);
-		return $name === '' ? 'upload.bin' : $name;
+		if ($name === '') {
+			return 'upload.bin';
+		}
+
+		return substr($name, 0, 255);
+	}
+
+	private function mapUploadErrorCode(int $errorCode): string
+	{
+		return match ($errorCode) {
+			UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'File is too large',
+			UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+			UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary upload directory',
+			UPLOAD_ERR_CANT_WRITE => 'Failed to write uploaded file',
+			UPLOAD_ERR_EXTENSION => 'Upload blocked by server extension',
+			default => 'Upload failed',
+		};
+	}
+
+	private function detectMimeType(string $tmpName, ?string $reportedMimeType): string
+	{
+		if ($reportedMimeType !== null && trim($reportedMimeType) !== '') {
+			return trim($reportedMimeType);
+		}
+
+		if (function_exists('finfo_open')) {
+			$finfo = finfo_open(FILEINFO_MIME_TYPE);
+			if ($finfo !== false) {
+				$detected = finfo_file($finfo, $tmpName);
+				finfo_close($finfo);
+				if (is_string($detected) && $detected !== '') {
+					return $detected;
+				}
+			}
+		}
+
+		return 'application/octet-stream';
 	}
 
 	private function assertProjectAccess(int $projectId, string $userId): void

@@ -23,6 +23,8 @@ use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\DB\QueryBuilder\ICompositeExpression;
+use OCP\DB\QueryBuilder\IExpressionBuilder;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -185,7 +187,6 @@ class ProjectServiceTest extends TestCase {
 	public function testAddTeamMember(): void {
 		$projectId = 1;
 		$userId = 'testuser';
-		$role = 'Developer';
 		$hourlyRate = 45.0;
 
 		// Mock project exists
@@ -216,19 +217,19 @@ class ProjectServiceTest extends TestCase {
 		$this->user->method('getUID')->willReturn('admin');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		$member = $this->projectService->addTeamMember($projectId, $userId, $role, $hourlyRate);
+		$member = $this->projectService->addTeamMember($projectId, $userId, 'Member', $hourlyRate);
 
 		$this->assertInstanceOf(ProjectMember::class, $member);
 		$this->assertEquals($projectId, $member->getProjectId());
 		$this->assertEquals($userId, $member->getUserId());
-		$this->assertEquals($role, $member->getRole());
+		$this->assertEquals('Member', $member->getRole());
 		$this->assertEquals($hourlyRate, $member->getHourlyRate());
 	}
 
 	/**
-	 * Test adding team member with invalid role
+	 * Team member role is normalized to a single membership role.
 	 */
-	public function testAddTeamMemberWithInvalidRole(): void {
+	public function testAddTeamMemberNormalizesRole(): void {
 		$projectId = 1;
 		$userId = 'testuser';
 		$role = 'InvalidRole';
@@ -250,10 +251,11 @@ class ProjectServiceTest extends TestCase {
 		$user = $this->createMock(IUser::class);
 		$this->userManager->method('get')->with($userId)->willReturn($user);
 
-		$this->expectException(\Exception::class);
-		$this->expectExceptionMessage('Invalid role value');
-
-		$this->projectService->addTeamMember($projectId, $userId, $role);
+		$this->user->method('getUID')->willReturn('admin');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->db->method('lastInsertId')->willReturn(2);
+		$member = $this->projectService->addTeamMember($projectId, $userId, $role);
+		$this->assertEquals('Member', $member->getRole());
 	}
 
 	/**
@@ -262,7 +264,7 @@ class ProjectServiceTest extends TestCase {
 	public function testAddTeamMemberWithNonExistentUser(): void {
 		$projectId = 1;
 		$userId = 'nonexistentuser';
-		$role = 'Developer';
+		$role = 'Member';
 
 		// Mock project exists
 		$qb = $this->createMock(IQueryBuilder::class);
@@ -486,5 +488,128 @@ class ProjectServiceTest extends TestCase {
 		$projects = $this->projectService->filterProjects($filters);
 
 		$this->assertIsArray($projects);
+	}
+
+	/**
+	 * Regression: legacy rows with NULL member_state must still count as active.
+	 */
+	public function testCanUserAccessProjectWithLegacyNullMemberState(): void {
+		$userId = 'member1';
+		$projectId = 42;
+
+		$expr = $this->createMock(IExpressionBuilder::class);
+		$orExpr = $this->createMock(ICompositeExpression::class);
+		$andExpr = $this->createMock(ICompositeExpression::class);
+
+		$expr->method('eq')->willReturn('eq');
+		$expr->method('isNull')->willReturn('is_null');
+		$expr->method('orX')->willReturn($orExpr);
+		$expr->method('andX')->willReturn($andExpr);
+
+		$qb = $this->createMock(IQueryBuilder::class);
+		$qb->method('expr')->willReturn($expr);
+		$qb->method('select')->willReturnSelf();
+		$qb->method('from')->willReturnSelf();
+		$qb->method('leftJoin')->willReturnSelf();
+		$qb->method('innerJoin')->willReturnSelf();
+		$qb->method('where')->willReturnSelf();
+		$qb->method('andWhere')->willReturnSelf();
+		$qb->method('createNamedParameter')->willReturn(':p');
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('closeCursor')->willReturnSelf();
+		$qb->method('fetch')->willReturnOnConsecutiveCalls(
+			[
+				'id' => $projectId,
+				'name' => 'Legacy Project',
+				'short_description' => 'Test',
+				'detailed_description' => '',
+				'customer_id' => 1,
+				'customer_name' => 'C',
+				'hourly_rate' => 80,
+				'total_budget' => 1000,
+				'available_hours' => 10,
+				'category' => '',
+				'priority' => 'Medium',
+				'status' => 'Active',
+				'start_date' => null,
+				'end_date' => null,
+				'tags' => '',
+				'project_type' => 'client',
+				'created_by' => 'owner',
+				'created_at' => '2026-01-01 00:00:00',
+				'updated_at' => '2026-01-01 00:00:00',
+			],
+			[
+				'id' => 7,
+				'project_id' => $projectId,
+				'user_id' => $userId,
+				'role' => 'Member',
+				'hourly_rate' => 50,
+				'assigned_at' => '2026-01-01 00:00:00',
+				'assigned_by' => 'owner',
+				'member_state' => null,
+				'archived_at' => null,
+			]
+		);
+
+		$this->db->method('getQueryBuilder')->willReturn($qb);
+		$this->groupManager->method('isAdmin')->with($userId)->willReturn(false);
+
+		$this->assertTrue($this->projectService->canUserAccessProject($userId, $projectId));
+	}
+
+	public function testCanUserAccessProjectDeniesFormerMember(): void {
+		$userId = 'member2';
+		$projectId = 88;
+
+		$expr = $this->createMock(IExpressionBuilder::class);
+		$orExpr = $this->createMock(ICompositeExpression::class);
+		$andExpr = $this->createMock(ICompositeExpression::class);
+
+		$expr->method('eq')->willReturn('eq');
+		$expr->method('isNull')->willReturn('is_null');
+		$expr->method('orX')->willReturn($orExpr);
+		$expr->method('andX')->willReturn($andExpr);
+
+		$qb = $this->createMock(IQueryBuilder::class);
+		$qb->method('expr')->willReturn($expr);
+		$qb->method('select')->willReturnSelf();
+		$qb->method('from')->willReturnSelf();
+		$qb->method('leftJoin')->willReturnSelf();
+		$qb->method('innerJoin')->willReturnSelf();
+		$qb->method('where')->willReturnSelf();
+		$qb->method('andWhere')->willReturnSelf();
+		$qb->method('createNamedParameter')->willReturn(':p');
+		$qb->method('executeQuery')->willReturnSelf();
+		$qb->method('closeCursor')->willReturnSelf();
+		$qb->method('fetch')->willReturnOnConsecutiveCalls(
+			[
+				'id' => $projectId,
+				'name' => 'Former Project',
+				'short_description' => 'Test',
+				'detailed_description' => '',
+				'customer_id' => 1,
+				'customer_name' => 'C',
+				'hourly_rate' => 80,
+				'total_budget' => 1000,
+				'available_hours' => 10,
+				'category' => '',
+				'priority' => 'Medium',
+				'status' => 'Active',
+				'start_date' => null,
+				'end_date' => null,
+				'tags' => '',
+				'project_type' => 'client',
+				'created_by' => 'owner',
+				'created_at' => '2026-01-01 00:00:00',
+				'updated_at' => '2026-01-01 00:00:00',
+			],
+			false
+		);
+
+		$this->db->method('getQueryBuilder')->willReturn($qb);
+		$this->groupManager->method('isAdmin')->with($userId)->willReturn(false);
+
+		$this->assertFalse($this->projectService->canUserAccessProject($userId, $projectId));
 	}
 }

@@ -185,6 +185,7 @@ class ProjectController extends Controller
 				'role' => $m->getRole(),
 				'hours' => round($hours, 2),
 				'is_former' => $isFormer,
+				'profile_url' => $live ? $this->urlGenerator->linkToRoute('core.ProfilePage.index', ['targetUserId' => $uid]) : null,
 			];
 		}
 		return $roster;
@@ -442,6 +443,8 @@ class ProjectController extends Controller
 		$canManageFiles = $canEdit;
 		$canManageMembers = $this->projectService->canUserManageMembers($uid, $id) && $project->isEditableState();
 		$canAddTimeEntry = $project->allowsTimeTracking() && $this->projectService->canUserAccessProject($uid, $id);
+		$canViewMemberTimeEntries = $this->projectService->canUserAccessProject($uid, $id);
+		$canViewMemberProfiles = $this->projectService->canUserAccessProject($uid, $id);
 
 		$allowedStatusTargets = $this->projectService->getAllowedStatusTargets($project->getStatus());
 		// Expose to JS as JSON
@@ -478,6 +481,8 @@ class ProjectController extends Controller
 			'canAddTeamMember' => $canManageMembers,
 			'canManageMembers' => $canManageMembers,
 			'canAddTimeEntry' => $canAddTimeEntry,
+			'canViewMemberTimeEntries' => $canViewMemberTimeEntries,
+			'canViewMemberProfiles' => $canViewMemberProfiles,
 			'allowedStatusTargets' => $allowedStatusTargets,
 			'statusTargetsJson' => $statusTargetsJson,
 			'canDelete' => $this->projectService->canUserDeleteProject($uid, $id),
@@ -896,6 +901,72 @@ class ProjectController extends Controller
 	}
 
 	/**
+	 * Search assignable users for a project (modal autocomplete).
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function searchAssignableUsers(int $id): JSONResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		$project = $this->projectService->getProject($id);
+		if ($project === null) {
+			return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
+		}
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+		if (!$project->isEditableState()) {
+			return new JSONResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
+
+		$q = trim((string)$this->request->getParam('q', ''));
+		if (mb_strlen($q) < 2) {
+			return new JSONResponse(['success' => true, 'items' => []]);
+		}
+		$q = mb_substr($q, 0, 120);
+
+		$activeTeam = $this->projectService->getProjectTeamGrouped($id)['active'] ?? [];
+		$activeUids = [];
+		foreach ($activeTeam as $member) {
+			if ($member instanceof ProjectMember) {
+				$activeUids[(string)$member->getUserId()] = true;
+			}
+		}
+
+		try {
+			$byId = $this->userManager->search($q, 20, 0);
+			$byName = $this->userManager->searchDisplayName($q, 20, 0);
+		} catch (\Throwable $e) {
+			return new JSONResponse(['error' => $this->l->t('User search failed. Check your connection and try again.')], 500);
+		}
+		$merged = [];
+		foreach (array_merge($byId, $byName) as $candidate) {
+			if (!($candidate instanceof \OCP\IUser)) {
+				continue;
+			}
+			if (method_exists($candidate, 'isEnabled') && !$candidate->isEnabled()) {
+				continue;
+			}
+			$uid = $candidate->getUID();
+			if ($uid === '' || isset($activeUids[$uid]) || isset($merged[$uid])) {
+				continue;
+			}
+			$display = trim((string)$candidate->getDisplayName());
+			$label = $display !== '' && $display !== $uid ? $display . ' (' . $uid . ')' : $uid;
+			$merged[$uid] = [
+				'uid' => $uid,
+				'displayName' => $display !== '' ? $display : $uid,
+				'label' => $label,
+			];
+		}
+
+		return new JSONResponse(['success' => true, 'items' => array_values($merged)]);
+	}
+
+	/**
 	 * Add team member to project
 	 *
 	 * @param int $id
@@ -908,14 +979,35 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		$project = $this->projectService->getProject($id);
+		if ($project === null) {
+			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
+		}
 		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
 			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
+		if (!$project->isEditableState()) {
+			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
 
 		try {
-			$userId = $this->request->getParam('user_id');
-			$role = $this->request->getParam('role');
-			$hourlyRate = $this->request->getParam('hourly_rate');
+			$userId = trim((string)$this->request->getParam('user_id', ''));
+			$role = \OCA\ProjectCheck\Service\ProjectService::DEFAULT_MEMBER_ROLE;
+			$hourlyRateRaw = $this->request->getParam('hourly_rate');
+			$hourlyRate = null;
+			if ($hourlyRateRaw !== null && $hourlyRateRaw !== '') {
+				if (!is_numeric($hourlyRateRaw)) {
+					return new DataResponse(['error' => $this->l->t('Hourly rate must be a non-negative number')], 400);
+				}
+				$hourlyRate = (float)$hourlyRateRaw;
+				if ($hourlyRate < 0) {
+					return new DataResponse(['error' => $this->l->t('Hourly rate must be a non-negative number')], 400);
+				}
+			}
+
+			if ($userId === '') {
+				return new DataResponse(['error' => $this->l->t('Invalid parameters')], 400);
+			}
 
 			$member = $this->projectService->addTeamMember($id, $userId, $role, $hourlyRate);
 
@@ -944,17 +1036,38 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		$project = $this->projectService->getProject($id);
+		if ($project === null) {
+			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
+		}
 		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
 			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
+		if (!$project->isEditableState()) {
+			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
 
 		try {
-			$role = $this->request->getParam('role');
-			$hourlyRate = $this->request->getParam('hourly_rate');
+			$targetUserId = trim($userId);
+			$role = \OCA\ProjectCheck\Service\ProjectService::DEFAULT_MEMBER_ROLE;
+			$hourlyRateRaw = $this->request->getParam('hourly_rate');
+			$hourlyRate = null;
+			if ($hourlyRateRaw !== null && $hourlyRateRaw !== '') {
+				if (!is_numeric($hourlyRateRaw)) {
+					return new DataResponse(['error' => $this->l->t('Hourly rate must be a non-negative number')], 400);
+				}
+				$hourlyRate = (float)$hourlyRateRaw;
+				if ($hourlyRate < 0) {
+					return new DataResponse(['error' => $this->l->t('Hourly rate must be a non-negative number')], 400);
+				}
+			}
+			if ($targetUserId === '') {
+				return new DataResponse(['error' => $this->l->t('Invalid parameters')], 400);
+			}
 
 			// Remove existing member and add with new data
-			$this->projectService->removeTeamMember($id, $userId);
-			$member = $this->projectService->addTeamMember($id, $userId, $role, $hourlyRate);
+			$this->projectService->removeTeamMember($id, $targetUserId);
+			$member = $this->projectService->addTeamMember($id, $targetUserId, $role, $hourlyRate);
 
 			return new DataResponse([
 				'success' => true,
@@ -981,12 +1094,23 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		$project = $this->projectService->getProject($id);
+		if ($project === null) {
+			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
+		}
 		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
 			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
+		if (!$project->isEditableState()) {
+			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
 
 		try {
-			$this->projectService->removeTeamMember($id, $userId);
+			$targetUserId = trim($userId);
+			if ($targetUserId === '') {
+				return new DataResponse(['error' => $this->l->t('Invalid parameters')], 400);
+			}
+			$this->projectService->removeTeamMember($id, $targetUserId);
 
 			return new DataResponse([
 				'success' => true,

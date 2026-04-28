@@ -28,7 +28,7 @@ trait StatsTrait
     /**
      * @param string|null $forUserId When set, only projects/customers this user may access
      */
-    protected function getCommonStats(ProjectService $projectService, CustomerService $customerService, TimeEntryService $timeEntryService = null, ?string $forUserId = null): array
+    protected function getCommonStats(ProjectService $projectService, CustomerService $customerService, ?TimeEntryService $timeEntryService = null, ?string $forUserId = null): array
     {
         try {
             if ($forUserId !== null) {

@@ -235,12 +235,6 @@ class ProjectMemberService
             return true;
         }
 
-        // Check if user is a Project Manager
-        $userMember = $this->getMemberByUserAndProject($userId, $projectId);
-        if ($userMember && $userMember->isProjectManager()) {
-            return true;
-        }
-
         return false;
     }
 

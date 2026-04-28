@@ -24,6 +24,24 @@
 	font-weight: 600;
 }
 
+.time-entry-form-intro {
+	margin: 0 0 16px;
+	padding: 12px 14px;
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+}
+
+.time-entry-form-note {
+	margin: 0 0 20px;
+	padding: 12px 14px;
+	border-radius: 8px;
+	border: 1px solid var(--color-warning);
+	background: var(--color-background-warning);
+	color: var(--color-main-text);
+}
+
 .form-actions {
 	display: flex;
 	gap: 10px;
@@ -35,6 +53,7 @@
 	border-radius: 8px;
 	padding: 30px;
 	border: 1px solid var(--color-border);
+	position: relative;
 }
 
 .form-row {
@@ -80,7 +99,8 @@
 }
 .datepicker-only:focus,
 .form-group input.datepicker-only:focus {
-	outline: none;
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 /* Date picker specific styling */
@@ -216,9 +236,22 @@
 	min-height: 16px;
 }
 
+.time-entry-form-errors {
+	min-height: 1px;
+	margin-top: 8px;
+	font-weight: 600;
+	color: var(--pc-emphasis-text-error);
+}
+
 .form-group.has-error input,
 .form-group.has-error select,
 .form-group.has-error textarea {
+	border-color: var(--color-error);
+}
+
+.form-group input.has-error,
+.form-group select.has-error,
+.form-group textarea.has-error {
 	border-color: var(--color-error);
 }
 
