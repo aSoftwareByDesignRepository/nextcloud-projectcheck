@@ -322,6 +322,65 @@ Util::addStyle('projectcheck', 'navigation');
         font-size: 14px;
     }
 
+    /* Empty state card for no time entries */
+    .time-entries-empty {
+        display: grid;
+        justify-items: center;
+        text-align: center;
+        gap: 0.85rem;
+        padding: clamp(2rem, 6vw, 3rem) clamp(1rem, 4vw, 2rem);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-large, 12px);
+        background:
+            linear-gradient(180deg,
+                color-mix(in srgb, var(--color-primary-element-light) 34%, transparent),
+                transparent 60%),
+            var(--color-main-background);
+    }
+
+    .time-entries-empty__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.3rem;
+        height: 3.3rem;
+        border-radius: 999px;
+        margin-inline: auto;
+        color: var(--color-primary-element);
+        background: color-mix(in srgb, var(--color-primary-element-light) 65%, var(--color-main-background));
+        border: 1px solid color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
+    }
+
+    .time-entries-empty__icon svg {
+        display: block;
+        width: 1.55rem;
+        height: 1.55rem;
+        color: inherit;
+    }
+
+    .time-entries-empty h2 {
+        margin: 0;
+        font-size: clamp(1.1rem, 2.5vw, 1.45rem);
+        line-height: 1.25;
+        color: var(--color-main-text);
+    }
+
+    .time-entries-empty p {
+        margin: 0;
+        max-width: 34rem;
+        line-height: 1.55;
+        color: var(--color-text-maxcontrast);
+        font-size: 1rem;
+    }
+
+    .time-entries-empty__actions {
+        margin-top: 0.4rem;
+        display: flex;
+        justify-content: center;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+    }
+
     #clear-filters-inline {
         margin: 0 auto;
     }
@@ -484,10 +543,17 @@ Util::addStyle('projectcheck', 'navigation');
         <!-- Time Entries Table -->
         <div class="section">
             <?php if (empty($timeEntries)): ?>
-                <div class="emptycontent">
-                    <div class="icon-time"></div>
+                <div class="time-entries-empty">
+                    <div class="time-entries-empty__icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock-icon lucide-clock"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    </div>
                     <h2><?php p($l->t('No time entries found')); ?></h2>
                     <p><?php p($l->t('Add your first time entry to get started!')); ?></p>
+                    <div class="time-entries-empty__actions">
+                        <a href="<?php p($_['createUrl'] ?? '/index.php/apps/projectcheck/time-entries/create'); ?>" class="button primary">
+                            <?php p($l->t('Add Time Entry')); ?>
+                        </a>
+                    </div>
                 </div>
             <?php else: ?>
                 <div class="grid-container">

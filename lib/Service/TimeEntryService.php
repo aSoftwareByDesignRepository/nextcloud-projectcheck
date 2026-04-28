@@ -664,9 +664,9 @@ class TimeEntryService
 	 *
 	 * @return array
 	 */
-	public function getUsersWithTimeEntries(): array
+	public function getUsersWithTimeEntries(?array $projectIds = null): array
 	{
-		return $this->timeEntryMapper->findUsersWithTimeEntries();
+		return $this->timeEntryMapper->findUsersWithTimeEntries($projectIds);
 	}
 
 	/**

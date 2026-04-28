@@ -87,7 +87,7 @@
                 <div class="projectcheck-deletion-modal__backdrop"></div>
                 <div class="projectcheck-deletion-modal__container" role="dialog" aria-labelledby="deletion-modal-title" aria-modal="true">
                     <div class="projectcheck-deletion-modal__header">
-                        <h2 id="deletion-modal-title" class="projectcheck-deletion-modal__title">${t('projectcheck', 'Confirm Deletion')}</h2>
+                        <h2 id="deletion-modal-title" class="projectcheck-deletion-modal__title">${t('projectcheck', 'Delete')}</h2>
                         <button class="projectcheck-deletion-modal__close" aria-label="${t('projectcheck', 'Close modal')}" type="button">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M15.898,4.045c-0.271-0.272-0.713-0.272-0.986,0l-4.71,4.711L5.493,4.045c-0.272-0.272-0.714-0.272-0.986,0s-0.272,0.714,0,0.986l4.709,4.711l-4.71,4.711c-0.272,0.271-0.272,0.713,0,0.986c0.136,0.136,0.314,0.203,0.492,0.203c0.179,0,0.357-0.067,0.493-0.203l4.711-4.711l4.71,4.711c0.136,0.136,0.314,0.203,0.494,0.203c0.18,0,0.357-0.067,0.493-0.203c0.272-0.273,0.272-0.715,0-0.986L10.187,9.742l4.711-4.711C16.17,4.759,16.17,4.317,15.898,4.045z"/>
@@ -250,11 +250,13 @@
      */
     function createDependencyContent(impact) {
         const entityName = escapeHtml(currentEntity.name || t('projectcheck', 'this item'));
+        const localizedMessageTemplate = t('projectcheck', 'Are you sure you want to delete %s? This action cannot be undone.');
+        const localizedMessage = localizedMessageTemplate.replace('%s', `<strong>${entityName}</strong>`);
         let content = `
             <div class="projectcheck-deletion-modal__warning">
                 <h3 class="projectcheck-deletion-modal__warning-title">${t('projectcheck', 'Warning')}</h3>
                 <p class="projectcheck-deletion-modal__warning-message">
-                    ${t('projectcheck', 'Are you sure you want to delete')} <strong>${entityName}</strong>? ${t('projectcheck', 'This action cannot be undone.')}
+                    ${localizedMessage}
                 </p>
             </div>
         `;
@@ -303,9 +305,11 @@
         if (!body) return;
 
         const entityName = escapeHtml(currentEntity.name || t('projectcheck', 'this item'));
+        const localizedMessageTemplate = t('projectcheck', 'Are you sure you want to delete %s? This action cannot be undone.');
+        const localizedMessage = localizedMessageTemplate.replace('%s', `<strong>${entityName}</strong>`);
         const customMessage = currentEntity.confirmMessage
             ? escapeHtml(String(currentEntity.confirmMessage))
-            : `${t('projectcheck', 'Are you sure you want to delete')} <strong>${entityName}</strong>? ${t('projectcheck', 'This action cannot be undone.')}`;
+            : localizedMessage;
 
         body.innerHTML = `
             <div class="projectcheck-deletion-modal__warning">

@@ -315,6 +315,65 @@ class ProjectControllerTest extends TestCase {
 		$this->assertEquals('Cannot change the team for a completed, cancelled, or archived project', $data['error']);
 	}
 
+	public function testAddAllTeamMembersAddsOnlyEnabledNonMembers(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Active');
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+
+		$existingMember = new ProjectMember();
+		$existingMember->setUserId('existing');
+		$this->projectService->method('getProjectTeamGrouped')->with(1)->willReturn(['active' => [$existingMember], 'former' => []]);
+
+		$existing = $this->createMock(IUser::class);
+		$existing->method('getUID')->willReturn('existing');
+		$existing->method('isEnabled')->willReturn(true);
+		$newEnabled = $this->createMock(IUser::class);
+		$newEnabled->method('getUID')->willReturn('newenabled');
+		$newEnabled->method('isEnabled')->willReturn(true);
+		$newDisabled = $this->createMock(IUser::class);
+		$newDisabled->method('getUID')->willReturn('newdisabled');
+		$newDisabled->method('isEnabled')->willReturn(false);
+
+		$this->userManager->expects($this->once())
+			->method('search')
+			->with('', 500, 0)
+			->willReturn([$existing, $newEnabled, $newDisabled]);
+
+		$this->projectService->expects($this->once())
+			->method('addTeamMember')
+			->with(1, 'newenabled', ProjectService::DEFAULT_MEMBER_ROLE, null);
+
+		$response = $this->controller->addAllTeamMembers(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+		$this->assertEquals(1, $data['added_count']);
+	}
+
+	public function testAddAllTeamMembersRejectsNonEditableProjectState(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Archived');
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+		$this->projectService->expects($this->never())->method('addTeamMember');
+		$this->userManager->expects($this->never())->method('search');
+
+		$response = $this->controller->addAllTeamMembers(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(403, $response->getStatus());
+		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
+		$this->assertEquals('Cannot change the team for a completed, cancelled, or archived project', $data['error']);
+	}
+
 	public function testSearchAssignableUsersRejectsShortQueryWithoutDirectorySearch(): void {
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);

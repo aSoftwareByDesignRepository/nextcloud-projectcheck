@@ -4,6 +4,22 @@
  */
 
 const ProjectControlMessaging = {
+  tr(key, ...params) {
+    const translated = t('projectcheck', key);
+    if (!params || params.length === 0) {
+      return translated;
+    }
+
+    let paramIndex = 0;
+    return String(translated).replace(/%[sd]/g, () => {
+      if (paramIndex >= params.length) {
+        return '';
+      }
+      const value = params[paramIndex++];
+      return value === null || value === undefined ? '' : String(value);
+    });
+  },
+
   escapeHtml(text) {
     if (text === null || text === undefined) return '';
     const div = document.createElement('div');
@@ -96,7 +112,7 @@ const ProjectControlMessaging = {
         <div class="toast-message">${this.escapeHtml(message)}</div>
         ${actions.length > 0 ? this.createToastActions(actions) : ''}
       </div>
-      ${dismissible ? `<button type="button" class="toast-close" aria-label="${t('projectcheck', 'Close notification')}"><span aria-hidden="true">&times;</span></button>` : ''}
+      ${dismissible ? `<button type="button" class="toast-close" aria-label="${this.tr('Close notification')}"><span aria-hidden="true">&times;</span></button>` : ''}
     `;
     
     // Add event listeners
@@ -243,7 +259,7 @@ const ProjectControlMessaging = {
         ${title ? `<div class="alert-title">${this.escapeHtml(title)}</div>` : ''}
         <div class="alert-message">${this.escapeHtml(message)}</div>
       </div>
-      ${dismissible ? `<button type="button" class="alert-close" aria-label="${t('projectcheck', 'Dismiss alert')}"><span aria-hidden="true">&times;</span></button>` : ''}
+      ${dismissible ? `<button type="button" class="alert-close" aria-label="${this.tr('Dismiss alert')}"><span aria-hidden="true">&times;</span></button>` : ''}
     `;
 
     container.appendChild(alert);
@@ -300,9 +316,9 @@ const ProjectControlMessaging = {
    */
   confirm(message, options = {}) {
     const {
-      title = 'Confirm Action',
-      confirmText = 'Confirm',
-      cancelText = 'Cancel',
+      title = this.tr('Confirm Action'),
+      confirmText = this.tr('Confirm'),
+      cancelText = this.tr('Cancel'),
       type = 'warning'
     } = options;
 
@@ -467,27 +483,27 @@ const ProjectControlMessaging = {
     const messages = {
       'created': {
         type: 'success',
-        title: 'Customer Created',
-        message: `Customer "${data.name}" has been created successfully.`,
+        title: this.tr('Customer Created'),
+        message: this.tr('Customer "%s" has been created successfully.', [data.name]),
         actions: [
-          { name: 'view', label: 'View Customer', primary: true },
-          { name: 'create_project', label: 'Create Project' }
+          { name: 'view', label: this.tr('View Customer'), primary: true },
+          { name: 'create_project', label: this.tr('Create Project') }
         ]
       },
       'updated': {
         type: 'success',
-        title: 'Customer Updated',
-        message: `Customer "${data.name}" has been updated successfully.`,
+        title: this.tr('Customer Updated'),
+        message: this.tr('Customer "%s" has been updated successfully.', [data.name]),
         actions: [
-          { name: 'view', label: 'View Customer', primary: true }
+          { name: 'view', label: this.tr('View Customer'), primary: true }
         ]
       },
       'deleted': {
         type: 'info',
-        title: 'Customer Deleted',
-        message: `Customer "${data.name}" has been deleted.`,
+        title: this.tr('Customer Deleted'),
+        message: this.tr('Customer "%s" has been deleted.', [data.name]),
         actions: [
-          { name: 'undo', label: 'Undo', primary: true }
+          { name: 'undo', label: this.tr('Undo'), primary: true }
         ]
       }
     };
@@ -508,35 +524,35 @@ const ProjectControlMessaging = {
     const messages = {
       'created': {
         type: 'success',
-        title: 'Project Created',
-        message: `Project "${data.name}" has been created successfully.`,
+        title: this.tr('Project Created'),
+        message: this.tr('Project "%s" has been created successfully.', [data.name]),
         actions: [
-          { name: 'view', label: 'View Project', primary: true },
-          { name: 'add_time_entry', label: 'Add Time Entry' }
+          { name: 'view', label: this.tr('View Project'), primary: true },
+          { name: 'add_time_entry', label: this.tr('Add Time Entry') }
         ]
       },
       'updated': {
         type: 'success',
-        title: 'Project Updated',
-        message: `Project "${data.name}" has been updated successfully.`,
+        title: this.tr('Project Updated'),
+        message: this.tr('Project "%s" has been updated successfully.', [data.name]),
         actions: [
-          { name: 'view', label: 'View Project', primary: true }
+          { name: 'view', label: this.tr('View Project'), primary: true }
         ]
       },
       'deleted': {
         type: 'info',
-        title: 'Project Deleted',
-        message: `Project "${data.name}" has been deleted.`,
+        title: this.tr('Project Deleted'),
+        message: this.tr('Project "%s" has been deleted.', [data.name]),
         actions: [
-          { name: 'undo', label: 'Undo', primary: true }
+          { name: 'undo', label: this.tr('Undo'), primary: true }
         ]
       },
       'status_changed': {
         type: 'info',
-        title: 'Project Status Changed',
-        message: `Project "${data.name}" status changed to "${data.status}".`,
+        title: this.tr('Project Status Changed'),
+        message: this.tr('Project "%s" status changed to "%s".', [data.name, data.status]),
         actions: [
-          { name: 'view', label: 'View Project', primary: true }
+          { name: 'view', label: this.tr('View Project'), primary: true }
         ]
       }
     };
@@ -557,36 +573,36 @@ const ProjectControlMessaging = {
     const messages = {
       'created': {
         type: 'success',
-        title: 'Time Entry Created',
-        message: `Time entry for ${data.hours} hours has been created successfully.`,
+        title: this.tr('Time Entry Created'),
+        message: this.tr('Time entry for %s hours has been created successfully.', [data.hours]),
         actions: [
-          { name: 'view', label: 'View Entry', primary: true },
-          { name: 'add_another', label: 'Add Another' }
+          { name: 'view', label: this.tr('View Entry'), primary: true },
+          { name: 'add_another', label: this.tr('Add Another') }
         ]
       },
       'updated': {
         type: 'success',
-        title: 'Time Entry Updated',
-        message: 'Time entry has been updated successfully.',
+        title: this.tr('Time Entry Updated'),
+        message: this.tr('Time entry has been updated successfully.'),
         actions: [
-          { name: 'view', label: 'View Entry', primary: true }
+          { name: 'view', label: this.tr('View Entry'), primary: true }
         ]
       },
       'deleted': {
         type: 'info',
-        title: 'Time Entry Deleted',
-        message: 'Time entry has been deleted.',
+        title: this.tr('Time Entry Deleted'),
+        message: this.tr('Time entry has been deleted.'),
         actions: [
-          { name: 'undo', label: 'Undo', primary: true }
+          { name: 'undo', label: this.tr('Undo'), primary: true }
         ]
       },
       'overlap_warning': {
         type: 'warning',
-        title: 'Time Entry Overlap',
-        message: 'This time entry overlaps with an existing entry. Please adjust the time range.',
+        title: this.tr('Time Entry Overlap'),
+        message: this.tr('This time entry overlaps with an existing entry. Please adjust the time range.'),
         actions: [
-          { name: 'adjust', label: 'Adjust Time', primary: true },
-          { name: 'view_conflicts', label: 'View Conflicts' }
+          { name: 'adjust', label: this.tr('Adjust Time'), primary: true },
+          { name: 'view_conflicts', label: this.tr('View Conflicts') }
         ]
       }
     };
@@ -607,16 +623,16 @@ const ProjectControlMessaging = {
     const messages = {
       'updated': {
         type: 'success',
-        title: 'Settings Updated',
-        message: 'Settings have been updated successfully.',
+        title: this.tr('Settings Updated'),
+        message: this.tr('Settings have been updated successfully.'),
         actions: []
       },
       'permissions_changed': {
         type: 'info',
-        title: 'Permissions Updated',
-        message: 'User permissions have been updated.',
+        title: this.tr('Permissions Updated'),
+        message: this.tr('User permissions have been updated.'),
         actions: [
-          { name: 'view_users', label: 'View Users', primary: true }
+          { name: 'view_users', label: this.tr('View Users'), primary: true }
         ]
       }
     };
@@ -637,19 +653,19 @@ const ProjectControlMessaging = {
     const messages = {
       'success': {
         type: 'success',
-        title: 'Bulk Operation Completed',
-        message: `${data.count} items have been processed successfully.`,
+        title: this.tr('Bulk Operation Completed'),
+        message: this.tr('%d items have been processed successfully.', [data.count]),
         actions: [
-          { name: 'view_results', label: 'View Results', primary: true }
+          { name: 'view_results', label: this.tr('View Results'), primary: true }
         ]
       },
       'partial': {
         type: 'warning',
-        title: 'Bulk Operation Partially Completed',
-        message: `${data.success_count} items processed successfully, ${data.error_count} failed.`,
+        title: this.tr('Bulk Operation Partially Completed'),
+        message: this.tr('%d items processed successfully, %d failed.', [data.success_count, data.error_count]),
         actions: [
-          { name: 'view_errors', label: 'View Errors', primary: true },
-          { name: 'retry_failed', label: 'Retry Failed' }
+          { name: 'view_errors', label: this.tr('View Errors'), primary: true },
+          { name: 'retry_failed', label: this.tr('Retry Failed') }
         ]
       }
     };
@@ -805,10 +821,10 @@ const ProjectControlMessaging = {
         <div class="persistent-notification__message">${this.escapeHtml(messageData.message)}</div>
       </div>
       <div class="persistent-notification__actions">
-        <button type="button" class="persistent-notification__acknowledge" aria-label="${t('projectcheck', 'Acknowledge')}">
+        <button type="button" class="persistent-notification__acknowledge" aria-label="${this.tr('Acknowledge')}">
           <span aria-hidden="true">✓</span>
         </button>
-        <button type="button" class="persistent-notification__dismiss" aria-label="${t('projectcheck', 'Dismiss')}">
+        <button type="button" class="persistent-notification__dismiss" aria-label="${this.tr('Dismiss')}">
           <span aria-hidden="true">×</span>
         </button>
       </div>
@@ -858,15 +874,15 @@ const ProjectControlMessaging = {
               <div class="history-item__timestamp">${this.escapeHtml(new Date(msg.timestamp).toLocaleString())}</div>
             </div>
             <div class="history-item__status">
-              ${msg.acknowledged ? '✓ Acknowledged' : '⚠ Pending'}
+              ${msg.acknowledged ? `✓ ${this.escapeHtml(this.tr('Acknowledged'))}` : `⚠ ${this.escapeHtml(this.tr('Pending'))}`}
             </div>
           </div>
         `).join('')
-      : '<div class="history-empty">No message history found.</div>';
+      : `<div class="history-empty">${this.escapeHtml(this.tr('No message history found.'))}</div>`;
     
     modal.innerHTML = `
       <div class="modal-header">
-        <h2 class="modal-title">Message History</h2>
+        <h2 class="modal-title">${this.escapeHtml(this.tr('Message History'))}</h2>
       </div>
       <div class="modal-body">
         <div class="history-list">
@@ -874,9 +890,9 @@ const ProjectControlMessaging = {
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn--secondary modal-clear-history">Clear History</button>
-        <button type="button" class="btn btn--primary modal-export-history">Export</button>
-        <button type="button" class="btn btn--secondary modal-cancel">Close</button>
+        <button type="button" class="btn btn--secondary modal-clear-history">${this.escapeHtml(this.tr('Clear History'))}</button>
+        <button type="button" class="btn btn--primary modal-export-history">${this.escapeHtml(this.tr('Export'))}</button>
+        <button type="button" class="btn btn--secondary modal-cancel">${this.escapeHtml(this.tr('Close'))}</button>
       </div>
     `;
     
@@ -888,7 +904,7 @@ const ProjectControlMessaging = {
     clearBtn.addEventListener('click', () => {
       this.clearMessageHistory();
       this.closeModal(modal);
-      this.show('info', 'Message history has been cleared.');
+      this.show('info', this.tr('Message history has been cleared.'));
     });
     
     exportBtn.addEventListener('click', () => {

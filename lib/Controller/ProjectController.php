@@ -185,7 +185,7 @@ class ProjectController extends Controller
 				'role' => $m->getRole(),
 				'hours' => round($hours, 2),
 				'is_former' => $isFormer,
-				'profile_url' => $live ? $this->urlGenerator->linkToRoute('core.ProfilePage.index', ['targetUserId' => $uid]) : null,
+				'profile_url' => $live ? $this->urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $uid]) : null,
 			];
 		}
 		return $roster;
@@ -1020,6 +1020,91 @@ class ProjectController extends Controller
 			// Removed logger call
 			return new DataResponse(['error' => $e->getMessage()], 400);
 		}
+	}
+
+	/**
+	 * Add all assignable (enabled, non-member) users to a project.
+	 */
+	#[NoAdminRequired]
+	public function addAllTeamMembers(int $id): DataResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		$project = $this->projectService->getProject($id);
+		if ($project === null) {
+			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
+		}
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+		if (!$project->isEditableState()) {
+			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
+
+		$activeTeam = $this->projectService->getProjectTeamGrouped($id)['active'] ?? [];
+		$activeUids = [];
+		foreach ($activeTeam as $member) {
+			if ($member instanceof ProjectMember) {
+				$activeUids[(string)$member->getUserId()] = true;
+			}
+		}
+
+		$batchSize = 500;
+		$offset = 0;
+		$addedCount = 0;
+		$skippedCount = 0;
+		$seenUids = [];
+
+		try {
+			do {
+				$candidates = $this->userManager->search('', $batchSize, $offset);
+				if (!is_array($candidates) || $candidates === []) {
+					break;
+				}
+
+				foreach ($candidates as $candidate) {
+					if (!($candidate instanceof \OCP\IUser)) {
+						continue;
+					}
+
+					$uid = trim((string)$candidate->getUID());
+					if ($uid === '' || isset($seenUids[$uid])) {
+						continue;
+					}
+					$seenUids[$uid] = true;
+
+					if (isset($activeUids[$uid])) {
+						$skippedCount++;
+						continue;
+					}
+					if (method_exists($candidate, 'isEnabled') && !$candidate->isEnabled()) {
+						$skippedCount++;
+						continue;
+					}
+
+					try {
+						$this->projectService->addTeamMember($id, $uid, \OCA\ProjectCheck\Service\ProjectService::DEFAULT_MEMBER_ROLE, null);
+						$activeUids[$uid] = true;
+						$addedCount++;
+					} catch (\Exception $e) {
+						$skippedCount++;
+					}
+				}
+
+				$offset += $batchSize;
+			} while (count($candidates) === $batchSize);
+		} catch (\Throwable $e) {
+			return new DataResponse(['error' => $this->l->t('Could not add all users to the project')], 400);
+		}
+
+		return new DataResponse([
+			'success' => true,
+			'added_count' => $addedCount,
+			'skipped_count' => $skippedCount,
+			'message' => $this->l->t('Added %d users to the project', [$addedCount]),
+		]);
 	}
 
 	/**

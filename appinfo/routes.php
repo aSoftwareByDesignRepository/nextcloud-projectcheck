@@ -32,6 +32,7 @@ return [
 		// Team member management routes
 		['name' => 'project#getTeamMembers', 'url' => '/projects/{id}/members', 'verb' => 'GET'],
 		['name' => 'project#addTeamMember', 'url' => '/projects/{id}/members', 'verb' => 'POST'],
+		['name' => 'project#addAllTeamMembers', 'url' => '/projects/{id}/members/add-all', 'verb' => 'POST'],
 		['name' => 'project#updateTeamMember', 'url' => '/projects/{id}/members/{userId}', 'verb' => 'PUT'],
 		['name' => 'project#removeTeamMember', 'url' => '/projects/{id}/members/{userId}', 'verb' => 'DELETE'],
 		['name' => 'project#searchAssignableUsers', 'url' => '/projects/{id}/members/search-users', 'verb' => 'GET'],

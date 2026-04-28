@@ -146,13 +146,14 @@ class TimeEntryController extends Controller
 		}
 
 		$userId = $user->getUID();
+		$accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($userId);
 
 		// Get filters from request
 		$projectId = $this->request->getParam('project_id', '');
 		$dateFrom = $this->request->getParam('date_from', '');
 		$dateTo = $this->request->getParam('date_to', '');
 		$search = $this->request->getParam('search', '');
-		$filterUserId = $this->request->getParam('user_id', '');
+		$filterUserId = trim((string)$this->request->getParam('user_id', ''));
 		$projectType = $this->request->getParam('project_type', '');
 		$page = max(1, (int)$this->request->getParam('page', 1));
 
@@ -170,6 +171,9 @@ class TimeEntryController extends Controller
 		if ($search) $filters['search'] = $search;
 		if ($filterUserId) $filters['user_id'] = $filterUserId;
 		if ($projectType) $filters['project_type'] = $projectType;
+		if ($accessibleProjectIds !== null) {
+			$filters['project_ids'] = $accessibleProjectIds;
+		}
 
 		// Apply pagination filters
 		$filters['limit'] = $perPage;
@@ -203,7 +207,8 @@ class TimeEntryController extends Controller
 		$userProjects = $this->sortProjectsByName($userProjects);
 
 		// Get all users who have time entries
-		$users = $this->timeEntryService->getUsersWithTimeEntries();
+		$users = $this->timeEntryService->getUsersWithTimeEntries($accessibleProjectIds);
+		$users = $this->ensureSelectedUserVisibleInFilters($users, $filterUserId, $timeEntries);
 
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
@@ -697,6 +702,7 @@ class TimeEntryController extends Controller
 			}
 
 			$currentUserId = $user->getUID();
+			$accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($currentUserId);
 
 			// Get filters from request
 			$projectId = $this->request->getParam('project_id', '');
@@ -713,6 +719,9 @@ class TimeEntryController extends Controller
 			if ($dateFrom) $filters['date_from'] = $dateFrom;
 			if ($dateTo) $filters['date_to'] = $dateTo;
 			if ($search) $filters['search'] = $search;
+			if ($accessibleProjectIds !== null) {
+				$filters['project_ids'] = $accessibleProjectIds;
+			}
 
 			// Get time entries with project and user information
 			$timeEntries = $this->timeEntryService->getTimeEntriesWithProjectInfo($filters);
@@ -748,6 +757,76 @@ class TimeEntryController extends Controller
 			return strcasecmp($nameA, $nameB);
 		});
 		return $projects;
+	}
+
+	/**
+	 * Ensure the currently selected user filter is always present in the dropdown.
+	 *
+	 * This avoids a confusing state where URL/user filter is active but invisible
+	 * because the user list source does not include that id in the current dataset.
+	 *
+	 * @param array<int, array{user_id:mixed, displayname:mixed}> $users
+	 * @param string $selectedUserId
+	 * @param array<int, array<string, mixed>> $timeEntries
+	 * @return array<int, array{user_id:string, displayname:string}>
+	 */
+	private function ensureSelectedUserVisibleInFilters(array $users, string $selectedUserId, array $timeEntries): array
+	{
+		$normalizedUsers = [];
+		$selectedPresent = false;
+
+		foreach ($users as $user) {
+			$uid = trim((string)($user['user_id'] ?? ''));
+			if ($uid === '') {
+				continue;
+			}
+
+			$displayName = trim((string)($user['displayname'] ?? ''));
+			if ($displayName === '') {
+				$displayName = $uid;
+			}
+
+			if ($uid === $selectedUserId) {
+				$selectedPresent = true;
+			}
+
+			$normalizedUsers[] = [
+				'user_id' => $uid,
+				'displayname' => $displayName,
+			];
+		}
+
+		if ($selectedUserId === '' || $selectedPresent) {
+			return $normalizedUsers;
+		}
+
+		$fallbackLabel = $selectedUserId;
+		foreach ($timeEntries as $entry) {
+			if (!isset($entry['timeEntry']) || !is_object($entry['timeEntry']) || !method_exists($entry['timeEntry'], 'getUserId')) {
+				continue;
+			}
+			$entryUserId = trim((string)$entry['timeEntry']->getUserId());
+			if ($entryUserId !== $selectedUserId) {
+				continue;
+			}
+
+			$candidateLabel = trim((string)($entry['userDisplayName'] ?? ''));
+			if ($candidateLabel !== '') {
+				$fallbackLabel = $candidateLabel;
+			}
+			break;
+		}
+
+		$normalizedUsers[] = [
+			'user_id' => $selectedUserId,
+			'displayname' => $fallbackLabel,
+		];
+
+		usort($normalizedUsers, static function (array $a, array $b): int {
+			return strcasecmp($a['displayname'], $b['displayname']);
+		});
+
+		return $normalizedUsers;
 	}
 
 	/**

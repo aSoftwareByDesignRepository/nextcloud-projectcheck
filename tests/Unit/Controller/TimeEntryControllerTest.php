@@ -6,6 +6,7 @@ namespace OCA\ProjectCheck\Tests\Unit\Controller;
 
 use OCA\ProjectCheck\Controller\TimeEntryController;
 use OCA\ProjectCheck\Db\Project;
+use OCA\ProjectCheck\Db\TimeEntry;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\CSPService;
@@ -14,6 +15,7 @@ use OCA\ProjectCheck\Service\DateFormatService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -26,6 +28,7 @@ use Psr\Log\LoggerInterface;
 
 class TimeEntryControllerTest extends TestCase {
 	private TimeEntryController $controller;
+	private IRequest $request;
 	private ProjectService $projectService;
 	private CustomerService $customerService;
 	private TimeEntryService $timeEntryService;
@@ -35,8 +38,7 @@ class TimeEntryControllerTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$request = $this->createMock(IRequest::class);
-		$request->method('getParam')->willReturn('');
+		$this->request = $this->createMock(IRequest::class);
 
 		$this->projectService = $this->createMock(ProjectService::class);
 		$this->customerService = $this->createMock(CustomerService::class);
@@ -65,13 +67,18 @@ class TimeEntryControllerTest extends TestCase {
 		$this->user->method('getUID')->willReturn('member-user');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		$this->projectService->method('getAccessibleProjectIdListForUser')->willReturn([]);
 		$this->projectService->method('getProjectsByIdList')->willReturn([]);
 		$this->customerService->method('getVisibleCustomerCountForUser')->willReturn(0);
+		$this->timeEntryService->method('countTimeEntries')->willReturn(0);
+		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([]);
+		$this->timeEntryService->method('getUsersWithTimeEntries')->willReturn([]);
+		$this->timeEntryService->method('getYearlyStatsByProjectType')->willReturn([]);
+		$this->timeEntryService->method('getDetailedYearlyStatsByProjectType')->willReturn([]);
+		$this->timeEntryService->method('getProductivityAnalysis')->willReturn([]);
 
 		$this->controller = new TimeEntryController(
 			'projectcheck',
-			$request,
+			$this->request,
 			$this->userSession,
 			$this->timeEntryService,
 			$this->projectService,
@@ -120,6 +127,122 @@ class TimeEntryControllerTest extends TestCase {
 		// Controller sorts by name, so Apollo should come before Zeus.
 		$this->assertSame('Apollo', $params['projects'][0]->getName());
 		$this->assertSame('Zeus', $params['projects'][1]->getName());
+	}
+
+	public function testIndexKeepsSelectedUserFilterVisibleWhenMissingInUserOptions(): void {
+		$selectedUserId = 'gna';
+		$timeEntry = new TimeEntry();
+		$timeEntry->setId(123);
+		$timeEntry->setProjectId(2);
+		$timeEntry->setUserId($selectedUserId);
+		$timeEntry->setDate(new \DateTime('2026-04-01'));
+		$timeEntry->setHours(2.5);
+		$timeEntry->setDescription('Filtered entry');
+		$timeEntry->setHourlyRate(100.0);
+		$timeEntry->setCreatedAt(new \DateTime('2026-04-01 10:00:00'));
+		$timeEntry->setUpdatedAt(new \DateTime('2026-04-01 10:00:00'));
+
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $name, $default = null) use ($selectedUserId) {
+				return match ($name) {
+					'project_id' => '2',
+					'user_id' => $selectedUserId,
+					'page' => 1,
+					'date_from', 'date_to', 'search', 'project_type' => '',
+					default => $default,
+				};
+			}
+		);
+
+		$this->timeEntryService->method('countTimeEntries')->willReturn(1);
+		$this->projectService->method('getProjectsForUserTimeEntry')->willReturn([]);
+		$this->timeEntryService->method('getUsersWithTimeEntries')->willReturn([
+			['user_id' => 'alice', 'displayname' => 'Alice'],
+		]);
+		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([
+			[
+				'timeEntry' => $timeEntry,
+				'userDisplayName' => 'Gina Adams',
+			],
+		]);
+
+		$response = $this->controller->index();
+
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$params = $response->getParams();
+		$this->assertSame($selectedUserId, $params['filters']['user_id']);
+		$selectedUserOption = array_values(array_filter(
+			$params['users'],
+			static fn (array $user): bool => ($user['user_id'] ?? '') === $selectedUserId
+		));
+		$this->assertNotEmpty($selectedUserOption);
+		$this->assertNotSame('', trim((string)($selectedUserOption[0]['displayname'] ?? '')));
+	}
+
+	public function testIndexScopesQueriesToAccessibleProjectsForNonGlobalUser(): void {
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $name, $default = null) {
+				return match ($name) {
+					'project_id', 'date_from', 'date_to', 'search', 'user_id', 'project_type' => '',
+					'page' => 1,
+					default => $default,
+				};
+			}
+		);
+
+		$accessibleProjectIds = [2, 4];
+		$this->projectService->method('getAccessibleProjectIdListForUser')->with('member-user')->willReturn($accessibleProjectIds);
+		$this->projectService->method('getProjectsForUserTimeEntry')->willReturn([]);
+
+		$this->timeEntryService->expects($this->once())
+			->method('countTimeEntries')
+			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
+				return ($filters['project_ids'] ?? null) === $accessibleProjectIds;
+			}))
+			->willReturn(0);
+
+		$this->timeEntryService->expects($this->once())
+			->method('getTimeEntriesWithProjectInfo')
+			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
+				return ($filters['project_ids'] ?? null) === $accessibleProjectIds;
+			}))
+			->willReturn([]);
+
+		$this->timeEntryService->expects($this->once())
+			->method('getUsersWithTimeEntries')
+			->with($accessibleProjectIds)
+			->willReturn([]);
+
+		$response = $this->controller->index();
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+	}
+
+	public function testExportScopesQueriesToAccessibleProjectsForNonGlobalUser(): void {
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $name, $default = null) {
+				return match ($name) {
+					'project_id', 'date_from', 'date_to', 'search', 'user_id', 'project_type' => '',
+					default => $default,
+				};
+			}
+		);
+
+		$accessibleProjectIds = [5, 8];
+		$this->projectService->method('getAccessibleProjectIdListForUser')->with('member-user')->willReturn($accessibleProjectIds);
+
+		$this->timeEntryService->expects($this->once())
+			->method('getTimeEntriesWithProjectInfo')
+			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
+				return ($filters['project_ids'] ?? null) === $accessibleProjectIds;
+			}))
+			->willReturn([]);
+
+		$response = $this->controller->export();
+
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$data = $response->getData();
+		$this->assertIsArray($data);
+		$this->assertArrayHasKey('csv_data', $data);
 	}
 }
 

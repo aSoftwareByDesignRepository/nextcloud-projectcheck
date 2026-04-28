@@ -13,6 +13,7 @@ namespace OCA\ProjectCheck\Db;
 
 use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
@@ -47,6 +48,15 @@ class TimeEntryMapper extends QBMapper
 		// Apply filters
 		if (!empty($filters['project_id'])) {
 			$qb->andWhere($qb->expr()->eq('project_id', $qb->createNamedParameter($filters['project_id'])));
+		}
+		if (array_key_exists('project_ids', $filters) && is_array($filters['project_ids'])) {
+			if ($filters['project_ids'] === []) {
+				$qb->andWhere('1 = 0');
+			} else {
+				$qb->andWhere(
+					$qb->expr()->in('project_id', $qb->createNamedParameter($filters['project_ids'], IQueryBuilder::PARAM_INT_ARRAY))
+				);
+			}
 		}
 
 		if (!empty($filters['user_id'])) {
@@ -182,6 +192,15 @@ class TimeEntryMapper extends QBMapper
 		// Apply filters
 		if (!empty($filters['project_id'])) {
 			$qb->andWhere($qb->expr()->eq('project_id', $qb->createNamedParameter($filters['project_id'])));
+		}
+		if (array_key_exists('project_ids', $filters) && is_array($filters['project_ids'])) {
+			if ($filters['project_ids'] === []) {
+				$qb->andWhere('1 = 0');
+			} else {
+				$qb->andWhere(
+					$qb->expr()->in('project_id', $qb->createNamedParameter($filters['project_ids'], IQueryBuilder::PARAM_INT_ARRAY))
+				);
+			}
 		}
 
 		if (!empty($filters['user_id'])) {
@@ -325,6 +344,15 @@ class TimeEntryMapper extends QBMapper
 		if (!empty($filters['project_id'])) {
 			$qb->andWhere($qb->expr()->eq('t.project_id', $qb->createNamedParameter($filters['project_id'])));
 		}
+		if (array_key_exists('project_ids', $filters) && is_array($filters['project_ids'])) {
+			if ($filters['project_ids'] === []) {
+				$qb->andWhere('1 = 0');
+			} else {
+				$qb->andWhere(
+					$qb->expr()->in('t.project_id', $qb->createNamedParameter($filters['project_ids'], IQueryBuilder::PARAM_INT_ARRAY))
+				);
+			}
+		}
 
 		if (!empty($filters['user_id'])) {
 			$qb->andWhere($qb->expr()->eq('t.user_id', $qb->createNamedParameter($filters['user_id'])));
@@ -393,7 +421,7 @@ class TimeEntryMapper extends QBMapper
 	 *
 	 * @return array
 	 */
-	public function findUsersWithTimeEntries(): array
+	public function findUsersWithTimeEntries(?array $projectIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
 		$coalesce = "COALESCE(MAX(s.display_name), MAX(u.displayname), t.user_id)";
@@ -403,6 +431,14 @@ class TimeEntryMapper extends QBMapper
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
 			->groupBy('t.user_id')
 			->orderBy($qb->createFunction($coalesce), 'ASC');
+		if ($projectIds !== null) {
+			if ($projectIds === []) {
+				return [];
+			}
+			$qb->andWhere(
+				$qb->expr()->in('t.project_id', $qb->createNamedParameter($projectIds, IQueryBuilder::PARAM_INT_ARRAY))
+			);
+		}
 
 		$result = $qb->executeQuery();
 		$users = [];

@@ -27,6 +27,8 @@ $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
 $allowedStatusTargets = $_['allowedStatusTargets'] ?? [];
 $canAddTimeEntry = $_['canAddTimeEntry'] ?? $project->allowsTimeTracking();
 $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
+$bulkAddSuccess = isset($_GET['bulk_add_success']) && (string)$_GET['bulk_add_success'] === '1';
+$bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_count']) : 0;
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -47,6 +49,13 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
             <div class="project-detail__notice project-detail__notice--archived" role="status" aria-live="polite">
                 <i class="icon-pause" aria-hidden="true"></i>
                 <p><?php p($l->t('This project is archived. It is read-only. To log time or edit details, reactivate it to Active or On Hold using "Change status".')); ?></p>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($bulkAddSuccess): ?>
+            <div class="notice notice-success" role="status" aria-live="polite" aria-atomic="true">
+                <i class="icon icon-checkmark" aria-hidden="true"></i>
+                <span><?php p($l->t('Added %d users to the project', [$bulkAddAddedCount])); ?></span>
             </div>
         <?php endif; ?>
 
@@ -811,6 +820,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
     $addTeamUrl = $addTeamMemberUrl !== null
         ? $addTeamMemberUrl
         : $urlGenerator->linkToRoute('projectcheck.project.addTeamMember', ['id' => $projectId]);
+    $addAllTeamUrl = $urlGenerator->linkToRoute('projectcheck.project.addAllTeamMembers', ['id' => $projectId]);
 ?>
 <?php if (!empty($canAddTeamMember) && $canAddTeamMember): ?>
 <div id="addTeamMemberModal" class="modal projectcheck-dialog" style="display: none;" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="addTeamMemberTitle" aria-describedby="addMemberHelp addMemberSteps">
@@ -849,6 +859,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         </div>
         <div class="modal-footer projectcheck-dialog__footer">
             <button type="button" class="button secondary" id="cancel-add-member"><?php p($l->t('Cancel')); ?></button>
+            <button type="button" class="button secondary" id="submit-add-all-team-members" data-default-label="<?php p($l->t('Add all users')); ?>" data-busy-label="<?php p($l->t('Adding all users…')); ?>"><?php p($l->t('Add all users')); ?></button>
             <button type="button" class="button primary" id="submit-add-team-member" disabled title="<?php p($l->t('Select one user first')); ?>" data-default-label="<?php p($l->t('Add to project')); ?>" data-busy-label="<?php p($l->t('Adding…')); ?>"><?php p($l->t('Add to project')); ?></button>
         </div>
     </div>
@@ -857,9 +868,19 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
 
 <script nonce="<?php p($_['cspNonce'] ?? ''); ?>">
     (function() {
+        <?php if ($bulkAddSuccess): ?>
+        if (window.history && typeof window.history.replaceState === 'function') {
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete('bulk_add_success');
+            cleanUrl.searchParams.delete('added_count');
+            window.history.replaceState({}, '', cleanUrl.toString());
+        }
+        <?php endif; ?>
+
         const projectcheckToken = <?php echo json_encode($_['requesttoken'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
         const changeStatusUrl = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.changeStatus', ['id' => $projectId])); ?>;
         const addTeamUrl = <?php echo json_encode($addTeamUrl ?? $urlGenerator->linkToRoute('projectcheck.project.addTeamMember', ['id' => $projectId])); ?>;
+        const addAllTeamUrl = <?php echo json_encode($addAllTeamUrl); ?>;
         const searchUsersUrl = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.searchAssignableUsers', ['id' => $projectId])); ?>;
         const errorStatusMsg = <?php echo json_encode($l->t('Error updating status')); ?>;
         const errorGeneric = <?php echo json_encode($l->t('Something went wrong. Please try again.')); ?>;
@@ -869,6 +890,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         const loadingUsersMsg = <?php echo json_encode($l->t('Searching users…')); ?>;
         const enterMoreCharsMsg = <?php echo json_encode($l->t('Type at least 2 characters to search.')); ?>;
         const searchUsersErrorMsg = <?php echo json_encode($l->t('User search failed. Check your connection and try again.')); ?>;
+        const addAllMembersError = <?php echo json_encode($l->t('Could not add all users to the project')); ?>;
         let lastFocusedElement = null;
         let memberSearchTimeout = null;
         let memberSearchAbort = null;
@@ -876,6 +898,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         let memberSearchActiveIndex = -1;
         let memberSearchItems = [];
         let memberAddSubmitting = false;
+        let memberAddAllSubmitting = false;
 
         function setSearchExpanded(expanded) {
             const searchInput = document.getElementById('teamMemberSearch');
@@ -896,6 +919,11 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
             const canSubmit = resolveSelectedUserId() !== '';
             submitButton.disabled = !canSubmit || memberAddSubmitting;
             submitButton.title = canSubmit ? '' : chooseUserMsg;
+
+            const addAllButton = document.getElementById('submit-add-all-team-members');
+            if (addAllButton instanceof HTMLButtonElement) {
+                addAllButton.disabled = memberAddSubmitting || memberAddAllSubmitting;
+            }
         }
 
         function updateSelectedUserSummary(uid, label) {
@@ -1302,7 +1330,7 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         }
 
         function submitAddTeamMember() {
-            if (memberAddSubmitting) {
+            if (memberAddSubmitting || memberAddAllSubmitting) {
                 return;
             }
             const uid = resolveSelectedUserId();
@@ -1365,6 +1393,56 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
                 });
         }
 
+        function submitAddAllTeamMembers() {
+            if (memberAddSubmitting || memberAddAllSubmitting) {
+                return;
+            }
+
+            memberAddAllSubmitting = true;
+            updateAddMemberSubmitState();
+
+            const addAllButton = document.getElementById('submit-add-all-team-members');
+            if (addAllButton instanceof HTMLButtonElement) {
+                addAllButton.setAttribute('aria-busy', 'true');
+                addAllButton.textContent = addAllButton.dataset.busyLabel || addAllButton.textContent;
+            }
+
+            // Requested UX: close modal immediately, run bulk action, then refresh.
+            closeAddTeamMemberModal();
+
+            fetch(addAllTeamUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'requesttoken': projectcheckToken
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(r => r.json().then(d => ({ ok: r.ok, d })).catch(() => ({ ok: r.ok, d: {} })))
+                .then(res => {
+                    if (res.d && res.d.success) {
+                        const addedCount = Number((res.d && res.d.added_count) || 0);
+                        const reloadUrl = new URL(window.location.href);
+                        reloadUrl.searchParams.set('bulk_add_success', '1');
+                        reloadUrl.searchParams.set('added_count', String(Number.isFinite(addedCount) ? Math.max(0, Math.trunc(addedCount)) : 0));
+                        window.location.href = reloadUrl.toString();
+                        return;
+                    }
+                    const err = (res.d && (res.d.error || res.d.message)) ? (res.d.error || res.d.message) : addAllMembersError;
+                    showError(err);
+                })
+                .catch(() => showError(errorGeneric))
+                .finally(() => {
+                    memberAddAllSubmitting = false;
+                    if (addAllButton instanceof HTMLButtonElement) {
+                        addAllButton.removeAttribute('aria-busy');
+                        addAllButton.textContent = addAllButton.dataset.defaultLabel || addAllButton.textContent;
+                    }
+                    updateAddMemberSubmitState();
+                });
+        }
+
         function handleAddMemberFormSubmit(e) {
             e.preventDefault();
             submitAddTeamMember();
@@ -1400,6 +1478,10 @@ $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
         const subAdd = document.getElementById('submit-add-team-member');
         if (subAdd) {
             subAdd.addEventListener('click', submitAddTeamMember);
+        }
+        const subAddAll = document.getElementById('submit-add-all-team-members');
+        if (subAddAll) {
+            subAddAll.addEventListener('click', submitAddAllTeamMembers);
         }
         const addMemberForm = document.getElementById('addTeamMemberForm');
         if (addMemberForm) {
