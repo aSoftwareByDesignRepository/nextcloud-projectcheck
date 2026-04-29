@@ -16,6 +16,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCA\ProjectCheck\Db\Project;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
@@ -78,7 +79,8 @@ class DashboardController extends Controller
 		CustomerService $customerService,
 		BudgetService $budgetService,
 		IURLGenerator $urlGenerator,
-		CSPService $cspService
+		CSPService $cspService,
+		IL10N $l
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
@@ -109,17 +111,19 @@ class DashboardController extends Controller
 		}
 
 		$userId = $user->getUID();
+		$accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($userId);
+		$isGlobalViewer = $accessibleProjectIds === null;
 
 		// Get comprehensive statistics
-		$comprehensiveStats = $this->getComprehensiveStats($userId);
+		$comprehensiveStats = $this->getComprehensiveStats($userId, $accessibleProjectIds);
 
 		// Get detailed yearly statistics grouped by customer and project
-		$detailedYearlyStats = $this->timeEntryService->getDetailedYearlyStats();
+		$detailedYearlyStats = $this->timeEntryService->getDetailedYearlyStats($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
 
 		// Get project type statistics
-		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType();
-		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType();
-		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis();
+		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
+		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
+		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
 
 		// Get common stats for the sidebar
 		$commonStats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
@@ -132,7 +136,7 @@ class DashboardController extends Controller
 		$stats['productivityAnalysis'] = $productivityAnalysis;
 
 		// Get budget alerts for active projects
-		$allProjects = $this->projectService->getProjectsByUser($userId);
+		$allProjects = $this->getDashboardProjects($accessibleProjectIds, $userId);
 		$activeProjects = array_filter($allProjects, function ($project) {
 			return $project->getStatus() === 'Active';
 		});
@@ -141,6 +145,7 @@ class DashboardController extends Controller
 		$response = new TemplateResponse($this->appName, 'dashboard', [
 			'stats' => $stats,
 			'budgetAlerts' => $budgetAlerts,
+			'isGlobalViewer' => $isGlobalViewer,
 			'userId' => $userId,
 			'urlGenerator' => $this->urlGenerator,
 			'dashboardUrl' => $this->urlGenerator->linkToRoute('projectcheck.dashboard.index'),
@@ -168,20 +173,22 @@ class DashboardController extends Controller
 		}
 
 		$userId = $user->getUID();
+		$accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($userId);
+		$isGlobalViewer = $accessibleProjectIds === null;
 
 		// Get comprehensive statistics
-		$comprehensiveStats = $this->getComprehensiveStats($userId);
+		$comprehensiveStats = $this->getComprehensiveStats($userId, $accessibleProjectIds);
 
 		// Get yearly statistics
-		$yearlyStats = $this->timeEntryService->getYearlyStatsForAllProjects();
+		$yearlyStats = $this->timeEntryService->getYearlyStatsForAllProjects($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
 
 		// Get detailed yearly statistics grouped by customer and project
-		$detailedYearlyStats = $this->timeEntryService->getDetailedYearlyStats();
+		$detailedYearlyStats = $this->timeEntryService->getDetailedYearlyStats($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
 
 		// Get project type statistics
-		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType();
-		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType();
-		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis();
+		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
+		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
+		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
 
 		// Get common stats for the sidebar
 		$commonStats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
@@ -193,6 +200,7 @@ class DashboardController extends Controller
 		$stats['projectTypeStats'] = $projectTypeStats;
 		$stats['detailedProjectTypeStats'] = $detailedProjectTypeStats;
 		$stats['productivityAnalysis'] = $productivityAnalysis;
+		$stats['isGlobalViewer'] = $isGlobalViewer;
 
 		return new JSONResponse($stats);
 	}
@@ -203,29 +211,16 @@ class DashboardController extends Controller
 	 * @param string $userId
 	 * @return array
 	 */
-	private function getComprehensiveStats($userId)
+	private function getComprehensiveStats(string $userId, ?array $accessibleProjectIds): array
 	{
 		try {
-			// Get all projects in the system
-			$allProjects = $this->projectService->getAllProjects();
-
-			// Get all time entries in the system
-			$allTimeEntries = $this->timeEntryService->getAllTimeEntries();
-			$recentTimeEntries = array_slice($allTimeEntries, 0, 5);
-
-			// Add project information to time entries
-			$timeEntriesWithProjectInfo = [];
-			foreach ($recentTimeEntries as $entry) {
-				$project = $this->projectService->getProject($entry->getProjectId());
-				$timeEntriesWithProjectInfo[] = [
-					'timeEntry' => $entry,
-					'projectName' => $project ? $project->getName() : 'Unknown Project',
-					'customerName' => $project ? $project->getCustomerName() : ''
-				];
-			}
-
-			// Get all customers
-			$customers = $this->customerService->getAllCustomers();
+			$isGlobalViewer = $accessibleProjectIds === null;
+			$allProjects = $this->getDashboardProjects($accessibleProjectIds, $userId);
+			$customers = $isGlobalViewer
+				? $this->customerService->getAllCustomers()
+				: $this->customerService->getCustomers(
+					$this->customerService->getCustomerListFiltersForUser($userId, [])
+				);
 
 			// Calculate statistics
 			$totalProjects = count($allProjects);
@@ -245,14 +240,21 @@ class DashboardController extends Controller
 				$totalBudget += $project->getTotalBudget();
 
 				// Calculate actual consumption from time entries for this project
-				$projectSpentData = $this->budgetService->getProjectBudgetInfo($project, $userId);
-				$totalConsumption += $projectSpentData['used_budget'];
+				if ($isGlobalViewer) {
+					$projectSpentData = $this->budgetService->getProjectBudgetInfo($project, $userId);
+					$totalConsumption += $projectSpentData['used_budget'];
+				} else {
+					$totalConsumption += $this->timeEntryService->getTotalCostForProjectAndUser((int) $project->getId(), $userId);
+				}
 			}
 
-			// Calculate total hours from time entries
-			foreach ($allTimeEntries as $entry) {
-				$totalHours += $entry->getHours();
+			$timeEntryScopeUserIds = $isGlobalViewer ? null : [$userId];
+			$yearlyStats = $this->timeEntryService->getYearlyStatsForAllProjects($accessibleProjectIds, $timeEntryScopeUserIds);
+			foreach ($yearlyStats as $yearData) {
+				$totalHours += (float) ($yearData['total_hours'] ?? 0);
 			}
+
+			$timeEntriesWithProjectInfo = $this->getRecentTimeEntries($accessibleProjectIds, $isGlobalViewer ? null : $userId);
 
 			$consumptionPercentage = $totalBudget > 0 ? ($totalConsumption / $totalBudget) * 100 : 0;
 
@@ -285,6 +287,38 @@ class DashboardController extends Controller
 				'error' => $e->getMessage()
 			];
 		}
+	}
+
+	/**
+	 * @param list<int>|null $accessibleProjectIds
+	 * @return list<Project>
+	 */
+	private function getDashboardProjects(?array $accessibleProjectIds, string $userId): array
+	{
+		if ($accessibleProjectIds === null) {
+			return $this->projectService->getAllProjects();
+		}
+		if ($accessibleProjectIds === []) {
+			return [];
+		}
+		return $this->projectService->getProjectsByIdList($accessibleProjectIds);
+	}
+
+	/**
+	 * @param list<int>|null $accessibleProjectIds
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function getRecentTimeEntries(?array $accessibleProjectIds, ?string $entryOwnerUserId = null): array
+	{
+		$filters = ['limit' => 5];
+		if ($accessibleProjectIds !== null) {
+			$filters['project_ids'] = $accessibleProjectIds;
+		}
+		if ($entryOwnerUserId !== null) {
+			$filters['user_id'] = $entryOwnerUserId;
+		}
+
+		return $this->timeEntryService->getTimeEntriesWithProjectInfo($filters);
 	}
 
 	/**

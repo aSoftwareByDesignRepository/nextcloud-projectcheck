@@ -386,9 +386,46 @@ class CustomerService
 	 */
 	public function getCustomerStats(): array
 	{
-		$totalCustomers = $this->customerMapper->count();
+		$totalCustomers = $this->customerMapper->countWithFilters([]);
 		$customersWithProjects = $this->customerMapper->countWithProjects();
 		$customersWithCompleteInfo = $this->customerMapper->countWithCompleteInfo();
+
+		return [
+			'totalCustomers' => $totalCustomers,
+			'customersWithProjects' => $customersWithProjects,
+			'customersWithCompleteInfo' => $customersWithCompleteInfo,
+			'customersWithoutProjects' => $totalCustomers - $customersWithProjects,
+			'customersWithIncompleteInfo' => $totalCustomers - $customersWithCompleteInfo
+		];
+	}
+
+	/**
+	 * Customer list statistics for the current viewer's scope.
+	 */
+	public function getCustomerStatsForUser(string $userId): array
+	{
+		if ($this->isOrganizationStaff($userId) || $this->projectService->isUserGroupAdmin($userId)) {
+			return $this->getCustomerStats();
+		}
+
+		$visibleCustomers = $this->getCustomers($this->getCustomerListFiltersForUser($userId, []));
+		$totalCustomers = count($visibleCustomers);
+		$customersWithProjects = 0;
+		$customersWithCompleteInfo = 0;
+
+		foreach ($visibleCustomers as $customer) {
+			if ((int) $customer->getProjectCount() > 0) {
+				$customersWithProjects++;
+			}
+			if (
+				($customer->getEmail() ?? '') !== ''
+				&& ($customer->getPhone() ?? '') !== ''
+				&& ($customer->getAddress() ?? '') !== ''
+				&& ($customer->getContactPerson() ?? '') !== ''
+			) {
+				$customersWithCompleteInfo++;
+			}
+		}
 
 		return [
 			'totalCustomers' => $totalCustomers,
@@ -405,7 +442,7 @@ class CustomerService
 	 * @param int $customerId Customer ID
 	 * @return array
 	 */
-	public function getCustomerSpecificStats(int $customerId): array
+	public function getCustomerSpecificStats(int $customerId, ?array $projectIds = null): array
 	{
 		$customer = $this->getCustomer($customerId);
 		if (!$customer) {
@@ -427,10 +464,11 @@ class CustomerService
 			];
 		}
 
-		$totalProjects = $this->customerMapper->getProjectCount($customerId);
-
 		// Get all projects for this customer
-		$projects = $this->projectService->getProjectsByCustomer($customerId);
+		$projects = $projectIds === null
+			? $this->projectService->getProjectsByCustomer($customerId)
+			: $this->projectService->getProjectsByIdList($projectIds);
+		$totalProjects = count($projects);
 
 		// Initialize counters
 		$activeProjects = 0;

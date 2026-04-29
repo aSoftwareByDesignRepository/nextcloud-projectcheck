@@ -475,7 +475,9 @@ class ProjectControllerTest extends TestCase {
 			new Project()
 		];
 
-		$this->projectService->method('getProjects')->willReturn($projects);
+		$this->projectService->method('getUserScopedProjects')
+			->with('testuser', ['search' => 'test'])
+			->willReturn($projects);
 
 		$response = $this->controller->search();
 

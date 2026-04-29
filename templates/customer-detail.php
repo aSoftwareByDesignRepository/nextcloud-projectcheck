@@ -7,7 +7,6 @@
  * @license AGPL-3.0-or-later
  */
 
-script('projectcheck', 'customer-detail');
 style('projectcheck', 'dashboard');
 style('projectcheck', 'projects');
 style('projectcheck', 'budget-alerts');
@@ -28,6 +27,7 @@ style('projectcheck', 'customer-statistics');
 
 <div id="app-content" role="main">
 	<div id="app-content-wrapper">
+		<?php $canEditCustomer = !empty($_['canEditCustomer']); ?>
 		<!-- Breadcrumb Navigation -->
 		<div class="breadcrumb-container">
 			<nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
@@ -62,16 +62,32 @@ style('projectcheck', 'customer-statistics');
 					</div>
 				</div>
 				<div class="header-actions">
+					<?php if ($canEditCustomer): ?>
 					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.edit', ['id' => $customer->getId()])); ?>"
 						class="button secondary" role="button">
 						<i data-lucide="edit" class="lucide-icon"></i>
 						<?php p($l->t('Edit Customer')); ?>
 					</a>
+					<?php endif; ?>
 					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>"
 						class="button primary" role="button">
 						<i data-lucide="plus" class="lucide-icon"></i>
 						<?php p($l->t('New Project')); ?>
 					</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="section">
+			<div class="section-content">
+				<div class="pc-scope-banner" role="status" aria-live="polite">
+					<div class="pc-scope-banner__icon">
+						<i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i>
+					</div>
+					<div class="pc-scope-banner__content">
+						<h3><?php p($l->t('Visible data only')); ?></h3>
+						<p><?php p($l->t('This page only includes projects and statistics you are allowed to access for this customer.')); ?></p>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -475,7 +491,7 @@ style('projectcheck', 'customer-statistics');
 														<span class="budget-status-badge safe">✅ <?php p($l->t('On Track')); ?></span>
 													<?php endif; ?>
 												<?php else: ?>
-													<span class="budget-status-badge safe">✅ On Track</span>
+							<span class="budget-status-badge safe">✅ <?php p($l->t('On Track')); ?></span>
 												<?php endif; ?>
 											</div>
 										</div>

@@ -21,6 +21,7 @@ Util::addStyle('projectcheck', 'time-entries');
 
 <div id="app-content" role="main" class="employees-page">
     <div id="app-content-wrapper">
+        <?php $isGlobalViewer = !empty($_['isGlobalViewer']); ?>
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
@@ -35,8 +36,8 @@ Util::addStyle('projectcheck', 'time-entries');
             <div class="header-content">
                 <div class="header-text">
                     <div class="header-details">
-                        <h2><?php p($l->t('Employee Overview')); ?></h2>
-                        <p><?php p($l->t('Track employee performance and time tracking statistics')); ?></p>
+                        <h2><?php p($isGlobalViewer ? $l->t('Employee Overview') : $l->t('Your work overview')); ?></h2>
+                        <p><?php p($isGlobalViewer ? $l->t('Track employee performance and time tracking statistics') : $l->t('Review your own time tracking and yearly performance.')); ?></p>
                     </div>
                 </div>
                 <div class="header-actions">
@@ -48,10 +49,26 @@ Util::addStyle('projectcheck', 'time-entries');
             </div>
         </div>
 
+        <?php if (!$isGlobalViewer): ?>
+            <div class="section">
+                <div class="section-content">
+                    <div class="pc-scope-banner" role="status" aria-live="polite">
+                        <div class="pc-scope-banner__icon">
+                            <i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i>
+                        </div>
+                        <div class="pc-scope-banner__content">
+                            <h3><?php p($l->t('Only your data is shown')); ?></h3>
+                            <p><?php p($l->t('Employee analytics are restricted to your own time entries unless you are an administrator.')); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <!-- Team Overview Stats -->
         <div class="section team-overview">
             <div class="section-header">
-                <h3><i data-lucide="users" class="lucide-icon"></i> <?php p($l->t('Team Overview')); ?></h3>
+                    <h3><i data-lucide="users" class="lucide-icon"></i> <?php p($isGlobalViewer ? $l->t('Team Overview') : $l->t('Personal Overview')); ?></h3>
             </div>
             <div class="section-content">
                 <?php

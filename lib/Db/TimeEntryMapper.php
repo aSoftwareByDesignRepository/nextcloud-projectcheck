@@ -522,12 +522,49 @@ class TimeEntryMapper extends QBMapper
 	}
 
 	/**
+	 * Get yearly statistics for all projects with optional project/user scope.
+	 *
+	 * @param list<int>|null $projectIds
+	 * @param list<string>|null $userIds
+	 * @return array<int, array<string, int|float>>
+	 */
+	public function getYearlyStatsForScope(?array $projectIds = null, ?array $userIds = null): array
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->select(
+			$qb->createFunction('YEAR(date) as year'),
+			$qb->createFunction('SUM(hours) as total_hours'),
+			$qb->createFunction('SUM(hours * hourly_rate) as total_cost'),
+			$qb->createFunction('COUNT(*) as entry_count')
+		)
+			->from($this->getTableName());
+		$this->applyProjectScope($qb, 'project_id', $projectIds);
+		$this->applyUserScope($qb, 'user_id', $userIds);
+		$qb->groupBy($qb->createFunction('YEAR(date)'))
+			->orderBy('year', 'DESC');
+
+		$result = $qb->executeQuery();
+		$yearlyStats = [];
+		while ($row = $result->fetch()) {
+			$yearlyStats[] = [
+				'year' => (int) $row['year'],
+				'total_hours' => (float) $row['total_hours'],
+				'total_cost' => (float) $row['total_cost'],
+				'entry_count' => (int) $row['entry_count']
+			];
+		}
+		$result->closeCursor();
+
+		return $yearlyStats;
+	}
+
+	/**
 	 * Get yearly statistics for a customer
 	 *
 	 * @param int $customerId Customer ID
 	 * @return array
 	 */
-	public function getYearlyStatsForCustomer(int $customerId): array
+	public function getYearlyStatsForCustomer(int $customerId, ?array $projectIds = null, ?array $userIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select(
@@ -538,8 +575,10 @@ class TimeEntryMapper extends QBMapper
 		)
 			->from($this->getTableName(), 't')
 			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
-			->where($qb->expr()->eq('p.customer_id', $qb->createNamedParameter($customerId)))
-			->groupBy($qb->createFunction('YEAR(t.date)'))
+			->where($qb->expr()->eq('p.customer_id', $qb->createNamedParameter($customerId)));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$this->applyUserScope($qb, 't.user_id', $userIds);
+		$qb->groupBy($qb->createFunction('YEAR(t.date)'))
 			->orderBy('year', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -562,7 +601,7 @@ class TimeEntryMapper extends QBMapper
 	 *
 	 * @return array
 	 */
-	public function getDetailedYearlyStats(): array
+	public function getDetailedYearlyStats(?array $projectIds = null, ?array $userIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select(
@@ -577,8 +616,10 @@ class TimeEntryMapper extends QBMapper
 		)
 			->from($this->getTableName(), 't')
 			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
-			->innerJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
-			->groupBy($qb->createFunction('YEAR(t.date)'), 'c.id', 'p.id')
+			->innerJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$this->applyUserScope($qb, 't.user_id', $userIds);
+		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'c.id', 'p.id')
 			->orderBy('year', 'DESC')
 			->addOrderBy('c.name', 'ASC')
 			->addOrderBy('p.name', 'ASC');
@@ -662,7 +703,7 @@ class TimeEntryMapper extends QBMapper
 	 *
 	 * @return array
 	 */
-	public function getEmployeeYearlyStats(): array
+	public function getEmployeeYearlyStats(?array $projectIds = null, ?array $userIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select(
@@ -675,8 +716,10 @@ class TimeEntryMapper extends QBMapper
 		)
 			->from($this->getTableName(), 't')
 			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
-			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
-			->groupBy($qb->createFunction('YEAR(t.date)'), 't.user_id')
+			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$this->applyUserScope($qb, 't.user_id', $userIds);
+		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 't.user_id')
 			->orderBy('year', 'DESC')
 			->addOrderBy($qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id))'), 'ASC');
 
@@ -708,7 +751,7 @@ class TimeEntryMapper extends QBMapper
 	 *
 	 * @return array
 	 */
-	public function getEmployeeComparisonStats(): array
+	public function getEmployeeComparisonStats(?array $projectIds = null, ?array $userIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select(
@@ -723,8 +766,10 @@ class TimeEntryMapper extends QBMapper
 		)
 			->from($this->getTableName(), 't')
 			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
-			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
-			->groupBy('t.user_id')
+			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$this->applyUserScope($qb, 't.user_id', $userIds);
+		$qb->groupBy('t.user_id')
 			->orderBy('total_hours', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -751,7 +796,7 @@ class TimeEntryMapper extends QBMapper
 	 *
 	 * @return array
 	 */
-	public function getYearlyStatsByProjectType(): array
+	public function getYearlyStatsByProjectType(?array $projectIds = null, ?array $userIds = null): array
 	{
 		// Return empty array if project_type column doesn't exist
 		if (!$this->columnExists('projects', 'project_type')) {
@@ -767,8 +812,10 @@ class TimeEntryMapper extends QBMapper
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
-			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
-			->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
+			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$this->applyUserScope($qb, 't.user_id', $userIds);
+		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
@@ -799,7 +846,7 @@ class TimeEntryMapper extends QBMapper
 	 *
 	 * @return array
 	 */
-	public function getDetailedYearlyStatsByProjectType(): array
+	public function getDetailedYearlyStatsByProjectType(?array $projectIds = null, ?array $userIds = null): array
 	{
 		// Return empty array if project_type column doesn't exist
 		if (!$this->columnExists('projects', 'project_type')) {
@@ -818,8 +865,10 @@ class TimeEntryMapper extends QBMapper
 		)
 			->from($this->getTableName(), 't')
 			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
-			->innerJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
-			->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type', 'c.id')
+			->innerJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$this->applyUserScope($qb, 't.user_id', $userIds);
+		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type', 'c.id')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC')
 			->addOrderBy('c.name', 'ASC');
@@ -924,7 +973,7 @@ class TimeEntryMapper extends QBMapper
 	 *
 	 * @return array
 	 */
-	public function getProductivityAnalysis(): array
+	public function getProductivityAnalysis(?array $projectIds = null, ?array $userIds = null): array
 	{
 		// Return empty array if project_type column doesn't exist
 		if (!$this->columnExists('projects', 'project_type')) {
@@ -940,8 +989,10 @@ class TimeEntryMapper extends QBMapper
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
-			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
-			->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
+			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$this->applyUserScope($qb, 't.user_id', $userIds);
+		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
@@ -1050,7 +1101,7 @@ class TimeEntryMapper extends QBMapper
 	 * @param string $userId
 	 * @return array
 	 */
-	public function getYearlyStatsByProjectTypeForEmployee(string $userId): array
+	public function getYearlyStatsByProjectTypeForEmployee(string $userId, ?array $projectIds = null): array
 	{
 		// Return empty array if project_type column doesn't exist
 		if (!$this->columnExists('projects', 'project_type')) {
@@ -1067,8 +1118,9 @@ class TimeEntryMapper extends QBMapper
 		)
 			->from($this->getTableName(), 't')
 			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
-			->where($qb->expr()->eq('t.user_id', $qb->createNamedParameter($userId)))
-			->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
+			->where($qb->expr()->eq('t.user_id', $qb->createNamedParameter($userId)));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
@@ -1100,7 +1152,7 @@ class TimeEntryMapper extends QBMapper
 	 *
 	 * @return array
 	 */
-	public function getDetailedYearlyStatsByProjectTypeForEmployees(): array
+	public function getDetailedYearlyStatsByProjectTypeForEmployees(?array $projectIds = null, ?array $userIds = null): array
 	{
 		// Return empty array if project_type column doesn't exist
 		if (!$this->columnExists('projects', 'project_type')) {
@@ -1120,8 +1172,10 @@ class TimeEntryMapper extends QBMapper
 			->from($this->getTableName(), 't')
 			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
 			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
-			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
-			->groupBy($qb->createFunction('YEAR(t.date)'), 't.user_id', 'p.project_type')
+			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$this->applyUserScope($qb, 't.user_id', $userIds);
+		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 't.user_id', 'p.project_type')
 			->orderBy('year', 'DESC')
 			->addOrderBy($qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id))'), 'ASC')
 			->addOrderBy('p.project_type', 'ASC');
@@ -1163,7 +1217,7 @@ class TimeEntryMapper extends QBMapper
 	 * @param string $userId
 	 * @return array
 	 */
-	public function getProductivityAnalysisForEmployee(string $userId): array
+	public function getProductivityAnalysisForEmployee(string $userId, ?array $projectIds = null): array
 	{
 		// Return empty array if project_type column doesn't exist
 		if (!$this->columnExists('projects', 'project_type')) {
@@ -1180,8 +1234,9 @@ class TimeEntryMapper extends QBMapper
 		)
 			->from($this->getTableName(), 't')
 			->innerJoin('t', 'projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
-			->where($qb->expr()->eq('t.user_id', $qb->createNamedParameter($userId)))
-			->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
+			->where($qb->expr()->eq('t.user_id', $qb->createNamedParameter($userId)));
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
@@ -1226,5 +1281,39 @@ class TimeEntryMapper extends QBMapper
 		$result->closeCursor();
 
 		return $productivityStats;
+	}
+
+	/**
+	 * @param list<int>|null $projectIds
+	 */
+	private function applyProjectScope(IQueryBuilder $qb, string $field, ?array $projectIds): void
+	{
+		if ($projectIds === null) {
+			return;
+		}
+		if ($projectIds === []) {
+			$qb->andWhere('1 = 0');
+			return;
+		}
+		$qb->andWhere(
+			$qb->expr()->in($field, $qb->createNamedParameter($projectIds, IQueryBuilder::PARAM_INT_ARRAY))
+		);
+	}
+
+	/**
+	 * @param list<string>|null $userIds
+	 */
+	private function applyUserScope(IQueryBuilder $qb, string $field, ?array $userIds): void
+	{
+		if ($userIds === null) {
+			return;
+		}
+		if ($userIds === []) {
+			$qb->andWhere('1 = 0');
+			return;
+		}
+		$qb->andWhere(
+			$qb->expr()->in($field, $qb->createNamedParameter($userIds, IQueryBuilder::PARAM_STR_ARRAY))
+		);
 	}
 }

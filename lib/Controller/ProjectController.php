@@ -245,7 +245,7 @@ class ProjectController extends Controller
 
 		$enrichedProjects = $this->projectService->getProjectsForListView($filters, $sort, $direction, $userId);
 
-		$totalProjects = $this->projectService->countProjects($filters);
+		$totalProjects = $this->projectService->countProjectsForUser($filters, $userId);
 		$totalPages = (int)max(1, ceil($totalProjects / $filters['limit']));
 		if ($page > $totalPages) {
 			$page = $totalPages;
@@ -1223,7 +1223,7 @@ class ProjectController extends Controller
 		try {
 			$query = $this->request->getParam('q', '');
 			$filters = ['search' => $query];
-			$projects = $this->projectService->getProjects($filters);
+			$projects = $this->projectService->getUserScopedProjects($user->getUID(), $filters);
 
 			return new DataResponse([
 				'success' => true,
@@ -1250,7 +1250,7 @@ class ProjectController extends Controller
 
 		try {
 			$filters = $this->request->getParams();
-			$projects = $this->projectService->getProjects($filters);
+			$projects = $this->projectService->getUserScopedProjects($user->getUID(), $filters);
 
 			return new DataResponse([
 				'success' => true,
@@ -1278,7 +1278,7 @@ class ProjectController extends Controller
 
 		try {
 			$filters = $this->request->getParams();
-			$projects = $this->projectService->getProjects($filters);
+			$projects = $this->projectService->getUserScopedProjects($user->getUID(), $filters);
 
 			return new DataResponse([
 				'success' => true,
@@ -1516,7 +1516,10 @@ class ProjectController extends Controller
 		}
 
 		try {
-			$projects = $this->projectService->getProjectsByCustomer($customerId);
+			// Scope projects by customer and per-user visibility.
+			$projects = $this->projectService->getUserScopedProjects($user->getUID(), [
+				'customer_id' => $customerId,
+			]);
 
 			// Convert projects to array format expected by JavaScript
 			$projectData = [];

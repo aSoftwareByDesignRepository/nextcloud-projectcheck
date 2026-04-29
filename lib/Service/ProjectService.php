@@ -262,7 +262,19 @@ class ProjectService
 		}
 		$project->setId($this->db->lastInsertId('projects'));
 
-		// Removed logger call
+		// Ensure the creator is also stored as an active project member so that
+		// membership-based queries (team lists, scoped stats, etc.) treat them as
+		// part of the project, not just as the creator record.
+		try {
+			// Use the public API so all invariants (editable state, account checks)
+			// are applied consistently. Swallow failures so a project can still be
+			// created even if the membership insert hits a legacy edge case.
+			$this->addTeamMember((int) $project->getId(), $userId, self::DEFAULT_MEMBER_ROLE, null);
+		} catch (\Throwable $e) {
+			// Intentionally ignore; access control still treats the creator as
+			// having project access via created_by even if the membership row is
+			// missing.
+		}
 
 		return $project;
 	}
@@ -336,6 +348,18 @@ class ProjectService
 
 		if (!empty($filters['project_type']) && $this->columnExists('projects', 'project_type')) {
 			$qb->andWhere($qb->expr()->eq('project_type', $qb->createNamedParameter($filters['project_type'])));
+		}
+
+		// Optional hard project-id scope (used for per-user visibility scoping).
+		if (array_key_exists('id_in', $filters) && is_array($filters['id_in'])) {
+			if ($filters['id_in'] === []) {
+				// Explicitly empty scope: no projects are visible.
+				$qb->andWhere('1 = 0');
+			} else {
+				$qb->andWhere(
+					$qb->expr()->in('p.id', $qb->createNamedParameter($filters['id_in'], IQueryBuilder::PARAM_INT_ARRAY))
+				);
+			}
 		}
 
 		if (!empty($filters['search'])) {
@@ -414,6 +438,13 @@ class ProjectService
 			'sort' => $dbSort,
 			'direction' => $dbDirection,
 		]);
+
+		// Restrict the project set to what the user may actually access, unless
+		// they have global project access (system admin or app org admin).
+		$accessibleIds = $this->getAccessibleProjectIdListForUser($userId);
+		if ($accessibleIds !== null) {
+			$dbFilters['id_in'] = $accessibleIds;
+		}
 
 		// For computed columns, use created_at as placeholder for initial DB sort
 		if ($sort === 'remaining_budget' || $sort === 'progress') {
@@ -506,6 +537,28 @@ class ProjectService
 		$countFilters = $filters;
 		unset($countFilters['limit'], $countFilters['offset'], $countFilters['sort'], $countFilters['direction']);
 		// Fallback if mapper was not injected (legacy DI)
+		if (!$this->projectMapper) {
+			$this->projectMapper = new \OCA\ProjectCheck\Db\ProjectMapper($this->db);
+		}
+
+		return $this->projectMapper->countWithFilters($countFilters);
+	}
+
+	/**
+	 * Count projects visible to a specific user (creator, member, or global admin/app-admin).
+	 *
+	 * @param array $filters
+	 */
+	public function countProjectsForUser(array $filters, string $userId): int
+	{
+		$countFilters = $filters;
+		unset($countFilters['limit'], $countFilters['offset'], $countFilters['sort'], $countFilters['direction']);
+
+		$ids = $this->getAccessibleProjectIdListForUser($userId);
+		if ($ids !== null) {
+			$countFilters['id_in'] = $ids;
+		}
+
 		if (!$this->projectMapper) {
 			$this->projectMapper = new \OCA\ProjectCheck\Db\ProjectMapper($this->db);
 		}
@@ -847,6 +900,53 @@ class ProjectService
 	public function getProjectsByStatus(string $status): array
 	{
 		return $this->getProjects(['status' => $status]);
+	}
+
+	/**
+	 * Convenience helper: return projects visible to a given user, with arbitrary filters.
+	 *
+	 * @param array<string, mixed> $filters
+	 * @return list<Project>
+	 */
+	public function getUserScopedProjects(string $userId, array $filters = []): array
+	{
+		$ids = $this->getAccessibleProjectIdListForUser($userId);
+		if ($ids !== null) {
+			$filters['id_in'] = $ids;
+		}
+		return $this->getProjects($filters);
+	}
+
+	/**
+	 * Project IDs for a customer, intersected with what the user may access.
+	 *
+	 * @return list<int>|null null means "all projects for this customer" for global viewers
+	 */
+	public function getUserScopedProjectIdsForCustomer(string $userId, int $customerId): ?array
+	{
+		$accessibleIds = $this->getAccessibleProjectIdListForUser($userId);
+		if ($accessibleIds === null) {
+			return null;
+		}
+
+		$customerProjectIds = [];
+		foreach ($this->getProjects(['customer_id' => $customerId]) as $project) {
+			$customerProjectIds[] = (int) $project->getId();
+		}
+
+		if ($customerProjectIds === []) {
+			return [];
+		}
+
+		$allowedMap = array_fill_keys($accessibleIds, true);
+		$scoped = [];
+		foreach ($customerProjectIds as $projectId) {
+			if (isset($allowedMap[$projectId])) {
+				$scoped[] = $projectId;
+			}
+		}
+
+		return $scoped;
 	}
 
 	/**
@@ -1712,7 +1812,7 @@ class ProjectService
 
 			// Check if column exists in schema
 			return strpos($schema, "`{$column}`") !== false || strpos($schema, "'{$column}'") !== false || strpos($schema, "{$column}") !== false;
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			// Fallback: try to select the column directly
 			try {
 				$qb = $this->db->getQueryBuilder();

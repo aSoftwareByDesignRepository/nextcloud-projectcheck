@@ -78,8 +78,13 @@ trait StatsTrait
 
                 // Get hours and consumption if TimeEntryService is available
                 if ($timeEntryService) {
-                    $projectHours = $timeEntryService->getTotalHoursForProject($project->getId());
-                    $projectConsumption = $timeEntryService->getTotalCostForProject($project->getId());
+					if ($forUserId !== null) {
+						$projectHours = $timeEntryService->getTotalHoursForProjectAndUser((int) $project->getId(), $forUserId);
+						$projectConsumption = $timeEntryService->getTotalCostForProjectAndUser((int) $project->getId(), $forUserId);
+					} else {
+						$projectHours = $timeEntryService->getTotalHoursForProject($project->getId());
+						$projectConsumption = $timeEntryService->getTotalCostForProject($project->getId());
+					}
                     $totalHours += $projectHours;
                     $totalConsumption += $projectConsumption;
                 }

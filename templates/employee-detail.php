@@ -39,6 +39,7 @@ $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
 
 <div id="app-content" role="main">
     <div id="app-content-wrapper">
+        <?php $isGlobalViewer = !empty($_['isGlobalViewer']); ?>
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
@@ -48,6 +49,22 @@ $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
                 </ol>
             </nav>
         </div>
+
+        <?php if (!$isGlobalViewer): ?>
+            <div class="section">
+                <div class="section-content">
+                    <div class="pc-scope-banner" role="status" aria-live="polite">
+                        <div class="pc-scope-banner__icon">
+                            <i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i>
+                        </div>
+                        <div class="pc-scope-banner__content">
+                            <h3><?php p($l->t('Private employee view')); ?></h3>
+                            <p><?php p($l->t('You can only open your own employee profile unless you are an administrator.')); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <!-- Page Header -->
         <div class="section page-header-section">

@@ -326,6 +326,18 @@ class TimeEntryService
 	}
 
 	/**
+	 * @return float Total cost for one user on one project
+	 */
+	public function getTotalCostForProjectAndUser(int $projectId, string $userId): float
+	{
+		$sum = 0.0;
+		foreach ($this->timeEntryMapper->findByProjectAndUser($projectId, $userId) as $entry) {
+			$sum += $entry->getCost();
+		}
+		return $sum;
+	}
+
+	/**
 	 * Get total hours for a user
 	 *
 	 * @param string $userId User ID
@@ -374,9 +386,12 @@ class TimeEntryService
 	 *
 	 * @return array
 	 */
-	public function getYearlyStatsForAllProjects()
+	public function getYearlyStatsForAllProjects(?array $projectIds = null, ?array $userIds = null)
 	{
-		return $this->timeEntryMapper->getYearlyStatsForAllProjects();
+		if ($projectIds === null && $userIds === null) {
+			return $this->timeEntryMapper->getYearlyStatsForAllProjects();
+		}
+		return $this->timeEntryMapper->getYearlyStatsForScope($projectIds, $userIds);
 	}
 
 	/**
@@ -385,9 +400,9 @@ class TimeEntryService
 	 * @param int $customerId Customer ID
 	 * @return array
 	 */
-	public function getYearlyStatsForCustomer($customerId)
+	public function getYearlyStatsForCustomer($customerId, ?array $projectIds = null, ?array $userIds = null)
 	{
-		return $this->timeEntryMapper->getYearlyStatsForCustomer($customerId);
+		return $this->timeEntryMapper->getYearlyStatsForCustomer((int) $customerId, $projectIds, $userIds);
 	}
 
 	/**
@@ -395,9 +410,9 @@ class TimeEntryService
 	 *
 	 * @return array
 	 */
-	public function getDetailedYearlyStats()
+	public function getDetailedYearlyStats(?array $projectIds = null, ?array $userIds = null)
 	{
-		return $this->timeEntryMapper->getDetailedYearlyStats();
+		return $this->timeEntryMapper->getDetailedYearlyStats($projectIds, $userIds);
 	}
 
 	/**
@@ -416,9 +431,9 @@ class TimeEntryService
 	 *
 	 * @return array
 	 */
-	public function getEmployeeYearlyStats()
+	public function getEmployeeYearlyStats(?array $projectIds = null, ?array $userIds = null)
 	{
-		return $this->timeEntryMapper->getEmployeeYearlyStats();
+		return $this->timeEntryMapper->getEmployeeYearlyStats($projectIds, $userIds);
 	}
 
 	/**
@@ -426,9 +441,9 @@ class TimeEntryService
 	 *
 	 * @return array
 	 */
-	public function getEmployeeComparisonStats()
+	public function getEmployeeComparisonStats(?array $projectIds = null, ?array $userIds = null)
 	{
-		return $this->timeEntryMapper->getEmployeeComparisonStats();
+		return $this->timeEntryMapper->getEmployeeComparisonStats($projectIds, $userIds);
 	}
 
 	/**
@@ -436,9 +451,9 @@ class TimeEntryService
 	 *
 	 * @return array
 	 */
-	public function getYearlyStatsByProjectType()
+	public function getYearlyStatsByProjectType(?array $projectIds = null, ?array $userIds = null)
 	{
-		return $this->timeEntryMapper->getYearlyStatsByProjectType();
+		return $this->timeEntryMapper->getYearlyStatsByProjectType($projectIds, $userIds);
 	}
 
 	/**
@@ -446,9 +461,9 @@ class TimeEntryService
 	 *
 	 * @return array
 	 */
-	public function getDetailedYearlyStatsByProjectType()
+	public function getDetailedYearlyStatsByProjectType(?array $projectIds = null, ?array $userIds = null)
 	{
-		return $this->timeEntryMapper->getDetailedYearlyStatsByProjectType();
+		return $this->timeEntryMapper->getDetailedYearlyStatsByProjectType($projectIds, $userIds);
 	}
 
 	/**
@@ -456,9 +471,9 @@ class TimeEntryService
 	 *
 	 * @return array
 	 */
-	public function getProductivityAnalysis()
+	public function getProductivityAnalysis(?array $projectIds = null, ?array $userIds = null)
 	{
-		return $this->timeEntryMapper->getProductivityAnalysis();
+		return $this->timeEntryMapper->getProductivityAnalysis($projectIds, $userIds);
 	}
 
 	/**
@@ -675,9 +690,9 @@ class TimeEntryService
 	 * @param string $userId
 	 * @return array
 	 */
-	public function getYearlyStatsByProjectTypeForEmployee(string $userId): array
+	public function getYearlyStatsByProjectTypeForEmployee(string $userId, ?array $projectIds = null): array
 	{
-		return $this->timeEntryMapper->getYearlyStatsByProjectTypeForEmployee($userId);
+		return $this->timeEntryMapper->getYearlyStatsByProjectTypeForEmployee($userId, $projectIds);
 	}
 
 	/**
@@ -685,9 +700,9 @@ class TimeEntryService
 	 *
 	 * @return array
 	 */
-	public function getDetailedYearlyStatsByProjectTypeForEmployees(): array
+	public function getDetailedYearlyStatsByProjectTypeForEmployees(?array $projectIds = null, ?array $userIds = null): array
 	{
-		return $this->timeEntryMapper->getDetailedYearlyStatsByProjectTypeForEmployees();
+		return $this->timeEntryMapper->getDetailedYearlyStatsByProjectTypeForEmployees($projectIds, $userIds);
 	}
 
 	/**
@@ -696,8 +711,8 @@ class TimeEntryService
 	 * @param string $userId
 	 * @return array
 	 */
-	public function getProductivityAnalysisForEmployee(string $userId): array
+	public function getProductivityAnalysisForEmployee(string $userId, ?array $projectIds = null): array
 	{
-		return $this->timeEntryMapper->getProductivityAnalysisForEmployee($userId);
+		return $this->timeEntryMapper->getProductivityAnalysisForEmployee($userId, $projectIds);
 	}
 }

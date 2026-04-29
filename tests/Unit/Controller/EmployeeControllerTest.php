@@ -13,7 +13,9 @@ use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -41,6 +43,8 @@ class EmployeeControllerTest extends TestCase
 	private $controller;
 	/** @var IUser|\PHPUnit\Framework\MockObject\MockObject */
 	private $user;
+	/** @var AccessControlService|\PHPUnit\Framework\MockObject\MockObject */
+	private $accessControl;
 
 	protected function setUp(): void
 	{
@@ -52,12 +56,20 @@ class EmployeeControllerTest extends TestCase
 		$this->projectService = $this->createMock(ProjectService::class);
 		$this->customerService = $this->createMock(CustomerService::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
+		$urlGenerator->method('linkToRoute')->willReturnCallback(
+			static function (string $route, array $params = []): string {
+				if ($route === 'projectcheck.employee.show' && isset($params['userId'])) {
+					return '/index.php/apps/projectcheck/employees/' . $params['userId'];
+				}
+				return '/index.php/' . $route;
+			}
+		);
 		$config = $this->createMock(IConfig::class);
 		$csp = $this->createMock(CSPService::class);
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn(string $t): string => $t);
 		$snapshots = $this->createMock(UserAccountSnapshotMapper::class);
-		$accessControl = $this->createMock(AccessControlService::class);
+		$this->accessControl = $this->createMock(AccessControlService::class);
 		$requestTokenProvider = $this->createMock(IRequestTokenProvider::class);
 
 		$this->controller = new EmployeeController(
@@ -73,13 +85,15 @@ class EmployeeControllerTest extends TestCase
 			$csp,
 			$l10n,
 			$snapshots,
-			$accessControl,
+			$this->accessControl,
 			$requestTokenProvider
 		);
 
 		$this->user = $this->createMock(IUser::class);
 		$this->user->method('getUID')->willReturn('manager1');
 		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('isSystemAdministrator')->willReturn(false);
+		$this->accessControl->method('canManageAppConfiguration')->willReturn(false);
 	}
 
 	public function testAssignProjectDeniedWhenNoPermission(): void
@@ -153,6 +167,74 @@ class EmployeeControllerTest extends TestCase
 		$response = $this->controller->assignProject('employee1');
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertEquals(200, $response->getStatus());
+	}
+
+	public function testShowRedirectsNonAdminToOwnProfile(): void
+	{
+		$response = $this->controller->show('employee1');
+
+		$this->assertInstanceOf(RedirectResponse::class, $response);
+		$this->assertSame('/index.php/apps/projectcheck/employees/manager1', $response->getRedirectURL());
+	}
+
+	public function testGetStatsWithoutUserIdReturnsOwnStatsForNonAdmin(): void
+	{
+		$this->request->method('getParam')->with('user_id', null)->willReturn(null);
+		$this->timeEntryService->expects($this->once())
+			->method('getYearlyStatsForEmployee')
+			->with('manager1')
+			->willReturn([['year' => 2026, 'total_hours' => 3.5]]);
+		$this->timeEntryService->expects($this->never())->method('getEmployeeYearlyStats');
+
+		$response = $this->controller->getStats();
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(200, $response->getStatus());
+	}
+
+	public function testIndexScopesNonAdminEmployeeOverviewToOwnData(): void
+	{
+		$this->request->method('getParam')->willReturnMap([
+			['search', '', ''],
+			['page', 1, 1],
+		]);
+		$project = new Project();
+		$project->setId(5);
+		$project->setStatus('Active');
+		$this->projectService->method('getAccessibleProjectIdListForUser')->with('manager1')->willReturn([5]);
+		$this->projectService->method('getProjectsByIdList')->with([5])->willReturn([$project]);
+		$this->timeEntryService->expects($this->once())
+			->method('getEmployeeComparisonStats')
+			->with([5], ['manager1'])
+			->willReturn([
+				[
+					'user_id' => 'manager1',
+					'user_display_name' => 'Manager One',
+					'total_hours' => 4.0,
+					'total_cost' => 100.0,
+					'entry_count' => 2,
+					'avg_hourly_rate' => 25.0,
+					'first_entry' => '2026-01-01',
+					'last_entry' => '2026-01-02',
+				],
+			]);
+		$this->timeEntryService->expects($this->once())
+			->method('getEmployeeYearlyStats')
+			->with([5], ['manager1'])
+			->willReturn([]);
+		$this->timeEntryService->expects($this->once())
+			->method('getDetailedYearlyStatsByProjectTypeForEmployees')
+			->with([5], ['manager1'])
+			->willReturn([]);
+		$this->timeEntryService->expects($this->once())
+			->method('getUsersWithTimeEntries')
+			->with([5])
+			->willReturn([['user_id' => 'manager1', 'displayname' => 'Manager One']]);
+		$this->timeEntryService->method('getYearlyStatsByProjectTypeForEmployee')->willReturn([]);
+
+		$response = $this->controller->index();
+
+		$this->assertInstanceOf(TemplateResponse::class, $response);
 	}
 }
 

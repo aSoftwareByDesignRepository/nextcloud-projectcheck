@@ -23,6 +23,7 @@ Util::addStyle('projectcheck', 'common/accessibility');
 
 <div id="app-content" role="main">
     <div id="app-content-wrapper">
+        <?php $isGlobalViewer = !empty($_['isGlobalViewer']); ?>
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
@@ -40,7 +41,7 @@ Util::addStyle('projectcheck', 'common/accessibility');
                 <div class="header-text">
                     <div class="header-details">
                         <h2><?php p($l->t('Dashboard')); ?></h2>
-                        <p><?php p($l->t('Overview of your projects and activities')); ?></p>
+                        <p><?php p($isGlobalViewer ? $l->t('Overview of your projects and activities') : $l->t('Overview of the projects you can access and your own logged work')); ?></p>
                         <div class="project-meta">
                             <div class="meta-item">
                                 <i data-lucide="calendar" class="lucide-icon primary"></i>
@@ -65,6 +66,22 @@ Util::addStyle('projectcheck', 'common/accessibility');
                 </div>
             </div>
         </div>
+
+        <?php if (!$isGlobalViewer): ?>
+            <div class="section">
+                <div class="section-content">
+                    <div class="pc-scope-banner" role="status" aria-live="polite">
+                        <div class="pc-scope-banner__icon">
+                            <i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i>
+                        </div>
+                        <div class="pc-scope-banner__content">
+                            <h3><?php p($l->t('Personal dashboard')); ?></h3>
+                            <p><?php p($l->t('Dashboard analytics only include your own time entries. Project cards still reflect the projects you are allowed to access.')); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <!-- Quick Actions Toolbar -->
         <div class="quick-actions-toolbar">

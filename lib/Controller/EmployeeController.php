@@ -16,6 +16,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\RedirectResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
@@ -139,9 +140,13 @@ class EmployeeController extends Controller
         }
 
         $userId = $user->getUID();
+		$isGlobalViewer = $this->accessControlService->isSystemAdministrator($userId)
+			|| $this->accessControlService->canManageAppConfiguration($userId);
+		$accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($userId);
+		$visibleUserIds = $isGlobalViewer ? null : [$userId];
 
         // Get employee yearly statistics
-        $employeeYearlyStats = $this->timeEntryService->getEmployeeYearlyStats();
+        $employeeYearlyStats = $this->timeEntryService->getEmployeeYearlyStats($accessibleProjectIds, $visibleUserIds);
 
         // Filters and pagination
         $search = $this->request->getParam('search', '');
@@ -150,7 +155,7 @@ class EmployeeController extends Controller
         $perPage = $defaultItemsPerPage > 0 ? $defaultItemsPerPage : 20;
 
         // Get employee comparison statistics
-        $employeeComparisonStatsAll = $this->timeEntryService->getEmployeeComparisonStats();
+        $employeeComparisonStatsAll = $this->timeEntryService->getEmployeeComparisonStats($accessibleProjectIds, $visibleUserIds);
 
         // Apply search filter (server-side)
         if ($search) {
@@ -171,11 +176,11 @@ class EmployeeController extends Controller
         $employeeComparisonStats = array_slice($employeeComparisonStatsAll, $offset, $perPage);
 
         // Get employee project type statistics
-        $employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId);
-        $detailedEmployeeProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectTypeForEmployees();
+        $employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId, $accessibleProjectIds);
+        $detailedEmployeeProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectTypeForEmployees($accessibleProjectIds, $visibleUserIds);
 
         // Get all users who have time entries
-        $usersWithTimeEntries = $this->timeEntryService->getUsersWithTimeEntries();
+        $usersWithTimeEntries = $this->timeEntryService->getUsersWithTimeEntries($accessibleProjectIds);
 
         // Get common stats for the sidebar
         $stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $userId);
@@ -186,6 +191,7 @@ class EmployeeController extends Controller
             'employeeProjectTypeStats' => $employeeProjectTypeStats,
             'detailedEmployeeProjectTypeStats' => $detailedEmployeeProjectTypeStats,
             'usersWithTimeEntries' => $usersWithTimeEntries,
+            'isGlobalViewer' => $isGlobalViewer,
             'filters' => [
                 'search' => $search,
             ],
@@ -223,6 +229,12 @@ class EmployeeController extends Controller
 
         $employeeUser = $this->userManager->get($userId);
         $snapshot = $this->userAccountSnapshotMapper->findByUserId($userId);
+		$viewerId = $user->getUID();
+		$isGlobalViewer = $this->accessControlService->isSystemAdministrator($viewerId)
+			|| $this->accessControlService->canManageAppConfiguration($viewerId);
+		if (!$isGlobalViewer && $viewerId !== $userId) {
+			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $viewerId]));
+		}
         if ($employeeUser === null && $snapshot === null) {
 			$hasHistory = $this->timeEntryService->getTimeEntriesByUser($userId) !== [];
 			if (!$hasHistory) {
@@ -237,10 +249,10 @@ class EmployeeController extends Controller
         $yearlyStats = $this->timeEntryService->getYearlyStatsForEmployee($userId);
 
         // Get project type statistics for this employee
-        $employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId);
-        $employeeProductivityAnalysis = $this->timeEntryService->getProductivityAnalysisForEmployee($userId);
+        $accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($viewerId);
+        $employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId, $accessibleProjectIds);
+        $employeeProductivityAnalysis = $this->timeEntryService->getProductivityAnalysisForEmployee($userId, $accessibleProjectIds);
 		$employeeAssignedProjects = $this->projectService->getUserProjects((string)$userId);
-		$viewerId = $user->getUID();
 		$manageableProjects = [];
 		foreach ($this->projectService->getProjects(['limit' => 500]) as $project) {
 			$pid = (int)$project->getId();
@@ -262,6 +274,7 @@ class EmployeeController extends Controller
 			'employeeId' => $userId,
 			'formerAccountDisplayName' => $formerDisplay,
 			'isFormerAccount' => $employeeUser === null,
+			'isGlobalViewer' => $isGlobalViewer,
             'yearlyStats' => $yearlyStats,
             'employeeProjectTypeStats' => $employeeProjectTypeStats,
             'employeeProductivityAnalysis' => $employeeProductivityAnalysis,
@@ -373,8 +386,10 @@ class EmployeeController extends Controller
 
         $userId = $this->request->getParam('user_id', null);
 		$viewerId = $user->getUID();
+		$isGlobalViewer = $this->accessControlService->isSystemAdministrator($viewerId)
+			|| $this->accessControlService->canManageAppConfiguration($viewerId);
 		if (is_string($userId) && $userId !== '' && $userId !== $viewerId) {
-			if (!$this->accessControlService->isSystemAdministrator($viewerId) && !$this->accessControlService->canManageAppConfiguration($viewerId)) {
+			if (!$isGlobalViewer) {
 				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 			}
 		}
@@ -383,8 +398,10 @@ class EmployeeController extends Controller
             // Get employee-specific statistics
             $yearlyStats = $this->timeEntryService->getYearlyStatsForEmployee($userId);
         } else {
-            // Get all employee statistics
-            $yearlyStats = $this->timeEntryService->getEmployeeYearlyStats();
+            // Non-admins can only request their own statistics.
+            $yearlyStats = $isGlobalViewer
+				? $this->timeEntryService->getEmployeeYearlyStats()
+				: $this->timeEntryService->getYearlyStatsForEmployee($viewerId);
         }
 
         return new JSONResponse([

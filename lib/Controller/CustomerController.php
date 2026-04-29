@@ -16,7 +16,6 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
@@ -73,6 +72,9 @@ class CustomerController extends Controller
 	/** @var LoggerInterface */
 	private $logger;
 
+	/** @var \OCA\ProjectCheck\Service\IRequestTokenProvider */
+	private $requestTokenProvider;
+
 	/**
 	 * Deletion impact preview
 	 */
@@ -118,6 +120,7 @@ class CustomerController extends Controller
 	 * @param CSPService $cspService
 	 * @param IL10N $l
 	 * @param LoggerInterface $logger
+	 * @param \OCA\ProjectCheck\Service\IRequestTokenProvider $requestTokenProvider
 	 */
 	public function __construct(
 		string $appName,
@@ -133,7 +136,8 @@ class CustomerController extends Controller
 		IConfig $config,
 		CSPService $cspService,
 		IL10N $l,
-		LoggerInterface $logger
+		LoggerInterface $logger,
+		\OCA\ProjectCheck\Service\IRequestTokenProvider $requestTokenProvider
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
@@ -147,6 +151,7 @@ class CustomerController extends Controller
 		$this->config = $config;
 		$this->l = $l;
 		$this->logger = $logger;
+		$this->requestTokenProvider = $requestTokenProvider;
 		$this->setCspService($cspService);
 	}
 
@@ -340,20 +345,26 @@ class CustomerController extends Controller
 			return $this->configureCSP($response, 'main');
 		}
 
+		$userId = $user->getUID();
+		$scopedProjectIds = $this->projectService->getUserScopedProjectIdsForCustomer($userId, (int) $id);
+
 		// Get projects for this customer with budget information
-		$projects = $this->projectService->getProjectsByCustomer($id);
+		$projects = $scopedProjectIds === null
+			? $this->projectService->getProjectsByCustomer((int) $id)
+			: $this->projectService->getProjectsByIdList($scopedProjectIds);
 		$projectsWithBudgetInfo = $this->enrichProjectsWithBudgetInfo($projects, $user->getUID());
 
 		// Get yearly statistics for the customer
-		$yearlyStats = $this->timeEntryService->getYearlyStatsForCustomer($id);
+		$yearlyStats = $this->timeEntryService->getYearlyStatsForCustomer((int) $id, $scopedProjectIds);
 
 		// Get project type statistics for the customer
-		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType();
-		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType();
-		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis();
+		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType($scopedProjectIds);
+		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType($scopedProjectIds);
+		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis($scopedProjectIds);
 
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $user->getUID());
+		$canEditCustomer = $this->customerService->canUserEditCustomer($userId, (int) $id);
 
 		$response = new TemplateResponse($this->appName, 'customer-detail', [
 			'customer' => $customer,
@@ -362,6 +373,8 @@ class CustomerController extends Controller
 			'projectTypeStats' => $projectTypeStats,
 			'detailedProjectTypeStats' => $detailedProjectTypeStats,
 			'productivityAnalysis' => $productivityAnalysis,
+			'canEditCustomer' => $canEditCustomer,
+			'requesttoken' => $this->requestTokenProvider->getEncryptedRequestToken(),
 			'stats' => $stats,
 			'urlGenerator' => $this->urlGenerator
 		]);
@@ -684,10 +697,13 @@ class CustomerController extends Controller
 			if (!$this->customerService->canUserViewCustomer($uid, $cid)) {
 				return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
 			}
-			$stats = $this->customerService->getCustomerSpecificStats($cid);
+			$stats = $this->customerService->getCustomerSpecificStats(
+				$cid,
+				$this->projectService->getUserScopedProjectIdsForCustomer($uid, $cid)
+			);
 		} else {
 			// Get general customer statistics
-			$stats = $this->customerService->getCustomerStats();
+			$stats = $this->customerService->getCustomerStatsForUser($uid);
 		}
 
 		return new JSONResponse([

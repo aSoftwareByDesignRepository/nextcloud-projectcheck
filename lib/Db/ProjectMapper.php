@@ -13,6 +13,7 @@ namespace OCA\ProjectCheck\Db;
 
 use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
@@ -234,7 +235,7 @@ class ProjectMapper extends QBMapper
 			$qb->andWhere($qb->expr()->eq('p.priority', $qb->createNamedParameter($filters['priority'])));
 		}
 
-		if (!empty($filters['project_type']) && $this->columnExists('projects', 'project_type')) {
+		if (!empty($filters['project_type'])) {
 			$qb->andWhere($qb->expr()->eq('p.project_type', $qb->createNamedParameter($filters['project_type'])));
 		}
 
@@ -243,6 +244,17 @@ class ProjectMapper extends QBMapper
 				$qb->expr()->like('p.name', $qb->createNamedParameter('%' . $filters['search'] . '%')),
 				$qb->expr()->like('p.short_description', $qb->createNamedParameter('%' . $filters['search'] . '%'))
 			));
+		}
+
+		// Optional hard project-id scope (used for per-user visibility scoping).
+		if (array_key_exists('id_in', $filters) && is_array($filters['id_in'])) {
+			if ($filters['id_in'] === []) {
+				$qb->andWhere('1 = 0');
+			} else {
+				$qb->andWhere(
+					$qb->expr()->in('p.id', $qb->createNamedParameter($filters['id_in'], IQueryBuilder::PARAM_INT_ARRAY))
+				);
+			}
 		}
 
 		$result = $qb->executeQuery();
