@@ -139,7 +139,7 @@ $logoFile = $appManager->getAppPath('projectcheck') . '/img/logo.svg';
 
 		<?php if ($canAccessSettings) { ?>
 		<div class="menu-group">
-			<a href="<?php p($gen->linkToRoute('projectcheck.settings.index')); ?>"
+			<a href="<?php p($gen->linkToRoute('projectcheck.app_config.settingsIndex')); ?>"
 				class="menu-item <?php echo ($currentPage === 'settings') ? 'active' : ''; ?>"
 				<?php echo $currentPage === 'settings' ? 'aria-current="page"' : ''; ?>>
 				<span class="icon" aria-hidden="true"></span>

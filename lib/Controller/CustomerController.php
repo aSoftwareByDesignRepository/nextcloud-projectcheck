@@ -177,7 +177,8 @@ class CustomerController extends Controller
 
 		// Pagination settings
 		$page = max(1, (int)$this->request->getParam('page', 1));
-		$defaultItemsPerPage = (int)$this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
+		$appItemsPerPage = $this->config->getAppValue($this->appName, 'items_per_page', '20');
+		$defaultItemsPerPage = (int)$this->config->getUserValue($userId, $this->appName, 'items_per_page', $appItemsPerPage);
 		$perPage = $defaultItemsPerPage > 0 ? $defaultItemsPerPage : 20;
 
 		// Get customers with optional search

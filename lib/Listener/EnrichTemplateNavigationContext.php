@@ -64,7 +64,7 @@ class EnrichTemplateNavigationContext implements IEventListener
 		$params['canManageSettings'] = $canManageSettings;
 		$params['canManageOrganization'] = $canManageOrganization;
 		$params['canManageOrg'] = $canManageOrganization; // backward compatibility for existing templates
-		$params['orgAppSettingsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.app_config.orgIndex');
+		$params['orgAppSettingsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
 		$params['jsL10n'] = $this->jsL10nCatalogBuilder->buildForApp();
 		$response->setParams($params);
 	}

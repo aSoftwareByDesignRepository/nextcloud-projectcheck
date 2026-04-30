@@ -48,7 +48,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 			->with('u1')
 			->willReturn(true);
 		$urlGenerator->method('linkToRoute')
-			->with('projectcheck.app_config.orgIndex')
+			->with('projectcheck.app_config.settingsIndex')
 			->willReturn('/index.php/apps/projectcheck/organization');
 
 		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog);

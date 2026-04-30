@@ -17,7 +17,7 @@ $userId = $user ? $user->getUID() : '';
 $isAdmin = $userId !== '' && $groupManager->isInGroup($userId, 'admin');
 $isLogged = $user !== null;
 $rawPath = \urldecode((string) \parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), \PHP_URL_PATH));
-$defaultOrg = $url->linkToRoute('projectcheck.app_config.orgIndex');
+$defaultOrg = $url->linkToRoute('projectcheck.app_config.settingsIndex');
 $canManageSettings = false;
 $canManageOrganization = false;
 $orgAppSettingsUrl = $defaultOrg;
@@ -26,8 +26,9 @@ if (isset($_) && \is_array($_)) {
 	$canManageOrganization = (bool) ($_['canManageOrganization'] ?? $_['canManageOrg'] ?? false);
 	$orgAppSettingsUrl = (string) ($_['orgAppSettingsUrl'] ?? $defaultOrg);
 }
+$canAccessSettings = $canManageSettings || $canManageOrganization;
 $personalInfoUrl = $url->linkToRoute('settings.PersonalSettings.index', [ 'section' => 'personal-info' ]);
-$appSettingsUrl = $url->linkToRoute('projectcheck.settings.index');
+$appSettingsUrl = $url->linkToRoute('projectcheck.app_config.settingsIndex');
 $serverAdminUrl = $url->linkToRoute('settings.AdminSettings.index', [ 'section' => 'server' ]);
 $helpUrl = $url->linkToDocs('user');
 $appearanceUrl = $url->linkToRoute('settings.PersonalSettings.index', [ 'section' => 'theming' ]);
@@ -67,7 +68,7 @@ if (!isset($currentPage) || $currentPage === '') {
 	$currentPage = 'dashboard';
 	if (strpos($rawPath, '/projectcheck/organization') !== false) {
 		$currentPage = 'organization';
-	} elseif (strpos($rawPath, '/projectcheck/settings') !== false
+	} elseif ((strpos($rawPath, '/projectcheck/settings') !== false || strpos($rawPath, '/projectcheck/organization') !== false)
 		&& strpos($rawPath, '/settings/user/') === false
 		&& strpos($rawPath, '/settings/admin/') === false) {
 		$currentPage = 'settings';
@@ -136,18 +137,7 @@ $on = static function (string $section) use ($g): array {
 					<a class="header__nav-link pcl-header__link<?php p($a['c']); ?>" href="<?php p($routes['employees']); ?>"
 						<?php if ($a['cur']) { ?>aria-current="page"<?php } ?>><?php p($l->t('Employees')); ?></a>
 				</li>
-				<?php
-				if ($canManageOrganization) {
-					$a = $on('organization');
-					?>
-				<li>
-					<a class="header__nav-link pcl-header__link<?php p($a['c']); ?>" href="<?php p($orgAppSettingsUrl); ?>"
-						<?php if ($a['cur']) { ?>aria-current="page"<?php } ?>><?php p($l->t('Organization')); ?></a>
-				</li>
-					<?php
-				}
-				?>
-				<?php if ($canManageSettings) { ?>
+				<?php if ($canAccessSettings) { ?>
 				<?php $a = $on('settings'); ?>
 				<li>
 					<a class="header__nav-link pcl-header__link<?php p($a['c']); ?>" href="<?php p($appSettingsUrl); ?>"
@@ -188,20 +178,11 @@ $on = static function (string $section) use ($g): array {
 						<li class="header__user-dropdown-item">
 							<a class="header__user-dropdown-link pcl-header__link" href="<?php p($appearanceUrl); ?>"><?php p($l->t('Appearance and accessibility')); ?></a>
 						</li>
-						<?php if ($canManageSettings) { ?>
+						<?php if ($canAccessSettings) { ?>
 						<li class="header__user-dropdown-item">
 							<a class="header__user-dropdown-link pcl-header__link" href="<?php p($appSettingsUrl); ?>"><?php p($l->t('ProjectCheck app settings')); ?></a>
 						</li>
 						<?php } ?>
-						<?php
-						if ($canManageOrganization) {
-							?>
-						<li class="header__user-dropdown-item">
-							<a class="header__user-dropdown-link pcl-header__link" href="<?php p($orgAppSettingsUrl); ?>"><?php p($l->t('Organization')); ?></a>
-						</li>
-							<?php
-						}
-						?>
 						<?php
 						if ($isAdmin) {
 							?>
@@ -252,11 +233,8 @@ $on = static function (string $section) use ($g): array {
 			<li><a class="header__mobile-nav-link pcl-header__link<?php p($a3['c']); ?>" href="<?php p($routes['timeEntries']); ?>" <?php if ($a3['cur']) { ?>aria-current="page"<?php } ?>><?php p($l->t('Time Entries')); ?></a></li>
 			<li><a class="header__mobile-nav-link pcl-header__link<?php p($a4['c']); ?>" href="<?php p($routes['employees']); ?>" <?php if ($a4['cur']) { ?>aria-current="page"<?php } ?>><?php p($l->t('Employees')); ?></a></li>
 			<?php
-			if ($canManageOrganization) {
-				?><li><a class="header__mobile-nav-link pcl-header__link<?php p($a5['c']); ?>" href="<?php p($orgAppSettingsUrl); ?>" <?php if ($a5['cur']) { ?>aria-current="page"<?php } ?>><?php p($l->t('Organization')); ?></a></li><?php
-			}
+			if ($canAccessSettings) {
 			?>
-			<?php if ($canManageSettings) { ?>
 			<li><a class="header__mobile-nav-link pcl-header__link<?php p($a6['c']); ?>" href="<?php p($appSettingsUrl); ?>" <?php if ($a6['cur']) { ?>aria-current="page"<?php } ?>><?php p($l->t('Settings')); ?></a></li>
 			<?php } ?>
 		</ul>
@@ -280,7 +258,7 @@ $on = static function (string $section) use ($g): array {
 		?>
 				<li><a class="pcl-header__link" href="<?php p($personalInfoUrl); ?>"><?php p($l->t('Nextcloud account settings')); ?></a></li>
 				<li><a class="pcl-header__link" href="<?php p($appearanceUrl); ?>"><?php p($l->t('Appearance and accessibility')); ?></a></li>
-				<?php if ($canManageSettings) { ?>
+				<?php if ($canAccessSettings) { ?>
 				<li><a class="pcl-header__link" href="<?php p($appSettingsUrl); ?>"><?php p($l->t('ProjectCheck app settings')); ?></a></li>
 				<?php } ?>
 				<?php

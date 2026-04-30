@@ -52,7 +52,11 @@ class AdminSettings implements ISettings
         $l = $this->l10nFactory->get('projectcheck');
         $policy = $this->accessControl->getPolicyState();
         $defaultHourlyRate = $this->config->getAppValue('projectcheck', 'default_hourly_rate', '50.00');
+        $defaultProjectStatus = $this->config->getAppValue('projectcheck', 'default_project_status', 'Active');
+        $defaultProjectPriority = $this->config->getAppValue('projectcheck', 'default_project_priority', 'Medium');
         $budgetWarningThreshold = $this->config->getAppValue('projectcheck', 'budget_warning_threshold', '80');
+        $budgetCriticalThreshold = $this->config->getAppValue('projectcheck', 'budget_critical_threshold', '90');
+        $itemsPerPage = $this->config->getAppValue('projectcheck', 'items_per_page', '20');
         $maxProjectsPerUser = $this->config->getAppValue('projectcheck', 'max_projects_per_user', '100');
         $enableTimeTracking = $this->config->getAppValue('projectcheck', 'enable_time_tracking', 'yes');
         $enableCustomerManagement = $this->config->getAppValue('projectcheck', 'enable_customer_management', 'yes');
@@ -66,7 +70,11 @@ class AdminSettings implements ISettings
             'allowedGroupLines' => implode("\n", $policy['allowedGroupIds'] ?? []),
             'appAdminLines' => implode("\n", $policy['appAdminUserIds'] ?? []),
             'default_hourly_rate' => $defaultHourlyRate,
+            'default_project_status' => $defaultProjectStatus,
+            'default_project_priority' => $defaultProjectPriority,
             'budget_warning_threshold' => $budgetWarningThreshold,
+            'budget_critical_threshold' => $budgetCriticalThreshold,
+            'items_per_page' => $itemsPerPage,
             'max_projects_per_user' => $maxProjectsPerUser,
             'enable_time_tracking' => $enableTimeTracking,
             'enable_customer_management' => $enableCustomerManagement,

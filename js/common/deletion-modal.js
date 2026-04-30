@@ -11,7 +11,6 @@
 
     let currentModal = null;
     let currentEntity = null;
-    let currentDependencies = null;
     let currentCallbacks = {
         onSuccess: null,
         onCancel: null
@@ -192,7 +191,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    currentDependencies = data.impact;
                     displayDependencyInfo(data.impact);
                 } else {
                     displayError(data.error || t('projectcheck', 'Failed to load dependency information'));
@@ -697,7 +695,6 @@
         // Reset state
         currentModal = null;
         currentEntity = null;
-        currentDependencies = null;
         currentCallbacks = {
             onSuccess: null,
             onCancel: null

@@ -24,6 +24,7 @@ $isOrganization = strpos($currentPage, '/organization') !== false;
 // Injected by EnrichTemplateNavigationContext (BeforeTemplateRendered); safe fallbacks for edge cases.
 $canManageSettings = $canManageSettings ?? ($_['canManageSettings'] ?? $_['canManageOrg'] ?? false);
 $canManageOrganization = $canManageOrganization ?? ($_['canManageOrganization'] ?? $_['canManageOrg'] ?? false);
+$canAccessSettings = $canManageSettings || $canManageOrganization;
 $orgAppSettingsUrl = $orgAppSettingsUrl ?? ($_['orgAppSettingsUrl'] ?? '/index.php/apps/projectcheck/organization');
 // Dashboard is active if URL contains /dashboard OR if it's the base app URL without any specific section
 $isDashboard = strpos($currentPage, '/dashboard') !== false || 
@@ -96,19 +97,11 @@ include __DIR__ . '/pc-l10n-bootstrap.php';
                 <span><?php p($l->t('Employees')); ?></span>
             </a>
         </li>
-        <?php if ($canManageSettings) { ?>
+        <?php if ($canAccessSettings) { ?>
         <li class="<?php echo $isSettings ? 'active' : ''; ?>" <?php echo $isSettings ? 'aria-current="page"' : ''; ?>>
-            <a href="<?php p($_['settingsUrl'] ?? '/index.php/apps/projectcheck/settings'); ?>">
+            <a href="<?php p($_['settingsUrl'] ?? $orgAppSettingsUrl); ?>">
                 <i data-lucide="settings" class="lucide-icon"></i>
                 <span><?php p($l->t('Settings')); ?></span>
-            </a>
-        </li>
-        <?php } ?>
-        <?php if ($canManageOrganization) { ?>
-        <li class="<?php echo $isOrganization ? 'active' : ''; ?>" <?php echo $isOrganization ? 'aria-current="page"' : ''; ?>>
-            <a href="<?php p($orgAppSettingsUrl); ?>">
-                <i data-lucide="shield" class="lucide-icon"></i>
-                <span><?php p($l->t('Organization')); ?></span>
             </a>
         </li>
         <?php } ?>

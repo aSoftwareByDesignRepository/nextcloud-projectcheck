@@ -334,11 +334,12 @@ class BudgetAlertService
             $userId = $user ? $user->getUID() : null;
         }
 
+        $fallback = $this->config->getAppValue($this->appName, 'budget_warning_threshold', '80');
         if (!$userId) {
-            return 80; // Default threshold
+            return (int) $fallback;
         }
 
-        return (int) $this->config->getUserValue($userId, $this->appName, 'budget_warning_threshold', '80');
+        return (int) $this->config->getUserValue($userId, $this->appName, 'budget_warning_threshold', $fallback);
     }
 
     /**
@@ -354,11 +355,12 @@ class BudgetAlertService
             $userId = $user ? $user->getUID() : null;
         }
 
+        $fallback = $this->config->getAppValue($this->appName, 'budget_critical_threshold', '90');
         if (!$userId) {
-            return 90; // Default threshold
+            return (int) $fallback;
         }
 
-        return (int) $this->config->getUserValue($userId, $this->appName, 'budget_critical_threshold', '90');
+        return (int) $this->config->getUserValue($userId, $this->appName, 'budget_critical_threshold', $fallback);
     }
 
     /**

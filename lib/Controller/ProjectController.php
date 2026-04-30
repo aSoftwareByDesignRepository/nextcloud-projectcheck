@@ -208,7 +208,8 @@ class ProjectController extends Controller
 
 		// Get user's default items per page setting
 		$userId = $user->getUID();
-		$defaultItemsPerPage = $this->config->getUserValue($userId, $this->appName, 'items_per_page', '20');
+		$appItemsPerPage = $this->config->getAppValue($this->appName, 'items_per_page', '20');
+		$defaultItemsPerPage = $this->config->getUserValue($userId, $this->appName, 'items_per_page', $appItemsPerPage);
 
 		$statusParam = $this->request->getParam('status', null);
 		$page = max(1, (int)$this->request->getParam('page', 1));
@@ -308,9 +309,24 @@ class ProjectController extends Controller
 
 		// Get user's default settings for pre-filling the form
 		$defaultSettings = [
-			'hourly_rate' => $this->config->getUserValue($userId, $this->appName, 'default_hourly_rate', '50.00'),
-			'status' => $this->config->getUserValue($userId, $this->appName, 'default_project_status', 'Active'),
-			'priority' => $this->config->getUserValue($userId, $this->appName, 'default_project_priority', 'Medium')
+			'hourly_rate' => $this->config->getUserValue(
+				$userId,
+				$this->appName,
+				'default_hourly_rate',
+				$this->config->getAppValue($this->appName, 'default_hourly_rate', '50.00')
+			),
+			'status' => $this->config->getUserValue(
+				$userId,
+				$this->appName,
+				'default_project_status',
+				$this->config->getAppValue($this->appName, 'default_project_status', 'Active')
+			),
+			'priority' => $this->config->getUserValue(
+				$userId,
+				$this->appName,
+				'default_project_priority',
+				$this->config->getAppValue($this->appName, 'default_project_priority', 'Medium')
+			)
 		];
 
 		// Get customers for the dropdown

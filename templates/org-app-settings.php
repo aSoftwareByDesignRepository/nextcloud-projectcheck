@@ -1,6 +1,6 @@
 <?php
 /**
- * In-app organization settings (delegated app admins)
+ * In-app settings (delegated app admins and system admins)
  *
  * @var \OCP\IL10N $l
  * @var array $policy
@@ -51,9 +51,9 @@ include __DIR__ . '/common/navigation.php';
 		<a href="#projectcheck-org-main" class="projectcheck-skip-link"><?php p($l->t('Skip to main content')); ?></a>
 		<div id="projectcheck-org-main" class="projectcheck-org__main" role="main" aria-labelledby="page-title-projectcheck-org" tabindex="-1">
 		<header class="projectcheck-org__header">
-			<p class="projectcheck-org__kicker" id="projectcheck-org-kicker"><?php p($l->t('Organization')); ?></p>
-			<h1 class="projectcheck-org__title" id="page-title-projectcheck-org"><?php p($l->t('ProjectCheck — organization')); ?></h1>
-			<p class="projectcheck-org__lede"><?php p($l->t('Set who may use the app, who can manage these settings, and default values. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.')); ?></p>
+			<p class="projectcheck-org__kicker" id="projectcheck-org-kicker"><?php p($l->t('Settings')); ?></p>
+			<h1 class="projectcheck-org__title" id="page-title-projectcheck-org"><?php p($l->t('ProjectCheck — settings')); ?></h1>
+			<p class="projectcheck-org__lede"><?php p($l->t('Set who may use the app, who can manage these settings, and default values for projects and budgets. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.')); ?></p>
 		</header>
 
 		<section class="projectcheck-org__notice" role="region" aria-labelledby="projectcheck-org-trust-h">

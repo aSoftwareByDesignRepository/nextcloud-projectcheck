@@ -9,7 +9,11 @@
  * @var string $allowedGroupLines
  * @var string $appAdminLines
  * @var string $default_hourly_rate
+ * @var string $default_project_status
+ * @var string $default_project_priority
  * @var string $budget_warning_threshold
+ * @var string $budget_critical_threshold
+ * @var string $items_per_page
  * @var string $max_projects_per_user
  * @var string $enable_time_tracking
  * @var string $enable_customer_management
@@ -269,9 +273,39 @@ try {
 				<p class="projectcheck-hint" id="pc_def_rate_hint"><?php p($l->t('Default for new projects when the app has no per-user override.')); ?></p>
 			</div>
 			<div class="projectcheck-form-group">
+				<label for="pc_def_status"><?php p($l->t('Default project status')); ?></label>
+				<select id="pc_def_status" name="default_project_status" class="projectcheck-select" aria-describedby="pc_def_status_hint">
+					<option value="Active" <?php if (($default_project_status ?? 'Active') === 'Active') { p('selected'); } ?>><?php p($l->t('Active')); ?></option>
+					<option value="On Hold" <?php if (($default_project_status ?? '') === 'On Hold') { p('selected'); } ?>><?php p($l->t('On Hold')); ?></option>
+					<option value="Completed" <?php if (($default_project_status ?? '') === 'Completed') { p('selected'); } ?>><?php p($l->t('Completed')); ?></option>
+					<option value="Cancelled" <?php if (($default_project_status ?? '') === 'Cancelled') { p('selected'); } ?>><?php p($l->t('Cancelled')); ?></option>
+				</select>
+				<p class="projectcheck-hint" id="pc_def_status_hint"><?php p($l->t('Default status used when creating a project.')); ?></p>
+			</div>
+			<div class="projectcheck-form-group">
+				<label for="pc_def_priority"><?php p($l->t('Default project priority')); ?></label>
+				<select id="pc_def_priority" name="default_project_priority" class="projectcheck-select" aria-describedby="pc_def_priority_hint">
+					<option value="Low" <?php if (($default_project_priority ?? '') === 'Low') { p('selected'); } ?>><?php p($l->t('Low')); ?></option>
+					<option value="Medium" <?php if (($default_project_priority ?? 'Medium') === 'Medium') { p('selected'); } ?>><?php p($l->t('Medium')); ?></option>
+					<option value="High" <?php if (($default_project_priority ?? '') === 'High') { p('selected'); } ?>><?php p($l->t('High')); ?></option>
+					<option value="Critical" <?php if (($default_project_priority ?? '') === 'Critical') { p('selected'); } ?>><?php p($l->t('Critical')); ?></option>
+				</select>
+				<p class="projectcheck-hint" id="pc_def_priority_hint"><?php p($l->t('Default priority used when creating a project.')); ?></p>
+			</div>
+			<div class="projectcheck-form-group">
 				<label for="pc_budget_th"><?php p($l->t('Budget Warning Threshold (%)')); ?></label>
 				<input type="number" id="pc_budget_th" name="budget_warning_threshold" class="projectcheck-input" value="<?php p($budget_warning_threshold); ?>" min="0" max="100" inputmode="numeric" aria-describedby="pc_budget_th_hint">
 				<p class="projectcheck-hint" id="pc_budget_th_hint"><?php p($l->t('Show warnings when this percentage of the budget is used.')); ?></p>
+			</div>
+			<div class="projectcheck-form-group">
+				<label for="pc_budget_crit"><?php p($l->t('Budget Critical Threshold (%)')); ?></label>
+				<input type="number" id="pc_budget_crit" name="budget_critical_threshold" class="projectcheck-input" value="<?php p($budget_critical_threshold ?? '90'); ?>" min="0" max="100" inputmode="numeric" aria-describedby="pc_budget_crit_hint">
+				<p class="projectcheck-hint" id="pc_budget_crit_hint"><?php p($l->t('Show critical alerts when this percentage of the budget is used.')); ?></p>
+			</div>
+			<div class="projectcheck-form-group">
+				<label for="pc_items_page"><?php p($l->t('Items per page')); ?></label>
+				<input type="number" id="pc_items_page" name="items_per_page" class="projectcheck-input" value="<?php p($items_per_page ?? '20'); ?>" min="5" max="100" inputmode="numeric" aria-describedby="pc_items_page_hint">
+				<p class="projectcheck-hint" id="pc_items_page_hint"><?php p($l->t('Default list size for projects, customers, and employees when users have no personal override.')); ?></p>
 			</div>
 			<div class="projectcheck-form-group">
 				<label for="pc_max_proj"><?php p($l->t('Maximum projects per user')); ?></label>

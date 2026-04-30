@@ -4,19 +4,21 @@ const base = process.env.BASE_URL;
 const user = process.env.E2E_USER;
 const pass = process.env.E2E_PASS;
 
-test.describe('ProjectCheck organization (optional E2E)', () => {
+test.describe('ProjectCheck settings routes (optional E2E)', () => {
 	test.skip(!base, 'Set BASE_URL to run E2E');
 	test.skip(!user || !pass, 'Set E2E_USER and E2E_PASS');
 
-	test('organization page loads for app admin', async ({ request }) => {
+	test('settings page is canonical and organization remains compatible', async ({ request }) => {
 		// Server-side session: use request context for login flow if your NC uses form login.
 		// Minimal check: unauthenticated org URL should not be 200 with full app shell (usually redirect to login).
-		const orgUrl = `${base!.replace(/\/$/, '')}/index.php/apps/projectcheck/organization`;
-		const res = await request.get(orgUrl, { maxRedirects: 0 });
-		const status = res.status();
-		// 302/401 to login or 200 for guest error template — not 5xx
-		expect(status, 'organization route should not 500').not.toBe(500);
-		expect([200, 301, 302, 401, 403].includes(status)).toBeTruthy();
+		const baseUrl = base!.replace(/\/$/, '');
+		const settingsRes = await request.get(`${baseUrl}/index.php/apps/projectcheck/settings`, { maxRedirects: 0 });
+		expect(settingsRes.status(), 'settings route should not 500').not.toBe(500);
+		expect([200, 301, 302, 401, 403].includes(settingsRes.status())).toBeTruthy();
+
+		const orgRes = await request.get(`${baseUrl}/index.php/apps/projectcheck/organization`, { maxRedirects: 0 });
+		expect(orgRes.status(), 'organization route should not 500').not.toBe(500);
+		expect([301, 302, 401, 403].includes(orgRes.status()) || [200].includes(orgRes.status())).toBeTruthy();
 	});
 
 	test('critical permission routes do not 500 unauthenticated', async ({ request }) => {

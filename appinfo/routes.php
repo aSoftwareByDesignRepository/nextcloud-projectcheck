@@ -54,12 +54,10 @@ return [
 		['name' => 'dashboard#index', 'url' => '/dashboard', 'verb' => 'GET'],
 		['name' => 'dashboard#getStats', 'url' => '/api/dashboard/stats', 'verb' => 'GET'],
 
-		// Settings routes
-		['name' => 'settings#index', 'url' => '/settings', 'verb' => 'GET'],
-		['name' => 'settings#update', 'url' => '/settings', 'verb' => 'POST'],
-
-		// Organization (app) configuration — access policy and app defaults
+		// In-app admin settings (canonical page)
 		// Must be app_config# (underscore) so routing maps to AppConfigController, not AppconfigController.
+		['name' => 'app_config#settingsIndex', 'url' => '/settings', 'verb' => 'GET'],
+		// Backward-compatible route for old in-app URL; redirects to /settings.
 		['name' => 'app_config#orgIndex', 'url' => '/organization', 'verb' => 'GET'],
 		['name' => 'app_config#savePolicy', 'url' => '/api/config/save', 'verb' => 'POST'],
 		['name' => 'app_config#searchUsers', 'url' => '/api/config/search/users', 'verb' => 'GET'],

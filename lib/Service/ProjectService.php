@@ -182,9 +182,24 @@ class ProjectService
 		$this->validateProjectData($data);
 
 		// Get user's default settings
-		$defaultHourlyRate = $this->config->getUserValue($userId, 'projectcheck', 'default_hourly_rate', '50.00');
-		$defaultStatus = $this->config->getUserValue($userId, 'projectcheck', 'default_project_status', 'Active');
-		$defaultPriority = $this->config->getUserValue($userId, 'projectcheck', 'default_project_priority', 'Medium');
+		$defaultHourlyRate = $this->config->getUserValue(
+			$userId,
+			'projectcheck',
+			'default_hourly_rate',
+			$this->config->getAppValue('projectcheck', 'default_hourly_rate', '50.00')
+		);
+		$defaultStatus = $this->config->getUserValue(
+			$userId,
+			'projectcheck',
+			'default_project_status',
+			$this->config->getAppValue('projectcheck', 'default_project_status', 'Active')
+		);
+		$defaultPriority = $this->config->getUserValue(
+			$userId,
+			'projectcheck',
+			'default_project_priority',
+			$this->config->getAppValue('projectcheck', 'default_project_priority', 'Medium')
+		);
 
 		$requestedStatus = $data['status'] ?? $defaultStatus;
 		if ($requestedStatus === 'Archived') {

@@ -16,6 +16,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
 use OCP\IGroupManager;
@@ -174,7 +175,7 @@ class AppConfigController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function orgIndex(): TemplateResponse
+	public function settingsIndex(): TemplateResponse
 	{
 		$user = $this->userSession->getUser();
 		$l = $this->l10nFactory->get('projectcheck');
@@ -193,6 +194,16 @@ class AppConfigController extends Controller
 		$resp = $this->buildFormParameters($l);
 		$response = new TemplateResponse('projectcheck', 'org-app-settings', $resp);
 		return $this->configureCSP($response, 'main');
+	}
+
+	/**
+	 * Backward-compatible route for old in-app URL.
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function orgIndex(): RedirectResponse
+	{
+		return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex'));
 	}
 
 	/**
@@ -309,7 +320,11 @@ class AppConfigController extends Controller
 	private function buildFormParameters(IL10N $l): array
 	{
 		$defaultHourlyRate = $this->config->getAppValue('projectcheck', 'default_hourly_rate', '50.00');
+		$defaultProjectStatus = $this->config->getAppValue('projectcheck', 'default_project_status', 'Active');
+		$defaultProjectPriority = $this->config->getAppValue('projectcheck', 'default_project_priority', 'Medium');
 		$budgetWarningThreshold = $this->config->getAppValue('projectcheck', 'budget_warning_threshold', '80');
+		$budgetCriticalThreshold = $this->config->getAppValue('projectcheck', 'budget_critical_threshold', '90');
+		$itemsPerPage = $this->config->getAppValue('projectcheck', 'items_per_page', '20');
 		$maxProjectsPerUser = $this->config->getAppValue('projectcheck', 'max_projects_per_user', '100');
 		$enableTimeTracking = $this->config->getAppValue('projectcheck', 'enable_time_tracking', 'yes');
 		$enableCustomerManagement = $this->config->getAppValue('projectcheck', 'enable_customer_management', 'yes');
@@ -334,7 +349,11 @@ class AppConfigController extends Controller
 			'allowedGroupLines' => implode("\n", $st['allowedGroupIds'] ?? []),
 			'appAdminLines' => implode("\n", $st['appAdminUserIds'] ?? []),
 			'default_hourly_rate' => $defaultHourlyRate,
+			'default_project_status' => $defaultProjectStatus,
+			'default_project_priority' => $defaultProjectPriority,
 			'budget_warning_threshold' => $budgetWarningThreshold,
+			'budget_critical_threshold' => $budgetCriticalThreshold,
+			'items_per_page' => $itemsPerPage,
 			'max_projects_per_user' => $maxProjectsPerUser,
 			'enable_time_tracking' => $enableTimeTracking,
 			'enable_customer_management' => $enableCustomerManagement,
@@ -345,8 +364,8 @@ class AppConfigController extends Controller
 			'customersUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.index'),
 			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'employeesUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.index'),
-			'settingsUrl' => $this->urlGenerator->linkToRoute('projectcheck.settings.index'),
-			'orgAppSettingsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.orgIndex'),
+			'settingsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex'),
+			'orgAppSettingsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex'),
 			'orgSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
 			'orgSearchGroupsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchGroups'),
 		];
@@ -361,7 +380,11 @@ class AppConfigController extends Controller
 	{
 		return [
 			'default_hourly_rate' => $this->config->getAppValue('projectcheck', 'default_hourly_rate', '50.00'),
+			'default_project_status' => $this->config->getAppValue('projectcheck', 'default_project_status', 'Active'),
+			'default_project_priority' => $this->config->getAppValue('projectcheck', 'default_project_priority', 'Medium'),
 			'budget_warning_threshold' => $this->config->getAppValue('projectcheck', 'budget_warning_threshold', '80'),
+			'budget_critical_threshold' => $this->config->getAppValue('projectcheck', 'budget_critical_threshold', '90'),
+			'items_per_page' => $this->config->getAppValue('projectcheck', 'items_per_page', '20'),
 			'max_projects_per_user' => $this->config->getAppValue('projectcheck', 'max_projects_per_user', '100'),
 			'enable_time_tracking' => $this->config->getAppValue('projectcheck', 'enable_time_tracking', 'yes'),
 			'enable_customer_management' => $this->config->getAppValue('projectcheck', 'enable_customer_management', 'yes'),
@@ -381,10 +404,34 @@ class AppConfigController extends Controller
 				$this->config->setAppValue('projectcheck', 'default_hourly_rate', number_format($x, 2, '.', ''));
 			}
 		}
+		if (isset($v['default_project_status'])) {
+			$status = (string) $v['default_project_status'];
+			if (in_array($status, [ 'Active', 'On Hold', 'Completed', 'Cancelled' ], true)) {
+				$this->config->setAppValue('projectcheck', 'default_project_status', $status);
+			}
+		}
+		if (isset($v['default_project_priority'])) {
+			$priority = (string) $v['default_project_priority'];
+			if (in_array($priority, [ 'Low', 'Medium', 'High', 'Critical' ], true)) {
+				$this->config->setAppValue('projectcheck', 'default_project_priority', $priority);
+			}
+		}
 		if (isset($v['budget_warning_threshold'])) {
 			$t = (int) $v['budget_warning_threshold'];
 			if ($t >= 0 && $t <= 100) {
 				$this->config->setAppValue('projectcheck', 'budget_warning_threshold', (string) $t);
+			}
+		}
+		if (isset($v['budget_critical_threshold'])) {
+			$t = (int) $v['budget_critical_threshold'];
+			if ($t >= 0 && $t <= 100) {
+				$this->config->setAppValue('projectcheck', 'budget_critical_threshold', (string) $t);
+			}
+		}
+		if (isset($v['items_per_page'])) {
+			$items = (int) $v['items_per_page'];
+			if ($items >= 5 && $items <= 100) {
+				$this->config->setAppValue('projectcheck', 'items_per_page', (string) $items);
 			}
 		}
 		if (isset($v['max_projects_per_user'])) {
