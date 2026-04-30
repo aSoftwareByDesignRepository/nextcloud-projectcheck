@@ -53,6 +53,8 @@ echo -n "projectcheck" | openssl dgst -sha512 -sign ~/.nextcloud/certificates/pr
 2. Update **`CHANGELOG.md`** at the app root. The store imports changelog from **`CHANGELOG.md`**; the release heading must match the **semantic version** in `info.xml` (see [Changelog](https://nextcloudappstore.readthedocs.io/en/latest/developer.html#changelog) — pattern `## X.Y.Z` / Keep a Changelog).
 3. Optional: **`release/GITHUB_RELEASE_NOTES_X.Y.Z.md`** for GitHub Releases.
 
+> **Important:** each published update must use a **new** version number. Re-uploading a tarball with the **same** `info.xml` `<version>` is not a normal upgrade path for existing installations.
+
 ---
 
 ## 4. Build the installable `.tar.gz`

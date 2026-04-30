@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.28 - 2026-04-30
+
+### Changed
+
+- Finalized organization-scoped settings and deletion workflow hardening across controllers, templates, listener wiring, and localization payloads.
+- Release operator guidance now explicitly requires a new app version for each published update to ensure upgrade visibility in Nextcloud instances.
+
 ## 2.0.27 - 2026-04-26
 
 ### Changed
