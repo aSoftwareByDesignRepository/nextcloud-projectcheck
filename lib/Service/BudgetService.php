@@ -279,10 +279,24 @@ class BudgetService
     {
         $budgetInfo = $this->getProjectBudgetInfo($project);
         $additionalCost = $additionalHours * $additionalRate;
+
+        if ($budgetInfo['total_budget'] <= 0) {
+            return [
+                'has_budget' => false,
+                'current_consumption' => 0,
+                'new_consumption' => 0,
+                'additional_cost' => $additionalCost,
+                'remaining_budget_after' => 0,
+                'would_exceed_budget' => false,
+                'warning_level_after' => 'none'
+            ];
+        }
+
         $newUsedBudget = $budgetInfo['used_budget'] + $additionalCost;
         $newConsumptionPercentage = ($newUsedBudget / $budgetInfo['total_budget']) * 100;
 
         return [
+            'has_budget' => true,
             'current_consumption' => $budgetInfo['consumption_percentage'],
             'new_consumption' => round($newConsumptionPercentage, 2),
             'additional_cost' => $additionalCost,

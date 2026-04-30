@@ -71,6 +71,11 @@
         const budgetSection = document.getElementById('budget-info-section');
 
         if (!budgetSection) return;
+        const totalBudget = parseFloat(budget.total_budget);
+        if (!isFinite(totalBudget) || totalBudget <= 0) {
+            hideBudgetInfo();
+            return;
+        }
 
         // Update budget values
         document.getElementById('total-budget').textContent = formatCurrency(budget.total_budget);

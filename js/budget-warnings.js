@@ -210,6 +210,11 @@
 	 * @param {object} impact
 	 */
 	function displayBudgetImpact(impact) {
+		if (!impact || impact.has_budget === false) {
+			hideBudgetWarning();
+			return;
+		}
+
 		let container = document.getElementById('budget-warning-container');
 
 		if (!container) {
