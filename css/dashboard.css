@@ -934,6 +934,10 @@ body {
 	margin-bottom: 20px;
 }
 
+.stats-overview-section .section-header {
+	border-bottom: none;
+}
+
 .overview-stats-compact {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
