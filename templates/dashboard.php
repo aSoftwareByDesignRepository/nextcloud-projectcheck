@@ -59,10 +59,12 @@ Util::addStyle('projectcheck', 'common/accessibility');
                         <i data-lucide="clock" class="lucide-icon"></i>
                         <?php p($l->t('New Time Entry')); ?>
                     </a>
+                    <?php if (!empty($_['canCreateProject'])): ?>
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="button secondary">
                         <i data-lucide="plus" class="lucide-icon"></i>
                         <?php p($l->t('New Project')); ?>
                     </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -89,10 +91,12 @@ Util::addStyle('projectcheck', 'common/accessibility');
                 <i data-lucide="clock" class="lucide-icon"></i>
                 <span><?php p($l->t('New Time Entry')); ?></span>
             </a>
+            <?php if (!empty($_['canCreateProject'])): ?>
             <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="toolbar-action">
                 <i data-lucide="plus" class="lucide-icon"></i>
                 <span><?php p($l->t('New Project')); ?></span>
             </a>
+            <?php endif; ?>
             <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.index')); ?>" class="toolbar-action">
                 <i data-lucide="folder" class="lucide-icon"></i>
                 <span><?php p($l->t('View Projects')); ?></span>
@@ -520,10 +524,12 @@ Util::addStyle('projectcheck', 'common/accessibility');
                     </div>
                     <h4><?php p($l->t('No recent projects')); ?></h4>
                     <p><?php p($l->t('Create your first project to get started!')); ?></p>
+                    <?php if (!empty($_['canCreateProject'])): ?>
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="button primary">
                         <i data-lucide="plus" class="lucide-icon"></i>
                         <?php p($l->t('Create Project')); ?>
                     </a>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <div class="projects-grid">

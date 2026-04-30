@@ -16,9 +16,12 @@ $userUID = $user ? $user->getUID() : '';
 $currentPage = $_GET['page'] ?? 'dashboard';
 $isAdmin = $userUID !== '' && $groupManager->isInGroup($userUID, 'admin');
 $isLoggedIn = $user !== null;
-$canManageProjects = $isLoggedIn;
-$canManageCustomers = $isLoggedIn;
+$canManageSettings = (bool)($_['canManageSettings'] ?? $_['canManageOrg'] ?? false);
+$canManageOrganization = (bool)($_['canManageOrganization'] ?? $_['canManageOrg'] ?? false);
+$canManageProjects = (bool)($_['canCreateProject'] ?? $canManageOrganization);
+$canManageCustomers = (bool)($_['canCreateCustomer'] ?? $canManageOrganization);
 $canViewTime = $isLoggedIn;
+$canAccessSettings = $canManageSettings;
 $logoFile = $appManager->getAppPath('projectcheck') . '/img/logo.svg';
 ?>
 <button class="menu-bar-toggle" id="menu-bar-toggle" type="button" aria-label="<?php p($l->t('Toggle menu')); ?>"
@@ -134,6 +137,7 @@ $logoFile = $appManager->getAppPath('projectcheck') . '/img/logo.svg';
 			</div>
 		</div>
 
+		<?php if ($canAccessSettings) { ?>
 		<div class="menu-group">
 			<a href="<?php p($gen->linkToRoute('projectcheck.settings.index')); ?>"
 				class="menu-item <?php echo ($currentPage === 'settings') ? 'active' : ''; ?>"
@@ -142,6 +146,7 @@ $logoFile = $appManager->getAppPath('projectcheck') . '/img/logo.svg';
 				<span class="text"><?php p($l->t('Settings')); ?></span>
 			</a>
 		</div>
+		<?php } ?>
 
 		<?php if ($isAdmin) { ?>
 		<div class="menu-group">

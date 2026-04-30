@@ -153,6 +153,7 @@ class DashboardController extends Controller
 			'customersUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.index'),
 			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'settingsUrl' => $this->urlGenerator->linkToRoute('projectcheck.settings.index'),
+			'canCreateProject' => $this->projectService->canUserCreateProject($userId),
 		]);
 
 		return $this->configureCSP($response);

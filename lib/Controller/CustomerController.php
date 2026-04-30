@@ -199,8 +199,12 @@ class CustomerController extends Controller
 		}
 
 		// Add deletion permission: no projects blocking *and* user may delete
+		$editableCustomerIds = [];
 		foreach ($customers as $customer) {
 			$cid = (int) $customer->getId();
+			if ($this->customerService->canUserEditCustomer($userId, $cid)) {
+				$editableCustomerIds[$cid] = true;
+			}
 			$customer->setCanDelete(
 				$this->customerService->canDeleteCustomer($cid)
 				&& $this->customerService->canUserDeleteCustomer($userId, $cid)
@@ -230,7 +234,9 @@ class CustomerController extends Controller
 			'urlGenerator' => $this->urlGenerator,
 			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => 'CUSTOMER_ID']),
 			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.edit', ['id' => 'CUSTOMER_ID']),
-			'deleteUrl' => $deleteUrl
+			'deleteUrl' => $deleteUrl,
+			'canCreateCustomer' => $this->projectService->canUserCreateCustomer($userId),
+			'editableCustomerIds' => $editableCustomerIds,
 		]);
 
 		return $this->configureCSP($response);
@@ -254,8 +260,17 @@ class CustomerController extends Controller
 			return $this->configureCSP($response, 'guest');
 		}
 
+		$userId = $user->getUID();
+		if (!$this->projectService->canUserCreateCustomer($userId)) {
+			$response = new TemplateResponse($this->appName, 'error', [
+				'message' => $this->l->t('Access denied'),
+				'urlGenerator' => $this->urlGenerator
+			], 'main');
+			return $this->configureCSP($response);
+		}
+
 		// Get common stats for the sidebar
-		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $user->getUID());
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
 
 		$response = new TemplateResponse($this->appName, 'customer-form', [
 			'customer' => null,
@@ -282,6 +297,9 @@ class CustomerController extends Controller
 		}
 
 		$userId = $user->getUID();
+		if (!$this->projectService->canUserCreateCustomer($userId)) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
+		}
 		$data = $this->request->getParams();
 
 		try {
@@ -365,6 +383,7 @@ class CustomerController extends Controller
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $user->getUID());
 		$canEditCustomer = $this->customerService->canUserEditCustomer($userId, (int) $id);
+		$canCreateProject = $this->projectService->canUserCreateProject($userId);
 
 		$response = new TemplateResponse($this->appName, 'customer-detail', [
 			'customer' => $customer,
@@ -374,6 +393,7 @@ class CustomerController extends Controller
 			'detailedProjectTypeStats' => $detailedProjectTypeStats,
 			'productivityAnalysis' => $productivityAnalysis,
 			'canEditCustomer' => $canEditCustomer,
+			'canCreateProject' => $canCreateProject,
 			'requesttoken' => $this->requestTokenProvider->getEncryptedRequestToken(),
 			'stats' => $stats,
 			'urlGenerator' => $this->urlGenerator

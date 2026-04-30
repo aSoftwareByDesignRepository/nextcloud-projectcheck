@@ -106,6 +106,12 @@ class SettingsController extends Controller
 		}
 
 		$userId = $user->getUID();
+		if (!$this->projectService->canManageSettings($userId)) {
+			$response = new TemplateResponse($this->appName, 'error', [
+				'message' => $this->l->t('Access denied')
+			], 'main');
+			return $this->configureCSP($response, 'main');
+		}
 
 		// Get user settings
 		$settings = $this->getUserSettings($userId);
@@ -140,6 +146,9 @@ class SettingsController extends Controller
 		}
 
 		$userId = $user->getUID();
+		if (!$this->projectService->canManageSettings($userId)) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
+		}
 		$data = $this->request->getParams();
 
 		try {

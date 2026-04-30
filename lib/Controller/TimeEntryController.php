@@ -169,7 +169,12 @@ class TimeEntryController extends Controller
 			$filters['date_to'] = $dateTo;
 		}
 		if ($search) $filters['search'] = $search;
-		if ($filterUserId) $filters['user_id'] = $filterUserId;
+		$canViewAllEntries = $this->projectService->canUserViewAllTimeEntries($userId);
+		if ($filterUserId) {
+			$filters['user_id'] = $canViewAllEntries ? $filterUserId : $userId;
+		} elseif (!$canViewAllEntries) {
+			$filters['user_id'] = $userId;
+		}
 		if ($projectType) $filters['project_type'] = $projectType;
 		if ($accessibleProjectIds !== null) {
 			$filters['project_ids'] = $accessibleProjectIds;
@@ -195,7 +200,7 @@ class TimeEntryController extends Controller
 			'date_from' => $dateFrom,
 			'date_to' => $dateTo,
 			'search' => $search,
-			'user_id' => $filterUserId,
+			'user_id' => $canViewAllEntries ? $filterUserId : $userId,
 			'project_type' => $projectType
 		];
 
@@ -224,6 +229,7 @@ class TimeEntryController extends Controller
 			'users' => $users,
 			'filters' => $formFilters,
 			'userId' => $userId,
+			'canViewAllEntries' => $canViewAllEntries,
 			'stats' => $stats,
 			'projectTypeStats' => $projectTypeStats,
 			'detailedProjectTypeStats' => $detailedProjectTypeStats,
@@ -380,8 +386,7 @@ class TimeEntryController extends Controller
 
 		$uid = $user->getUID();
 		$isOwner = $timeEntry->getUserId() === $uid;
-		$canAccessProject = $this->projectService->canUserAccessProject($uid, $timeEntry->getProjectId());
-		if (!$isOwner && !$canAccessProject) {
+		if (!$isOwner && !$this->projectService->canUserViewAllTimeEntries($uid)) {
 			$response = new TemplateResponse($this->appName, 'error', [
 				'message' => $this->l->t('Access denied')
 			], 'guest');
@@ -714,7 +719,12 @@ class TimeEntryController extends Controller
 
 			$filters = [];
 			if ($projectId) $filters['project_id'] = $projectId;
-			if ($filterUserId) $filters['user_id'] = $filterUserId;
+			$canViewAllEntries = $this->projectService->canUserViewAllTimeEntries($currentUserId);
+			if ($filterUserId) {
+				$filters['user_id'] = $canViewAllEntries ? $filterUserId : $currentUserId;
+			} elseif (!$canViewAllEntries) {
+				$filters['user_id'] = $currentUserId;
+			}
 			if ($projectType) $filters['project_type'] = $projectType;
 			if ($dateFrom) $filters['date_from'] = $dateFrom;
 			if ($dateTo) $filters['date_to'] = $dateTo;

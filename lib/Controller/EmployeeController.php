@@ -141,7 +141,7 @@ class EmployeeController extends Controller
 
         $userId = $user->getUID();
 		$isGlobalViewer = $this->accessControlService->isSystemAdministrator($userId)
-			|| $this->accessControlService->canManageAppConfiguration($userId);
+			|| $this->accessControlService->canManageOrganization($userId);
 		$accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($userId);
 		$visibleUserIds = $isGlobalViewer ? null : [$userId];
 
@@ -231,7 +231,7 @@ class EmployeeController extends Controller
         $snapshot = $this->userAccountSnapshotMapper->findByUserId($userId);
 		$viewerId = $user->getUID();
 		$isGlobalViewer = $this->accessControlService->isSystemAdministrator($viewerId)
-			|| $this->accessControlService->canManageAppConfiguration($viewerId);
+			|| $this->accessControlService->canManageOrganization($viewerId);
 		if (!$isGlobalViewer && $viewerId !== $userId) {
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $viewerId]));
 		}
@@ -387,7 +387,7 @@ class EmployeeController extends Controller
         $userId = $this->request->getParam('user_id', null);
 		$viewerId = $user->getUID();
 		$isGlobalViewer = $this->accessControlService->isSystemAdministrator($viewerId)
-			|| $this->accessControlService->canManageAppConfiguration($viewerId);
+			|| $this->accessControlService->canManageOrganization($viewerId);
 		if (is_string($userId) && $userId !== '' && $userId !== $viewerId) {
 			if (!$isGlobalViewer) {
 				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);

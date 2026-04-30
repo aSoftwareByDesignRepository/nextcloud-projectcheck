@@ -108,6 +108,7 @@ class ProjectControllerTest extends TestCase {
 			$this->userManager,
 			$userAccountSnapshot
 		);
+		$this->projectService->method('canUserCreateProject')->willReturn(true);
 	}
 
 	/**

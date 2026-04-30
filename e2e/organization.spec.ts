@@ -18,4 +18,23 @@ test.describe('ProjectCheck organization (optional E2E)', () => {
 		expect(status, 'organization route should not 500').not.toBe(500);
 		expect([200, 301, 302, 401, 403].includes(status)).toBeTruthy();
 	});
+
+	test('critical permission routes do not 500 unauthenticated', async ({ request }) => {
+		const baseUrl = base!.replace(/\/$/, '');
+		const candidateRoutes = [
+			'/index.php/apps/projectcheck/settings',
+			'/index.php/apps/projectcheck/organization',
+			'/index.php/apps/projectcheck/projects',
+			'/index.php/apps/projectcheck/customers',
+			'/index.php/apps/projectcheck/time-entries',
+			'/index.php/apps/projectcheck/employees',
+		];
+
+		for (const route of candidateRoutes) {
+			const res = await request.get(`${baseUrl}${route}`, { maxRedirects: 0 });
+			const status = res.status();
+			expect(status, `${route} should not 500`).not.toBe(500);
+			expect([200, 301, 302, 401, 403].includes(status), `${route} should return expected auth status`).toBeTruthy();
+		}
+	});
 });

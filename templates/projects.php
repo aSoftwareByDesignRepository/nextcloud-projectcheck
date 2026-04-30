@@ -27,9 +27,11 @@ Util::addStyle('projectcheck', 'navigation');
                     <p><?php p($l->t('Manage your projects and track their progress')); ?></p>
                 </div>
                 <div class="header-actions">
+                    <?php if (!empty($_['canCreateProject'])): ?>
                     <a href="<?php p($_['createUrl']); ?>" class="button primary">
                         <?php p($l->t('Create New Project')); ?>
                     </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -364,6 +366,7 @@ Util::addStyle('projectcheck', 'navigation');
                                             <span class="icon icon-rename" aria-hidden="true"></span>
                                         </a>
                                         <?php } ?>
+                                        <?php if (!empty($projectData['canEdit'])): ?>
                                         <button type="button" class="action-item delete-project-btn"
                                             data-project-id="<?php p($project->getId()); ?>"
                                             data-project-name="<?php p($project->getName()); ?>"
@@ -371,6 +374,7 @@ Util::addStyle('projectcheck', 'navigation');
                                             aria-label="<?php p($l->t('Delete project %s', [$project->getName()])); ?>">
                                             <span class="icon icon-delete" aria-hidden="true"></span>
                                         </button>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -400,16 +404,20 @@ Util::addStyle('projectcheck', 'navigation');
                                 $prevQuery = array_merge($baseQuery, ['page' => max(1, $currentPage - 1)]);
                                 $nextQuery = array_merge($baseQuery, ['page' => min($totalPages, $currentPage + 1)]);
                             ?>
-                            <a class="button secondary <?php echo $currentPage <= 1 ? 'disabled' : ''; ?>"
-                               href="<?php p($currentPage <= 1 ? '#' : $baseUrl . '?' . http_build_query($prevQuery)); ?>"
-                               aria-disabled="<?php echo $currentPage <= 1 ? 'true' : 'false'; ?>">
+                            <?php if ($currentPage > 1): ?>
+                            <a class="button secondary" href="<?php p($baseUrl . '?' . http_build_query($prevQuery)); ?>">
                                 ‹ <?php p($l->t('Previous')); ?>
                             </a>
-                            <a class="button secondary <?php echo $currentPage >= $totalPages ? 'disabled' : ''; ?>"
-                               href="<?php p($currentPage >= $totalPages ? '#' : $baseUrl . '?' . http_build_query($nextQuery)); ?>"
-                               aria-disabled="<?php echo $currentPage >= $totalPages ? 'true' : 'false'; ?>">
+                            <?php else: ?>
+                            <span class="button secondary disabled" aria-disabled="true"><?php p($l->t('Previous')); ?></span>
+                            <?php endif; ?>
+                            <?php if ($currentPage < $totalPages): ?>
+                            <a class="button secondary" href="<?php p($baseUrl . '?' . http_build_query($nextQuery)); ?>">
                                 <?php p($l->t('Next')); ?> ›
                             </a>
+                            <?php else: ?>
+                            <span class="button secondary disabled" aria-disabled="true"><?php p($l->t('Next')); ?></span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endif; ?>

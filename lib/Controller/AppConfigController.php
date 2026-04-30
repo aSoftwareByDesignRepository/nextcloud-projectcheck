@@ -145,7 +145,7 @@ class AppConfigController extends Controller
 		if ($sess === null) {
 			return new JSONResponse([ 'ok' => false, 'error' => 'unauthorized' ], 401);
 		}
-		if (!$this->accessControl->canManageAppConfiguration($sess->getUID())) {
+		if (!$this->accessControl->canManageOrganization($sess->getUID())) {
 			return new JSONResponse([ 'ok' => false, 'error' => 'forbidden' ], 403);
 		}
 		return null;
@@ -184,7 +184,7 @@ class AppConfigController extends Controller
 				'urlGenerator' => $this->urlGenerator,
 			], 'guest');
 		}
-		if (!$this->accessControl->canManageAppConfiguration($user->getUID())) {
+		if (!$this->accessControl->canManageOrganization($user->getUID())) {
 			return new TemplateResponse('projectcheck', 'error', [
 				'message' => $l->t('You do not have permission to change organization settings for ProjectCheck.'),
 				'urlGenerator' => $this->urlGenerator,
@@ -211,7 +211,7 @@ class AppConfigController extends Controller
 				'message' => $apiMsg['unauthorized'],
 			], 401);
 		}
-		if (!$this->accessControl->canManageAppConfiguration($user->getUID())) {
+		if (!$this->accessControl->canManageOrganization($user->getUID())) {
 			$this->logger->warning('projectcheck org save denied', [ 'userId' => $user->getUID() ]);
 			return new JSONResponse([
 				'error' => 'forbidden',

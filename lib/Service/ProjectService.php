@@ -170,14 +170,16 @@ class ProjectService
 	 */
 	public function createProject(array $data): Project
 	{
-		$this->validateProjectData($data);
-
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			throw new \Exception('User not authenticated');
 		}
-
 		$userId = $user->getUID();
+		if (!$this->canUserCreateProject($userId)) {
+			throw new \Exception('Access denied');
+		}
+
+		$this->validateProjectData($data);
 
 		// Get user's default settings
 		$defaultHourlyRate = $this->config->getUserValue($userId, 'projectcheck', 'default_hourly_rate', '50.00');
@@ -869,6 +871,31 @@ class ProjectService
 		return $this->canUserDeleteProject($userId, $projectId);
 	}
 
+	public function canUserCreateProject(string $userId): bool
+	{
+		return $this->hasGlobalProjectAccess($userId);
+	}
+
+	public function canUserCreateCustomer(string $userId): bool
+	{
+		return $this->hasGlobalProjectAccess($userId);
+	}
+
+	public function canUserViewAllTimeEntries(string $userId): bool
+	{
+		return $this->hasGlobalProjectAccess($userId);
+	}
+
+	public function canManageSettings(string $userId): bool
+	{
+		return $this->hasGlobalProjectAccess($userId);
+	}
+
+	public function canManageOrganization(string $userId): bool
+	{
+		return $this->hasGlobalProjectAccess($userId);
+	}
+
 	/**
 	 * Filter projects by various criteria
 	 *
@@ -1248,6 +1275,9 @@ class ProjectService
 		if (!$sessionUser) {
 			throw new \Exception('User not authenticated');
 		}
+		if (!$this->canUserManageMembers($sessionUser->getUID(), $projectId)) {
+			throw new \Exception('Access denied');
+		}
 
 		$existingMember = $this->getProjectMemberAnyState($projectId, $userId);
 		if ($existingMember !== null) {
@@ -1318,6 +1348,13 @@ class ProjectService
 		}
 		if (!$project->isEditableState()) {
 			throw new \Exception('Cannot change the team for a completed, cancelled, or archived project');
+		}
+		$sessionUser = $this->userSession->getUser();
+		if (!$sessionUser) {
+			throw new \Exception('User not authenticated');
+		}
+		if (!$this->canUserManageMembers($sessionUser->getUID(), $projectId)) {
+			throw new \Exception('Access denied');
 		}
 
 		$member = $this->getProjectMemberActive($projectId, $userId);
@@ -1682,6 +1719,18 @@ class ProjectService
 			if (!isset($data[$field]) || empty($data[$field])) {
 				throw new \Exception("Field '{$field}' is required");
 			}
+		}
+		if (!is_numeric($data['customer_id']) || (int)$data['customer_id'] <= 0) {
+			throw new \Exception('Customer is required');
+		}
+		$customerId = (int)$data['customer_id'];
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('id')
+			->from('customers')
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($customerId, IQueryBuilder::PARAM_INT)));
+		$exists = $qb->executeQuery()->fetchOne();
+		if ($exists === false) {
+			throw new \Exception('Customer not found');
 		}
 
 		if (strlen($data['name']) > 100) {

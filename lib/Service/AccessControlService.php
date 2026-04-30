@@ -169,6 +169,22 @@ class AccessControlService
 	}
 
 	/**
+	 * Explicit capability: who may access/manage app settings.
+	 */
+	public function canManageSettings(string $userId): bool
+	{
+		return $this->canManageAppConfiguration($userId);
+	}
+
+	/**
+	 * Explicit capability: who may access/manage organization configuration.
+	 */
+	public function canManageOrganization(string $userId): bool
+	{
+		return $this->canManageAppConfiguration($userId);
+	}
+
+	/**
 	 * @throws \InvalidArgumentException
 	 */
 	public function saveAccessPolicy(

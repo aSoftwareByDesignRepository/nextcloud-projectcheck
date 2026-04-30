@@ -145,6 +145,27 @@ class AccessControlServiceTest extends TestCase
 		$this->assertStringContainsString('teamA', $gJson, $gJson);
 	}
 
+	public function testExplicitSettingsAndOrganizationCapabilitiesMapToAppConfigPermission(): void
+	{
+		[ $config, $groupManager, $userManager, $logger ] = $this->newMocks();
+		$config->method('getAppValue')->willReturnMap([
+			[AccessControlService::APP_ID, AccessControlService::KEY_APP_ADMIN_USER_IDS, '[]', '["app-admin"]'],
+		]);
+		$groupManager->method('isAdmin')->willReturnMap([
+			['app-admin', false],
+			['system-admin', true],
+			['member', false],
+		]);
+		$s = $this->service($config, $groupManager, $userManager, $logger);
+
+		$this->assertTrue($s->canManageSettings('app-admin'));
+		$this->assertTrue($s->canManageOrganization('app-admin'));
+		$this->assertTrue($s->canManageSettings('system-admin'));
+		$this->assertTrue($s->canManageOrganization('system-admin'));
+		$this->assertFalse($s->canManageSettings('member'));
+		$this->assertFalse($s->canManageOrganization('member'));
+	}
+
 	/** @return IUser&MockObject */
 	private function createUserMock(string $id): IUser
 	{

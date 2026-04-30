@@ -41,7 +41,10 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$event = new BeforeTemplateRenderedEvent(true, $response);
 
 		$userSession->method('getUser')->willReturn($user);
-		$accessControl->method('canManageAppConfiguration')
+		$accessControl->method('canManageSettings')
+			->with('u1')
+			->willReturn(true);
+		$accessControl->method('canManageOrganization')
 			->with('u1')
 			->willReturn(true);
 		$urlGenerator->method('linkToRoute')
@@ -54,6 +57,8 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$params = $response->getParams();
 		$this->assertSame(1, $params['foo'] ?? null);
 		$this->assertSame(['X' => 'Y'], $params['jsL10n'] ?? null);
+		$this->assertTrue($params['canManageSettings'] ?? null);
+		$this->assertTrue($params['canManageOrganization'] ?? null);
 		$this->assertTrue($params['canManageOrg'] ?? null);
 		$this->assertSame(
 			'/index.php/apps/projectcheck/organization',
@@ -74,7 +79,8 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$event = new BeforeTemplateRenderedEvent(false, $response);
 
 		$userSession->expects($this->never())->method('getUser');
-		$accessControl->expects($this->never())->method('canManageAppConfiguration');
+		$accessControl->expects($this->never())->method('canManageSettings');
+		$accessControl->expects($this->never())->method('canManageOrganization');
 		$urlGenerator->expects($this->never())->method('linkToRoute');
 
 		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog);
@@ -112,7 +118,8 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$response = new TemplateResponse(Application::APP_ID, 'main', []);
 		$event = new BeforeTemplateRenderedEvent(true, $response);
 		$userSession->method('getUser')->willReturn(null);
-		$accessControl->expects($this->never())->method('canManageAppConfiguration');
+		$accessControl->expects($this->never())->method('canManageSettings');
+		$accessControl->expects($this->never())->method('canManageOrganization');
 
 		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog);
 		$listener->handle($event);

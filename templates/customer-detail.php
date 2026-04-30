@@ -28,6 +28,7 @@ style('projectcheck', 'customer-statistics');
 <div id="app-content" role="main">
 	<div id="app-content-wrapper">
 		<?php $canEditCustomer = !empty($_['canEditCustomer']); ?>
+		<?php $canCreateProject = !empty($_['canCreateProject']); ?>
 		<!-- Breadcrumb Navigation -->
 		<div class="breadcrumb-container">
 			<nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
@@ -62,18 +63,20 @@ style('projectcheck', 'customer-statistics');
 					</div>
 				</div>
 				<div class="header-actions">
-					<?php if ($canEditCustomer): ?>
+					<?php if ($canCreateProject): ?>
 					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.edit', ['id' => $customer->getId()])); ?>"
 						class="button secondary" role="button">
 						<i data-lucide="edit" class="lucide-icon"></i>
 						<?php p($l->t('Edit Customer')); ?>
 					</a>
 					<?php endif; ?>
+					<?php if ($canEditCustomer): ?>
 					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>"
-						class="button primary" role="button">
+						class="button primary">
 						<i data-lucide="plus" class="lucide-icon"></i>
 						<?php p($l->t('New Project')); ?>
 					</a>
+					<?php endif; ?>
 				</div>
 			</div>
 		</div>
@@ -418,11 +421,13 @@ style('projectcheck', 'customer-statistics');
 				<div class="section-header">
 					<h3><i data-lucide="folder" class="lucide-icon primary"></i> <?php p($l->t('Associated Projects')); ?></h3>
 					<div class="section-header-actions">
+						<?php if ($canCreateProject): ?>
 						<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>"
-							class="button primary" role="button">
+							class="button primary">
 							<i data-lucide="plus" class="lucide-icon"></i>
 							<?php p($l->t('Create New Project')); ?>
 						</a>
+						<?php endif; ?>
 					</div>
 				</div>
 				<div class="section-content">
@@ -433,10 +438,12 @@ style('projectcheck', 'customer-statistics');
 							</div>
 							<h4><?php p($l->t('No projects found')); ?></h4>
 							<p><?php p($l->t('This customer doesn\'t have any projects yet.')); ?></p>
+							<?php if ($canCreateProject): ?>
 							<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>" class="button primary">
 								<i data-lucide="plus" class="lucide-icon"></i>
 								<?php p($l->t('Create First Project')); ?>
 							</a>
+							<?php endif; ?>
 						</div>
 					<?php else: ?>
 						<div class="projects-grid">

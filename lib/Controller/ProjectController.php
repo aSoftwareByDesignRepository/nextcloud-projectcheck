@@ -279,6 +279,7 @@ class ProjectController extends Controller
 			'customersUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.index'),
 			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'dashboardUrl' => $this->urlGenerator->linkToRoute('projectcheck.dashboard.index'),
+			'canCreateProject' => $this->projectService->canUserCreateProject($userId),
 		]);
 
 		return $this->configureCSP($response);
@@ -300,6 +301,10 @@ class ProjectController extends Controller
 		}
 
 		$userId = $user->getUID();
+		if (!$this->projectService->canUserCreateProject($userId)) {
+			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Access denied')], 'main');
+			return $this->configureCSP($response, 'main');
+		}
 
 		// Get user's default settings for pre-filling the form
 		$defaultSettings = [
@@ -346,6 +351,14 @@ class ProjectController extends Controller
 				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
+		}
+
+		$userId = $user->getUID();
+		if (!$this->projectService->canUserCreateProject($userId)) {
+			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
+				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			}
+			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
 		}
 
 		try {
@@ -1301,6 +1314,10 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+
+		if (!$this->projectService->canUserCreateProject($user->getUID())) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
 		try {

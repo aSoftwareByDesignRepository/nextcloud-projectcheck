@@ -299,6 +299,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IRequest::class),
 				$c->query(\OCP\IUserSession::class),
 				$c->query('ProjectMemberService'),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
 				$c->query('DeletionService'),
 				$c->query('ActivityService'),
 				$c->query(\OCA\ProjectCheck\Service\CSPService::class),

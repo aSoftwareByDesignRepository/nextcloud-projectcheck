@@ -68,6 +68,7 @@ class TimeEntryControllerTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn($this->user);
 
 		$this->projectService->method('getProjectsByIdList')->willReturn([]);
+		$this->projectService->method('canUserViewAllTimeEntries')->willReturn(false);
 		$this->customerService->method('getVisibleCustomerCountForUser')->willReturn(0);
 		$this->timeEntryService->method('countTimeEntries')->willReturn(0);
 		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([]);
@@ -170,7 +171,7 @@ class TimeEntryControllerTest extends TestCase {
 
 		$this->assertInstanceOf(TemplateResponse::class, $response);
 		$params = $response->getParams();
-		$this->assertSame($selectedUserId, $params['filters']['user_id']);
+		$this->assertSame('member-user', $params['filters']['user_id']);
 		$selectedUserOption = array_values(array_filter(
 			$params['users'],
 			static fn (array $user): bool => ($user['user_id'] ?? '') === $selectedUserId
@@ -192,19 +193,22 @@ class TimeEntryControllerTest extends TestCase {
 
 		$accessibleProjectIds = [2, 4];
 		$this->projectService->method('getAccessibleProjectIdListForUser')->with('member-user')->willReturn($accessibleProjectIds);
+		$this->projectService->method('canUserViewAllTimeEntries')->with('member-user')->willReturn(false);
 		$this->projectService->method('getProjectsForUserTimeEntry')->willReturn([]);
 
 		$this->timeEntryService->expects($this->once())
 			->method('countTimeEntries')
 			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
-				return ($filters['project_ids'] ?? null) === $accessibleProjectIds;
+				return ($filters['project_ids'] ?? null) === $accessibleProjectIds
+					&& ($filters['user_id'] ?? null) === 'member-user';
 			}))
 			->willReturn(0);
 
 		$this->timeEntryService->expects($this->once())
 			->method('getTimeEntriesWithProjectInfo')
 			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
-				return ($filters['project_ids'] ?? null) === $accessibleProjectIds;
+				return ($filters['project_ids'] ?? null) === $accessibleProjectIds
+					&& ($filters['user_id'] ?? null) === 'member-user';
 			}))
 			->willReturn([]);
 
@@ -229,11 +233,13 @@ class TimeEntryControllerTest extends TestCase {
 
 		$accessibleProjectIds = [5, 8];
 		$this->projectService->method('getAccessibleProjectIdListForUser')->with('member-user')->willReturn($accessibleProjectIds);
+		$this->projectService->method('canUserViewAllTimeEntries')->with('member-user')->willReturn(false);
 
 		$this->timeEntryService->expects($this->once())
 			->method('getTimeEntriesWithProjectInfo')
 			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
-				return ($filters['project_ids'] ?? null) === $accessibleProjectIds;
+				return ($filters['project_ids'] ?? null) === $accessibleProjectIds
+					&& ($filters['user_id'] ?? null) === 'member-user';
 			}))
 			->willReturn([]);
 

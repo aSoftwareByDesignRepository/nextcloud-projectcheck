@@ -140,6 +140,10 @@ class CustomerService
 	 */
 	public function createCustomer(array $data, string $userId): Customer
 	{
+		if (!$this->projectService->canUserCreateCustomer($userId)) {
+			throw new \Exception('Access denied');
+		}
+
 		// Validate required fields
 		if (empty($data['name'])) {
 			throw new \Exception('Customer name is required');

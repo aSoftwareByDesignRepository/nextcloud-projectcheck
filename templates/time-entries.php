@@ -456,6 +456,7 @@ Util::addStyle('projectcheck', 'navigation');
                         </select>
                     </div>
 
+                    <?php if (!empty($_['canViewAllEntries'])): ?>
                     <div class="filter-group">
                         <label for="user-filter" class="filter-label"><?php p($l->t('User')); ?></label>
                         <select id="user-filter" class="filter-select">
@@ -469,6 +470,7 @@ Util::addStyle('projectcheck', 'navigation');
                             <?php endif; ?>
                         </select>
                     </div>
+                    <?php endif; ?>
 
                     <div class="filter-group">
                         <label for="time-entry-project-type-filter" class="filter-label"><?php p($l->t('Project Type')); ?></label>
@@ -694,16 +696,20 @@ Util::addStyle('projectcheck', 'navigation');
                                 $prevQuery = array_merge($baseQuery, ['page' => max(1, $currentPage - 1)]);
                                 $nextQuery = array_merge($baseQuery, ['page' => min($totalPages, $currentPage + 1)]);
                             ?>
-                            <a class="btn btn-secondary <?php echo $currentPage <= 1 ? 'disabled' : ''; ?>"
-                               href="<?php p($currentPage <= 1 ? '#' : $baseUrl . '?' . http_build_query($prevQuery)); ?>"
-                               aria-disabled="<?php echo $currentPage <= 1 ? 'true' : 'false'; ?>">
+                            <?php if ($currentPage > 1): ?>
+                            <a class="btn btn-secondary" href="<?php p($baseUrl . '?' . http_build_query($prevQuery)); ?>">
                                 ‹ <?php p($l->t('Previous')); ?>
                             </a>
-                            <a class="btn btn-secondary <?php echo $currentPage >= $totalPages ? 'disabled' : ''; ?>"
-                               href="<?php p($currentPage >= $totalPages ? '#' : $baseUrl . '?' . http_build_query($nextQuery)); ?>"
-                               aria-disabled="<?php echo $currentPage >= $totalPages ? 'true' : 'false'; ?>">
+                            <?php else: ?>
+                            <span class="btn btn-secondary disabled" aria-disabled="true"><?php p($l->t('Previous')); ?></span>
+                            <?php endif; ?>
+                            <?php if ($currentPage < $totalPages): ?>
+                            <a class="btn btn-secondary" href="<?php p($baseUrl . '?' . http_build_query($nextQuery)); ?>">
                                 <?php p($l->t('Next')); ?> ›
                             </a>
+                            <?php else: ?>
+                            <span class="btn btn-secondary disabled" aria-disabled="true"><?php p($l->t('Next')); ?></span>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endif; ?>
