@@ -48,7 +48,6 @@ include __DIR__ . '/common/navigation.php';
 ?>
 <div id="app-content" role="main" class="projectcheck-app-content">
 	<div id="app-content-wrapper" class="projectcheck-org">
-		<a href="#projectcheck-org-main" class="projectcheck-skip-link"><?php p($l->t('Skip to main content')); ?></a>
 		<!-- Audit fix D18: there must be exactly one role="main" per page; the
 		     inner block uses role="region" with the existing aria-labelledby so
 		     screen readers still announce it as a labeled landmark. -->

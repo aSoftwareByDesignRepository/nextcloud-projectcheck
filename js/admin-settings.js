@@ -254,26 +254,6 @@
 		});
 	}
 
-	function initSkipLinks() {
-		document.querySelectorAll('a.projectcheck-skip-link[href^="#"]').forEach(function (a) {
-			var id = a.getAttribute('href');
-			if (!id || id.length < 2) {
-				return;
-			}
-			var el = document.getElementById(id.substring(1));
-			if (!el) {
-				return;
-			}
-			a.addEventListener('click', function () {
-				if (el && typeof el.focus === 'function') {
-					setTimeout(function () {
-						el.focus();
-					}, 0);
-				}
-			});
-		});
-	}
-
 	function boot() {
 		var org = document.getElementById('projectcheck-org-form');
 		var admin = document.getElementById('projectcheck-admin-form');
@@ -283,7 +263,6 @@
 		if (admin) {
 			initForm(/** @type {HTMLFormElement} */ (admin));
 		}
-		initSkipLinks();
 	}
 
 	if (document.readyState === 'loading') {

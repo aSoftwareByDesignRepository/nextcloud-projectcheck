@@ -62,7 +62,6 @@ include __DIR__ . '/pc-l10n-bootstrap.php';
 ?>
 
 <div id="app-navigation" role="navigation" aria-label="<?php p($l->t('ProjectCheck primary navigation')); ?>">
-    <a class="skip-link" href="#app-content"><?php p($l->t('Skip to main content')); ?></a>
     <!-- Sidebar Header -->
     <div class="sidebar-header">
         <div class="app-brand">
