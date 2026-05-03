@@ -82,8 +82,12 @@ class AppAccessMiddleware extends Middleware
 
 		$path = (string) ($this->request->getPathInfo() ?? '');
 		$isApi = str_contains($path, '/api/') || str_starts_with($path, '/ocs/');
-		$wantsJson = $this->request->getHeader('Accept') === 'application/json'
-			|| str_starts_with((string) $this->request->getHeader('Content-Type'), 'application/json');
+		$accept = strtolower((string) $this->request->getHeader('Accept'));
+		$contentType = strtolower((string) $this->request->getHeader('Content-Type'));
+		$xRequestedWith = strtolower((string) $this->request->getHeader('X-Requested-With'));
+		$wantsJson = str_contains($accept, 'application/json')
+			|| str_contains($contentType, 'application/json')
+			|| $xRequestedWith === 'xmlhttprequest';
 
 		if ($isApi || $wantsJson || $this->request->getMethod() !== 'GET') {
 			return new JSONResponse([

@@ -20,8 +20,9 @@
  */
 use OCP\Util;
 Util::addStyle('projectcheck', 'common/feedback-system');
-Util::addScript('projectcheck', 'pc-l10n', 'core', true);
+// Init script list before prepend: OCP\Util::addScript(..., true) requires a non-null bucket (PHP 8+).
 Util::addScript('projectcheck', 'admin-settings');
+Util::addScript('projectcheck', 'pc-l10n', 'core', true);
 Util::addScript('projectcheck', 'org-policy-pickers');
 Util::addStyle('projectcheck', 'admin-settings');
 $restrictOn = !empty($policy['restrictionEnabled']);

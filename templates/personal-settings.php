@@ -1,98 +1,137 @@
 <?php
 
 /**
- * Personal settings template for projectcheck app
+ * Personal settings panel for ProjectCheck (rendered inside Nextcloud's Personal Settings UI).
+ *
+ * IMPORTANT: This template runs inside Nextcloud's settings layout.
+ * It must NOT include any app-level navigation, page chrome or layout
+ * containers (#app-navigation / #app-content) -- those belong to the host page.
  *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
+ *
+ * @var \OCP\IL10N $l
+ * @var bool $hasAccess
+ * @var string $budget_warning_threshold
+ * @var string $budget_critical_threshold
+ * @var string $appBudgetWarningDefault
+ * @var string $appBudgetCriticalDefault
+ * @var string $saveUrl
  */
 
 use OCP\Util;
 
-Util::addScript('projectcheck', 'personal-settings');
 Util::addStyle('projectcheck', 'personal-settings');
-Util::addStyle('projectcheck', 'navigation');
+
+$hasAccess = !empty($hasAccess);
+$formId = 'projectcheck-personal-settings-form';
+$saveUrl = (string) ($saveUrl ?? '');
+$warning = (string) ($budget_warning_threshold ?? '');
+$critical = (string) ($budget_critical_threshold ?? '');
+$appWarn = (string) ($appBudgetWarningDefault ?? '80');
+$appCrit = (string) ($appBudgetCriticalDefault ?? '90');
 ?>
+<section class="section projectcheck-personal" aria-labelledby="projectcheck-personal-heading">
+	<h2 id="projectcheck-personal-heading" class="projectcheck-personal__title">
+		<?php p($l->t('ProjectCheck')); ?>
+	</h2>
 
-<?php include __DIR__ . '/common/navigation.php'; ?>
+	<?php if (!$hasAccess) : ?>
+		<p class="projectcheck-personal__intro">
+			<?php p($l->t('You do not currently have access to ProjectCheck. Ask an administrator if you should be added.')); ?>
+		</p>
+	<?php else : ?>
+		<p class="projectcheck-personal__intro">
+			<?php p($l->t('Override the budget alert thresholds your dashboard and notifications use. Leave the defaults to follow the organization settings.')); ?>
+		</p>
 
-<div id="app-content" role="main">
-    <div id="app-content-wrapper">
-        <div class="section">
-            <h2><?php p($l->t('Project Control Preferences')); ?></h2>
+		<form id="<?php p($formId); ?>"
+			class="projectcheck-personal__form"
+			method="post"
+			action="<?php p($saveUrl); ?>"
+			data-save-url="<?php p($saveUrl); ?>"
+			novalidate>
 
-            <form id="projectcheck-personal-settings" class="projectcheck-personal-form">
-                <div class="form-group">
-                    <label for="default_hourly_rate"><?php p($l->t('Default Hourly Rate (€)')); ?></label>
-                    <input type="number" id="default_hourly_rate" name="default_hourly_rate"
-                        value="<?php p($default_hourly_rate); ?>" step="0.01" min="0">
-                    <p class="setting-hint"><?php p($l->t('Your default hourly rate for time entries')); ?></p>
-                </div>
+			<input type="hidden" name="requesttoken" value="<?php p(\OCP\Util::callRegister()); ?>">
 
-                <div class="form-group">
-                    <label for="dashboard_refresh_interval"><?php p($l->t('Dashboard Refresh Interval (seconds)')); ?></label>
-                    <select id="dashboard_refresh_interval" name="dashboard_refresh_interval">
-                        <option value="15" <?php if ($dashboard_refresh_interval === '15') echo 'selected'; ?>>15</option>
-                        <option value="30" <?php if ($dashboard_refresh_interval === '30') echo 'selected'; ?>>30</option>
-                        <option value="60" <?php if ($dashboard_refresh_interval === '60') echo 'selected'; ?>>60</option>
-                        <option value="300" <?php if ($dashboard_refresh_interval === '300') echo 'selected'; ?>>300</option>
-                        <option value="0" <?php if ($dashboard_refresh_interval === '0') echo 'selected'; ?>><?php p($l->t('Disabled')); ?></option>
-                    </select>
-                    <p class="setting-hint"><?php p($l->t('How often to refresh dashboard statistics')); ?></p>
-                </div>
+			<fieldset class="projectcheck-personal__fieldset">
+				<legend class="projectcheck-personal__legend"><?php p($l->t('Budget alert thresholds')); ?></legend>
 
-                <div class="form-group">
-                    <label for="show_completed_projects"><?php p($l->t('Show Completed Projects')); ?></label>
-                    <select id="show_completed_projects" name="show_completed_projects">
-                        <option value="yes" <?php if ($show_completed_projects === 'yes') echo 'selected'; ?>><?php p($l->t('Yes')); ?></option>
-                        <option value="no" <?php if ($show_completed_projects === 'no') echo 'selected'; ?>><?php p($l->t('No')); ?></option>
-                    </select>
-                    <p class="setting-hint"><?php p($l->t('Show completed projects in project lists')); ?></p>
-                </div>
+				<div class="projectcheck-personal__field">
+					<label class="projectcheck-personal__label" for="pc-personal-warning">
+						<?php p($l->t('Warning threshold')); ?>
+					</label>
+					<div class="projectcheck-personal__input-row">
+						<input
+							type="number"
+							id="pc-personal-warning"
+							name="budget_warning_threshold"
+							class="projectcheck-personal__input"
+							inputmode="numeric"
+							min="0"
+							max="100"
+							step="1"
+							required
+							value="<?php p($warning); ?>"
+							aria-describedby="pc-personal-warning-hint pc-personal-warning-error">
+						<span class="projectcheck-personal__suffix" aria-hidden="true">%</span>
+					</div>
+					<p id="pc-personal-warning-hint" class="projectcheck-personal__hint">
+						<?php p($l->t('Projects are highlighted as “warning” when budget consumption reaches this percentage.')); ?>
+						<span class="projectcheck-personal__default">
+							<?php p($l->t('Organization default: %s%%', [ $appWarn ])); ?>
+						</span>
+					</p>
+					<p id="pc-personal-warning-error" class="projectcheck-personal__error" role="alert" hidden></p>
+				</div>
 
-                <div class="form-group">
-                    <label for="time_entry_reminder"><?php p($l->t('Time Entry Reminder')); ?></label>
-                    <select id="time_entry_reminder" name="time_entry_reminder">
-                        <option value="yes" <?php if ($time_entry_reminder === 'yes') echo 'selected'; ?>><?php p($l->t('Yes')); ?></option>
-                        <option value="no" <?php if ($time_entry_reminder === 'no') echo 'selected'; ?>><?php p($l->t('No')); ?></option>
-                    </select>
-                    <p class="setting-hint"><?php p($l->t('Show reminder to log time entries')); ?></p>
-                </div>
+				<div class="projectcheck-personal__field">
+					<label class="projectcheck-personal__label" for="pc-personal-critical">
+						<?php p($l->t('Critical threshold')); ?>
+					</label>
+					<div class="projectcheck-personal__input-row">
+						<input
+							type="number"
+							id="pc-personal-critical"
+							name="budget_critical_threshold"
+							class="projectcheck-personal__input"
+							inputmode="numeric"
+							min="0"
+							max="100"
+							step="1"
+							required
+							value="<?php p($critical); ?>"
+							aria-describedby="pc-personal-critical-hint pc-personal-critical-error">
+						<span class="projectcheck-personal__suffix" aria-hidden="true">%</span>
+					</div>
+					<p id="pc-personal-critical-hint" class="projectcheck-personal__hint">
+						<?php p($l->t('Projects are flagged as “critical” when budget consumption reaches this percentage. Must be higher than the warning threshold.')); ?>
+						<span class="projectcheck-personal__default">
+							<?php p($l->t('Organization default: %s%%', [ $appCrit ])); ?>
+						</span>
+					</p>
+					<p id="pc-personal-critical-error" class="projectcheck-personal__error" role="alert" hidden></p>
+				</div>
+			</fieldset>
 
-                <div class="form-group">
-                    <label for="email_notifications"><?php p($l->t('Email Notifications')); ?></label>
-                    <select id="email_notifications" name="email_notifications">
-                        <option value="yes" <?php if ($email_notifications === 'yes') echo 'selected'; ?>><?php p($l->t('Yes')); ?></option>
-                        <option value="no" <?php if ($email_notifications === 'no') echo 'selected'; ?>><?php p($l->t('No')); ?></option>
-                    </select>
-                    <p class="setting-hint"><?php p($l->t('Receive email notifications for project events')); ?></p>
-                </div>
+			<div class="projectcheck-personal__actions">
+				<button type="submit"
+					class="projectcheck-personal__save button primary"
+					data-pc-save>
+					<span class="projectcheck-personal__save-label">
+						<?php p($l->t('Save preferences')); ?>
+					</span>
+					<span class="projectcheck-personal__save-spinner" aria-hidden="true" hidden></span>
+				</button>
+				<p class="projectcheck-personal__status"
+					role="status"
+					aria-live="polite"
+					data-pc-status></p>
+			</div>
+		</form>
 
-                <div class="form-group">
-                    <label for="default_time_entry_duration"><?php p($l->t('Default Time Entry Duration (hours)')); ?></label>
-                    <input type="number" id="default_time_entry_duration" name="default_time_entry_duration"
-                        value="<?php p($default_time_entry_duration); ?>" step="0.25" min="0.25" max="24">
-                    <p class="setting-hint"><?php p($l->t('Default duration when creating new time entries')); ?></p>
-                </div>
-
-                <div class="form-group">
-                    <label for="budget_warning_threshold"><?php p($l->t('Budget Warning Threshold (Percent)')); ?></label>
-                    <input type="number" id="budget_warning_threshold" name="budget_warning_threshold"
-                        value="<?php p($budget_warning_threshold ?? '80'); ?>" min="0" max="100">
-                    <p class="setting-hint"><?php p($l->t('Highlight projects when budget consumption reaches this percentage')); ?></p>
-                </div>
-
-                <div class="form-group">
-                    <label for="budget_critical_threshold"><?php p($l->t('Budget Critical Threshold (Percent)')); ?></label>
-                    <input type="number" id="budget_critical_threshold" name="budget_critical_threshold"
-                        value="<?php p($budget_critical_threshold ?? '90'); ?>" min="0" max="100">
-                    <p class="setting-hint"><?php p($l->t('Highlight projects as critical when budget consumption reaches this percentage')); ?></p>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary"><?php p($l->t('Save Preferences')); ?></button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+		<?php
+		Util::addScript('projectcheck', 'personal-settings');
+		?>
+	<?php endif; ?>
+</section>

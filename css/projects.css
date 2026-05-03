@@ -4446,18 +4446,28 @@ body {
 	font-size: 24px;
 	cursor: pointer;
 	color: var(--color-text-maxcontrast);
-	width: 32px;
-	height: 32px;
-	display: flex;
+	/* WCAG 2.5.5 enhanced target size: 44x44 minimum hit area, even though the
+	   visible glyph remains 24px. Audit ref. AUDIT-FINDINGS D19. */
+	min-width: 44px;
+	min-height: 44px;
+	width: 44px;
+	height: 44px;
+	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	border-radius: 50%;
-	transition: all 0.2s ease;
+	transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.popup-close:hover {
+.popup-close:hover,
+.popup-close:focus-visible {
 	background: var(--color-error);
-	color: var(--pc-text-on-strong);
+	color: var(--pc-text-on-strong, #fff);
+}
+
+.popup-close:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .popup-body {

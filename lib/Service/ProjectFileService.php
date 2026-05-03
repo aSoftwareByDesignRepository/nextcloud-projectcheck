@@ -3,7 +3,18 @@
 declare(strict_types=1);
 
 /**
- * Service for handling project file uploads and access
+ * Service for handling project file uploads and access.
+ *
+ * Hardening notes (audit reference: AUDIT-FINDINGS.md A2/A3):
+ *  - Server-side MIME detection (finfo) is authoritative; the client-reported
+ *    type is only stored as advisory metadata after sanity checks.
+ *  - Uploads are streamed from `tmp_name` into the app storage as a file
+ *    pointer (no buffering of the full file in PHP memory).
+ *  - Filenames are normalized with a strict allow-list and an executable /
+ *    server-side-handler blocklist; double extensions like `evil.php.jpg`
+ *    are reduced to a safe single extension.
+ *  - Aggregate request size is capped on top of the per-file cap.
+ *  - Storage paths are validated against traversal before being resolved.
  *
  * @copyright Copyright (c) 2025, Nextcloud GmbH
  * @license AGPL-3.0-or-later
@@ -19,13 +30,37 @@ use OCP\Files\AppData\IAppDataFactory;
 use OCP\Files\SimpleFS\ISimpleFile;
 use OCP\Files\SimpleFS\ISimpleFolder;
 use Psr\Log\LoggerInterface;
-use OCP\IRequest;
 use OCP\IUserSession;
 
 class ProjectFileService
 {
-	private const MAX_FILES_PER_UPLOAD = 20;
-	private const MAX_FILE_SIZE_BYTES = 52428800; // 50 MiB per file
+	public const MAX_FILES_PER_UPLOAD = 20;
+	public const MAX_FILE_SIZE_BYTES = 52428800; // 50 MiB per file
+	public const MAX_REQUEST_BYTES = 209715200; // 200 MiB aggregate per request
+
+	/**
+	 * Filename extensions that must never be stored under any circumstance,
+	 * even if the user "really" wants to upload them. These are file types
+	 * which can be executed/served by a web server or which can carry
+	 * server-side handlers (`.htaccess`).
+	 */
+	private const FORBIDDEN_EXTENSIONS = [
+		'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phps', 'phtml', 'phar',
+		'pl', 'pm', 'cgi', 'py', 'pyc', 'pyo', 'rb', 'sh', 'bash', 'zsh', 'ksh',
+		'jsp', 'jspx', 'asp', 'aspx', 'cfm', 'cfc', 'do', 'action',
+		'exe', 'dll', 'bat', 'cmd', 'com', 'scr', 'msi', 'msp', 'vbs', 'vbe',
+		'wsf', 'wsh', 'ps1', 'psm1', 'ps1xml',
+		'htaccess', 'htpasswd', 'ini', 'config', 'conf', 'env', 'lock',
+	];
+
+	/** Server-MIME types we refuse to accept regardless of extension. */
+	private const FORBIDDEN_MIME_PREFIXES = [
+		'application/x-php', 'application/x-httpd-php', 'text/x-php',
+		'application/x-perl', 'application/x-python',
+		'application/x-ruby', 'application/x-shellscript',
+		'application/x-msdos-program', 'application/x-msdownload',
+		'application/x-executable', 'application/vnd.microsoft.portable-executable',
+	];
 
 	private ProjectFileMapper $mapper;
 	private ProjectService $projectService;
@@ -61,25 +96,19 @@ class ProjectFileService
 			return [];
 		}
 
-		// Normalize uploaded files array (handle PHP's multi-file structure)
-		if (isset($uploads['tmp_name']) && is_array($uploads['tmp_name'])) {
-			$normalized = [];
-			foreach ($uploads['tmp_name'] as $idx => $tmpName) {
-				$normalized[] = [
-					'name' => $uploads['name'][$idx] ?? '',
-					'type' => $uploads['type'][$idx] ?? '',
-					'tmp_name' => $tmpName,
-					'error' => $uploads['error'][$idx] ?? UPLOAD_ERR_NO_FILE,
-					'size' => $uploads['size'][$idx] ?? 0,
-				];
-			}
-			$uploads = $normalized;
-		} elseif (isset($uploads['tmp_name'])) {
-			$uploads = [$uploads];
-		}
+		$uploads = $this->normalizeUploadsArray($uploads);
 
 		if (count($uploads) > self::MAX_FILES_PER_UPLOAD) {
 			throw new \InvalidArgumentException('Too many files in one upload request');
+		}
+
+		// Aggregate size cap (in addition to per-file cap)
+		$aggregate = 0;
+		foreach ($uploads as $u) {
+			$aggregate += max(0, (int)($u['size'] ?? 0));
+		}
+		if ($aggregate > self::MAX_REQUEST_BYTES) {
+			throw new \InvalidArgumentException('Total upload size exceeds the allowed limit');
 		}
 
 		$stored = [];
@@ -104,6 +133,53 @@ class ProjectFileService
 		}
 
 		return $stored;
+	}
+
+	/**
+	 * Normalize PHP's split-array upload structure into a list of per-file entries.
+	 *
+	 * @param array<string,mixed> $uploads
+	 * @return list<array{name:string,type:string,tmp_name:string,error:int,size:int}>
+	 */
+	private function normalizeUploadsArray(array $uploads): array
+	{
+		if (isset($uploads['tmp_name']) && is_array($uploads['tmp_name'])) {
+			$normalized = [];
+			foreach ($uploads['tmp_name'] as $idx => $tmpName) {
+				$normalized[] = [
+					'name' => (string)($uploads['name'][$idx] ?? ''),
+					'type' => (string)($uploads['type'][$idx] ?? ''),
+					'tmp_name' => (string)$tmpName,
+					'error' => (int)($uploads['error'][$idx] ?? UPLOAD_ERR_NO_FILE),
+					'size' => (int)($uploads['size'][$idx] ?? 0),
+				];
+			}
+			return $normalized;
+		}
+		if (isset($uploads['tmp_name'])) {
+			return [[
+				'name' => (string)($uploads['name'] ?? ''),
+				'type' => (string)($uploads['type'] ?? ''),
+				'tmp_name' => (string)$uploads['tmp_name'],
+				'error' => (int)($uploads['error'] ?? UPLOAD_ERR_NO_FILE),
+				'size' => (int)($uploads['size'] ?? 0),
+			]];
+		}
+		// Already a list?
+		$out = [];
+		foreach ($uploads as $u) {
+			if (!is_array($u) || !isset($u['tmp_name'])) {
+				continue;
+			}
+			$out[] = [
+				'name' => (string)($u['name'] ?? ''),
+				'type' => (string)($u['type'] ?? ''),
+				'tmp_name' => (string)$u['tmp_name'],
+				'error' => (int)($u['error'] ?? UPLOAD_ERR_NO_FILE),
+				'size' => (int)($u['size'] ?? 0),
+			];
+		}
+		return $out;
 	}
 
 	/**
@@ -158,68 +234,99 @@ class ProjectFileService
 	}
 
 	/**
-	 * @param ProjectFile $projectFile
-	 * @return ISimpleFile
+	 * Resolve a stored ProjectFile to the underlying ISimpleFile.
+	 *
+	 * The stored path follows the rigid layout `project_files/<projectId>/<basename>`.
+	 * We re-validate every component to guard against any historical/migrated
+	 * row that might contain unexpected separators.
+	 *
+	 * @throws \RuntimeException when the path is malformed.
 	 */
 	public function resolveFile(ProjectFile $projectFile): ISimpleFile
 	{
-		$path = $projectFile->getStoragePath();
-		$parts = explode('/', $path, 3);
-		if (count($parts) < 3) {
-			throw new \Exception('Invalid file path');
+		$path = (string)$projectFile->getStoragePath();
+		$parts = explode('/', $path);
+		if (count($parts) !== 3) {
+			throw new \RuntimeException('Invalid file path');
 		}
-		$folderPath = $parts[0] ?? '';
-		$projectFolder = $parts[1] ?? '';
-		$fileName = $parts[2] ?? '';
+		[$root, $folder, $name] = $parts;
+		if ($root !== 'project_files') {
+			throw new \RuntimeException('Invalid storage root');
+		}
+		if ($folder === '' || $folder !== (string)(int)$folder) {
+			throw new \RuntimeException('Invalid project folder');
+		}
+		if ($name === '' || str_contains($name, '/') || str_contains($name, "\0") || $name === '.' || $name === '..') {
+			throw new \RuntimeException('Invalid file name');
+		}
 
-		$root = $this->appData->getFolder($folderPath);
-		$projectFolder = $root->getFolder($projectFolder);
-		return $projectFolder->getFile($fileName);
+		$rootFolder = $this->appData->getFolder($root);
+		$projectFolder = $rootFolder->getFolder($folder);
+		return $projectFolder->getFile($name);
 	}
 
+	/**
+	 * @param array{name:string,type:string,tmp_name:string,error:int,size:int} $upload
+	 */
 	private function storeSingleFile(int $projectId, array $upload, string $userId): ProjectFile
 	{
-		$folder = $this->getProjectFolder($projectId);
-
-		$originalName = $upload['name'] ?? 'upload.bin';
-		$cleanName = $this->sanitizeFileName($originalName);
-		$uniqueName = uniqid('file_', true) . '_' . $cleanName;
-
-		$tmpName = (string)($upload['tmp_name'] ?? '');
+		$tmpName = $upload['tmp_name'];
 		if ($tmpName === '' || !is_uploaded_file($tmpName)) {
 			throw new \InvalidArgumentException('Invalid uploaded file');
 		}
 
-		$size = (int)($upload['size'] ?? 0);
-		if ($size < 0) {
-			throw new \InvalidArgumentException('Invalid file size');
+		$size = $upload['size'];
+		if ($size <= 0) {
+			throw new \InvalidArgumentException('Empty upload is not allowed');
 		}
 		if ($size > self::MAX_FILE_SIZE_BYTES) {
 			throw new \InvalidArgumentException('File is too large');
 		}
+		// Cross-check with the actual size on disk - PHP's reported size is
+		// derived from headers and can be wrong if the upload was truncated.
+		$actualSize = @filesize($tmpName);
+		if ($actualSize === false || $actualSize <= 0) {
+			throw new \InvalidArgumentException('Could not determine uploaded file size');
+		}
+		if ($actualSize > self::MAX_FILE_SIZE_BYTES) {
+			throw new \InvalidArgumentException('File is too large');
+		}
 
-		$file = $folder->newFile($uniqueName);
-		$content = @fopen($tmpName, 'rb');
-		if ($content === false) {
+		// Server-side MIME detection is authoritative.
+		$mimeType = $this->detectServerMimeType($tmpName);
+		foreach (self::FORBIDDEN_MIME_PREFIXES as $blocked) {
+			if (str_starts_with($mimeType, $blocked)) {
+				throw new \InvalidArgumentException('This file type is not allowed');
+			}
+		}
+
+		$cleanName = $this->sanitizeFileName($upload['name']);
+		$uniqueName = $this->buildUniqueStorageName($cleanName);
+
+		$folder = $this->getProjectFolder($projectId);
+
+		$stream = @fopen($tmpName, 'rb');
+		if ($stream === false) {
 			throw new \RuntimeException('Could not read uploaded file');
 		}
-		$rawContent = stream_get_contents($content);
-		fclose($content);
-		if ($rawContent === false) {
-			throw new \RuntimeException('Could not read uploaded file');
+
+		try {
+			$file = $folder->newFile($uniqueName);
+			// putContent supports a resource argument and streams it without
+			// buffering the entire payload into a PHP string.
+			$file->putContent($stream);
+		} finally {
+			if (is_resource($stream)) {
+				fclose($stream);
+			}
 		}
-		$file->putContent($rawContent);
 
 		$entity = new ProjectFile();
 		$entity->setProjectId($projectId);
 		$entity->setStoragePath('project_files/' . $projectId . '/' . $uniqueName);
-		$entity->setDisplayName($originalName);
-		$mimeType = $this->detectMimeType(
-			$tmpName,
-			is_string($upload['type'] ?? null) ? (string)$upload['type'] : null
-		);
+		$entity->setDisplayName($cleanName);
 		$entity->setMimeType($mimeType);
-		$entity->setSize($size);
+		$entity->setSize((int)$actualSize);
 		$entity->setUploadedBy($userId);
 		$entity->setCreatedAt(new \DateTime());
 
@@ -241,17 +348,78 @@ class ProjectFileService
 		}
 	}
 
-	private function sanitizeFileName(string $name): string
+	/**
+	 * Sanitize a user-provided filename and reduce dangerous double extensions
+	 * such as `evil.php.jpg` -> `evil.jpg`. Returns a safe display name.
+	 *
+	 * Steps:
+	 *  1. Strip control characters and path separators.
+	 *  2. Strip leading dots so we never produce hidden / dotfiles.
+	 *  3. Drop any extension segment that is in the forbidden list.
+	 *  4. Limit the total length to 200 bytes (well below the 255 column cap).
+	 *  5. Ensure a non-empty display name.
+	 */
+	public function sanitizeFileName(string $name): string
 	{
-		// Keep it readable while removing path separators
-		$name = preg_replace('/[\\\\\\/]+/', '-', $name);
-		$name = preg_replace('/[\x00-\x1f\x7f]+/', '', $name);
+		$name = preg_replace('/[\\\\\\/]+/', '-', $name) ?? $name;
+		$name = preg_replace('/[\x00-\x1f\x7f]+/u', '', $name) ?? $name;
+		$name = preg_replace('/\s+/u', ' ', $name) ?? $name;
 		$name = trim($name);
+		$name = ltrim($name, '.');
 		if ($name === '') {
 			return 'upload.bin';
 		}
 
-		return substr($name, 0, 255);
+		$parts = explode('.', $name);
+		if (count($parts) > 1) {
+			$base = array_shift($parts);
+			$safeExt = [];
+			foreach ($parts as $segment) {
+				$segLower = strtolower($segment);
+				if ($segLower === '' || in_array($segLower, self::FORBIDDEN_EXTENSIONS, true)) {
+					continue;
+				}
+				if (!preg_match('/^[a-z0-9]{1,16}$/i', $segment)) {
+					continue;
+				}
+				$safeExt[] = $segment;
+			}
+			// Keep at most one trailing extension to prevent polyglot tricks
+			if ($safeExt !== []) {
+				$ext = array_pop($safeExt);
+				$name = $base . '.' . $ext;
+			} else {
+				$name = $base;
+			}
+		}
+
+		// Neutralise bare server-side handler names like `.htaccess`,
+		// `.htpasswd`, `.env`, etc. The leading dot is already stripped above
+		// so what's left is e.g. `htaccess` - if that matches a forbidden
+		// token in isolation we replace the entire filename with the safe
+		// fallback rather than store something that looks dangerous.
+		if (in_array(strtolower($name), self::FORBIDDEN_EXTENSIONS, true)) {
+			$name = 'upload.bin';
+		}
+
+		if (strlen($name) > 200) {
+			$name = substr($name, 0, 200);
+		}
+		if ($name === '' || $name === '.' || $name === '..') {
+			$name = 'upload.bin';
+		}
+		return $name;
+	}
+
+	private function buildUniqueStorageName(string $cleanName): string
+	{
+		$prefix = bin2hex(random_bytes(8));
+		// Strip any character not safe for storage filenames.
+		$safe = preg_replace('/[^A-Za-z0-9._-]+/', '_', $cleanName) ?? $cleanName;
+		if ($safe === '' || $safe === '.' || $safe === '..') {
+			$safe = 'upload.bin';
+		}
+		return $prefix . '_' . $safe;
 	}
 
 	private function mapUploadErrorCode(int $errorCode): string
@@ -266,38 +434,40 @@ class ProjectFileService
 		};
 	}
 
-	private function detectMimeType(string $tmpName, ?string $reportedMimeType): string
+	/**
+	 * Detect MIME type using the server's finfo. Falls back to a safe
+	 * generic type when finfo is unavailable so we never leak the
+	 * client-claimed type into authoritative metadata.
+	 */
+	public function detectServerMimeType(string $tmpName): string
 	{
-		if ($reportedMimeType !== null && trim($reportedMimeType) !== '') {
-			return trim($reportedMimeType);
-		}
-
 		if (function_exists('finfo_open')) {
 			$finfo = finfo_open(FILEINFO_MIME_TYPE);
 			if ($finfo !== false) {
-				$detected = finfo_file($finfo, $tmpName);
-				finfo_close($finfo);
-				if (is_string($detected) && $detected !== '') {
-					return $detected;
+				try {
+					$detected = finfo_file($finfo, $tmpName);
+					if (is_string($detected) && $detected !== '') {
+						return strtolower($detected);
+					}
+				} finally {
+					finfo_close($finfo);
 				}
 			}
 		}
-
 		return 'application/octet-stream';
 	}
 
 	private function assertProjectAccess(int $projectId, string $userId): void
 	{
 		if (!$this->projectService->canUserAccessProject($userId, $projectId)) {
-			throw new \Exception('Access denied');
+			throw new \RuntimeException('Access denied');
 		}
 	}
 
 	private function assertProjectManage(int $projectId, string $userId): void
 	{
 		if (!$this->projectService->canUserEditProject($userId, $projectId)) {
-			throw new \Exception('Access denied');
+			throw new \RuntimeException('Access denied');
 		}
 	}
 }
-

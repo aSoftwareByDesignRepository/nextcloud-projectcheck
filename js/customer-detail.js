@@ -97,11 +97,21 @@
 			return;
 		}
 
+		const lblBudget = escapeHtml(t('projectcheck', 'Budget'));
+		const lblProgress = escapeHtml(t('projectcheck', 'Progress'));
+		const lblStart = escapeHtml(t('projectcheck', 'Start'));
+		const lblEnd = escapeHtml(t('projectcheck', 'End'));
+
 		const projectsHtml = projects.map(project => {
 			const name = escapeHtml(String(project.name ?? ''));
 			const status = escapeHtml(String(project.status ?? ''));
 			const budget = escapeHtml(formatCurrency(project.budget));
-			const progress = escapeHtml(String(project.progress ?? ''));
+			const progressNum = Number(project.progress);
+			const progressTxt = Number.isFinite(progressNum)
+				? escapeHtml(window.ProjectCheckFormat
+					? window.ProjectCheckFormat.percent(progressNum, 0)
+					: progressNum.toFixed(0) + '%')
+				: '\u2014';
 			const startDate = escapeHtml(formatDate(project.start_date));
 			const endDate = escapeHtml(formatDate(project.end_date));
 			const id = Number(project.id);
@@ -113,12 +123,12 @@
 				</div>
 				<div class="project-details">
 					<div class="project-info">
-						<span class="project-budget">Budget: ${budget}</span>
-						<span class="project-progress">Progress: ${progress}%</span>
+						<span class="project-budget">${lblBudget}: ${budget}</span>
+						<span class="project-progress">${lblProgress}: ${progressTxt}</span>
 					</div>
 					<div class="project-dates">
-						<span class="project-start">Start: ${startDate}</span>
-						<span class="project-end">End: ${endDate}</span>
+						<span class="project-start">${lblStart}: ${startDate}</span>
+						<span class="project-end">${lblEnd}: ${endDate}</span>
 					</div>
 				</div>
 			</div>`;
@@ -214,33 +224,45 @@
 	}
 
 	/**
-	 * Format currency
+	 * Format currency in the user's locale and the org-configured currency.
+	 * Delegates to {@link window.ProjectCheckFormat} so we never hard-code
+	 * a locale or currency code (audit ref. B10).
 	 */
 	function formatCurrency(amount) {
-		return new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD'
-		}).format(amount);
+		if (window.ProjectCheckFormat) {
+			return window.ProjectCheckFormat.currencyFmt(amount);
+		}
+		const n = Number(amount);
+		if (!Number.isFinite(n)) {
+			return '\u2014';
+		}
+		// Boot-order fallback only; primary path is ProjectCheckFormat above.
+		try {
+			return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(n);
+		} catch (e) {
+			return 'EUR ' + n.toFixed(2);
+		}
 	}
 
-	/**
-	 * Format date
-	 */
 	function formatDate(dateString) {
-		if (!dateString) return 'N/A';
+		if (!dateString) return '\u2014';
+		if (window.ProjectCheckFormat) {
+			return window.ProjectCheckFormat.date(dateString);
+		}
 		const date = new Date(dateString);
-		// Format as dd.mm.yyyy
-		const day = date.getDate().toString().padStart(2, '0');
-		const month = (date.getMonth() + 1).toString().padStart(2, '0');
-		const year = date.getFullYear();
-		return `${day}.${month}.${year}`;
+		if (Number.isNaN(date.getTime())) {
+			return '\u2014';
+		}
+		return date.toISOString().substring(0, 10);
 	}
 
-	/**
-	 * Format hours
-	 */
 	function formatHours(hours) {
-		return `${hours.toFixed(1)}h`;
+		const n = Number(hours);
+		if (!Number.isFinite(n)) return '\u2014';
+		if (window.ProjectCheckFormat) {
+			return window.ProjectCheckFormat.hours(n);
+		}
+		return n.toFixed(1) + '\u00A0h';
 	}
 
 })();

@@ -98,18 +98,7 @@
   white-space: normal;
 }
 
-/* ARIA Labels and Descriptions */
-[aria-label] {
-  /* Ensure aria-label is properly supported */
-}
-
-[aria-describedby] {
-  /* Ensure aria-describedby is properly supported */
-}
-
-[aria-labelledby] {
-  /* Ensure aria-labelledby is properly supported */
-}
+/* ARIA hooks (no-op style baseline; behaviour comes from JS / browser AT). */
 
 /* ===== COLOR AND CONTRAST ===== */
 
@@ -303,14 +292,7 @@
 
 /* ===== ALERT ACCESSIBILITY ===== */
 
-/* Alert Role Support */
-.alert[role="alert"] {
-  /* Ensure alert role is properly supported */
-}
-
-.alert[role="status"] {
-  /* Ensure status role is properly supported */
-}
+/* Alert / status surface baseline (live regions handled by JS). */
 
 /* Alert Icons for Screen Readers */
 .alert-icon {
@@ -430,10 +412,6 @@
 }
 
 /* Breadcrumb Navigation */
-.breadcrumb[role="navigation"] {
-  /* Ensure breadcrumb navigation is properly supported */
-}
-
 .breadcrumb[role="navigation"] ol {
   list-style: none;
   margin: 0;
@@ -514,35 +492,7 @@
   overflow: hidden;
 }
 
-.live-region[aria-live="polite"] {
-  /* Ensure polite live region is properly supported */
-}
-
-.live-region[aria-live="assertive"] {
-  /* Ensure assertive live region is properly supported */
-}
-
-/* ===== LANDMARK ROLES ===== */
-
-/* Main Content Area */
-main[role="main"] {
-  /* Ensure main role is properly supported */
-}
-
-/* Complementary Content */
-aside[role="complementary"] {
-  /* Ensure complementary role is properly supported */
-}
-
-/* Content Information */
-footer[role="contentinfo"] {
-  /* Ensure contentinfo role is properly supported */
-}
-
-/* Banner */
-header[role="banner"] {
-  /* Ensure banner role is properly supported */
-}
+/* Landmark roles inherit the document's default flow; no extra style needed. */
 
 /* ===== INTERACTIVE ELEMENTS ===== */
 
@@ -630,13 +580,27 @@ th {
   }
 }
 
-/* ===== PAGE SECTIONS (ProjectCheck) — clear hierarchy, spacing, focus ===== */
+/* =============================================================
+   PAGE SECTIONS (ProjectCheck) - clear hierarchy, spacing, focus.
+   Audit reference: AUDIT-FINDINGS C13/C14/D-series. The "pc-section"
+   primitive gives every page a single, consistent surface treatment so
+   the eye can reliably locate the next chunk of information. Variants
+   (`--ghost`, `--callout`) tone down the surface for context blocks
+   without breaking the rhythm.
+   ============================================================= */
 .pc-section {
   margin-bottom: 1.75rem;
   padding: 1.25rem 1.5rem;
   border-radius: var(--radius-base, 8px);
   border: 1px solid var(--color-border, #e1e5eb);
-  background: var(--color-background-plain, #fff);
+  background: var(--color-main-background, #fff);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text, #222) 4%, transparent);
+}
+
+.pc-section--ghost {
+  background: color-mix(in srgb, var(--color-primary-element, #0082c9) 4%, var(--color-main-background, #fff));
+  border-color: color-mix(in srgb, var(--color-primary-element, #0082c9) 18%, var(--color-border, #e1e5eb));
+  box-shadow: none;
 }
 
 .pc-section__title {
@@ -655,9 +619,177 @@ th {
   color: var(--color-text-maxcontrast, #3d3d3d);
 }
 
+/* Generic "section header" pattern reused by older templates. We harmonise
+   spacing so dashboard and detail pages all feel the same. */
+.section .section-header {
+  padding-bottom: 0.75rem;
+}
+
+.section .section-header h3,
+.section .section-header h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section .section-header h3 .lucide-icon,
+.section .section-header h4 .lucide-icon {
+  color: var(--color-primary-element, #0082c9);
+}
+
 @media (max-width: 768px) {
   .pc-section {
     padding: 1rem 1.1rem;
     margin-bottom: 1.25rem;
+  }
+}
+
+/* =============================================================
+   Touch target normalization (WCAG 2.5.5 Target Size – Enhanced).
+   Audit reference: AUDIT-FINDINGS D19 / E21.
+
+   Action items (icon-only links/buttons inside tables and toolbars
+   used to render at 32px on touch devices, which is below the 44px
+   recommended minimum and was difficult to operate on phones.
+
+   We expand the *interactive* area to 44x44 while keeping the visual
+   icon size unchanged - so the layout does not shift on desktop.
+   ============================================================= */
+.action-items > .action-item,
+.action-item,
+.popup-close,
+.toast-close,
+.alert-close,
+.persistent-notification__acknowledge,
+.persistent-notification__dismiss,
+.modal-close {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Compact icon-only buttons in dense tables: keep the tap area but
+   compensate with negative margin so the visual rhythm is unchanged. */
+.action-items {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+@media (pointer: coarse) {
+  .action-item,
+  .popup-close,
+  .modal-close {
+    /* On touch devices ensure padding is generous enough for fat-fingers. */
+    padding: 0.5rem;
+  }
+}
+
+/* =============================================================
+   Tooltip a11y baseline (WCAG 4.1.2 Name, Role, Value).
+   Audit reference: AUDIT-FINDINGS D20.
+
+   Tooltips that visually depend on title= must also be reachable
+   by screen readers via aria-describedby. The .pc-tooltip pattern
+   declares the relationship; pages produce <span role="tooltip">
+   nodes referenced via aria-describedby on the trigger.
+   ============================================================= */
+[role="tooltip"] {
+  position: absolute;
+  z-index: var(--z-tooltip, 1080);
+  max-width: 22rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  background: var(--color-background-darker, #2a2a2a);
+  color: var(--pc-text-on-strong, #fff);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+/* =============================================================
+   Compact responsive baseline at 360px (WCAG 1.4.10 Reflow).
+   Audit reference: AUDIT-FINDINGS C15 / E21.
+
+   Wide tables and filter rows used to overflow horizontally and
+   hide actions on phones. We collapse them into a card-style
+   stack so the user never has to side-scroll.
+   ============================================================= */
+@media (max-width: 480px) {
+  .filters-row,
+  .filter-row,
+  .table-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .filters-row select,
+  .filters-row input[type="search"],
+  .filters-row input[type="date"],
+  .filters-row input[type="text"] {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Tables: wrap action items below content instead of pushing them off-screen. */
+  .table .action-items {
+    justify-content: flex-end;
+  }
+
+  /* Sticky actions bar so primary CTA is always reachable. */
+  .table-actions-sticky {
+    position: sticky;
+    bottom: 0;
+    background: var(--color-main-background);
+    padding: 0.5rem;
+    border-top: 1px solid var(--color-border);
+    z-index: 1;
+  }
+}
+
+/* Extra-small (≤360px) hardening: stop budget cells (cited in audit) and
+   similar fixed-width controls from forcing horizontal scroll. */
+@media (max-width: 360px) {
+  .budget-cell {
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  .filters-row,
+  .filter-row {
+    padding: 0.5rem;
+  }
+
+  .progress-percentage {
+    min-width: 0;
+  }
+
+  /* Convert dense data tables to a card-collapse layout. Pages can opt-in
+     by adding `.pc-collapse-on-xs` to the table element. */
+  .pc-collapse-on-xs thead { display: none; }
+  .pc-collapse-on-xs tbody tr {
+    display: block;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+  }
+  .pc-collapse-on-xs tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+    border: 0;
+  }
+  .pc-collapse-on-xs tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--color-text-maxcontrast, #555);
+    flex: 0 0 40%;
   }
 }

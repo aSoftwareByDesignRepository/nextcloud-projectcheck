@@ -179,6 +179,9 @@ class Notifier implements INotifier
 			case 'budget_warning':
 				$subject = $this->l10n->t('Budget warning: Project {project} has reached {percentage}% of its budget');
 				break;
+			case 'budget_critical':
+				$subject = $this->l10n->t('Budget critical: Project {project} has reached {percentage}% of its budget');
+				break;
 			case 'budget_exceeded':
 				$subject = $this->l10n->t('Budget exceeded: Project {project} has exceeded its budget');
 				break;
@@ -298,6 +301,9 @@ class Notifier implements INotifier
 			case 'budget_warning':
 				$message = $this->l10n->t('Please review the project budget and consider taking action.');
 				break;
+			case 'budget_critical':
+				$message = $this->l10n->t('Budget is close to the limit. Please take action now.');
+				break;
 			case 'budget_exceeded':
 				$message = $this->l10n->t('The project has exceeded its allocated budget. Immediate action is required.');
 				break;
@@ -378,6 +384,8 @@ class Notifier implements INotifier
 				return 'icon-delete';
 			case 'budget_warning':
 				return 'icon-warning';
+			case 'budget_critical':
+				return 'icon-warning';
 			case 'budget_exceeded':
 				return 'icon-error';
 			case 'deadline_approaching':
@@ -408,6 +416,7 @@ class Notifier implements INotifier
 			case 'time_entry_updated':
 			case 'time_entry_deleted':
 			case 'budget_warning':
+			case 'budget_critical':
 			case 'budget_exceeded':
 			case 'deadline_approaching':
 			case 'deadline_overdue':

@@ -128,9 +128,11 @@ Util::addStyle('projectcheck', 'customer-statistics');
         <div class="section">
             <div class="filters-container">
                 <div class="searchbox">
-                    <input type="text" id="customer-search"
+                    <input type="search" id="customer-search"
                         placeholder="<?php p($l->t('Search customers...')); ?>"
-                        value="<?php p($_['filters']['search'] ?? ''); ?>">
+                        value="<?php p($_['filters']['search'] ?? ''); ?>"
+                        aria-label="<?php p($l->t('Search customers')); ?>"
+                        autocomplete="off">
                 </div>
 
                 <div class="filters-row">
@@ -179,13 +181,15 @@ Util::addStyle('projectcheck', 'customer-statistics');
                                 <td>
                                     <div class="action-items">
                                         <a href="<?php p(str_replace('CUSTOMER_ID', $customer->getId(), $_['showUrl'] ?? '')); ?>"
-                                            class="action-item" title="<?php p($l->t('View Details')); ?>">
-                                            <span class="icon icon-details"></span>
+                                            class="action-item" title="<?php p($l->t('View Details')); ?>"
+                                            aria-label="<?php p($l->t('View details for customer %s', [$customer->getName() ?? ''])); ?>">
+                                            <span class="icon icon-details" aria-hidden="true"></span>
                                         </a>
                                         <?php if (!empty($_['editableCustomerIds'][(int)$customer->getId()])): ?>
                                         <a href="<?php p(str_replace('CUSTOMER_ID', $customer->getId(), $_['editUrl'] ?? '')); ?>"
-                                            class="action-item" title="<?php p($l->t('Edit Customer')); ?>" aria-label="<?php p($l->t('Edit customer')); ?>">
-                                            <span class="icon icon-rename"></span>
+                                            class="action-item" title="<?php p($l->t('Edit Customer')); ?>"
+                                            aria-label="<?php p($l->t('Edit customer %s', [$customer->getName() ?? ''])); ?>">
+                                            <span class="icon icon-rename" aria-hidden="true"></span>
                                         </a>
                                         <?php endif; ?>
                                         <?php if ($customer->getCanDelete()): ?>
@@ -194,13 +198,15 @@ Util::addStyle('projectcheck', 'customer-statistics');
                                                 data-customer-name="<?php p($customer->getName()); ?>"
                                                 data-delete-url="<?php p($_['deleteUrl'] ?? ''); ?>"
                                                 title="<?php p($l->t('Delete Customer')); ?>"
-                                                aria-label="<?php p($l->t('Delete customer')); ?>">
-                                                <span class="icon icon-delete"></span>
+                                                aria-label="<?php p($l->t('Delete customer %s', [$customer->getName() ?? ''])); ?>">
+                                                <span class="icon icon-delete" aria-hidden="true"></span>
                                             </button>
                                         <?php else: ?>
                                             <span class="action-item disabled"
+                                                role="img"
+                                                aria-label="<?php p($l->t('Cannot delete customer %s with associated projects', [$customer->getName() ?? ''])); ?>"
                                                 title="<?php p($l->t('Cannot delete customer with associated projects')); ?>">
-                                                <span class="icon icon-delete" style="opacity: 0.3;"></span>
+                                                <span class="icon icon-delete" style="opacity: 0.3;" aria-hidden="true"></span>
                                             </span>
                                         <?php endif; ?>
                                     </div>
@@ -253,33 +259,4 @@ Util::addStyle('projectcheck', 'customer-statistics');
     </div>
 </div>
 
-<script nonce="<?php p($_['cspNonce']) ?>">
-    // Local SVG icon library
-    const svgIcons = {
-        users: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-        folder: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>',
-        play: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><polygon points="5,3 19,12 5,21"/></svg>',
-        euro: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.25.5-2.5 1.5-3.5Z"/></svg>',
-        clock: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>',
-        'check-circle': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>',
-        'trending-up': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg>',
-        wallet: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M19 7H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>',
-        percent: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>',
-        'bar-chart-3': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>',
-        'dollar-sign': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-        target: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
-        trophy: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 1 0 5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21l-1.5.5A2 2 0 0 1 5 17v-2.34"/><path d="M14 14.66V17c0 .55.47.98.97 1.21l1.5.5A2 2 0 0 0 19 17v-2.34"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
-        activity: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>'
-    };
-
-    // Initialize icons
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('[data-lucide]').forEach(function(el) {
-            const iconName = el.getAttribute('data-lucide');
-            if (svgIcons[iconName]) {
-                el.innerHTML = svgIcons[iconName];
-            }
-        });
-
-    });
-</script>
+<?php /* Icons are hydrated by the centralised js/common/icons.js module loaded via templates/common/navigation.php (audit ref. AUDIT-FINDINGS H22). */ ?>

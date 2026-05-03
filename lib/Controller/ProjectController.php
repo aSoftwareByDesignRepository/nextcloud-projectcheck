@@ -27,6 +27,7 @@ use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -364,7 +365,7 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+				return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
@@ -372,7 +373,7 @@ class ProjectController extends Controller
 		$userId = $user->getUID();
 		if (!$this->projectService->canUserCreateProject($userId)) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+				return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
 		}
@@ -395,13 +396,14 @@ class ProjectController extends Controller
 			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'success', 'project_name' => $project->getName()]);
 			return new RedirectResponse($url);
 		} catch (\Exception $e) {
+			$safeError = $this->toSafeProjectErrorMessage($e, $this->l->t('Could not create project. Please check your input.'));
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $e->getMessage()], 400);
+				return new DataResponse($this->errorPayload($safeError), 400);
 			}
 
 			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $e->getMessage()]);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $safeError]);
 			return new RedirectResponse($url);
 		}
 	}
@@ -564,7 +566,7 @@ class ProjectController extends Controller
 		} catch (\Exception $e) {
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not load budget information.')
 			], 500);
 		}
 	}
@@ -611,7 +613,7 @@ class ProjectController extends Controller
 		} catch (\Exception $e) {
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not calculate budget impact.')
 			], 500);
 		}
 	}
@@ -673,14 +675,14 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+				return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
 
 		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+				return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
 		}
@@ -695,7 +697,7 @@ class ProjectController extends Controller
 		} elseif ($method !== 'PUT') {
 			// If it's not a PUT request and not a POST with _method=PUT, return error
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('Method not allowed')], 405);
+				return new DataResponse($this->errorPayload($this->l->t('Method not allowed')), 405);
 			}
 			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Method not allowed')]);
 			return new RedirectResponse($url);
@@ -715,13 +717,14 @@ class ProjectController extends Controller
 			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'success', 'project_name' => $project->getName()]);
 			return new RedirectResponse($url);
 		} catch (\Exception $e) {
+			$safeError = $this->toSafeProjectErrorMessage($e, $this->l->t('Could not update project. Please check your input.'));
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $e->getMessage()], 400);
+				return new DataResponse($this->errorPayload($safeError), 400);
 			}
 
 			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $e->getMessage()]);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $safeError]);
 			return new RedirectResponse($url);
 		}
 	}
@@ -764,11 +767,11 @@ class ProjectController extends Controller
 		} catch (\Exception $e) {
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $e->getMessage()], 400);
+				return new DataResponse(['error' => $this->l->t('Could not update project. Please check your input.')], 400);
 			}
 
 			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $e->getMessage()]);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Could not update project. Please check your input.')]);
 			return new RedirectResponse($url);
 		}
 	}
@@ -785,7 +788,7 @@ class ProjectController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+				return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
@@ -793,7 +796,7 @@ class ProjectController extends Controller
 		// Check if user can delete this project
 		if (!$this->projectService->canUserDeleteProject($user->getUID(), $id)) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+				return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
 		}
@@ -808,7 +811,7 @@ class ProjectController extends Controller
 		} elseif ($method !== 'DELETE') {
 			// If it's not a DELETE request and not a POST with _method=DELETE, redirect with error
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('Method not allowed')], 405);
+				return new DataResponse($this->errorPayload($this->l->t('Method not allowed')), 405);
 			}
 			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Method not allowed')]);
 			return new RedirectResponse($url);
@@ -837,63 +840,146 @@ class ProjectController extends Controller
 		} catch (\Exception $e) {
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $e->getMessage()], 400);
+				return new DataResponse($this->errorPayload($this->l->t('Could not delete project.')), 400);
 			}
 
 			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $e->getMessage()]);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Could not delete project.')]);
 			return new RedirectResponse($url);
 		}
 	}
 
 	/**
-	 * Change project status
+	 * Change project status (PUT; body must be JSON or url-encoded — not multipart)
 	 *
 	 * @param int $id
 	 * @return RedirectResponse|DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function changeStatus(int $id): RedirectResponse|DataResponse
+	{
+		return $this->mutateProjectStatus($id);
+	}
+
+	/**
+	 * Change project status via POST (browser FormData / standard PHP $_POST parsing)
+	 *
+	 * @param int $id
+	 * @return RedirectResponse|DataResponse
+	 */
+	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
+	public function changeStatusPost(int $id): RedirectResponse|DataResponse
+	{
+		return $this->mutateProjectStatus($id);
+	}
+
+	/**
+	 * Shared handler for PUT and POST project status changes.
+	 *
+	 * Nextcloud's IRequest does not merge multipart/form-data into parameters for PUT;
+	 * the UI therefore uses POST for form submissions. PUT remains for API-style callers
+	 * sending application/x-www-form-urlencoded or application/json bodies.
+	 *
+	 * @param int $id
+	 * @return RedirectResponse|DataResponse
+	 */
+	private function mutateProjectStatus(int $id): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+				return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index'));
 		}
 		if (!$this->projectService->canUserChangeProjectStatus($user->getUID(), $id)) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+				return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 			}
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
 		}
 
-		try {
-			$status = $this->request->getParam('status');
-			if (!is_string($status) || $status === '') {
-				throw new \Exception('Status is required');
+		$status = $this->request->getParam('status');
+		if (!is_string($status) || trim($status) === '') {
+			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
+				return new DataResponse($this->errorPayload($this->l->t('Please select a status.')), 400);
 			}
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Please select a status.')]);
+			return new RedirectResponse($url);
+		}
+
+		try {
+			$projectBefore = $this->projectService->getProject($id);
+			$previousStatus = $projectBefore !== null ? (string) $projectBefore->getStatus() : '';
+
+			$reasonRaw = $this->request->getParam('reason');
+			$reason = is_string($reasonRaw) ? trim(strip_tags($reasonRaw)) : '';
+			if ($reason !== '') {
+				if (function_exists('mb_strlen') && mb_strlen($reason, 'UTF-8') > 2000) {
+					$reason = mb_substr($reason, 0, 2000, 'UTF-8');
+				} elseif (strlen($reason) > 2000) {
+					$reason = substr($reason, 0, 2000);
+				}
+			}
+
 			$project = $this->projectService->changeProjectStatus($id, $status);
 
-			// Return appropriate response based on request type
-			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['success' => true, 'message' => $this->l->t('Project status updated successfully')]);
+			if ($projectBefore !== null) {
+				try {
+					$this->activityService->logProjectStatusChanged(
+						$user->getUID(),
+						$project,
+						$previousStatus,
+						(string) $project->getStatus(),
+						$reason !== '' ? $reason : null
+					);
+				} catch (\Throwable) {
+					// Status is already persisted; activity feed is best-effort audit only.
+				}
 			}
 
-			// Redirect to projects list with success message
+			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
+				return new DataResponse([
+					'success' => true,
+					'message' => $this->l->t('Project status updated successfully'),
+				]);
+			}
+
 			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'success', 'status_updated' => 'true']);
 			return new RedirectResponse($url);
 		} catch (\Exception $e) {
-			// Return appropriate response based on request type
+			$userMessage = $this->localizeProjectStatusChangeError($e);
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $e->getMessage()], 400);
+				return new DataResponse($this->errorPayload($userMessage), 400);
 			}
 
-			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $e->getMessage()]);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $userMessage]);
 			return new RedirectResponse($url);
 		}
+	}
+
+	/**
+	 * Map service-layer English exceptions to localized, user-safe messages (no raw internals).
+	 */
+	private function localizeProjectStatusChangeError(\Exception $e): string
+	{
+		$raw = trim($e->getMessage());
+		if ($raw === 'Project not found') {
+			return $this->l->t('Project not found');
+		}
+		if ($raw === 'Invalid status value') {
+			return $this->l->t('The selected status is not valid.');
+		}
+		if ($raw === 'User not authenticated') {
+			return $this->l->t('User not authenticated');
+		}
+		if (preg_match('/^Invalid status transition from /', $raw) === 1) {
+			return $this->l->t('This status change is not allowed for the current project state.');
+		}
+
+		return $this->l->t('Could not change project status.');
 	}
 
 	/**
@@ -925,15 +1011,20 @@ class ProjectController extends Controller
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse(['error' => $this->l->t('Could not load team members.')], 400);
 		}
 	}
 
 	/**
 	 * Search assignable users for a project (modal autocomplete).
+	 *
+	 * Rate-limited because this endpoint can be used to enumerate users
+	 * across the directory; the cap supports live typing while blocking
+	 * scripted enumeration.
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function searchAssignableUsers(int $id): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1047,7 +1138,7 @@ class ProjectController extends Controller
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse(['error' => $this->l->t('Could not add team member.')], 400);
 		}
 	}
 
@@ -1190,7 +1281,7 @@ class ProjectController extends Controller
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse(['error' => $this->l->t('Could not update team member.')], 400);
 		}
 	}
 
@@ -1232,7 +1323,7 @@ class ProjectController extends Controller
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse(['error' => $this->l->t('Could not remove team member.')], 400);
 		}
 	}
 
@@ -1242,6 +1333,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function search(): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1260,7 +1352,7 @@ class ProjectController extends Controller
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse(['error' => $this->l->t('Could not search projects.')], 400);
 		}
 	}
 
@@ -1270,6 +1362,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function filter(): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1287,7 +1380,7 @@ class ProjectController extends Controller
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse(['error' => $this->l->t('Could not filter projects.')], 400);
 		}
 	}
 
@@ -1302,7 +1395,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+			return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 		}
 
 		try {
@@ -1315,7 +1408,7 @@ class ProjectController extends Controller
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse($this->errorPayload($this->l->t('Could not load projects.')), 400);
 		}
 	}
 
@@ -1329,11 +1422,11 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+			return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 		}
 
 		if (!$this->projectService->canUserCreateProject($user->getUID())) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 		}
 
 		try {
@@ -1346,7 +1439,7 @@ class ProjectController extends Controller
 				'message' => $this->l->t('Project created successfully')
 			]);
 		} catch (\Exception $e) {
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse($this->errorPayload($this->l->t('Could not create project. Please check your input.')), 400);
 		}
 	}
 
@@ -1362,16 +1455,16 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+			return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 		}
 		if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 		}
 
 		try {
 			$project = $this->projectService->getProject($id);
 			if (!$project) {
-				return new DataResponse(['error' => $this->l->t('Project not found')], 404);
+				return new DataResponse($this->errorPayload($this->l->t('Project not found')), 404);
 			}
 
 			$teamMembers = $this->projectService->getProjectTeam($id);
@@ -1383,7 +1476,7 @@ class ProjectController extends Controller
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse($this->errorPayload($this->l->t('Could not load project details.')), 400);
 		}
 	}
 
@@ -1398,29 +1491,29 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+			return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 		}
 		$uid = $user->getUID();
 		if (!$this->projectService->canUserAccessProject($uid, $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 		}
 
 		$raw = $this->request->getParams();
 		$staged = $this->extractProjectApiUpdatePayload($raw);
 		if ($staged === []) {
-			return new DataResponse(['error' => $this->l->t('No update data')], 400);
+			return new DataResponse($this->errorPayload($this->l->t('No update data')), 400);
 		}
 
 		$isStatusOnly = count($staged) === 1 && \array_key_exists('status', $staged);
 		if ($isStatusOnly) {
 			if (!$this->projectService->canUserChangeProjectStatus($uid, $id)) {
-				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+				return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 			}
 			try {
 				$this->projectService->changeProjectStatus($id, (string)$staged['status']);
 				$project = $this->projectService->getProject($id);
 				if (!$project) {
-					return new DataResponse(['error' => $this->l->t('Project not found')], 404);
+					return new DataResponse($this->errorPayload($this->l->t('Project not found')), 404);
 				}
 				return new DataResponse([
 					'success' => true,
@@ -1428,12 +1521,12 @@ class ProjectController extends Controller
 					'message' => $this->l->t('Project updated successfully'),
 				]);
 			} catch (\Exception $e) {
-				return new DataResponse(['error' => $e->getMessage()], 400);
+				return new DataResponse($this->errorPayload($this->l->t('Could not update project status.')), 400);
 			}
 		}
 
 		if (!$this->projectService->canUserEditProject($uid, $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 		}
 
 		try {
@@ -1445,7 +1538,7 @@ class ProjectController extends Controller
 				'message' => $this->l->t('Project updated successfully')
 			]);
 		} catch (\Exception $e) {
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse($this->errorPayload($this->l->t('Could not update project. Please check your input.')), 400);
 		}
 	}
 
@@ -1493,17 +1586,17 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+			return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 		}
 		if (!$this->projectService->canUserDeleteProject($user->getUID(), $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 		}
 
 		try {
 			$this->projectService->deleteProject($id);
 			return new DataResponse(['success' => true, 'message' => $this->l->t('Project deleted successfully')]);
 		} catch (\Exception $e) {
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse($this->errorPayload($this->l->t('Could not delete project.')), 400);
 		}
 	}
 
@@ -1519,17 +1612,17 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+			return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 		}
 		if (!$this->projectService->canUserDeleteProject($user->getUID(), $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+			return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
 		}
 
 		try {
 			$impact = $this->deletionService->getProjectDeletionImpact($id);
 			return new DataResponse(['success' => true, 'impact' => $impact]);
 		} catch (\Exception $e) {
-			return new DataResponse(['success' => false, 'error' => $e->getMessage()], 400);
+			return new DataResponse(['success' => false, 'error' => $this->l->t('Could not load deletion impact.')], 400);
 		}
 	}
 
@@ -1545,7 +1638,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+			return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 		}
 
 		try {
@@ -1583,8 +1676,46 @@ class ProjectController extends Controller
 				'projects' => $projectData,
 			]);
 		} catch (\Exception $e) {
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse($this->errorPayload($this->l->t('Could not load customer projects.')), 400);
 		}
+	}
+
+	private function toSafeProjectErrorMessage(\Exception $e, string $fallback): string
+	{
+		$message = trim($e->getMessage());
+		if ($message === '') {
+			return $fallback;
+		}
+
+		$allowlistPatterns = [
+			'/^Access denied$/',
+			'/^Project not found$/',
+			'/^Customer not found$/',
+			'/^.+ is required$/',
+			'/^Invalid (parameters|status value|priority value|project type value)$/',
+			'/^Field .+ is required$/',
+			'/^.+ must be .+$/',
+			'/^Cannot .+$/',
+		];
+		foreach ($allowlistPatterns as $pattern) {
+			if (preg_match($pattern, $message) === 1) {
+				return $message;
+			}
+		}
+
+		return $fallback;
+	}
+
+	/**
+	 * @return array{success: false, error: string, message: string}
+	 */
+	private function errorPayload(string $message): array
+	{
+		return [
+			'success' => false,
+			'error' => $message,
+			'message' => $message,
+		];
 	}
 
 }

@@ -13,6 +13,7 @@ use OCA\ProjectCheck\AppInfo\Application;
 use OCA\ProjectCheck\Listener\EnrichTemplateNavigationContext;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\JsL10nCatalogBuilder;
+use OCA\ProjectCheck\Service\LocaleFormatService;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IURLGenerator;
@@ -23,6 +24,13 @@ use PHPUnit\Framework\TestCase;
 
 class EnrichTemplateNavigationContextTest extends TestCase
 {
+	private function localeFormatMock(string $currency = 'EUR'): LocaleFormatService
+	{
+		$mock = $this->createMock(LocaleFormatService::class);
+		$mock->method('getCurrency')->willReturn($currency);
+		return $mock;
+	}
+
 	public function testEnrichesParamsWhenProjectCheckTemplateAndLoggedIn(): void
 	{
 		/** @var IUserSession&MockObject $userSession */
@@ -33,6 +41,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$urlGenerator = $this->createMock(IURLGenerator::class);
 		$jsL10nCatalog = $this->createMock(JsL10nCatalogBuilder::class);
 		$jsL10nCatalog->method('buildForApp')->willReturn(['X' => 'Y']);
+		$localeFormat = $this->localeFormatMock('EUR');
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('u1');
@@ -51,7 +60,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 			->with('projectcheck.app_config.settingsIndex')
 			->willReturn('/index.php/apps/projectcheck/organization');
 
-		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog);
+		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
 		$listener->handle($event);
 
 		$params = $response->getParams();
@@ -64,6 +73,8 @@ class EnrichTemplateNavigationContextTest extends TestCase
 			'/index.php/apps/projectcheck/organization',
 			$params['orgAppSettingsUrl'] ?? null
 		);
+		$this->assertSame('EUR', $params['orgCurrency'] ?? null);
+		$this->assertInstanceOf(LocaleFormatService::class, $params['fmt'] ?? null);
 	}
 
 	public function testDoesNotRunWhenNotLoggedIn(): void
@@ -74,6 +85,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$urlGenerator = $this->createMock(IURLGenerator::class);
 		$jsL10nCatalog = $this->createMock(JsL10nCatalogBuilder::class);
 		$jsL10nCatalog->expects($this->never())->method('buildForApp');
+		$localeFormat = $this->localeFormatMock();
 
 		$response = new TemplateResponse(Application::APP_ID, 'main', ['canManageOrg' => 'old']);
 		$event = new BeforeTemplateRenderedEvent(false, $response);
@@ -83,7 +95,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$accessControl->expects($this->never())->method('canManageOrganization');
 		$urlGenerator->expects($this->never())->method('linkToRoute');
 
-		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog);
+		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
 		$listener->handle($event);
 		$this->assertSame('old', $response->getParams()['canManageOrg']);
 	}
@@ -96,13 +108,14 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$urlGenerator = $this->createMock(IURLGenerator::class);
 		$jsL10nCatalog = $this->createMock(JsL10nCatalogBuilder::class);
 		$jsL10nCatalog->expects($this->never())->method('buildForApp');
+		$localeFormat = $this->localeFormatMock();
 
 		$response = new TemplateResponse('files', 'list', []);
 		$event = new BeforeTemplateRenderedEvent(true, $response);
 
 		$userSession->expects($this->never())->method('getUser');
 
-		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog);
+		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
 		$listener->handle($event);
 	}
 
@@ -114,6 +127,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$urlGenerator = $this->createMock(IURLGenerator::class);
 		$jsL10nCatalog = $this->createMock(JsL10nCatalogBuilder::class);
 		$jsL10nCatalog->expects($this->never())->method('buildForApp');
+		$localeFormat = $this->localeFormatMock();
 
 		$response = new TemplateResponse(Application::APP_ID, 'main', []);
 		$event = new BeforeTemplateRenderedEvent(true, $response);
@@ -121,7 +135,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$accessControl->expects($this->never())->method('canManageSettings');
 		$accessControl->expects($this->never())->method('canManageOrganization');
 
-		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog);
+		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
 		$listener->handle($event);
 		$this->assertSame([], $response->getParams());
 	}

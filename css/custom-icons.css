@@ -136,3 +136,19 @@
     width: 48px;
     height: 48px;
 }
+
+/* When icon placeholders are hydrated with inline Lucide SVG, suppress
+ * the legacy background-image icon to avoid double-rendered stacked icons. */
+.icon-calendar-custom[data-lucide-hydrated="1"],
+.icon-time-custom[data-lucide-hydrated="1"],
+.icon-money-custom[data-lucide-hydrated="1"],
+.icon-user-custom[data-lucide-hydrated="1"],
+.icon-chart-custom[data-lucide-hydrated="1"],
+.icon-add-custom[data-lucide-hydrated="1"],
+.icon-info-custom[data-lucide-hydrated="1"],
+.icon-tag-custom[data-lucide-hydrated="1"],
+.icon-edit-custom[data-lucide-hydrated="1"],
+.icon-delete-custom[data-lucide-hydrated="1"],
+.icon-folder-custom[data-lucide-hydrated="1"] {
+    background-image: none;
+}

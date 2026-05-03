@@ -68,15 +68,15 @@
 		const actionButtons = document.querySelectorAll('.action-buttons .button');
 		actionButtons.forEach(function (button) {
 			button.addEventListener('click', function (e) {
-				// Add loading state
 				const originalText = this.textContent;
-				this.textContent = 'Loading...';
+				this.textContent = t('projectcheck', 'Loading…');
 				this.disabled = true;
+				this.setAttribute('aria-busy', 'true');
 
-				// Re-enable after navigation
 				setTimeout(function () {
 					button.textContent = originalText;
 					button.disabled = false;
+					button.removeAttribute('aria-busy');
 				}, 1000);
 			});
 		});
@@ -199,12 +199,17 @@
 			const easeOutQuart = 1 - Math.pow(1 - progress, 4);
 			const currentValue = start + (end - start) * easeOutQuart;
 
-			// Format the number
+			// Locale-aware formatting. Audit ref. B10/H28: never hard-code a
+			// locale or a currency symbol in animated values.
 			let formattedValue;
 			if (isCurrency) {
-				formattedValue = '€' + currentValue.toFixed(2);
+				formattedValue = window.ProjectCheckFormat
+					? window.ProjectCheckFormat.currencyFmt(currentValue)
+					: currentValue.toFixed(2);
 			} else {
-				formattedValue = Math.round(currentValue).toString();
+				formattedValue = window.ProjectCheckFormat
+					? window.ProjectCheckFormat.number(Math.round(currentValue))
+					: Math.round(currentValue).toString();
 			}
 
 			element.textContent = formattedValue;
@@ -265,37 +270,46 @@
 	}
 
 	/**
-	 * Create a project item element
+	 * Create a project item element.
+	 *
+	 * Audit ref. B10 (locale-aware) + XSS-hardening: build the DOM with
+	 * textContent so untrusted project fields can never escape into HTML.
 	 */
 	function createProjectItem(project) {
 		const item = document.createElement('div');
 		item.className = 'project-item';
 
-		item.innerHTML = `
-			<div class="project-info">
-				<div class="project-name">${escapeHtml(project.name)}</div>
-				<div class="project-status status-${project.status.toLowerCase()}">
-					${escapeHtml(project.status)}
-				</div>
-			</div>
-			<div class="project-budget">
-				€${parseFloat(project.totalBudget).toFixed(2)}
-			</div>
-			<div class="project-actions">
-				<a href="${OC.generateUrl('/apps/projectcheck/projects/' + project.id)}" class="button">View</a>
-			</div>
-		`;
+		const info = document.createElement('div');
+		info.className = 'project-info';
+		const name = document.createElement('div');
+		name.className = 'project-name';
+		name.textContent = String(project.name || '');
+		info.appendChild(name);
+
+		const statusToken = String(project.status || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+		const status = document.createElement('div');
+		status.className = 'project-status status-' + statusToken;
+		status.textContent = String(project.status || '');
+		info.appendChild(status);
+		item.appendChild(info);
+
+		const budget = document.createElement('div');
+		budget.className = 'project-budget';
+		budget.textContent = window.ProjectCheckFormat
+			? window.ProjectCheckFormat.currencyFmt(project.totalBudget)
+			: String(parseFloat(project.totalBudget || 0).toFixed(2));
+		item.appendChild(budget);
+
+		const actions = document.createElement('div');
+		actions.className = 'project-actions';
+		const link = document.createElement('a');
+		link.href = OC.generateUrl('/apps/projectcheck/projects/' + encodeURIComponent(String(project.id)));
+		link.className = 'button';
+		link.textContent = (typeof t === 'function') ? t('projectcheck', 'View') : 'View';
+		actions.appendChild(link);
+		item.appendChild(actions);
 
 		return item;
-	}
-
-	/**
-	 * Escape HTML to prevent XSS
-	 */
-	function escapeHtml(text) {
-		const div = document.createElement('div');
-		div.textContent = text;
-		return div.innerHTML;
 	}
 
 	/**
@@ -316,42 +330,78 @@
 	}
 
 	/**
-	 * Show productivity info popup
+	 * Productivity info popup.
+	 *
+	 * Audit ref. AUDIT-FINDINGS C13/D17: every modal in the app must share
+	 * one accessible primitive with focus trap, Escape handling, restore
+	 * focus and a single backdrop dismissal contract. Delegates entirely
+	 * to {@link window.ProjectCheckModalA11y}.
 	 */
+	let productivityRestoreScroll = '';
+
 	function showProductivityInfoPopup() {
 		const popup = document.getElementById('productivity-info-popup');
-		if (popup) {
-			popup.style.display = 'flex';
-			document.body.style.overflow = 'hidden';
+		if (!popup) {
+			return;
+		}
+		productivityRestoreScroll = document.body.style.overflow || '';
+		popup.removeAttribute('hidden');
+		popup.style.display = 'flex';
+		document.body.style.overflow = 'hidden';
+
+		if (window.ProjectCheckModalA11y) {
+			window.ProjectCheckModalA11y.attach(popup, {
+				dismissOnEscape: true,
+				dismissOnBackdrop: false,
+				restoreFocus: true,
+				initialFocus: '.popup-close',
+				onDismiss: function () {
+					hideProductivityInfoPopup({ skipDetach: true });
+				},
+			});
 		}
 	}
 
-	/**
-	 * Hide productivity info popup
-	 */
-	function hideProductivityInfoPopup() {
+	function hideProductivityInfoPopup(options) {
 		const popup = document.getElementById('productivity-info-popup');
-		if (popup) {
-			popup.style.display = 'none';
-			document.body.style.overflow = 'auto';
+		if (!popup) {
+			return;
 		}
+		const opts = options || {};
+		if (!opts.skipDetach && window.ProjectCheckModalA11y) {
+			window.ProjectCheckModalA11y.detach(popup, { reason: 'programmatic' });
+		}
+		popup.style.display = 'none';
+		popup.setAttribute('hidden', '');
+		document.body.style.overflow = productivityRestoreScroll;
+		productivityRestoreScroll = '';
 	}
 
-	// Make functions globally available
 	window.showProductivityInfoPopup = showProductivityInfoPopup;
 	window.hideProductivityInfoPopup = hideProductivityInfoPopup;
 
-	// Add event listeners for popup
 	document.addEventListener('click', function (event) {
+		const target = event.target;
+		if (!(target instanceof Element)) {
+			return;
+		}
+		if (target.matches('[data-action="show-productivity-info"], .info-popup-trigger')) {
+			event.preventDefault();
+			event.stopPropagation();
+			showProductivityInfoPopup();
+			return;
+		}
+		if (target.closest('[data-action="hide-productivity-info"], .popup-close')) {
+			const popup = document.getElementById('productivity-info-popup');
+			if (popup && popup.contains(target)) {
+				event.preventDefault();
+				event.stopPropagation();
+				hideProductivityInfoPopup();
+				return;
+			}
+		}
 		const popup = document.getElementById('productivity-info-popup');
 		if (popup && event.target === popup) {
-			hideProductivityInfoPopup();
-		}
-	});
-
-	// Close popup with Escape key
-	document.addEventListener('keydown', function (event) {
-		if (event.key === 'Escape') {
 			hideProductivityInfoPopup();
 		}
 	});

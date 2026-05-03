@@ -891,7 +891,13 @@ body {
 	background: color-mix(in srgb, var(--color-text-lighter) 10%, transparent);
 	border-color: color-mix(in srgb, var(--color-text-lighter) 30%, transparent);
 }
-/* Quick Actions Toolbar */
+/* Quick Navigation Toolbar (was "Quick Actions Toolbar").
+ *
+ * Audit ref. AUDIT-FINDINGS C14: this toolbar now hosts navigation shortcuts
+ * only ("View Projects", "View Time Entries", "View Customers"). The mutating
+ * primary CTAs ("New Time Entry", "New Project") live exclusively in the page
+ * header so a single role of any given verb appears once per page.
+ */
 .quick-actions-toolbar {
 	display: flex;
 	gap: 8px;
@@ -907,26 +913,36 @@ body {
 	align-items: center;
 	gap: 8px;
 	padding: 8px 16px;
-	background: var(--color-primary-element);
-	color: var(--color-primary-element-text);
+	min-height: 44px; /* WCAG 2.5.5 touch-target enhanced minimum */
+	background: var(--color-background-plain, var(--color-main-background));
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border);
 	border-radius: 6px;
 	text-decoration: none;
 	font-size: 14px;
 	font-weight: 500;
-	transition: all 0.2s ease;
-	border: none;
+	transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 	cursor: pointer;
 }
 
 .toolbar-action:hover {
-	background: var(--color-primary-element-hover);
+	background: color-mix(in srgb, var(--color-primary-element) 10%, var(--color-main-background));
+	border-color: color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
+	color: var(--color-main-text);
 	transform: translateY(-1px);
 	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 10%, transparent);
+}
+
+.toolbar-action:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+	border-color: var(--color-primary-element);
 }
 
 .toolbar-action .lucide-icon {
 	width: 18px;
 	height: 18px;
+	color: var(--color-primary-element);
 }
 
 /* Statistics Overview Section - Compact Style */
@@ -943,6 +959,8 @@ body {
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	gap: 16px;
 	padding: 0;
+	margin: 0;
+	list-style: none;
 }
 
 .overview-stat-compact {
@@ -954,6 +972,7 @@ body {
 	border: 1px solid var(--color-border);
 	border-radius: 8px;
 	transition: all 0.2s ease;
+	list-style: none;
 }
 
 .overview-stat-compact:hover {

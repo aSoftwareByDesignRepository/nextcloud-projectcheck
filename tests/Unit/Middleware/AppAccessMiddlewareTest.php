@@ -61,16 +61,12 @@ class AppAccessMiddlewareTest extends TestCase {
 		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/projects');
 
 		$this->expectException(AppAccessDeniedException::class);
-		$controller = new \OCA\ProjectCheck\Controller\SettingsController(
+		// Any controller from OCA\ProjectCheck\Controller\* triggers the middleware.
+		// PageController is the smallest, with no service dependencies.
+		$controller = new \OCA\ProjectCheck\Controller\PageController(
 			'projectcheck',
 			$this->createMock(\OCP\IRequest::class),
-			$this->createMock(\OCP\IUserSession::class),
-			$this->createMock(\OCP\IConfig::class),
-			$this->createMock(\OCP\IGroupManager::class),
-			$this->createMock(\OCA\ProjectCheck\Service\CSPService::class),
-			$this->createMock(\OCA\ProjectCheck\Service\ProjectService::class),
-			$this->createMock(\OCA\ProjectCheck\Service\CustomerService::class),
-			$this->createMock(\OCP\IL10N::class)
+			$this->createMock(\OCP\IURLGenerator::class)
 		);
 		$this->middleware->beforeController($controller, 'index');
 	}
@@ -112,6 +108,28 @@ class AppAccessMiddlewareTest extends TestCase {
 		);
 
 		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame(403, $response->getStatus());
+	}
+
+	public function testAfterExceptionReturnsJsonWhenAcceptHeaderContainsJson(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('member-user');
+		$this->userSession->method('getUser')->willReturn($user);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/projects');
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getHeader')->willReturnMap([
+			['Accept', 'text/html,application/json;q=0.9'],
+			['Content-Type', 'text/plain'],
+			['X-Requested-With', ''],
+		]);
+
+		$response = $this->middleware->afterException(
+			new \stdClass(),
+			'index',
+			new AppAccessDeniedException('app_access_denied')
+		);
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(403, $response->getStatus());
 	}
 }

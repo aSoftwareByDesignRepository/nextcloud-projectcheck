@@ -62,7 +62,7 @@ class Provider implements IProvider
 	 * @throws \InvalidArgumentException Should be thrown if your provider does not know this event
 	 * @since 11.0.0
 	 */
-	public function parse($language, IEvent $event, IEvent $previousEvent = null)
+	public function parse($language, IEvent $event, ?IEvent $previousEvent = null)
 	{
 		if ($event->getApp() !== 'projectcheck') {
 			throw new \InvalidArgumentException();
@@ -246,6 +246,11 @@ class Provider implements IProvider
 			case 'project_updated':
 				if (isset($parameters['changes'])) {
 					$message = $this->l10n->t('Changes: {changes}');
+				}
+				break;
+			case 'project_status_changed':
+				if (isset($parameters['note']) && trim((string)$parameters['note']) !== '') {
+					$message = $this->l10n->t('Note: {note}', ['note' => trim((string)$parameters['note'])]);
 				}
 				break;
 			case 'time_entry_created':

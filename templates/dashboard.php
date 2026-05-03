@@ -21,6 +21,17 @@ Util::addStyle('projectcheck', 'common/accessibility');
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
+<?php
+/**
+ * Audit ref. AUDIT-FINDINGS C14: previously the dashboard had two competing
+ * "New Time Entry / New Project" CTAs (one in the page header and one in the
+ * quick-actions toolbar). We keep a single primary group in the header for
+ * mutating actions, and demote navigation shortcuts ("View …") into the
+ * quick-actions toolbar so only one element of any given role appears at a
+ * time.
+ */
+$fmt = $_['fmt'] ?? null;
+?>
 <div id="app-content" role="main">
     <div id="app-content-wrapper">
         <?php $isGlobalViewer = !empty($_['isGlobalViewer']); ?>
@@ -33,51 +44,49 @@ Util::addStyle('projectcheck', 'common/accessibility');
             </nav>
         </div>
 
-
-
         <!-- Page Header -->
-        <div class="section page-header-section">
+        <header class="section page-header-section" aria-labelledby="dash-title">
             <div class="header-content">
                 <div class="header-text">
                     <div class="header-details">
-                        <h2><?php p($l->t('Dashboard')); ?></h2>
+                        <h2 id="dash-title"><?php p($l->t('Dashboard')); ?></h2>
                         <p><?php p($isGlobalViewer ? $l->t('Overview of your projects and activities') : $l->t('Overview of the projects you can access and your own logged work')); ?></p>
-                        <div class="project-meta">
+                        <div class="project-meta" aria-label="<?php p($l->t('Dashboard summary')); ?>">
                             <div class="meta-item">
-                                <i data-lucide="calendar" class="lucide-icon primary"></i>
-                                <span><?php p(date('d.m.Y')); ?></span>
+                                <i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i>
+                                <span><?php p($fmt ? $fmt->date(new \DateTime()) : date('d.m.Y')); ?></span>
                             </div>
                             <div class="meta-item">
-                                <i data-lucide="folder" class="lucide-icon primary"></i>
-                                <span><?php p($_['stats']['totalProjects'] ?? 0); ?> <?php p($l->t('Projects')); ?></span>
+                                <i data-lucide="folder" class="lucide-icon primary" aria-hidden="true"></i>
+                                <span><?php p(($_['stats']['totalProjects'] ?? 0) . ' ' . $l->t('Projects')); ?></span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="header-actions">
+                <div class="header-actions" role="group" aria-label="<?php p($l->t('Primary actions')); ?>">
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="button primary">
-                        <i data-lucide="clock" class="lucide-icon"></i>
+                        <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
                         <?php p($l->t('New Time Entry')); ?>
                     </a>
                     <?php if (!empty($_['canCreateProject'])): ?>
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="button secondary">
-                        <i data-lucide="plus" class="lucide-icon"></i>
+                        <i data-lucide="plus" class="lucide-icon" aria-hidden="true"></i>
                         <?php p($l->t('New Project')); ?>
                     </a>
                     <?php endif; ?>
                 </div>
             </div>
-        </div>
+        </header>
 
         <?php if (!$isGlobalViewer): ?>
-            <div class="section">
+            <div class="section pc-section--ghost" aria-labelledby="dash-scope-title">
                 <div class="section-content">
                     <div class="pc-scope-banner" role="status" aria-live="polite">
                         <div class="pc-scope-banner__icon">
                             <i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i>
                         </div>
                         <div class="pc-scope-banner__content">
-                            <h3><?php p($l->t('Personal dashboard')); ?></h3>
+                            <h3 id="dash-scope-title"><?php p($l->t('Personal dashboard')); ?></h3>
                             <p><?php p($l->t('Dashboard analytics only include your own time entries. Project cards still reflect the projects you are allowed to access.')); ?></p>
                         </div>
                     </div>
@@ -85,27 +94,21 @@ Util::addStyle('projectcheck', 'common/accessibility');
             </div>
         <?php endif; ?>
 
-        <!-- Quick Actions Toolbar -->
-        <div class="quick-actions-toolbar">
-            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="toolbar-action">
-                <i data-lucide="clock" class="lucide-icon"></i>
-                <span><?php p($l->t('New Time Entry')); ?></span>
-            </a>
-            <?php if (!empty($_['canCreateProject'])): ?>
-            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="toolbar-action">
-                <i data-lucide="plus" class="lucide-icon"></i>
-                <span><?php p($l->t('New Project')); ?></span>
-            </a>
-            <?php endif; ?>
+        <!-- Quick Navigation Toolbar (jump-to surfaces only; primary CTAs live in the header) -->
+        <nav class="quick-actions-toolbar" aria-label="<?php p($l->t('Quick navigation')); ?>">
             <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.index')); ?>" class="toolbar-action">
-                <i data-lucide="folder" class="lucide-icon"></i>
+                <i data-lucide="folder" class="lucide-icon" aria-hidden="true"></i>
                 <span><?php p($l->t('View Projects')); ?></span>
             </a>
             <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="toolbar-action">
-                <i data-lucide="bar-chart-3" class="lucide-icon"></i>
+                <i data-lucide="bar-chart-3" class="lucide-icon" aria-hidden="true"></i>
                 <span><?php p($l->t('View Time Entries')); ?></span>
             </a>
-        </div>
+            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.index')); ?>" class="toolbar-action">
+                <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
+                <span><?php p($l->t('View Customers')); ?></span>
+            </a>
+        </nav>
 
         <!-- Budget Alerts -->
         <?php if (isset($budgetAlerts) && !empty($budgetAlerts)): ?>
@@ -140,58 +143,58 @@ Util::addStyle('projectcheck', 'common/accessibility');
         <?php endif; ?>
 
         <!-- Statistics Overview -->
-        <div class="section stats-overview-section pc-section" aria-labelledby="dash-overview-stats-title">
+        <section class="section stats-overview-section pc-section" aria-labelledby="dash-overview-stats-title">
             <div class="section-header">
                 <h3 class="pc-section__title" id="dash-overview-stats-title"><?php p($l->t('Overview Statistics')); ?></h3>
                 <p class="pc-section__intro"><?php p($l->t('Key metrics and project insights')); ?></p>
             </div>
 
-            <div class="overview-stats-compact">
-                <div class="overview-stat-compact">
-                    <i data-lucide="folder" class="lucide-icon"></i>
+            <ul class="overview-stats-compact" role="list">
+                <li class="overview-stat-compact">
+                    <i data-lucide="folder" class="lucide-icon" aria-hidden="true"></i>
                     <div class="stat-content">
-                        <div class="stat-number"><?php p($_['stats']['totalProjects'] ?? 0); ?></div>
-                        <div class="stat-label"><?php p($l->t('Projects')); ?></div>
+                        <div class="stat-number" aria-describedby="dash-stat-projects-label"><?php p($fmt ? $fmt->number((int)($_['stats']['totalProjects'] ?? 0)) : (int)($_['stats']['totalProjects'] ?? 0)); ?></div>
+                        <div class="stat-label" id="dash-stat-projects-label"><?php p($l->t('Projects')); ?></div>
                         <div class="stat-detail">
-                            <span><?php p($_['stats']['activeProjects'] ?? 0); ?> <?php p($l->t('active')); ?></span>
+                            <span><?php p(($fmt ? $fmt->number((int)($_['stats']['activeProjects'] ?? 0)) : (int)($_['stats']['activeProjects'] ?? 0)) . ' ' . $l->t('active')); ?></span>
                         </div>
                     </div>
-                </div>
+                </li>
 
-                <div class="overview-stat-compact">
-                    <i data-lucide="euro" class="lucide-icon"></i>
+                <li class="overview-stat-compact">
+                    <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
                     <div class="stat-content">
-                        <div class="stat-number">€<?php p(number_format($_['stats']['totalBudget'] ?? 0, 0)); ?></div>
-                        <div class="stat-label"><?php p($l->t('Budget')); ?></div>
+                        <div class="stat-number" aria-describedby="dash-stat-budget-label"><?php p($fmt ? $fmt->currency((float)($_['stats']['totalBudget'] ?? 0)) : '€' . number_format((float)($_['stats']['totalBudget'] ?? 0), 0)); ?></div>
+                        <div class="stat-label" id="dash-stat-budget-label"><?php p($l->t('Budget')); ?></div>
                         <div class="stat-detail">
-                            <span><?php p($_['stats']['consumptionPercentage'] ?? 0); ?>% <?php p($l->t('used')); ?></span>
+                            <span><?php p(($fmt ? $fmt->percent((float)($_['stats']['consumptionPercentage'] ?? 0), 0) : ((int)($_['stats']['consumptionPercentage'] ?? 0)) . '%') . ' ' . $l->t('used')); ?></span>
                         </div>
                     </div>
-                </div>
+                </li>
 
-                <div class="overview-stat-compact">
-                    <i data-lucide="clock" class="lucide-icon"></i>
+                <li class="overview-stat-compact">
+                    <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
                     <div class="stat-content">
-                        <div class="stat-number"><?php p($_['stats']['totalHours'] ?? 0); ?>h</div>
-                        <div class="stat-label"><?php p($l->t('Hours')); ?></div>
+                        <div class="stat-number" aria-describedby="dash-stat-hours-label"><?php p($fmt ? $fmt->hours((float)($_['stats']['totalHours'] ?? 0)) : ((float)($_['stats']['totalHours'] ?? 0)) . 'h'); ?></div>
+                        <div class="stat-label" id="dash-stat-hours-label"><?php p($l->t('Hours')); ?></div>
                         <div class="stat-detail">
                             <span><?php p($l->t('total')); ?></span>
                         </div>
                     </div>
-                </div>
+                </li>
 
-                <div class="overview-stat-compact">
-                    <i data-lucide="users" class="lucide-icon"></i>
+                <li class="overview-stat-compact">
+                    <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
                     <div class="stat-content">
-                        <div class="stat-number"><?php p($_['stats']['totalCustomers'] ?? 0); ?></div>
-                        <div class="stat-label"><?php p($l->t('Customers')); ?></div>
+                        <div class="stat-number" aria-describedby="dash-stat-customers-label"><?php p($fmt ? $fmt->number((int)($_['stats']['totalCustomers'] ?? 0)) : (int)($_['stats']['totalCustomers'] ?? 0)); ?></div>
+                        <div class="stat-label" id="dash-stat-customers-label"><?php p($l->t('Customers')); ?></div>
                         <div class="stat-detail">
                             <span><?php p($l->t('active')); ?></span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
+                </li>
+            </ul>
+        </section>
 
         <!-- Detailed Yearly Statistics -->
         <?php if (!empty($_['stats']['detailedYearlyStats'])): ?>
@@ -214,15 +217,15 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                         ?>
                                         <div class="year-summary-item">
                                             <span class="summary-label"><?php p($l->t('Total Hours')); ?>:</span>
-                                            <span class="summary-value"><?php p(number_format($yearTotalHours, 1)); ?>h</span>
+                                            <span class="summary-value"><?php p($fmt ? $fmt->hours($yearTotalHours) : number_format($yearTotalHours, 1) . 'h'); ?></span>
                                         </div>
                                         <div class="year-summary-item">
                                             <span class="summary-label"><?php p($l->t('Total Cost')); ?>:</span>
-                                            <span class="summary-value">€<?php p(number_format($yearTotalCost, 2)); ?></span>
+                                            <span class="summary-value"><?php p($fmt ? $fmt->currency($yearTotalCost) : '€' . number_format($yearTotalCost, 2)); ?></span>
                                         </div>
                                         <div class="year-summary-item">
                                             <span class="summary-label"><?php p($l->t('Entries')); ?>:</span>
-                                            <span class="summary-value"><?php p($yearTotalEntries); ?></span>
+                                            <span class="summary-value"><?php p($fmt ? $fmt->number($yearTotalEntries) : $yearTotalEntries); ?></span>
                                         </div>
                                     </div>
                                 </div>
@@ -238,11 +241,11 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                                 <div class="customer-summary">
                                                     <div class="customer-summary-item">
                                                         <span class="summary-label"><?php p($l->t('Hours')); ?>:</span>
-                                                        <span class="summary-value"><?php p(number_format($customerData['total_hours'], 1)); ?>h</span>
+                                                        <span class="summary-value"><?php p($fmt ? $fmt->hours($customerData['total_hours']) : number_format($customerData['total_hours'], 1) . 'h'); ?></span>
                                                     </div>
                                                     <div class="customer-summary-item">
                                                         <span class="summary-label"><?php p($l->t('Cost')); ?>:</span>
-                                                        <span class="summary-value">€<?php p(number_format($customerData['total_cost'], 2)); ?></span>
+                                                        <span class="summary-value"><?php p($fmt ? $fmt->currency($customerData['total_cost']) : '€' . number_format($customerData['total_cost'], 2)); ?></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -265,19 +268,19 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                                             <div class="project-stats">
                                                                 <div class="project-stat">
                                                                     <div class="stat-icon">
-                                                                        <i data-lucide="clock" class="lucide-icon"></i>
+                                                                        <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
                                                                     </div>
                                                                     <div class="stat-details">
-                                                                        <div class="stat-value"><?php p(number_format($projectData['total_hours'], 1)); ?>h</div>
+                                                                        <div class="stat-value"><?php p($fmt ? $fmt->hours($projectData['total_hours']) : number_format($projectData['total_hours'], 1) . 'h'); ?></div>
                                                                         <div class="stat-label"><?php p($l->t('Hours')); ?></div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="project-stat">
                                                                     <div class="stat-icon">
-                                                                        <i data-lucide="euro" class="lucide-icon"></i>
+                                                                        <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
                                                                     </div>
                                                                     <div class="stat-details">
-                                                                        <div class="stat-value">€<?php p(number_format($projectData['total_cost'], 2)); ?></div>
+                                                                        <div class="stat-value"><?php p($fmt ? $fmt->currency($projectData['total_cost']) : '€' . number_format($projectData['total_cost'], 2)); ?></div>
                                                                         <div class="stat-label"><?php p($l->t('Cost')); ?></div>
                                                                     </div>
                                                                 </div>
@@ -333,12 +336,12 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                     ?>
                                     <div class="year-summary">
                                         <span class="summary-item">
-                                            <i data-lucide="clock" class="lucide-icon"></i>
-                                            <?php p(number_format($yearTotalHours, 1)); ?>h
+                                            <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
+                                            <?php p($fmt ? $fmt->hours($yearTotalHours) : number_format($yearTotalHours, 1) . 'h'); ?>
                                         </span>
                                         <span class="summary-item">
-                                            <i data-lucide="euro" class="lucide-icon"></i>
-                                            €<?php p(number_format($yearTotalCost, 2)); ?>
+                                            <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
+                                            <?php p($fmt ? $fmt->currency($yearTotalCost) : '€' . number_format($yearTotalCost, 2)); ?>
                                         </span>
                                     </div>
                                 </div>
@@ -391,15 +394,15 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                                 </h5>
                                                 <div class="type-stats">
                                                     <div class="stat-item">
-                                                        <span class="stat-value"><?php p(number_format($typeData['total_hours'], 1)); ?>h</span>
+                                                        <span class="stat-value"><?php p($fmt ? $fmt->hours($typeData['total_hours']) : number_format($typeData['total_hours'], 1) . 'h'); ?></span>
                                                         <span class="stat-label"><?php p($l->t('Hours')); ?></span>
                                                     </div>
                                                     <div class="stat-item">
-                                                        <span class="stat-value">€<?php p(number_format($typeData['total_cost'], 2)); ?></span>
+                                                        <span class="stat-value"><?php p($fmt ? $fmt->currency($typeData['total_cost']) : '€' . number_format($typeData['total_cost'], 2)); ?></span>
                                                         <span class="stat-label"><?php p($l->t('Cost')); ?></span>
                                                     </div>
                                                     <div class="stat-item">
-                                                        <span class="stat-value"><?php p($typeData['entry_count']); ?></span>
+                                                        <span class="stat-value"><?php p($fmt ? $fmt->number((int)$typeData['entry_count']) : $typeData['entry_count']); ?></span>
                                                         <span class="stat-label"><?php p($l->t('Entries')); ?></span>
                                                     </div>
                                                 </div>
@@ -453,16 +456,16 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                         <div class="card-header">
                                             <h5><?php p($l->t('Billable Work')); ?></h5>
                                             <div class="card-icon">
-                                                <i data-lucide="dollar-sign" class="lucide-icon"></i>
+                                                <i data-lucide="dollar-sign" class="lucide-icon" aria-hidden="true"></i>
                                             </div>
                                         </div>
                                         <div class="card-content">
                                             <div class="stat-item">
-                                                <span class="stat-value"><?php p(number_format($yearData['billable']['total_hours'], 1)); ?>h</span>
+                                                <span class="stat-value"><?php p($fmt ? $fmt->hours($yearData['billable']['total_hours']) : number_format($yearData['billable']['total_hours'], 1) . 'h'); ?></span>
                                                 <span class="stat-label"><?php p($l->t('Hours')); ?></span>
                                             </div>
                                             <div class="stat-item">
-                                                <span class="stat-value">€<?php p(number_format($yearData['billable']['total_cost'], 2)); ?></span>
+                                                <span class="stat-value"><?php p($fmt ? $fmt->currency($yearData['billable']['total_cost']) : '€' . number_format($yearData['billable']['total_cost'], 2)); ?></span>
                                                 <span class="stat-label"><?php p($l->t('Revenue')); ?></span>
                                             </div>
                                         </div>
@@ -471,16 +474,16 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                         <div class="card-header">
                                             <h5><?php p($l->t('Overhead Work')); ?></h5>
                                             <div class="card-icon">
-                                                <i data-lucide="settings" class="lucide-icon"></i>
+                                                <i data-lucide="settings" class="lucide-icon" aria-hidden="true"></i>
                                             </div>
                                         </div>
                                         <div class="card-content">
                                             <div class="stat-item">
-                                                <span class="stat-value"><?php p(number_format($yearData['overhead']['total_hours'], 1)); ?>h</span>
+                                                <span class="stat-value"><?php p($fmt ? $fmt->hours($yearData['overhead']['total_hours']) : number_format($yearData['overhead']['total_hours'], 1) . 'h'); ?></span>
                                                 <span class="stat-label"><?php p($l->t('Hours')); ?></span>
                                             </div>
                                             <div class="stat-item">
-                                                <span class="stat-value">€<?php p(number_format($yearData['overhead']['total_cost'], 2)); ?></span>
+                                                <span class="stat-value"><?php p($fmt ? $fmt->currency($yearData['overhead']['total_cost']) : '€' . number_format($yearData['overhead']['total_cost'], 2)); ?></span>
                                                 <span class="stat-label"><?php p($l->t('Cost')); ?></span>
                                             </div>
                                         </div>
@@ -492,13 +495,13 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                     $billablePercentage = $totalHours > 0 ? ($yearData['billable']['total_hours'] / $totalHours) * 100 : 0;
                                     $overheadPercentage = $totalHours > 0 ? ($yearData['overhead']['total_hours'] / $totalHours) * 100 : 0;
                                     ?>
-                                    <div class="ratio-bar">
+                                    <div class="ratio-bar" role="img" aria-label="<?php p($l->t('Billable %1$s, overhead %2$s', [($fmt ? $fmt->percent($billablePercentage, 1) : round($billablePercentage, 1) . '%'), ($fmt ? $fmt->percent($overheadPercentage, 1) : round($overheadPercentage, 1) . '%')])); ?>">
                                         <div class="ratio-fill billable" style="width: <?php p($billablePercentage); ?>%"></div>
                                         <div class="ratio-fill overhead" style="width: <?php p($overheadPercentage); ?>%"></div>
                                     </div>
                                     <div class="ratio-labels">
-                                        <span class="ratio-label billable"><?php p(round($billablePercentage, 1)); ?>% <?php p($l->t('Billable')); ?></span>
-                                        <span class="ratio-label overhead"><?php p(round($overheadPercentage, 1)); ?>% <?php p($l->t('Overhead')); ?></span>
+                                        <span class="ratio-label billable"><?php p(($fmt ? $fmt->percent($billablePercentage, 1) : round($billablePercentage, 1) . '%') . ' ' . $l->t('Billable')); ?></span>
+                                        <span class="ratio-label overhead"><?php p(($fmt ? $fmt->percent($overheadPercentage, 1) : round($overheadPercentage, 1) . '%') . ' ' . $l->t('Overhead')); ?></span>
                                     </div>
                                 </div>
                             </div>
@@ -603,41 +606,45 @@ Util::addStyle('projectcheck', 'common/accessibility');
                                             <span class="detail-label"><?php p($l->t('Budget:')); ?></span>
                                             <span class="detail-value budget-info">
                                                 <span class="budget-remaining <?php p($budgetInfo['warning_level']); ?>">
-                                                    €<?php p(number_format($budgetInfo['remaining_budget'], 2)); ?>
+                                                    <?php p($fmt ? $fmt->currency($budgetInfo['remaining_budget']) : '€' . number_format($budgetInfo['remaining_budget'], 2)); ?>
                                                 </span>
                                                 <span class="budget-separator"><?php p($l->t('remaining of')); ?></span>
-                                                <span class="budget-total">€<?php p(number_format($budgetInfo['total_budget'], 2)); ?></span>
+                                                <span class="budget-total"><?php p($fmt ? $fmt->currency($budgetInfo['total_budget']) : '€' . number_format($budgetInfo['total_budget'], 2)); ?></span>
                                             </span>
                                         </div>
                                         <div class="detail-row">
                                             <span class="detail-label"><?php p($l->t('Progress:')); ?></span>
                                             <span class="detail-value progress-info">
                                                 <span class="usage-stats">
-                                                    <?php p(round($budgetInfo['consumption_percentage'])); ?>% used
-                                                    • <?php p(number_format($budgetInfo['used_hours'], 1)); ?>h logged
+                                                    <?php p(($fmt ? $fmt->percent($budgetInfo['consumption_percentage'], 0) : round($budgetInfo['consumption_percentage']) . '%') . ' ' . $l->t('used')); ?>
+                                                    • <?php p($fmt ? $fmt->hours($budgetInfo['used_hours']) : number_format($budgetInfo['used_hours'], 1) . 'h'); ?>
+                                                    <?php p($l->t('logged')); ?>
                                                 </span>
                                             </span>
                                         </div>
                                     <?php else: ?>
                                         <div class="detail-row">
                                             <span class="detail-label"><?php p($l->t('Budget:')); ?></span>
-                                            <span class="detail-value">€<?php p(number_format($project->getTotalBudget() ?? 0, 2)); ?></span>
+                                            <span class="detail-value"><?php p($fmt ? $fmt->currency($project->getTotalBudget() ?? 0) : '€' . number_format($project->getTotalBudget() ?? 0, 2)); ?></span>
                                         </div>
                                     <?php endif; ?>
                                 </div>
 
                                 <?php if ($budgetInfo): ?>
                                     <div class="card-progress-section">
-                                        <div class="budget-progress-bar dashboard">
+                                        <div class="budget-progress-bar dashboard" role="progressbar"
+                                             aria-valuemin="0" aria-valuemax="100"
+                                             aria-valuenow="<?php p((int)round($budgetInfo['consumption_percentage'])); ?>"
+                                             aria-label="<?php p($l->t('Budget consumption: %s', [($fmt ? $fmt->percent($budgetInfo['consumption_percentage'], 0) : round($budgetInfo['consumption_percentage']) . '%')])); ?>">
                                             <div class="budget-progress-fill <?php p($budgetInfo['warning_level']); ?>"
                                                 style="width: <?php p(min(100, $budgetInfo['consumption_percentage'])); ?>%"></div>
                                         </div>
                                         <div class="progress-labels">
-                                            <span class="progress-label-left">€0</span>
+                                            <span class="progress-label-left"><?php p($fmt ? $fmt->currency(0) : '€0'); ?></span>
                                             <span class="progress-label-center <?php p($budgetInfo['warning_level']); ?>">
-                                                <?php p(round($budgetInfo['consumption_percentage'])); ?>%
+                                                <?php p($fmt ? $fmt->percent($budgetInfo['consumption_percentage'], 0) : round($budgetInfo['consumption_percentage']) . '%'); ?>
                                             </span>
-                                            <span class="progress-label-right">€<?php p(number_format($budgetInfo['total_budget'], 0)); ?></span>
+                                            <span class="progress-label-right"><?php p($fmt ? $fmt->currency($budgetInfo['total_budget']) : '€' . number_format($budgetInfo['total_budget'], 0)); ?></span>
                                         </div>
                                     </div>
                                 <?php endif; ?>
@@ -675,18 +682,18 @@ Util::addStyle('projectcheck', 'common/accessibility');
                             <div class="card-header">
                                 <div class="card-title">
                                     <h4><?php p($entryData['projectName'] ?? $l->t('Unknown Project')); ?></h4>
-                                    <span class="duration"><?php p($entry->getHours() . 'h'); ?></span>
+                                    <span class="duration"><?php p($fmt ? $fmt->hours($entry->getHours()) : ($entry->getHours() . 'h')); ?></span>
                                 </div>
                             </div>
                             <div class="card-content">
                                 <p class="card-description"><?php p($entry->getDescription() ?: $l->t('No description')); ?></p>
                                 <div class="card-meta">
                                     <div class="meta-item">
-                                        <i data-lucide="calendar" class="lucide-icon primary"></i>
-                                        <span><?php p($entry->getDate() ? $entry->getDate()->format('d.m.Y') : ''); ?></span>
+                                        <i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i>
+                                        <span><?php p($entry->getDate() ? ($fmt ? $fmt->date($entry->getDate()) : $entry->getDate()->format('d.m.Y')) : ''); ?></span>
                                     </div>
                                     <div class="meta-item">
-                                        <i data-lucide="user" class="lucide-icon primary"></i>
+                                        <i data-lucide="user" class="lucide-icon primary" aria-hidden="true"></i>
                                         <span><?php p($entryData['userDisplayName'] ?? $entry->getUserId() ?? ''); ?></span>
                                     </div>
                                 </div>
@@ -707,99 +714,20 @@ Util::addStyle('projectcheck', 'common/accessibility');
     </div>
 </div>
 
-<script nonce="<?php p($_['cspNonce']) ?>">
-    // Local SVG icon library
-    const svgIcons = {
-        calendar: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-        folder: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>',
-        plus: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-        clock: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>',
-        euro: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.25.5-2.5 1.5-3.5Z"/></svg>',
-        users: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-        user: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-        eye: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-        'bar-chart-3': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>',
-        'pie-chart': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
-        'dollar-sign': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-        'chevron-down': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><polyline points="6,9 12,15 18,9"/></svg>',
-        'settings': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="lucide-icon"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
-    };
-
-    // Initialize icons
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('[data-lucide]').forEach(function(el) {
-            const iconName = el.getAttribute('data-lucide');
-            if (svgIcons[iconName]) {
-                el.innerHTML = svgIcons[iconName];
-            }
-        });
-    });
-
-    // Temporary popup functions (will be moved to webpack build)
-    function showProductivityInfoPopup() {
-        const popup = document.getElementById('productivity-info-popup');
-        if (popup) {
-            popup.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        } else {
-            if (typeof console !== 'undefined' && console.error) {
-                console.error('Productivity info popup element not found');
-            }
-        }
-    }
-
-    function hideProductivityInfoPopup() {
-        const popup = document.getElementById('productivity-info-popup');
-        if (popup) {
-            popup.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    }
-
-    // Make functions globally available
-    window.showProductivityInfoPopup = showProductivityInfoPopup;
-    window.hideProductivityInfoPopup = hideProductivityInfoPopup;
-
-    // Add event listeners
-    document.addEventListener('click', function(event) {
-        // Handle productivity info popup trigger
-        if (event.target.matches('.info-popup-trigger') ||
-            event.target.matches('[data-action="show-productivity-info"]')) {
-            event.preventDefault();
-            event.stopPropagation();
-            showProductivityInfoPopup();
-            return;
-        }
-
-        // Handle popup close button
-        if (event.target.matches('.popup-close') ||
-            event.target.matches('[data-action="hide-productivity-info"]')) {
-            event.preventDefault();
-            event.stopPropagation();
-            hideProductivityInfoPopup();
-            return;
-        }
-
-        // Handle popup close when clicking background
-        const popup = document.getElementById('productivity-info-popup');
-        if (popup && event.target === popup) {
-            hideProductivityInfoPopup();
-        }
-    });
-
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            hideProductivityInfoPopup();
-        }
-    });
-</script>
+<?php /* Icons hydrated by js/common/icons.js (audit ref. AUDIT-FINDINGS H22).
+       Productivity info popup behavior lives in js/dashboard.js so every
+       modal in the app shares one accessibility primitive
+       (audit ref. C13/D17 - ProjectCheckModalA11y). */ ?>
 
 <!-- Productivity Info Popup Modal -->
-<div id="productivity-info-popup" class="productivity-info-popup" style="display: none;">
+<div id="productivity-info-popup" class="productivity-info-popup" style="display: none;" hidden
+     role="dialog" aria-modal="true" aria-labelledby="productivity-info-popup-title" tabindex="-1">
     <div class="popup-content">
         <div class="popup-header">
-            <h3><?php p($l->t('Productivity Analysis Explanation')); ?></h3>
-            <button class="popup-close" data-action="hide-productivity-info" aria-label="<?php p($l->t('Close')); ?>">×</button>
+            <h3 id="productivity-info-popup-title"><?php p($l->t('Productivity Analysis Explanation')); ?></h3>
+            <button type="button" class="popup-close" data-action="hide-productivity-info" aria-label="<?php p($l->t('Close')); ?>">
+                <span aria-hidden="true">×</span>
+            </button>
         </div>
         <div class="popup-body">
             <div class="info-section">

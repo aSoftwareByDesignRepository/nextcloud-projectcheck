@@ -216,30 +216,50 @@ const ProjectControlUtils = {
   // ===== NUMBER UTILITIES =====
 
   /**
-   * Format number with commas
+   * Format number with locale-aware thousands separators.
+   *
+   * Delegates to {@link window.ProjectCheckFormat} so the user's Nextcloud
+   * locale drives the output. The previous hard-coded `en-US` was an audit
+   * finding (B10) and produced wrong number grouping for non-English users.
    */
   formatNumber(num, decimals = 0) {
-    return Number(num).toLocaleString('en-US', {
+    if (typeof window !== 'undefined' && window.ProjectCheckFormat) {
+      return window.ProjectCheckFormat.number(num, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
+    }
+    return Number(num).toLocaleString(undefined, {
       minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
+      maximumFractionDigits: decimals,
     });
   },
 
   /**
-   * Format currency
+   * Format currency. Currency defaults to the org-configured currency
+   * (resolved by ProjectCheckFormat) so the displayed unit matches the
+   * server-side budget data.
    */
-  formatCurrency(amount, currency = 'USD') {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
+  formatCurrency(amount, currency) {
+    if (typeof window !== 'undefined' && window.ProjectCheckFormat) {
+      return window.ProjectCheckFormat.currencyFmt(amount, currency);
+    }
+    const code = typeof currency === 'string' ? currency.toUpperCase() : 'EUR';
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format(amount);
+    } catch (e) {
+      return code + ' ' + Number(amount).toFixed(2);
+    }
   },
 
   /**
-   * Format percentage
+   * Format percentage. Input is a 0-1 ratio (e.g. `0.42` -> "42 %").
    */
   formatPercentage(value, decimals = 1) {
-    return `${(value * 100).toFixed(decimals)}%`;
+    if (typeof window !== 'undefined' && window.ProjectCheckFormat) {
+      return window.ProjectCheckFormat.ratio(value, decimals);
+    }
+    return `${(Number(value) * 100).toFixed(decimals)}%`;
   },
 
   /**

@@ -810,7 +810,7 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
         </div>
         <div class="modal-footer projectcheck-dialog__footer">
             <button type="button" class="button secondary" id="cancel-status-change"><?php p($l->t('Cancel')); ?></button>
-            <button type="button" class="button primary" id="submit-status-change"><?php p($l->t('Update status')); ?></button>
+            <button type="button" class="button primary" id="submit-status-change" data-default-label="<?php p($l->t('Update status')); ?>" data-busy-label="<?php p($l->t('Updating status…')); ?>"><?php p($l->t('Update status')); ?></button>
         </div>
     </div>
 </div>
@@ -878,11 +878,12 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
         <?php endif; ?>
 
         const projectcheckToken = <?php echo json_encode($_['requesttoken'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-        const changeStatusUrl = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.changeStatus', ['id' => $projectId])); ?>;
+        const changeStatusPostUrl = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.changeStatusPost', ['id' => $projectId])); ?>;
         const addTeamUrl = <?php echo json_encode($addTeamUrl ?? $urlGenerator->linkToRoute('projectcheck.project.addTeamMember', ['id' => $projectId])); ?>;
         const addAllTeamUrl = <?php echo json_encode($addAllTeamUrl); ?>;
         const searchUsersUrl = <?php echo json_encode($urlGenerator->linkToRoute('projectcheck.project.searchAssignableUsers', ['id' => $projectId])); ?>;
         const errorStatusMsg = <?php echo json_encode($l->t('Error updating status')); ?>;
+        const selectStatusMsg = <?php echo json_encode($l->t('Please select a status.')); ?>;
         const errorGeneric = <?php echo json_encode($l->t('Something went wrong. Please try again.')); ?>;
         const addMemberError = <?php echo json_encode($l->t('Could not add team member')); ?>;
         const noUsersFoundMsg = <?php echo json_encode($l->t('No matching users found')); ?>;
@@ -899,6 +900,7 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
         let memberSearchItems = [];
         let memberAddSubmitting = false;
         let memberAddAllSubmitting = false;
+        let statusChangeSubmitting = false;
 
         function setSearchExpanded(expanded) {
             const searchInput = document.getElementById('teamMemberSearch');
@@ -1301,31 +1303,72 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
         }
 
         function submitStatusChangeFunc() {
+            if (statusChangeSubmitting) {
+                return;
+            }
             const form = document.getElementById('statusChangeForm');
             if (!form) {
                 return;
             }
+            const statusSelect = document.getElementById('newStatus');
+            const statusVal = statusSelect ? String(statusSelect.value || '').trim() : '';
+            if (!statusVal) {
+                window.alert(selectStatusMsg);
+                if (statusSelect) {
+                    statusSelect.focus();
+                }
+                return;
+            }
             const formData = new FormData(form);
+            formData.append('requesttoken', projectcheckToken);
 
-            fetch(changeStatusUrl, {
-                    method: 'PUT',
+            const submitBtn = document.getElementById('submit-status-change');
+            statusChangeSubmitting = true;
+            if (submitBtn instanceof HTMLButtonElement) {
+                submitBtn.disabled = true;
+                submitBtn.setAttribute('aria-busy', 'true');
+                submitBtn.textContent = submitBtn.dataset.busyLabel || submitBtn.textContent;
+            }
+
+            fetch(changeStatusPostUrl, {
+                    method: 'POST',
                     body: formData,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
                         'requesttoken': projectcheckToken
-                    }
+                    },
+                    credentials: 'same-origin'
                 })
-                .then(r => r.json().then(d => ({ ok: r.ok, d })))
-                .then(res => {
-                    if (res.d && res.d.success) {
-                        window.location.reload();
-                    } else {
-                        const err = (res.d && (res.d.error || res.d.message)) ? (res.d.error || res.d.message) : errorStatusMsg;
-                        window.alert(errorStatusMsg + (err ? ': ' + err : ''));
+                .then((r) => r.text().then((text) => {
+                    let d = {};
+                    if (text) {
+                        try {
+                            d = JSON.parse(text);
+                        } catch (parseErr) {
+                            d = {};
+                        }
                     }
+                    return { ok: r.ok, d, status: r.status };
+                }))
+                .then((res) => {
+                    if (res.d && res.d.success === true) {
+                        window.location.reload();
+                        return;
+                    }
+                    const detail = (res.d && (res.d.error || res.d.message)) ? String(res.d.error || res.d.message) : '';
+                    window.alert(detail || errorStatusMsg);
                 })
                 .catch(() => {
                     window.alert(errorGeneric);
+                })
+                .finally(() => {
+                    statusChangeSubmitting = false;
+                    if (submitBtn instanceof HTMLButtonElement) {
+                        submitBtn.disabled = false;
+                        submitBtn.removeAttribute('aria-busy');
+                        submitBtn.textContent = submitBtn.dataset.defaultLabel || submitBtn.textContent;
+                    }
                 });
         }
 

@@ -1,55 +1,34 @@
 // Service Worker for the ProjectCheck app
-// Handles caching, offline functionality, and performance optimization
+// Handles runtime caching and offline fallback. We deliberately avoid
+// precaching by URL because Nextcloud serves all assets through its asset
+// pipeline (with a webroot prefix and content-hashed bundle names) so the
+// effective URLs are not knowable at SW install time. Caching is therefore
+// driven by the network (cache-first for static files, network-first for
+// dynamic content) which mirrors how Nextcloud's own apps behave.
 
-const CACHE_NAME = 'projectcheck-v1';
-const STATIC_CACHE = 'projectcheck-static-v1';
-const DYNAMIC_CACHE = 'projectcheck-dynamic-v1';
+const STATIC_CACHE = 'projectcheck-static-v2';
+const DYNAMIC_CACHE = 'projectcheck-dynamic-v2';
 
-// Files to cache immediately
-const STATIC_FILES = [
-    '/css/common/critical.css',
-    '/css/common/base.css',
-    '/css/common/colors.css',
-    '/css/common/typography.css',
-    '/js/common/index.js',
-    '/js/common/utils.js',
-    '/js/common/layout.js',
-    '/js/common/components.js',
-    '/js/common/theme.js',
-    '/js/common/validation.js',
-    '/js/common/messaging.js',
-    '/js/common/performance.js',
-    '/js/common/cache.js',
-    '/img/app.svg',
-    '/img/logo.svg',
-    '/img/icons/',
-    '/templates/common/layout.php',
-    '/templates/common/header.php',
-    '/templates/common/footer.php',
-    '/templates/common/navigation.php'
+// Only precache the offline fallback page; everything else is cached at
+// fetch time. The SW is scoped to /apps/projectcheck/ so this resolves to
+// /apps/projectcheck/offline.html which is shipped with the app.
+const PRECACHE_FALLBACKS = [
+    'offline.html'
 ];
 
-// API endpoints to cache
+// API endpoints to cache (paths are matched by suffix regardless of webroot)
 const API_CACHE_PATTERNS = [
-    '/api/projects',
-    '/api/customers',
-    '/api/time-entries',
-    '/api/dashboard',
-    '/api/settings'
+    '/apps/projectcheck/api/',
 ];
 
-// Install event - cache static files
+// Install event - prime the offline fallback only.
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(STATIC_CACHE)
-            .then(cache => {
-                return cache.addAll(STATIC_FILES);
-            })
-            .then(() => {
-                return self.skipWaiting();
-            })
+            .then(cache => cache.addAll(PRECACHE_FALLBACKS))
+            .then(() => self.skipWaiting())
             .catch(error => {
-                console.error('ProjectCheck SW: failed to cache static files', error);
+                console.error('ProjectCheck SW: failed to prime fallback cache', error);
             })
     );
 });
@@ -107,7 +86,8 @@ function isAPIRequest(pathname) {
 
 // Check if request is for HTML content
 function isHTMLRequest(request) {
-    return request.headers.get('accept').includes('text/html');
+    const accept = request.headers.get('accept') || '';
+    return accept.includes('text/html');
 }
 
 // Cache-first strategy for static files
@@ -127,12 +107,14 @@ async function cacheFirst(request, cacheName) {
         return networkResponse;
     } catch (error) {
         console.error('Cache-first strategy failed:', error);
-        
-        // Return offline page for HTML requests
+
         if (isHTMLRequest(request)) {
-            return caches.match('/offline.html');
+            const fallback = await caches.match('offline.html');
+            if (fallback) {
+                return fallback;
+            }
         }
-        
+
         throw error;
     }
 }
@@ -155,12 +137,14 @@ async function networkFirst(request, cacheName) {
         if (cachedResponse) {
             return cachedResponse;
         }
-        
-        // Return offline page for HTML requests
+
         if (isHTMLRequest(request)) {
-            return caches.match('/offline.html');
+            const fallback = await caches.match('offline.html');
+            if (fallback) {
+                return fallback;
+            }
         }
-        
+
         throw error;
     }
 }
@@ -171,12 +155,14 @@ async function networkOnly(request) {
         return await fetch(request);
     } catch (error) {
         console.error('Network-only strategy failed:', error);
-        
-        // Return offline page for HTML requests
+
         if (isHTMLRequest(request)) {
-            return caches.match('/offline.html');
+            const fallback = await caches.match('offline.html');
+            if (fallback) {
+                return fallback;
+            }
         }
-        
+
         throw error;
     }
 }
@@ -214,18 +200,50 @@ async function getPendingActions() {
     return [];
 }
 
-// Perform a pending action
+// Perform a pending action.
+//
+// Hardening (audit ref. C12 / sw.js:204): mutating actions must carry a
+// `requesttoken` header that originated in the user's authenticated context.
+// We refuse anything else outright so a queued action cannot be replayed by
+// the worker after the session is gone or in a different origin context.
 async function performAction(action) {
-    const response = await fetch(action.url, {
-        method: action.method,
-        headers: action.headers,
-        body: action.body
-    });
-    
-    if (!response.ok) {
-        throw new Error(`Action failed: ${response.status}`);
+    if (!action || typeof action !== 'object') {
+        throw new Error('Invalid queued action');
     }
-    
+    const method = String(action.method || 'GET').toUpperCase();
+    const isMutating = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+    const headers = Object.assign({}, action.headers || {});
+
+    if (isMutating) {
+        // Normalize header lookup (case-insensitive)
+        const lowerKeys = Object.keys(headers).map(function (k) { return k.toLowerCase(); });
+        const hasToken = lowerKeys.includes('requesttoken');
+        const hasXhr = lowerKeys.includes('x-requested-with');
+        if (!hasToken || !hasXhr) {
+            throw new Error('Refusing to replay mutating action without request token contract');
+        }
+        // Reject cross-origin replay: the URL must be same-origin.
+        try {
+            const target = new URL(action.url, self.location.origin);
+            if (target.origin !== self.location.origin) {
+                throw new Error('Refusing cross-origin replay');
+            }
+        } catch (e) {
+            throw new Error('Invalid replay URL');
+        }
+    }
+
+    const response = await fetch(action.url, {
+        method: method,
+        headers: headers,
+        body: action.body,
+        credentials: 'same-origin',
+    });
+
+    if (!response.ok) {
+        throw new Error('Action failed: ' + response.status);
+    }
+
     return response;
 }
 

@@ -114,18 +114,20 @@ class ProjectMemberController extends Controller
             $impact = $this->deletionService->getProjectMemberDeletionImpact($id);
             return new JSONResponse(['success' => true, 'impact' => $impact]);
         } catch (\Exception $e) {
-            return new JSONResponse(['success' => false, 'error' => $e->getMessage()], 400);
+            return new JSONResponse(['success' => false, 'error' => $this->l->t('Could not load deletion impact.')], 400);
         }
     }
 
     /**
      * Remove a project member
      *
+     * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+     * `requesttoken` verification (deletion modal sends header + query param).
+     *
      * @param int $id
      * @return JSONResponse
      */
     #[NoAdminRequired]
-    #[NoCSRFRequired]
     public function remove(int $id): JSONResponse
     {
         $user = $this->userSession->getUser();
@@ -167,7 +169,7 @@ class ProjectMemberController extends Controller
         } catch (\Exception $e) {
             return new JSONResponse([
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $this->l->t('Could not remove project member.')
             ], 400);
         }
     }
@@ -175,11 +177,13 @@ class ProjectMemberController extends Controller
     /**
      * Remove project member via POST (for HTML forms)
      *
+     * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+     * `requesttoken` verification.
+     *
      * @param int $id
      * @return JSONResponse
      */
     #[NoAdminRequired]
-    #[NoCSRFRequired]
     public function removePost(int $id): JSONResponse
     {
         // Delegate to the remove method

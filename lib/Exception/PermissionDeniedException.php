@@ -27,7 +27,7 @@ class PermissionDeniedException extends Exception
 	 * @param int $code Error code
 	 * @param Exception|null $previous Previous exception
 	 */
-	public function __construct(string $action, string $resource, string $message = '', int $code = 0, Exception $previous = null)
+	public function __construct(string $action, string $resource, string $message = '', int $code = 0, ?Exception $previous = null)
 	{
 		if (empty($message)) {
 			$message = "Permission denied: Cannot {$action} on {$resource}";

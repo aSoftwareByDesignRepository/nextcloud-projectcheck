@@ -19,6 +19,7 @@ use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
@@ -301,10 +302,13 @@ class TimeEntryController extends Controller
 	/**
 	 * Store new time entry
 	 *
+	 * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+	 * `requesttoken` verification (the time-entry form submits it as a
+	 * hidden input on POST, time-entry-form.js sends it as a header).
+	 *
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function store()
 	{
 		$user = $this->userSession->getUser();
@@ -353,7 +357,7 @@ class TimeEntryController extends Controller
 			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not create time entry. Please check your input.')
 			], $status);
 		}
 	}
@@ -471,11 +475,13 @@ class TimeEntryController extends Controller
 	/**
 	 * Update time entry
 	 *
+	 * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+	 * `requesttoken` verification (form hidden input + AJAX header).
+	 *
 	 * @param int $id Time entry ID
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function update($id)
 	{
 		$user = $this->userSession->getUser();
@@ -520,7 +526,7 @@ class TimeEntryController extends Controller
 			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not update time entry. Please check your input.')
 			], $status);
 		}
 	}
@@ -528,11 +534,13 @@ class TimeEntryController extends Controller
 	/**
 	 * Update time entry via POST for forms that cannot send PUT
 	 *
+	 * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+	 * `requesttoken` verification.
+	 *
 	 * @param int $id Time entry ID
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function updatePost($id)
 	{
 		// Delegate to update() to keep logic in one place
@@ -564,18 +572,20 @@ class TimeEntryController extends Controller
 		} catch (\Throwable $e) {
 			$this->logger->error('Time entry deletion impact failed', ['exception' => $e]);
 			$status = $e instanceof \Exception ? 400 : 500;
-			return new JSONResponse(['success' => false, 'error' => $e->getMessage()], $status);
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Could not load deletion impact.')], $status);
 		}
 	}
 
 	/**
 	 * Delete time entry
 	 *
+	 * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+	 * `requesttoken` verification (deletion modal sends header + query param).
+	 *
 	 * @param int $id Time entry ID
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function delete($id)
 	{
 		$user = $this->userSession->getUser();
@@ -603,7 +613,7 @@ class TimeEntryController extends Controller
 			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not delete time entry.')
 			], $status);
 		}
 	}
@@ -670,6 +680,7 @@ class TimeEntryController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function search()
 	{
 		$user = $this->userSession->getUser();
@@ -692,12 +703,17 @@ class TimeEntryController extends Controller
 	}
 
 	/**
-	 * Export time entries to CSV
+	 * Export time entries to CSV.
+	 *
+	 * Rate-limited because export materialises the user's accessible
+	 * time-entry rows into a single response: it is the most expensive
+	 * read endpoint and the most attractive for data scraping.
 	 *
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 10, period: 60)]
 	public function export()
 	{
 		try {
@@ -748,7 +764,7 @@ class TimeEntryController extends Controller
 			]);
 		} catch (\Throwable $e) {
 			$this->logger->error('Time entry export failed', ['exception' => $e]);
-			return new DataResponse(['error' => $this->l->t('Export failed: %s', [$e->getMessage()])], 500);
+			return new DataResponse(['error' => $this->l->t('Export failed. Please try again.')], 500);
 		}
 	}
 
@@ -884,7 +900,14 @@ class TimeEntryController extends Controller
 					continue;
 				}
 
-				$totalAmount = $timeEntry->getHours() * $timeEntry->getHourlyRate();
+				$totalAmount = \OCA\ProjectCheck\Util\Money::asFloat(
+					\OCA\ProjectCheck\Util\Money::mul(
+						$timeEntry->getHours(),
+						$timeEntry->getHourlyRate(),
+						\OCA\ProjectCheck\Util\Money::MONEY_SCALE
+					),
+					\OCA\ProjectCheck\Util\Money::MONEY_SCALE
+				);
 
 				// Get project type display name
 				$projectTypeDisplayName = $entry['project_type_display_name'] ?? $entry['project_type'] ?? 'Client Project';

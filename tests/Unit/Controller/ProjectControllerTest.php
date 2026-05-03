@@ -112,6 +112,23 @@ class ProjectControllerTest extends TestCase {
 	}
 
 	/**
+	 * IRequest::getParam is invoked for status and optional reason; PHPUnit cannot match only "status".
+	 *
+	 * @return void
+	 */
+	private function stubRequestParamsForProjectStatusChange(string $status, string $reason = ''): void {
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $key, $default = null) use ($status, $reason) {
+				return match ($key) {
+					'status' => $status,
+					'reason' => $reason,
+					default => $default,
+				};
+			}
+		);
+	}
+
+	/**
 	 * Test complete project creation workflow
 	 */
 	public function testCompleteProjectCreationWorkflow(): void {
@@ -653,7 +670,7 @@ class ProjectControllerTest extends TestCase {
 
 		$this->projectService->method('getProject')->with(1)->willReturn($project);
 		$this->projectService->method('canUserChangeProjectStatus')->with('testuser', 1)->willReturn(true);
-		$this->request->method('getParam')->with('status')->willReturn('On Hold');
+		$this->stubRequestParamsForProjectStatusChange('On Hold', '');
 		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
 
 		$updatedProject = clone $project;
@@ -672,6 +689,80 @@ class ProjectControllerTest extends TestCase {
 		$this->assertTrue($data['success']);
 		$this->assertEquals('Project status updated successfully', $data['message']);
 		// Controller returns only success/message; project object is not in response
+	}
+
+	public function testProjectStatusChangePostMatchesPutBehaviour(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+
+		$project = new Project();
+		$project->setId(1);
+		$project->setName('Test Project');
+		$project->setStatus('Active');
+
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserChangeProjectStatus')->with('testuser', 1)->willReturn(true);
+		$this->stubRequestParamsForProjectStatusChange('Archived', '');
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
+
+		$updatedProject = clone $project;
+		$updatedProject->setStatus('Archived');
+
+		$this->projectService->method('changeProjectStatus')
+			->with(1, 'Archived')
+			->willReturn($updatedProject);
+
+		$response = $this->controller->changeStatusPost(1);
+
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+	}
+
+	public function testProjectStatusChangeMissingStatusReturnsErrorPayload(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('canUserChangeProjectStatus')->with('testuser', 1)->willReturn(true);
+		$this->request->method('getParam')->with('status')->willReturn('');
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
+
+		$this->projectService->expects($this->never())->method('changeProjectStatus');
+
+		$response = $this->controller->changeStatusPost(1);
+
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertFalse($data['success']);
+		$this->assertEquals('Please select a status.', $data['error']);
+	}
+
+	public function testProjectStatusChangeInvalidTransitionMessage(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+
+		$project = new Project();
+		$project->setId(1);
+		$project->setName('Test Project');
+		$project->setStatus('Completed');
+
+		$this->projectService->method('canUserChangeProjectStatus')->with('testuser', 1)->willReturn(true);
+		$this->stubRequestParamsForProjectStatusChange('Active', '');
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
+
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+
+		$this->projectService->method('changeProjectStatus')
+			->willThrowException(new \Exception("Invalid status transition from 'Completed' to 'Active'"));
+
+		$response = $this->controller->changeStatus(1);
+
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertFalse($data['success']);
+		$this->assertEquals('This status change is not allowed for the current project state.', $data['error']);
 	}
 
 	/**

@@ -168,20 +168,20 @@
 
 		// Validate name
 		if (!data.name || data.name.trim() === '') {
-			errors.name = 'Customer name is required';
+			errors.name = t('projectcheck', 'Customer name is required');
 			hasErrors = true;
 		} else if (data.name.length > 100) {
-			errors.name = 'Customer name must be 100 characters or less';
+			errors.name = t('projectcheck', 'Customer name must be 100 characters or less');
 			hasErrors = true;
 		} else if (data.name.length < 2) {
-			errors.name = 'Customer name must be at least 2 characters';
+			errors.name = t('projectcheck', 'Customer name must be at least 2 characters');
 			hasErrors = true;
 		}
 
 		// Validate email if provided
 		if (data.email && data.email.trim() !== '') {
 			if (!isValidEmail(data.email)) {
-				errors.email = 'Please enter a valid email address';
+				errors.email = t('projectcheck', 'Please enter a valid email address');
 				hasErrors = true;
 			}
 		}
@@ -189,7 +189,7 @@
 		// Validate phone if provided
 		if (data.phone && data.phone.trim() !== '') {
 			if (data.phone.length > 50) {
-				errors.phone = 'Phone number must be 50 characters or less';
+				errors.phone = t('projectcheck', 'Phone number must be 50 characters or less');
 				hasErrors = true;
 			}
 		}
@@ -197,7 +197,7 @@
 		// Validate contact person if provided
 		if (data.contact_person && data.contact_person.trim() !== '') {
 			if (data.contact_person.length > 100) {
-				errors.contact_person = 'Contact person name must be 100 characters or less';
+				errors.contact_person = t('projectcheck', 'Contact person name must be 100 characters or less');
 				hasErrors = true;
 			}
 		}
@@ -205,7 +205,7 @@
 		// Validate address if provided
 		if (data.address && data.address.trim() !== '') {
 			if (data.address.length > 500) {
-				errors.address = 'Address must be 500 characters or less';
+				errors.address = t('projectcheck', 'Address must be 500 characters or less');
 				hasErrors = true;
 			}
 		}

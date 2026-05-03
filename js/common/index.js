@@ -22,38 +22,46 @@ export { default as CacheManager } from './cache.js';
 
 // Initialize common functionality
 document.addEventListener('DOMContentLoaded', () => {
+    const themeManager = window.ThemeManager || window.ProjectCheckTheme || window.ProjectControlTheme;
+    const layoutManager = window.LayoutManager || window.ProjectCheckLayout || window.ProjectControlLayout;
+    const componentManager = window.ComponentManager || window.ProjectCheckComponents || window.ProjectControlComponents;
+    const validationManager = window.ValidationManager || window.ProjectCheckValidation || window.ProjectControlValidation;
+    const messageManager = window.MessageManager || window.ProjectCheckMessaging || window.ProjectControlMessaging;
+    const performanceManager = window.PerformanceOptimizer || window.ProjectCheckPerformance || window.ProjectControlPerformance;
+    const cacheManager = window.CacheManager || window.ProjectCheckCache || window.ProjectControlCache;
+
     // Initialize theme management
-    if (window.ThemeManager) {
-        window.ThemeManager.init();
+    if (themeManager && typeof themeManager.init === 'function') {
+        themeManager.init();
     }
     
     // Initialize layout management
-    if (window.LayoutManager) {
-        window.LayoutManager.init();
+    if (layoutManager && typeof layoutManager.init === 'function') {
+        layoutManager.init();
     }
     
     // Initialize component management
-    if (window.ComponentManager) {
-        window.ComponentManager.init();
+    if (componentManager && typeof componentManager.init === 'function') {
+        componentManager.init();
     }
     
     // Initialize validation management
-    if (window.ValidationManager) {
-        window.ValidationManager.init();
+    if (validationManager && typeof validationManager.init === 'function') {
+        validationManager.init();
     }
     
     // Initialize message management
-    if (window.MessageManager) {
-        window.MessageManager.init();
+    if (messageManager && typeof messageManager.init === 'function') {
+        messageManager.init();
     }
     
     // Initialize performance optimization
-    if (window.PerformanceOptimizer) {
-        window.PerformanceOptimizer.init();
+    if (performanceManager && typeof performanceManager.init === 'function') {
+        performanceManager.init();
     }
     
     // Initialize cache management
-    if (window.CacheManager) {
-        window.CacheManager.init();
+    if (cacheManager && typeof cacheManager.init === 'function') {
+        cacheManager.init();
     }
 });

@@ -3,7 +3,12 @@
 declare(strict_types=1);
 
 /**
- * Personal settings for projectcheck app
+ * Personal settings panel for the ProjectCheck app.
+ *
+ * The form is rendered inside Nextcloud's Personal Settings UI; the
+ * accompanying template MUST therefore not duplicate any of Nextcloud's
+ * layout chrome (no #app-navigation, no #app-content, no app-level styles
+ * that affect the surrounding page).
  *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
@@ -12,100 +17,76 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Settings;
 
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\Settings\ISettings;
 use OCP\IConfig;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
+use OCP\L10N\IFactory;
+use OCP\Settings\ISettings;
 use OCA\ProjectCheck\Service\AccessControlService;
 
-/**
- * Personal settings for projectcheck app
- */
 class PersonalSettings implements ISettings
 {
-    /** @var IConfig */
-    private $config;
+	public function __construct(
+		private IConfig $config,
+		private IUserSession $userSession,
+		private IURLGenerator $urlGenerator,
+		private IFactory $l10nFactory,
+		private AccessControlService $accessControl,
+	) {
+	}
 
-    /** @var IUserSession */
-    private $userSession;
+	public function getForm(): TemplateResponse
+	{
+		$l = $this->l10nFactory->get('projectcheck');
+		$user = $this->userSession->getUser();
 
-    /** @var AccessControlService */
-    private $accessControl;
+		// When the user has no access to ProjectCheck the panel must still
+		// render something coherent (Nextcloud has already rendered the
+		// section header at this point) but never expose configuration.
+		if ($user === null || !$this->accessControl->canUseApp($user->getUID())) {
+			return new TemplateResponse('projectcheck', 'personal-settings', [
+				'l' => $l,
+				'hasAccess' => false,
+				'budget_warning_threshold' => '',
+				'budget_critical_threshold' => '',
+				'appBudgetWarningDefault' => $this->config->getAppValue('projectcheck', 'budget_warning_threshold', '80'),
+				'appBudgetCriticalDefault' => $this->config->getAppValue('projectcheck', 'budget_critical_threshold', '90'),
+				'saveUrl' => '',
+			]);
+		}
 
-    /**
-     * PersonalSettings constructor
-     *
-     * @param IConfig $config
-     * @param IUserSession $userSession
-     * @param AccessControlService $accessControl
-     */
-    public function __construct(IConfig $config, IUserSession $userSession, AccessControlService $accessControl)
-    {
-        $this->config = $config;
-        $this->userSession = $userSession;
-        $this->accessControl = $accessControl;
-    }
+		$userId = $user->getUID();
 
-    /**
-     * @return TemplateResponse
-     */
-    public function getForm()
-    {
-        $user = $this->userSession->getUser();
-        if (!$user) {
-            return new TemplateResponse('projectcheck', 'personal-settings', []);
-        }
-        if (!$this->accessControl->canUseApp($user->getUID())) {
-            return new TemplateResponse('projectcheck', 'personal-settings', []);
-        }
+		// Personal values fall back to the org-wide defaults when the user
+		// has not set their own override.
+		$appWarning = $this->config->getAppValue('projectcheck', 'budget_warning_threshold', '80');
+		$appCritical = $this->config->getAppValue('projectcheck', 'budget_critical_threshold', '90');
+		$warning = $this->config->getUserValue($userId, 'projectcheck', 'budget_warning_threshold', $appWarning);
+		$critical = $this->config->getUserValue($userId, 'projectcheck', 'budget_critical_threshold', $appCritical);
 
-        $userId = $user->getUID();
-        $defaultHourlyRate = $this->config->getUserValue($userId, 'projectcheck', 'default_hourly_rate', '');
-        $dashboardRefreshInterval = $this->config->getUserValue($userId, 'projectcheck', 'dashboard_refresh_interval', '30');
-        $showCompletedProjects = $this->config->getUserValue($userId, 'projectcheck', 'show_completed_projects', 'yes');
-        $timeEntryReminder = $this->config->getUserValue($userId, 'projectcheck', 'time_entry_reminder', 'yes');
-        $emailNotifications = $this->config->getUserValue($userId, 'projectcheck', 'email_notifications', 'yes');
-        $defaultTimeEntryDuration = $this->config->getUserValue($userId, 'projectcheck', 'default_time_entry_duration', '1.00');
-        $budgetWarningThreshold = $this->config->getUserValue($userId, 'projectcheck', 'budget_warning_threshold', '80');
-        $budgetCriticalThreshold = $this->config->getUserValue($userId, 'projectcheck', 'budget_critical_threshold', '90');
+		return new TemplateResponse('projectcheck', 'personal-settings', [
+			'l' => $l,
+			'hasAccess' => true,
+			'budget_warning_threshold' => (string) $warning,
+			'budget_critical_threshold' => (string) $critical,
+			'appBudgetWarningDefault' => (string) $appWarning,
+			'appBudgetCriticalDefault' => (string) $appCritical,
+			'saveUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.savePersonalPreferences'),
+		]);
+	}
 
-        $parameters = [
-            'default_hourly_rate' => $defaultHourlyRate,
-            'dashboard_refresh_interval' => $dashboardRefreshInterval,
-            'show_completed_projects' => $showCompletedProjects,
-            'time_entry_reminder' => $timeEntryReminder,
-            'email_notifications' => $emailNotifications,
-            'default_time_entry_duration' => $defaultTimeEntryDuration,
-            'budget_warning_threshold' => $budgetWarningThreshold,
-            'budget_critical_threshold' => $budgetCriticalThreshold
-        ];
+	public function getSection(): ?string
+	{
+		$user = $this->userSession->getUser();
+		// Hide the panel entirely from users who cannot use the app.
+		if ($user === null || !$this->accessControl->canUseApp($user->getUID())) {
+			return null;
+		}
+		return 'projectcheck';
+	}
 
-        return new TemplateResponse('projectcheck', 'personal-settings', $parameters);
-    }
-
-    /**
-     * @return string the section ID, e.g. 'sharing'
-     */
-    public function getSection()
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return 'projectcheck';
-        }
-        if (!$this->accessControl->canUseApp($user->getUID())) {
-            return null;
-        }
-        return 'projectcheck';
-    }
-
-    /**
-     * @return int whether the form should be rather on the top or bottom of
-     * the admin section. The forms are arranged in ascending order of the
-     * priority values. It is required to return a value between 0 and 100.
-     *
-     * E.g.: 70 will be displayed after "Sharing" (50) and before "Groupware" (80)
-     */
-    public function getPriority()
-    {
-        return 50;
-    }
+	public function getPriority(): int
+	{
+		return 50;
+	}
 }

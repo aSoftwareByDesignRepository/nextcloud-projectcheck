@@ -24,6 +24,7 @@ return [
 		['name' => 'project#updatePost', 'url' => '/projects/{id}/update', 'verb' => 'POST'],
 		['name' => 'project#delete', 'url' => '/projects/{id}', 'verb' => 'DELETE'],
 		['name' => 'project#changeStatus', 'url' => '/projects/{id}/status', 'verb' => 'PUT'],
+		['name' => 'project#changeStatusPost', 'url' => '/projects/{id}/status', 'verb' => 'POST'],
 		['name' => 'projectfile#upload', 'url' => '/projects/{projectId}/files', 'verb' => 'POST'],
 		['name' => 'projectfile#list', 'url' => '/projects/{projectId}/files', 'verb' => 'GET'],
 		['name' => 'projectfile#download', 'url' => '/projects/{projectId}/files/{fileId}/download', 'verb' => 'GET'],
@@ -60,6 +61,7 @@ return [
 		// Backward-compatible route for old in-app URL; redirects to /settings.
 		['name' => 'app_config#orgIndex', 'url' => '/organization', 'verb' => 'GET'],
 		['name' => 'app_config#savePolicy', 'url' => '/api/config/save', 'verb' => 'POST'],
+		['name' => 'app_config#savePersonalPreferences', 'url' => '/api/preferences/save', 'verb' => 'POST'],
 		['name' => 'app_config#searchUsers', 'url' => '/api/config/search/users', 'verb' => 'GET'],
 		['name' => 'app_config#searchGroups', 'url' => '/api/config/search/groups', 'verb' => 'GET'],
 

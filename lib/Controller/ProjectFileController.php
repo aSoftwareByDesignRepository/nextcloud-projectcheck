@@ -15,6 +15,7 @@ use OCA\ProjectCheck\Service\ProjectFileService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\FileDisplayResponse;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -47,11 +48,15 @@ class ProjectFileController extends Controller
 	}
 
 	/**
-	 * Upload one or more files for a project
+	 * Upload one or more files for a project.
+	 *
+	 * Rate-limited per user to prevent storage exhaustion / abuse uploads
+	 * (storage I/O is the most expensive write path in this app).
 	 *
 	 * @return Response
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
 	public function upload(int $projectId)
 	{
 		$user = $this->userSession->getUser();
@@ -64,13 +69,13 @@ class ProjectFileController extends Controller
 			$this->fileService->addFilesFromUpload($projectId, $uploads ?? [], $user->getUID());
 		} catch (\Throwable $e) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $e->getMessage()], 400);
+				return new DataResponse(['error' => $this->l->t('File upload failed. Please check your input and try again.')], 400);
 			}
 			$url = $this->request->getParam(
 				'redirect',
 				$this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $projectId])
 			);
-			return new RedirectResponse($url . '?message=error&error_text=' . urlencode($e->getMessage()));
+			return new RedirectResponse($url . '?message=error&error_text=' . urlencode($this->l->t('File upload failed. Please check your input and try again.')));
 		}
 
 		if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
@@ -85,9 +90,12 @@ class ProjectFileController extends Controller
 	}
 
 	/**
-	 * List files for a project
+	 * List files for a project.
+	 *
+	 * Rate-limited to throttle enumeration of file metadata across projects.
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 120, period: 60)]
 	public function list(int $projectId): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -112,15 +120,20 @@ class ProjectFileController extends Controller
 				}, $files),
 			]);
 		} catch (\Throwable $e) {
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse(['error' => $this->l->t('Could not load project files.')], 400);
 		}
 	}
 
 	/**
-	 * Download a project file
+	 * Download a project file.
+	 *
+	 * Rate-limited per user to throttle bulk download / scraping attempts.
+	 * NoCSRFRequired is intentional: GET download links must be embeddable
+	 * and idempotent.
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 120, period: 60)]
 	public function download(int $projectId, int $fileId)
 	{
 		$user = $this->userSession->getUser();
@@ -132,24 +145,46 @@ class ProjectFileController extends Controller
 			$projectFile = $this->fileService->getFile($projectId, $fileId, $user->getUID());
 			$file = $this->fileService->resolveFile($projectFile);
 
+			$mime = $projectFile->getMimeType() ?: 'application/octet-stream';
+			// Inline rendering is only safe for content the browser cannot
+			// execute. SVG/HTML/JS/etc. are forced to attachment to prevent
+			// stored-XSS via uploaded files (defence in depth on top of the
+			// upload-time MIME blocklist).
+			$inlineSafe = preg_match(
+				'#^(image/(jpeg|png|gif|webp|bmp|x-icon)|application/pdf|text/plain|text/csv)$#i',
+				$mime
+			) === 1;
+			$disposition = $inlineSafe ? 'inline' : 'attachment';
+
+			// Sanitize filename for header: ASCII fallback + RFC 5987 UTF-8.
+			$displayName = (string)$projectFile->getDisplayName();
+			$asciiName = preg_replace('/[^\x20-\x7E]+/', '_', $displayName) ?? 'download';
+			$asciiName = addcslashes($asciiName, '"\\');
+			$utf8Name = rawurlencode($displayName);
+
 			$response = new FileDisplayResponse($file);
-			$response->addHeader('Content-Type', $projectFile->getMimeType() ?: 'application/octet-stream');
-			// Keep inline display but provide filename for compatibility
+			$response->addHeader('Content-Type', $mime);
 			$response->addHeader(
 				'Content-Disposition',
-				'inline; filename="' . addcslashes($projectFile->getDisplayName(), '"\\') . '"'
+				$disposition . '; filename="' . $asciiName . '"; filename*=UTF-8\'\'' . $utf8Name
 			);
+			// Defence-in-depth: never let a download be sniffed into a
+			// dangerous type.
+			$response->addHeader('X-Content-Type-Options', 'nosniff');
 
 			return $response;
 		} catch (\Throwable $e) {
-			return new DataResponse(['error' => $e->getMessage()], 404);
+			return new DataResponse(['error' => $this->l->t('File not found or access denied.')], 404);
 		}
 	}
 
 	/**
-	 * Delete a project file
+	 * Delete a project file.
+	 *
+	 * Rate-limited so a compromised session cannot mass-delete files in a burst.
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function delete(int $projectId, int $fileId): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -161,7 +196,7 @@ class ProjectFileController extends Controller
 			$this->fileService->deleteFile($projectId, $fileId, $user->getUID());
 			return new DataResponse(['success' => true]);
 		} catch (\Throwable $e) {
-			return new DataResponse(['error' => $e->getMessage()], 400);
+			return new DataResponse(['error' => $this->l->t('Could not delete the file.')], 400);
 		}
 	}
 }

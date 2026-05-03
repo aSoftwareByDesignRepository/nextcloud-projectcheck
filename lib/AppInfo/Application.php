@@ -102,6 +102,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IConfig::class),
 				$c->query(\Psr\Log\LoggerInterface::class),
 				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\OCA\ProjectCheck\Service\LocaleFormatService::class),
 				self::APP_ID
 			);
 		});
@@ -187,6 +188,15 @@ class Application extends App implements IBootstrap
 			);
 		});
 
+		// Register LocaleFormatService (audit ref. AUDIT-FINDINGS B10/H28).
+		$context->registerService(\OCA\ProjectCheck\Service\LocaleFormatService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\LocaleFormatService(
+				$c->query(\OCP\IConfig::class),
+				$c->query(\OCP\L10N\IFactory::class),
+				$c->query(\OCP\IUserSession::class)
+			);
+		});
+
 		$context->registerService(\OCA\ProjectCheck\Service\JsL10nCatalogBuilder::class, function ($c) {
 			return new \OCA\ProjectCheck\Service\JsL10nCatalogBuilder(
 				$c->query(\OCP\L10N\IFactory::class),
@@ -203,7 +213,9 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IUserManager::class),
 				$c->query(\Psr\Log\LoggerInterface::class),
 				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
-				$c->query(\OCA\ProjectCheck\Service\TimeEntryService::class)
+				$c->query(\OCA\ProjectCheck\Service\TimeEntryService::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\OCA\ProjectCheck\Service\LocaleFormatService::class)
 			);
 		});
 

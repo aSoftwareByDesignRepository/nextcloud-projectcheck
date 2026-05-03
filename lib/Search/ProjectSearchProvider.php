@@ -205,7 +205,7 @@ class ProjectSearchProvider implements IProvider
 	 */
 	private function resolveAppIconPath(): string
 	{
-		foreach (['app-dark.svg', 'app.svg'] as $iconFile) {
+		foreach (['app.svg', 'app-dark.svg'] as $iconFile) {
 			try {
 				return $this->urlGenerator->imagePath('projectcheck', $iconFile);
 			} catch (RuntimeException $e) {

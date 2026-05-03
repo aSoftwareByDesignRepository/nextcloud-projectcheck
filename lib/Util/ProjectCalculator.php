@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Util;
 
+use OCA\ProjectCheck\Util\Money;
+
 /**
  * Class ProjectCalculator
  *
@@ -20,7 +22,10 @@ class ProjectCalculator
 {
 
 	/**
-	 * Calculate available hours based on budget and hourly rate
+	 * Calculate available hours based on budget and hourly rate.
+	 *
+	 * Uses fixed-point math via {@see Money} to eliminate float drift on
+	 * large budgets (audit reference A5).
 	 *
 	 * @param float $budget
 	 * @param float $hourlyRate
@@ -32,11 +37,11 @@ class ProjectCalculator
 			return 0;
 		}
 
-		return round($budget / $hourlyRate, 2);
+		return Money::asFloat(Money::div($budget, $hourlyRate, Money::HOUR_SCALE), Money::HOUR_SCALE);
 	}
 
 	/**
-	 * Calculate budget consumption percentage
+	 * Calculate budget consumption percentage with fixed-point precision.
 	 *
 	 * @param float $usedHours
 	 * @param float $totalBudget
@@ -49,8 +54,8 @@ class ProjectCalculator
 			return 0;
 		}
 
-		$usedBudget = $usedHours * $hourlyRate;
-		return round(($usedBudget / $totalBudget) * 100, 2);
+		$usedBudget = Money::mul($usedHours, $hourlyRate, Money::INTERNAL_SCALE);
+		return Money::asFloat(Money::percentage($usedBudget, $totalBudget, Money::MONEY_SCALE), Money::MONEY_SCALE);
 	}
 
 	/**
@@ -91,7 +96,11 @@ class ProjectCalculator
 	}
 
 	/**
-	 * Calculate project cost for hours worked
+	 * Calculate project cost for hours worked.
+	 *
+	 * Uses fixed-point math; equivalent to `round($hours * $rate, 2)` but
+	 * without the IEEE-754 drift that produces "0.30000000000000004" cents
+	 * on user-visible totals.
 	 *
 	 * @param float $hours
 	 * @param float $hourlyRate
@@ -99,7 +108,7 @@ class ProjectCalculator
 	 */
 	public function calculateProjectCost(float $hours, float $hourlyRate): float
 	{
-		return round($hours * $hourlyRate, 2);
+		return Money::asFloat(Money::mul($hours, $hourlyRate, Money::MONEY_SCALE), Money::MONEY_SCALE);
 	}
 
 	/**
@@ -124,7 +133,8 @@ class ProjectCalculator
 	public function calculateRemainingBudget(float $totalBudget, float $usedHours, float $hourlyRate): float
 	{
 		$usedBudget = $this->calculateProjectCost($usedHours, $hourlyRate);
-		return max(0, $totalBudget - $usedBudget);
+		$remaining = Money::asFloat(Money::sub($totalBudget, $usedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE);
+		return max(0.0, $remaining);
 	}
 
 	/**

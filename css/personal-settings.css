@@ -1,193 +1,206 @@
 /**
- * Personal settings styles for projectcheck app
+ * Personal settings panel styles for ProjectCheck.
+ *
+ * Designed to live INSIDE Nextcloud's personal-settings page, so the
+ * outer chrome relies on the host layout. All selectors are scoped to
+ * the panel root (.projectcheck-personal) to avoid leaking styles into
+ * neighboring sections.
  *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
  */
 
-.personal-settings-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+.projectcheck-personal {
+	max-width: 720px;
+	margin-bottom: 32px;
 }
 
-.personal-settings-header {
-    margin-bottom: 30px;
+.projectcheck-personal__title {
+	margin: 0 0 8px;
+	font-size: 1.25rem;
+	font-weight: 600;
+	color: var(--color-text);
 }
 
-.personal-settings-header h2 {
-    margin: 0 0 10px 0;
-    color: var(--color-primary);
+.projectcheck-personal__intro {
+	margin: 0 0 20px;
+	color: var(--color-text-maxcontrast);
+	line-height: 1.5;
 }
 
-.personal-settings-header p {
-    margin: 0;
-    color: var(--color-text-maxcontrast);
+.projectcheck-personal__form {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	margin: 0;
+	padding: 0;
 }
 
-.personal-settings-form {
-    background: var(--color-main-background);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    padding: 30px;
+.projectcheck-personal__fieldset {
+	margin: 0;
+	padding: 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, var(--border-radius));
+	background: var(--color-main-background);
 }
 
-.form-section {
-    margin-bottom: 30px;
+.projectcheck-personal__legend {
+	padding: 0 6px;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--color-text);
 }
 
-.form-section h3 {
-    margin: 0 0 20px 0;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--color-border);
-    color: var(--color-primary);
+.projectcheck-personal__field {
+	display: block;
+	margin-top: 16px;
 }
 
-.form-group {
-    margin-bottom: 20px;
+.projectcheck-personal__field:first-of-type {
+	margin-top: 8px;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
-    color: var(--color-text);
+.projectcheck-personal__label {
+	display: block;
+	margin-bottom: 6px;
+	font-weight: 600;
+	color: var(--color-text);
 }
 
-.form-group label.required::after {
-    content: ' *';
-    color: var(--pc-emphasis-text-error);
+.projectcheck-personal__input-row {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	max-width: 220px;
 }
 
-.form-control {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    background: var(--color-main-background);
-    color: var(--color-text);
-    font-size: 14px;
-    transition: border-color 0.2s ease;
+.projectcheck-personal__input {
+	flex: 1 1 auto;
+	min-width: 0;
+	width: 100%;
+	padding: 6px 10px;
+	font: inherit;
+	color: var(--color-text);
+	background: var(--color-main-background);
+	border: 2px solid var(--color-border-dark, var(--color-border));
+	border-radius: var(--border-radius);
+	transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
-.form-control:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px var(--color-primary-alpha-20);
+.projectcheck-personal__input:focus {
+	outline: none;
+	border-color: var(--color-primary-element, var(--color-primary));
+	box-shadow: 0 0 0 2px var(--color-primary-element-light, var(--color-primary-light));
 }
 
-.form-control.has-error {
-    border-color: var(--color-error);
+.projectcheck-personal__input.has-error,
+.projectcheck-personal__input[aria-invalid="true"] {
+	border-color: var(--color-error);
 }
 
-.error-message {
-    color: var(--pc-emphasis-text-error);
-    font-size: 12px;
-    margin-top: 5px;
+.projectcheck-personal__input.has-error:focus,
+.projectcheck-personal__input[aria-invalid="true"]:focus {
+	box-shadow: 0 0 0 2px var(--color-error);
 }
 
-.form-group.has-error .form-control {
-    border-color: var(--color-error);
+.projectcheck-personal__suffix {
+	color: var(--color-text-maxcontrast);
+	font-weight: 500;
 }
 
-.form-actions {
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid var(--color-border);
-    text-align: right;
+.projectcheck-personal__hint {
+	margin: 6px 0 0;
+	font-size: 0.85rem;
+	color: var(--color-text-maxcontrast);
+	line-height: 1.4;
 }
 
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    display: inline-block;
+.projectcheck-personal__default {
+	display: inline-block;
+	margin-left: 4px;
+	color: var(--color-text-maxcontrast);
+	font-style: italic;
 }
 
-.btn-primary {
-    background: var(--color-primary);
-    color: var(--color-primary-text);
+.projectcheck-personal__error {
+	margin: 6px 0 0;
+	font-size: 0.85rem;
+	color: var(--color-error);
+	line-height: 1.4;
 }
 
-.btn-primary:hover {
-    background: var(--color-primary-hover);
+.projectcheck-personal__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
 }
 
-.btn-secondary {
-    background: var(--color-background-dark);
-    color: var(--color-text);
-    border: 1px solid var(--color-border);
+.projectcheck-personal__save {
+	min-height: 44px;
+	min-width: 160px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
 }
 
-.btn-secondary:hover {
-    background: var(--color-background-hover);
+.projectcheck-personal__save[aria-busy="true"] {
+	opacity: 0.85;
+	cursor: progress;
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+.projectcheck-personal__save-spinner {
+	width: 14px;
+	height: 14px;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: pc-personal-spin 720ms linear infinite;
 }
 
-@media (max-width: 768px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .personal-settings-container {
-        padding: 10px;
-    }
-
-    .personal-settings-form {
-        padding: 20px;
-    }
+@media (prefers-reduced-motion: reduce) {
+	.projectcheck-personal__save-spinner {
+		animation: none;
+	}
 }
 
-.help-text {
-    font-size: 12px;
-    color: var(--color-text-maxcontrast);
-    margin-top: 5px;
+@keyframes pc-personal-spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.projectcheck-personal__status {
+	margin: 0;
+	min-height: 1.2em;
+	font-size: 0.9rem;
+	color: var(--color-text-maxcontrast);
 }
 
-.checkbox-group input[type="checkbox"] {
-    margin: 0;
+.projectcheck-personal__status.is-success {
+	color: var(--color-success, var(--color-primary-element));
 }
 
-.checkbox-group label {
-    margin: 0;
-    font-weight: normal;
+.projectcheck-personal__status.is-error {
+	color: var(--color-error);
 }
 
-.settings-summary {
-    background: var(--color-background-dark);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    padding: 20px;
-    margin-bottom: 30px;
-}
+@media (max-width: 600px) {
+	.projectcheck-personal {
+		max-width: none;
+	}
 
-.settings-summary h4 {
-    margin: 0 0 15px 0;
-    color: var(--color-primary);
-}
+	.projectcheck-personal__input-row {
+		max-width: 100%;
+	}
 
-.settings-summary ul {
-    margin: 0;
-    padding-left: 20px;
-}
+	.projectcheck-personal__actions {
+		align-items: stretch;
+		flex-direction: column;
+	}
 
-.settings-summary li {
-    margin-bottom: 5px;
-    color: var(--color-text);
+	.projectcheck-personal__save {
+		width: 100%;
+	}
 }

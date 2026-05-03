@@ -436,7 +436,9 @@ Util::addStyle('projectcheck', 'navigation');
                 <div class="search-input-wrapper">
                     <input type="text" id="time-entry-search" class="search-input"
                         placeholder="<?php p($l->t('Search descriptions, projects, or customers...')); ?>"
-                        value="<?php p($filters['search'] ?? ''); ?>">
+                        value="<?php p($filters['search'] ?? ''); ?>"
+                        aria-label="<?php p($l->t('Search descriptions, projects, or customers')); ?>"
+                        autocomplete="off">
                     <span class="search-icon" aria-hidden="true">🔍</span>
                 </div>
 
@@ -649,8 +651,9 @@ Util::addStyle('projectcheck', 'navigation');
                                     <td>
                                         <div class="action-items">
                                             <a href="<?php p(str_replace('ENTRY_ID', $timeEntry->getId(), $_['showUrl'] ?? '/index.php/apps/projectcheck/time-entries/')); ?>"
-                                                class="action-item" title="<?php p($l->t('View Details')); ?>">
-                                                <span class="icon icon-details"></span>
+                                                class="action-item" title="<?php p($l->t('View Details')); ?>"
+                                                aria-label="<?php p($l->t('View time entry details')); ?>">
+                                                <span class="icon icon-details" aria-hidden="true"></span>
                                             </a>
                                             <?php if ($timeEntry->getUserId() === $_['userId']): ?>
                                                 <a href="<?php p(str_replace('ENTRY_ID', $timeEntry->getId(), $_['editUrl'] ?? '/index.php/apps/projectcheck/time-entries/edit/')); ?>"

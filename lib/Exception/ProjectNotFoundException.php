@@ -26,7 +26,7 @@ class ProjectNotFoundException extends Exception
 	 * @param int $code Error code
 	 * @param Exception|null $previous Previous exception
 	 */
-	public function __construct(int $projectId, string $message = '', int $code = 0, Exception $previous = null)
+	public function __construct(int $projectId, string $message = '', int $code = 0, ?Exception $previous = null)
 	{
 		if (empty($message)) {
 			$message = "Project with ID {$projectId} not found";

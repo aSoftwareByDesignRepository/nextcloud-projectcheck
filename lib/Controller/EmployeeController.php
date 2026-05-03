@@ -338,7 +338,7 @@ class EmployeeController extends Controller
 				'message' => $this->l->t('Team member added successfully'),
 			]);
 		} catch (\Exception $e) {
-			return new JSONResponse(['error' => $e->getMessage()], 400);
+			return new JSONResponse(['error' => $this->l->t('Could not assign employee to project.')], 400);
 		}
 	}
 
@@ -367,7 +367,7 @@ class EmployeeController extends Controller
 				'message' => $this->l->t('Team member removed successfully'),
 			]);
 		} catch (\Exception $e) {
-			return new JSONResponse(['error' => $e->getMessage()], 400);
+			return new JSONResponse(['error' => $this->l->t('Could not remove employee from project.')], 400);
 		}
 	}
 

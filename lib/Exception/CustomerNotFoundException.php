@@ -26,7 +26,7 @@ class CustomerNotFoundException extends Exception
 	 * @param int $code Error code
 	 * @param Exception|null $previous Previous exception
 	 */
-	public function __construct(int $customerId, string $message = '', int $code = 0, Exception $previous = null)
+	public function __construct(int $customerId, string $message = '', int $code = 0, ?Exception $previous = null)
 	{
 		if (empty($message)) {
 			$message = "Customer with ID {$customerId} not found";

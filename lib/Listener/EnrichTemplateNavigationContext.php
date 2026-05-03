@@ -15,6 +15,7 @@ namespace OCA\ProjectCheck\Listener;
 use OCA\ProjectCheck\AppInfo\Application;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\JsL10nCatalogBuilder;
+use OCA\ProjectCheck\Service\LocaleFormatService;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\EventDispatcher\Event;
@@ -33,6 +34,7 @@ class EnrichTemplateNavigationContext implements IEventListener
 		private AccessControlService $accessControl,
 		private IURLGenerator $urlGenerator,
 		private JsL10nCatalogBuilder $jsL10nCatalogBuilder,
+		private LocaleFormatService $localeFormat,
 	) {
 	}
 
@@ -66,6 +68,9 @@ class EnrichTemplateNavigationContext implements IEventListener
 		$params['canManageOrg'] = $canManageOrganization; // backward compatibility for existing templates
 		$params['orgAppSettingsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
 		$params['jsL10n'] = $this->jsL10nCatalogBuilder->buildForApp();
+		// Locale-aware server-side formatting bridge (audit ref. AUDIT-FINDINGS B10/H28).
+		$params['fmt'] = $this->localeFormat;
+		$params['orgCurrency'] = $this->localeFormat->getCurrency();
 		$response->setParams($params);
 	}
 }

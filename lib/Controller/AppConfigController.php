@@ -15,6 +15,7 @@ use JsonException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -73,9 +74,14 @@ class AppConfigController extends Controller
 
 	/**
 	 * Autocomplete: Nextcloud user accounts. Restricted to users who may edit org policy (avoids unauthenticated search).
+	 *
+	 * Rate-limited because autocomplete fan-out can be used to enumerate
+	 * the user directory; the cap is generous enough for live typing
+	 * (>= 1/sec) but stops scripted enumeration.
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function searchUsers(): JSONResponse
 	{
 		$auth = $this->orgSearchAuthResponse();
@@ -116,9 +122,12 @@ class AppConfigController extends Controller
 
 	/**
 	 * Autocomplete: Nextcloud groups (GID + display name).
+	 *
+	 * Rate-limited; same enumeration rationale as `searchUsers`.
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function searchGroups(): JSONResponse
 	{
 		$auth = $this->orgSearchAuthResponse();
@@ -209,8 +218,12 @@ class AppConfigController extends Controller
 	/**
 	 * Save organization settings (CSRF required).
 	 * Accepts form POST (application/x-www-form-urlencoded) or JSON with the same field names.
+	 *
+	 * Rate-limited because each save triggers config writes and audit events;
+	 * the cap is well above any human interaction rate but blocks bursts.
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
 	public function savePolicy(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -312,6 +325,122 @@ class AppConfigController extends Controller
 			'message' => $l->t('Settings saved'),
 			'state' => $this->accessControl->getPolicyState(),
 		]);
+	}
+
+	/**
+	 * Save the current user's personal ProjectCheck preferences.
+	 *
+	 * Only fields that are actually consumed elsewhere in the app are accepted
+	 * and persisted as user values. Anything else is silently ignored to avoid
+	 * giving the impression that a setting has an effect when it does not.
+	 *
+	 * Mutating endpoint: CSRF protection is provided by Nextcloud automatically
+	 * (no `#[NoCSRFRequired]`); the client must send `requesttoken`.
+	 */
+	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
+	public function savePersonalPreferences(): JSONResponse
+	{
+		$user = $this->userSession->getUser();
+		$l = $this->l10nFactory->get('projectcheck');
+		if ($user === null) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => 'unauthorized',
+				'message' => $l->t('You are not signed in.'),
+			], 401);
+		}
+		$uid = $user->getUID();
+		if (!$this->accessControl->canUseApp($uid)) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => 'forbidden',
+				'message' => $l->t('You do not have access to ProjectCheck.'),
+			], 403);
+		}
+
+		try {
+			$payload = $this->getPayload();
+		} catch (JsonException) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => 'invalid_json',
+				'message' => $l->t('Could not read your settings.'),
+			], 400);
+		}
+
+		$errors = [];
+
+		$warning = null;
+		if (array_key_exists('budget_warning_threshold', $payload)) {
+			$raw = (string) $payload['budget_warning_threshold'];
+			if ($raw === '' || !preg_match('/^\d{1,3}$/', $raw)) {
+				$errors['budget_warning_threshold'] = $l->t('Enter a whole number between 0 and 100.');
+			} else {
+				$warning = (int) $raw;
+				if ($warning < 0 || $warning > 100) {
+					$errors['budget_warning_threshold'] = $l->t('Enter a whole number between 0 and 100.');
+					$warning = null;
+				}
+			}
+		}
+
+		$critical = null;
+		if (array_key_exists('budget_critical_threshold', $payload)) {
+			$raw = (string) $payload['budget_critical_threshold'];
+			if ($raw === '' || !preg_match('/^\d{1,3}$/', $raw)) {
+				$errors['budget_critical_threshold'] = $l->t('Enter a whole number between 0 and 100.');
+			} else {
+				$critical = (int) $raw;
+				if ($critical < 0 || $critical > 100) {
+					$errors['budget_critical_threshold'] = $l->t('Enter a whole number between 0 and 100.');
+					$critical = null;
+				}
+			}
+		}
+
+		// Cross-field check: warning must be strictly less than critical when both are valid integers.
+		if ($warning !== null && $critical !== null && $warning >= $critical) {
+			$errors['budget_warning_threshold'] = $l->t('The warning threshold must be lower than the critical threshold.');
+			$errors['budget_critical_threshold'] = $l->t('The critical threshold must be higher than the warning threshold.');
+		}
+
+		if ($errors !== []) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => 'validation',
+				'message' => $l->t('Please correct the highlighted fields.'),
+				'fieldErrors' => $errors,
+			], 400);
+		}
+
+		try {
+			if ($warning !== null) {
+				$this->config->setUserValue($uid, 'projectcheck', 'budget_warning_threshold', (string) $warning);
+			}
+			if ($critical !== null) {
+				$this->config->setUserValue($uid, 'projectcheck', 'budget_critical_threshold', (string) $critical);
+			}
+		} catch (\Throwable $e) {
+			$this->logger->error('projectcheck personal preferences save failed', [
+				'exception' => $e,
+				'userId' => $uid,
+			]);
+			return new JSONResponse([
+				'success' => false,
+				'error' => 'server',
+				'message' => $l->t('We could not save your settings. Please try again.'),
+			], 500);
+		}
+
+		return new JSONResponse([
+			'success' => true,
+			'message' => $l->t('Your preferences were saved.'),
+			'state' => [
+				'budget_warning_threshold' => (string) $this->config->getUserValue($uid, 'projectcheck', 'budget_warning_threshold', '80'),
+				'budget_critical_threshold' => (string) $this->config->getUserValue($uid, 'projectcheck', 'budget_critical_threshold', '90'),
+			],
+		], 200);
 	}
 
 	/**

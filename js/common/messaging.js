@@ -368,48 +368,60 @@ const ProjectControlMessaging = {
   },
 
   /**
-   * Open modal
+   * Open modal.
+   *
+   * Focus management, ESC, backdrop dismissal and focus restoration are
+   * delegated to {@link window.ProjectCheckModalA11y} so every modal in the
+   * app shares one accessible behavior (audit ref. C13 / D17).
    */
   openModal(modal) {
-    // Create backdrop
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
     backdrop.setAttribute('aria-hidden', 'true');
 
-    // Move modal to backdrop
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
 
-    // Show modal
     backdrop.style.display = 'flex';
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
 
-    // Lock body scroll
     if (window.ProjectCheckLayout || window.ProjectControlLayout) {
       (window.ProjectCheckLayout || window.ProjectControlLayout).lockBodyScroll();
     }
 
-    // Focus first focusable element
-    this.focusFirstElement(modal);
+    const self = this;
+    if (window.ProjectCheckModalA11y) {
+      window.ProjectCheckModalA11y.attach(modal, {
+        dismissOnEscape: true,
+        dismissOnBackdrop: true,
+        restoreFocus: true,
+        onDismiss: function () {
+          self.closeModal(modal);
+        },
+      });
+    } else {
+      this.focusFirstElement(modal);
+    }
   },
 
   /**
-   * Close modal
+   * Close modal.
    */
   closeModal(modal) {
     const backdrop = modal.closest('.modal-backdrop');
     if (!backdrop) return;
 
-    // Hide modal
+    if (window.ProjectCheckModalA11y) {
+      window.ProjectCheckModalA11y.detach(modal, { reason: 'programmatic' });
+    }
+
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
     backdrop.style.display = 'none';
 
-    // Remove backdrop
     backdrop.remove();
 
-    // Unlock body scroll
     if (window.ProjectCheckLayout || window.ProjectControlLayout) {
       (window.ProjectCheckLayout || window.ProjectControlLayout).unlockBodyScroll();
     }

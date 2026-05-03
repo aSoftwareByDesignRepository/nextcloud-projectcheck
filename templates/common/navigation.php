@@ -8,10 +8,20 @@
  */
 
 \OCP\Util::addStyle('projectcheck', 'common/feedback-system');
+// Centralized locale-aware formatting (number/currency/date). Must load before any
+// page module that calls window.ProjectCheckFormat (audit ref. AUDIT-FINDINGS B10/H28).
+// Registered first so the script bucket exists; pc-l10n is then prepended so it still loads first.
+\OCP\Util::addScript('projectcheck', 'common/format');
 // Patch window.t before other app scripts; keep first in the projectcheck bundle (prepend list).
 \OCP\Util::addScript('projectcheck', 'pc-l10n', 'core', true);
+// Shared modal accessibility helper (focus trap, Escape, backdrop, restore focus).
+// Must load before messaging/components so every openModal call gets the trap.
+\OCP\Util::addScript('projectcheck', 'common/modal-a11y');
 // SVG icon injection: external app script (CSP via Nextcloud app resource pipeline, not inline).
 \OCP\Util::addScript('projectcheck', 'navigation-icons');
+// Centralised icon catalog and hydration (audit ref. AUDIT-FINDINGS H22/icon-dedup).
+// Replaces six duplicated inline svgIcons blocks across page templates.
+\OCP\Util::addScript('projectcheck', 'common/icons');
 
 // Get current page to highlight active navigation item
 $currentPage = $_SERVER['REQUEST_URI'] ?? '';
@@ -41,17 +51,18 @@ $projectCount = is_numeric($projectCount) ? (int)$projectCount : 0;
 $customerCount = is_numeric($customerCount) ? (int)$customerCount : 0;
 $timeEntryCount = is_numeric($timeEntryCount) ? (int)$timeEntryCount : 0;
 
-// If stats are not available, show a loading indicator or default values
+// If stats are not available yet, fall back to explicit zeros.
 if (!isset($_['stats']) || empty($_['stats'])) {
-    $projectCount = '...';
-    $customerCount = '...';
-    $timeEntryCount = '...';
+    $projectCount = 0;
+    $customerCount = 0;
+    $timeEntryCount = 0;
 }
 
 include __DIR__ . '/pc-l10n-bootstrap.php';
 ?>
 
-<div id="app-navigation" role="navigation">
+<div id="app-navigation" role="navigation" aria-label="<?php p($l->t('ProjectCheck primary navigation')); ?>">
+    <a class="skip-link" href="#app-content"><?php p($l->t('Skip to main content')); ?></a>
     <!-- Sidebar Header -->
     <div class="sidebar-header">
         <div class="app-brand">
@@ -66,41 +77,41 @@ include __DIR__ . '/pc-l10n-bootstrap.php';
     </div>
 
     <!-- Navigation Menu -->
-    <ul class="nav-menu">
-        <li class="<?php echo $isDashboard ? 'active' : ''; ?>" <?php echo $isDashboard ? 'aria-current="page"' : ''; ?>>
-            <a href="<?php p($_['dashboardUrl'] ?? '/index.php/apps/projectcheck/dashboard'); ?>">
-                <i data-lucide="home" class="lucide-icon"></i>
+    <ul class="nav-menu" aria-label="<?php p($l->t('Main sections')); ?>">
+        <li class="<?php echo $isDashboard ? 'active' : ''; ?>">
+            <a href="<?php p($_['dashboardUrl'] ?? '/index.php/apps/projectcheck/dashboard'); ?>" <?php echo $isDashboard ? 'aria-current="page"' : ''; ?>>
+                <i data-lucide="home" class="lucide-icon" aria-hidden="true"></i>
                 <span><?php p($l->t('Dashboard')); ?></span>
             </a>
         </li>
-        <li class="<?php echo $isTimeEntries ? 'active' : ''; ?>" <?php echo $isTimeEntries ? 'aria-current="page"' : ''; ?>>
-            <a href="<?php p($_['timeEntriesUrl'] ?? '/index.php/apps/projectcheck/time-entries'); ?>">
-                <i data-lucide="clock" class="lucide-icon"></i>
+        <li class="<?php echo $isTimeEntries ? 'active' : ''; ?>">
+            <a href="<?php p($_['timeEntriesUrl'] ?? '/index.php/apps/projectcheck/time-entries'); ?>" <?php echo $isTimeEntries ? 'aria-current="page"' : ''; ?>>
+                <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
                 <span><?php p($l->t('Time Entries')); ?></span>
             </a>
         </li>
-        <li class="<?php echo $isProjects ? 'active' : ''; ?>" <?php echo $isProjects ? 'aria-current="page"' : ''; ?>>
-            <a href="<?php p($_['projectsUrl'] ?? '/index.php/apps/projectcheck/projects'); ?>">
-                <i data-lucide="folder" class="lucide-icon"></i>
+        <li class="<?php echo $isProjects ? 'active' : ''; ?>">
+            <a href="<?php p($_['projectsUrl'] ?? '/index.php/apps/projectcheck/projects'); ?>" <?php echo $isProjects ? 'aria-current="page"' : ''; ?>>
+                <i data-lucide="folder" class="lucide-icon" aria-hidden="true"></i>
                 <span><?php p($l->t('Projects')); ?></span>
             </a>
         </li>
-        <li class="<?php echo $isCustomers ? 'active' : ''; ?>" <?php echo $isCustomers ? 'aria-current="page"' : ''; ?>>
-            <a href="<?php p($_['customersUrl'] ?? '/index.php/apps/projectcheck/customers'); ?>">
-                <i data-lucide="users" class="lucide-icon"></i>
+        <li class="<?php echo $isCustomers ? 'active' : ''; ?>">
+            <a href="<?php p($_['customersUrl'] ?? '/index.php/apps/projectcheck/customers'); ?>" <?php echo $isCustomers ? 'aria-current="page"' : ''; ?>>
+                <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
                 <span><?php p($l->t('Customers')); ?></span>
             </a>
         </li>
-        <li class="<?php echo $isEmployees ? 'active' : ''; ?>" <?php echo $isEmployees ? 'aria-current="page"' : ''; ?>>
-            <a href="<?php p($_['employeesUrl'] ?? '/index.php/apps/projectcheck/employees'); ?>">
-                <i data-lucide="user-check" class="lucide-icon"></i>
+        <li class="<?php echo $isEmployees ? 'active' : ''; ?>">
+            <a href="<?php p($_['employeesUrl'] ?? '/index.php/apps/projectcheck/employees'); ?>" <?php echo $isEmployees ? 'aria-current="page"' : ''; ?>>
+                <i data-lucide="user-check" class="lucide-icon" aria-hidden="true"></i>
                 <span><?php p($l->t('Employees')); ?></span>
             </a>
         </li>
         <?php if ($canAccessSettings) { ?>
-        <li class="<?php echo $isSettings ? 'active' : ''; ?>" <?php echo $isSettings ? 'aria-current="page"' : ''; ?>>
-            <a href="<?php p($_['settingsUrl'] ?? $orgAppSettingsUrl); ?>">
-                <i data-lucide="settings" class="lucide-icon"></i>
+        <li class="<?php echo $isSettings ? 'active' : ''; ?>">
+            <a href="<?php p($_['settingsUrl'] ?? $orgAppSettingsUrl); ?>" <?php echo $isSettings ? 'aria-current="page"' : ''; ?>>
+                <i data-lucide="settings" class="lucide-icon" aria-hidden="true"></i>
                 <span><?php p($l->t('Settings')); ?></span>
             </a>
         </li>

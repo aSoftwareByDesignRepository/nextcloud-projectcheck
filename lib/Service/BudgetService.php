@@ -13,6 +13,7 @@ namespace OCA\ProjectCheck\Service;
 
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
+use OCA\ProjectCheck\Util\Money;
 use OCP\IConfig;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
@@ -20,7 +21,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Class BudgetService
  *
- * @package OCA\ProjectControl\Service
+ * @package OCA\ProjectCheck\Service
  */
 class BudgetService
 {
@@ -39,20 +40,30 @@ class BudgetService
     /** @var IL10N */
     private $l10n;
 
+    /** @var LocaleFormatService */
+    private $localeFormat;
+
     /**
-     * BudgetService constructor
+     * BudgetService constructor.
+     *
+     * Audit ref. AUDIT-FINDINGS B10/H28: budget alert messages are user-visible HTML,
+     * so monetary and percentage values are routed through {@see LocaleFormatService}
+     * (locale + org-currency aware) instead of being hard-coded with the euro glyph
+     * and en_US-style number_format() output.
      */
     public function __construct(
         TimeEntryMapper $timeEntryMapper,
         IConfig $config,
         LoggerInterface $logger,
         IL10N $l10n,
+        LocaleFormatService $localeFormat,
         string $appName
     ) {
         $this->timeEntryMapper = $timeEntryMapper;
         $this->config = $config;
         $this->logger = $logger;
         $this->l10n = $l10n;
+        $this->localeFormat = $localeFormat;
         $this->appName = $appName;
     }
 
@@ -90,29 +101,40 @@ class BudgetService
             ];
         }
 
-        // Calculate remaining values
-        $remainingBudget = max(0, $totalBudget - $usedBudget);
-        $consumptionPercentage = ($usedBudget / $totalBudget) * 100;
+        // Fixed-point math (audit ref. A5): every operation goes through
+        // Money so the displayed totals never drift due to IEEE-754.
+        $remainingBudget = Money::asFloat(Money::sub($totalBudget, $usedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE);
+        if ($remainingBudget < 0) {
+            $remainingBudget = 0.0;
+        }
+        // Bounded percentage: never let display rounding push a 99.999%
+        // value to "100% / exceeded" or vice-versa.
+        $consumptionPercentage = Money::asFloat(
+            Money::percentageBounded($usedBudget, $totalBudget, Money::MONEY_SCALE),
+            Money::MONEY_SCALE
+        );
 
-        // Calculate available and remaining hours
-        $availableHours = $hourlyRate > 0 ? $totalBudget / $hourlyRate : 0;
-        $remainingHours = max(0, $availableHours - $usedHours);
+        $availableHours = $hourlyRate > 0
+            ? Money::asFloat(Money::div($totalBudget, $hourlyRate, Money::HOUR_SCALE), Money::HOUR_SCALE)
+            : 0.0;
+        $remainingHoursVal = Money::asFloat(Money::sub($availableHours, $usedHours, Money::HOUR_SCALE), Money::HOUR_SCALE);
+        if ($remainingHoursVal < 0) {
+            $remainingHoursVal = 0.0;
+        }
 
-        // Determine warning level
         $warningLevel = $this->getWarningLevel($consumptionPercentage, $userId);
-        $isOverBudget = $consumptionPercentage > 100;
+        $isOverBudget = Money::compare($consumptionPercentage, '100', Money::MONEY_SCALE) > 0;
 
-        // Generate alerts if needed
         $alerts = $this->generateBudgetAlerts($project, $consumptionPercentage, $usedBudget, $totalBudget, $userId);
 
         return [
-            'total_budget' => $totalBudget,
-            'used_budget' => $usedBudget,
+            'total_budget' => Money::asFloat(Money::normalize($totalBudget, Money::MONEY_SCALE), Money::MONEY_SCALE),
+            'used_budget' => Money::asFloat(Money::normalize($usedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE),
             'remaining_budget' => $remainingBudget,
-            'consumption_percentage' => round($consumptionPercentage, 2),
-            'available_hours' => round($availableHours, 2),
-            'used_hours' => round($usedHours, 2),
-            'remaining_hours' => round($remainingHours, 2),
+            'consumption_percentage' => $consumptionPercentage,
+            'available_hours' => $availableHours,
+            'used_hours' => Money::asFloat(Money::normalize($usedHours, Money::HOUR_SCALE), Money::HOUR_SCALE),
+            'remaining_hours' => $remainingHoursVal,
             'warning_level' => $warningLevel,
             'is_over_budget' => $isOverBudget,
             'alerts' => $alerts
@@ -173,7 +195,12 @@ class BudgetService
     }
 
     /**
-     * Generate budget alerts for a project
+     * Generate budget alerts for a project.
+     *
+     * Audit ref. AUDIT-FINDINGS B10/H28: the message strings keep neutral
+     * `%s` placeholders (no embedded `€` glyph, no embedded format
+     * specifiers) so translators can reorder them and the values that
+     * fill them are pre-formatted with {@see LocaleFormatService}.
      *
      * @param Project $project
      * @param float $consumptionPercentage
@@ -194,20 +221,27 @@ class BudgetService
         $alertData = [
             'project_id' => $project->getId(),
             'project_name' => $project->getName(),
-            'consumption_percentage' => round($consumptionPercentage, 2),
-            'used_budget' => $usedBudget,
-            'total_budget' => $totalBudget,
-            'remaining_budget' => $totalBudget - $usedBudget,
+            'consumption_percentage' => Money::asFloat(Money::normalize($consumptionPercentage, Money::MONEY_SCALE), Money::MONEY_SCALE),
+            'used_budget' => Money::asFloat(Money::normalize($usedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE),
+            'total_budget' => Money::asFloat(Money::normalize($totalBudget, Money::MONEY_SCALE), Money::MONEY_SCALE),
+            'remaining_budget' => Money::asFloat(Money::sub($totalBudget, $usedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE),
             'level' => $warningLevel
         ];
+
+        $overBudgetAmount = Money::asFloat(Money::sub($usedBudget, $totalBudget, Money::MONEY_SCALE), Money::MONEY_SCALE);
+        $overBudgetPercentage = Money::asFloat(Money::sub($consumptionPercentage, '100', Money::MONEY_SCALE), Money::MONEY_SCALE);
 
         if ($consumptionPercentage >= 100) {
             $alerts[] = array_merge($alertData, [
                 'type' => 'budget_exceeded',
                 'title' => $this->l10n->t('Budget Exceeded'),
                 'message' => $this->l10n->t(
-                    'Project "%s" has exceeded its budget by €%.2f (%.1f%% over)',
-                    [$project->getName(), $usedBudget - $totalBudget, $consumptionPercentage - 100]
+                    'Project "%1$s" has exceeded its budget by %2$s (%3$s over)',
+                    [
+                        $project->getName(),
+                        $this->localeFormat->currency($overBudgetAmount),
+                        $this->localeFormat->percent($overBudgetPercentage, 1),
+                    ]
                 )
             ]);
         } elseif ($warningLevel === 'critical') {
@@ -215,8 +249,11 @@ class BudgetService
                 'type' => 'budget_critical',
                 'title' => $this->l10n->t('Budget Critical'),
                 'message' => $this->l10n->t(
-                    'Project "%s" is approaching budget limit (%.1f%% used)',
-                    [$project->getName(), $consumptionPercentage]
+                    'Project "%1$s" is approaching budget limit (%2$s used)',
+                    [
+                        $project->getName(),
+                        $this->localeFormat->percent($consumptionPercentage, 1),
+                    ]
                 )
             ]);
         } elseif ($warningLevel === 'warning') {
@@ -224,8 +261,11 @@ class BudgetService
                 'type' => 'budget_warning',
                 'title' => $this->l10n->t('Budget Warning'),
                 'message' => $this->l10n->t(
-                    'Project "%s" budget consumption is at %.1f%%',
-                    [$project->getName(), $consumptionPercentage]
+                    'Project "%1$s" budget consumption is at %2$s',
+                    [
+                        $project->getName(),
+                        $this->localeFormat->percent($consumptionPercentage, 1),
+                    ]
                 )
             ]);
         }
@@ -278,30 +318,34 @@ class BudgetService
     public function checkTimeEntryBudgetImpact(Project $project, float $additionalHours, float $additionalRate): array
     {
         $budgetInfo = $this->getProjectBudgetInfo($project);
-        $additionalCost = $additionalHours * $additionalRate;
+        $additionalCostFloat = Money::asFloat(Money::mul($additionalHours, $additionalRate, Money::MONEY_SCALE), Money::MONEY_SCALE);
 
         if ($budgetInfo['total_budget'] <= 0) {
             return [
                 'has_budget' => false,
                 'current_consumption' => 0,
                 'new_consumption' => 0,
-                'additional_cost' => $additionalCost,
+                'additional_cost' => $additionalCostFloat,
                 'remaining_budget_after' => 0,
                 'would_exceed_budget' => false,
                 'warning_level_after' => 'none'
             ];
         }
 
-        $newUsedBudget = $budgetInfo['used_budget'] + $additionalCost;
-        $newConsumptionPercentage = ($newUsedBudget / $budgetInfo['total_budget']) * 100;
+        $newUsedBudget = Money::add($budgetInfo['used_budget'], $additionalCostFloat, Money::MONEY_SCALE);
+        $newConsumptionPercentage = Money::asFloat(
+            Money::percentageBounded($newUsedBudget, $budgetInfo['total_budget'], Money::MONEY_SCALE),
+            Money::MONEY_SCALE
+        );
+        $remainingAfter = Money::asFloat(Money::sub($budgetInfo['total_budget'], $newUsedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE);
 
         return [
             'has_budget' => true,
             'current_consumption' => $budgetInfo['consumption_percentage'],
-            'new_consumption' => round($newConsumptionPercentage, 2),
-            'additional_cost' => $additionalCost,
-            'remaining_budget_after' => $budgetInfo['total_budget'] - $newUsedBudget,
-            'would_exceed_budget' => $newConsumptionPercentage > 100,
+            'new_consumption' => $newConsumptionPercentage,
+            'additional_cost' => $additionalCostFloat,
+            'remaining_budget_after' => $remainingAfter,
+            'would_exceed_budget' => Money::compare($newConsumptionPercentage, '100', Money::MONEY_SCALE) > 0,
             'warning_level_after' => $this->getWarningLevel($newConsumptionPercentage)
         ];
     }

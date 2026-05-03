@@ -77,47 +77,33 @@ class TimeEntry extends Entity
 	}
 
 	/**
-	 * Calculate the cost for this time entry
+	 * Calculate the cost for this time entry.
+	 *
+	 * Uses fixed-point math so totals are not subject to IEEE-754 drift
+	 * when summed in PHP (audit ref. A5). The DB-side aggregations remain
+	 * authoritative; this helper only feeds UI / single-row display.
 	 *
 	 * @return float
 	 */
 	public function getCost()
 	{
-		return $this->getHours() * $this->getHourlyRate();
+		return \OCA\ProjectCheck\Util\Money::asFloat(
+			\OCA\ProjectCheck\Util\Money::mul(
+				$this->getHours(),
+				$this->getHourlyRate(),
+				\OCA\ProjectCheck\Util\Money::MONEY_SCALE
+			),
+			\OCA\ProjectCheck\Util\Money::MONEY_SCALE
+		);
 	}
 
 	/**
-	 * Get formatted hours
+	 * Get a non-locale-sensitive ISO date string for serialization.
 	 *
-	 * @return string
-	 */
-	public function getFormattedHours()
-	{
-		return number_format($this->getHours(), 2);
-	}
-
-	/**
-	 * Get formatted cost
-	 *
-	 * @return string
-	 */
-	public function getFormattedCost()
-	{
-		return '€' . number_format($this->getCost(), 2);
-	}
-
-	/**
-	 * Get formatted hourly rate
-	 *
-	 * @return string
-	 */
-	public function getFormattedHourlyRate()
-	{
-		return '€' . number_format($this->getHourlyRate(), 2);
-	}
-
-	/**
-	 * Get formatted date
+	 * For user-visible display use {@see \OCA\ProjectCheck\Service\LocaleFormatService::date()}
+	 * (server-side) or `ProjectCheckFormat.dateFmt` (client-side); this helper
+	 * intentionally returns an ISO-8601 date so JSON payloads stay
+	 * machine-parseable across locales (audit ref. AUDIT-FINDINGS B10/H28).
 	 *
 	 * @return string
 	 */
@@ -127,7 +113,14 @@ class TimeEntry extends Entity
 	}
 
 	/**
-	 * Get time entry summary for display
+	 * Get time entry summary for display.
+	 *
+	 * Note: pre-formatted currency / hour fields are intentionally omitted.
+	 * The locale and currency context belongs in the presentation layer
+	 * (server: {@see \OCA\ProjectCheck\Service\LocaleFormatService};
+	 * client: `js/common/format.js`), so we expose raw numeric values and
+	 * let the caller render them. This avoids leaking the hard-coded
+	 * `€` glyph into JSON payloads (audit ref. AUDIT-FINDINGS B10/H28).
 	 *
 	 * @return array
 	 */
@@ -139,12 +132,9 @@ class TimeEntry extends Entity
 			'userId' => $this->getUserId(),
 			'date' => $this->getFormattedDate(),
 			'hours' => $this->getHours(),
-			'formattedHours' => $this->getFormattedHours(),
 			'description' => $this->getDescription(),
 			'hourlyRate' => $this->getHourlyRate(),
-			'formattedHourlyRate' => $this->getFormattedHourlyRate(),
 			'cost' => $this->getCost(),
-			'formattedCost' => $this->getFormattedCost(),
 			'createdAt' => $this->getCreatedAt()->format('Y-m-d H:i:s'),
 			'updatedAt' => $this->getUpdatedAt()->format('Y-m-d H:i:s')
 		];

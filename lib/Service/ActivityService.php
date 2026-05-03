@@ -59,6 +59,44 @@ class ActivityService
     }
 
     /**
+     * Log project workflow status change (audit / activity stream).
+     *
+     * @param string $userId Acting user
+     * @param Project $project Project after the status update
+     * @param string $previousStatus Prior workflow status
+     * @param string $newStatus New workflow status (must match persisted value)
+     * @param string|null $note Optional user note (plain text, already bounded by caller)
+     */
+    public function logProjectStatusChanged(
+        string $userId,
+        Project $project,
+        string $previousStatus,
+        string $newStatus,
+        ?string $note = null
+    ): void {
+        $event = $this->activityManager->generateEvent();
+        $event->setApp('projectcheck')
+            ->setType('projectcheck')
+            ->setAuthor($userId)
+            ->setObject('project', $project->getId(), $project->getName())
+            ->setSubject('project_status_changed', [
+                'actor' => $userId,
+                'project' => $project->getName(),
+                'project_id' => $project->getId(),
+                'status' => $newStatus,
+                'previous_status' => $previousStatus,
+            ]);
+
+        if ($note !== null && $note !== '') {
+            $event->setMessage('status_change_note', [
+                'note' => $note,
+            ]);
+        }
+
+        $this->activityManager->publish($event);
+    }
+
+    /**
      * Log customer deletion
      *
      * @param string $userId

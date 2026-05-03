@@ -14,6 +14,7 @@ namespace OCA\ProjectCheck\Controller;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -99,7 +100,7 @@ class CustomerController extends Controller
 			return new JSONResponse(['success' => true, 'impact' => $impact]);
 		} catch (\Exception $e) {
 			$this->logger->error('Customer deletion impact failed', ['exception' => $e, 'customerId' => $id]);
-			return new JSONResponse(['success' => false, 'error' => $e->getMessage()], 400);
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Could not load deletion impact.')], 400);
 		}
 	}
 
@@ -286,10 +287,13 @@ class CustomerController extends Controller
 	/**
 	 * Store new customer
 	 *
+	 * Mutating endpoint — Nextcloud verifies the `requesttoken` header automatically
+	 * because the method is NOT annotated with NoCSRFRequired. The frontend
+	 * (customer-form.js) sends this header on every POST.
+	 *
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function store(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -324,7 +328,7 @@ class CustomerController extends Controller
 		} catch (\Exception $e) {
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not create customer. Please check your input.')
 			], 400);
 		}
 	}
@@ -454,11 +458,14 @@ class CustomerController extends Controller
 	/**
 	 * Update customer
 	 *
+	 * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+	 * `requesttoken` verification. The frontend forms include the token as
+	 * a hidden input and as a header on AJAX calls.
+	 *
 	 * @param int $id Customer ID
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function update($id)
 	{
 		$user = $this->userSession->getUser();
@@ -506,7 +513,7 @@ class CustomerController extends Controller
 		} catch (\Exception $e) {
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not update customer. Please check your input.')
 			], 400);
 		}
 	}
@@ -514,11 +521,14 @@ class CustomerController extends Controller
 	/**
 	 * Delete customer
 	 *
+	 * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+	 * `requesttoken` verification. The deletion modal sends the token as
+	 * a header and as a query parameter for DELETE requests.
+	 *
 	 * @param int $id Customer ID
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function delete(int $id): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -577,7 +587,7 @@ class CustomerController extends Controller
 
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not delete customer.')
 			], 400);
 		}
 	}
@@ -585,11 +595,13 @@ class CustomerController extends Controller
 	/**
 	 * Update customer via POST (for HTML forms)
 	 *
+	 * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+	 * `requesttoken` verification (form hidden input).
+	 *
 	 * @param int $id Customer ID
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function updatePost(int $id): JSONResponse
 	{
 		// Delegate to the update method
@@ -599,11 +611,13 @@ class CustomerController extends Controller
 	/**
 	 * Delete customer via POST (for HTML forms)
 	 *
+	 * Mutating endpoint — CSRF is enforced via Nextcloud's automatic
+	 * `requesttoken` verification (sent as form field by the deletion modal).
+	 *
 	 * @param int $id Customer ID
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	#[NoCSRFRequired]
 	public function deletePost(int $id): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -639,7 +653,7 @@ class CustomerController extends Controller
 
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not delete customer.')
 			], 400);
 		}
 	}
@@ -651,6 +665,7 @@ class CustomerController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function search(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -758,7 +773,7 @@ class CustomerController extends Controller
 			$this->logger->error('Customer analytics failed', ['exception' => $e]);
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage()
+				'error' => $this->l->t('Could not load analytics data.')
 			], 500);
 		}
 	}

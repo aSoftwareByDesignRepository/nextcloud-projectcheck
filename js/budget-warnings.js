@@ -10,10 +10,19 @@
 	'use strict';
 
 	/**
-	 * @param {number} value
+	 * Format a value as locale-aware currency. Audit ref. AUDIT-FINDINGS B10:
+	 * delegate to {@link window.ProjectCheckFormat} so the org-configured
+	 * currency code drives the display. The previous hard-coded EUR fallback
+	 * is retained only when the formatter has not loaded yet (e.g. during a
+	 * very early script evaluation race) so the call site never throws.
+	 *
+	 * @param {number|string} value
 	 * @returns {string}
 	 */
 	function formatEur(value) {
+		if (window.ProjectCheckFormat) {
+			return window.ProjectCheckFormat.currencyFmt(value);
+		}
 		const n = parseFloat(String(value));
 		if (isNaN(n) || !isFinite(n)) {
 			return '—';
@@ -24,7 +33,7 @@
 		try {
 			return new Intl.NumberFormat(loc, { style: 'currency', currency: 'EUR' }).format(n);
 		} catch (e) {
-			return '€' + n.toFixed(2);
+			return 'EUR ' + n.toFixed(2);
 		}
 	}
 
@@ -122,10 +131,17 @@
 	}
 
 	/**
-	 * @param {number} value
+	 * Format a percentage in the user's locale. Audit ref. AUDIT-FINDINGS B10:
+	 * delegate to the central formatter; the inlined `Intl.NumberFormat` block
+	 * remains only as a defensive fallback for the boot-order edge case.
+	 *
+	 * @param {number|string} value
 	 * @returns {string}
 	 */
 	function formatPercent(value) {
+		if (window.ProjectCheckFormat) {
+			return window.ProjectCheckFormat.percent(value, 1);
+		}
 		const n = parseFloat(String(value));
 		if (isNaN(n) || !isFinite(n)) {
 			return '—';

@@ -12,7 +12,6 @@ module.exports = (env, argv) => {
         entry: {
             projects: './js/projects.js',
             dashboard: './js/dashboard.js',
-            settings: './js/settings.js',
             customers: './js/customers.js',
             'customer-form': './js/customer-form.js',
             'customer-detail': './js/customer-detail.js',

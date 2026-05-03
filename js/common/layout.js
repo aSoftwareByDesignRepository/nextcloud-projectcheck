@@ -74,8 +74,8 @@ const ProjectControlLayout = {
     document.body.className = document.body.className.replace(/breakpoint-\w+/g, '');
     document.body.classList.add(`breakpoint-${breakpoint}`);
     
-    // Dispatch custom event
-    window.dispatchEvent(new CustomEvent('breakpoint-change', {
+    // Dispatch app-scoped custom event
+    window.dispatchEvent(new CustomEvent('projectcheck:breakpoint-change', {
       detail: { breakpoint }
     }));
     
@@ -96,8 +96,8 @@ const ProjectControlLayout = {
     window.addEventListener('scroll', () => {
       clearTimeout(scrollTimeout);
       
-      // Dispatch scroll event
-      window.dispatchEvent(new CustomEvent('scroll', {
+      // Dispatch app-scoped custom event (avoid re-firing native "scroll")
+      window.dispatchEvent(new CustomEvent('projectcheck:scroll', {
         detail: { 
           scrollY: window.scrollY,
           scrollX: window.scrollX 
@@ -109,7 +109,7 @@ const ProjectControlLayout = {
       
       // Debounced scroll end event
       scrollTimeout = setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('scroll-end'));
+        window.dispatchEvent(new CustomEvent('projectcheck:scroll-end'));
       }, 150);
     });
   },
@@ -167,8 +167,8 @@ const ProjectControlLayout = {
     document.documentElement.style.setProperty('--viewport-width', `${width}px`);
     document.documentElement.style.setProperty('--viewport-height', `${height}px`);
     
-    // Dispatch resize event
-    window.dispatchEvent(new CustomEvent('resize', {
+    // Dispatch app-scoped custom event (avoid re-firing native "resize")
+    window.dispatchEvent(new CustomEvent('projectcheck:resize', {
       detail: { width, height }
     }));
     

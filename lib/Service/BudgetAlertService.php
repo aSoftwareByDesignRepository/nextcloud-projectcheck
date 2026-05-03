@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Service;
 
 use OCP\IConfig;
+use OCP\IL10N;
 use OCP\IUserSession;
 use OCP\Notification\IManager as NotificationManager;
 use OCP\IUserManager;
@@ -43,6 +44,12 @@ class BudgetAlertService
     /** @var TimeEntryService */
     private $timeEntryService;
 
+    /** @var IL10N */
+    private $l10n;
+
+    /** @var LocaleFormatService */
+    private $localeFormat;
+
     /** @var string */
     private $appName = 'projectcheck';
 
@@ -56,6 +63,8 @@ class BudgetAlertService
      * @param LoggerInterface $logger
      * @param ProjectService $projectService
      * @param TimeEntryService $timeEntryService
+     * @param IL10N $l10n
+     * @param LocaleFormatService $localeFormat
      */
     public function __construct(
         IConfig $config,
@@ -64,7 +73,9 @@ class BudgetAlertService
         IUserManager $userManager,
         LoggerInterface $logger,
         ProjectService $projectService,
-        TimeEntryService $timeEntryService
+        TimeEntryService $timeEntryService,
+        IL10N $l10n,
+        LocaleFormatService $localeFormat
     ) {
         $this->config = $config;
         $this->userSession = $userSession;
@@ -73,6 +84,8 @@ class BudgetAlertService
         $this->logger = $logger;
         $this->projectService = $projectService;
         $this->timeEntryService = $timeEntryService;
+        $this->l10n = $l10n;
+        $this->localeFormat = $localeFormat;
     }
 
     /**
@@ -198,12 +211,12 @@ class BudgetAlertService
             'budget' => $budget,
             'percentage_used' => $percentageUsed,
             'remaining_budget' => $budget - $spentAmount,
-            'message' => sprintf(
-                'Project "%s" has used %.1f%% of its budget (€%.2f of €%.2f)',
-                $project->getName(),
-                $percentageUsed,
-                $spentAmount,
-                $budget
+            'message' => $this->l10n->t(
+                'Project "%1$s" budget consumption is at %2$s',
+                [
+                    $project->getName(),
+                    $this->localeFormat->percent((float)$percentageUsed, 1),
+                ]
             )
         ];
     }
@@ -227,12 +240,12 @@ class BudgetAlertService
             'budget' => $budget,
             'percentage_used' => $percentageUsed,
             'remaining_budget' => $budget - $spentAmount,
-            'message' => sprintf(
-                'Project "%s" has used %.1f%% of its budget (€%.2f of €%.2f) - CRITICAL!',
-                $project->getName(),
-                $percentageUsed,
-                $spentAmount,
-                $budget
+            'message' => $this->l10n->t(
+                'Project "%1$s" is approaching budget limit (%2$s used)',
+                [
+                    $project->getName(),
+                    $this->localeFormat->percent((float)$percentageUsed, 1),
+                ]
             )
         ];
     }
@@ -256,11 +269,13 @@ class BudgetAlertService
             'budget' => $budget,
             'percentage_used' => $percentageUsed,
             'remaining_budget' => $budget - $spentAmount,
-            'message' => sprintf(
-                'Project "%s" has EXCEEDED its budget by €%.2f (%.1f%% used)',
-                $project->getName(),
-                $spentAmount - $budget,
-                $percentageUsed
+            'message' => $this->l10n->t(
+                'Project "%1$s" has exceeded its budget by %2$s (%3$s over)',
+                [
+                    $project->getName(),
+                    $this->localeFormat->currency((float)($spentAmount - $budget)),
+                    $this->localeFormat->percent((float)($percentageUsed - 100), 1),
+                ]
             )
         ];
     }
