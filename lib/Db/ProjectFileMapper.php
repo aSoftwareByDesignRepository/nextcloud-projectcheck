@@ -18,7 +18,7 @@ class ProjectFileMapper extends QBMapper
 {
 	public function __construct(IDBConnection $db)
 	{
-		parent::__construct($db, 'project_files', ProjectFile::class);
+		parent::__construct($db, 'pc_project_files', ProjectFile::class);
 	}
 
 	/**

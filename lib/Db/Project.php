@@ -57,7 +57,7 @@ use OCP\AppFramework\Db\Entity;
  */
 class Project extends Entity
 {
-	protected $tableName = 'projects';
+	protected $tableName = 'pc_projects';
 	protected $name;
 	protected $shortDescription;
 	protected $detailedDescription;

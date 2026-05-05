@@ -1,0 +1,23 @@
+name: DB Naming On Version Bump
+
+on:
+  push:
+    paths:
+      - "appinfo/info.xml"
+      - "lib/Migration/**"
+      - "scripts/check-db-naming.sh"
+  pull_request:
+    paths:
+      - "appinfo/info.xml"
+      - "lib/Migration/**"
+      - "scripts/check-db-naming.sh"
+
+jobs:
+  naming-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - name: Verify DB naming conventions
+        run: bash scripts/check-db-naming.sh

@@ -62,7 +62,7 @@ class ProjectMemberService
         try {
             $qb = $this->db->getQueryBuilder();
             $qb->select('*')
-                ->from('project_members')
+                ->from('pc_project_members')
                 ->where($qb->expr()->eq('id', $qb->createNamedParameter($id, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
 
             $result = $qb->executeQuery();
@@ -100,7 +100,7 @@ class ProjectMemberService
     {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
-            ->from('project_members')
+            ->from('pc_project_members')
             ->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)))
             ->orderBy('role', 'ASC');
 
@@ -158,12 +158,12 @@ class ProjectMemberService
 
         // Insert into database
         $qb = $this->db->getQueryBuilder();
-        $qb->insert('project_members')
+        $qb->insert('pc_project_members')
             ->values([
                 'project_id' => $qb->createNamedParameter($projectId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT),
                 'user_id' => $qb->createNamedParameter($data['user_id']),
                 'role' => $qb->createNamedParameter($data['role']),
-                'hourly_rate' => $qb->createNamedParameter((float)($data['hourly_rate'] ?? 0), IQueryBuilder::PARAM_FLOAT),
+                'hourly_rate' => $qb->createNamedParameter((string)(float)($data['hourly_rate'] ?? 0)),
                 'assigned_at' => $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')),
                 'assigned_by' => $qb->createNamedParameter($data['assigned_by']),
                 'member_state' => $qb->createNamedParameter(ProjectMember::STATE_ACTIVE),
@@ -171,7 +171,7 @@ class ProjectMemberService
             ]);
 
         $qb->executeStatement();
-        $member->setId((int)$this->db->lastInsertId('project_members'));
+        $member->setId((int)$this->db->lastInsertId('pc_project_members'));
 
         return $member;
     }
@@ -202,7 +202,7 @@ class ProjectMemberService
         try {
             // Delete the member
             $qb = $this->db->getQueryBuilder();
-            $qb->delete('project_members')
+            $qb->delete('pc_project_members')
                 ->where($qb->expr()->eq('id', $qb->createNamedParameter($id, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
             $qb->executeStatement();
 
@@ -249,7 +249,7 @@ class ProjectMemberService
     {
         $qb = $this->db->getQueryBuilder();
         $qb->select('*')
-            ->from('project_members')
+            ->from('pc_project_members')
             ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
             ->andWhere($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
 
@@ -290,7 +290,7 @@ class ProjectMemberService
 
         $qb = $this->db->getQueryBuilder();
         $qb->select($qb->createFunction('COUNT(*)'))
-            ->from('time_entries')
+            ->from('pc_time_entries')
             ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($member->getUserId())))
             ->andWhere($qb->expr()->eq('project_id', $qb->createNamedParameter($member->getProjectId(), \OCP\DB\QueryBuilder\IQueryBuilder::PARAM_INT)));
 

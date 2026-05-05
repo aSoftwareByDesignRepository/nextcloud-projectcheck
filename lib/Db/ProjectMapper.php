@@ -28,7 +28,7 @@ class ProjectMapper extends QBMapper
 	 */
 	public function __construct(IDBConnection $db)
 	{
-		parent::__construct($db, 'projects', Project::class);
+		parent::__construct($db, 'pc_projects', Project::class);
 	}
 
 	/**
@@ -78,7 +78,7 @@ class ProjectMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.*')
 		   ->from($this->getTableName(), 'p')
-		   ->leftJoin('p', 'project_members', 'pm', $qb->expr()->andX(
+		   ->leftJoin('p', 'pc_project_members', 'pm', $qb->expr()->andX(
 			   $qb->expr()->eq('p.id', 'pm.project_id'),
 			   $qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)),
 			   $qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
@@ -125,7 +125,7 @@ class ProjectMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.*')
 		   ->from($this->getTableName(), 'p')
-		   ->leftJoin('p', 'project_members', 'pm', $qb->expr()->andX(
+		   ->leftJoin('p', 'pc_project_members', 'pm', $qb->expr()->andX(
 			   $qb->expr()->eq('p.id', 'pm.project_id'),
 			   $qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)),
 			   $qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
@@ -155,7 +155,7 @@ class ProjectMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('p.id'))
 		   ->from($this->getTableName(), 'p')
-		   ->leftJoin('p', 'project_members', 'pm', $qb->expr()->andX(
+		   ->leftJoin('p', 'pc_project_members', 'pm', $qb->expr()->andX(
 			   $qb->expr()->eq('p.id', 'pm.project_id'),
 			   $qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)),
 			   $qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
@@ -184,7 +184,7 @@ class ProjectMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('p.id'))
 		   ->from($this->getTableName(), 'p')
-		   ->leftJoin('p', 'project_members', 'pm', $qb->expr()->andX(
+		   ->leftJoin('p', 'pc_project_members', 'pm', $qb->expr()->andX(
 			   $qb->expr()->eq('p.id', 'pm.project_id'),
 			   $qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)),
 			   $qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
@@ -213,7 +213,7 @@ class ProjectMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('p.id'))
 			->from($this->getTableName(), 'p')
-			->leftJoin('p', 'customers', 'c', 'p.customer_id = c.id');
+			->leftJoin('p', 'pc_customers', 'c', 'p.customer_id = c.id');
 
 		if (!empty($filters['status'])) {
 			if (is_array($filters['status'])) {
@@ -275,8 +275,8 @@ class ProjectMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.*', 'c.name as customer_name')
 		   ->from($this->getTableName(), 'p')
-		   ->leftJoin('p', 'customers', 'c', 'p.customer_id = c.id')
-		   ->leftJoin('p', 'project_members', 'pm', $qb->expr()->andX(
+		   ->leftJoin('p', 'pc_customers', 'c', 'p.customer_id = c.id')
+		   ->leftJoin('p', 'pc_project_members', 'pm', $qb->expr()->andX(
 			   $qb->expr()->eq('p.id', 'pm.project_id'),
 			   $qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)),
 			   $qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))

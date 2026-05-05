@@ -102,7 +102,7 @@ class ProjectService
 		$ids = [];
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.id')
-			->from('projects', 'p')
+			->from('pc_projects', 'p')
 			->where($qb->expr()->eq('p.created_by', $qb->createNamedParameter($userId)));
 		$rs = $qb->executeQuery();
 		while ($r = $rs->fetch()) {
@@ -111,8 +111,8 @@ class ProjectService
 		$rs->closeCursor();
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p2.id')
-			->from('project_members', 'm')
-			->innerJoin('m', 'projects', 'p2', $qb->expr()->eq('m.project_id', 'p2.id'))
+			->from('pc_project_members', 'm')
+			->innerJoin('m', 'pc_projects', 'p2', $qb->expr()->eq('m.project_id', 'p2.id'))
 			->where($qb->expr()->eq('m.user_id', $qb->createNamedParameter($userId)))
 			->andWhere($this->buildActiveMemberExpression($qb, 'm'));
 		$rs = $qb->executeQuery();
@@ -256,11 +256,11 @@ class ProjectService
 		];
 
 		// Add project_type column if it exists
-		if ($this->columnExists('projects', 'project_type')) {
+		if ($this->columnExists('pc_projects', 'project_type')) {
 			$values['project_type'] = $qb->createNamedParameter($project->getProjectType());
 		}
 
-		$qb->insert('projects')->values($values);
+		$qb->insert('pc_projects')->values($values);
 
 		try {
 			$qb->executeStatement();
@@ -270,14 +270,14 @@ class ProjectService
 				// Remove project_type from the insert and try again
 				unset($values['project_type']);
 				$qb = $this->db->getQueryBuilder();
-				$qb->insert('projects')->values($values);
+				$qb->insert('pc_projects')->values($values);
 				$qb->executeStatement();
 			} else {
 				// Re-throw if it's a different error
 				throw $e;
 			}
 		}
-		$project->setId($this->db->lastInsertId('projects'));
+		$project->setId($this->db->lastInsertId('pc_projects'));
 
 		// Ensure the creator is also stored as an active project member so that
 		// membership-based queries (team lists, scoped stats, etc.) treat them as
@@ -306,8 +306,8 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.*', 'c.name as customer_name')
-			->from('projects', 'p')
-			->leftJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
+			->from('pc_projects', 'p')
+			->leftJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
 			->where($qb->expr()->eq('p.id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 
 		$result = $qb->executeQuery();
@@ -331,8 +331,8 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.*', 'c.name as customer_name')
-			->from('projects', 'p')
-			->leftJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
+			->from('pc_projects', 'p')
+			->leftJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
 
 		// Apply filters
 		if (isset($filters['status']) && $filters['status'] === 'all') {
@@ -363,7 +363,7 @@ class ProjectService
 			$qb->andWhere($qb->expr()->eq('priority', $qb->createNamedParameter($filters['priority'])));
 		}
 
-		if (!empty($filters['project_type']) && $this->columnExists('projects', 'project_type')) {
+		if (!empty($filters['project_type']) && $this->columnExists('pc_projects', 'project_type')) {
 			$qb->andWhere($qb->expr()->eq('project_type', $qb->createNamedParameter($filters['project_type'])));
 		}
 
@@ -406,7 +406,7 @@ class ProjectService
 		$requestedSort = $filters['sort'] ?? 'created_at';
 		$sortField = $sortColumnMap[$requestedSort] ?? 'p.created_at';
 		// project_type column may not exist on older installations
-		if ($requestedSort === 'project_type' && !$this->columnExists('projects', 'project_type')) {
+		if ($requestedSort === 'project_type' && !$this->columnExists('pc_projects', 'project_type')) {
 			$sortField = 'p.created_at';
 		}
 		$requestedDirection = strtoupper((string)($filters['direction'] ?? 'DESC'));
@@ -623,7 +623,7 @@ class ProjectService
 		}
 
 		$qb = $this->db->getQueryBuilder();
-		$qb->update('projects')
+		$qb->update('pc_projects')
 			->set('updated_at', $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')));
 
 		// Map form field names to database column names
@@ -685,7 +685,7 @@ class ProjectService
 			if (strpos($e->getMessage(), 'project_type') !== false || strpos($e->getMessage(), 'Unknown column') !== false) {
 				// Remove project_type from the update and try again
 				$qb = $this->db->getQueryBuilder();
-				$qb->update('projects')
+				$qb->update('pc_projects')
 					->set('updated_at', $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')));
 
 				// Rebuild the query without project_type
@@ -763,7 +763,7 @@ class ProjectService
 	public function touchProjectRowTimestampForMaintenance(int $id): void
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->update('projects')
+		$qb->update('pc_projects')
 			->set('updated_at', $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')))
 			->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 		$qb->executeStatement();
@@ -783,7 +783,7 @@ class ProjectService
 			return;
 		}
 		$qb = $this->db->getQueryBuilder();
-		$qb->update('projects')
+		$qb->update('pc_projects')
 			->set('status', $qb->createNamedParameter('Cancelled'))
 			->set('updated_at', $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')))
 			->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
@@ -809,19 +809,19 @@ class ProjectService
 		try {
 			// Delete related time entries first
 			$qb = $this->db->getQueryBuilder();
-			$qb->delete('time_entries')
+			$qb->delete('pc_time_entries')
 				->where($qb->expr()->eq('project_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 			$qb->executeStatement();
 
 			// Delete project team members
 			$qb = $this->db->getQueryBuilder();
-			$qb->delete('project_members')
+			$qb->delete('pc_project_members')
 				->where($qb->expr()->eq('project_id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 			$qb->executeStatement();
 
 			// Delete the project itself
 			$qb = $this->db->getQueryBuilder();
-			$qb->delete('projects')
+			$qb->delete('pc_projects')
 				->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 			$qb->executeStatement();
 
@@ -1181,8 +1181,8 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.*')
-			->from('projects', 'p')
-			->innerJoin('p', 'project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
+			->from('pc_projects', 'p')
+			->innerJoin('p', 'pc_project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
 			->andWhere($this->buildActiveMemberExpression($qb, 'pm'))
 			->orderBy('p.created_at', 'DESC');
@@ -1209,7 +1209,7 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.*')
-			->from('projects', 'p')
+			->from('pc_projects', 'p')
 			->where($qb->expr()->eq('p.created_by', $qb->createNamedParameter($userId)))
 			->orderBy('p.created_at', 'DESC');
 
@@ -1234,8 +1234,8 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.*', 'c.name as customer_name')
-			->from('projects', 'p')
-			->leftJoin('p', 'customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
+			->from('pc_projects', 'p')
+			->leftJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
 			->orderBy('p.created_at', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -1301,7 +1301,7 @@ class ProjectService
 			}
 			$now = new \DateTime();
 			$qb = $this->db->getQueryBuilder();
-			$qb->update('project_members')
+			$qb->update('pc_project_members')
 				->set('member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
 				->set('archived_at', $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL))
 				->set('role', $qb->createNamedParameter(self::DEFAULT_MEMBER_ROLE))
@@ -1338,11 +1338,11 @@ class ProjectService
 			'member_state' => $qb->createNamedParameter(ProjectMember::STATE_ACTIVE),
 			'archived_at' => $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL),
 		];
-		$qb->insert('project_members')
+		$qb->insert('pc_project_members')
 			->values($ins);
 
 		$qb->executeStatement();
-		$member->setId((int) $this->db->lastInsertId('project_members'));
+		$member->setId((int) $this->db->lastInsertId('pc_project_members'));
 
 		return $member;
 	}
@@ -1378,7 +1378,7 @@ class ProjectService
 		}
 
 		$qb = $this->db->getQueryBuilder();
-		$qb->delete('project_members')
+		$qb->delete('pc_project_members')
 			->where($qb->expr()->andX(
 				$qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)),
 				$qb->expr()->eq('user_id', $qb->createNamedParameter($userId))
@@ -1398,7 +1398,7 @@ class ProjectService
 			return 0;
 		}
 		$qb = $this->db->getQueryBuilder();
-		$qb->update('project_members')
+		$qb->update('pc_project_members')
 			->set('member_state', $qb->createNamedParameter(ProjectMember::STATE_FORMER))
 			->set('archived_at', $qb->createNamedParameter($at, IQueryBuilder::PARAM_DATETIME_MUTABLE))
 			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
@@ -1417,7 +1417,7 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')
-			->from('project_members')
+			->from('pc_project_members')
 			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)))
 			->orderBy('user_id', 'ASC');
 
@@ -1497,14 +1497,14 @@ class ProjectService
 	{
 		$now = (new \DateTime())->format('Y-m-d H:i:s');
 		$qb = $this->db->getQueryBuilder();
-		$qb->update('projects')
+		$qb->update('pc_projects')
 			->set('created_by', $qb->createNamedParameter($newOwnerId))
 			->set('updated_at', $qb->createNamedParameter($now, IQueryBuilder::PARAM_STR))
 			->where($qb->expr()->eq('created_by', $qb->createNamedParameter($deletedId)));
 		$qb->executeStatement();
 
 		$qb2 = $this->db->getQueryBuilder();
-		$qb2->update('customers')
+		$qb2->update('pc_customers')
 			->set('created_by', $qb2->createNamedParameter($newOwnerId))
 			->set('updated_at', $qb2->createNamedParameter($now, IQueryBuilder::PARAM_STR))
 			->where($qb2->expr()->eq('created_by', $qb2->createNamedParameter($deletedId)));
@@ -1532,7 +1532,7 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')
-			->from('project_members')
+			->from('pc_project_members')
 			->where($qb->expr()->andX(
 				$qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)),
 				$qb->expr()->eq('user_id', $qb->createNamedParameter($userId))
@@ -1586,7 +1586,7 @@ class ProjectService
 		}
 
 		$qb = $this->db->getQueryBuilder();
-		$qb->update('projects')
+		$qb->update('pc_projects')
 			->set('status', $qb->createNamedParameter($newStatus))
 			->set('updated_at', $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')))
 			->where($qb->expr()->eq('id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
@@ -1623,7 +1623,7 @@ class ProjectService
 		$newRole = self::DEFAULT_MEMBER_ROLE;
 
 		$qb = $this->db->getQueryBuilder();
-		$qb->update('project_members')
+		$qb->update('pc_project_members')
 			->set('role', $qb->createNamedParameter($newRole))
 			->where($qb->expr()->andX(
 				$qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)),
@@ -1649,8 +1649,8 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('p.*')
-			->from('projects', 'p')
-			->innerJoin('p', 'project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
+			->from('pc_projects', 'p')
+			->innerJoin('p', 'pc_project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
 			->andWhere($this->buildActiveMemberExpression($qb, 'pm'))
 			->orderBy('p.created_at', 'DESC');
@@ -1691,8 +1691,8 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('pm.user_id', 'pm.role', 'pm.hourly_rate', 'p.name as project_name')
-			->from('project_members', 'pm')
-			->innerJoin('pm', 'projects', 'p', $qb->expr()->eq('pm.project_id', 'p.id'))
+			->from('pc_project_members', 'pm')
+			->innerJoin('pm', 'pc_projects', 'p', $qb->expr()->eq('pm.project_id', 'p.id'))
 			->where($qb->expr()->eq('p.created_by', $qb->createNamedParameter($managerId)))
 			->andWhere($qb->expr()->neq('pm.user_id', $qb->createNamedParameter($managerId)))
 			->orderBy('pm.user_id', 'ASC');
@@ -1741,7 +1741,7 @@ class ProjectService
 		$customerId = (int)$data['customer_id'];
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('id')
-			->from('customers')
+			->from('pc_customers')
 			->where($qb->expr()->eq('id', $qb->createNamedParameter($customerId, IQueryBuilder::PARAM_INT)));
 		$exists = $qb->executeQuery()->fetchOne();
 		if ($exists === false) {
@@ -1961,7 +1961,7 @@ class ProjectService
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->createFunction('COUNT(*)'))
-			->from('projects');
+			->from('pc_projects');
 
 		$result = $qb->executeQuery();
 		$count = $result->fetchOne();

@@ -39,7 +39,7 @@ class ProjectMember extends Entity {
 	public const STATE_ACTIVE = 'active';
 	public const STATE_FORMER = 'former';
 
-	protected $tableName = 'project_members';
+	protected $tableName = 'pc_project_members';
 	protected $projectId;
 	protected $userId;
 	protected $role;

@@ -15,7 +15,7 @@ use OCP\AppFramework\Db\Entity;
 
 class ProjectFile extends Entity
 {
-	protected $tableName = 'project_files';
+	protected $tableName = 'pc_project_files';
 	protected $projectId;
 	protected $storagePath;
 	protected $displayName;

@@ -36,6 +36,19 @@ git -C "${APP_DIR}" rev-parse --show-toplevel >/dev/null 2>&1 || {
 
 APP="projectcheck"
 OUT="${APP_DIR}/release/${APP}-${VERSION}.tar.gz"
+INFO_VERSION="$(sed -n 's:[[:space:]]*<version>\([^<]*\)</version>:\1:p' "${APP_DIR}/appinfo/info.xml" | head -1)"
+
+if [[ -z "${INFO_VERSION}" ]]; then
+	echo "Could not read <version> from ${APP_DIR}/appinfo/info.xml" >&2
+	exit 1
+fi
+if [[ "${INFO_VERSION}" != "${VERSION}" ]]; then
+	echo "Version mismatch: script argument is '${VERSION}' but info.xml is '${INFO_VERSION}'." >&2
+	exit 1
+fi
+
+echo "==> DB naming convention check (${APP_DIR})"
+(cd "${APP_DIR}" && bash scripts/check-db-naming.sh)
 
 echo "==> npm ci + build (${APP_DIR})"
 (cd "${APP_DIR}" && npm ci && npm run build)

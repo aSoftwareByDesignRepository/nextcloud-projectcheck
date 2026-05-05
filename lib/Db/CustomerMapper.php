@@ -27,7 +27,7 @@ class CustomerMapper extends QBMapper
 	 */
 	public function __construct(IDBConnection $db)
 	{
-		parent::__construct($db, 'customers', Customer::class);
+		parent::__construct($db, 'pc_customers', Customer::class);
 	}
 
 
@@ -197,7 +197,7 @@ class CustomerMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->createFunction('COUNT(DISTINCT c.id)'))
 			->from($this->getTableName(), 'c')
-			->innerJoin('c', 'projects', 'p', $qb->expr()->eq('c.id', 'p.customer_id'));
+			->innerJoin('c', 'pc_projects', 'p', $qb->expr()->eq('c.id', 'p.customer_id'));
 
 		$result = $qb->executeQuery();
 		$count = $result->fetchColumn();
@@ -242,7 +242,7 @@ class CustomerMapper extends QBMapper
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->createFunction('COUNT(*)'))
-			->from('projects')
+			->from('pc_projects')
 			->where($qb->expr()->eq('customer_id', $qb->createNamedParameter($customerId)));
 
 		$result = $qb->executeQuery();
@@ -262,7 +262,7 @@ class CustomerMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('c.*', $qb->createFunction('COUNT(p.id) as project_count'))
 			->from($this->getTableName(), 'c')
-			->leftJoin('c', 'projects', 'p', $qb->expr()->eq('c.id', 'p.customer_id'))
+			->leftJoin('c', 'pc_projects', 'p', $qb->expr()->eq('c.id', 'p.customer_id'))
 			->groupBy('c.id')
 			->orderBy('c.name', 'ASC');
 
@@ -291,8 +291,8 @@ class CustomerMapper extends QBMapper
 		$qb = $this->db->getQueryBuilder();
 		$qb->selectDistinct('c.id')
 			->from($this->getTableName(), 'c')
-			->leftJoin('c', 'projects', 'p', $qb->expr()->eq('c.id', 'p.customer_id'))
-			->leftJoin('p', 'project_members', 'pm', $qb->expr()->andX(
+			->leftJoin('c', 'pc_projects', 'p', $qb->expr()->eq('c.id', 'p.customer_id'))
+			->leftJoin('p', 'pc_project_members', 'pm', $qb->expr()->andX(
 				$qb->expr()->eq('p.id', 'pm.project_id'),
 				$qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)),
 				$qb->expr()->eq('pm.member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
