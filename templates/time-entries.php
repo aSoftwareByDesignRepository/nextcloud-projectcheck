@@ -386,7 +386,7 @@ Util::addStyle('projectcheck', 'navigation');
     }
 </style>
 
-<div id="app-content" role="main" data-date-format="<?php p($_['dateFormat']); ?>">
+<div id="app-content" role="main">
     <div id="app-content-wrapper">
         <!-- Page Header -->
         <div class="section">

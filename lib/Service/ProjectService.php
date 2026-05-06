@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Service;
 
+use OCA\ProjectCheck\Db\ColumnIntrospectionTrait;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCA\ProjectCheck\Db\ProjectMapper;
@@ -30,6 +31,8 @@ use OCP\IGroupManager;
  */
 class ProjectService
 {
+	use ColumnIntrospectionTrait;
+
 	/** @var list<string> All stored project status values */
 	public const PROJECT_STATUSES = ['Active', 'On Hold', 'Completed', 'Cancelled', 'Archived'];
 	public const DEFAULT_MEMBER_ROLE = 'Member';
@@ -86,6 +89,11 @@ class ProjectService
 		$this->budgetService = $budgetService;
 		$this->accessControl = $accessControl;
 		$this->calculator = new ProjectCalculator();
+	}
+
+	protected function getColumnIntrospectionConnection(): IDBConnection
+	{
+		return $this->db;
 	}
 
 	/**
@@ -1844,52 +1852,6 @@ class ProjectService
 		$project->setUpdatedAt(SafeDateTime::fromRequired($row['updated_at'] ?? null, 'projects.updated_at'));
 
 		return $project;
-	}
-
-	/**
-	 * Check if a column exists in a table
-	 *
-	 * @param string $table
-	 * @param string $column
-	 * @return bool
-	 */
-	private function columnExists(string $table, string $column): bool
-	{
-		try {
-			// Use PRAGMA table_info for SQLite to check column existence
-			$qb = $this->db->getQueryBuilder();
-			$qb->select('*')
-				->from('sqlite_master')
-				->where($qb->expr()->eq('type', $qb->createNamedParameter('table')))
-				->andWhere($qb->expr()->eq('name', $qb->createNamedParameter($table)));
-
-			$result = $qb->executeQuery();
-			$row = $result->fetch();
-			$result->closeCursor();
-
-			if (!$row) {
-				return false;
-			}
-
-			// Get table schema
-			$schema = $row['sql'];
-
-			// Check if column exists in schema
-			return strpos($schema, "`{$column}`") !== false || strpos($schema, "'{$column}'") !== false || strpos($schema, "{$column}") !== false;
-		} catch (\Throwable $e) {
-			// Fallback: try to select the column directly
-			try {
-				$qb = $this->db->getQueryBuilder();
-				$qb->select($column)
-					->from($table)
-					->setMaxResults(1);
-				$result = $qb->executeQuery();
-				$result->closeCursor();
-				return true;
-			} catch (\Exception $e2) {
-				return false;
-			}
-		}
 	}
 
 	/**

@@ -21,6 +21,8 @@ use OCP\IDBConnection;
  */
 class TimeEntryMapper extends QBMapper
 {
+	use ColumnIntrospectionTrait;
+
 	/**
 	 * TimeEntryMapper constructor
 	 *
@@ -29,6 +31,11 @@ class TimeEntryMapper extends QBMapper
 	public function __construct(IDBConnection $db)
 	{
 		parent::__construct($db, 'pc_time_entries', TimeEntry::class);
+	}
+
+	protected function getColumnIntrospectionConnection(): IDBConnection
+	{
+		return $this->db;
 	}
 
 	/**
@@ -313,7 +320,11 @@ class TimeEntryMapper extends QBMapper
 	{
 		$qb = $this->db->getQueryBuilder();
 
-		// Base select fields
+		// Base select fields. `project_type_display_name` is intentionally NOT
+		// selected from SQL: it is always derived in PHP via
+		// `getProjectTypeDisplayName($projectType)` in the row loop below, so
+		// pulling it from the database would just be a value the loop throws
+		// away.
 		$selectFields = [
 			't.*',
 			'p.name as project_name',
@@ -321,14 +332,14 @@ class TimeEntryMapper extends QBMapper
 			$qb->createFunction('COALESCE(s.display_name, u.displayname, t.user_id) as user_display_name'),
 		];
 
-		// Add project_type fields if column exists
+		// `project_type` is guaranteed to exist after `Version2007` runs; the
+		// guard keeps the page healthy during the maintenance-mode upgrade
+		// window between the new code being loaded and the migration being
+		// applied. If the column is absent the row simply has no
+		// `project_type` key and the loop below falls back to `'client'`,
+		// which matches `Project::getProjectType()` runtime semantics.
 		if ($this->columnExists('pc_projects', 'project_type')) {
 			$selectFields[] = 'p.project_type';
-			$selectFields[] = 'p.project_type as project_type_display_name';
-		} else {
-			// Provide default values if column doesn't exist - will be handled in post-processing
-			$selectFields[] = $qb->createNamedParameter('client') . ' as project_type';
-			$selectFields[] = $qb->createNamedParameter('Client Project') . ' as project_type_display_name';
 		}
 
 		$qb->select(...$selectFields)
@@ -942,30 +953,6 @@ class TimeEntryMapper extends QBMapper
 		];
 
 		return $types[$projectType] ?? 'Client Project';
-	}
-
-	/**
-	 * Check if a column exists in a table
-	 *
-	 * @param string $table
-	 * @param string $column
-	 * @return bool
-	 */
-	private function columnExists(string $table, string $column): bool
-	{
-		try {
-			$qb = $this->db->getQueryBuilder();
-			$qb->select('*')
-				->from($table)
-				->setMaxResults(1);
-			$result = $qb->executeQuery();
-			$row = $result->fetch();
-			$result->closeCursor();
-
-			return isset($row[$column]);
-		} catch (\Exception $e) {
-			return false;
-		}
 	}
 
 	/**

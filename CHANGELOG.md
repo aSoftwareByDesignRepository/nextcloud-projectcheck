@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.31 - 2026-05-06
+
+### Fixed
+
+- Time entries page (`/apps/projectcheck/time-entries`) crashed with
+  `SQLSTATE[42S22] Unknown column ':dcValue1'` on installs whose
+  `pc_projects.project_type` column was missing. The fallback `SELECT`
+  branch in `TimeEntryMapper::findWithProjectInfo()` was emitting a named
+  parameter placeholder as if it were a column identifier; that branch is
+  now removed in favour of the existing PHP-level fallback to `'client'`.
+
+### Added
+
+- New migration `Version2007Date20260506180000` ensures that
+  `pc_projects.project_type` always exists (`varchar(32) NOT NULL DEFAULT
+  'client'`) and is indexed (`pc_proj_type_idx`) on every install,
+  including fresh installs and partial upgrades from the legacy
+  `projectcontrol` schema. Idempotent and cross-database safe.
+
+### Changed
+
+- Consolidated the two divergent `columnExists()` helpers in
+  `TimeEntryMapper` and `ProjectService` into a shared
+  `ColumnIntrospectionTrait`. The new helper is portable across MySQL,
+  PostgreSQL and SQLite, immune to false negatives on empty tables, and
+  caches results for the request lifetime so a typical request now
+  performs at most one introspection probe per `(table, column)` pair.
+
 ## 2.0.30 - 2026-05-05
 
 ### Changed
