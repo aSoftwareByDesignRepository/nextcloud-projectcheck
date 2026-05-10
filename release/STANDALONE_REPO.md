@@ -4,9 +4,14 @@
 
 Use the workflow below **only if** you develop ProjectCheck inside a **larger private repository** (e.g. a Nextcloud “all apps” monorepo) and want to **publish** the same tree to **`nextcloud-projectcheck`** without maintaining two codebases by hand.
 
-Develop in the private repo (canonical GitHub name **`nextcloud-development`**; local folder may differ). Publish **source** to **`aSoftwareByDesignRepository/nextcloud-projectcheck`** with `git subtree`. Further policy (visibility, layout): see monorepo `ready2publish/REPOSITORY-LAYOUT.md` if present.
+Develop in the private repo (canonical GitHub name **`nextcloud-development`**; local folder may differ).
 
-**Convenience script** (run from **monorepo root**, not inside `nextcloud-projectcheck`):
+**`nextcloud-development`** tracks this app as a **git submodule** at `apps/projectcheck` (branch **`main`**). Workflow:
+
+1. Commit and push changes **here** (`nextcloud-projectcheck`).
+2. In the monorepo: `cd apps/projectcheck && git pull origin main`, then from monorepo root commit the updated submodule pointer and push.
+
+Older setups that **vendor** `apps/projectcheck/` without a submodule can still publish with **`git subtree`** (see below) or the convenience script:
 
 `scripts/push-public-app-subtree.sh projectcheck aSoftwareByDesignRepository/nextcloud-projectcheck`
 
@@ -39,9 +44,9 @@ git remote add projectcheck-public git@github.com:aSoftwareByDesignRepository/ne
 
 ---
 
-## Push app sources: `git subtree push`
+## Push app sources (subtree / vendored tree): `git subtree push`
 
-This publishes **only** `apps/projectcheck/` history to the default branch of `projectcheck-public` (usually `main`).
+Use this only when `apps/projectcheck` is **not** a submodule. It publishes **only** `apps/projectcheck/` history to the default branch of `projectcheck-public` (usually `main`).
 
 ```bash
 cd /path/to/nextcloud-development
@@ -65,9 +70,13 @@ Use `--force` only when you intend to replace the remote history (e.g. empty rep
 
 ---
 
-## After monorepo changes
+## After changes (monorepo uses submodule)
 
-Whenever you want **`nextcloud-projectcheck`** to match the monorepo’s `apps/projectcheck`:
+When **`nextcloud-development`** uses the submodule: publish **here first**, then bump the pointer in the monorepo (`git add apps/projectcheck` after pulling inside the submodule).
+
+## After monorepo changes (subtree / vendored copy only)
+
+When the monorepo still contains a **plain directory** `apps/projectcheck/` and syncs via subtree:
 
 1. Commit and push your work on **`master`** (or your main branch) in the monorepo.
 2. Run **`git subtree push`** again (same command as above).
