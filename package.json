@@ -1,6 +1,6 @@
 {
     "name": "projectcheck",
-    "version": "2.0.31",
+    "version": "2.0.32",
     "description": "Project management and time tracking app for Nextcloud",
     "main": "index.js",
     "scripts": {

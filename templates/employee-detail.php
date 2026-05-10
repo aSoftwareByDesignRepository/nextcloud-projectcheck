@@ -25,6 +25,11 @@ $empDisplay = $isFormer
 	? (string) ($_['formerAccountDisplayName'] ?? $eid)
 	: ($emp ? $emp->getDisplayName() : $eid);
 $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
+$fmt = $_['fmt'] ?? null;
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
 ?>
 
 <script nonce="<?php p($_['cspNonce']) ?>">
@@ -136,7 +141,7 @@ $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
                                             <i class="icon-money-custom"></i>
                                         </div>
                                         <div class="stat-details">
-                                            <div class="stat-value">€<?php p(number_format($yearData['total_cost'], 2)); ?></div>
+                                            <div class="stat-value"><?php p($fmt ? $fmt->currency((float)$yearData['total_cost']) : $currencyCode . ' ' . number_format((float)$yearData['total_cost'], 2)); ?></div>
                                             <div class="stat-label"><?php p($l->t('Total Cost')); ?></div>
                                         </div>
                                     </div>
@@ -354,7 +359,7 @@ $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
                                         </span>
                                         <span class="summary-item-compact">
                                             <i data-lucide="euro" class="lucide-icon"></i>
-                                            €<?php p(number_format($yearTotalCost, 2)); ?>
+                                            <?php p($fmt ? $fmt->currency((float)$yearTotalCost) : $currencyCode . ' ' . number_format((float)$yearTotalCost, 2)); ?>
                                         </span>
                                     </div>
                                 </div>
@@ -415,7 +420,7 @@ $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
                                                         </div>
                                                     </td>
                                                     <td class="stat-cell"><?php p(number_format($typeData['total_hours'], 1)); ?>h</td>
-                                                    <td class="stat-cell">€<?php p(number_format($typeData['total_cost'], 2)); ?></td>
+                                                    <td class="stat-cell"><?php p($fmt ? $fmt->currency((float)$typeData['total_cost']) : $currencyCode . ' ' . number_format((float)$typeData['total_cost'], 2)); ?></td>
                                                     <td class="stat-cell"><?php p($typeData['entry_count']); ?></td>
                                                     <td class="percentage-cell">
                                                         <div class="percentage-bar">
@@ -474,7 +479,7 @@ $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
                                                 <span class="stat-label"><?php p($l->t('Hours')); ?></span>
                                             </div>
                                             <div class="stat-item">
-                                                <span class="stat-value">€<?php p(number_format($yearData['billable']['total_cost'], 2)); ?></span>
+                                                <span class="stat-value"><?php p($fmt ? $fmt->currency((float)$yearData['billable']['total_cost']) : $currencyCode . ' ' . number_format((float)$yearData['billable']['total_cost'], 2)); ?></span>
                                                 <span class="stat-label"><?php p($l->t('Revenue')); ?></span>
                                             </div>
                                         </div>
@@ -492,7 +497,7 @@ $empEmail = $emp && !$isFormer ? $emp->getEMailAddress() : '';
                                                 <span class="stat-label"><?php p($l->t('Hours')); ?></span>
                                             </div>
                                             <div class="stat-item">
-                                                <span class="stat-value">€<?php p(number_format($yearData['overhead']['total_cost'], 2)); ?></span>
+                                                <span class="stat-value"><?php p($fmt ? $fmt->currency((float)$yearData['overhead']['total_cost']) : $currencyCode . ' ' . number_format((float)$yearData['overhead']['total_cost'], 2)); ?></span>
                                                 <span class="stat-label"><?php p($l->t('Cost')); ?></span>
                                             </div>
                                         </div>

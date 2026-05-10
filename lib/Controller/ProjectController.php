@@ -549,6 +549,10 @@ class ProjectController extends Controller
 			}
 
 			$budgetInfo = $this->budgetService->getProjectBudgetInfo($project, $user->getUID());
+			$currency = strtoupper(trim((string)$this->config->getAppValue($this->appName, 'currency', 'EUR')));
+			if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
+				$currency = 'EUR';
+			}
 
 			return new JSONResponse([
 				'success' => true,
@@ -560,7 +564,7 @@ class ProjectController extends Controller
 					'warning_level' => $budgetInfo['warning_level'],
 					'total_hours' => $budgetInfo['used_hours'],
 					'project_name' => $project->getName(),
-					'currency' => '€'
+					'currency' => $currency,
 				]
 			]);
 		} catch (\Exception $e) {

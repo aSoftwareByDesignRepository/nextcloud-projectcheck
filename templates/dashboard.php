@@ -31,6 +31,10 @@ Util::addStyle('projectcheck', 'common/accessibility');
  * time.
  */
 $fmt = $_['fmt'] ?? null;
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
 ?>
 <div id="app-content" role="main">
     <div id="app-content-wrapper">
@@ -164,7 +168,7 @@ $fmt = $_['fmt'] ?? null;
                 <li class="overview-stat-compact">
                     <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
                     <div class="stat-content">
-                        <div class="stat-number" aria-describedby="dash-stat-budget-label"><?php p($fmt ? $fmt->currency((float)($_['stats']['totalBudget'] ?? 0)) : '€' . number_format((float)($_['stats']['totalBudget'] ?? 0), 0)); ?></div>
+                        <div class="stat-number" aria-describedby="dash-stat-budget-label"><?php p($fmt ? $fmt->currency((float)($_['stats']['totalBudget'] ?? 0)) : $currencyCode . ' ' . number_format((float)($_['stats']['totalBudget'] ?? 0), 0)); ?></div>
                         <div class="stat-label" id="dash-stat-budget-label"><?php p($l->t('Budget')); ?></div>
                         <div class="stat-detail">
                             <span><?php p(($fmt ? $fmt->percent((float)($_['stats']['consumptionPercentage'] ?? 0), 0) : ((int)($_['stats']['consumptionPercentage'] ?? 0)) . '%') . ' ' . $l->t('used')); ?></span>
@@ -221,7 +225,7 @@ $fmt = $_['fmt'] ?? null;
                                         </div>
                                         <div class="year-summary-item">
                                             <span class="summary-label"><?php p($l->t('Total Cost')); ?>:</span>
-                                            <span class="summary-value"><?php p($fmt ? $fmt->currency($yearTotalCost) : '€' . number_format($yearTotalCost, 2)); ?></span>
+                                            <span class="summary-value"><?php p($fmt ? $fmt->currency($yearTotalCost) : $currencyCode . ' ' . number_format($yearTotalCost, 2)); ?></span>
                                         </div>
                                         <div class="year-summary-item">
                                             <span class="summary-label"><?php p($l->t('Entries')); ?>:</span>
@@ -245,7 +249,7 @@ $fmt = $_['fmt'] ?? null;
                                                     </div>
                                                     <div class="customer-summary-item">
                                                         <span class="summary-label"><?php p($l->t('Cost')); ?>:</span>
-                                                        <span class="summary-value"><?php p($fmt ? $fmt->currency($customerData['total_cost']) : '€' . number_format($customerData['total_cost'], 2)); ?></span>
+                                                        <span class="summary-value"><?php p($fmt ? $fmt->currency($customerData['total_cost']) : $currencyCode . ' ' . number_format($customerData['total_cost'], 2)); ?></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -280,7 +284,7 @@ $fmt = $_['fmt'] ?? null;
                                                                         <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
                                                                     </div>
                                                                     <div class="stat-details">
-                                                                        <div class="stat-value"><?php p($fmt ? $fmt->currency($projectData['total_cost']) : '€' . number_format($projectData['total_cost'], 2)); ?></div>
+                                                                        <div class="stat-value"><?php p($fmt ? $fmt->currency($projectData['total_cost']) : $currencyCode . ' ' . number_format($projectData['total_cost'], 2)); ?></div>
                                                                         <div class="stat-label"><?php p($l->t('Cost')); ?></div>
                                                                     </div>
                                                                 </div>
@@ -341,7 +345,7 @@ $fmt = $_['fmt'] ?? null;
                                         </span>
                                         <span class="summary-item">
                                             <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
-                                            <?php p($fmt ? $fmt->currency($yearTotalCost) : '€' . number_format($yearTotalCost, 2)); ?>
+                                            <?php p($fmt ? $fmt->currency($yearTotalCost) : $currencyCode . ' ' . number_format($yearTotalCost, 2)); ?>
                                         </span>
                                     </div>
                                 </div>
@@ -398,7 +402,7 @@ $fmt = $_['fmt'] ?? null;
                                                         <span class="stat-label"><?php p($l->t('Hours')); ?></span>
                                                     </div>
                                                     <div class="stat-item">
-                                                        <span class="stat-value"><?php p($fmt ? $fmt->currency($typeData['total_cost']) : '€' . number_format($typeData['total_cost'], 2)); ?></span>
+                                                        <span class="stat-value"><?php p($fmt ? $fmt->currency($typeData['total_cost']) : $currencyCode . ' ' . number_format($typeData['total_cost'], 2)); ?></span>
                                                         <span class="stat-label"><?php p($l->t('Cost')); ?></span>
                                                     </div>
                                                     <div class="stat-item">
@@ -465,7 +469,7 @@ $fmt = $_['fmt'] ?? null;
                                                 <span class="stat-label"><?php p($l->t('Hours')); ?></span>
                                             </div>
                                             <div class="stat-item">
-                                                <span class="stat-value"><?php p($fmt ? $fmt->currency($yearData['billable']['total_cost']) : '€' . number_format($yearData['billable']['total_cost'], 2)); ?></span>
+                                                <span class="stat-value"><?php p($fmt ? $fmt->currency($yearData['billable']['total_cost']) : $currencyCode . ' ' . number_format($yearData['billable']['total_cost'], 2)); ?></span>
                                                 <span class="stat-label"><?php p($l->t('Revenue')); ?></span>
                                             </div>
                                         </div>
@@ -483,7 +487,7 @@ $fmt = $_['fmt'] ?? null;
                                                 <span class="stat-label"><?php p($l->t('Hours')); ?></span>
                                             </div>
                                             <div class="stat-item">
-                                                <span class="stat-value"><?php p($fmt ? $fmt->currency($yearData['overhead']['total_cost']) : '€' . number_format($yearData['overhead']['total_cost'], 2)); ?></span>
+                                                <span class="stat-value"><?php p($fmt ? $fmt->currency($yearData['overhead']['total_cost']) : $currencyCode . ' ' . number_format($yearData['overhead']['total_cost'], 2)); ?></span>
                                                 <span class="stat-label"><?php p($l->t('Cost')); ?></span>
                                             </div>
                                         </div>
@@ -606,10 +610,10 @@ $fmt = $_['fmt'] ?? null;
                                             <span class="detail-label"><?php p($l->t('Budget:')); ?></span>
                                             <span class="detail-value budget-info">
                                                 <span class="budget-remaining <?php p($budgetInfo['warning_level']); ?>">
-                                                    <?php p($fmt ? $fmt->currency($budgetInfo['remaining_budget']) : '€' . number_format($budgetInfo['remaining_budget'], 2)); ?>
+                                                    <?php p($fmt ? $fmt->currency($budgetInfo['remaining_budget']) : $currencyCode . ' ' . number_format($budgetInfo['remaining_budget'], 2)); ?>
                                                 </span>
                                                 <span class="budget-separator"><?php p($l->t('remaining of')); ?></span>
-                                                <span class="budget-total"><?php p($fmt ? $fmt->currency($budgetInfo['total_budget']) : '€' . number_format($budgetInfo['total_budget'], 2)); ?></span>
+                                                <span class="budget-total"><?php p($fmt ? $fmt->currency($budgetInfo['total_budget']) : $currencyCode . ' ' . number_format($budgetInfo['total_budget'], 2)); ?></span>
                                             </span>
                                         </div>
                                         <div class="detail-row">
@@ -625,7 +629,7 @@ $fmt = $_['fmt'] ?? null;
                                     <?php else: ?>
                                         <div class="detail-row">
                                             <span class="detail-label"><?php p($l->t('Budget:')); ?></span>
-                                            <span class="detail-value"><?php p($fmt ? $fmt->currency($project->getTotalBudget() ?? 0) : '€' . number_format($project->getTotalBudget() ?? 0, 2)); ?></span>
+                                            <span class="detail-value"><?php p($fmt ? $fmt->currency($project->getTotalBudget() ?? 0) : $currencyCode . ' ' . number_format($project->getTotalBudget() ?? 0, 2)); ?></span>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -640,11 +644,11 @@ $fmt = $_['fmt'] ?? null;
                                                 style="width: <?php p(min(100, $budgetInfo['consumption_percentage'])); ?>%"></div>
                                         </div>
                                         <div class="progress-labels">
-                                            <span class="progress-label-left"><?php p($fmt ? $fmt->currency(0) : '€0'); ?></span>
+                                            <span class="progress-label-left"><?php p($fmt ? $fmt->currency(0) : $currencyCode . ' 0'); ?></span>
                                             <span class="progress-label-center <?php p($budgetInfo['warning_level']); ?>">
                                                 <?php p($fmt ? $fmt->percent($budgetInfo['consumption_percentage'], 0) : round($budgetInfo['consumption_percentage']) . '%'); ?>
                                             </span>
-                                            <span class="progress-label-right"><?php p($fmt ? $fmt->currency($budgetInfo['total_budget']) : '€' . number_format($budgetInfo['total_budget'], 0)); ?></span>
+                                            <span class="progress-label-right"><?php p($fmt ? $fmt->currency($budgetInfo['total_budget']) : $currencyCode . ' ' . number_format($budgetInfo['total_budget'], 0)); ?></span>
                                         </div>
                                     </div>
                                 <?php endif; ?>

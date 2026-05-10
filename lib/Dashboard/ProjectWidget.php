@@ -240,7 +240,7 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
      */
     private function resolveAppIconPath(): string
     {
-        foreach (['app.svg', 'app-dark.svg'] as $iconFile) {
+        foreach (['app-dark.svg', 'app.svg'] as $iconFile) {
             try {
                 return $this->urlGenerator->imagePath('projectcheck', $iconFile);
             } catch (RuntimeException $e) {

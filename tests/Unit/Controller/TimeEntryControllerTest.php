@@ -34,6 +34,8 @@ class TimeEntryControllerTest extends TestCase {
 	private TimeEntryService $timeEntryService;
 	private IUserSession $userSession;
 	private IUser $user;
+	private IConfig $config;
+	private string $configuredCurrency = 'EUR';
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -48,7 +50,17 @@ class TimeEntryControllerTest extends TestCase {
 		$urlGenerator->method('linkToRoute')->willReturnCallback(
 			static fn (string $route, array $params = []): string => '/index.php/' . $route . (empty($params) ? '' : '?' . http_build_query($params))
 		);
-		$config = $this->createMock(IConfig::class);
+		$this->config = $this->createMock(IConfig::class);
+		$this->config->method('getAppValue')->willReturnCallback(function (
+			string $app,
+			string $key,
+			string $default = ''
+		): string {
+			if ($app === 'projectcheck' && $key === 'currency') {
+				return $this->configuredCurrency;
+			}
+			return $default;
+		});
 		$dateFormatService = $this->createMock(DateFormatService::class);
 		$deletionService = $this->createMock(DeletionService::class);
 		$activityService = $this->createMock(ActivityService::class);
@@ -71,7 +83,6 @@ class TimeEntryControllerTest extends TestCase {
 		$this->projectService->method('canUserViewAllTimeEntries')->willReturn(false);
 		$this->customerService->method('getVisibleCustomerCountForUser')->willReturn(0);
 		$this->timeEntryService->method('countTimeEntries')->willReturn(0);
-		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([]);
 		$this->timeEntryService->method('getUsersWithTimeEntries')->willReturn([]);
 		$this->timeEntryService->method('getYearlyStatsByProjectType')->willReturn([]);
 		$this->timeEntryService->method('getDetailedYearlyStatsByProjectType')->willReturn([]);
@@ -86,7 +97,7 @@ class TimeEntryControllerTest extends TestCase {
 			$this->customerService,
 			$budgetService,
 			$urlGenerator,
-			$config,
+			$this->config,
 			$dateFormatService,
 			$deletionService,
 			$activityService,
@@ -249,6 +260,71 @@ class TimeEntryControllerTest extends TestCase {
 		$data = $response->getData();
 		$this->assertIsArray($data);
 		$this->assertArrayHasKey('csv_data', $data);
+	}
+
+	public function testExportUsesConfiguredCurrencyInCsvHeader(): void {
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $name, $default = null) {
+				return match ($name) {
+					'project_id', 'date_from', 'date_to', 'search', 'user_id', 'project_type' => '',
+					default => $default,
+				};
+			}
+		);
+		$this->projectService->method('getAccessibleProjectIdListForUser')->with('member-user')->willReturn([]);
+		$this->projectService->method('canUserViewAllTimeEntries')->with('member-user')->willReturn(true);
+		$this->configuredCurrency = 'usd';
+		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([]);
+
+		$response = $this->controller->export();
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$data = $response->getData();
+		$this->assertIsArray($data);
+		$this->assertStringContainsString('"Hourly Rate (USD)";"Total Amount (USD)"', (string)($data['csv_data'] ?? ''));
+	}
+
+	public function testExportNeutralizesCsvFormulaInjectionInTextFields(): void {
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $name, $default = null) {
+				return match ($name) {
+					'project_id', 'date_from', 'date_to', 'search', 'user_id', 'project_type' => '',
+					default => $default,
+				};
+			}
+		);
+		$this->projectService->method('getAccessibleProjectIdListForUser')->with('member-user')->willReturn([]);
+		$this->projectService->method('canUserViewAllTimeEntries')->with('member-user')->willReturn(true);
+
+		$entry = new TimeEntry();
+		$entry->setProjectId(1);
+		$entry->setUserId('member-user');
+		$entry->setDate(new \DateTime('2026-05-01'));
+		$entry->setHours(1.5);
+		$entry->setHourlyRate(100.0);
+		$entry->setDescription('=HYPERLINK("http://evil.local","click")');
+		$entry->setCreatedAt(new \DateTime('2026-05-01 12:00:00'));
+		$entry->setUpdatedAt(new \DateTime('2026-05-01 12:00:00'));
+
+		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([
+			[
+				'timeEntry' => $entry,
+				'projectName' => '=cmd',
+				'customerName' => '+sum(A1:A2)',
+				'project_type_display_name' => '@calc',
+				'userDisplayName' => '-user',
+			],
+		]);
+
+		$response = $this->controller->export();
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$data = $response->getData();
+		$this->assertIsArray($data);
+		$csv = (string)($data['csv_data'] ?? '');
+		$this->assertStringContainsString("\"'=cmd\"", $csv);
+		$this->assertStringContainsString("\"'+sum(A1:A2)\"", $csv);
+		$this->assertStringContainsString("\"'@calc\"", $csv);
+		$this->assertStringContainsString("\"'=HYPERLINK(\"\"http://evil.local\"\",\"\"click\"\")\"", $csv);
+		$this->assertStringContainsString("\"'-user\"", $csv);
 	}
 }
 

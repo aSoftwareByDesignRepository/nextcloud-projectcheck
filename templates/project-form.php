@@ -20,6 +20,10 @@ $isEdit = isset($project) && $project instanceof \OCA\ProjectCheck\Db\Project;
 $pageTitle = $isEdit ? $l->t('Edit Project') : $l->t('Create New Project');
 $formAction = $_['formAction'] ?? ($isEdit ? '/projects/' . $project->getId() : '/projects');
 $formMethod = $isEdit ? 'PUT' : 'POST';
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -65,7 +69,7 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
                         required
                         rows="3"
                         placeholder="<?php p($l->t('Brief description of the project (max 500 characters)')); ?>"><?php p($isEdit ? $project->getShortDescription() : ''); ?></textarea>
-                    <div class="char-count">
+                    <div class="char-count" aria-live="polite">
                         <span id="short_description-count">0</span>/500
                     </div>
                 </div>
@@ -78,7 +82,7 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
                         maxlength="2000"
                         rows="5"
                         placeholder="<?php p($l->t('Detailed project description (max 2000 characters)')); ?>"><?php p($isEdit ? $project->getDetailedDescription() : ''); ?></textarea>
-                    <div class="char-count">
+                    <div class="char-count" aria-live="polite">
                         <span id="detailed_description-count">0</span>/2000
                     </div>
                 </div>
@@ -233,7 +237,7 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
                 <!-- Budget Information -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="total_budget"><?php p($l->t('Total Budget (€)')); ?></label>
+                        <label for="total_budget"><?php p($l->t('Total Budget (%s)', [$currencyCode])); ?></label>
                         <input type="number"
                             id="total_budget"
                             name="total_budget"
@@ -245,7 +249,7 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
                     </div>
 
                     <div class="form-group">
-                        <label for="hourly_rate"><?php p($l->t('Hourly Rate (€)')); ?></label>
+                        <label for="hourly_rate"><?php p($l->t('Hourly Rate (%s)', [$currencyCode])); ?></label>
                         <input type="number"
                             id="hourly_rate"
                             name="hourly_rate"
@@ -322,13 +326,14 @@ $formMethod = $isEdit ? 'PUT' : 'POST';
             if (textarea && countElement) {
                 const currentLength = textarea.value.length;
                 countElement.textContent = currentLength;
-
-                if (currentLength > maxLength * 0.9) {
-                    countElement.style.color = '#e74c3c';
-                } else if (currentLength > maxLength * 0.8) {
-                    countElement.style.color = '#f39c12';
-                } else {
-                    countElement.style.color = '#7f8c8d';
+                const container = countElement.closest('.char-count');
+                if (container) {
+                    container.classList.remove('char-count--warning', 'char-count--critical');
+                    if (currentLength > maxLength * 0.9) {
+                        container.classList.add('char-count--critical');
+                    } else if (currentLength > maxLength * 0.8) {
+                        container.classList.add('char-count--warning');
+                    }
                 }
             }
         }

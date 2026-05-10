@@ -245,6 +245,10 @@
 /* Budget Overview Integration with Form Styling */
 .form-group.budget-overview {
     margin-bottom: 20px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-main-background);
 }
 
 .form-group.budget-overview label {
@@ -257,19 +261,24 @@
 
 .budget-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 15px;
-    padding: 15px;
-    background: var(--color-background-hover);
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 14px;
+    background: var(--color-background-dark);
     border: 1px solid var(--color-border);
-    border-radius: 4px;
+    border-radius: 8px;
 }
 
 .budget-stat-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+    min-height: 56px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-main-background);
 }
 
 .budget-stat-label {
@@ -279,59 +288,50 @@
 }
 
 .budget-stat-value {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
-    color: var(--color-text);
+    color: var(--color-main-text);
+    line-height: 1.25;
 }
 
 .budget-progress-container {
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
 .budget-progress-bar {
     width: 100%;
-    height: 8px;
+    height: 10px;
     background-color: var(--color-background-hover);
     border: 1px solid var(--color-border);
-    border-radius: 4px;
+    border-radius: 999px;
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .budget-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--color-success) 0%, var(--color-warning) 70%, var(--color-error) 90%);
+    background: var(--color-success);
     transition: width 0.3s ease, background-color 0.3s ease;
-    border-radius: 3px;
+    border-radius: 999px;
 }
 
-.budget-progress-fill.warning {
-    background: linear-gradient(90deg, var(--color-warning) 0%, var(--color-warning) 100%);
-    border-radius: 3px 0 0 3px !important;
-    /* Override Nextcloud's global .warning class */
-    margin-top: 0 !important;
-    padding: 0 !important;
-    background-color: transparent !important;
+.budget-progress-fill--warning {
+    background: var(--color-warning);
 }
 
-.budget-progress-fill.critical {
-    background: linear-gradient(90deg, var(--color-error) 0%, var(--color-error) 100%);
-    border-radius: 3px 0 0 3px !important;
-    /* Override Nextcloud's global .critical class if it exists */
-    margin-top: 0 !important;
-    padding: 0 !important;
-    background-color: transparent !important;
+.budget-progress-fill--critical {
+    background: var(--color-error);
 }
 
 /* Full budget progress gets rounded corners on both sides */
 .budget-progress-fill[style*="width: 100%"] {
-    border-radius: 3px;
+    border-radius: 999px;
 }
 
 .budget-progress-text {
     text-align: center;
-    font-size: 12px;
-    color: var(--color-text-maxcontrast);
+    font-size: 13px;
+    color: var(--color-main-text);
     font-weight: 500;
 }
 
@@ -341,15 +341,15 @@
 }
 
 /* Color coding for budget values */
-.budget-stat-value.safe {
+.budget-stat-value--safe {
     color: var(--pc-emphasis-text-success);
 }
 
-.budget-stat-value.warning {
+.budget-stat-value--warning {
     color: var(--pc-emphasis-text-warning);
 }
 
-.budget-stat-value.critical {
+.budget-stat-value--critical {
     color: var(--pc-emphasis-text-error);
 }
 
@@ -368,18 +368,22 @@
 
 /* Responsive adjustments matching form responsiveness */
 @media (max-width: 768px) {
+    .form-group.budget-overview {
+        padding: 12px;
+    }
+
     .budget-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr;
         gap: 10px;
         padding: 12px;
     }
 
     .budget-stat-value {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .budget-stat-label {
-        font-size: 11px;
+        font-size: 12px;
     }
 }
 

@@ -21,6 +21,11 @@ if (!isset($timeEntry) || !($timeEntry instanceof \OCA\ProjectCheck\Db\TimeEntry
 
 $timeEntryId = $timeEntry->getId();
 $totalCost = $timeEntry->getCost() ?? ($timeEntry->getHours() * $timeEntry->getHourlyRate());
+$fmt = $_['fmt'] ?? null;
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
 
 $project = $project ?? null;
 $projectStatus = ($project && $project instanceof \OCA\ProjectCheck\Db\Project) ? (string) $project->getStatus() : '';
@@ -70,7 +75,7 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                             </div>
                             <div class="meta-item">
                                 <i class="icon-money-custom"></i>
-                                <span>€<?php p(number_format($totalCost, 2)); ?></span>
+                                <span><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
                             </div>
                             <div class="meta-item">
                                 <i class="icon-user-custom"></i>
@@ -111,7 +116,7 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                         <i class="icon-money-custom icon-large"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number">€<?php p(number_format($timeEntry->getHourlyRate(), 2)); ?></div>
+                        <div class="stat-number"><?php p($fmt ? $fmt->currency((float)$timeEntry->getHourlyRate()) : $currencyCode . ' ' . number_format((float)$timeEntry->getHourlyRate(), 2)); ?></div>
                         <div class="stat-label"><?php p($l->t('HOURLY RATE')); ?></div>
                     </div>
                 </div>
@@ -120,7 +125,7 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                         <i class="icon-money-custom icon-large"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number">€<?php p(number_format($totalCost, 2)); ?></div>
+                        <div class="stat-number"><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></div>
                         <div class="stat-label"><?php p($l->t('TOTAL COST')); ?></div>
                     </div>
                 </div>
@@ -163,11 +168,11 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                         </div>
                         <div class="info-item">
                             <label><?php p($l->t('HOURLY RATE')); ?></label>
-                            <span>€<?php p(number_format($timeEntry->getHourlyRate(), 2)); ?><?php p($l->t('/hour')); ?></span>
+                            <span><?php p($fmt ? $fmt->currency((float)$timeEntry->getHourlyRate()) : $currencyCode . ' ' . number_format((float)$timeEntry->getHourlyRate(), 2)); ?><?php p($l->t('/hour')); ?></span>
                         </div>
                         <div class="info-item">
                             <label><?php p($l->t('TOTAL COST')); ?></label>
-                            <span class="total-cost">€<?php p(number_format($totalCost, 2)); ?></span>
+                            <span class="total-cost"><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
                         </div>
                         <div class="info-item">
                             <label><?php p($l->t('CREATED BY')); ?></label>
@@ -234,7 +239,7 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                                 </div>
                                 <div class="stat-content">
                                     <span class="stat-label"><?php p($l->t('Rate')); ?></span>
-                                    <span class="stat-value">€<?php p(number_format($timeEntry->getHourlyRate(), 2)); ?><?php p($l->t('/hour')); ?></span>
+                                    <span class="stat-value"><?php p($fmt ? $fmt->currency((float)$timeEntry->getHourlyRate()) : $currencyCode . ' ' . number_format((float)$timeEntry->getHourlyRate(), 2)); ?><?php p($l->t('/hour')); ?></span>
                                 </div>
                             </div>
                             <div class="overview-stat">
@@ -243,7 +248,7 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                                 </div>
                                 <div class="stat-content">
                                     <span class="stat-label"><?php p($l->t('Total')); ?></span>
-                                    <span class="stat-value">€<?php p(number_format($totalCost, 2)); ?></span>
+                                    <span class="stat-value"><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
                                 </div>
                             </div>
                         </div>
@@ -275,7 +280,7 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                             </div>
                             <div class="timeline-content">
                                 <label><?php p($l->t('Hourly Rate')); ?></label>
-                                <span>€<?php p(number_format($timeEntry->getHourlyRate(), 2)); ?><?php p($l->t('/hour')); ?></span>
+                                <span><?php p($fmt ? $fmt->currency((float)$timeEntry->getHourlyRate()) : $currencyCode . ' ' . number_format((float)$timeEntry->getHourlyRate(), 2)); ?><?php p($l->t('/hour')); ?></span>
                             </div>
                         </div>
                         <div class="timeline-item">
@@ -284,7 +289,7 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                             </div>
                             <div class="timeline-content">
                                 <label><?php p($l->t('Total Cost')); ?></label>
-                                <span>€<?php p(number_format($totalCost, 2)); ?></span>
+                                <span><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
                             </div>
                         </div>
                         <div class="timeline-item">

@@ -16,6 +16,13 @@ style('projectcheck', 'customer-statistics');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
+<?php
+$fmt = $_['fmt'] ?? null;
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
+?>
 
 <script nonce="<?php p($_['cspNonce']) ?>">
 	// Pass PHP variables to JavaScript
@@ -257,7 +264,7 @@ style('projectcheck', 'customer-statistics');
 											<i class="icon-money-custom"></i>
 										</div>
 										<div class="stat-details">
-											<div class="stat-value">€<?php p(number_format($yearData['total_cost'], 2)); ?></div>
+											<div class="stat-value"><?php p($fmt ? $fmt->currency((float)$yearData['total_cost']) : $currencyCode . ' ' . number_format((float)$yearData['total_cost'], 2)); ?></div>
 											<div class="stat-label"><?php p($l->t('Total Cost')); ?></div>
 										</div>
 									</div>
@@ -311,7 +318,7 @@ style('projectcheck', 'customer-statistics');
 										</span>
 										<span class="summary-item">
 											<i data-lucide="euro" class="lucide-icon"></i>
-											€<?php p(number_format($yearTotalCost, 2)); ?>
+											<?php p($fmt ? $fmt->currency((float)$yearTotalCost) : $currencyCode . ' ' . number_format((float)$yearTotalCost, 2)); ?>
 										</span>
 									</div>
 								</div>
@@ -326,7 +333,7 @@ style('projectcheck', 'customer-statistics');
 														<span class="stat-label"><?php p($l->t('Hours')); ?></span>
 													</div>
 													<div class="stat-item">
-														<span class="stat-value">€<?php p(number_format($typeData['total_cost'], 2)); ?></span>
+														<span class="stat-value"><?php p($fmt ? $fmt->currency((float)$typeData['total_cost']) : $currencyCode . ' ' . number_format((float)$typeData['total_cost'], 2)); ?></span>
 														<span class="stat-label"><?php p($l->t('Cost')); ?></span>
 													</div>
 													<div class="stat-item">
@@ -514,10 +521,10 @@ style('projectcheck', 'customer-statistics');
 													<span class="detail-label"><?php p($l->t('Budget:')); ?></span>
 													<span class="detail-value budget-info">
 														<span class="budget-remaining <?php p($budgetInfo['warning_level']); ?>">
-															€<?php p(number_format($budgetInfo['remaining_budget'], 2)); ?>
+															<?php p($fmt ? $fmt->currency((float)$budgetInfo['remaining_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['remaining_budget'], 2)); ?>
 														</span>
 														<span class="budget-separator"><?php p($l->t('remaining of')); ?></span>
-														<span class="budget-total">€<?php p(number_format($budgetInfo['total_budget'], 2)); ?></span>
+														<span class="budget-total"><?php p($fmt ? $fmt->currency((float)$budgetInfo['total_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['total_budget'], 2)); ?></span>
 													</span>
 												</div>
 												<div class="detail-row">
@@ -532,7 +539,7 @@ style('projectcheck', 'customer-statistics');
 											<?php else: ?>
 												<div class="detail-row">
 													<span class="detail-label"><?php p($l->t('Budget:')); ?></span>
-													<span class="detail-value">€<?php p(number_format($project->getTotalBudget() ?? 0, 2)); ?></span>
+													<span class="detail-value"><?php p($fmt ? $fmt->currency((float)($project->getTotalBudget() ?? 0)) : $currencyCode . ' ' . number_format((float)($project->getTotalBudget() ?? 0), 2)); ?></span>
 												</div>
 											<?php endif; ?>
 										</div>
@@ -544,11 +551,11 @@ style('projectcheck', 'customer-statistics');
 														style="width: <?php p(min(100, $budgetInfo['consumption_percentage'])); ?>%"></div>
 												</div>
 												<div class="progress-labels">
-													<span class="progress-label-left">€0</span>
+													<span class="progress-label-left"><?php p($fmt ? $fmt->currency(0) : $currencyCode . ' 0'); ?></span>
 													<span class="progress-label-center <?php p($budgetInfo['warning_level']); ?>">
 														<?php p(round($budgetInfo['consumption_percentage'])); ?>%
 													</span>
-													<span class="progress-label-right">€<?php p(number_format($budgetInfo['total_budget'], 0)); ?></span>
+													<span class="progress-label-right"><?php p($fmt ? $fmt->currency((float)$budgetInfo['total_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['total_budget'], 0)); ?></span>
 												</div>
 											</div>
 										<?php endif; ?>
@@ -616,14 +623,17 @@ style('projectcheck', 'customer-statistics');
 		document.getElementById('total-hours').textContent = parseFloat(stats.used_hours || 0).toFixed(1) + 'h';
 
 		// Financial statistics
-		document.getElementById('total-budget').textContent = '€' + parseFloat(stats.total_budget || 0).toFixed(2);
-		document.getElementById('budget-earned').textContent = '€' + parseFloat(stats.budget_earned || 0).toFixed(2);
-		document.getElementById('budget-remaining').textContent = '€' + parseFloat(stats.budget_remaining || 0).toFixed(2);
+		const code = (window.ProjectCheckConfig && typeof window.ProjectCheckConfig.currency === 'string' && /^[A-Z]{3}$/i.test(window.ProjectCheckConfig.currency))
+			? window.ProjectCheckConfig.currency.toUpperCase()
+			: 'EUR';
+		document.getElementById('total-budget').textContent = window.ProjectCheckFormat ? window.ProjectCheckFormat.currencyFmt(stats.total_budget || 0) : (code + ' ' + parseFloat(stats.total_budget || 0).toFixed(2));
+		document.getElementById('budget-earned').textContent = window.ProjectCheckFormat ? window.ProjectCheckFormat.currencyFmt(stats.budget_earned || 0) : (code + ' ' + parseFloat(stats.budget_earned || 0).toFixed(2));
+		document.getElementById('budget-remaining').textContent = window.ProjectCheckFormat ? window.ProjectCheckFormat.currencyFmt(stats.budget_remaining || 0) : (code + ' ' + parseFloat(stats.budget_remaining || 0).toFixed(2));
 		document.getElementById('budget-utilization').textContent = parseFloat(stats.budget_utilization_percentage || 0).toFixed(1) + '%';
 
 		// Performance statistics
 		document.getElementById('average-hours-per-project').textContent = parseFloat(stats.average_hours_per_project || 0).toFixed(1) + 'h';
-		document.getElementById('average-revenue-per-project').textContent = '€' + parseFloat(stats.average_revenue_per_project || 0).toFixed(2);
+		document.getElementById('average-revenue-per-project').textContent = window.ProjectCheckFormat ? window.ProjectCheckFormat.currencyFmt(stats.average_revenue_per_project || 0) : (code + ' ' + parseFloat(stats.average_revenue_per_project || 0).toFixed(2));
 		document.getElementById('project-completion-rate').textContent = parseFloat(stats.project_completion_rate || 0).toFixed(1) + '%';
 		document.getElementById('total-time-entries').textContent = stats.total_time_entries || 0;
 	}

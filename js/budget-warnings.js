@@ -30,10 +30,14 @@
 		var loc = (typeof OC !== 'undefined' && typeof OC.getLanguage === 'function')
 			? String(OC.getLanguage()).replace(/_/g, '-')
 			: (document.documentElement.getAttribute('lang') || 'en').replace(/_/g, '-');
+		var code = (window.ProjectCheckConfig && typeof window.ProjectCheckConfig.currency === 'string'
+			&& /^[A-Z]{3}$/i.test(window.ProjectCheckConfig.currency))
+			? window.ProjectCheckConfig.currency.toUpperCase()
+			: 'EUR';
 		try {
-			return new Intl.NumberFormat(loc, { style: 'currency', currency: 'EUR' }).format(n);
+			return new Intl.NumberFormat(loc, { style: 'currency', currency: code }).format(n);
 		} catch (e) {
-			return 'EUR ' + n.toFixed(2);
+			return code + ' ' + n.toFixed(2);
 		}
 	}
 

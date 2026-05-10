@@ -17,6 +17,10 @@ Util::addStyle('projectcheck', 'time-entry-form');
 Util::addStyle('projectcheck', 'common/datepicker');
 Util::addStyle('projectcheck', 'budget-alerts');
 Util::addStyle('projectcheck', 'navigation');
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -31,6 +35,10 @@ Util::addStyle('projectcheck', 'navigation');
 			<span data-budget-tpl="threshold"><?php p($l->t('After this entry, the project would be at {usage} of the budget. Additional cost: {cost}.')); ?></span>
 			<span data-budget-tpl="ok"><?php p($l->t('Entry cost: {entryCost}. Remaining budget: {remaining}.')); ?></span>
 			<span data-budget-tpl="error"><?php p($l->t('Could not check budget. Try again.')); ?></span>
+			<span data-budget-tpl="loading"><?php p($l->t('Loading…')); ?></span>
+			<span data-budget-tpl="remaining-hours"><?php p($l->t('remaining')); ?></span>
+			<span data-budget-tpl="used"><?php p($l->t('used')); ?></span>
+			<span data-budget-tpl="over-budget"><?php p($l->t('Over budget')); ?></span>
 		</div>
 		<div class="time-entry-form-container">
 			<div class="time-entry-form-header">
@@ -86,19 +94,19 @@ Util::addStyle('projectcheck', 'navigation');
 				<!-- Project Budget Information -->
 				<div id="budget-info-section" class="form-row" style="display: none;">
 					<div class="form-group budget-overview">
-						<label><?php p($l->t('Project Budget Overview')); ?></label>
+						<label id="budget-overview-heading"><?php p($l->t('Project Budget Overview')); ?></label>
 						<div class="budget-stats-grid">
 							<div class="budget-stat-item">
 								<span class="budget-stat-label"><?php p($l->t('Total Budget')); ?></span>
-								<span class="budget-stat-value" id="total-budget">€0.00</span>
+								<span class="budget-stat-value" id="total-budget"><?php p($currencyCode); ?> 0.00</span>
 							</div>
 							<div class="budget-stat-item">
 								<span class="budget-stat-label"><?php p($l->t('Used Budget')); ?></span>
-								<span class="budget-stat-value" id="used-budget">€0.00</span>
+								<span class="budget-stat-value" id="used-budget"><?php p($currencyCode); ?> 0.00</span>
 							</div>
 							<div class="budget-stat-item">
 								<span class="budget-stat-label"><?php p($l->t('Remaining Budget')); ?></span>
-								<span class="budget-stat-value" id="remaining-budget">€0.00</span>
+								<span class="budget-stat-value" id="remaining-budget"><?php p($currencyCode); ?> 0.00</span>
 							</div>
 							<div class="budget-stat-item">
 								<span class="budget-stat-label"><?php p($l->t('Total Hours')); ?></span>
@@ -107,11 +115,18 @@ Util::addStyle('projectcheck', 'navigation');
 							</div>
 						</div>
 						<div class="budget-progress-container">
-							<div class="budget-progress-bar">
+							<div
+								class="budget-progress-bar"
+								role="progressbar"
+								aria-labelledby="budget-overview-heading"
+								aria-valuemin="0"
+								aria-valuemax="100"
+								aria-valuenow="0">
 								<div class="budget-progress-fill" id="budget-progress-fill" style="width: 0%"></div>
 							</div>
 							<div class="budget-progress-text">
-								<span id="budget-percentage">0%</span> <?php p($l->t('used')); ?>
+								<span id="budget-percentage">0%</span>
+								<span id="budget-progress-status"><?php p($l->t('used')); ?></span>
 							</div>
 						</div>
 					</div>
@@ -140,7 +155,7 @@ Util::addStyle('projectcheck', 'navigation');
 					</div>
 
 					<div class="form-group">
-						<label for="hourly_rate" class="required"><?php p($l->t('Hourly Rate (€)')); ?></label>
+						<label for="hourly_rate" class="required"><?php p($l->t('Hourly Rate (%s)', [$currencyCode])); ?></label>
 						<input type="number" name="hourly_rate" id="hourly_rate" class="form-input" step="0.01" min="0" required
 							value="<?php p($isEdit ? $timeEntry->getHourlyRate() : ''); ?>"
 							placeholder="0.00">
@@ -149,7 +164,7 @@ Util::addStyle('projectcheck', 'navigation');
 
 					<div class="form-group">
 						<label for="total_cost"><?php p($l->t('Total Cost')); ?></label>
-						<input type="text" id="total_cost" class="form-input" readonly value="€0.00">
+						<input type="text" id="total_cost" class="form-input" readonly value="<?php p($currencyCode); ?> 0.00">
 					</div>
 				</div>
 

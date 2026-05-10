@@ -257,4 +257,54 @@ class AppConfigControllerTest extends TestCase {
 		$response = $this->makeController()->savePersonalPreferences();
 		$this->assertSame(403, $response->getStatus());
 	}
+
+	public function testSavePolicyPersistsValidCurrency(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->method('applyFullAccessPolicy')->with(false, [], [], []);
+		$this->accessControl->method('getPolicyState')->willReturn([
+			'restrictionEnabled' => false,
+			'allowedUserIds' => [],
+			'allowedGroupIds' => [],
+			'appAdminUserIds' => [],
+		]);
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'currency' => 'usd',
+		]);
+		$this->config->expects($this->once())
+			->method('setAppValue')
+			->with('projectcheck', 'currency', 'USD');
+		$this->eventDispatcher->method('dispatchTyped');
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(200, $response->getStatus());
+		$body = $response->getData();
+		$this->assertTrue($body['success']);
+	}
+
+	public function testSavePolicyIgnoresInvalidCurrency(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->method('applyFullAccessPolicy')->with(false, [], [], []);
+		$this->accessControl->method('getPolicyState')->willReturn([
+			'restrictionEnabled' => false,
+			'allowedUserIds' => [],
+			'allowedGroupIds' => [],
+			'appAdminUserIds' => [],
+		]);
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'currency' => 'usd<script>',
+		]);
+		$this->config->expects($this->never())
+			->method('setAppValue')
+			->with('projectcheck', 'currency', $this->anything());
+		$this->eventDispatcher->method('dispatchTyped');
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(200, $response->getStatus());
+		$body = $response->getData();
+		$this->assertTrue($body['success']);
+	}
 }

@@ -257,6 +257,20 @@
 	function boot() {
 		var org = document.getElementById('projectcheck-org-form');
 		var admin = document.getElementById('projectcheck-admin-form');
+		var currencySelect = document.getElementById('pc_currency');
+		var hourlyRateLabel = document.getElementById('pc_def_rate_label');
+		if (currencySelect && hourlyRateLabel) {
+			var applyCurrencyToRateLabel = function () {
+				var code = (currencySelect.value || 'EUR').toUpperCase().trim();
+				if (!/^[A-Z]{3}$/.test(code)) {
+					code = 'EUR';
+				}
+				var tpl = hourlyRateLabel.getAttribute('data-currency-label-template') || 'Default hourly rate (%s)';
+				hourlyRateLabel.textContent = tpl.replace('%s', code);
+			};
+			currencySelect.addEventListener('change', applyCurrencyToRateLabel);
+			applyCurrencyToRateLabel();
+		}
 		if (org) {
 			initForm(/** @type {HTMLFormElement} */ (org));
 		}

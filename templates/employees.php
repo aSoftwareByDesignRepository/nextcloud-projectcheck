@@ -15,6 +15,11 @@ Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'custom-icons');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'time-entries');
+$fmt = $_['fmt'] ?? null;
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -112,7 +117,7 @@ Util::addStyle('projectcheck', 'time-entries');
                             <i data-lucide="euro" class="lucide-icon"></i>
                         </div>
                         <div class="card-content">
-                            <div class="card-value">€<?php p(number_format($teamTotalCost, 2)); ?></div>
+                            <div class="card-value"><?php p($fmt ? $fmt->currency((float)$teamTotalCost) : $currencyCode . ' ' . number_format((float)$teamTotalCost, 2)); ?></div>
                             <div class="card-label"><?php p($l->t('Total Revenue')); ?></div>
                         </div>
                     </div>
@@ -200,11 +205,11 @@ Util::addStyle('projectcheck', 'time-entries');
                                     </td>
                                     <td>
                                         <i data-lucide="euro" class="lucide-icon"></i>
-                                        €<?php p(number_format($employee['total_cost'], 2)); ?>
+                                        <?php p($fmt ? $fmt->currency((float)$employee['total_cost']) : $currencyCode . ' ' . number_format((float)$employee['total_cost'], 2)); ?>
                                     </td>
                                     <td>
                                         <i data-lucide="trending-up" class="lucide-icon"></i>
-                                        €<?php p(number_format($employee['avg_hourly_rate'], 2)); ?>/h
+                                        <?php p($fmt ? $fmt->currency((float)$employee['avg_hourly_rate']) : $currencyCode . ' ' . number_format((float)$employee['avg_hourly_rate'], 2)); ?>/h
                                     </td>
                                     <td>
                                         <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $employee['user_id']])); ?>"

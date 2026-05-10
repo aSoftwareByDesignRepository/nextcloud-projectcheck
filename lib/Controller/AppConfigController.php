@@ -448,6 +448,10 @@ class AppConfigController extends Controller
 	 */
 	private function buildFormParameters(IL10N $l): array
 	{
+		$orgCurrency = strtoupper(trim($this->config->getAppValue('projectcheck', 'currency', 'EUR')));
+		if (preg_match('/^[A-Z]{3}$/', $orgCurrency) !== 1) {
+			$orgCurrency = 'EUR';
+		}
 		$defaultHourlyRate = $this->config->getAppValue('projectcheck', 'default_hourly_rate', '50.00');
 		$defaultProjectStatus = $this->config->getAppValue('projectcheck', 'default_project_status', 'Active');
 		$defaultProjectPriority = $this->config->getAppValue('projectcheck', 'default_project_priority', 'Medium');
@@ -477,6 +481,7 @@ class AppConfigController extends Controller
 			'allowedUserLines' => implode("\n", $st['allowedUserIds'] ?? []),
 			'allowedGroupLines' => implode("\n", $st['allowedGroupIds'] ?? []),
 			'appAdminLines' => implode("\n", $st['appAdminUserIds'] ?? []),
+			'orgCurrency' => $orgCurrency,
 			'default_hourly_rate' => $defaultHourlyRate,
 			'default_project_status' => $defaultProjectStatus,
 			'default_project_priority' => $defaultProjectPriority,
@@ -508,6 +513,7 @@ class AppConfigController extends Controller
 	private function readAppDefaultSnapshot(): array
 	{
 		return [
+			'currency' => $this->config->getAppValue('projectcheck', 'currency', 'EUR'),
 			'default_hourly_rate' => $this->config->getAppValue('projectcheck', 'default_hourly_rate', '50.00'),
 			'default_project_status' => $this->config->getAppValue('projectcheck', 'default_project_status', 'Active'),
 			'default_project_priority' => $this->config->getAppValue('projectcheck', 'default_project_priority', 'Medium'),
@@ -527,6 +533,12 @@ class AppConfigController extends Controller
 	private function saveAppDefaults(array $payload): void
 	{
 		$v = $payload;
+		if (isset($v['currency'])) {
+			$currency = strtoupper(trim((string) $v['currency']));
+			if (preg_match('/^[A-Z]{3}$/', $currency) === 1) {
+				$this->config->setAppValue('projectcheck', 'currency', $currency);
+			}
+		}
 		if (isset($v['default_hourly_rate']) && (string) $v['default_hourly_rate'] !== '') {
 			$x = (float) $v['default_hourly_rate'];
 			if ($x >= 0) {

@@ -1785,6 +1785,16 @@ body {
 	opacity: 0.7;
 }
 
+.char-count.char-count--warning {
+	color: var(--pc-emphasis-text-warning);
+	opacity: 1;
+}
+
+.char-count.char-count--critical {
+	color: var(--pc-emphasis-text-error);
+	opacity: 1;
+}
+
 /* Form Row Layout */
 .form-row {
 	display: grid;

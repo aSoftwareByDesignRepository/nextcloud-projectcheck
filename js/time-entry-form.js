@@ -627,7 +627,18 @@
 	 * Format currency
 	 */
 	function formatCurrency(amount) {
-		return '€' + parseFloat(amount).toFixed(2);
+		if (window.ProjectCheckFormat) {
+			return window.ProjectCheckFormat.currencyFmt(amount);
+		}
+		const value = Number.parseFloat(amount);
+		if (!Number.isFinite(value)) {
+			return '\u2014';
+		}
+		const code = (window.ProjectCheckConfig && typeof window.ProjectCheckConfig.currency === 'string'
+			&& /^[A-Z]{3}$/i.test(window.ProjectCheckConfig.currency))
+			? window.ProjectCheckConfig.currency.toUpperCase()
+			: 'EUR';
+		return code + ' ' + value.toFixed(2);
 	}
 
 	/**

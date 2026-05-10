@@ -13,6 +13,11 @@ Util::addScript('projectcheck', 'customers');
 Util::addStyle('projectcheck', 'customers');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'customer-statistics');
+$fmt = $_['fmt'] ?? null;
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -114,7 +119,7 @@ Util::addStyle('projectcheck', 'customer-statistics');
                         <i data-lucide="euro" class="lucide-icon white"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number">€<?php p(number_format($_['stats']['totalRevenue'] ?? 0, 2)); ?></div>
+                        <div class="stat-number"><?php p($fmt ? $fmt->currency((float)($_['stats']['totalRevenue'] ?? 0)) : $currencyCode . ' ' . number_format((float)($_['stats']['totalRevenue'] ?? 0), 2)); ?></div>
                         <div class="stat-label"><?php p($l->t('Total Revenue')); ?></div>
                         <div class="stat-detail">
                             <span class="stat-sub"><?php p($l->t('From all customers')); ?></span>

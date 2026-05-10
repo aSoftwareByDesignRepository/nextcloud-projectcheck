@@ -29,6 +29,11 @@ $canAddTimeEntry = $_['canAddTimeEntry'] ?? $project->allowsTimeTracking();
 $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
 $bulkAddSuccess = isset($_GET['bulk_add_success']) && (string)$_GET['bulk_add_success'] === '1';
 $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_count']) : 0;
+$fmt = $_['fmt'] ?? null;
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -144,11 +149,11 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
                         <i class="icon-money-custom icon-large"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-number">€<?php p(number_format($budgetInfo['used_budget'] ?? $budgetConsumption, 2)); ?></div>
+                        <div class="stat-number"><?php p($fmt ? $fmt->currency((float)($budgetInfo['used_budget'] ?? $budgetConsumption)) : $currencyCode . ' ' . number_format((float)($budgetInfo['used_budget'] ?? $budgetConsumption), 2)); ?></div>
                         <div class="stat-label"><?php p($l->t('BUDGET USED')); ?></div>
                         <?php if (isset($budgetInfo['total_budget']) && $budgetInfo['total_budget'] > 0): ?>
                             <div class="stat-sub">
-                                <?php p($l->t('€%s remaining', [number_format((float)$budgetInfo['remaining_budget'], 2, '.', '')])); ?>
+                                <?php p($l->t('%s remaining', [($fmt ? $fmt->currency((float)$budgetInfo['remaining_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['remaining_budget'], 2))])); ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -211,7 +216,7 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
                                             <i class="icon-money-custom"></i>
                                         </div>
                                         <div class="stat-details">
-                                            <div class="stat-value">€<?php p(number_format($yearData['total_cost'], 2)); ?></div>
+                                            <div class="stat-value"><?php p($fmt ? $fmt->currency((float)$yearData['total_cost']) : $currencyCode . ' ' . number_format((float)$yearData['total_cost'], 2)); ?></div>
                                             <div class="stat-label"><?php p($l->t('Total Cost')); ?></div>
                                         </div>
                                     </div>
@@ -367,7 +372,7 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
                                 </div>
                                 <div class="stat-content">
                                     <span class="stat-label"><?php p($l->t('Budget')); ?></span>
-                                    <span class="stat-value">€<?php p(number_format($project->getTotalBudget() ?? 0, 2)); ?></span>
+                                    <span class="stat-value"><?php p($fmt ? $fmt->currency((float)($project->getTotalBudget() ?? 0)) : $currencyCode . ' ' . number_format((float)($project->getTotalBudget() ?? 0), 2)); ?></span>
                                 </div>
                             </div>
                             <div class="overview-stat">
@@ -385,7 +390,7 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
                                 </div>
                                 <div class="stat-content">
                                     <span class="stat-label"><?php p($l->t('Consumed')); ?></span>
-                                    <span class="stat-value">€<?php p(number_format($budgetConsumption, 2)); ?></span>
+                                    <span class="stat-value"><?php p($fmt ? $fmt->currency((float)$budgetConsumption) : $currencyCode . ' ' . number_format((float)$budgetConsumption, 2)); ?></span>
                                 </div>
                             </div>
                         </div>
@@ -400,10 +405,10 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
                                     <span class="budget-percentage budget-<?php p($budgetInfo['warning_level']); ?>">
                                         <?php p($l->t('%s%% used', [number_format((float)$budgetInfo['consumption_percentage'], 1, '.', '')])); ?>
                                     </span>
-                                    <span class="budget-remaining"><?php p($l->t('€%s remaining', [number_format((float)$budgetInfo['remaining_budget'], 2, '.', '')])); ?></span>
+                                    <span class="budget-remaining"><?php p($l->t('%s remaining', [($fmt ? $fmt->currency((float)$budgetInfo['remaining_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['remaining_budget'], 2))])); ?></span>
                                 <?php else: ?>
                                     <span class="budget-percentage"><?php p($l->t('%s%% used', [number_format((float)round(($budgetConsumption / max(1, $project->getTotalBudget() ?? 1)) * 100, 1), 1, '.', '')])); ?></span>
-                                    <span class="budget-remaining"><?php p($l->t('€%s remaining', [number_format((float)(($project->getTotalBudget() ?? 0) - $budgetConsumption), 2, '.', '')])); ?></span>
+                                    <span class="budget-remaining"><?php p($l->t('%s remaining', [($fmt ? $fmt->currency((float)(($project->getTotalBudget() ?? 0) - $budgetConsumption)) : $currencyCode . ' ' . number_format((float)(($project->getTotalBudget() ?? 0) - $budgetConsumption), 2))])); ?></span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -419,20 +424,20 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
                         <div class="budget-breakdown">
                             <div class="breakdown-item">
                                 <span class="breakdown-label"><?php p($l->t('Total Budget')); ?></span>
-                                <span class="breakdown-value">€<?php p(number_format($budgetInfo['total_budget'] ?? $project->getTotalBudget() ?? 0, 2)); ?></span>
+                                <span class="breakdown-value"><?php p($fmt ? $fmt->currency((float)($budgetInfo['total_budget'] ?? $project->getTotalBudget() ?? 0)) : $currencyCode . ' ' . number_format((float)($budgetInfo['total_budget'] ?? $project->getTotalBudget() ?? 0), 2)); ?></span>
                             </div>
                             <div class="breakdown-item">
                                 <span class="breakdown-label"><?php p($l->t('Used')); ?></span>
-                                <span class="breakdown-value consumed">€<?php p(number_format($budgetInfo['used_budget'] ?? $budgetConsumption, 2)); ?></span>
+                                <span class="breakdown-value consumed"><?php p($fmt ? $fmt->currency((float)($budgetInfo['used_budget'] ?? $budgetConsumption)) : $currencyCode . ' ' . number_format((float)($budgetInfo['used_budget'] ?? $budgetConsumption), 2)); ?></span>
                             </div>
                             <div class="breakdown-item">
                                 <span class="breakdown-label"><?php p($l->t('Remaining')); ?></span>
-                                <span class="breakdown-value remaining">€<?php p(number_format($budgetInfo['remaining_budget'] ?? (($project->getTotalBudget() ?? 0) - $budgetConsumption), 2)); ?></span>
+                                <span class="breakdown-value remaining"><?php p($fmt ? $fmt->currency((float)($budgetInfo['remaining_budget'] ?? (($project->getTotalBudget() ?? 0) - $budgetConsumption))) : $currencyCode . ' ' . number_format((float)($budgetInfo['remaining_budget'] ?? (($project->getTotalBudget() ?? 0) - $budgetConsumption)), 2)); ?></span>
                             </div>
                             <?php if (isset($budgetInfo['is_over_budget']) && $budgetInfo['is_over_budget']): ?>
                                 <div class="breakdown-item over-budget">
                                     <span class="breakdown-label"><?php p($l->t('Over Budget')); ?></span>
-                                    <span class="breakdown-value over-budget">€<?php p(number_format($budgetInfo['used_budget'] - $budgetInfo['total_budget'], 2)); ?></span>
+                                    <span class="breakdown-value over-budget"><?php p($fmt ? $fmt->currency((float)($budgetInfo['used_budget'] - $budgetInfo['total_budget'])) : $currencyCode . ' ' . number_format((float)($budgetInfo['used_budget'] - $budgetInfo['total_budget']), 2)); ?></span>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -502,7 +507,7 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
                                 </div>
                                 <div class="timeline-content">
                                     <label><?php p($l->t('Hourly Rate')); ?></label>
-                                    <span>€<?php p(number_format($project->getHourlyRate() ?? 0, 2)); ?><?php p($l->t('/hour')); ?></span>
+                                    <span><?php p($fmt ? $fmt->currency((float)($project->getHourlyRate() ?? 0)) : $currencyCode . ' ' . number_format((float)($project->getHourlyRate() ?? 0), 2)); ?><?php p($l->t('/hour')); ?></span>
                                 </div>
                             </div>
                         </div>
@@ -623,7 +628,7 @@ $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_coun
                                     </div>
                                     <div class="entry-stats">
                                         <span class="entry-hours"><?php p($entry->getHours()); ?> <?php p($l->t('hours')); ?></span>
-                                        <span class="entry-cost">€<?php p(number_format($entry->getHours() * $entry->getHourlyRate(), 2)); ?></span>
+                                        <span class="entry-cost"><?php p($fmt ? $fmt->currency((float)($entry->getHours() * $entry->getHourlyRate())) : $currencyCode . ' ' . number_format((float)($entry->getHours() * $entry->getHourlyRate()), 2)); ?></span>
                                     </div>
                                 </div>
                                 <?php if ($entry->getDescription()): ?>

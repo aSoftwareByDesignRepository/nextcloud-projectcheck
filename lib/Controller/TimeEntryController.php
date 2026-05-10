@@ -865,6 +865,10 @@ class TimeEntryController extends Controller
 	private function generateTimeEntriesCSV(array $timeEntries, string $userId): string
 	{
 		try {
+			$currencyCode = strtoupper(trim((string)$this->config->getAppValue($this->appName, 'currency', 'EUR')));
+			if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+				$currencyCode = 'EUR';
+			}
 			// CSV headers
 			$headers = [
 				'Date',
@@ -873,8 +877,8 @@ class TimeEntryController extends Controller
 				'Project Type',
 				'Description',
 				'Hours',
-				'Hourly Rate (€)',
-				'Total Amount (€)',
+				'Hourly Rate (' . $currencyCode . ')',
+				'Total Amount (' . $currencyCode . ')',
 				'User',
 				'Created At'
 			];
@@ -928,7 +932,7 @@ class TimeEntryController extends Controller
 
 				// Write row manually to ensure proper formatting
 				fputs($output, implode(';', array_map(function ($field) {
-					return '"' . str_replace('"', '""', $field) . '"';
+					return '"' . str_replace('"', '""', $this->sanitizeCsvField((string)$field)) . '"';
 				}, $row)) . "\n");
 			}
 
@@ -941,5 +945,23 @@ class TimeEntryController extends Controller
 			$this->logger->error('CSV generation failed', ['exception' => $e]);
 			throw $e;
 		}
+	}
+
+	/**
+	 * Neutralize spreadsheet formulas in exported text fields.
+	 *
+	 * Without this, values starting with =,+,-,@ can execute formulas when
+	 * opened in spreadsheet tools (CSV injection).
+	 */
+	private function sanitizeCsvField(string $value): string
+	{
+		if ($value === '') {
+			return $value;
+		}
+		$first = $value[0];
+		if ($first === '=' || $first === '+' || $first === '-' || $first === '@') {
+			return "'" . $value;
+		}
+		return $value;
 	}
 }

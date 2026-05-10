@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.32 - 2026-05-08
+
+### Fixed
+
+- Budget overview: clearer UI state handling when loading or when data is empty.
+- Organization currency settings: stricter validation and safer persistence of the default currency.
+
+### Changed
+
+- Dashboard widgets: prefer dark-themed app icons where the server exposes them, for better contrast on the dashboard.
+- Release metadata for App Store: version `2.0.32`, package alignment, and Nextcloud `32–33` compatibility (`max-version` aligned with current stable server major `33`).
+
 ## 2.0.31 - 2026-05-06
 
 ### Fixed

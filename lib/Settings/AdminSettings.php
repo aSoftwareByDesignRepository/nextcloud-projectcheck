@@ -51,6 +51,10 @@ class AdminSettings implements ISettings
     {
         $l = $this->l10nFactory->get('projectcheck');
         $policy = $this->accessControl->getPolicyState();
+        $orgCurrency = strtoupper(trim($this->config->getAppValue('projectcheck', 'currency', 'EUR')));
+        if (preg_match('/^[A-Z]{3}$/', $orgCurrency) !== 1) {
+            $orgCurrency = 'EUR';
+        }
         $defaultHourlyRate = $this->config->getAppValue('projectcheck', 'default_hourly_rate', '50.00');
         $defaultProjectStatus = $this->config->getAppValue('projectcheck', 'default_project_status', 'Active');
         $defaultProjectPriority = $this->config->getAppValue('projectcheck', 'default_project_priority', 'Medium');
@@ -69,6 +73,7 @@ class AdminSettings implements ISettings
             'allowedUserLines' => implode("\n", $policy['allowedUserIds'] ?? []),
             'allowedGroupLines' => implode("\n", $policy['allowedGroupIds'] ?? []),
             'appAdminLines' => implode("\n", $policy['appAdminUserIds'] ?? []),
+            'orgCurrency' => $orgCurrency,
             'default_hourly_rate' => $defaultHourlyRate,
             'default_project_status' => $defaultProjectStatus,
             'default_project_priority' => $defaultProjectPriority,

@@ -266,12 +266,15 @@
 					</button>
 				</div>`;
 			const badge = isFormer ? ` <span class="pc-badge pc-badge--neutral">${t('projectcheck', 'Former')}</span>` : '';
+			const memberRate = (member.hourly_rate !== null && member.hourly_rate !== undefined && member.hourly_rate !== '')
+				? `${escapeHtml(formatCurrency(member.hourly_rate))}/h`
+				: '';
 			return `
 			<div class="team-member${isFormer ? ' team-member--former' : ''}">
 				<div class="team-member-info">
 					<div class="team-member-name">${name}${badge}</div>
 					<div class="team-member-role">${role}</div>
-					${member.hourly_rate ? `<div class="team-member-rate">${member.hourly_rate} €/h</div>` : ''}
+					${memberRate ? `<div class="team-member-rate">${memberRate}</div>` : ''}
 				</div>
 				${removeBtn}
 			</div>`;
@@ -480,6 +483,21 @@
 		const div = document.createElement('div');
 		div.textContent = text;
 		return div.innerHTML;
+	}
+
+	function formatCurrency(amount) {
+		if (window.ProjectCheckFormat) {
+			return window.ProjectCheckFormat.currencyFmt(amount);
+		}
+		const value = Number.parseFloat(amount);
+		if (!Number.isFinite(value)) {
+			return '\u2014';
+		}
+		const code = (window.ProjectCheckConfig && typeof window.ProjectCheckConfig.currency === 'string'
+			&& /^[A-Z]{3}$/i.test(window.ProjectCheckConfig.currency))
+			? window.ProjectCheckConfig.currency.toUpperCase()
+			: 'EUR';
+		return code + ' ' + value.toFixed(2);
 	}
 
 	/**

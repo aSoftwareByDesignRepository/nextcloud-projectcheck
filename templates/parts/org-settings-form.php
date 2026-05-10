@@ -268,7 +268,39 @@ try {
 			<h2 class="projectcheck-panel__title" id="pc-defaults-heading"><?php p($l->t('App defaults')); ?></h2>
 			<div class="projectcheck-defaults-grid" role="group" aria-label="<?php p($l->t('App defaults')); ?>">
 			<div class="projectcheck-form-group">
-				<label for="pc_def_rate"><?php p($l->t('Default hourly rate (€)')); ?></label>
+				<?php
+				$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+				if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+					$currencyCode = 'EUR';
+				}
+				?>
+				<label for="pc_currency"><?php p($l->t('Default currency')); ?></label>
+				<?php
+				$currencyOptions = [
+					'EUR', 'USD', 'GBP', 'CHF', 'CAD', 'AUD', 'NZD', 'JPY', 'CNY', 'HKD', 'SGD',
+					'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF', 'RON', 'BGN', 'TRY', 'ILS', 'AED',
+					'SAR', 'ZAR', 'INR', 'KRW', 'THB', 'MYR', 'IDR', 'PHP', 'VND', 'MXN', 'BRL',
+					'ARS', 'CLP', 'COP', 'PEN',
+				];
+				if (!in_array($currencyCode, $currencyOptions, true)) {
+					array_unshift($currencyOptions, $currencyCode);
+				}
+				?>
+				<select id="pc_currency" name="currency" class="projectcheck-select" aria-describedby="pc_currency_hint">
+					<?php foreach ($currencyOptions as $currencyOption): ?>
+						<option value="<?php p($currencyOption); ?>" <?php if ($currencyCode === $currencyOption) { p('selected'); } ?>>
+							<?php p($currencyOption); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+				<p class="projectcheck-hint" id="pc_currency_hint"><?php p($l->t('Used across budgets, rates, totals, and exports.')); ?></p>
+			</div>
+			<div class="projectcheck-form-group">
+				<label
+					for="pc_def_rate"
+					id="pc_def_rate_label"
+					data-currency-label-template="<?php p($l->t('Default hourly rate (%s)', ['%s'])); ?>"
+				><?php p($l->t('Default hourly rate (%s)', [$currencyCode])); ?></label>
 				<input type="text" id="pc_def_rate" name="default_hourly_rate" inputmode="decimal" class="projectcheck-input" value="<?php p($default_hourly_rate); ?>" autocomplete="off" aria-describedby="pc_def_rate_hint">
 				<p class="projectcheck-hint" id="pc_def_rate_hint"><?php p($l->t('Default for new projects when the app has no per-user override.')); ?></p>
 			</div>

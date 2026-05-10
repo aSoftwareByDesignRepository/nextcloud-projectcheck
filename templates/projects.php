@@ -13,6 +13,11 @@ Util::addScript('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'dashboard');
 Util::addStyle('projectcheck', 'navigation');
+$fmt = $_['fmt'] ?? null;
+$currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
+	$currencyCode = 'EUR';
+}
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -105,7 +110,7 @@ Util::addStyle('projectcheck', 'navigation');
                 <div class="overview-stat-compact">
                     <i data-lucide="euro" class="lucide-icon"></i>
                     <div class="stat-content">
-                        <div class="stat-number">€<?php p(number_format($_['stats']['totalBudget'] ?? 0, 0)); ?></div>
+                        <div class="stat-number"><?php p($fmt ? $fmt->currency((float)($_['stats']['totalBudget'] ?? 0)) : $currencyCode . ' ' . number_format((float)($_['stats']['totalBudget'] ?? 0), 0)); ?></div>
                         <div class="stat-label"><?php p($l->t('Budget')); ?></div>
                         <div class="stat-detail">
                             <span><?php p($_['stats']['consumptionPercentage'] ?? 0); ?>% <?php p($l->t('used')); ?></span>
@@ -289,16 +294,16 @@ Util::addStyle('projectcheck', 'navigation');
                                             <div class="budget-main">
                                                 <div class="budget-line">
                                                     <span class="budget-label"><?php p($l->t('Total Budget:')); ?></span>
-                                                    <span class="budget-total">€<?php p(number_format($budgetInfo['total_budget'], 2)); ?></span>
+                                                    <span class="budget-total"><?php p($fmt ? $fmt->currency((float)$budgetInfo['total_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['total_budget'], 2)); ?></span>
                                                 </div>
                                                 <div class="budget-line">
                                                     <span class="budget-label"><?php p($l->t('Used:')); ?></span>
-                                                    <span class="budget-used">€<?php p(number_format($budgetInfo['used_budget'], 2)); ?></span>
+                                                    <span class="budget-used"><?php p($fmt ? $fmt->currency((float)$budgetInfo['used_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['used_budget'], 2)); ?></span>
                                                 </div>
                                                 <div class="budget-line">
                                                     <span class="budget-label"><?php p($l->t('Remaining:')); ?></span>
                                                     <span class="budget-remaining <?php p($budgetInfo['warning_level']); ?>">
-                                                        €<?php p(number_format($budgetInfo['remaining_budget'], 2)); ?>
+                                                        <?php p($fmt ? $fmt->currency((float)$budgetInfo['remaining_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['remaining_budget'], 2)); ?>
                                                     </span>
                                                 </div>
                                             </div>
@@ -313,15 +318,15 @@ Util::addStyle('projectcheck', 'navigation');
                                             <div class="budget-main">
                                                 <div class="budget-line">
                                                     <span class="budget-label"><?php p($l->t('Total Budget:')); ?></span>
-                                                    <span class="budget-total">€<?php p(number_format($project->getTotalBudget() ?? 0, 2)); ?></span>
+                                                    <span class="budget-total"><?php p($fmt ? $fmt->currency((float)($project->getTotalBudget() ?? 0)) : $currencyCode . ' ' . number_format((float)($project->getTotalBudget() ?? 0), 2)); ?></span>
                                                 </div>
                                                 <div class="budget-line">
                                                     <span class="budget-label"><?php p($l->t('Used:')); ?></span>
-                                                    <span class="budget-used">€0.00</span>
+                                                    <span class="budget-used"><?php p($fmt ? $fmt->currency(0) : $currencyCode . ' 0.00'); ?></span>
                                                 </div>
                                                 <div class="budget-line">
                                                     <span class="budget-label"><?php p($l->t('Remaining:')); ?></span>
-                                                    <span class="budget-remaining">€<?php p(number_format($project->getTotalBudget() ?? 0, 2)); ?></span>
+                                                    <span class="budget-remaining"><?php p($fmt ? $fmt->currency((float)($project->getTotalBudget() ?? 0)) : $currencyCode . ' ' . number_format((float)($project->getTotalBudget() ?? 0), 2)); ?></span>
                                                 </div>
                                             </div>
                                             <div class="budget-secondary">

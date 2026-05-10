@@ -237,10 +237,14 @@
 			return '\u2014';
 		}
 		// Boot-order fallback only; primary path is ProjectCheckFormat above.
+		const code = (window.ProjectCheckConfig && typeof window.ProjectCheckConfig.currency === 'string'
+			&& /^[A-Z]{3}$/i.test(window.ProjectCheckConfig.currency))
+			? window.ProjectCheckConfig.currency.toUpperCase()
+			: 'EUR';
 		try {
-			return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(n);
+			return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format(n);
 		} catch (e) {
-			return 'EUR ' + n.toFixed(2);
+			return code + ' ' + n.toFixed(2);
 		}
 	}
 
