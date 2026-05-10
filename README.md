@@ -63,7 +63,7 @@ Sicherheitsprobleme bitte **nicht** öffentlich in GitHub-Issues melden. Hinweis
 ### Projekt & Support
 
 **ProjectCheck** wird von **Software by Design** entwickelt und gepflegt.  
-Website: [software-by-design.de](https://software-by-design.de/) · E-Mail: [info@software-by-design.de](mailto:info@software-by-design.de)  
+Website: [software-by-design.de](http://nextcloud.software-by-design.de/) · E-Mail: [info@software-by-design.de](mailto:info@software-by-design.de)  
 Quellcode und Issues: [github.com/aSoftwareByDesignRepository/nextcloud-projectcheck](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck)
 
 ### Lizenz
@@ -114,7 +114,7 @@ Please do not report security issues in public GitHub issues. See **[SECURITY.md
 ### Project & support
 
 **ProjectCheck** is developed and maintained by **Software by Design**.  
-Website: [software-by-design.de](https://software-by-design.de/) · E-mail: [info@software-by-design.de](mailto:info@software-by-design.de)  
+Website: [software-by-design.de](http://nextcloud.software-by-design.de/) · E-mail: [info@software-by-design.de](mailto:info@software-by-design.de)  
 Source code and issues: [github.com/aSoftwareByDesignRepository/nextcloud-projectcheck](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck)
 
 ### License
