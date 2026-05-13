@@ -21,8 +21,6 @@ use OCP\IDBConnection;
  */
 class TimeEntryMapper extends QBMapper
 {
-	use ColumnIntrospectionTrait;
-
 	/**
 	 * TimeEntryMapper constructor
 	 *
@@ -31,11 +29,6 @@ class TimeEntryMapper extends QBMapper
 	public function __construct(IDBConnection $db)
 	{
 		parent::__construct($db, 'pc_time_entries', TimeEntry::class);
-	}
-
-	protected function getColumnIntrospectionConnection(): IDBConnection
-	{
-		return $this->db;
 	}
 
 	/**
@@ -79,7 +72,8 @@ class TimeEntryMapper extends QBMapper
 		}
 
 		if (!empty($filters['search'])) {
-			$qb->andWhere($qb->expr()->like('description', $qb->createNamedParameter('%' . $filters['search'] . '%')));
+			$searchTerm = '%' . $this->db->escapeLikeParameter($filters['search']) . '%';
+			$qb->andWhere($qb->expr()->iLike('description', $qb->createNamedParameter($searchTerm)));
 		}
 
 		// Apply pagination
@@ -193,33 +187,58 @@ class TimeEntryMapper extends QBMapper
 	public function count(array $filters = []): int
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select($qb->createFunction('COUNT(*)'))
-			->from($this->getTableName());
+		$qb->select($qb->createFunction('COUNT(*)'));
+
+		// Same joins as findWithProjectInfo when filters touch joined tables.
+		$needsProjectJoin = !empty($filters['project_type']) || !empty($filters['search']);
+		if ($needsProjectJoin) {
+			$qb->from($this->getTableName(), 't')
+				->innerJoin('t', 'pc_projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
+				->innerJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
+		} else {
+			$qb->from($this->getTableName());
+		}
+		$t = $needsProjectJoin ? 't.' : '';
 
 		// Apply filters
 		if (!empty($filters['project_id'])) {
-			$qb->andWhere($qb->expr()->eq('project_id', $qb->createNamedParameter($filters['project_id'])));
+			$qb->andWhere($qb->expr()->eq($t . 'project_id', $qb->createNamedParameter($filters['project_id'])));
 		}
 		if (array_key_exists('project_ids', $filters) && is_array($filters['project_ids'])) {
 			if ($filters['project_ids'] === []) {
 				$qb->andWhere('1 = 0');
 			} else {
 				$qb->andWhere(
-					$qb->expr()->in('project_id', $qb->createNamedParameter($filters['project_ids'], IQueryBuilder::PARAM_INT_ARRAY))
+					$qb->expr()->in($t . 'project_id', $qb->createNamedParameter($filters['project_ids'], IQueryBuilder::PARAM_INT_ARRAY))
 				);
 			}
 		}
 
 		if (!empty($filters['user_id'])) {
-			$qb->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($filters['user_id'])));
+			$qb->andWhere($qb->expr()->eq($t . 'user_id', $qb->createNamedParameter($filters['user_id'])));
+		}
+
+		if (!empty($filters['project_type'])) {
+			$qb->andWhere($qb->expr()->eq('p.project_type', $qb->createNamedParameter($filters['project_type'])));
 		}
 
 		if (!empty($filters['date_from'])) {
-			$qb->andWhere($qb->expr()->gte('date', $qb->createNamedParameter($filters['date_from'])));
+			$qb->andWhere($qb->expr()->gte($t . 'date', $qb->createNamedParameter($filters['date_from'])));
 		}
 
 		if (!empty($filters['date_to'])) {
-			$qb->andWhere($qb->expr()->lte('date', $qb->createNamedParameter($filters['date_to'])));
+			$qb->andWhere($qb->expr()->lte($t . 'date', $qb->createNamedParameter($filters['date_to'])));
+		}
+
+		if (!empty($filters['search'])) {
+			$searchTerm = '%' . $this->db->escapeLikeParameter($filters['search']) . '%';
+			$qb->andWhere(
+				$qb->expr()->orX(
+					$qb->expr()->iLike($t . 'description', $qb->createNamedParameter($searchTerm)),
+					$qb->expr()->iLike('p.name', $qb->createNamedParameter($searchTerm)),
+					$qb->expr()->iLike('c.name', $qb->createNamedParameter($searchTerm))
+				)
+			);
 		}
 
 		$result = $qb->executeQuery();
@@ -320,34 +339,24 @@ class TimeEntryMapper extends QBMapper
 	{
 		$qb = $this->db->getQueryBuilder();
 
-		// Base select fields. `project_type_display_name` is intentionally NOT
-		// selected from SQL: it is always derived in PHP via
-		// `getProjectTypeDisplayName($projectType)` in the row loop below, so
-		// pulling it from the database would just be a value the loop throws
-		// away.
-		$selectFields = [
-			't.*',
-			'p.name as project_name',
-			'c.name as customer_name',
-			$qb->createFunction('COALESCE(s.display_name, u.displayname, t.user_id) as user_display_name'),
-		];
-
-		// `project_type` is guaranteed to exist after `Version2007` runs; the
-		// guard keeps the page healthy during the maintenance-mode upgrade
-		// window between the new code being loaded and the migration being
-		// applied. If the column is absent the row simply has no
-		// `project_type` key and the loop below falls back to `'client'`,
-		// which matches `Project::getProjectType()` runtime semantics.
-		if ($this->columnExists('pc_projects', 'project_type')) {
-			$selectFields[] = 'p.project_type';
-		}
-
-		$qb->select(...$selectFields)
-			->from($this->getTableName(), 't')
+		// Base columns. `user_display_name` uses selectAlias + createFunction so
+		// identifiers are quoted per NC rules (avoids fragile `… as …` handling).
+		// `project_type_display_name` stays PHP-derived in the row loop below.
+		$qb->from($this->getTableName(), 't')
 			->innerJoin('t', 'pc_projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
 			->innerJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
 			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
+			->select(
+				't.*',
+				'p.name as project_name',
+				'p.project_type',
+				'c.name as customer_name',
+			)
+			->selectAlias(
+				$qb->createFunction(SqlPortableExpressions::coalesceUserDisplayName()),
+				'user_display_name'
+			)
 			->orderBy('t.date', 'DESC')
 			->addOrderBy('t.created_at', 'DESC');
 
@@ -370,9 +379,7 @@ class TimeEntryMapper extends QBMapper
 		}
 
 		if (!empty($filters['project_type'])) {
-			if ($this->columnExists('pc_projects', 'project_type')) {
-				$qb->andWhere($qb->expr()->eq('p.project_type', $qb->createNamedParameter($filters['project_type'])));
-			}
+			$qb->andWhere($qb->expr()->eq('p.project_type', $qb->createNamedParameter($filters['project_type'])));
 		}
 
 		if (!empty($filters['date_from'])) {
@@ -409,7 +416,6 @@ class TimeEntryMapper extends QBMapper
 		while ($row = $result->fetch()) {
 			$timeEntry = $this->mapRowToEntity($row);
 
-			// Get project type and display name - handle both cases (column exists or not)
 			$projectType = $row['project_type'] ?? 'client';
 			$projectTypeDisplayName = $this->getProjectTypeDisplayName($projectType);
 
@@ -435,11 +441,12 @@ class TimeEntryMapper extends QBMapper
 	public function findUsersWithTimeEntries(?array $projectIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
-		$coalesce = "COALESCE(MAX(s.display_name), MAX(u.displayname), t.user_id)";
-		$qb->select('t.user_id', $qb->createFunction($coalesce . ' as displayname'))
-			->from($this->getTableName(), 't')
+		$coalesce = SqlPortableExpressions::coalesceUserDisplayNameAggregated();
+		$qb->from($this->getTableName(), 't')
 			->leftJoin('t', 'pc_user_account_snapshots', 's', $qb->expr()->eq('t.user_id', 's.user_id'))
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'))
+			->select('t.user_id')
+			->selectAlias($qb->createFunction($coalesce), 'displayname')
 			->groupBy('t.user_id')
 			->orderBy($qb->createFunction($coalesce), 'ASC');
 		if ($projectIds !== null) {
@@ -473,15 +480,16 @@ class TimeEntryMapper extends QBMapper
 	public function getYearlyStatsForProject(int $projectId): array
 	{
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(date) as year'),
-			$qb->createFunction('SUM(hours) as total_hours'),
-			$qb->createFunction('SUM(hours * hourly_rate) as total_cost'),
+			$qb->createFunction($yearExpr . ' as year'),
+			$qb->createFunction('SUM(t.hours) as total_hours'),
+			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
-			->from($this->getTableName())
-			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId)))
-			->groupBy($qb->createFunction('YEAR(date)'))
+			->from($this->getTableName(), 't')
+			->where($qb->expr()->eq('t.project_id', $qb->createNamedParameter($projectId)))
+			->groupBy($qb->createFunction($yearExpr))
 			->orderBy('year', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -507,14 +515,15 @@ class TimeEntryMapper extends QBMapper
 	public function getYearlyStatsForAllProjects(): array
 	{
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(date) as year'),
-			$qb->createFunction('SUM(hours) as total_hours'),
-			$qb->createFunction('SUM(hours * hourly_rate) as total_cost'),
+			$qb->createFunction($yearExpr . ' as year'),
+			$qb->createFunction('SUM(t.hours) as total_hours'),
+			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
-			->from($this->getTableName())
-			->groupBy($qb->createFunction('YEAR(date)'))
+			->from($this->getTableName(), 't')
+			->groupBy($qb->createFunction($yearExpr))
 			->orderBy('year', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -542,16 +551,17 @@ class TimeEntryMapper extends QBMapper
 	public function getYearlyStatsForScope(?array $projectIds = null, ?array $userIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(date) as year'),
-			$qb->createFunction('SUM(hours) as total_hours'),
-			$qb->createFunction('SUM(hours * hourly_rate) as total_cost'),
+			$qb->createFunction($yearExpr . ' as year'),
+			$qb->createFunction('SUM(t.hours) as total_hours'),
+			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
-			->from($this->getTableName());
-		$this->applyProjectScope($qb, 'project_id', $projectIds);
-		$this->applyUserScope($qb, 'user_id', $userIds);
-		$qb->groupBy($qb->createFunction('YEAR(date)'))
+			->from($this->getTableName(), 't');
+		$this->applyProjectScope($qb, 't.project_id', $projectIds);
+		$this->applyUserScope($qb, 't.user_id', $userIds);
+		$qb->groupBy($qb->createFunction($yearExpr))
 			->orderBy('year', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -578,8 +588,9 @@ class TimeEntryMapper extends QBMapper
 	public function getYearlyStatsForCustomer(int $customerId, ?array $projectIds = null, ?array $userIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(t.date) as year'),
+			$qb->createFunction($yearExpr . ' as year'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
@@ -589,7 +600,7 @@ class TimeEntryMapper extends QBMapper
 			->where($qb->expr()->eq('p.customer_id', $qb->createNamedParameter($customerId)));
 		$this->applyProjectScope($qb, 't.project_id', $projectIds);
 		$this->applyUserScope($qb, 't.user_id', $userIds);
-		$qb->groupBy($qb->createFunction('YEAR(t.date)'))
+		$qb->groupBy($qb->createFunction($yearExpr))
 			->orderBy('year', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -615,8 +626,9 @@ class TimeEntryMapper extends QBMapper
 	public function getDetailedYearlyStats(?array $projectIds = null, ?array $userIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(t.date) as year'),
+			$qb->createFunction($yearExpr . ' as year'),
 			'c.id as customer_id',
 			'c.name as customer_name',
 			'p.id as project_id',
@@ -630,7 +642,7 @@ class TimeEntryMapper extends QBMapper
 			->innerJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
 		$this->applyProjectScope($qb, 't.project_id', $projectIds);
 		$this->applyUserScope($qb, 't.user_id', $userIds);
-		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'c.id', 'p.id')
+		$qb->groupBy($qb->createFunction($yearExpr), 'c.id', 'p.id')
 			->orderBy('year', 'DESC')
 			->addOrderBy('c.name', 'ASC')
 			->addOrderBy('p.name', 'ASC');
@@ -683,15 +695,16 @@ class TimeEntryMapper extends QBMapper
 	public function getYearlyStatsForEmployee(string $userId): array
 	{
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(date) as year'),
-			$qb->createFunction('SUM(hours) as total_hours'),
-			$qb->createFunction('SUM(hours * hourly_rate) as total_cost'),
+			$qb->createFunction($yearExpr . ' as year'),
+			$qb->createFunction('SUM(t.hours) as total_hours'),
+			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
-			->from($this->getTableName())
-			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
-			->groupBy($qb->createFunction('YEAR(date)'))
+			->from($this->getTableName(), 't')
+			->where($qb->expr()->eq('t.user_id', $qb->createNamedParameter($userId)))
+			->groupBy($qb->createFunction($yearExpr))
 			->orderBy('year', 'DESC');
 
 		$result = $qb->executeQuery();
@@ -717,10 +730,12 @@ class TimeEntryMapper extends QBMapper
 	public function getEmployeeYearlyStats(?array $projectIds = null, ?array $userIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
+		$maxDisplay = SqlPortableExpressions::maxCoalesceUserDisplayName();
 		$qb->select(
-			$qb->createFunction('YEAR(t.date) as year'),
+			$qb->createFunction($yearExpr . ' as year'),
 			't.user_id',
-			$qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id)) as user_display_name'),
+			$qb->createFunction($maxDisplay . ' as user_display_name'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
@@ -730,9 +745,9 @@ class TimeEntryMapper extends QBMapper
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'));
 		$this->applyProjectScope($qb, 't.project_id', $projectIds);
 		$this->applyUserScope($qb, 't.user_id', $userIds);
-		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 't.user_id')
+		$qb->groupBy($qb->createFunction($yearExpr), 't.user_id')
 			->orderBy('year', 'DESC')
-			->addOrderBy($qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id))'), 'ASC');
+			->addOrderBy($qb->createFunction($maxDisplay), 'ASC');
 
 		$result = $qb->executeQuery();
 		$employeeStats = [];
@@ -765,9 +780,10 @@ class TimeEntryMapper extends QBMapper
 	public function getEmployeeComparisonStats(?array $projectIds = null, ?array $userIds = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
+		$maxDisplay = SqlPortableExpressions::maxCoalesceUserDisplayName();
 		$qb->select(
 			't.user_id',
-			$qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id)) as user_display_name'),
+			$qb->createFunction($maxDisplay . ' as user_display_name'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count'),
@@ -809,14 +825,10 @@ class TimeEntryMapper extends QBMapper
 	 */
 	public function getYearlyStatsByProjectType(?array $projectIds = null, ?array $userIds = null): array
 	{
-		// Return empty array if project_type column doesn't exist
-		if (!$this->columnExists('pc_projects', 'project_type')) {
-			return [];
-		}
-
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(t.date) as year'),
+			$qb->createFunction($yearExpr . ' as year'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
@@ -826,7 +838,7 @@ class TimeEntryMapper extends QBMapper
 			->innerJoin('t', 'pc_projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'));
 		$this->applyProjectScope($qb, 't.project_id', $projectIds);
 		$this->applyUserScope($qb, 't.user_id', $userIds);
-		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
+		$qb->groupBy($qb->createFunction($yearExpr), 'p.project_type')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
@@ -859,14 +871,10 @@ class TimeEntryMapper extends QBMapper
 	 */
 	public function getDetailedYearlyStatsByProjectType(?array $projectIds = null, ?array $userIds = null): array
 	{
-		// Return empty array if project_type column doesn't exist
-		if (!$this->columnExists('pc_projects', 'project_type')) {
-			return [];
-		}
-
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(t.date) as year'),
+			$qb->createFunction($yearExpr . ' as year'),
 			'p.project_type',
 			'c.id as customer_id',
 			'c.name as customer_name',
@@ -879,7 +887,7 @@ class TimeEntryMapper extends QBMapper
 			->innerJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
 		$this->applyProjectScope($qb, 't.project_id', $projectIds);
 		$this->applyUserScope($qb, 't.user_id', $userIds);
-		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type', 'c.id')
+		$qb->groupBy($qb->createFunction($yearExpr), 'p.project_type', 'c.id')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC')
 			->addOrderBy('c.name', 'ASC');
@@ -962,14 +970,10 @@ class TimeEntryMapper extends QBMapper
 	 */
 	public function getProductivityAnalysis(?array $projectIds = null, ?array $userIds = null): array
 	{
-		// Return empty array if project_type column doesn't exist
-		if (!$this->columnExists('pc_projects', 'project_type')) {
-			return [];
-		}
-
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(t.date) as year'),
+			$qb->createFunction($yearExpr . ' as year'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
@@ -979,7 +983,7 @@ class TimeEntryMapper extends QBMapper
 			->innerJoin('t', 'pc_projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'));
 		$this->applyProjectScope($qb, 't.project_id', $projectIds);
 		$this->applyUserScope($qb, 't.user_id', $userIds);
-		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
+		$qb->groupBy($qb->createFunction($yearExpr), 'p.project_type')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
@@ -1090,14 +1094,10 @@ class TimeEntryMapper extends QBMapper
 	 */
 	public function getYearlyStatsByProjectTypeForEmployee(string $userId, ?array $projectIds = null): array
 	{
-		// Return empty array if project_type column doesn't exist
-		if (!$this->columnExists('pc_projects', 'project_type')) {
-			return [];
-		}
-
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(t.date) as year'),
+			$qb->createFunction($yearExpr . ' as year'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
@@ -1107,7 +1107,7 @@ class TimeEntryMapper extends QBMapper
 			->innerJoin('t', 'pc_projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
 			->where($qb->expr()->eq('t.user_id', $qb->createNamedParameter($userId)));
 		$this->applyProjectScope($qb, 't.project_id', $projectIds);
-		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
+		$qb->groupBy($qb->createFunction($yearExpr), 'p.project_type')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 
@@ -1141,16 +1141,13 @@ class TimeEntryMapper extends QBMapper
 	 */
 	public function getDetailedYearlyStatsByProjectTypeForEmployees(?array $projectIds = null, ?array $userIds = null): array
 	{
-		// Return empty array if project_type column doesn't exist
-		if (!$this->columnExists('pc_projects', 'project_type')) {
-			return [];
-		}
-
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
+		$maxDisplay = SqlPortableExpressions::maxCoalesceUserDisplayName();
 		$qb->select(
-			$qb->createFunction('YEAR(t.date) as year'),
+			$qb->createFunction($yearExpr . ' as year'),
 			't.user_id',
-			$qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id)) as user_display_name'),
+			$qb->createFunction($maxDisplay . ' as user_display_name'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
@@ -1162,9 +1159,9 @@ class TimeEntryMapper extends QBMapper
 			->leftJoin('t', 'users', 'u', $qb->expr()->eq('t.user_id', 'u.uid'));
 		$this->applyProjectScope($qb, 't.project_id', $projectIds);
 		$this->applyUserScope($qb, 't.user_id', $userIds);
-		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 't.user_id', 'p.project_type')
+		$qb->groupBy($qb->createFunction($yearExpr), 't.user_id', 'p.project_type')
 			->orderBy('year', 'DESC')
-			->addOrderBy($qb->createFunction('MAX(COALESCE(s.display_name, u.displayname, t.user_id))'), 'ASC')
+			->addOrderBy($qb->createFunction($maxDisplay), 'ASC')
 			->addOrderBy('p.project_type', 'ASC');
 
 		$result = $qb->executeQuery();
@@ -1206,14 +1203,10 @@ class TimeEntryMapper extends QBMapper
 	 */
 	public function getProductivityAnalysisForEmployee(string $userId, ?array $projectIds = null): array
 	{
-		// Return empty array if project_type column doesn't exist
-		if (!$this->columnExists('pc_projects', 'project_type')) {
-			return [];
-		}
-
 		$qb = $this->db->getQueryBuilder();
+		$yearExpr = SqlPortableExpressions::yearFromColumn($this->db, 't.date');
 		$qb->select(
-			$qb->createFunction('YEAR(t.date) as year'),
+			$qb->createFunction($yearExpr . ' as year'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
 			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
@@ -1223,7 +1216,7 @@ class TimeEntryMapper extends QBMapper
 			->innerJoin('t', 'pc_projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
 			->where($qb->expr()->eq('t.user_id', $qb->createNamedParameter($userId)));
 		$this->applyProjectScope($qb, 't.project_id', $projectIds);
-		$qb->groupBy($qb->createFunction('YEAR(t.date)'), 'p.project_type')
+		$qb->groupBy($qb->createFunction($yearExpr), 'p.project_type')
 			->orderBy('year', 'DESC')
 			->addOrderBy('p.project_type', 'ASC');
 

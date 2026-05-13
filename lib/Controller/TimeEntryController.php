@@ -769,8 +769,14 @@ class TimeEntryController extends Controller
 	}
 
 	/**
-	 * Sort projects alphabetically by name (case-insensitive).
-	 * Null-safe for PHP 8.1+ compatibility (strcasecmp rejects null).
+	 * Sort projects alphabetically by name using a case-insensitive
+	 * *natural* order, so that embedded numbers compare numerically
+	 * ("Support 2" before "Support 10") instead of lexicographically.
+	 *
+	 * Names are trimmed before comparison so that stray leading/trailing
+	 * whitespace in stored project names doesn't push a project to the top
+	 * (or bottom) of the dropdown. Null-safe for PHP 8.1+ compatibility
+	 * (strnatcasecmp rejects null).
 	 *
 	 * @param array<\OCA\ProjectCheck\Db\Project> $projects
 	 * @return array<\OCA\ProjectCheck\Db\Project>
@@ -778,9 +784,9 @@ class TimeEntryController extends Controller
 	private function sortProjectsByName(array $projects): array
 	{
 		usort($projects, static function ($a, $b) {
-			$nameA = $a->getName() ?? '';
-			$nameB = $b->getName() ?? '';
-			return strcasecmp($nameA, $nameB);
+			$nameA = trim($a->getName() ?? '');
+			$nameB = trim($b->getName() ?? '');
+			return strnatcasecmp($nameA, $nameB);
 		});
 		return $projects;
 	}

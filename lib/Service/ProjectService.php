@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Service;
 
-use OCA\ProjectCheck\Db\ColumnIntrospectionTrait;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCA\ProjectCheck\Db\ProjectMapper;
@@ -31,8 +30,6 @@ use OCP\IGroupManager;
  */
 class ProjectService
 {
-	use ColumnIntrospectionTrait;
-
 	/** @var list<string> All stored project status values */
 	public const PROJECT_STATUSES = ['Active', 'On Hold', 'Completed', 'Cancelled', 'Archived'];
 	public const DEFAULT_MEMBER_ROLE = 'Member';
@@ -89,11 +86,6 @@ class ProjectService
 		$this->budgetService = $budgetService;
 		$this->accessControl = $accessControl;
 		$this->calculator = new ProjectCalculator();
-	}
-
-	protected function getColumnIntrospectionConnection(): IDBConnection
-	{
-		return $this->db;
 	}
 
 	/**
@@ -261,30 +253,11 @@ class ProjectService
 			'created_by' => $qb->createNamedParameter($project->getCreatedBy()),
 			'created_at' => $qb->createNamedParameter($project->getCreatedAt()->format('Y-m-d H:i:s')),
 			'updated_at' => $qb->createNamedParameter($project->getUpdatedAt()->format('Y-m-d H:i:s')),
+			'project_type' => $qb->createNamedParameter($project->getProjectType()),
 		];
 
-		// Add project_type column if it exists
-		if ($this->columnExists('pc_projects', 'project_type')) {
-			$values['project_type'] = $qb->createNamedParameter($project->getProjectType());
-		}
-
 		$qb->insert('pc_projects')->values($values);
-
-		try {
-			$qb->executeStatement();
-		} catch (\Exception $e) {
-			// If the error is about project_type column not existing, try again without it
-			if (strpos($e->getMessage(), 'project_type') !== false || strpos($e->getMessage(), 'Unknown column') !== false) {
-				// Remove project_type from the insert and try again
-				unset($values['project_type']);
-				$qb = $this->db->getQueryBuilder();
-				$qb->insert('pc_projects')->values($values);
-				$qb->executeStatement();
-			} else {
-				// Re-throw if it's a different error
-				throw $e;
-			}
-		}
+		$qb->executeStatement();
 		$project->setId($this->db->lastInsertId('pc_projects'));
 
 		// Ensure the creator is also stored as an active project member so that
@@ -371,7 +344,7 @@ class ProjectService
 			$qb->andWhere($qb->expr()->eq('priority', $qb->createNamedParameter($filters['priority'])));
 		}
 
-		if (!empty($filters['project_type']) && $this->columnExists('pc_projects', 'project_type')) {
+		if (!empty($filters['project_type'])) {
 			$qb->andWhere($qb->expr()->eq('project_type', $qb->createNamedParameter($filters['project_type'])));
 		}
 
@@ -413,10 +386,6 @@ class ProjectService
 		];
 		$requestedSort = $filters['sort'] ?? 'created_at';
 		$sortField = $sortColumnMap[$requestedSort] ?? 'p.created_at';
-		// project_type column may not exist on older installations
-		if ($requestedSort === 'project_type' && !$this->columnExists('pc_projects', 'project_type')) {
-			$sortField = 'p.created_at';
-		}
 		$requestedDirection = strtoupper((string)($filters['direction'] ?? 'DESC'));
 		$sortDirection = ($requestedDirection === 'ASC') ? 'ASC' : 'DESC';
 		$qb->orderBy($sortField, $sortDirection);
@@ -686,71 +655,7 @@ class ProjectService
 
 		$qb->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 
-		try {
-			$qb->executeStatement();
-		} catch (\Exception $e) {
-			// If the error is about project_type column not existing, try again without it
-			if (strpos($e->getMessage(), 'project_type') !== false || strpos($e->getMessage(), 'Unknown column') !== false) {
-				// Remove project_type from the update and try again
-				$qb = $this->db->getQueryBuilder();
-				$qb->update('pc_projects')
-					->set('updated_at', $qb->createNamedParameter((new \DateTime())->format('Y-m-d H:i:s')));
-
-				// Rebuild the query without project_type
-				$dbFieldMappingWithoutProjectType = [
-					'name' => 'name',
-					'short_description' => 'short_description',
-					'detailed_description' => 'detailed_description',
-					'customer_id' => 'customer_id',
-					'hourly_rate' => 'hourly_rate',
-					'total_budget' => 'total_budget',
-					'available_hours' => 'available_hours',
-					'category' => 'category',
-					'start_date' => 'start_date',
-					'end_date' => 'end_date',
-					'status' => 'status',
-					'priority' => 'priority',
-					'tags' => 'tags'
-				];
-
-				foreach ($data as $field => $value) {
-					if (isset($dbFieldMappingWithoutProjectType[$field])) {
-						$dbField = $dbFieldMappingWithoutProjectType[$field];
-
-						// Handle date fields
-						if (in_array($field, ['start_date', 'end_date'])) {
-							if (!empty($value)) {
-								$dateObj = $this->parseEuropeanDate($value);
-								$value = $dateObj ? $dateObj->format('Y-m-d H:i:s') : null;
-							} else {
-								$value = null;
-							}
-						}
-
-						// Handle numeric fields
-						if (in_array($field, ['customer_id']) && !empty($value)) {
-							$value = (int)$value;
-						}
-
-						if (in_array($field, ['hourly_rate', 'total_budget', 'available_hours']) && !empty($value)) {
-							$value = (float)$value;
-						}
-
-						if ($value === null) {
-							$qb->set($dbField, $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL));
-						} else {
-							$qb->set($dbField, $qb->createNamedParameter($value));
-						}
-					}
-				}
-
-				$qb->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
-				$qb->executeStatement();
-			} else {
-				// Re-throw if it's a different error
-				throw $e;
-			}
-		}
+		$qb->executeStatement();
 
 		// Removed logger call
 
@@ -1734,8 +1639,20 @@ class ProjectService
 	 * @param int|null $projectId
 	 * @throws \Exception
 	 */
-	private function validateProjectData(array $data, ?int $projectId = null): void
+	private function validateProjectData(array &$data, ?int $projectId = null): void
 	{
+		// Normalize leading/trailing whitespace on the project name so that
+		// stray spaces (e.g. copy/paste artefacts) cannot push a project to
+		// the top of alphabetically-sorted dropdowns. The trimmed value is
+		// propagated back to the caller via the by-reference parameter so
+		// downstream `setName(...)` / UPDATE column writes also persist the
+		// normalized form. We intentionally only trim `name` here; other
+		// text fields may legitimately contain leading whitespace (e.g.
+		// indented detailed descriptions).
+		if (isset($data['name']) && is_string($data['name'])) {
+			$data['name'] = trim($data['name']);
+		}
+
 		$requiredFields = ['name', 'short_description', 'customer_id'];
 
 		foreach ($requiredFields as $field) {

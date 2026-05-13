@@ -16,10 +16,11 @@ declare(strict_types=1);
  *
  *  The result was that every fresh install AND every install that arrived at
  *  projectcheck via a partial projectcontrol migration ran headless without
- *  `project_type`, and the runtime code had to guard every read/write with a
- *  `columnExists()` shim. One of those shims silently produced invalid SQL
- *  (named parameter wrapped in backticks as if it were a column identifier)
- *  and crashed the time-entries page with a 500 error.
+ *  `project_type`. Earlier runtime code used fragile `columnExists()` shims;
+ *  one of them silently produced invalid SQL (named parameter wrapped in
+ *  backticks as if it were a column identifier) and crashed the time-entries
+ *  page with a 500 error. Current application code assumes this migration
+ *  has run and no longer performs column introspection for `project_type`.
  *
  *  This migration removes the entire class of failure at the schema level:
  *    - the column always exists with a sensible default (`'client'`),

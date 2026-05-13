@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.36 - 2026-05-12
+
+### Fixed
+
+- **App Store:** `donation`, `website`, and author `homepage` in `appinfo/info.xml` use `https://` URLs so they validate against the store schema (`donation` requires pattern `https://.+`).
+
+### Changed
+
+- **Release:** Nextcloud `max-version` set to current stable major **33** (upstream lookup during release prep).
+
+## 2.0.35 - 2026-05-12
+
+### Fixed
+
+- **App Store:** `donation`, `website`, and author `homepage` in `appinfo/info.xml` use `https://` URLs so they validate against the store schema (`donation` requires pattern `https://.+`).
+
+## 2.0.34 - 2026-05-12
+
+### Fixed
+
+- **PostgreSQL:** Yearly and project-type statistics no longer use MySQL-only `YEAR()`; portable `EXTRACT(YEAR FROM …)` (and SQLite `strftime`) via `SqlPortableExpressions` so dashboard and analytics load on PostgreSQL.
+- **PostgreSQL:** Raw SQL in `createFunction()` no longer uses MySQL identifier backticks for display-name `COALESCE` fragments; migration `Version2008` name-trim `UPDATE` is ANSI-quoted (`*PREFIX*` only) so it runs on PostgreSQL.
+- **Time entries list:** `findWithProjectInfo` uses `selectAlias` + portable coalesce; `count()` applies the same joins and filters as the list when searching or filtering by `project_type`, so pagination totals stay consistent.
+- **Search:** `findAll` uses case-insensitive `iLike` with `escapeLikeParameter`, matching list/count behaviour on PostgreSQL.
+
+### Changed
+
+- **`project_type`:** Runtime assumes migration `Version2007` has run (column always present); defensive `columnExists` / insert-retry paths removed from `ProjectService` and `TimeEntryMapper` in favour of a single clear schema contract after `occ upgrade`.
+- **Release metadata:** App Store prep script aligned `package.json` and `info.xml` to **2.0.34**; Nextcloud `max-version` set to current stable major **33** (per upstream lookup). PHPUnit suite includes `tests/Unit/Db`.
+
+### Removed
+
+- `ColumnIntrospectionTrait` (superseded by the migration-backed `project_type` column).
+
 ## 2.0.32 - 2026-05-08
 
 ### Fixed

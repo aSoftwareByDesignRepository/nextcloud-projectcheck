@@ -10,6 +10,7 @@
             <directory suffix="Test.php">tests/Unit/Listener</directory>
             <directory suffix="Test.php">tests/Unit/Middleware</directory>
             <directory suffix="Test.php">tests/Unit/Util</directory>
+            <directory suffix="Test.php">tests/Unit/Db</directory>
             <file>tests/Unit/Service/SavePolicyUiStringsTest.php</file>
             <file>tests/Unit/Service/AccessControlServiceTest.php</file>
             <file>tests/Unit/Service/OrgPolicySaveAuditTest.php</file>
