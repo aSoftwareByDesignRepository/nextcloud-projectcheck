@@ -12,7 +12,6 @@ use OCP\Util;
 Util::addScript('projectcheck', 'time-entry-detail');
 Util::addStyle('projectcheck', 'time-entries');
 Util::addStyle('projectcheck', 'projects');
-Util::addStyle('projectcheck', 'custom-icons');
 Util::addStyle('projectcheck', 'navigation');
 
 if (!isset($timeEntry) || !($timeEntry instanceof \OCA\ProjectCheck\Db\TimeEntry)) {
@@ -45,8 +44,12 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content" role="main">
-    <div id="app-content-wrapper">
+<?php
+$pageId = 'time-entry-detail';
+$pageTitle = $l->t('Time Entry Details');
+$pageHelp = $l->t('Time entry information and associated details');
+include __DIR__ . '/common/page-start.php';
+?>
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
@@ -57,13 +60,10 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
             </nav>
         </div>
 
-        <!-- Page Header -->
-        <div class="section page-header-section">
+        <div class="section page-header-section pc-section">
             <div class="header-content">
                 <div class="header-text">
                     <div class="header-details">
-                        <h2><?php p($l->t('Time Entry Details')); ?></h2>
-                        <p class="header-subtitle"><?php p($l->t('Time entry information and associated details')); ?></p>
                         <div class="project-meta">
                             <div class="meta-item">
                                 <i class="icon-calendar-custom"></i>
@@ -169,7 +169,14 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                         <div class="info-item">
                             <label><?php p($l->t('HOURLY RATE')); ?></label>
                             <span><?php p($fmt ? $fmt->currency((float)$timeEntry->getHourlyRate()) : $currencyCode . ' ' . number_format((float)$timeEntry->getHourlyRate(), 2)); ?><?php p($l->t('/hour')); ?></span>
+                            <p class="form-hint" id="time-entry-rate-frozen-hint"><?php p($l->t('This hourly rate was stored when the entry was saved and is not recalculated.')); ?></p>
                         </div>
+                        <?php if (!empty($pricingRateSourceLabel)): ?>
+                        <div class="info-item">
+                            <label><?php p($l->t('How hours are priced')); ?></label>
+                            <span><?php p($pricingRateSourceLabel); ?></span>
+                        </div>
+                        <?php endif; ?>
                         <div class="info-item">
                             <label><?php p($l->t('TOTAL COST')); ?></label>
                             <span class="total-cost"><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
@@ -328,8 +335,12 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                             <?php p($l->t('Edit Time Entry')); ?>
                         </a>
                         <button type="button" class="button danger delete-time-entry" id="delete-time-entry-btn"
+                            data-id="<?php p((string)$timeEntryId); ?>"
+                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.delete', ['id' => $timeEntryId])); ?>"
+                            data-index-url="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>"
+                            data-confirm="<?php p($l->t('Are you sure you want to delete this time entry? This action cannot be undone.')); ?>"
                             aria-label="<?php p($l->t('Delete time entry')); ?>">
-                            <i class="icon-delete-custom"></i>
+                            <i class="icon-delete-custom" aria-hidden="true"></i>
                             <?php p($l->t('Delete Time Entry')); ?>
                         </button>
                     <?php endif; ?>
@@ -337,36 +348,11 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
                         <i class="icon-time-custom"></i>
                         <?php p($l->t('View All Time Entries')); ?>
                     </a>
-                    <a href="/index.php/apps/projectcheck/projects/<?php p($timeEntry->getProjectId()); ?>" class="button secondary">
+                    <a href="<?php p($projectLinkHref); ?>" class="button secondary">
                         <i class="icon-user-custom"></i>
                         <?php p($l->t('View Project')); ?>
                     </a>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<script nonce="<?php p($_['cspNonce']) ?>">
-    document.addEventListener('DOMContentLoaded', function() {
-        const deleteBtn = document.getElementById('delete-time-entry-btn');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
-                if (confirm('<?php p($l->t('Are you sure you want to delete this time entry? This action cannot be undone.')); ?>')) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.delete', ['id' => $timeEntryId])); ?>';
-
-                    const tokenInput = document.createElement('input');
-                    tokenInput.type = 'hidden';
-                    tokenInput.name = 'requesttoken';
-                    tokenInput.value = '<?php p($_['requesttoken']); ?>';
-
-                    form.appendChild(tokenInput);
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
-        }
-    });
-</script>
+<?php include __DIR__ . '/common/page-end.php'; ?>

@@ -1,6 +1,6 @@
 {
     "name": "projectcheck",
-    "version": "2.0.36",
+    "version": "2.0.44",
     "description": "Project management and time tracking app for Nextcloud",
     "main": "index.js",
     "scripts": {
@@ -10,6 +10,9 @@
         "dev": "webpack --mode=development --watch",
         "test": "jest --passWithNoTests",
         "e2e": "playwright test",
+        "e2e:smoke": "playwright test e2e/cost-pricing-smoke.spec.js",
+        "e2e:install": "playwright install --with-deps chromium",
+        "e2e:auth": "node ./e2e/global-setup.js",
         "lint": "eslint js/",
         "lint:fix": "eslint js/ --fix",
         "analyze": "webpack --mode=production --analyze",

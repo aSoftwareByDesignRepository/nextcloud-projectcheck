@@ -51,6 +51,8 @@
         euro: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.25.5-2.5 1.5-3.5Z"/>',
         eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
         folder: '<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>',
+        'file-text': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+        tag: '<path d="M20.6 13.4 13 21l-9-9V4h8l8 8a2.8 2.8 0 0 1 .6 1.4Z"/><circle cx="7" cy="7" r="1"/>',
         home: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>',
         info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
         list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
@@ -70,12 +72,31 @@
         users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
         wallet: '<path d="M19 7H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/>',
         x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+        'trash-2': '<polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
     };
 
-    // A handful of legacy aliases exist for icons that were originally
-    // declared with bespoke names in detail templates.
-    PATHS['icon-time-custom'] = PATHS['clock'];
-    PATHS['icon-money-custom'] = PATHS['euro'];
+    /** Legacy template class names → catalog keys (M6 icon migration). */
+    const LEGACY_CLASS_ICONS = {
+        'icon-calendar-custom': 'calendar',
+        'icon-time-custom': 'clock',
+        'icon-money-custom': 'euro',
+        'icon-user-custom': 'user',
+        'icon-chart-custom': 'bar-chart-3',
+        'icon-add-custom': 'plus',
+        'icon-info-custom': 'info',
+        'icon-tag-custom': 'tag',
+        'icon-edit-custom': 'edit',
+        'icon-delete-custom': 'trash-2',
+        'icon-folder-custom': 'folder',
+        'icon-file-custom': 'file-text',
+    };
+
+    Object.keys(LEGACY_CLASS_ICONS).forEach(function (legacyClass) {
+        const key = LEGACY_CLASS_ICONS[legacyClass];
+        if (PATHS[key]) {
+            PATHS[legacyClass] = PATHS[key];
+        }
+    });
 
     function svg(name) {
         const body = PATHS[name];
@@ -85,8 +106,34 @@
         return SVG_OPEN + body + SVG_CLOSE;
     }
 
+    function hydrateLegacyClassIcons(scope) {
+        Object.keys(LEGACY_CLASS_ICONS).forEach(function (legacyClass) {
+            scope.querySelectorAll('.' + legacyClass).forEach(function (el) {
+                if (el.getAttribute('data-lucide-hydrated') === '1') {
+                    return;
+                }
+                const markup = svg(legacyClass);
+                if (markup === '') {
+                    return;
+                }
+                el.innerHTML = markup;
+                el.setAttribute('data-lucide-hydrated', '1');
+            });
+        });
+    }
+
+    function nodeHasLegacyIconClass(node) {
+        if (!node || !node.classList) {
+            return false;
+        }
+        return Object.keys(LEGACY_CLASS_ICONS).some(function (legacyClass) {
+            return node.classList.contains(legacyClass);
+        });
+    }
+
     function hydrate(root) {
         const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
+        hydrateLegacyClassIcons(scope);
         scope.querySelectorAll('[data-lucide]').forEach(function (el) {
             // Idempotent: skip already-hydrated nodes so MutationObserver
             // re-runs are cheap.
@@ -126,7 +173,10 @@
                     for (let j = 0; j < m.addedNodes.length; j++) {
                         const node = m.addedNodes[j];
                         if (node && node.nodeType === 1) {
-                            if (node.matches && node.matches('[data-lucide]')) {
+                            if (
+                                node.matches
+                                && (node.matches('[data-lucide]') || nodeHasLegacyIconClass(node))
+                            ) {
                                 hydrate(node.parentNode || node);
                             } else if (node.querySelectorAll) {
                                 hydrate(node);

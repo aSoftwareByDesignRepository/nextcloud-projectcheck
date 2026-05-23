@@ -54,6 +54,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setCustomerName(string $customerName)
  * @method string getProjectType()
  * @method void setProjectType(string $projectType)
+ * @method string getCostRateMode()
+ * @method void setCostRateMode(string $costRateMode)
  */
 class Project extends Entity
 {
@@ -76,6 +78,7 @@ class Project extends Entity
 	protected $updatedAt;
 	protected $customerName;
 	protected $projectType;
+	protected $costRateMode;
 
 	/**
 	 * Project constructor
@@ -99,6 +102,12 @@ class Project extends Entity
 		$this->addType('createdAt', 'datetime');
 		$this->addType('updatedAt', 'datetime');
 		$this->addType('projectType', 'string');
+		$this->addType('costRateMode', 'string');
+	}
+
+	public function getCostRateMode(): string
+	{
+		return \OCA\ProjectCheck\Util\CostRateMode::normalize($this->costRateMode ?? null);
 	}
 
 	/**
@@ -106,6 +115,9 @@ class Project extends Entity
 	 *
 	 * @param float $usedHours
 	 * @return float
+	 */
+	/**
+	 * @deprecated Use {@see BudgetService::getProjectBudgetInfo()} — uses actual entry costs, not hours × project rate.
 	 */
 	public function getBudgetConsumption(float $usedHours = 0): float
 	{
@@ -187,6 +199,9 @@ class Project extends Entity
 	 *
 	 * @param float $usedHours
 	 * @return string
+	 */
+	/**
+	 * @deprecated Use {@see BudgetService::getProjectBudgetInfo()} for warning levels.
 	 */
 	public function getBudgetWarningLevel(float $usedHours = 0): string
 	{

@@ -7,13 +7,14 @@
  * @license AGPL-3.0-or-later
  */
 
+script('projectcheck', 'common/api');
 script('projectcheck', 'employee-detail');
 script('projectcheck', 'common/deletion-modal');
-style('projectcheck', 'dashboard');
 style('projectcheck', 'projects');
-style('projectcheck', 'custom-icons');
 style('projectcheck', 'navigation');
 style('projectcheck', 'common/progress-bars');
+style('projectcheck', 'common/accessibility');
+style('projectcheck', 'employee-detail');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -38,13 +39,18 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
         requestToken: '<?php p($_['requesttoken']) ?>',
         employeeId: '<?php p($eid); ?>',
         assignProjectUrl: '<?php p($_['assignProjectUrl'] ?? ''); ?>',
+        addEmployeeRateUrl: '<?php p($_['addEmployeeRateUrl'] ?? ''); ?>',
         unassignProjectUrlTemplate: '<?php p($urlGenerator->linkToRoute('projectcheck.employee.unassignProject', ['userId' => 'USER_ID', 'projectId' => 'PROJECT_ID'])); ?>'
     };
 </script>
 
-<div id="app-content" role="main">
-    <div id="app-content-wrapper">
-        <?php $isGlobalViewer = !empty($_['isGlobalViewer']); ?>
+<?php
+$isGlobalViewer = !empty($_['isGlobalViewer']);
+$pageId = 'employee-detail';
+$pageTitle = $empDisplay;
+$pageHelp = $l->t('Employee performance and time tracking statistics');
+include __DIR__ . '/common/page-start.php';
+?>
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
@@ -71,38 +77,32 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
             </div>
         <?php endif; ?>
 
-        <!-- Page Header -->
-        <div class="section page-header-section">
-            <div class="header-content">
-                <div class="header-text">
-                    <div class="header-details">
-                        <h2><?php p($empDisplay); ?><?php if ($isFormer): ?>
-                            <span class="pc-badge pc-badge--neutral" role="status" aria-label="<?php p($l->t('Former user — account was removed. Statistics are historical data.')); ?>"><?php p($l->t('Former user')); ?></span>
-                        <?php endif; ?></h2>
-                        <p><?php p($l->t('Employee performance and time tracking statistics')); ?></p>
-                        <div class="employee-meta">
-                            <span class="meta-item">
-                                <i data-lucide="user" class="lucide-icon primary" aria-hidden="true"></i>
-                                <span><?php p($eid); ?></span>
-                            </span>
-                            <?php if (!$isFormer): ?>
-                            <span class="meta-item">
-                                <i data-lucide="mail" class="lucide-icon primary" aria-hidden="true"></i>
-                                <span><?php p($empEmail !== '' && $empEmail !== null ? $empEmail : $l->t('No email')); ?></span>
-                            </span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.index')); ?>"
-                        class="button secondary" role="button">
-                        <i data-lucide="arrow-left" class="lucide-icon"></i>
-                        <?php p($l->t('Back to Employees')); ?>
-                    </a>
+        <section class="pc-employee-profile" aria-label="<?php p($l->t('Employee profile')); ?>">
+            <div class="pc-employee-profile__meta">
+                <?php if ($isFormer): ?>
+                    <span class="pc-badge pc-badge--neutral" role="status"><?php p($l->t('Former user — account was removed. Statistics are historical data.')); ?></span>
+                <?php endif; ?>
+                <div class="employee-meta">
+                    <span class="meta-item">
+                        <i data-lucide="user" class="lucide-icon primary" aria-hidden="true"></i>
+                        <span><?php p($eid); ?></span>
+                    </span>
+                    <?php if (!$isFormer): ?>
+                    <span class="meta-item">
+                        <i data-lucide="mail" class="lucide-icon primary" aria-hidden="true"></i>
+                        <span><?php p($empEmail !== '' && $empEmail !== null ? $empEmail : $l->t('No email')); ?></span>
+                    </span>
+                    <?php endif; ?>
                 </div>
             </div>
-        </div>
+            <div class="header-actions">
+                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.index')); ?>"
+                    class="button secondary">
+                    <i data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></i>
+                    <?php p($l->t('Back to Employees')); ?>
+                </a>
+            </div>
+        </section>
 
         <!-- Yearly Performance Dashboard -->
         <?php if (!empty($yearlyStats)): ?>
@@ -148,24 +148,24 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                                 </div>
 
                                 <!-- Progress indicators -->
+                                <?php
+                                $hoursSharePct = $totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0;
+                                $costSharePct = $totalCost > 0 ? ($yearData['total_cost'] / $totalCost) * 100 : 0;
+                                ?>
                                 <div class="yearly-progress">
-                                    <div class="progress-item progress-item--compact">
-                                        <div class="progress-label"><?php p($l->t('Hours Share')); ?></div>
-                                        <div class="progress-wrapper">
-                                            <div class="progress-bar progress-bar--sm">
-                                                <div class="progress-fill" style="width: <?php p($totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0); ?>%"></div>
-                                            </div>
+                                    <div class="yearly-progress-item">
+                                        <div class="yearly-progress-label"><?php p($l->t('Hours Share')); ?></div>
+                                        <div class="yearly-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php p(round($hoursSharePct, 1)); ?>" aria-label="<?php p($l->t('Hours Share')); ?>">
+                                            <div class="yearly-progress-fill" style="width: <?php p($hoursSharePct); ?>%"></div>
                                         </div>
-                                        <div class="progress-percentage"><?php p($totalHours > 0 ? round(($yearData['total_hours'] / $totalHours) * 100, 1) : 0); ?>%</div>
+                                        <div class="yearly-progress-percentage"><?php p(round($hoursSharePct, 1)); ?>%</div>
                                     </div>
-                                    <div class="progress-item progress-item--compact">
-                                        <div class="progress-label"><?php p($l->t('Cost Share')); ?></div>
-                                        <div class="progress-wrapper">
-                                            <div class="progress-bar progress-bar--sm">
-                                                <div class="progress-fill" style="width: <?php p($totalCost > 0 ? ($yearData['total_cost'] / $totalCost) * 100 : 0); ?>%"></div>
-                                            </div>
+                                    <div class="yearly-progress-item">
+                                        <div class="yearly-progress-label"><?php p($l->t('Cost Share')); ?></div>
+                                        <div class="yearly-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php p(round($costSharePct, 1)); ?>" aria-label="<?php p($l->t('Cost Share')); ?>">
+                                            <div class="yearly-progress-fill" style="width: <?php p($costSharePct); ?>%"></div>
                                         </div>
-                                        <div class="progress-percentage"><?php p($totalCost > 0 ? round(($yearData['total_cost'] / $totalCost) * 100, 1) : 0); ?>%</div>
+                                        <div class="yearly-progress-percentage"><?php p(round($costSharePct, 1)); ?>%</div>
                                     </div>
                                 </div>
                             </div>
@@ -173,6 +173,48 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                     </div>
                 </div>
             </div>
+        <?php endif; ?>
+
+        <?php if (!empty($_['canManageEmployeeRates'])): ?>
+        <section class="pc-section" id="employee-rate-history" aria-labelledby="employee-rates-heading">
+            <h3 id="employee-rates-heading" class="pc-section-title"><?php p($l->t('Hourly rate history')); ?></h3>
+            <p class="pc-section-intro"><?php p($l->t('Append-only rates used when projects price hours by employee. Time entries keep the rate that was effective on the work date.')); ?></p>
+            <?php $rates = $_['employeeHourlyRates'] ?? []; ?>
+            <?php if ($rates === []): ?>
+                <p class="form-hint"><?php p($l->t('No rates yet. Add the first rate with an effective-from date on or before the earliest work date you plan to log.')); ?></p>
+            <?php else: ?>
+                <table class="grid employee-rates-table">
+                    <thead>
+                        <tr>
+                            <th scope="col"><?php p($l->t('Effective from')); ?></th>
+                            <th scope="col"><?php p($l->t('Hourly rate (%s)', [$currencyCode])); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($rates as $rateRow): ?>
+                            <tr>
+                                <td><?php p($rateRow->getEffectiveFrom()->format('d.m.Y')); ?></td>
+                                <td><?php p(number_format((float) $rateRow->getHourlyRate(), 2, '.', '')); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+            <form id="add-employee-rate-form" class="employee-rate-add-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="employeeRateAmount"><?php p($l->t('New hourly rate (%s)', [$currencyCode])); ?></label>
+                        <input type="number" id="employeeRateAmount" name="hourly_rate" class="form-input" min="0.01" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="employeeRateEffective"><?php p($l->t('Effective from')); ?></label>
+                        <input type="date" id="employeeRateEffective" name="effective_from" class="form-input" required lang="<?php p(str_replace('_', '-', \OCP\Util::getLocale())); ?>">
+                    </div>
+                </div>
+                <p id="employee-rate-error" class="form-error-text" role="alert" aria-live="assertive"></p>
+                <button type="submit" class="button primary"><?php p($l->t('Add rate')); ?></button>
+            </form>
+        </section>
         <?php endif; ?>
 
         <!-- Main Content Grid -->
@@ -191,20 +233,32 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                         <div class="employee-assignments-panel employee-assignments-panel--form">
                             <h4 class="employee-assignments-panel__title"><?php p($l->t('Add to project')); ?></h4>
                             <?php if ($canManageAssignments): ?>
+                                <?php if ($manageableProjects === [] && !empty($assignedProjects)): ?>
+                            <p class="empty-state-hint"><?php p($l->t('This person is already on all projects you can manage.')); ?></p>
+                                <?php elseif ($manageableProjects === []): ?>
+                            <p class="empty-state-hint"><?php p($l->t('No projects available to assign. You need permission to manage a project team.')); ?></p>
+                                <?php else: ?>
                             <form id="assign-project-form" class="employee-assignments-form" method="post">
                                 <div class="form-group">
                                     <label for="assignProjectId"><?php p($l->t('Project')); ?></label>
                                     <select id="assignProjectId" name="project_id" class="form-input form-select" required aria-describedby="assign-project-help assign-project-error">
                                         <option value=""><?php p($l->t('Select project')); ?></option>
                                         <?php foreach ($manageableProjects as $project): ?>
-                                            <option value="<?php p((int)$project->getId()); ?>"><?php p($project->getName()); ?></option>
+                                            <option
+                                                value="<?php p((int)$project->getId()); ?>"
+                                                data-cost-rate-mode="<?php p($project->getCostRateMode()); ?>"
+                                                data-project-url="<?php p($urlGenerator->linkToRoute('projectcheck.project.show', ['id' => (int)$project->getId()]) . '#team-section'); ?>">
+                                                <?php p($project->getName()); ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <p id="assign-project-help" class="form-help-text"><?php p($l->t('Only projects you can manage are shown.')); ?></p>
-                                <p id="assign-project-error" class="form-error-text" role="status" aria-live="polite"></p>
+                                <p id="assign-project-help" class="form-help-text"><?php p($l->t('Only projects you can manage are shown. Already assigned projects are hidden.')); ?></p>
+                                <p id="assign-project-member-hint" class="form-help-text pc-assign-member-hint" hidden></p>
+                                <p id="assign-project-error" class="form-error-text" role="alert" aria-live="assertive"></p>
                                 <button type="submit" class="button primary" id="assign-project-submit"><?php p($l->t('Add to project')); ?></button>
                             </form>
+                                <?php endif; ?>
                             <?php else: ?>
                             <p class="empty-state-hint"><?php p($l->t('Project assignments can only be managed for active user accounts.')); ?></p>
                             <?php endif; ?>
@@ -390,32 +444,25 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                                                             'internal' => $l->t('Internal Project'),
                                                             'research' => $l->t('Research & Development'),
                                                             'training' => $l->t('Training & Education'),
-                                                            'other' => $l->t('Other')
+                                                            'other' => $l->t('Other'),
                                                         ];
-
-                                                        // Icon mapping for project types
-                                                        $iconMapping = [
-                                                            'client' => '👥',
-                                                            'admin' => '⚙️',
-                                                            'sales' => '📈',
-                                                            'customer' => '🎧',
-                                                            'product' => '💻',
-                                                            'meeting' => '🤝',
-                                                            'internal' => '🏢',
-                                                            'research' => '🔬',
-                                                            'training' => '🎓',
-                                                            'other' => '📋'
+                                                        $typeIconNames = [
+                                                            'client' => 'users',
+                                                            'admin' => 'settings',
+                                                            'sales' => 'bar-chart-3',
+                                                            'customer' => 'users',
+                                                            'product' => 'layout-grid',
+                                                            'meeting' => 'users',
+                                                            'internal' => 'folder',
+                                                            'research' => 'search',
+                                                            'training' => 'file-text',
+                                                            'other' => 'tag',
                                                         ];
-
                                                         $displayName = $displayNames[$projectType] ?? ucfirst($projectType);
-                                                        $icon = $iconMapping[$projectType] ?? '📋';
+                                                        $typeIcon = $typeIconNames[$projectType] ?? 'tag';
                                                         ?>
                                                         <div class="project-type-display">
-                                                            <span class="project-type-icon"
-                                                                data-project-type="<?php p($projectType); ?>"
-                                                                title="<?php p($displayName); ?>">
-                                                                <?php p($icon); ?>
-                                                            </span>
+                                                            <i data-lucide="<?php p($typeIcon); ?>" class="lucide-icon" aria-hidden="true"></i>
                                                             <span class="project-type-text"><?php p($displayName); ?></span>
                                                         </div>
                                                     </td>
@@ -451,10 +498,13 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
             <div class="section employee-productivity-analysis-section">
                 <div class="section-header">
                     <h3>
-                        <i data-lucide="trending-up" class="lucide-icon"></i>
+                        <i data-lucide="trending-up" class="lucide-icon" aria-hidden="true"></i>
                         <?php p($l->t('Productivity Analysis')); ?>
-                        <span class="info-tooltip"
-                            title="<?php p($l->t('Billable Work: Client projects, sales, customer support, product development, research & development, and other revenue-generating activities. Overhead Work: Administrative tasks, meetings, internal projects, and training activities that do not directly generate revenue.')); ?>">ℹ️</span>
+                        <button type="button"
+                            class="pc-help-trigger"
+                            aria-label="<?php p($l->t('Billable Work: Client projects, sales, customer support, product development, research & development, and other revenue-generating activities. Overhead Work: Administrative tasks, meetings, internal projects, and training activities that do not directly generate revenue.')); ?>">
+                            <i data-lucide="info" class="lucide-icon" aria-hidden="true"></i>
+                        </button>
                     </h3>
                     <p><?php p($l->t('Compare billable vs overhead work to measure this employee\'s productivity')); ?></p>
                 </div>
@@ -524,23 +574,4 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                 </div>
             </div>
         <?php endif; ?>
-    </div>
-</div>
-
-<?php /* Icons hydrated by js/common/icons.js (audit ref. AUDIT-FINDINGS H22). The
-        legacy `.icon-time-custom`/`.icon-money-custom` class names are retained
-        as data-lucide aliases inside the central catalog. */ ?>
-<script nonce="<?php p($_['cspNonce']) ?>">
-    // Hydrate the legacy class-based custom icons against the central catalog.
-    document.addEventListener('DOMContentLoaded', function () {
-        if (!window.ProjectCheckIcons) return;
-        document.querySelectorAll('.icon-time-custom, .icon-money-custom').forEach(function (el) {
-            var name = el.classList.contains('icon-time-custom') ? 'icon-time-custom' : 'icon-money-custom';
-            var markup = window.ProjectCheckIcons.svg(name);
-            if (markup && el.getAttribute('data-lucide-hydrated') !== '1') {
-                el.innerHTML = markup;
-                el.setAttribute('data-lucide-hydrated', '1');
-            }
-        });
-    });
-</script>
+<?php include __DIR__ . '/common/page-end.php'; ?>

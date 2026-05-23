@@ -167,13 +167,16 @@
 	function initializeBudgetWarnings() {
 		const projectSelect = document.getElementById('project_id');
 		const hoursInput = document.getElementById('hours');
-		const rateInput = document.getElementById('hourly_rate');
+		const dateInput = document.getElementById('date');
 
-		if (projectSelect && hoursInput && rateInput) {
-			[projectSelect, hoursInput, rateInput].forEach((element) => {
+		if (projectSelect && hoursInput) {
+			[projectSelect, hoursInput].forEach((element) => {
 				element.addEventListener('change', checkBudgetImpact);
 				element.addEventListener('input', debounce(checkBudgetImpact, 500));
 			});
+		}
+		if (dateInput) {
+			dateInput.addEventListener('change', checkBudgetImpact);
 		}
 	}
 
@@ -183,16 +186,15 @@
 	function checkBudgetImpact() {
 		const projectSelect = document.getElementById('project_id');
 		const hoursField = document.getElementById('hours');
-		const rateField = document.getElementById('hourly_rate');
-		if (!projectSelect || !hoursField || !rateField) {
+		const dateField = document.getElementById('date');
+		if (!projectSelect || !hoursField) {
 			return;
 		}
 
 		const projectId = projectSelect.value;
 		const hours = parseFloat(hoursField.value) || 0;
-		const rate = parseFloat(rateField.value) || 0;
 
-		if (!projectId || hours <= 0 || rate <= 0) {
+		if (!projectId || hours <= 0) {
 			hideBudgetWarning();
 			return;
 		}
@@ -206,7 +208,7 @@
 			body: JSON.stringify({
 				project_id: parseInt(projectId, 10),
 				additional_hours: hours,
-				additional_rate: rate
+				entry_date: dateField && dateField.value ? dateField.value : ''
 			})
 		})
 			.then((response) => response.json())

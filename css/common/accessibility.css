@@ -644,6 +644,98 @@ th {
   }
 }
 
+/* Empty states — single focal CTA, WCAG 2.1 AA touch targets */
+.pc-empty-state {
+  box-sizing: border-box;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border: 1px dashed var(--color-border, #e1e5eb);
+  border-radius: var(--pc-radius-md, 12px);
+  background: color-mix(in srgb, var(--color-primary-element, #0082c9) 5%, var(--color-main-background, #fff));
+}
+
+.pc-empty-state__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary-element, #0082c9) 14%, transparent);
+  color: var(--color-primary-element, #0082c9);
+}
+
+.pc-empty-state__icon .lucide-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0;
+}
+
+.pc-empty-state__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-main-text, #222);
+}
+
+.pc-empty-state__lead {
+  margin: 0 0 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-text-maxcontrast, #3d3d3d);
+}
+
+.pc-empty-state__hint {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--color-text-maxcontrast, #3d3d3d);
+}
+
+.pc-empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.pc-empty-state__cta {
+  min-height: 44px;
+  padding: 0.65rem 1.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pc-empty-state__cta .lucide-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+}
+
+.pc-empty-state__cta-label {
+  line-height: 1.3;
+}
+
+label.button.primary.pc-empty-state__cta {
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .pc-empty-state {
+    padding: 1.5rem 1rem;
+  }
+
+  .pc-empty-state__cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* =============================================================
    Touch target normalization (WCAG 2.5.5 Target Size – Enhanced).
    Audit reference: AUDIT-FINDINGS D19 / E21.

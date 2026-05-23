@@ -12,12 +12,17 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Controller;
 
 use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\HourlyRateService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCA\ProjectCheck\Exception\RateResolutionException;
+use OCA\ProjectCheck\Util\CostRateMode;
+use OCA\ProjectCheck\Util\ProjectCapacity;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\ProjectFileService;
+use OCA\ProjectCheck\Service\ProjectMemberHourlyRateService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCP\AppFramework\Controller;
@@ -51,6 +56,9 @@ class ProjectController extends Controller
 
 	/** @var ProjectService */
 	private $projectService;
+
+	/** @var HourlyRateService */
+	private $hourlyRateService;
 
 	/** @var CustomerService */
 	private $customerService;
@@ -91,12 +99,16 @@ class ProjectController extends Controller
 	/** @var UserAccountSnapshotMapper */
 	private $userAccountSnapshotMapper;
 
+	/** @var ProjectMemberHourlyRateService */
+	private $projectMemberHourlyRateService;
+
 	/**
 	 * ProjectController constructor
 	 *
 	 * @param string $appName
 	 * @param IRequest $request
 	 * @param ProjectService $projectService
+	 * @param HourlyRateService $hourlyRateService
 	 * @param CustomerService $customerService
 	 * @param TimeEntryService $timeEntryService
 	 * @param BudgetService $budgetService
@@ -111,11 +123,13 @@ class ProjectController extends Controller
 	 * @param IL10N $l
 	 * @param IUserManager $userManager
 	 * @param UserAccountSnapshotMapper $userAccountSnapshotMapper
+	 * @param ProjectMemberHourlyRateService $projectMemberHourlyRateService
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		ProjectService $projectService,
+		HourlyRateService $hourlyRateService,
 		CustomerService $customerService,
 		TimeEntryService $timeEntryService,
 		BudgetService $budgetService,
@@ -129,10 +143,12 @@ class ProjectController extends Controller
 		IRequestTokenProvider $requestTokenProvider,
 		IL10N $l,
 		IUserManager $userManager,
-		UserAccountSnapshotMapper $userAccountSnapshotMapper
+		UserAccountSnapshotMapper $userAccountSnapshotMapper,
+		ProjectMemberHourlyRateService $projectMemberHourlyRateService
 	) {
 		parent::__construct($appName, $request);
 		$this->projectService = $projectService;
+		$this->hourlyRateService = $hourlyRateService;
 		$this->customerService = $customerService;
 		$this->timeEntryService = $timeEntryService;
 		$this->budgetService = $budgetService;
@@ -146,6 +162,7 @@ class ProjectController extends Controller
 		$this->l = $l;
 		$this->userManager = $userManager;
 		$this->userAccountSnapshotMapper = $userAccountSnapshotMapper;
+		$this->projectMemberHourlyRateService = $projectMemberHourlyRateService;
 		$this->setCspService($cspService);
 	}
 
@@ -154,12 +171,13 @@ class ProjectController extends Controller
 	 *
 	 * @return array{0: list<array<string, mixed>>, 1: list<array<string, mixed>>}
 	 */
-	private function buildProjectTeamRosterForTemplate(int $projectId): array
+	private function buildProjectTeamRosterForTemplate(int $projectId, \OCA\ProjectCheck\Db\Project $project): array
 	{
 		$g = $this->projectService->getProjectTeamGrouped($projectId);
+		$mode = $project->getCostRateMode();
 		return [
-			$this->mapProjectMembersToRoster($projectId, $g['active'], false),
-			$this->mapProjectMembersToRoster($projectId, $g['former'], true),
+			$this->mapProjectMembersToRoster($projectId, $g['active'], false, $mode),
+			$this->mapProjectMembersToRoster($projectId, $g['former'], true, $mode),
 		];
 	}
 
@@ -167,9 +185,10 @@ class ProjectController extends Controller
 	 * @param list<ProjectMember> $members
 	 * @return list<array<string, mixed>>
 	 */
-	private function mapProjectMembersToRoster(int $projectId, array $members, bool $isFormer): array
+	private function mapProjectMembersToRoster(int $projectId, array $members, bool $isFormer, string $costRateMode): array
 	{
 		$roster = [];
+		$today = gmdate('Y-m-d');
 		foreach ($members as $m) {
 			$uid = $m->getUserId();
 			$live = $this->userManager->get($uid);
@@ -179,7 +198,7 @@ class ProjectController extends Controller
 				$display = $s !== null ? $s->getDisplayName() : $uid;
 			}
 			$hours = $this->timeEntryService->getTotalHoursForProjectAndUser($projectId, $uid);
-			$roster[] = [
+			$row = [
 				'id' => $m->getId(),
 				'user_id' => $uid,
 				'name' => $display,
@@ -188,6 +207,28 @@ class ProjectController extends Controller
 				'is_former' => $isFormer,
 				'profile_url' => $live ? $this->urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $uid]) : null,
 			];
+			if (!$isFormer && $costRateMode === CostRateMode::PROJECT_MEMBER) {
+				try {
+					$row['current_rate'] = $this->projectMemberHourlyRateService->resolveRateForProjectMember($projectId, $uid, $today);
+				} catch (\Throwable $e) {
+					$row['current_rate'] = null;
+				}
+				$history = [];
+				foreach ($this->projectMemberHourlyRateService->listRatesForMember($projectId, $uid) as $rateRow) {
+					$ef = $rateRow->getEffectiveFrom();
+					$history[] = [
+						'rate' => $rateRow->getHourlyRate(),
+						'effective_from' => $ef ? $ef->format('Y-m-d') : '',
+					];
+				}
+				usort($history, static fn (array $a, array $b): int => strcmp($b['effective_from'], $a['effective_from']));
+				$row['rate_history'] = array_slice($history, 0, 5);
+				$row['update_rate_url'] = $this->urlGenerator->linkToRoute('projectcheck.project.updateTeamMember', [
+					'id' => $projectId,
+					'userId' => $uid,
+				]);
+			}
+			$roster[] = $row;
 		}
 		return $roster;
 	}
@@ -339,6 +380,11 @@ class ProjectController extends Controller
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
 
+		$currency = strtoupper(trim((string) $this->config->getAppValue($this->appName, 'currency', 'EUR')));
+		if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
+			$currency = 'EUR';
+		}
+
 		$response = new TemplateResponse($this->appName, 'project-form', [
 			'project' => null,
 			'mode' => 'create',
@@ -349,6 +395,9 @@ class ProjectController extends Controller
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index'),
 			'formAction' => $this->urlGenerator->linkToRoute('projectcheck.project.store'),
 			'urlGenerator' => $this->urlGenerator,
+			'orgCurrency' => $currency,
+			'costRateModeLocked' => false,
+			'employeesIndexUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.index'),
 		]);
 
 		return $this->configureCSP($response);
@@ -392,8 +441,10 @@ class ProjectController extends Controller
 				return new DataResponse(['success' => true, 'message' => $this->l->t('Project created successfully'), 'project' => $project->getId()]);
 			}
 
-			// Redirect to projects list with success message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'success', 'project_name' => $project->getName()]);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.show', [
+				'id' => $project->getId(),
+				'message' => 'created',
+			]);
 			return new RedirectResponse($url);
 		} catch (\Exception $e) {
 			$safeError = $this->toSafeProjectErrorMessage($e, $this->l->t('Could not create project. Please check your input.'));
@@ -435,7 +486,7 @@ class ProjectController extends Controller
 		}
 
 		// Get additional project data (roster: active = current team; former = account removed, read-only)
-		[ $teamMembersActive, $teamMembersFormer ] = $this->buildProjectTeamRosterForTemplate($id);
+		[ $teamMembersActive, $teamMembersFormer ] = $this->buildProjectTeamRosterForTemplate($id, $project);
 		$teamMembers = array_merge($teamMembersActive, $teamMembersFormer);
 
 		// Get real time entry data
@@ -458,14 +509,10 @@ class ProjectController extends Controller
 		$createdBy = $project->getCreatedBy();
 		$teamMembersCount = count($teamMembers) > 0 ? count($teamMembers) : 1;
 
-		// Calculate project progress based on time entries vs available hours
-		$projectProgress = 0;
-		if ($project->getAvailableHours() > 0) {
-			$projectProgress = min(100, ($totalHours / $project->getAvailableHours()) * 100);
-		}
+		// Calculate project progress from authoritative budget info
+		$projectProgress = ProjectCapacity::progressPercent($budgetInfo, (float) $totalHours);
 
-		// Determine warning level for budget using project's built-in method
-		$warningLevel = $project->getBudgetWarningLevel($totalHours);
+		$warningLevel = (string) ($budgetInfo['warning_level'] ?? 'none');
 
 		$projectFiles = $this->projectFileService->listFiles($id, $user->getUID());
 		$uid = $user->getUID();
@@ -485,8 +532,14 @@ class ProjectController extends Controller
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $uid);
 
 		$requestToken = $this->requestTokenProvider->getEncryptedRequestToken();
+		$pricingModeLabel = $this->pricingModeLabel($project->getCostRateMode());
+		$showCreatedBanner = (string) $this->request->getParam('message', '') === 'created';
 		$response = new TemplateResponse($this->appName, 'project-detail', [
 			'project' => $project,
+			'pricingModeLabel' => $pricingModeLabel,
+			'costRateMode' => $project->getCostRateMode(),
+			'hideAddAllTeam' => $project->getCostRateMode() === CostRateMode::PROJECT_MEMBER,
+			'showCreatedBanner' => $showCreatedBanner,
 			'teamMembers' => $teamMembers,
 			'teamMembersActive' => $teamMembersActive,
 			'teamMembersFormer' => $teamMembersFormer,
@@ -524,10 +577,54 @@ class ProjectController extends Controller
 	}
 
 	/**
+	 * Resolve hourly rate for time-entry preview (server authority).
+	 * Read-only GET; session + project access checks apply (see getBudgetInfo).
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
+	public function resolveHourlyRate(int $id): JSONResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+
+		$dateRaw = (string) $this->request->getParam('date', '');
+		$targetUserId = trim((string) $this->request->getParam('user_id', $user->getUID()));
+		if ($targetUserId === '') {
+			$targetUserId = $user->getUID();
+		}
+		if ($targetUserId !== $user->getUID()) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+
+		if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateRaw) && !preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $dateRaw)) {
+			return new JSONResponse(['error' => $this->l->t('Invalid date format')], 400);
+		}
+		if (preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $dateRaw, $m)) {
+			$dateRaw = $m[3] . '-' . $m[2] . '-' . $m[1];
+		}
+
+		try {
+			$preview = $this->hourlyRateService->resolvePreview($id, $targetUserId, new \DateTime($dateRaw));
+			return new JSONResponse(['success' => true, 'data' => $preview]);
+		} catch (RateResolutionException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $e->getMessage(),
+				'code' => $e->getCodeKey(),
+			], 400);
+		} catch (\Throwable $e) {
+			return new JSONResponse(['success' => false, 'error' => $this->l->t('Could not resolve hourly rate.')], 500);
+		}
+	}
+
+	/**
 	 * Get budget information for a project
-	 *
-	 * @param int $id Project ID
-	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
@@ -562,6 +659,13 @@ class ProjectController extends Controller
 					'remaining_budget' => $budgetInfo['remaining_budget'],
 					'consumption_percentage' => $budgetInfo['consumption_percentage'],
 					'warning_level' => $budgetInfo['warning_level'],
+					'warning_threshold' => $budgetInfo['warning_threshold'],
+					'critical_threshold' => $budgetInfo['critical_threshold'],
+					'used_hours' => $budgetInfo['used_hours'],
+					'remaining_hours' => $budgetInfo['remaining_hours'],
+					'hours_estimated' => $budgetInfo['hours_estimated'],
+					'capacity_basis' => $budgetInfo['capacity_basis'],
+					'capacity_rate' => $budgetInfo['capacity_rate'],
 					'total_hours' => $budgetInfo['used_hours'],
 					'project_name' => $project->getName(),
 					'currency' => $currency,
@@ -580,7 +684,7 @@ class ProjectController extends Controller
 	 *
 	 * @param int $project_id
 	 * @param float $additional_hours
-	 * @param float $additional_rate
+	 * @param string $entry_date Optional YYYY-MM-DD (defaults to today)
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
@@ -593,9 +697,9 @@ class ProjectController extends Controller
 
 		$projectId = (int) $this->request->getParam('project_id');
 		$additionalHours = (float) $this->request->getParam('additional_hours');
-		$additionalRate = (float) $this->request->getParam('additional_rate');
+		$entryDateRaw = trim((string) $this->request->getParam('entry_date', ''));
 
-		if (!$projectId || $additionalHours <= 0 || $additionalRate <= 0) {
+		if (!$projectId || $additionalHours <= 0) {
 			return new JSONResponse(['error' => $this->l->t('Invalid parameters')], 400);
 		}
 
@@ -608,18 +712,62 @@ class ProjectController extends Controller
 				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 			}
 
-			$impact = $this->budgetService->checkTimeEntryBudgetImpact($project, $additionalHours, $additionalRate);
+			$entryDate = $this->parseEntryDateParam($entryDateRaw);
+			if ($entryDate === null) {
+				return new JSONResponse(['error' => $this->l->t('Invalid parameters')], 400);
+			}
+
+			try {
+				$resolvedRate = $this->hourlyRateService->resolveForTimeEntry(
+					$projectId,
+					$user->getUID(),
+					$entryDate
+				);
+			} catch (RateResolutionException $e) {
+				return new JSONResponse([
+					'success' => false,
+					'error' => $e->getMessage(),
+				], 400);
+			}
+
+			if ($resolvedRate <= 0) {
+				return new JSONResponse(['error' => $this->l->t('Invalid parameters')], 400);
+			}
+
+			$impact = $this->budgetService->checkTimeEntryBudgetImpact(
+				$project,
+				$additionalHours,
+				$resolvedRate,
+				$user->getUID()
+			);
+			$impact['resolved_hourly_rate'] = $resolvedRate;
 
 			return new JSONResponse([
 				'success' => true,
-				'impact' => $impact
+				'impact' => $impact,
 			]);
 		} catch (\Exception $e) {
 			return new JSONResponse([
 				'success' => false,
-				'error' => $this->l->t('Could not calculate budget impact.')
+				'error' => $this->l->t('Could not calculate budget impact.'),
 			], 500);
 		}
+	}
+
+	/**
+	 * Parse optional YYYY-MM-DD for budget impact preview (defaults to today).
+	 */
+	private function parseEntryDateParam(string $raw): ?\DateTimeImmutable
+	{
+		if ($raw === '') {
+			return new \DateTimeImmutable('today');
+		}
+		$dt = \DateTimeImmutable::createFromFormat('Y-m-d', $raw);
+		if ($dt === false || $dt->format('Y-m-d') !== $raw) {
+			return null;
+		}
+
+		return $dt;
 	}
 
 	/**
@@ -654,6 +802,11 @@ class ProjectController extends Controller
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $user->getUID());
 
+		$currency = strtoupper(trim((string) $this->config->getAppValue($this->appName, 'currency', 'EUR')));
+		if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
+			$currency = 'EUR';
+		}
+
 		$response = new TemplateResponse($this->appName, 'project-form', [
 			'project' => $project,
 			'mode' => 'edit',
@@ -662,6 +815,9 @@ class ProjectController extends Controller
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index'),
 			'formAction' => $this->urlGenerator->linkToRoute('projectcheck.project.updatePost', ['id' => $id]),
 			'urlGenerator' => $this->urlGenerator,
+			'orgCurrency' => $currency,
+			'costRateModeLocked' => $this->projectService->projectHasLoggedTime($id),
+			'employeesIndexUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.index'),
 		]);
 
 		return $this->configureCSP($response);
@@ -1133,6 +1289,14 @@ class ProjectController extends Controller
 				return new DataResponse(['error' => $this->l->t('Invalid parameters')], 400);
 			}
 
+			if ($project->getCostRateMode() === CostRateMode::PROJECT_MEMBER) {
+				if ($hourlyRate === null || $hourlyRate <= 0) {
+					return new DataResponse([
+						'error' => $this->l->t('Enter an hourly rate for this person before adding them to the project.'),
+					], 400);
+				}
+			}
+
 			$member = $this->projectService->addTeamMember($id, $userId, $role, $hourlyRate);
 
 			return new DataResponse([
@@ -1165,6 +1329,11 @@ class ProjectController extends Controller
 		}
 		if (!$project->isEditableState()) {
 			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
+		if ($project->getCostRateMode() === CostRateMode::PROJECT_MEMBER) {
+			return new DataResponse([
+				'error' => $this->l->t('Add each person individually with their rate when using per-person project pricing.'),
+			], 400);
 		}
 
 		$activeTeam = $this->projectService->getProjectTeamGrouped($id)['active'] ?? [];
@@ -1274,7 +1443,26 @@ class ProjectController extends Controller
 				return new DataResponse(['error' => $this->l->t('Invalid parameters')], 400);
 			}
 
-			// Remove existing member and add with new data
+			if ($project->getCostRateMode() === CostRateMode::PROJECT_MEMBER) {
+				$effectiveFrom = trim((string) $this->request->getParam('effective_from', ''));
+				if ($effectiveFrom === '') {
+					$effectiveFrom = gmdate('Y-m-d');
+				}
+				if (preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $effectiveFrom, $m)) {
+					$effectiveFrom = $m[3] . '-' . $m[2] . '-' . $m[1];
+				}
+				if ($hourlyRate === null || $hourlyRate <= 0) {
+					return new DataResponse(['error' => $this->l->t('Hourly rate must be a positive number')], 400);
+				}
+				$this->projectService->appendTeamMemberRate($id, $targetUserId, $hourlyRate, $effectiveFrom, $user->getUID());
+				$member = $this->projectService->getActiveProjectMember($id, $targetUserId);
+				return new DataResponse([
+					'success' => true,
+					'member' => $member,
+					'message' => $this->l->t('Rate saved. Past time entries keep their previous rate.'),
+				]);
+			}
+
 			$this->projectService->removeTeamMember($id, $targetUserId);
 			$member = $this->projectService->addTeamMember($id, $targetUserId, $role, $hourlyRate);
 
@@ -1556,6 +1744,7 @@ class ProjectController extends Controller
 		$allowed = [
 			'name', 'short_description', 'detailed_description', 'customer_id', 'hourly_rate', 'total_budget',
 			'available_hours', 'category', 'priority', 'status', 'start_date', 'end_date', 'tags', 'project_type',
+			'cost_rate_mode',
 		];
 		$staged = [];
 		foreach ($raw as $k => $v) {
@@ -1666,6 +1855,11 @@ class ProjectController extends Controller
 					'remaining_budget' => $budgetInfo['remaining_budget'],
 					'consumption_percentage' => $budgetInfo['consumption_percentage'],
 					'used_hours' => $budgetInfo['used_hours'],
+					'remaining_hours' => $budgetInfo['remaining_hours'],
+					'hours_estimated' => $budgetInfo['hours_estimated'],
+					'capacity_basis' => $budgetInfo['capacity_basis'],
+					'capacity_rate' => $budgetInfo['capacity_rate'],
+					'available_hours' => $budgetInfo['available_hours'],
 					'warning_level' => $budgetInfo['warning_level'],
 					'start_date' => $project->getStartDate() ? $project->getStartDate()->format('d.m.Y') : null,
 					'end_date' => $project->getEndDate() ? $project->getEndDate()->format('d.m.Y') : null,
@@ -1708,6 +1902,15 @@ class ProjectController extends Controller
 		}
 
 		return $fallback;
+	}
+
+	private function pricingModeLabel(string $mode): string
+	{
+		return match (CostRateMode::normalize($mode)) {
+			CostRateMode::EMPLOYEE => $this->l->t('Rate per employee (master data)'),
+			CostRateMode::PROJECT_MEMBER => $this->l->t('Rate per person on this project'),
+			default => $this->l->t('One rate for the whole project'),
+		};
 	}
 
 	/**

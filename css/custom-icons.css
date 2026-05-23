@@ -151,4 +151,25 @@
 .icon-delete-custom[data-lucide-hydrated="1"],
 .icon-folder-custom[data-lucide-hydrated="1"] {
     background-image: none;
+    width: auto;
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+}
+
+.icon-calendar-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-time-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-money-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-user-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-chart-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-add-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-info-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-tag-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-edit-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-delete-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-folder-custom[data-lucide-hydrated="1"] .lucide-icon {
+    width: 1.125rem;
+    height: 1.125rem;
 }

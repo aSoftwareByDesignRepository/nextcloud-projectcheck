@@ -8,6 +8,7 @@ use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMapper;
 use OCA\ProjectCheck\Db\TimeEntry;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
+use OCA\ProjectCheck\Service\HourlyRateService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\IL10N;
@@ -27,6 +28,7 @@ class TimeEntryServiceTest extends TestCase {
 		$this->timeEntryMapper = $this->createMock(TimeEntryMapper::class);
 		$this->projectMapper = $this->createMock(ProjectMapper::class);
 		$this->projectService = $this->createMock(ProjectService::class);
+		$hourlyRateService = $this->createMock(HourlyRateService::class);
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn(string $text): string => $text);
 
@@ -34,6 +36,7 @@ class TimeEntryServiceTest extends TestCase {
 			$this->timeEntryMapper,
 			$this->projectMapper,
 			$this->projectService,
+			$hourlyRateService,
 			$l10n
 		);
 	}

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Tests\Unit\Controller;
 
 use OCA\ProjectCheck\Controller\ProjectController;
+use OCA\ProjectCheck\Service\HourlyRateService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\TimeEntryService;
@@ -24,6 +25,7 @@ use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -45,6 +47,9 @@ class ProjectControllerTest extends TestCase {
 
 	/** @var ProjectService|\PHPUnit\Framework\MockObject\MockObject */
 	private $projectService;
+
+	/** @var HourlyRateService|\PHPUnit\Framework\MockObject\MockObject */
+	private $hourlyRateService;
 
 	/** @var IRequest|\PHPUnit\Framework\MockObject\MockObject */
 	private $request;
@@ -74,6 +79,7 @@ class ProjectControllerTest extends TestCase {
 		$this->l10n->method('t')
 			->willReturnCallback(static fn ($s, $p = []) => is_array($p) && !empty($p) ? vsprintf($s, $p) : $s);
 
+		$this->hourlyRateService = $this->createMock(HourlyRateService::class);
 		$customerService = $this->createMock(CustomerService::class);
 		$timeEntryService = $this->createMock(TimeEntryService::class);
 		$budgetService = $this->createMock(BudgetService::class);
@@ -88,11 +94,13 @@ class ProjectControllerTest extends TestCase {
 		$requestToken->method('getEncryptedRequestToken')->willReturn('mock-encrypted-csrf');
 		$this->userManager = $this->createMock(\OCP\IUserManager::class);
 		$userAccountSnapshot = $this->createMock(\OCA\ProjectCheck\Db\UserAccountSnapshotMapper::class);
+		$projectMemberHourlyRateService = $this->createMock(\OCA\ProjectCheck\Service\ProjectMemberHourlyRateService::class);
 
 		$this->controller = new ProjectController(
 			'projectcheck',
 			$this->request,
 			$this->projectService,
+			$this->hourlyRateService,
 			$customerService,
 			$timeEntryService,
 			$budgetService,
@@ -106,7 +114,8 @@ class ProjectControllerTest extends TestCase {
 			$requestToken,
 			$this->l10n,
 			$this->userManager,
-			$userAccountSnapshot
+			$userAccountSnapshot,
+			$projectMemberHourlyRateService
 		);
 		$this->projectService->method('canUserCreateProject')->willReturn(true);
 	}
@@ -265,6 +274,32 @@ class ProjectControllerTest extends TestCase {
 		$this->assertInstanceOf(ProjectMember::class, $data['member']);
 	}
 
+	public function testAddTeamMemberRequiresRateInProjectMemberMode(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Active');
+		$project->setCostRateMode(\OCA\ProjectCheck\Util\CostRateMode::PROJECT_MEMBER);
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+
+		$this->request->method('getParam')
+			->willReturnMap([
+				['user_id', '', 'newuser'],
+				['hourly_rate', null, null],
+			]);
+
+		$this->projectService->expects($this->never())->method('addTeamMember');
+
+		$response = $this->controller->addTeamMember(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
+		$this->assertStringContainsString('hourly rate', strtolower((string)$data['error']));
+	}
+
 	public function testAddTeamMemberRejectsInvalidHourlyRate(): void {
 		$this->user->method('getUID')->willReturn('testuser');
 		$this->userSession->method('getUser')->willReturn($this->user);
@@ -371,6 +406,25 @@ class ProjectControllerTest extends TestCase {
 		$data = $response->getData();
 		$this->assertTrue($data['success']);
 		$this->assertEquals(1, $data['added_count']);
+	}
+
+	public function testAddAllTeamMembersRejectsProjectMemberPricingMode(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$project = new Project();
+		$project->setId(1);
+		$project->setStatus('Active');
+		$project->setCostRateMode(\OCA\ProjectCheck\Util\CostRateMode::PROJECT_MEMBER);
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('testuser', 1)->willReturn(true);
+		$this->projectService->expects($this->never())->method('addTeamMember');
+		$this->userManager->expects($this->never())->method('search');
+
+		$response = $this->controller->addAllTeamMembers(1);
+
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
 	}
 
 	public function testAddAllTeamMembersRejectsNonEditableProjectState(): void {
@@ -841,5 +895,64 @@ class ProjectControllerTest extends TestCase {
 		$params = $response->getParams();
 		$this->assertArrayHasKey('error', $params);
 		$this->assertEquals('User not authenticated', $params['error']);
+	}
+
+	/**
+	 * Resolve API: self-only user_id (A6 / T2.19).
+	 */
+	public function testResolveHourlyRateRejectsQueryingAnotherUser(): void {
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('canUserAccessProject')->with('alice', 9)->willReturn(true);
+		$this->request->method('getParam')->willReturnCallback(static function (string $key, $default = null) {
+			return match ($key) {
+				'date' => '2026-04-01',
+				'user_id' => 'bob',
+				default => $default,
+			};
+		});
+		$this->hourlyRateService->expects($this->never())->method('resolvePreview');
+
+		$response = $this->controller->resolveHourlyRate(9);
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertEquals(403, $response->getStatus());
+	}
+
+	public function testResolveHourlyRateSuccessForSessionUser(): void {
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('canUserAccessProject')->with('alice', 9)->willReturn(true);
+		$this->request->method('getParam')->willReturnCallback(static function (string $key, $default = null) {
+			return match ($key) {
+				'date' => '01.04.2026',
+				'user_id' => '',
+				default => $default,
+			};
+		});
+		$this->hourlyRateService->method('resolvePreview')->willReturn([
+			'hourly_rate' => 88.0,
+			'cost_rate_mode' => 'project',
+			'source' => 'project',
+		]);
+
+		$response = $this->controller->resolveHourlyRate(9);
+
+		$this->assertEquals(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+		$this->assertEqualsWithDelta(88.0, (float) $data['data']['hourly_rate'], 0.001);
+	}
+
+	public function testResolveHourlyRateDeniedWithoutProjectAccess(): void {
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('canUserAccessProject')->with('alice', 9)->willReturn(false);
+		$this->request->method('getParam')->willReturn('2026-04-01');
+		$this->hourlyRateService->expects($this->never())->method('resolvePreview');
+
+		$response = $this->controller->resolveHourlyRate(9);
+
+		$this->assertEquals(403, $response->getStatus());
 	}
 }

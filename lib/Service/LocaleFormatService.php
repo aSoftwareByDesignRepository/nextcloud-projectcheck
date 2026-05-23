@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Server-side counterpart to {@see js/common/format.js}.
  *
- * Audit reference: `pm/app-ideas/projectcheck/AUDIT-FINDINGS.md` finding B10/H28.
+ * Audit reference: `pm/app-ideas/projectcheck/README.md` (locale/format requirements).
  * Templates used to render numbers and currency with `number_format($x, 2)` +
  * a hard-coded `€` glyph, which silently produces an `en_US`-style grouping
  * (`1,234.56`) for German users (who expect `1.234,56`). This service routes

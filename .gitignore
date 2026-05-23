@@ -39,8 +39,13 @@ temp/
 coverage/
 .nyc_output/
 
+# E2E auth cookies (local only)
+.auth/
+e2e/.env
+
 # Test outputs
 test-results/
+playwright-report/
 junit.xml
 tests/results.xml
 tests/coverage/

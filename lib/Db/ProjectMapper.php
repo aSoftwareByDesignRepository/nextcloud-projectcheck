@@ -76,7 +76,7 @@ class ProjectMapper extends QBMapper
 	public function findByUser($userId, $limit = null)
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('p.*')
+		$qb->select(...ProjectQueryColumns::qualified('p'))
 		   ->from($this->getTableName(), 'p')
 		   ->leftJoin('p', 'pc_project_members', 'pm', $qb->expr()->andX(
 			   $qb->expr()->eq('p.id', 'pm.project_id'),
@@ -273,7 +273,7 @@ class ProjectMapper extends QBMapper
 	public function getProjectsWithBudgetConsumption($userId)
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('p.*', 'c.name as customer_name')
+		$qb->select(...ProjectQueryColumns::withExtra('p', 'c.name as customer_name'))
 		   ->from($this->getTableName(), 'p')
 		   ->leftJoin('p', 'pc_customers', 'c', 'p.customer_id = c.id')
 		   ->leftJoin('p', 'pc_project_members', 'pm', $qb->expr()->andX(

@@ -22,14 +22,16 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content" role="main">
-    <div id="app-content-wrapper">
-        <!-- Page Header -->
-        <div class="section">
+<?php
+$pageId = 'customers';
+$pageTitle = $l->t('Customers');
+$pageHelp = $l->t('Manage your customer relationships');
+include __DIR__ . '/common/page-start.php';
+?>
+        <div class="section pc-section">
             <div class="header-content">
                 <div class="header-text">
-                    <h2><?php p($l->t('Customers')); ?></h2>
-                    <p><?php p($l->t('Manage your customer relationships')); ?></p>
+                    <p class="pc-page-header__lead"><?php p($pageHelp); ?></p>
                 </div>
                 <div class="header-actions">
                     <?php if (!empty($_['canCreateCustomer'])): ?>
@@ -261,7 +263,5 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                 <?php endif; ?>
             <?php endif; ?>
         </div>
-    </div>
-</div>
 
-<?php /* Icons are hydrated by the centralised js/common/icons.js module loaded via templates/common/navigation.php (audit ref. AUDIT-FINDINGS H22). */ ?>
+<?php include __DIR__ . '/common/page-end.php'; ?>

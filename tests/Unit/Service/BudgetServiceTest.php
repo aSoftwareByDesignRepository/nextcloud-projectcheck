@@ -176,4 +176,73 @@ class BudgetServiceTest extends TestCase {
 		$this->assertStringContainsString('85.0 %', $alert['message']);
 		$this->assertStringNotContainsString('%.1f', $alert['message']);
 	}
+
+	public function testGetProjectBudgetInfoMarksCapacityUnavailableWithoutPlanningRate(): void {
+		$project = new Project();
+		$project->setId(20);
+		$project->setCostRateMode(\OCA\ProjectCheck\Util\CostRateMode::PROJECT_MEMBER);
+		$project->setTotalBudget(5000.0);
+		$project->setHourlyRate(0.0);
+
+		$this->timeEntryMapper->method('getTotalCostForProject')->willReturn(1000.0);
+		$this->timeEntryMapper->method('getTotalHoursForProject')->willReturn(20.0);
+
+		$info = $this->service->getProjectBudgetInfo($project);
+
+		$this->assertFalse($info['hours_estimated']);
+		$this->assertSame('unavailable', $info['capacity_basis']);
+		$this->assertSame(20.0, $info['used_hours']);
+		$this->assertSame(4000.0, $info['remaining_budget']);
+	}
+
+	public function testCheckTimeEntryBudgetImpactUsesUserThresholds(): void {
+		$config = $this->createMock(IConfig::class);
+		$config->method('getAppValue')->willReturnCallback(static function (string $app, string $key, string $default = '') {
+			return $default;
+		});
+		$config->method('getUserValue')->willReturnCallback(static function (string $user, string $app, string $key, $default = '') {
+			if ($user === 'alice' && $key === 'budget_warning_threshold') {
+				return '70';
+			}
+			if ($user === 'alice' && $key === 'budget_critical_threshold') {
+				return '85';
+			}
+			return $default;
+		});
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		$localeFormat = $this->createMock(LocaleFormatService::class);
+		$localeFormat->method('currency')->willReturn('€0.00');
+		$localeFormat->method('percent')->willReturn('0 %');
+		$localeFormat->method('number')->willReturn('0');
+		$localeFormat->method('hours')->willReturn('0 h');
+		$localeFormat->method('getCurrency')->willReturn('EUR');
+		$localeFormat->method('getLocale')->willReturn('en');
+
+		$service = new BudgetService(
+			$this->timeEntryMapper,
+			$config,
+			$logger,
+			$l10n,
+			$localeFormat,
+			'projectcheck'
+		);
+
+		$project = new Project();
+		$project->setId(99);
+		$project->setTotalBudget(1000.00);
+		$project->setHourlyRate(100.0);
+
+		$this->timeEntryMapper->method('getTotalCostForProject')->willReturn(840.00);
+		$this->timeEntryMapper->method('getTotalHoursForProject')->willReturn(8.4);
+
+		// 840 + 10 = 850 => 85% — critical for alice (85%), warning at defaults (80/90)
+		$impact = $service->checkTimeEntryBudgetImpact($project, 0.1, 100.0, 'alice');
+		$this->assertSame('critical', $impact['warning_level_after']);
+
+		$impactDefault = $this->service->checkTimeEntryBudgetImpact($project, 0.1, 100.0);
+		$this->assertSame('warning', $impactDefault['warning_level_after']);
+	}
 }

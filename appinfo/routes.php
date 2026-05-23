@@ -108,6 +108,8 @@ return [
 
 		// Project budget info API route
 		['name' => 'project#getBudgetInfo', 'url' => '/api/project/{id}/budget', 'verb' => 'GET'],
+		['name' => 'project#resolveHourlyRate', 'url' => '/api/projects/{id}/resolve-hourly-rate', 'verb' => 'GET'],
+		['name' => 'employee#addHourlyRate', 'url' => '/api/employees/{userId}/hourly-rates', 'verb' => 'POST'],
 
 		// Project member management routes
 		['name' => 'projectmember#getDeletionImpact', 'url' => '/api/project-members/{id}/deletion-impact', 'verb' => 'GET'],

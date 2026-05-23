@@ -14,6 +14,7 @@ namespace OCA\ProjectCheck\Service;
 use OCA\ProjectCheck\Db\TimeEntry;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
 use OCA\ProjectCheck\Db\ProjectMapper;
+use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\IL10N;
@@ -32,26 +33,23 @@ class TimeEntryService
 	/** @var ProjectService */
 	private $projectService;
 
+	/** @var HourlyRateService */
+	private $hourlyRateService;
+
 	/** @var IL10N */
 	private $l;
 
-	/**
-	 * TimeEntryService constructor
-	 *
-	 * @param TimeEntryMapper $timeEntryMapper
-	 * @param ProjectMapper $projectMapper
-	 * @param ProjectService $projectService
-	 * @param IL10N $l
-	 */
 	public function __construct(
 		TimeEntryMapper $timeEntryMapper,
 		ProjectMapper $projectMapper,
 		ProjectService $projectService,
+		HourlyRateService $hourlyRateService,
 		IL10N $l
 	) {
 		$this->timeEntryMapper = $timeEntryMapper;
 		$this->projectMapper = $projectMapper;
 		$this->projectService = $projectService;
+		$this->hourlyRateService = $hourlyRateService;
 		$this->l = $l;
 	}
 
@@ -65,7 +63,6 @@ class TimeEntryService
 	 */
 	public function createTimeEntry($data, $userId)
 	{
-		// Validate project exists and accepts time entries
 		$project = $this->projectMapper->find($data['project_id']);
 		if (!$project) {
 			throw new \Exception($this->l->t('Project not found'));
@@ -83,13 +80,20 @@ class TimeEntryService
 			throw new \Exception($this->l->t('Date is required'));
 		}
 
+		$resolvedRate = $this->resolveAndAssertClientRate(
+			$pid,
+			$userId,
+			$parsedDate,
+			$data['hourly_rate'] ?? null
+		);
+
 		$timeEntry = new TimeEntry();
 		$timeEntry->setProjectId((int)$data['project_id']);
 		$timeEntry->setUserId($userId);
 		$timeEntry->setDate($parsedDate);
 		$timeEntry->setHours((float)$data['hours']);
 		$timeEntry->setDescription($data['description'] ?? '');
-		$timeEntry->setHourlyRate((float)$data['hourly_rate']);
+		$timeEntry->setHourlyRate($resolvedRate);
 		$timeEntry->setCreatedAt(new \DateTime());
 		$timeEntry->setUpdatedAt(new \DateTime());
 
@@ -183,12 +187,10 @@ class TimeEntryService
 			throw new \Exception($this->l->t('Time entry not found'));
 		}
 
-		// Check if user owns this time entry
 		if ($timeEntry->getUserId() !== $userId) {
 			throw new \Exception($this->l->t('Access denied'));
 		}
 
-		// Update fields with proper types
 		if (isset($data['project_id'])) {
 			$timeEntry->setProjectId((int)$data['project_id']);
 		}
@@ -208,26 +210,64 @@ class TimeEntryService
 		if (isset($data['description'])) {
 			$timeEntry->setDescription((string)$data['description']);
 		}
-		if (isset($data['hourly_rate'])) {
-			$timeEntry->setHourlyRate((float)$data['hourly_rate']);
+
+		$targetProject = $this->projectMapper->find($timeEntry->getProjectId());
+		if (!$targetProject) {
+			throw new \Exception($this->l->t('Project not found'));
+		}
+		if (!$targetProject->allowsTimeTracking()) {
+			throw new \Exception($this->l->t('Time entries cannot be moved to a project that is not Active or On Hold.'));
+		}
+		if (!$this->projectService->canUserAccessProject($userId, (int) $timeEntry->getProjectId())) {
+			throw new \Exception($this->l->t('Access denied'));
 		}
 
-		if (isset($data['project_id'])) {
-			$targetProject = $this->projectMapper->find($timeEntry->getProjectId());
-			if (!$targetProject) {
-				throw new \Exception($this->l->t('Project not found'));
-			}
-			if (!$targetProject->allowsTimeTracking()) {
-				throw new \Exception($this->l->t('Time entries cannot be moved to a project that is not Active or On Hold.'));
-			}
-			if (!$this->projectService->canUserAccessProject($userId, (int) $timeEntry->getProjectId())) {
-				throw new \Exception($this->l->t('Access denied'));
-			}
+		$entryDate = $timeEntry->getDate();
+		if (!$entryDate instanceof \DateTimeInterface) {
+			throw new \Exception($this->l->t('Date is required'));
 		}
+
+		$clientRate = $data['hourly_rate'] ?? $timeEntry->getHourlyRate();
+		$resolvedRate = $this->resolveAndAssertClientRate(
+			(int) $timeEntry->getProjectId(),
+			$userId,
+			$entryDate,
+			$clientRate
+		);
+		$timeEntry->setHourlyRate($resolvedRate);
 
 		$timeEntry->setUpdatedAt(new \DateTime());
 
 		return $this->timeEntryMapper->update($timeEntry);
+	}
+
+	/**
+	 * @throws \Exception
+	 */
+	private function resolveAndAssertClientRate(
+		int $projectId,
+		string $userId,
+		\DateTimeInterface $entryDate,
+		mixed $clientRate,
+	): float {
+		try {
+			$resolved = $this->hourlyRateService->resolveForTimeEntry($projectId, $userId, $entryDate);
+		} catch (RateResolutionException $e) {
+			throw new \Exception($e->getMessage());
+		}
+
+		if ($clientRate !== null && $clientRate !== '') {
+			if (!is_numeric($clientRate)) {
+				throw new \Exception($this->l->t('Invalid hourly rate'));
+			}
+			try {
+				$this->hourlyRateService->assertClientRateMatchesResolved((float) $clientRate, $resolved);
+			} catch (RateResolutionException $e) {
+				throw new \Exception($e->getMessage());
+			}
+		}
+
+		return $resolved;
 	}
 
 	/**
@@ -244,7 +284,6 @@ class TimeEntryService
 			throw new \Exception($this->l->t('Time entry not found'));
 		}
 
-		// Check if user owns this time entry
 		if ($timeEntry->getUserId() !== $userId) {
 			throw new \Exception($this->l->t('Access denied'));
 		}
@@ -330,11 +369,11 @@ class TimeEntryService
 	 */
 	public function getTotalCostForProjectAndUser(int $projectId, string $userId): float
 	{
-		$sum = 0.0;
+		$sum = '0';
 		foreach ($this->timeEntryMapper->findByProjectAndUser($projectId, $userId) as $entry) {
-			$sum += $entry->getCost();
+			$sum = \OCA\ProjectCheck\Util\Money::add($sum, $entry->getCost());
 		}
-		return $sum;
+		return \OCA\ProjectCheck\Util\Money::asFloat($sum);
 	}
 
 	/**
@@ -359,7 +398,6 @@ class TimeEntryService
 		$totalHours = $this->getTotalHoursForUser($userId);
 		$totalEntries = $this->timeEntryMapper->countByUser($userId);
 
-		// Get recent entries
 		$recentEntries = $this->timeEntryMapper->findByUser($userId);
 
 		return [
@@ -521,7 +559,6 @@ class TimeEntryService
 
 	/**
 	 * Validate time entry data with both localized messages and stable error codes
-	 * (for API clients and audit logs).
 	 *
 	 * @param array $data Time entry data
 	 * @return array{errors: array<string, string>, errorCodes: array<string, string>}
@@ -579,9 +616,7 @@ class TimeEntryService
 			}
 		}
 
-		if (!isset($data['hourly_rate']) || $data['hourly_rate'] === '' || $data['hourly_rate'] === null) {
-			$errors['hourly_rate'] = 'required';
-		} else {
+		if (isset($data['hourly_rate']) && $data['hourly_rate'] !== '' && $data['hourly_rate'] !== null) {
 			if (!is_numeric($data['hourly_rate']) || (float) $data['hourly_rate'] < 0) {
 				$errors['hourly_rate'] = 'invalid';
 			}
@@ -615,7 +650,6 @@ class TimeEntryService
 				default => $this->l->t('Invalid parameters'),
 			},
 			'hourly_rate' => match ($code) {
-				'required' => $this->l->t('Hourly rate is required'),
 				'invalid' => $this->l->t('Hourly rate must be a non-negative number'),
 				default => $this->l->t('Invalid parameters'),
 			},

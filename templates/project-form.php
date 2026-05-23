@@ -9,11 +9,11 @@
 
 use OCP\Util;
 
-Util::addScript('projectcheck', 'common/datepicker');
 Util::addScript('projectcheck', 'projects');
 Util::addScript('projectcheck', 'project-form');
+Util::addScript('projectcheck', 'project-form-cost-rates');
 Util::addStyle('projectcheck', 'projects');
-Util::addStyle('projectcheck', 'common/datepicker');
+Util::addStyle('projectcheck', 'common/accessibility');
 Util::addStyle('projectcheck', 'navigation');
 
 $isEdit = isset($project) && $project instanceof \OCA\ProjectCheck\Db\Project;
@@ -21,6 +21,9 @@ $pageTitle = $isEdit ? $l->t('Edit Project') : $l->t('Create New Project');
 $formAction = $_['formAction'] ?? ($isEdit ? '/projects/' . $project->getId() : '/projects');
 $formMethod = $isEdit ? 'PUT' : 'POST';
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
+$costRateModeLocked = !empty($_['costRateModeLocked']);
+$selectedCostRateMode = $isEdit ? $project->getCostRateMode() : \OCA\ProjectCheck\Util\CostRateMode::DEFAULT;
+$employeesIndexUrl = $_['employeesIndexUrl'] ?? '';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 	$currencyCode = 'EUR';
 }
@@ -28,13 +31,36 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content" role="main">
-    <div id="app-content-wrapper">
-        <!-- Page Header -->
-        <div class="section">
-            <h2><?php p($pageTitle); ?></h2>
-            <p><?php p($isEdit ? $l->t('Update project information') : $l->t('Create a new project')); ?></p>
-
+<?php
+$pageId = $isEdit ? 'project-edit' : 'project-create';
+$pageTitle = $isEdit ? $l->t('Edit Project') : $l->t('Create New Project');
+$pageHelp = $isEdit ? $l->t('Update project information') : $l->t('Create a new project');
+include __DIR__ . '/common/page-start.php';
+?>
+        <?php if (!$isEdit): ?>
+        <nav class="pc-create-workflow pc-section" aria-label="<?php p($l->t('Steps to create a project')); ?>">
+            <h2 class="pc-create-workflow__title"><?php p($l->t('How to set up a new project')); ?></h2>
+            <ol class="pc-create-workflow__list">
+                <li class="pc-create-workflow__step">
+                    <span class="pc-create-workflow__num" aria-hidden="true">1</span>
+                    <span><?php p($l->t('Enter name, customer, and description')); ?></span>
+                </li>
+                <li class="pc-create-workflow__step">
+                    <span class="pc-create-workflow__num" aria-hidden="true">2</span>
+                    <span><?php p($l->t('Set schedule and status')); ?></span>
+                </li>
+                <li class="pc-create-workflow__step">
+                    <span class="pc-create-workflow__num" aria-hidden="true">3</span>
+                    <span><?php p($l->t('Choose how hours are priced')); ?></span>
+                </li>
+                <li class="pc-create-workflow__step">
+                    <span class="pc-create-workflow__num" aria-hidden="true">4</span>
+                    <span><?php p($l->t('After saving, add your team so people can log time')); ?></span>
+                </li>
+            </ol>
+        </nav>
+        <?php endif; ?>
+        <div class="section pc-section">
             <div class="actions">
                 <a href="<?php p($_['indexUrl'] ?? '/projects'); ?>" class="button">
                     ← <?php p($l->t('Back to Projects')); ?>
@@ -47,7 +73,9 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
             <form id="project-form" action="<?php p($formAction); ?>" method="POST">
                 <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']) ?>">
 
-                <!-- Basic Information -->
+                <section class="pc-section" aria-labelledby="pc-project-basics-heading">
+                    <h3 id="pc-project-basics-heading" class="pc-section-title"><?php p($l->t('Basics')); ?></h3>
+                    <p class="pc-section-intro"><?php p($l->t('Name, customer, and what this project is about.')); ?></p>
                 <div class="form-group">
                     <label for="name"><?php p($l->t('Project Name')); ?> *</label>
                     <input type="text"
@@ -109,35 +137,42 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                         <?php endif; ?>
                     </select>
                 </div>
+                </section>
 
-                <!-- Project Details -->
+                <?php
+                $htmlLang = isset($_['htmlLang']) && is_string($_['htmlLang']) ? $_['htmlLang'] : 'en';
+                $startDateIso = ($isEdit && $project->getStartDate()) ? $project->getStartDate()->format('Y-m-d') : '';
+                $endDateIso = ($isEdit && $project->getEndDate()) ? $project->getEndDate()->format('Y-m-d') : '';
+                ?>
+                <section class="pc-section" aria-labelledby="pc-project-schedule-heading">
+                    <h3 id="pc-project-schedule-heading" class="pc-section-title"><?php p($l->t('Schedule & status')); ?></h3>
+                    <p class="pc-section-intro"><?php p($l->t('When the project runs and whether work can be logged now.')); ?></p>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="start_date"><?php p($l->t('Start Date')); ?></label>
-                        <input type="text"
+                        <input type="date"
                             id="start_date"
                             name="start_date"
-                            class="form-input datepicker-only"
-                            placeholder="dd.mm.yyyy"
-                            value="<?php p($isEdit && $project->getStartDate() ? $project->getStartDate()->format('d.m.Y') : ''); ?>"
-                            pattern="\d{2}\.\d{2}\.\d{4}"
-                            title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>"
-                            readonly="readonly" autocomplete="off">
+                            class="form-input"
+                            lang="<?php p($htmlLang); ?>"
+                            value="<?php p($startDateIso); ?>"
+                            autocomplete="off"
+                            aria-describedby="project-dates-hint">
                     </div>
 
                     <div class="form-group">
                         <label for="end_date"><?php p($l->t('End Date')); ?></label>
-                        <input type="text"
+                        <input type="date"
                             id="end_date"
                             name="end_date"
-                            class="form-input datepicker-only"
-                            placeholder="dd.mm.yyyy"
-                            value="<?php p($isEdit && $project->getEndDate() ? $project->getEndDate()->format('d.m.Y') : ''); ?>"
-                            pattern="\d{2}\.\d{2}\.\d{4}"
-                            title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>"
-                            readonly="readonly" autocomplete="off">
+                            class="form-input"
+                            lang="<?php p($htmlLang); ?>"
+                            value="<?php p($endDateIso); ?>"
+                            autocomplete="off"
+                            aria-describedby="project-dates-hint">
                     </div>
                 </div>
+                <p class="form-hint" id="project-dates-hint"><?php p($l->t('End date must be on or after the start date when both are set.')); ?></p>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -184,7 +219,11 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                         </select>
                     </div>
                 </div>
+                </section>
 
+                <section class="pc-section" aria-labelledby="pc-project-classification-heading">
+                    <h3 id="pc-project-classification-heading" class="pc-section-title"><?php p($l->t('Classification')); ?></h3>
+                    <p class="pc-section-intro"><?php p($l->t('For reports only — this does not change how hours are priced.')); ?></p>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="project_type"><?php p($l->t('Project Type')); ?> *</label>
@@ -233,8 +272,17 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                             placeholder="<?php p($l->t('Project category (optional)')); ?>">
                     </div>
                 </div>
+                </section>
 
-                <!-- Budget Information -->
+                <section class="pc-section pc-section--pricing" aria-labelledby="pc-pricing-heading">
+                    <h3 id="pc-pricing-heading" class="pc-section-title"><?php p($l->t('Pricing')); ?></h3>
+                    <?php include __DIR__ . '/parts/pricing-mode-cards.php'; ?>
+                </section>
+
+                <!-- Budget & capacity -->
+                <section class="pc-section" aria-labelledby="pc-budget-heading">
+                    <h3 id="pc-budget-heading" class="pc-section-title"><?php p($l->t('Budget & capacity')); ?></h3>
+                    <p class="pc-section-intro" id="pc-capacity-hint" data-hint-project="<?php p($l->t('Available hours are calculated from budget ÷ project hourly rate.')); ?>" data-hint-planning="<?php p($l->t('Planning rate is for capacity estimates only — billed cost uses the pricing method above.')); ?>"></p>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="total_budget"><?php p($l->t('Total Budget (%s)', [$currencyCode])); ?></label>
@@ -248,8 +296,12 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                             placeholder="0.00">
                     </div>
 
-                    <div class="form-group">
-                        <label for="hourly_rate"><?php p($l->t('Hourly Rate (%s)', [$currencyCode])); ?></label>
+                    <div class="form-group" id="pc-hourly-rate-group">
+                        <label for="hourly_rate" id="pc-hourly-rate-label"
+                            data-label-project="<?php p($l->t('Project hourly rate (%s)', [$currencyCode])); ?>"
+                            data-label-planning="<?php p($l->t('Planning hourly rate (%s) — optional', [$currencyCode])); ?>">
+                            <?php p($l->t('Hourly Rate (%s)', [$currencyCode])); ?>
+                        </label>
                         <input type="number"
                             id="hourly_rate"
                             name="hourly_rate"
@@ -257,23 +309,32 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                             step="0.01"
                             min="0"
                             value="<?php p($isEdit ? $project->getHourlyRate() : ($_['defaultSettings']['hourly_rate'] ?? '')); ?>"
-                            placeholder="0.00">
+                            placeholder="0.00"
+                            aria-describedby="pc-capacity-hint">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="available_hours"><?php p($l->t('Available Hours')); ?></label>
-                    <input type="number"
+                <div class="form-group" id="pc-available-hours-group">
+                    <label for="available_hours"><?php p($l->t('Estimated capacity (hours)')); ?></label>
+                    <input type="text"
                         id="available_hours"
                         name="available_hours"
-                        class="form-input"
-                        step="0.01"
-                        min="0"
-                        value="<?php p($isEdit ? $project->getAvailableHours() : ''); ?>"
-                        placeholder="0.00"
-                        readonly>
-                    <small class="form-help"><?php p($l->t('Calculated automatically from budget and hourly rate')); ?></small>
+                        class="form-input pc-capacity-input"
+                        inputmode="decimal"
+                        value="<?php p($isEdit ? ($project->getAvailableHours() > 0 ? number_format($project->getAvailableHours(), 2, '.', '') : '') : ''); ?>"
+                        placeholder="—"
+                        readonly
+                        aria-readonly="true"
+                        aria-describedby="pc-available-hours-help">
+                    <small id="pc-available-hours-help" class="form-help"
+                        data-help-project="<?php p($l->t('Calculated from budget ÷ project hourly rate.')); ?>"
+                        data-help-planning="<?php p($l->t('Calculated from budget ÷ planning rate (optional). Actual cost uses each person’s billing rate.')); ?>"
+                        data-help-unavailable="<?php p($l->t('Add an optional planning hourly rate above to estimate how many hours fit the budget.')); ?>"
+                        data-help-empty="<?php p($l->t('Enter a budget and hourly rate to estimate capacity.')); ?>">
+                        <?php p($l->t('Calculated automatically from budget and hourly rate')); ?>
+                    </small>
                 </div>
+                </section>
 
                 <!-- Form Actions -->
                 <div class="form-actions">
@@ -286,71 +347,4 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                 </div>
             </form>
         </div>
-    </div>
-</div>
-
-<script nonce="<?php p($_['cspNonce']) ?>">
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-calculate available hours when budget or hourly rate changes
-        const totalBudgetInput = document.getElementById('total_budget');
-        const hourlyRateInput = document.getElementById('hourly_rate');
-        const availableHoursInput = document.getElementById('available_hours');
-
-        function calculateAvailableHours() {
-            const budget = parseFloat(totalBudgetInput.value) || 0;
-            const rate = parseFloat(hourlyRateInput.value) || 0;
-
-            if (rate > 0) {
-                const hours = budget / rate;
-                availableHoursInput.value = hours.toFixed(2);
-            } else {
-                availableHoursInput.value = '0.00';
-            }
-        }
-
-        if (totalBudgetInput && hourlyRateInput && availableHoursInput) {
-            totalBudgetInput.addEventListener('input', calculateAvailableHours);
-            hourlyRateInput.addEventListener('input', calculateAvailableHours);
-
-            // Calculate on page load
-            calculateAvailableHours();
-        }
-
-        // Character count for textareas
-        const shortDescriptionTextarea = document.getElementById('short_description');
-        const detailedDescriptionTextarea = document.getElementById('detailed_description');
-        const shortDescriptionCount = document.getElementById('short_description-count');
-        const detailedDescriptionCount = document.getElementById('detailed_description-count');
-
-        function updateCharCount(textarea, countElement, maxLength) {
-            if (textarea && countElement) {
-                const currentLength = textarea.value.length;
-                countElement.textContent = currentLength;
-                const container = countElement.closest('.char-count');
-                if (container) {
-                    container.classList.remove('char-count--warning', 'char-count--critical');
-                    if (currentLength > maxLength * 0.9) {
-                        container.classList.add('char-count--critical');
-                    } else if (currentLength > maxLength * 0.8) {
-                        container.classList.add('char-count--warning');
-                    }
-                }
-            }
-        }
-
-        if (shortDescriptionTextarea && shortDescriptionCount) {
-            shortDescriptionTextarea.addEventListener('input', function() {
-                updateCharCount(this, shortDescriptionCount, 500);
-            });
-            updateCharCount(shortDescriptionTextarea, shortDescriptionCount, 500);
-        }
-
-        if (detailedDescriptionTextarea && detailedDescriptionCount) {
-            detailedDescriptionTextarea.addEventListener('input', function() {
-                updateCharCount(this, detailedDescriptionCount, 2000);
-            });
-            updateCharCount(detailedDescriptionTextarea, detailedDescriptionCount, 2000);
-        }
-
-    });
-</script>
+<?php include __DIR__ . '/common/page-end.php'; ?>

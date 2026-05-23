@@ -1,0 +1,182 @@
+/**
+ * Employee detail page — layout, sections, and responsive UX.
+ */
+
+.pc-app--employee-detail .breadcrumb-container {
+	margin-bottom: var(--pc-space-4, 1rem);
+}
+
+.pc-app--employee-detail .pc-employee-profile {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--pc-space-4, 1rem);
+	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
+	margin-bottom: var(--pc-space-5, 1.25rem);
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-radius: var(--pc-radius-md, 12px);
+	background: var(--color-background-hover, var(--color-main-background));
+}
+
+.pc-app--employee-detail .pc-employee-profile__meta {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-3, 0.75rem);
+	min-width: 0;
+	flex: 1 1 16rem;
+}
+
+.pc-app--employee-detail .employee-meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--pc-space-3, 0.75rem) var(--pc-space-5, 1.25rem);
+}
+
+.pc-app--employee-detail .meta-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: var(--pc-fs-md, 0.9375rem);
+	color: var(--color-main-text);
+	min-height: var(--pc-touch-min, 44px);
+}
+
+.pc-app--employee-detail .header-actions {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: flex-start;
+}
+
+.pc-app--employee-detail .content-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+	gap: var(--pc-space-5, 1.25rem);
+	width: 100%;
+	max-width: 100%;
+}
+
+.pc-app--employee-detail #employee-project-assignments {
+	grid-column: 1 / -1;
+}
+
+.pc-app--employee-detail .employee-assignments-grid {
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+	gap: var(--pc-space-5, 1.25rem);
+}
+
+.pc-app--employee-detail .employee-assignments-panel {
+	padding: var(--pc-space-4, 1rem);
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-radius: var(--pc-radius-md, 12px);
+	background: var(--color-main-background);
+}
+
+.pc-app--employee-detail .yearly-stats-section .section-header,
+.pc-app--employee-detail .employee-project-type-stats-section .section-header,
+.pc-app--employee-detail .employee-productivity-analysis-section .section-header {
+	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
+	border-bottom: 1px solid var(--pc-border, var(--color-border));
+}
+
+.pc-app--employee-detail .yearly-stats-section .section-header p,
+.pc-app--employee-detail .employee-productivity-analysis-section .section-header p {
+	margin: 0.35rem 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	max-width: 65ch;
+}
+
+.pc-app--employee-detail .yearly-stats-container {
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.pc-app--employee-detail #employee-rate-history .employee-rates-table {
+	width: 100%;
+}
+
+.pc-app--employee-detail .employee-rate-add-form .form-row {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+	gap: var(--pc-space-4, 1rem);
+}
+
+.pc-app--employee-detail .actions-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+	gap: var(--pc-space-4, 1rem);
+}
+
+.pc-app--employee-detail .action-card {
+	min-height: var(--pc-touch-min, 44px);
+}
+
+.pc-app--employee-detail .project-type-display {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.pc-app--employee-detail .project-type-display .lucide-icon {
+	flex-shrink: 0;
+	color: var(--color-primary-element, var(--color-primary));
+}
+
+.pc-app--employee-detail .pc-help-trigger {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+	padding: 0;
+	margin-inline-start: 0.35rem;
+	border: 0;
+	border-radius: var(--pc-radius-sm, 6px);
+	background: transparent;
+	color: var(--color-text-maxcontrast);
+	vertical-align: middle;
+	cursor: help;
+}
+
+.pc-app--employee-detail .pc-help-trigger:hover {
+	background: var(--color-background-hover);
+	color: var(--color-main-text);
+}
+
+.pc-app--employee-detail .pc-help-trigger:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+.pc-app--employee-detail .section-header h3 .pc-help-trigger {
+	margin-inline-start: 0.5rem;
+}
+
+.pc-app--employee-detail .compact-table {
+	width: 100%;
+}
+
+@media (max-width: 960px) {
+	.pc-app--employee-detail .content-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 640px) {
+	.pc-app--employee-detail .pc-employee-profile {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.pc-app--employee-detail .header-actions .button {
+		width: 100%;
+		justify-content: center;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pc-app--employee-detail .action-card,
+	.pc-app--employee-detail .yearly-stat-card {
+		transition: none;
+	}
+}

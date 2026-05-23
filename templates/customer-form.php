@@ -14,13 +14,13 @@ style('projectcheck', 'navigation');
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content" role="main">
-	<div id="app-content-wrapper">
-		<div class="customer-form-container">
-			<div class="customer-form-header">
-				<h1><?php if ($isEdit): ?><?php p($l->t('Edit Customer')); ?><?php else: ?><?php p($l->t('Add Customer')); ?><?php endif; ?></h1>
-				<p><?php if ($isEdit): ?><?php p($l->t('Update customer information')); ?><?php else: ?><?php p($l->t('Create a new customer with complete contact details')); ?><?php endif; ?></p>
-			</div>
+<?php
+$pageId = $isEdit ? 'customer-edit' : 'customer-create';
+$pageTitle = $isEdit ? $l->t('Edit Customer') : $l->t('Add Customer');
+$pageHelp = $isEdit ? $l->t('Update customer information') : $l->t('Create a new customer with complete contact details');
+include __DIR__ . '/common/page-start.php';
+?>
+		<div class="customer-form-container pc-section">
 
 			<!-- Form Messages -->
 			<div id="form-message" class="form-message" style="display: none;"></div>
@@ -119,7 +119,5 @@ style('projectcheck', 'navigation');
 				</div>
 			</form>
 		</div>
-	</div>
-</div>
 
-<?php /* Icons hydrated by js/common/icons.js (audit ref. AUDIT-FINDINGS H22). */ ?>
+<?php include __DIR__ . '/common/page-end.php'; ?>

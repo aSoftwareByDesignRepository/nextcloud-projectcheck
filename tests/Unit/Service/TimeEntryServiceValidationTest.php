@@ -11,6 +11,7 @@ namespace OCA\ProjectCheck\Tests\Unit\Service;
 
 use OCA\ProjectCheck\Db\ProjectMapper;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
+use OCA\ProjectCheck\Service\HourlyRateService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\IL10N;
@@ -21,6 +22,7 @@ class TimeEntryServiceValidationTest extends TestCase {
 		$timeEntryMapper = $this->createMock(TimeEntryMapper::class);
 		$projectMapper = $this->createMock(ProjectMapper::class);
 		$projectService = $this->createMock(ProjectService::class);
+		$hourlyRateService = $this->createMock(HourlyRateService::class);
 		$l = $this->createMock(IL10N::class);
 		$l->method('t')->willReturnArgument(0);
 
@@ -28,6 +30,7 @@ class TimeEntryServiceValidationTest extends TestCase {
 			$timeEntryMapper,
 			$projectMapper,
 			$projectService,
+			$hourlyRateService,
 			$l
 		);
 	}
@@ -40,7 +43,7 @@ class TimeEntryServiceValidationTest extends TestCase {
 		$this->assertSame('required', $out['errorCodes']['project_id'] ?? null);
 		$this->assertSame('required', $out['errorCodes']['date'] ?? null);
 		$this->assertSame('required', $out['errorCodes']['hours'] ?? null);
-		$this->assertSame('required', $out['errorCodes']['hourly_rate'] ?? null);
+		$this->assertArrayNotHasKey('hourly_rate', $out['errorCodes']);
 		$this->assertStringContainsString('Project', $out['errors']['project_id']);
 	}
 

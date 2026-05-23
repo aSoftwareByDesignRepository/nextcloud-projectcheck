@@ -12,7 +12,7 @@ use OCP\Util;
 Util::addScript('projectcheck', 'employees');
 Util::addStyle('projectcheck', 'dashboard');
 Util::addStyle('projectcheck', 'projects');
-Util::addStyle('projectcheck', 'custom-icons');
+Util::addScript('projectcheck', 'common/icons');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'time-entries');
 $fmt = $_['fmt'] ?? null;
@@ -24,9 +24,15 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content" role="main" class="employees-page">
-    <div id="app-content-wrapper">
-        <?php $isGlobalViewer = !empty($_['isGlobalViewer']); ?>
+<?php
+$isGlobalViewer = !empty($_['isGlobalViewer']);
+$pageId = 'employees';
+$pageTitle = $isGlobalViewer ? $l->t('Employees') : $l->t('Your work overview');
+$pageHelp = $isGlobalViewer
+	? $l->t('Track employee performance and time tracking statistics')
+	: $l->t('Review your own time tracking and yearly performance.');
+include __DIR__ . '/common/page-start.php';
+?>
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
@@ -36,15 +42,10 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
             </nav>
         </div>
 
-        <!-- Page Header -->
-        <div class="section page-header-section">
+        <!-- Page actions -->
+        <div class="section page-header-section pc-section">
             <div class="header-content">
                 <div class="header-text">
-                    <div class="header-details">
-                        <h2><?php p($isGlobalViewer ? $l->t('Employee Overview') : $l->t('Your work overview')); ?></h2>
-                        <p><?php p($isGlobalViewer ? $l->t('Track employee performance and time tracking statistics') : $l->t('Review your own time tracking and yearly performance.')); ?></p>
-                    </div>
-                </div>
                 <div class="header-actions">
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>" class="button secondary">
                         <i data-lucide="arrow-left" class="lucide-icon"></i>
@@ -155,7 +156,7 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
         <div class="section">
             <?php if (empty($_['employeeComparisonStats'])): ?>
                 <div class="emptycontent">
-                    <div class="icon-time"></div>
+                    <span data-lucide="clock" aria-hidden="true"></span>
                     <h2><?php p($l->t('No employees found')); ?></h2>
                     <p><?php p($l->t('No employees have logged time entries yet.')); ?></p>
                 </div>
@@ -259,7 +260,5 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                 <?php endif; ?>
             <?php endif; ?>
         </div>
-    </div>
-</div>
 
-<?php /* Icons hydrated by js/common/icons.js (audit ref. AUDIT-FINDINGS H22). */ ?>
+<?php include __DIR__ . '/common/page-end.php'; ?>

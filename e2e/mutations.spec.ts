@@ -1,29 +1,20 @@
 import { test, expect } from '@playwright/test';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { gotoApp } = require('./helpers/auth-guard');
+
 const base = process.env.BASE_URL;
-const user = process.env.E2E_USER;
-const pass = process.env.E2E_PASS;
 
 test.describe('ProjectCheck mutation hardening (optional E2E)', () => {
 	test.skip(!base, 'Set BASE_URL to run E2E');
-	test.skip(!user || !pass, 'Set E2E_USER and E2E_PASS');
+	test.skip(!process.env.E2E_USER, 'Set E2E_USER and run npm run e2e:auth (uses storage state)');
 
 	test('authenticated preferences mutation enforces validation and never 500s', async ({ page }) => {
 		const baseUrl = base!.replace(/\/$/, '');
 
-		await page.goto(`${baseUrl}/index.php/login`);
-		await page.fill('input[name="user"]', user!);
-		await page.fill('input[name="password"]', pass!);
-		await page.click('button[type="submit"]');
-		const loginErrorVisible = await page
-			.getByText('Wrong login or password.')
-			.isVisible({ timeout: 4000 })
-			.catch(() => false);
-		test.skip(loginErrorVisible, 'E2E_USER/E2E_PASS are not valid for this instance');
-		await page.waitForURL(/index\.php\/apps\/files|index\.php\/apps\/projectcheck/, { timeout: 20000 });
-
-		await page.goto(`${baseUrl}/index.php/apps/projectcheck/settings`);
-		await page.waitForLoadState('networkidle');
+		// Personal preferences API — org settings page does not host this form.
+		await gotoApp(page, `${baseUrl}/index.php/settings/user/projectcheck`);
+		await page.waitForURL(/settings\/user\/projectcheck/, { timeout: 20000 });
 
 		const mutationResult = await page.evaluate(async () => {
 			const tokenFromMeta = document.querySelector('meta[name="requesttoken"]')?.getAttribute('content') || '';
@@ -46,7 +37,7 @@ test.describe('ProjectCheck mutation hardening (optional E2E)', () => {
 			let payload: unknown = null;
 			try {
 				payload = await response.json();
-			} catch (error) {
+			} catch {
 				payload = null;
 			}
 
@@ -62,7 +53,7 @@ test.describe('ProjectCheck mutation hardening (optional E2E)', () => {
 			expect.objectContaining({
 				success: false,
 				error: 'validation',
-			})
+			}),
 		);
 	});
 });

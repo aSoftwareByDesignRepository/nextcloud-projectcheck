@@ -9,10 +9,8 @@
 
 use OCP\Util;
 
-Util::addScript('projectcheck', 'common/datepicker');
 Util::addScript('projectcheck', 'time-entries');
 Util::addStyle('projectcheck', 'time-entries');
-Util::addStyle('projectcheck', 'common/datepicker');
 Util::addStyle('projectcheck', 'navigation');
 ?>
 
@@ -136,7 +134,7 @@ Util::addStyle('projectcheck', 'navigation');
         box-shadow: 0 0 0 3px rgba(0, 130, 201, 0.1);
     }
 
-    .filter-date.datepicker-only {
+    .filter-date[type="date"] {
         cursor: pointer;
         caret-color: transparent;
     }
@@ -386,14 +384,16 @@ Util::addStyle('projectcheck', 'navigation');
     }
 </style>
 
-<div id="app-content" role="main">
-    <div id="app-content-wrapper">
-        <!-- Page Header -->
-        <div class="section">
+<?php
+$pageId = 'time-entries';
+$pageTitle = $l->t('Time Entries');
+$pageHelp = $l->t('Track and manage your time entries');
+include __DIR__ . '/common/page-start.php';
+?>
+        <div class="section pc-section">
             <div class="header-content">
                 <div class="header-text">
-                    <h2><?php p($l->t('Time Entries')); ?></h2>
-                    <p><?php p($l->t('Track and manage your time entries')); ?></p>
+                    <p class="pc-page-header__lead"><?php p($pageHelp); ?></p>
                 </div>
                 <div class="header-actions">
                     <a href="<?php p($_['createUrl'] ?? '/index.php/apps/projectcheck/time-entries/create'); ?>" class="button primary">
@@ -491,38 +491,33 @@ Util::addStyle('projectcheck', 'navigation');
                         </select>
                     </div>
 
+                    <?php
+                    $htmlLang = isset($_['htmlLang']) && is_string($_['htmlLang']) ? $_['htmlLang'] : 'en';
+                    $filterDateFrom = '';
+                    if (!empty($filters['date_from'])) {
+                        $dateObj = \DateTime::createFromFormat('Y-m-d', (string)$filters['date_from']);
+                        $filterDateFrom = $dateObj ? $dateObj->format('Y-m-d') : '';
+                    }
+                    $filterDateTo = '';
+                    if (!empty($filters['date_to'])) {
+                        $dateObj = \DateTime::createFromFormat('Y-m-d', (string)$filters['date_to']);
+                        $filterDateTo = $dateObj ? $dateObj->format('Y-m-d') : '';
+                    }
+                    ?>
                     <div class="filter-group">
                         <label for="date-from-filter" class="filter-label"><?php p($l->t('From')); ?></label>
-                        <input type="text" id="date-from-filter" name="date_from" class="filter-date datepicker-only"
-                            value="<?php
-                                    if (!empty($filters['date_from'])) {
-                                        // Parse ISO format (yyyy-mm-dd) from URL parameter and convert to dd.mm.yyyy
-                                        $dateObj = \DateTime::createFromFormat('Y-m-d', $filters['date_from']);
-                                        echo $dateObj ? $dateObj->format('d.m.Y') : '';
-                                    }
-                                    ?>"
-                            placeholder="dd.mm.yyyy"
-                            pattern="\d{2}\.\d{2}\.\d{4}"
-                            maxlength="10"
-                            title="<?php p($l->t('Enter start date in format dd.mm.yyyy')); ?>"
-                            readonly="readonly" autocomplete="off">
+                        <input type="date" id="date-from-filter" name="date_from" class="filter-date form-input"
+                            lang="<?php p($htmlLang); ?>"
+                            value="<?php p($filterDateFrom); ?>"
+                            autocomplete="off">
                     </div>
 
                     <div class="filter-group">
                         <label for="date-to-filter" class="filter-label"><?php p($l->t('To')); ?></label>
-                        <input type="text" id="date-to-filter" name="date_to" class="filter-date datepicker-only"
-                            value="<?php
-                                    if (!empty($filters['date_to'])) {
-                                        // Parse ISO format (yyyy-mm-dd) from URL parameter and convert to dd.mm.yyyy
-                                        $dateObj = \DateTime::createFromFormat('Y-m-d', $filters['date_to']);
-                                        echo $dateObj ? $dateObj->format('d.m.Y') : '';
-                                    }
-                                    ?>"
-                            placeholder="dd.mm.yyyy"
-                            pattern="\d{2}\.\d{2}\.\d{4}"
-                            maxlength="10"
-                            title="<?php p($l->t('Enter end date in format dd.mm.yyyy')); ?>"
-                            readonly="readonly" autocomplete="off">
+                        <input type="date" id="date-to-filter" name="date_to" class="filter-date form-input"
+                            lang="<?php p($htmlLang); ?>"
+                            value="<?php p($filterDateTo); ?>"
+                            autocomplete="off">
                     </div>
                 </div>
 
@@ -718,6 +713,5 @@ Util::addStyle('projectcheck', 'navigation');
                 <?php endif; ?>
             <?php endif; ?>
         </div>
-    </div>
-</div>
+<?php include __DIR__ . '/common/page-end.php'; ?>
 

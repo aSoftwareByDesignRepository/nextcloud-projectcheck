@@ -32,6 +32,7 @@ use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\DateFormatService;
+use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Traits\StatsTrait;
 use OCA\ProjectCheck\Controller\CSPTrait;
 use OCP\IL10N;
@@ -400,6 +401,7 @@ class TimeEntryController extends Controller
 		$project = $this->projectService->getProject($timeEntry->getProjectId());
 		$projectName = $project ? $project->getName() : (string) $this->l->t('Unknown project');
 		$projectShowUrl = $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $timeEntry->getProjectId()]);
+		$pricingRateSourceLabel = $project ? $this->pricingModeLabel($project->getCostRateMode()) : '';
 
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
@@ -409,6 +411,7 @@ class TimeEntryController extends Controller
 			'project' => $project,
 			'projectName' => $projectName,
 			'projectShowUrl' => $projectShowUrl,
+			'pricingRateSourceLabel' => $pricingRateSourceLabel,
 			'stats' => $stats,
 			'urlGenerator' => $this->urlGenerator,
 			'userId' => $user->getUID()
@@ -969,5 +972,14 @@ class TimeEntryController extends Controller
 			return "'" . $value;
 		}
 		return $value;
+	}
+
+	private function pricingModeLabel(string $mode): string
+	{
+		return match (CostRateMode::normalize($mode)) {
+			CostRateMode::EMPLOYEE => $this->l->t('Rate per employee (master data)'),
+			CostRateMode::PROJECT_MEMBER => $this->l->t('Rate per person on this project'),
+			default => $this->l->t('One rate for the whole project'),
+		};
 	}
 }

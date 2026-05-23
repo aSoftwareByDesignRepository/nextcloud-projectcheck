@@ -51,7 +51,7 @@ class EnrichTemplateNavigationContext implements IEventListener
 			return;
 		}
 		// WCAG / theming: semantic tokens (--pc-*, *-light tints) must load on every view, every theme.
-		Util::addStyle(Application::APP_ID, 'common/colors', true);
+		Util::addStyle(Application::APP_ID, 'app', true);
 		if (!$event->isLoggedIn()) {
 			return;
 		}
@@ -71,6 +71,7 @@ class EnrichTemplateNavigationContext implements IEventListener
 		// Locale-aware server-side formatting bridge (audit ref. AUDIT-FINDINGS B10/H28).
 		$params['fmt'] = $this->localeFormat;
 		$params['orgCurrency'] = $this->localeFormat->getCurrency();
+		$params['htmlLang'] = str_replace('_', '-', $this->localeFormat->getLocale());
 		$response->setParams($params);
 	}
 }

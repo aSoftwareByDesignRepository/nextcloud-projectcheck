@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Add referential integrity for `project_files`.
  *
- * Audit reference: `pm/app-ideas/projectcheck/AUDIT-FINDINGS.md` finding A4 -
+ * Audit reference: `pm/app-ideas/projectcheck/README.md` §11.3 -
  * orphan rows were possible because `project_files.project_id` had no FK and
  * relied on application-side cleanup only.
  *

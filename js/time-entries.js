@@ -8,38 +8,19 @@
 (function () {
 	'use strict';
 	
-	function fallbackConvertEuropeanToISO(dateString) {
+	function normalizeDateToIso(dateString) {
 		if (!dateString) {
 			return '';
 		}
-		if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateString)) {
-			const parts = dateString.split('.');
+		const s = String(dateString).trim();
+		if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+			return s;
+		}
+		if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) {
+			const parts = s.split('.');
 			return `${parts[2]}-${parts[1]}-${parts[0]}`;
 		}
-		return dateString;
-	}
-
-	function enableManualDateInput(element) {
-		if (!element) {
-			return;
-		}
-		element.readOnly = false;
-		element.removeAttribute('readonly');
-		element.setAttribute('inputmode', 'numeric');
-	}
-
-	function getDatepickerFunctions() {
-		if (window.ProjectCheckDatepicker && typeof window.ProjectCheckDatepicker.initializeDatepicker === 'function') {
-			return {
-				initializeDatepicker: window.ProjectCheckDatepicker.initializeDatepicker,
-				convertEuropeanToISO: window.ProjectCheckDatepicker.convertEuropeanToISO
-			};
-		}
-		console.error('[TimeEntries] Shared datepicker script missing. Falling back to manual date input.');
-		return {
-			initializeDatepicker: null,
-			convertEuropeanToISO: fallbackConvertEuropeanToISO
-		};
+		return '';
 	}
 
 	// DOM elements - NO AUTOMATIC EVENT LISTENERS
@@ -60,9 +41,6 @@
 	 */
 	function init() {
 		bindEvents();
-		
-		// Initialize datepicker immediately (using inline implementation if needed)
-		initCalendarIcons();
 		
 		initMessageAutoHide();
 	}
@@ -170,14 +148,11 @@
 		let dateFrom = dateFromInput ? dateFromInput.value.trim() : '';
 		let dateTo = dateToInput ? dateToInput.value.trim() : '';
 
-		// Convert European format (dd.mm.yyyy) to ISO format (yyyy-mm-dd) for backend
 		if (dateFrom) {
-			const datepickerFuncs = getDatepickerFunctions();
-			dateFrom = datepickerFuncs.convertEuropeanToISO(dateFrom);
+			dateFrom = normalizeDateToIso(dateFrom);
 		}
 		if (dateTo) {
-			const datepickerFuncs = getDatepickerFunctions();
-			dateTo = datepickerFuncs.convertEuropeanToISO(dateTo);
+			dateTo = normalizeDateToIso(dateTo);
 		}
 
 		const url = new URL(window.location.href);
@@ -219,7 +194,7 @@
 	 */
 	function showTimeEntryDeletionModal(entryId, entryDescription) {
 		if (typeof window.projectcheckDeletionModal === 'undefined') {
-			confirmDeleteTimeEntry(entryId);
+			showMessage(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'), 'error');
 			return;
 		}
 
@@ -245,15 +220,6 @@
 			onCancel: function () {
 			}
 		});
-	}
-
-	/**
-	 * Confirm delete time entry - fallback method
-	 */
-	function confirmDeleteTimeEntry(entryId) {
-		if (confirm(t('projectcheck', 'Are you sure you want to delete this time entry? This action cannot be undone.'))) {
-			deleteTimeEntry(entryId);
-		}
 	}
 
 	/**
@@ -346,37 +312,6 @@
 	/**
 	 * Initialize date input formatting for European format (dd.mm.yyyy)
 	 */
-	function initCalendarIcons() {
-		const dateFromInput = document.getElementById('date-from-filter');
-		const dateToInput = document.getElementById('date-to-filter');
-
-		if (dateFromInput) {
-			initializeDateInput(dateFromInput);
-		}
-		if (dateToInput) {
-			initializeDateInput(dateToInput);
-		}
-	}
-
-	/**
-	 * Initialize date input with datepicker (European format dd.mm.yyyy)
-	 */
-	function initializeDateInput(input) {
-		if (!input) return;
-		
-		try {
-			const datepickerFuncs = getDatepickerFunctions();
-			if (typeof datepickerFuncs.initializeDatepicker === 'function') {
-				datepickerFuncs.initializeDatepicker(input);
-			} else {
-				enableManualDateInput(input);
-			}
-		} catch (error) {
-			console.error('Error initializing datepicker:', error);
-			enableManualDateInput(input);
-		}
-	}
-
 	/**
 	 * Export ALL filtered time entries to CSV via backend API
 	 */
@@ -391,13 +326,11 @@
 		let dateFrom = dateFromInput ? dateFromInput.value.trim() : '';
 		let dateTo = dateToInput ? dateToInput.value.trim() : '';
 
-		// Convert European format (dd.mm.yyyy) to ISO format (yyyy-mm-dd) for backend
-		const datepickerFuncs = getDatepickerFunctions();
 		if (dateFrom) {
-			dateFrom = datepickerFuncs.convertEuropeanToISO(dateFrom);
+			dateFrom = normalizeDateToIso(dateFrom);
 		}
 		if (dateTo) {
-			dateTo = datepickerFuncs.convertEuropeanToISO(dateTo);
+			dateTo = normalizeDateToIso(dateTo);
 		}
 
 		// Build export URL with current filters

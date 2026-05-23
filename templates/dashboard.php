@@ -13,7 +13,6 @@ Util::addScript('projectcheck', 'dashboard');
 Util::addStyle('projectcheck', 'dashboard');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'budget-alerts');
-Util::addStyle('projectcheck', 'custom-icons');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/progress-bars');
 Util::addStyle('projectcheck', 'common/accessibility');
@@ -36,25 +35,18 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 	$currencyCode = 'EUR';
 }
 ?>
-<div id="app-content" role="main">
-    <div id="app-content-wrapper">
-        <?php $isGlobalViewer = !empty($_['isGlobalViewer']); ?>
-        <!-- Breadcrumb Navigation -->
-        <div class="breadcrumb-container">
-            <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
-                <ol>
-                    <li aria-current="page"><?php p($l->t('Dashboard')); ?></li>
-                </ol>
-            </nav>
-        </div>
-
-        <!-- Page Header -->
-        <header class="section page-header-section" aria-labelledby="dash-title">
+<?php
+$isGlobalViewer = !empty($_['isGlobalViewer']);
+$pageId = 'dashboard';
+$pageTitle = $l->t('Dashboard');
+$pageHelp = $isGlobalViewer ? $l->t('Overview of your projects and activities') : $l->t('Overview of the projects you can access and your own logged work');
+include __DIR__ . '/common/page-start.php';
+?>
+        <!-- Page actions (header actions stay below h1 from page-start) -->
+        <header class="section page-header-section pc-section" aria-labelledby="pc-page-title">
             <div class="header-content">
                 <div class="header-text">
                     <div class="header-details">
-                        <h2 id="dash-title"><?php p($l->t('Dashboard')); ?></h2>
-                        <p><?php p($isGlobalViewer ? $l->t('Overview of your projects and activities') : $l->t('Overview of the projects you can access and your own logged work')); ?></p>
                         <div class="project-meta" aria-label="<?php p($l->t('Dashboard summary')); ?>">
                             <div class="meta-item">
                                 <i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i>
@@ -621,8 +613,11 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                                             <span class="detail-value progress-info">
                                                 <span class="usage-stats">
                                                     <?php p(($fmt ? $fmt->percent($budgetInfo['consumption_percentage'], 0) : round($budgetInfo['consumption_percentage']) . '%') . ' ' . $l->t('used')); ?>
-                                                    • <?php p($fmt ? $fmt->hours($budgetInfo['used_hours']) : number_format($budgetInfo['used_hours'], 1) . 'h'); ?>
-                                                    <?php p($l->t('logged')); ?>
+													• <?php p($fmt ? $fmt->hours($budgetInfo['used_hours']) : number_format($budgetInfo['used_hours'], 1) . 'h'); ?>
+													<?php p($l->t('logged')); ?>
+													<?php if (!empty($budgetInfo['hours_estimated']) && ($budgetInfo['available_hours'] ?? 0) > 0): ?>
+														· <?php p($l->t('%sh remaining (estimate)', [number_format((float) $budgetInfo['remaining_hours'], 1, '.', '')])); ?>
+													<?php endif; ?>
                                                 </span>
                                             </span>
                                         </div>
@@ -769,5 +764,4 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
                 </ul>
             </div>
         </div>
-    </div>
-</div>
+<?php include __DIR__ . '/common/page-end.php'; ?>

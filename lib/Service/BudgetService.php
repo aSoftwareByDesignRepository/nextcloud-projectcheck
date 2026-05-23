@@ -14,6 +14,7 @@ namespace OCA\ProjectCheck\Service;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
 use OCA\ProjectCheck\Util\Money;
+use OCA\ProjectCheck\Util\ProjectCapacity;
 use OCP\IConfig;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
@@ -78,7 +79,6 @@ class BudgetService
     {
         $projectId = $project->getId();
         $totalBudget = $project->getTotalBudget() ?? 0;
-        $hourlyRate = $project->getHourlyRate() ?? 0;
 
         // Get actual spent hours and cost regardless of budget
         $spentData = $this->getProjectSpentData($projectId);
@@ -95,8 +95,13 @@ class BudgetService
                 'available_hours' => 0,
                 'used_hours' => $usedHours,
                 'remaining_hours' => 0,
+                'hours_estimated' => false,
+                'capacity_basis' => ProjectCapacity::BASIS_UNAVAILABLE,
+                'capacity_rate' => 0.0,
                 'warning_level' => 'none',
                 'is_over_budget' => false,
+                'warning_threshold' => $this->getBudgetWarningThreshold($userId),
+                'critical_threshold' => $this->getBudgetCriticalThreshold($userId),
                 'alerts' => []
             ];
         }
@@ -114,13 +119,7 @@ class BudgetService
             Money::MONEY_SCALE
         );
 
-        $availableHours = $hourlyRate > 0
-            ? Money::asFloat(Money::div($totalBudget, $hourlyRate, Money::HOUR_SCALE), Money::HOUR_SCALE)
-            : 0.0;
-        $remainingHoursVal = Money::asFloat(Money::sub($availableHours, $usedHours, Money::HOUR_SCALE), Money::HOUR_SCALE);
-        if ($remainingHoursVal < 0) {
-            $remainingHoursVal = 0.0;
-        }
+        $capacity = ProjectCapacity::forProject($project, $usedHours);
 
         $warningLevel = $this->getWarningLevel($consumptionPercentage, $userId);
         $isOverBudget = Money::compare($consumptionPercentage, '100', Money::MONEY_SCALE) > 0;
@@ -132,12 +131,30 @@ class BudgetService
             'used_budget' => Money::asFloat(Money::normalize($usedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE),
             'remaining_budget' => $remainingBudget,
             'consumption_percentage' => $consumptionPercentage,
-            'available_hours' => $availableHours,
+            'available_hours' => $capacity['available_hours'],
             'used_hours' => Money::asFloat(Money::normalize($usedHours, Money::HOUR_SCALE), Money::HOUR_SCALE),
-            'remaining_hours' => $remainingHoursVal,
+            'remaining_hours' => $capacity['remaining_hours'],
+            'hours_estimated' => $capacity['hours_estimated'],
+            'capacity_basis' => $capacity['basis'],
+            'capacity_rate' => $capacity['rate'],
             'warning_level' => $warningLevel,
             'is_over_budget' => $isOverBudget,
+            'warning_threshold' => $this->getBudgetWarningThreshold($userId),
+            'critical_threshold' => $this->getBudgetCriticalThreshold($userId),
             'alerts' => $alerts
+        ];
+    }
+
+    /**
+     * User/org budget alert thresholds (percent).
+     *
+     * @return array{warning: float, critical: float}
+     */
+    public function getBudgetThresholds(?string $userId = null): array
+    {
+        return [
+            'warning' => $this->getBudgetWarningThreshold($userId),
+            'critical' => $this->getBudgetCriticalThreshold($userId),
         ];
     }
 
@@ -315,9 +332,9 @@ class BudgetService
      * @param float $additionalRate
      * @return array
      */
-    public function checkTimeEntryBudgetImpact(Project $project, float $additionalHours, float $additionalRate): array
+    public function checkTimeEntryBudgetImpact(Project $project, float $additionalHours, float $additionalRate, ?string $userId = null): array
     {
-        $budgetInfo = $this->getProjectBudgetInfo($project);
+        $budgetInfo = $this->getProjectBudgetInfo($project, $userId);
         $additionalCostFloat = Money::asFloat(Money::mul($additionalHours, $additionalRate, Money::MONEY_SCALE), Money::MONEY_SCALE);
 
         if ($budgetInfo['total_budget'] <= 0) {
@@ -346,7 +363,7 @@ class BudgetService
             'additional_cost' => $additionalCostFloat,
             'remaining_budget_after' => $remainingAfter,
             'would_exceed_budget' => Money::compare($newConsumptionPercentage, '100', Money::MONEY_SCALE) > 0,
-            'warning_level_after' => $this->getWarningLevel($newConsumptionPercentage)
+            'warning_level_after' => $this->getWarningLevel($newConsumptionPercentage, $userId)
         ];
     }
 

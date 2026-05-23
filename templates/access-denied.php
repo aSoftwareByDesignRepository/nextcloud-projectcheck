@@ -1,4 +1,6 @@
 <?php
+use OCA\ProjectCheck\Service\IconCatalog;
+
 /**
  * 403 access denied for users without ProjectCheck access
  *
@@ -11,6 +13,7 @@
  */
 ?>
 <div class="section projectcheck-access-denied" role="region" aria-labelledby="projectcheck-access-denied-title">
+	<div class="projectcheck-access-denied__icon" aria-hidden="true"><?php print_unescaped(IconCatalog::render('shield-alert', 'pc-icon--lg')); ?></div>
 	<h2 id="projectcheck-access-denied-title"><?php p($l->t('Access denied')); ?></h2>
 	<p class="projectcheck-access-denied__message"><?php p($message); ?></p>
 	<p>

@@ -302,7 +302,7 @@ try {
 					data-currency-label-template="<?php p($l->t('Default hourly rate (%s)', ['%s'])); ?>"
 				><?php p($l->t('Default hourly rate (%s)', [$currencyCode])); ?></label>
 				<input type="text" id="pc_def_rate" name="default_hourly_rate" inputmode="decimal" class="projectcheck-input" value="<?php p($default_hourly_rate); ?>" autocomplete="off" aria-describedby="pc_def_rate_hint">
-				<p class="projectcheck-hint" id="pc_def_rate_hint"><?php p($l->t('Default for new projects when the app has no per-user override.')); ?></p>
+				<p class="projectcheck-hint" id="pc_def_rate_hint"><?php p($l->t('Default hourly rate for new projects in “One rate for the whole project” pricing mode. Employee-wide and per-person project rates use their own settings.')); ?></p>
 			</div>
 			<div class="projectcheck-form-group">
 				<label for="pc_def_status"><?php p($l->t('Default project status')); ?></label>

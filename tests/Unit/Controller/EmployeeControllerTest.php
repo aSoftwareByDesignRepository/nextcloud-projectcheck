@@ -6,11 +6,13 @@ namespace OCA\ProjectCheck\Tests\Unit\Controller;
 
 use OCA\ProjectCheck\Controller\EmployeeController;
 use OCA\ProjectCheck\Db\Project;
+use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Db\UserAccountSnapshotMapper;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
+use OCA\ProjectCheck\Service\EmployeeHourlyRateService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -54,6 +56,7 @@ class EmployeeControllerTest extends TestCase
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->timeEntryService = $this->createMock(TimeEntryService::class);
 		$this->projectService = $this->createMock(ProjectService::class);
+		$employeeHourlyRateService = $this->createMock(EmployeeHourlyRateService::class);
 		$this->customerService = $this->createMock(CustomerService::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
 		$urlGenerator->method('linkToRoute')->willReturnCallback(
@@ -79,6 +82,7 @@ class EmployeeControllerTest extends TestCase
 			$this->userManager,
 			$this->timeEntryService,
 			$this->projectService,
+			$employeeHourlyRateService,
 			$this->customerService,
 			$urlGenerator,
 			$config,
@@ -147,6 +151,30 @@ class EmployeeControllerTest extends TestCase
 		$response = $this->controller->unassignProject('employee1', 8);
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertEquals(403, $response->getStatus());
+	}
+
+	public function testAssignProjectRejectedForProjectMemberMode(): void
+	{
+		$target = $this->createMock(IUser::class);
+		$this->userManager->method('get')->with('employee1')->willReturn($target);
+		$this->request->method('getParam')->willReturnMap([
+			['project_id', 0, 12],
+			['hourly_rate', null, null],
+		]);
+		$project = new Project();
+		$project->setId(12);
+		$project->setStatus('Active');
+		$project->setCostRateMode(CostRateMode::PROJECT_MEMBER);
+		$this->projectService->method('getProject')->with(12)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('manager1', 12)->willReturn(true);
+		$this->projectService->expects($this->never())->method('addTeamMember');
+
+		$response = $this->controller->assignProject('employee1');
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame('project_member_mode', $data['code'] ?? null);
+		$this->assertArrayHasKey('project_url', $data);
 	}
 
 	public function testAssignProjectSuccess(): void

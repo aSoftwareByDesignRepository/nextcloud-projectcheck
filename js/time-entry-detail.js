@@ -8,100 +8,71 @@
 (function () {
     'use strict';
 
-    // Initialize time entry detail when DOM is ready
     document.addEventListener('DOMContentLoaded', function () {
         initializeTimeEntryDetail();
     });
 
-    /**
-     * Initialize time entry detail functionality
-     */
     function initializeTimeEntryDetail() {
-        // Add event listeners
         addEventListeners();
-
-        // Add accessibility features
         addAccessibilityFeatures();
     }
 
-    /**
-     * Add event listeners
-     */
     function addEventListeners() {
-        // Add delete button handler
         const deleteButton = document.querySelector('.delete-time-entry');
         if (deleteButton) {
             deleteButton.addEventListener('click', function () {
                 handleDeleteTimeEntry(this);
             });
         }
-
-        // Add keyboard navigation
         addKeyboardNavigation();
     }
 
-    /**
-     * Handle time entry deletion
-     */
     function handleDeleteTimeEntry(button) {
         const timeEntryId = button.getAttribute('data-id');
-        const confirmMessage = button.getAttribute('data-confirm');
+        const deleteUrl = button.getAttribute('data-delete-url');
+        const confirmMessage = button.getAttribute('data-confirm')
+            || t('projectcheck', 'Are you sure you want to delete this time entry? This action cannot be undone.');
 
-        if (!timeEntryId) {
+        if (!timeEntryId || !deleteUrl) {
             return;
         }
 
-        // Show confirmation dialog
-        if (confirm(confirmMessage || t('projectcheck', 'Are you sure you want to delete this time entry? This action cannot be undone.'))) {
-            // Show loading state
-            button.disabled = true;
-            button.textContent = t('projectcheck', 'Deleting…');
-
-            // Make delete request
-            fetch(OC.generateUrl('/apps/projectcheck/time-entries/' + timeEntryId), {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'requesttoken': getRequestToken()
-                }
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(t('projectcheck', 'Failed to delete time entry'));
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Redirect to time entries list
-                        window.location.href = OC.generateUrl('/apps/projectcheck/time-entries');
-                    } else {
-                        throw new Error(data.error || t('projectcheck', 'Failed to delete time entry'));
-                    }
-                })
-                .catch(error => {
-                    showError(t('projectcheck', 'Failed to delete time entry') + ': ' + error.message);
-
-                    // Reset button state
-                    button.disabled = false;
-                    button.textContent = t('projectcheck', 'Delete Time Entry');
-                });
+        if (typeof window.projectcheckDeletionModal === 'undefined') {
+            showError(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'));
+            return;
         }
+
+        window.projectcheckDeletionModal.show({
+            entityType: 'time_entry',
+            entityId: timeEntryId,
+            entityName: t('projectcheck', 'Time entry'),
+            deleteUrl: deleteUrl,
+            simpleConfirm: true,
+            confirmMessage: confirmMessage,
+            onSuccess: function () {
+                const indexUrl = button.getAttribute('data-index-url');
+                if (indexUrl) {
+                    window.location.href = indexUrl;
+                    return;
+                }
+                if (typeof OC !== 'undefined' && typeof OC.generateUrl === 'function') {
+                    window.location.href = OC.generateUrl('/apps/projectcheck/time-entries');
+                    return;
+                }
+                window.location.reload();
+            },
+            onCancel: function () {}
+        });
     }
 
-    /**
-     * Add accessibility features
-     */
     function addAccessibilityFeatures() {
-        // Add ARIA labels and roles
         const deleteButton = document.querySelector('.delete-time-entry');
-        if (deleteButton) {
+        if (deleteButton && !deleteButton.getAttribute('aria-label')) {
             deleteButton.setAttribute('aria-label', t('projectcheck', 'Delete time entry'));
         }
 
-        // Add focus management
-        const actionButtons = document.querySelectorAll('.action-buttons .button');
-        actionButtons.forEach(function (button, index) {
+        const actionButtons = document.querySelectorAll('.actions-grid .button');
+        actionButtons.forEach(function (button) {
             button.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -111,13 +82,8 @@
         });
     }
 
-    /**
-     * Add keyboard navigation
-     */
     function addKeyboardNavigation() {
-        // Add keyboard shortcuts
         document.addEventListener('keydown', function (e) {
-            // Ctrl/Cmd + E to edit
             if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
                 e.preventDefault();
                 const editButton = document.querySelector('a[href*="/edit"]');
@@ -126,7 +92,6 @@
                 }
             }
 
-            // Ctrl/Cmd + Backspace to go back
             if ((e.ctrlKey || e.metaKey) && e.key === 'Backspace') {
                 e.preventDefault();
                 const backButton = document.querySelector('a[href*="/time-entries"]');
@@ -135,69 +100,23 @@
                 }
             }
 
-            // Escape to go back
             if (e.key === 'Escape') {
                 const backButton = document.querySelector('a[href*="/time-entries"]');
-                if (backButton) {
+                if (backButton && !document.querySelector('.projectcheck-deletion-modal[style*="flex"]')) {
                     backButton.click();
                 }
             }
         });
     }
 
-    /**
-     * Show error message
-     */
     function showError(message) {
-        // Create error notification
-        const notification = document.createElement('div');
-        notification.className = 'notification notification-error';
-        notification.setAttribute('role', 'alert');
-        notification.innerHTML = `
-			<div class="notification-content">
-				<span class="notification-message">${escapeHtml(message)}</span>
-				<button type="button" class="notification-close" aria-label="${t('projectcheck', 'Close notification')}">
-					<span class="icon-close"></span>
-				</button>
-			</div>
-		`;
-
-        // Add to page
-        document.body.appendChild(notification);
-
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 5000);
-
-        // Add close functionality
-        const closeButton = notification.querySelector('.notification-close');
-        if (closeButton) {
-            closeButton.addEventListener('click', function () {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            });
+        if (typeof OC !== 'undefined' && OC.Notification) {
+            OC.Notification.showTemporary(message, { type: 'error' });
+            return;
+        }
+        const live = document.getElementById('pc-alert-region');
+        if (live) {
+            live.textContent = message;
         }
     }
-
-    /**
-     * Get request token for CSRF protection
-     */
-    function getRequestToken() {
-        const tokenElement = document.querySelector('input[name="requesttoken"]');
-        return tokenElement ? tokenElement.value : '';
-    }
-
-    /**
-     * Utility function to escape HTML
-     */
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
 })();

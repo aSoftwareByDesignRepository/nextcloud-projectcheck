@@ -1,0 +1,43 @@
+/*
+ * ProjectCheck design tokens (--pc-*).
+ * Colors inherit from Nextcloud; spacing, radii, type, and tints only.
+ * WCAG 2.1 AA: 44px touch targets, visible focus, prefers-reduced-motion.
+ */
+:root {
+	--pc-breakpoint-sm: 480px;
+	--pc-breakpoint-md: 768px;
+	--pc-breakpoint-lg: 1024px;
+
+	--pc-space-1: 4px;
+	--pc-space-2: 8px;
+	--pc-space-3: 12px;
+	--pc-space-4: 16px;
+	--pc-space-5: 24px;
+	--pc-space-6: 32px;
+	--pc-space-7: 48px;
+
+	--pc-radius-sm: 6px;
+	--pc-radius-md: 12px;
+	--pc-radius-lg: 16px;
+	--pc-radius-pill: 999px;
+
+	--pc-fs-xs: 0.75rem;
+	--pc-fs-sm: 0.875rem;
+	--pc-fs-md: 1rem;
+	--pc-fs-lg: 1.125rem;
+	--pc-fs-xl: 1.5rem;
+	--pc-line-tight: 1.25;
+	--pc-line-base: 1.45;
+
+	--pc-shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-primary-element, #0082c9) 45%, transparent);
+	--pc-muted: var(--color-text-maxcontrast, #6b6b6b);
+	--pc-text: var(--color-main-text, #1d1d1d);
+	--pc-border: color-mix(in srgb, var(--color-main-text, #1d1d1d) 14%, transparent);
+	--pc-touch-min: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--pc-motion-safe: 0.01ms;
+	}
+}

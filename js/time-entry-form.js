@@ -4,40 +4,46 @@
 
 (function () {
 	'use strict';
-	
-	function fallbackConvertEuropeanToISO(dateString) {
+
+	/**
+	 * Normalize native date (YYYY-MM-DD) or legacy EU text to ISO for the server.
+	 */
+	function normalizeDateToIso(dateString) {
 		if (!dateString) {
 			return '';
 		}
-		if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateString)) {
-			const parts = dateString.split('.');
+		const s = String(dateString).trim();
+		if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+			return s;
+		}
+		if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) {
+			const parts = s.split('.');
 			return `${parts[2]}-${parts[1]}-${parts[0]}`;
 		}
-		return dateString;
+		return '';
 	}
 
-	function enableManualDateInput(element) {
-		if (!element) {
-			return;
+	/**
+	 * Parse ISO date in local timezone (avoids UTC midnight drift).
+	 */
+	function parseIsoDateLocal(iso) {
+		const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+		if (!m) {
+			return null;
 		}
-		element.readOnly = false;
-		element.removeAttribute('readonly');
-		element.classList.remove('datepicker-only');
-		element.setAttribute('inputmode', 'numeric');
-	}
-
-	function getDatepickerFunctions() {
-		if (window.ProjectCheckDatepicker && typeof window.ProjectCheckDatepicker.initializeDatepicker === 'function') {
-			return {
-				initializeDatepicker: window.ProjectCheckDatepicker.initializeDatepicker,
-				convertEuropeanToISO: window.ProjectCheckDatepicker.convertEuropeanToISO
-			};
+		const year = parseInt(m[1], 10);
+		const month = parseInt(m[2], 10);
+		const day = parseInt(m[3], 10);
+		const date = new Date(year, month - 1, day);
+		if (
+			isNaN(date.getTime())
+			|| date.getDate() !== day
+			|| date.getMonth() !== month - 1
+			|| date.getFullYear() !== year
+		) {
+			return null;
 		}
-		console.error('[TimeEntryForm] Shared datepicker script missing. Falling back to manual date input.');
-		return {
-			initializeDatepicker: null,
-			convertEuropeanToISO: fallbackConvertEuropeanToISO
-		};
+		return date;
 	}
 
 	/**
@@ -51,32 +57,14 @@
 		initializeProjectRateSync();
 		calculateTotalCost();
 
-		// For new entries, set today's date using browser-local time to avoid server timezone drift.
 		const isEdit = window.timeEntryFormData && window.timeEntryFormData.isEdit;
 		const dateInput = document.getElementById('date');
 		if (dateInput && !isEdit && !dateInput.value) {
 			const today = new Date();
-			const day = String(today.getDate()).padStart(2, '0');
-			const month = String(today.getMonth() + 1).padStart(2, '0');
-			const year = today.getFullYear();
-			dateInput.value = `${day}.${month}.${year}`;
-		}
-		
-		// Initialize shared datepicker from common/datepicker.js
-		if (dateInput) {
-			try {
-				const datepickerFuncs = getDatepickerFunctions();
-				if (typeof datepickerFuncs.initializeDatepicker === 'function') {
-					datepickerFuncs.initializeDatepicker(dateInput, {
-						maxDate: new Date() // No future dates
-					});
-				} else {
-					enableManualDateInput(dateInput);
-				}
-			} catch (error) {
-				console.error('[TimeEntryForm] Error initializing datepicker:', error);
-				enableManualDateInput(dateInput);
-			}
+			const y = today.getFullYear();
+			const mo = String(today.getMonth() + 1).padStart(2, '0');
+			const d = String(today.getDate()).padStart(2, '0');
+			dateInput.value = `${y}-${mo}-${d}`;
 		}
 	}
 
@@ -109,10 +97,14 @@
 			rateInput.addEventListener('input', calculateTotalCost);
 		}
 
-		// Project selection handler
 		const projectSelect = document.getElementById('project_id');
 		if (projectSelect) {
-			projectSelect.addEventListener('change', handleProjectChange);
+			projectSelect.addEventListener('change', () => resolveRateFromServer());
+		}
+		const dateInput = document.getElementById('date');
+		if (dateInput) {
+			dateInput.addEventListener('change', () => resolveRateFromServer());
+			dateInput.addEventListener('blur', () => resolveRateFromServer());
 		}
 
 		// Description character count
@@ -121,7 +113,6 @@
 			descriptionTextarea.addEventListener('input', updateCharacterCount);
 		}
 
-		// Datepicker initialization is handled in initializeTimeEntryForm() with delay
 	}
 
 	/**
@@ -168,9 +159,7 @@
 			if (key === 'project_id' || key === 'hours' || key === 'hourly_rate') {
 				data[key] = trimmedValue === '' ? null : parseFloat(trimmedValue);
 			} else if (key === 'date' && trimmedValue) {
-				// Convert European date format (dd.mm.yyyy) to ISO format (yyyy-mm-dd) for server
-				const datepickerFuncs = getDatepickerFunctions();
-				data[key] = datepickerFuncs.convertEuropeanToISO(trimmedValue);
+				data[key] = normalizeDateToIso(trimmedValue);
 			} else {
 				data[key] = trimmedValue;
 			}
@@ -194,41 +183,23 @@
 			errors.project_id = t('projectcheck', 'Project is required');
 		}
 
-		// Use raw date value for validation (before conversion to ISO)
 		const rawDate = data._raw && data._raw.date ? data._raw.date : '';
-		
+		const isoDate = normalizeDateToIso(rawDate);
+
 		if (!rawDate) {
 			errors.date = t('projectcheck', 'Date is required');
+		} else if (!isoDate) {
+			errors.date = t('projectcheck', 'Invalid date');
 		} else {
-			// Validate date format - expect European format (dd.mm.yyyy)
-			let date = null;
-			if (/^\d{2}\.\d{2}\.\d{4}$/.test(rawDate)) {
-				// European format: dd.mm.yyyy
-				const parts = rawDate.split('.');
-				const day = parseInt(parts[0], 10);
-				const month = parseInt(parts[1], 10);
-				const year = parseInt(parts[2], 10);
-				
-				// Validate ranges
-				if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
-					errors.date = t('projectcheck', 'Invalid date format (dd.mm.yyyy)');
-				} else {
-					date = new Date(year, month - 1, day);
-					
-					// Check if date is valid
-					if (isNaN(date.getTime()) || date.getDate() !== day || date.getMonth() !== (month - 1) || date.getFullYear() !== year) {
-						errors.date = t('projectcheck', 'Invalid date (e.g., 31.02.2024 is not valid)');
-					} else {
-						// Check if date is not in the future
-						const today = new Date();
-						today.setHours(0, 0, 0, 0);
-						if (date > today) {
-							errors.date = t('projectcheck', 'Date cannot be in the future');
-						}
-					}
-				}
+			const date = parseIsoDateLocal(isoDate);
+			if (!date) {
+				errors.date = t('projectcheck', 'Invalid date (e.g., 31.02.2024 is not valid)');
 			} else {
-				errors.date = t('projectcheck', 'Invalid date format (dd.mm.yyyy)');
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				if (date > today) {
+					errors.date = t('projectcheck', 'Date cannot be in the future');
+				}
 			}
 		}
 
@@ -434,29 +405,28 @@
 			case 'project_id':
 				if (!value) { error = t('projectcheck', 'Project is required'); }
 				break;
-			case 'date':
+			case 'date': {
 				if (!value) {
 					error = t('projectcheck', 'Date is required');
-				} else if (!/^\d{2}\.\d{2}\.\d{4}$/.test(value)) {
-					error = t('projectcheck', 'Invalid date format (dd.mm.yyyy)');
-				} else {
-					const parts = value.split('.');
-					const day = parseInt(parts[0], 10);
-					const month = parseInt(parts[1], 10);
-					const year = parseInt(parts[2], 10);
-					const date = new Date(year, month - 1, day);
-					
-					if (isNaN(date.getTime()) || date.getDate() !== day || date.getMonth() !== (month - 1) || date.getFullYear() !== year) {
-						error = t('projectcheck', 'Invalid date (e.g., 31.02.2024 is not valid)');
-					} else {
-						const today = new Date();
-						today.setHours(0, 0, 0, 0);
-						if (date > today) {
-							error = t('projectcheck', 'Date cannot be in the future');
-						}
-					}
+					break;
+				}
+				const iso = normalizeDateToIso(value);
+				if (!iso) {
+					error = t('projectcheck', 'Invalid date');
+					break;
+				}
+				const date = parseIsoDateLocal(iso);
+				if (!date) {
+					error = t('projectcheck', 'Invalid date (e.g., 31.02.2024 is not valid)');
+					break;
+				}
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				if (date > today) {
+					error = t('projectcheck', 'Date cannot be in the future');
 				}
 				break;
+			}
 			case 'hours':
 				if (!value) {
 					error = t('projectcheck', 'Hours are required');
@@ -537,73 +507,51 @@
 		}
 	}
 
-	/**
-	 * Initialize project rate synchronization
-	 */
-	function initializeProjectRateSync() {
+	function getIsoDateFromInput() {
+		const dateInput = document.getElementById('date');
+		if (!dateInput || !dateInput.value) {
+			return '';
+		}
+		return normalizeDateToIso(dateInput.value.trim());
+	}
+
+	async function resolveRateFromServer() {
 		const projectSelect = document.getElementById('project_id');
-		if (projectSelect) {
-			// Set initial rate if project is selected
-			const selectedOption = projectSelect.options[projectSelect.selectedIndex];
-			if (selectedOption && selectedOption.dataset.hourlyRate) {
-				const rateInput = document.getElementById('hourly_rate');
-				const projectHourlyRate = parseFloat(selectedOption.dataset.hourlyRate);
-
-				if (rateInput) {
-					// If project has hourly rate set and different from 0, make field readonly
-					if (projectHourlyRate > 0) {
-						rateInput.value = projectHourlyRate;
-						rateInput.readOnly = true;
-						rateInput.classList.add('readonly');
-						rateInput.title = t('projectcheck', 'Hourly rate is set by the project and cannot be changed');
-					} else if (!rateInput.value) {
-						// Project has no hourly rate or it's 0, and field is empty
-						rateInput.value = projectHourlyRate;
-					}
-
-					calculateTotalCost();
+		const rateInput = document.getElementById('hourly_rate');
+		const hint = document.getElementById('hourly_rate-hint');
+		if (!projectSelect || !rateInput || !window.ProjectCheckApi) {
+			return;
+		}
+		const projectId = parseInt(projectSelect.value, 10);
+		const isoDate = getIsoDateFromInput();
+		if (!projectId || !isoDate) {
+			return;
+		}
+		rateInput.setAttribute('aria-busy', 'true');
+		try {
+			const path = '/apps/projectcheck/api/projects/' + projectId + '/resolve-hourly-rate';
+			const payload = await window.ProjectCheckApi.get(path, { date: isoDate });
+			if (payload && payload.success && payload.data) {
+				rateInput.value = String(payload.data.hourly_rate);
+				rateInput.readOnly = true;
+				rateInput.classList.add('readonly');
+				if (hint) {
+					hint.textContent = t('projectcheck', 'Rate resolved from server for this project and work date.');
 				}
+				calculateTotalCost();
 			}
+		} catch (err) {
+			rateInput.value = '';
+			if (hint) {
+				hint.textContent = err.message || t('projectcheck', 'Could not resolve hourly rate.');
+			}
+		} finally {
+			rateInput.removeAttribute('aria-busy');
 		}
 	}
 
-	/**
-	 * Handle project selection change
-	 */
-	function handleProjectChange(event) {
-		const select = event.currentTarget;
-		const selectedOption = select.options[select.selectedIndex];
-		const rateInput = document.getElementById('hourly_rate');
-
-		if (selectedOption && selectedOption.dataset.hourlyRate && rateInput) {
-			const projectHourlyRate = parseFloat(selectedOption.dataset.hourlyRate);
-
-			// If project has hourly rate set and different from 0, make field readonly
-			if (projectHourlyRate > 0) {
-				rateInput.value = projectHourlyRate;
-				rateInput.readOnly = true;
-				rateInput.classList.add('readonly');
-				rateInput.title = t('projectcheck', 'Hourly rate is set by the project and cannot be changed');
-			} else {
-				// Project has no hourly rate or it's 0, allow editing
-				rateInput.readOnly = false;
-				rateInput.classList.remove('readonly');
-				rateInput.title = '';
-
-				// Only update rate if it's empty or if user hasn't manually changed it
-				if (!rateInput.value || rateInput.dataset.autoSet === 'true') {
-					rateInput.value = projectHourlyRate;
-					rateInput.dataset.autoSet = 'true';
-				}
-			}
-
-			calculateTotalCost();
-		} else {
-			// No project selected or no hourly rate, allow editing
-			rateInput.readOnly = false;
-			rateInput.classList.remove('readonly');
-			rateInput.title = '';
-		}
+	function initializeProjectRateSync() {
+		resolveRateFromServer();
 	}
 
 	/**

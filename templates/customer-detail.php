@@ -10,8 +10,8 @@
 style('projectcheck', 'dashboard');
 style('projectcheck', 'projects');
 style('projectcheck', 'budget-alerts');
-style('projectcheck', 'custom-icons');
 style('projectcheck', 'navigation');
+style('projectcheck', 'common/progress-bars');
 style('projectcheck', 'customer-statistics');
 ?>
 
@@ -32,10 +32,14 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 	};
 </script>
 
-<div id="app-content" role="main">
-	<div id="app-content-wrapper">
-		<?php $canEditCustomer = !empty($_['canEditCustomer']); ?>
-		<?php $canCreateProject = !empty($_['canCreateProject']); ?>
+<?php
+$canEditCustomer = !empty($_['canEditCustomer']);
+$canCreateProject = !empty($_['canCreateProject']);
+$pageId = 'customer-detail';
+$pageTitle = $customer->getName();
+$pageHelp = $l->t('Customer details and associated projects');
+include __DIR__ . '/common/page-start.php';
+?>
 		<!-- Breadcrumb Navigation -->
 		<div class="breadcrumb-container">
 			<nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
@@ -46,13 +50,11 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 			</nav>
 		</div>
 
-		<!-- Page Header -->
-		<div class="section page-header-section">
+		<!-- Customer meta + actions -->
+		<div class="section page-header-section pc-section">
 			<div class="header-content">
 				<div class="header-text">
 					<div class="header-details">
-						<h2><?php p($customer->getName()); ?></h2>
-						<p><?php p($l->t('Customer details and associated projects')); ?></p>
 						<div class="customer-meta">
 							<?php if ($customer->getEmail()): ?>
 								<span class="meta-item">
@@ -271,20 +273,24 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 								</div>
 
 								<!-- Progress indicators -->
+								<?php
+								$hoursSharePct = $totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0;
+								$costSharePct = $totalCost > 0 ? ($yearData['total_cost'] / $totalCost) * 100 : 0;
+								?>
 								<div class="yearly-progress">
 									<div class="yearly-progress-item">
 										<div class="yearly-progress-label"><?php p($l->t('Hours Share')); ?></div>
-										<div class="yearly-progress-bar">
-											<div class="yearly-progress-fill" data-width="<?php p($totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0); ?>"></div>
+										<div class="yearly-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php p(round($hoursSharePct, 1)); ?>" aria-label="<?php p($l->t('Hours Share')); ?>">
+											<div class="yearly-progress-fill" style="width: <?php p($hoursSharePct); ?>%"></div>
 										</div>
-										<div class="yearly-progress-percentage"><?php p($totalHours > 0 ? round(($yearData['total_hours'] / $totalHours) * 100, 1) : 0); ?>%</div>
+										<div class="yearly-progress-percentage"><?php p(round($hoursSharePct, 1)); ?>%</div>
 									</div>
 									<div class="yearly-progress-item">
 										<div class="yearly-progress-label"><?php p($l->t('Cost Share')); ?></div>
-										<div class="yearly-progress-bar">
-											<div class="yearly-progress-fill" style="width: <?php p($totalCost > 0 ? ($yearData['total_cost'] / $totalCost) * 100 : 0); ?>%"></div>
+										<div class="yearly-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php p(round($costSharePct, 1)); ?>" aria-label="<?php p($l->t('Cost Share')); ?>">
+											<div class="yearly-progress-fill" style="width: <?php p($costSharePct); ?>%"></div>
 										</div>
-										<div class="yearly-progress-percentage"><?php p($totalCost > 0 ? round(($yearData['total_cost'] / $totalCost) * 100, 1) : 0); ?>%</div>
+										<div class="yearly-progress-percentage"><?php p(round($costSharePct, 1)); ?>%</div>
 									</div>
 								</div>
 							</div>
@@ -533,6 +539,9 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 														<span class="usage-stats">
 															<?php p(round($budgetInfo['consumption_percentage'])); ?>% <?php p($l->t('used')); ?>
 															• <?php p(number_format($budgetInfo['used_hours'], 1)); ?>h <?php p($l->t('logged')); ?>
+															<?php if (!empty($budgetInfo['hours_estimated']) && ($budgetInfo['available_hours'] ?? 0) > 0): ?>
+																· <?php p($l->t('%sh remaining (estimate)', [number_format((float) $budgetInfo['remaining_hours'], 1, '.', '')])); ?>
+															<?php endif; ?>
 														</span>
 													</span>
 												</div>
@@ -567,24 +576,8 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 				</div>
 			</div>
 		</div>
-	</div>
-</div>
 
-<?php /* Icons hydrated by js/common/icons.js (audit ref. AUDIT-FINDINGS H22). */ ?>
-<script nonce="<?php p($_['cspNonce']) ?>">
-	// Hydrate legacy class-based custom icons against the central catalog.
-	document.addEventListener('DOMContentLoaded', function () {
-		if (!window.ProjectCheckIcons) return;
-		document.querySelectorAll('.icon-time-custom, .icon-money-custom').forEach(function (el) {
-			var name = el.classList.contains('icon-time-custom') ? 'icon-time-custom' : 'icon-money-custom';
-			var markup = window.ProjectCheckIcons.svg(name);
-			if (markup && el.getAttribute('data-lucide-hydrated') !== '1') {
-				el.innerHTML = markup;
-				el.setAttribute('data-lucide-hydrated', '1');
-			}
-		});
-	});
-</script>
+<?php include __DIR__ . '/common/page-end.php'; ?>
 
 <script nonce="<?php p($_['cspNonce']) ?>">
 	// Load customer statistics only (projects are now rendered server-side)

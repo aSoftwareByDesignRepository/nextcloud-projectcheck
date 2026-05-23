@@ -1,0 +1,59 @@
+/**
+ * Nextcloud app shell layout fixes for ProjectCheck.
+ *
+ * dashboard.css / projects.css historically set #app-content { display: block }
+ * and #app-navigation { position: relative }, which breaks the core #content flex
+ * row (sidebar + main). These rules restore side-by-side layout on desktop.
+ */
+
+#content > #app-navigation:not(.vue) {
+	position: sticky;
+	top: 0;
+	flex: 0 0 300px;
+	width: 300px;
+	min-width: 300px;
+	max-width: 300px;
+	height: 100%;
+	overflow-x: hidden;
+	overflow-y: auto;
+	align-self: stretch;
+}
+
+#content > #app-content {
+	flex: 1 1 auto;
+	min-width: 0;
+	width: auto;
+	max-width: none;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+#content > #app-content > #app-content-wrapper {
+	width: 100%;
+	max-width: min(1400px, 100%);
+	margin-inline: auto;
+	box-sizing: border-box;
+}
+
+#content > #app-content > #app-content-wrapper.pc-shell {
+	padding-inline: var(--pc-space-4, 1rem);
+	padding-bottom: var(--pc-space-6, 2rem);
+}
+
+@media (max-width: 1024px) {
+	#content > #app-navigation:not(.vue) {
+		flex: 0 0 280px;
+		width: 280px;
+		min-width: 280px;
+		max-width: 280px;
+	}
+}
+
+@media (forced-colors: active) {
+	#content > #app-navigation:not(.vue) {
+		border-inline-end: 1px solid CanvasText;
+	}
+}

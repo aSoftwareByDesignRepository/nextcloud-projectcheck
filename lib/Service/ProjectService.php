@@ -14,7 +14,10 @@ namespace OCA\ProjectCheck\Service;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCA\ProjectCheck\Db\ProjectMapper;
+use OCA\ProjectCheck\Db\ProjectQueryColumns;
+use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Util\ProjectCalculator;
+use OCA\ProjectCheck\Util\ProjectCapacity;
 use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
@@ -63,6 +66,9 @@ class ProjectService
 	/** @var AccessControlService|null */
 	private $accessControl;
 
+	/** @var ProjectMemberHourlyRateService|null */
+	private $projectMemberHourlyRateService;
+
 	/**
 	 * ProjectService constructor
 	 *
@@ -74,8 +80,9 @@ class ProjectService
 	 * @param ProjectMapper|null $projectMapper
 	 * @param BudgetService|null $budgetService
 	 * @param AccessControlService|null $accessControl
+	 * @param ProjectMemberHourlyRateService|null $projectMemberHourlyRateService
 	 */
-	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config, IGroupManager $groupManager, ?ProjectMapper $projectMapper = null, ?BudgetService $budgetService = null, ?AccessControlService $accessControl = null)
+	public function __construct(IDBConnection $db, IUserSession $userSession, IUserManager $userManager, IConfig $config, IGroupManager $groupManager, ?ProjectMapper $projectMapper = null, ?BudgetService $budgetService = null, ?AccessControlService $accessControl = null, ?ProjectMemberHourlyRateService $projectMemberHourlyRateService = null)
 	{
 		$this->db = $db;
 		$this->userSession = $userSession;
@@ -85,7 +92,36 @@ class ProjectService
 		$this->projectMapper = $projectMapper ?? new ProjectMapper($db);
 		$this->budgetService = $budgetService;
 		$this->accessControl = $accessControl;
+		$this->projectMemberHourlyRateService = $projectMemberHourlyRateService;
 		$this->calculator = new ProjectCalculator();
+	}
+
+	public function setProjectMemberHourlyRateService(?ProjectMemberHourlyRateService $service): void
+	{
+		$this->projectMemberHourlyRateService = $service;
+	}
+
+	/**
+	 * True when the project has at least one time entry (locks cost_rate_mode).
+	 */
+	public function projectHasLoggedTime(int $projectId): bool
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->select($qb->createFunction('COUNT(*)'))
+			->from('pc_time_entries')
+			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
+		$count = $qb->executeQuery()->fetchOne();
+		return (int) $count > 0;
+	}
+
+	public function isActiveTeamMember(int $projectId, string $userId): bool
+	{
+		return $this->getProjectMemberActive($projectId, $userId) !== null;
+	}
+
+	public function getActiveProjectMember(int $projectId, string $userId): ?ProjectMember
+	{
+		return $this->getProjectMemberActive($projectId, $userId);
 	}
 
 	/**
@@ -206,15 +242,19 @@ class ProjectService
 			throw new \Exception('New projects cannot be created as archived. Create an active project and use “Archive” from the project view.');
 		}
 
-		// Calculate available hours from budget and rate (if provided)
-		$hourlyRate = isset($data['hourly_rate']) && $data['hourly_rate'] !== '' ? (float)$data['hourly_rate'] : (float)$defaultHourlyRate;
-		$totalBudget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float)$data['total_budget'] : 0.0;
+		$costRateMode = CostRateMode::normalize($data['cost_rate_mode'] ?? null);
+		$totalBudget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float) $data['total_budget'] : 0.0;
 
-		if ($hourlyRate > 0 && $totalBudget > 0) {
-			$availableHours = $this->calculator->calculateAvailableHours($totalBudget, $hourlyRate);
-		} else {
-			$availableHours = $data['available_hours'] ?? 0;
+		$hourlyRate = 0.0;
+		if ($costRateMode === CostRateMode::PROJECT) {
+			$hourlyRate = isset($data['hourly_rate']) && $data['hourly_rate'] !== ''
+				? (float) $data['hourly_rate']
+				: (float) $defaultHourlyRate;
+		} elseif (isset($data['hourly_rate']) && $data['hourly_rate'] !== '' && is_numeric($data['hourly_rate'])) {
+			$hourlyRate = (float) $data['hourly_rate'];
 		}
+
+		$availableHours = ProjectCapacity::storedAvailableHours($totalBudget, $hourlyRate, $costRateMode);
 
 		$project = new Project();
 		$project->setName($data['name']);
@@ -231,6 +271,7 @@ class ProjectService
 		$project->setEndDate($this->parseEuropeanDate($data['end_date'] ?? null));
 		$project->setTags($data['tags'] ?? '');
 		$project->setProjectType($data['project_type'] ?? 'client');
+		$project->setCostRateMode($costRateMode);
 		$project->setCreatedBy($user->getUID());
 		$project->setCreatedAt(new \DateTime());
 		$project->setUpdatedAt(new \DateTime());
@@ -254,6 +295,7 @@ class ProjectService
 			'created_at' => $qb->createNamedParameter($project->getCreatedAt()->format('Y-m-d H:i:s')),
 			'updated_at' => $qb->createNamedParameter($project->getUpdatedAt()->format('Y-m-d H:i:s')),
 			'project_type' => $qb->createNamedParameter($project->getProjectType()),
+			'cost_rate_mode' => $qb->createNamedParameter($project->getCostRateMode()),
 		];
 
 		$qb->insert('pc_projects')->values($values);
@@ -286,7 +328,7 @@ class ProjectService
 	public function getProject(int $id): ?Project
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('p.*', 'c.name as customer_name')
+		$qb->select(...ProjectQueryColumns::withExtra('p', 'c.name as customer_name'))
 			->from('pc_projects', 'p')
 			->leftJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
 			->where($qb->expr()->eq('p.id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
@@ -311,7 +353,7 @@ class ProjectService
 	public function getProjects(array $filters = []): array
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('p.*', 'c.name as customer_name')
+		$qb->select(...ProjectQueryColumns::withExtra('p', 'c.name as customer_name'))
 			->from('pc_projects', 'p')
 			->leftJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
 
@@ -503,6 +545,7 @@ class ProjectService
 					'canEdit' => $this->canUserEditProject($userId, $project->getId()),
 				];
 			} catch (\Exception $e) {
+				$capacity = ProjectCapacity::forProject($project, 0.0);
 				$enriched[] = [
 					'project' => $project,
 					'budgetInfo' => [
@@ -510,8 +553,13 @@ class ProjectService
 						'used_budget' => 0,
 						'remaining_budget' => $project->getTotalBudget() ?? 0,
 						'consumption_percentage' => 0,
-						'warning_level' => 'safe',
+						'warning_level' => 'none',
 						'used_hours' => 0,
+						'remaining_hours' => $capacity['remaining_hours'],
+						'available_hours' => $capacity['available_hours'],
+						'hours_estimated' => $capacity['hours_estimated'],
+						'capacity_basis' => $capacity['basis'],
+						'capacity_rate' => $capacity['rate'],
 					],
 					'canEdit' => $this->canUserEditProject($userId, $project->getId()),
 				];
@@ -589,13 +637,25 @@ class ProjectService
 			$this->assertStatusTransitionAllowed((string)$previousStatus, (string)$data['status']);
 		}
 
-		// Recalculate available hours if budget or rate changed
-		if (isset($data['total_budget']) || isset($data['hourly_rate'])) {
-			$budget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float)$data['total_budget'] : (float)$project->getTotalBudget();
-			$rate = isset($data['hourly_rate']) && $data['hourly_rate'] !== '' ? (float)$data['hourly_rate'] : (float)$project->getHourlyRate();
+		if (isset($data['cost_rate_mode'])) {
+			$newMode = CostRateMode::normalize($data['cost_rate_mode']);
+			$currentMode = $project->getCostRateMode();
+			if ($newMode !== $currentMode) {
+				if ($this->projectHasLoggedTime($id)) {
+					throw new \Exception('The pricing method cannot be changed after time has been logged on this project.');
+				}
+				$data['cost_rate_mode'] = $newMode;
+			}
+		}
 
+		$modeForCapacity = CostRateMode::normalize($data['cost_rate_mode'] ?? $project->getCostRateMode());
+		if (isset($data['total_budget']) || isset($data['hourly_rate'])) {
+			$budget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float) $data['total_budget'] : (float) $project->getTotalBudget();
+			$rate = isset($data['hourly_rate']) && $data['hourly_rate'] !== '' ? (float) $data['hourly_rate'] : (float) $project->getHourlyRate();
 			if ($budget > 0 && $rate > 0) {
-				$data['available_hours'] = $this->calculator->calculateAvailableHours($budget, $rate);
+				$data['available_hours'] = ProjectCapacity::storedAvailableHours($budget, $rate, $modeForCapacity);
+			} elseif ($budget > 0 && $modeForCapacity !== CostRateMode::PROJECT && $rate <= 0) {
+				$data['available_hours'] = 0;
 			}
 		}
 
@@ -618,7 +678,8 @@ class ProjectService
 			'status' => 'status',
 			'priority' => 'priority',
 			'tags' => 'tags',
-			'project_type' => 'project_type'
+			'project_type' => 'project_type',
+			'cost_rate_mode' => 'cost_rate_mode',
 		];
 
 		foreach ($data as $field => $value) {
@@ -1093,7 +1154,7 @@ class ProjectService
 	public function getProjectsByUser(string $userId): array
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('p.*')
+		$qb->select(...ProjectQueryColumns::qualified('p'))
 			->from('pc_projects', 'p')
 			->innerJoin('p', 'pc_project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
@@ -1121,7 +1182,7 @@ class ProjectService
 	public function getProjectsCreatedByUser(string $userId): array
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('p.*')
+		$qb->select(...ProjectQueryColumns::qualified('p'))
 			->from('pc_projects', 'p')
 			->where($qb->expr()->eq('p.created_by', $qb->createNamedParameter($userId)))
 			->orderBy('p.created_at', 'DESC');
@@ -1146,7 +1207,7 @@ class ProjectService
 	public function getAllProjects(): array
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('p.*', 'c.name as customer_name')
+		$qb->select(...ProjectQueryColumns::withExtra('p', 'c.name as customer_name'))
 			->from('pc_projects', 'p')
 			->leftJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'))
 			->orderBy('p.created_at', 'DESC');
@@ -1189,6 +1250,13 @@ class ProjectService
 			throw new \Exception('Project not found');
 		}
 
+		$costRateMode = $project->getCostRateMode();
+		if ($costRateMode === CostRateMode::PROJECT_MEMBER) {
+			if ($hourlyRate === null || $hourlyRate <= 0) {
+				throw new \Exception('Enter an hourly rate for this person before adding them to the project.');
+			}
+		}
+
 		if (!$project->isEditableState()) {
 			throw new \Exception('Cannot change the team for a completed, cancelled, or archived project');
 		}
@@ -1225,6 +1293,7 @@ class ProjectService
 			$qb->executeStatement();
 			$ref = $this->getProjectMemberAnyState($projectId, $userId);
 			if ($ref !== null) {
+				$this->seedMemberRateHistoryAfterAdd($project, $ref, $hourlyRate, $sessionUser->getUID());
 				return $ref;
 			}
 			return $existingMember;
@@ -1257,7 +1326,59 @@ class ProjectService
 		$qb->executeStatement();
 		$member->setId((int) $this->db->lastInsertId('pc_project_members'));
 
+		$this->seedMemberRateHistoryAfterAdd($project, $member, $hourlyRate, $sessionUser->getUID());
+
 		return $member;
+	}
+
+	/**
+	 * Append a new effective-dated rate for an active team member (project_member mode).
+	 *
+	 * @throws \Exception
+	 */
+	public function appendTeamMemberRate(
+		int $projectId,
+		string $userId,
+		float $hourlyRate,
+		string $effectiveFromYmd,
+		string $actorUserId,
+	): void {
+		if ($this->projectMemberHourlyRateService === null) {
+			throw new \Exception('Rate service unavailable');
+		}
+		$project = $this->getProject($projectId);
+		if ($project === null) {
+			throw new \Exception('Project not found');
+		}
+		if ($project->getCostRateMode() !== CostRateMode::PROJECT_MEMBER) {
+			throw new \Exception('Per-person project rates are not enabled for this project');
+		}
+		if (!$this->canUserManageMembers($actorUserId, $projectId)) {
+			throw new \Exception('Access denied');
+		}
+		$this->projectMemberHourlyRateService->appendRateRow(
+			$projectId,
+			$userId,
+			$hourlyRate,
+			$effectiveFromYmd,
+			$actorUserId
+		);
+	}
+
+	private function seedMemberRateHistoryAfterAdd(Project $project, ProjectMember $member, ?float $hourlyRate, string $actorUserId): void
+	{
+		if ($project->getCostRateMode() !== CostRateMode::PROJECT_MEMBER) {
+			return;
+		}
+		if ($this->projectMemberHourlyRateService === null || $hourlyRate === null || $hourlyRate <= 0) {
+			return;
+		}
+		$this->projectMemberHourlyRateService->seedInitialRateIfNeeded(
+			(int) $project->getId(),
+			(string) $member->getUserId(),
+			$hourlyRate,
+			$actorUserId
+		);
 	}
 
 	/**
@@ -1561,7 +1682,7 @@ class ProjectService
 	public function getUserProjects(string $userId): array
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('p.*')
+		$qb->select(...ProjectQueryColumns::qualified('p'))
 			->from('pc_projects', 'p')
 			->innerJoin('p', 'pc_project_members', 'pm', $qb->expr()->eq('p.id', 'pm.project_id'))
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
@@ -1698,13 +1819,14 @@ class ProjectService
 			}
 		}
 
-		// If both budget and rate are provided, validate the combination
+		// Minimum capacity check only when a rate is used for estimation (project or planning rate).
 		if (
-			isset($data['hourly_rate']) && !empty($data['hourly_rate']) &&
-			isset($data['total_budget']) && !empty($data['total_budget'])
+			isset($data['hourly_rate']) && $data['hourly_rate'] !== '' && is_numeric($data['hourly_rate']) && (float) $data['hourly_rate'] > 0
+			&& isset($data['total_budget']) && $data['total_budget'] !== '' && is_numeric($data['total_budget']) && (float) $data['total_budget'] > 0
 		) {
-			$availableHours = $this->calculator->calculateAvailableHours((float)$data['total_budget'], (float)$data['hourly_rate']);
-			if ($availableHours < 0.5) {
+			$mode = CostRateMode::normalize($data['cost_rate_mode'] ?? CostRateMode::DEFAULT);
+			$availableHours = ProjectCapacity::storedAvailableHours((float) $data['total_budget'], (float) $data['hourly_rate'], $mode);
+			if ($availableHours > 0 && $availableHours < 0.5) {
 				throw new \Exception('Budget too low for the specified hourly rate');
 			}
 		}
@@ -1737,6 +1859,15 @@ class ProjectService
 		if (isset($data['project_type']) && !in_array($data['project_type'], $validProjectTypes)) {
 			throw new \Exception('Invalid project type value');
 		}
+
+		$mode = CostRateMode::normalize($data['cost_rate_mode'] ?? CostRateMode::DEFAULT);
+		$data['cost_rate_mode'] = $mode;
+
+		$budget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float) $data['total_budget'] : 0.0;
+		$rate = isset($data['hourly_rate']) && $data['hourly_rate'] !== '' ? (float) $data['hourly_rate'] : 0.0;
+		if ($mode === CostRateMode::PROJECT && $budget > 0 && $rate <= 0) {
+			throw new \Exception('Hourly rate is required when the project has a budget in project-rate mode');
+		}
 	}
 
 	/**
@@ -1764,6 +1895,7 @@ class ProjectService
 		$project->setEndDate(SafeDateTime::fromOptional($row['end_date'] ?? null));
 		$project->setTags($row['tags']);
 		$project->setProjectType($row['project_type'] ?? 'client');
+		$project->setCostRateMode($row['cost_rate_mode'] ?? CostRateMode::DEFAULT);
 		$project->setCreatedBy($row['created_by']);
 		$project->setCreatedAt(SafeDateTime::fromRequired($row['created_at'] ?? null, 'projects.created_at'));
 		$project->setUpdatedAt(SafeDateTime::fromRequired($row['updated_at'] ?? null, 'projects.updated_at'));
@@ -1817,6 +1949,7 @@ class ProjectService
 			'end_date' => $project->getEndDate() ? $project->getEndDate()->format('Y-m-d') : null,
 			'tags' => $project->getTags(),
 			'project_type' => $project->getProjectType(),
+			'cost_rate_mode' => $project->getCostRateMode(),
 		];
 
 		$mergedData = array_merge($currentData, $data);

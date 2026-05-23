@@ -99,10 +99,12 @@
 			setTimeout(function () {
 				bar.style.width = width;
 
-				// Add warning/critical classes based on percentage
-				if (percentage >= 90) {
+				// Add warning/critical classes from server thresholds when available.
+				const warnThreshold = parseFloat(bar.dataset.warningThreshold || '80');
+				const critThreshold = parseFloat(bar.dataset.criticalThreshold || '90');
+				if (percentage >= critThreshold) {
 					bar.classList.add('critical');
-				} else if (percentage >= 80) {
+				} else if (percentage >= warnThreshold) {
 					bar.classList.add('warning');
 				}
 			}, 100);
@@ -236,11 +238,14 @@
 			// Update text
 			progressText.textContent = percentage + '% consumed';
 
-			// Update classes based on percentage
+			// Update classes based on configured thresholds (fallback 80/90).
 			progressFill.classList.remove('warning', 'critical');
-			if (percentage >= 90) {
+			const bar = progressFill.closest('[data-warning-threshold]') || progressFill;
+			const warnThreshold = parseFloat(bar.dataset.warningThreshold || '80');
+			const critThreshold = parseFloat(bar.dataset.criticalThreshold || '90');
+			if (percentage >= critThreshold) {
 				progressFill.classList.add('critical');
-			} else if (percentage >= 80) {
+			} else if (percentage >= warnThreshold) {
 				progressFill.classList.add('warning');
 			}
 		}

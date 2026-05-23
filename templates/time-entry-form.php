@@ -9,12 +9,11 @@
 
 use OCP\Util;
 
-Util::addScript('projectcheck', 'common/datepicker');
+Util::addScript('projectcheck', 'common/api');
 Util::addScript('projectcheck', 'time-entry-form');
 Util::addScript('projectcheck', 'budget-warnings');
 Util::addScript('projectcheck', 'budget-info');
 Util::addStyle('projectcheck', 'time-entry-form');
-Util::addStyle('projectcheck', 'common/datepicker');
 Util::addStyle('projectcheck', 'budget-alerts');
 Util::addStyle('projectcheck', 'navigation');
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
@@ -25,8 +24,13 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
 
-<div id="app-content" role="main">
-	<div id="app-content-wrapper">
+<?php
+$isEdit = isset($isEdit) ? $isEdit : (isset($timeEntry) && $timeEntry instanceof \OCA\ProjectCheck\Db\TimeEntry);
+$pageId = $isEdit ? 'time-entry-edit' : 'time-entry-create';
+$pageTitle = $isEdit ? $l->t('Edit Time Entry') : $l->t('Add Time Entry');
+$pageHelp = $l->t('You can log time only for projects with status Active or On Hold that you can access (creator, admin, or active team member).');
+include __DIR__ . '/common/page-start.php';
+?>
 		<?php
 		// Server IL10N for budget-warnings.js: browser t() does not resolve app l10n; embed text in DOM (not script order sensitive).
 		?>
@@ -37,21 +41,20 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 			<span data-budget-tpl="error"><?php p($l->t('Could not check budget. Try again.')); ?></span>
 			<span data-budget-tpl="loading"><?php p($l->t('Loading…')); ?></span>
 			<span data-budget-tpl="remaining-hours"><?php p($l->t('remaining')); ?></span>
+			<span data-budget-tpl="remaining-hours-estimate"><?php p($l->t('remaining (estimate)')); ?></span>
+			<span data-budget-tpl="no-hour-estimate"><?php p($l->t('Hour estimate unavailable')); ?></span>
 			<span data-budget-tpl="used"><?php p($l->t('used')); ?></span>
 			<span data-budget-tpl="over-budget"><?php p($l->t('Over budget')); ?></span>
+			<span data-budget-tpl="with-entry"><?php p($l->t('incl. this entry')); ?></span>
 		</div>
-		<div class="time-entry-form-container">
+		<div class="time-entry-form-container pc-section">
 			<div class="time-entry-form-header">
-				<h2><?php p($isEdit ? $l->t('Edit Time Entry') : $l->t('Add Time Entry')); ?></h2>
 				<div class="form-actions">
 					<a href="<?php p($_['indexUrl']); ?>" class="btn btn-secondary">
 						<?php p($l->t('Cancel')); ?>
 					</a>
 				</div>
 			</div>
-			<p class="time-entry-form-intro">
-				<?php p($l->t('You can log time only for projects with status Active or On Hold that you can access (creator, admin, or active team member).')); ?>
-			</p>
 
 			<form id="time-entry-form" class="time-entry-form" method="POST" action="<?php p($isEdit ? $_['updateUrl'] : $_['storeUrl']); ?>">
 				<?php if ($isEdit && isset($timeEntry)): ?>
@@ -73,8 +76,8 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 							<?php if (!empty($projects)): ?>
 								<?php foreach ($projects as $project): ?>
 									<option value="<?php p($project->getId()); ?>"
-										<?php if ($isEdit && $timeEntry->getProjectId() == $project->getId()) echo 'selected'; ?>
-										data-hourly-rate="<?php p($project->getHourlyRate()); ?>">
+										data-cost-rate-mode="<?php p($project->getCostRateMode()); ?>"
+										<?php if ($isEdit && $timeEntry->getProjectId() == $project->getId()) echo 'selected'; ?>>
 										<?php p($project->getName()); ?> (<?php p($project->getStatus()); ?>)
 									</option>
 								<?php endforeach; ?>
@@ -132,15 +135,24 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 					</div>
 				</div>
 
+				<?php
+				$htmlLang = isset($_['htmlLang']) && is_string($_['htmlLang']) ? $_['htmlLang'] : 'en';
+				$dateValue = '';
+				if ($isEdit && isset($timeEntry)) {
+					$dateValue = $timeEntry->getDate()->format('Y-m-d');
+				}
+				$todayIso = (new \DateTime('today'))->format('Y-m-d');
+				?>
 				<div class="form-row">
 					<div class="form-group">
 						<label for="date" class="required"><?php p($l->t('Date')); ?></label>
-						<input type="text" name="date" id="date" class="form-input datepicker-only" required
-							value="<?php p($isEdit ? $timeEntry->getDate()->format('d.m.Y') : ''); ?>"
-							placeholder="dd.mm.yyyy"
-							pattern="\d{2}\.\d{2}\.\d{4}"
-							title="<?php p($l->t('Please enter date in format dd.mm.yyyy')); ?>"
-							maxlength="10" readonly="readonly" autocomplete="off">
+						<input type="date" name="date" id="date" class="form-input" required
+							lang="<?php p($htmlLang); ?>"
+							value="<?php p($dateValue); ?>"
+							max="<?php p($todayIso); ?>"
+							autocomplete="off"
+							aria-describedby="date-hint date-error">
+						<p class="form-hint" id="date-hint"><?php p($l->t('Use the calendar or type the work date. Future dates are not allowed.')); ?></p>
 						<div class="error-message" id="date-error"></div>
 					</div>
 				</div>
@@ -155,10 +167,15 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 					</div>
 
 					<div class="form-group">
-						<label for="hourly_rate" class="required"><?php p($l->t('Hourly Rate (%s)', [$currencyCode])); ?></label>
-						<input type="number" name="hourly_rate" id="hourly_rate" class="form-input" step="0.01" min="0" required
+						<label for="hourly_rate"><?php p($l->t('Hourly rate (%s)', [$currencyCode])); ?></label>
+						<input type="number" name="hourly_rate" id="hourly_rate" class="form-input" step="0.01" min="0.01" readonly
 							value="<?php p($isEdit ? $timeEntry->getHourlyRate() : ''); ?>"
-							placeholder="0.00">
+							placeholder="0.00"
+							aria-required="true"
+							aria-describedby="hourly_rate-hint">
+						<p class="form-hint" id="hourly_rate-hint" role="status" aria-live="polite">
+							<?php p($l->t('Rate is set by the server from the project and work date. It cannot be edited.')); ?>
+						</p>
 						<div class="error-message" id="hourly_rate-error"></div>
 					</div>
 
@@ -193,5 +210,4 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 				<div id="time-entry-form-errors" class="time-entry-form-errors" role="alert" aria-live="assertive"></div>
 			</form>
 		</div>
-	</div>
-</div>
+<?php include __DIR__ . '/common/page-end.php'; ?>

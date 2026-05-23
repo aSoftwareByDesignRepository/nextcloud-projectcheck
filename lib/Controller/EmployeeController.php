@@ -23,6 +23,8 @@ use OCP\IURLGenerator;
 use OCP\IUserManager;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\EmployeeHourlyRateService;
+use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\AccessControlService;
@@ -70,6 +72,9 @@ class EmployeeController extends Controller
 	/** @var AccessControlService */
 	private $accessControlService;
 
+	/** @var EmployeeHourlyRateService */
+	private $employeeHourlyRateService;
+
 	/** @var IRequestTokenProvider */
 	private $requestTokenProvider;
 
@@ -89,6 +94,7 @@ class EmployeeController extends Controller
 	 * @param IL10N $l
 	 * @param UserAccountSnapshotMapper $userAccountSnapshotMapper
 	 * @param AccessControlService $accessControlService
+	 * @param EmployeeHourlyRateService $employeeHourlyRateService
 	 * @param IRequestTokenProvider $requestTokenProvider
      */
     public function __construct(
@@ -98,6 +104,7 @@ class EmployeeController extends Controller
         IUserManager $userManager,
         TimeEntryService $timeEntryService,
         ProjectService $projectService,
+        EmployeeHourlyRateService $employeeHourlyRateService,
         CustomerService $customerService,
 		IURLGenerator $urlGenerator,
 		IConfig $config,
@@ -118,6 +125,7 @@ class EmployeeController extends Controller
 		$this->l = $l;
 		$this->userAccountSnapshotMapper = $userAccountSnapshotMapper;
 		$this->accessControlService = $accessControlService;
+		$this->employeeHourlyRateService = $employeeHourlyRateService;
 		$this->requestTokenProvider = $requestTokenProvider;
         $this->setCspService($cspService);
     }
@@ -254,9 +262,16 @@ class EmployeeController extends Controller
         $employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId, $accessibleProjectIds);
         $employeeProductivityAnalysis = $this->timeEntryService->getProductivityAnalysisForEmployee($userId, $accessibleProjectIds);
 		$employeeAssignedProjects = $this->projectService->getUserProjects((string)$userId);
+		$assignedProjectIds = [];
+		foreach ($employeeAssignedProjects as $assignedProject) {
+			$assignedProjectIds[(int)$assignedProject->getId()] = true;
+		}
 		$manageableProjects = [];
 		foreach ($this->projectService->getProjects(['limit' => 500]) as $project) {
 			$pid = (int)$project->getId();
+			if (isset($assignedProjectIds[$pid])) {
+				continue;
+			}
 			if ($this->projectService->canUserManageMembers($viewerId, $pid) && $project->isEditableState()) {
 				$manageableProjects[] = $project;
 			}
@@ -286,6 +301,9 @@ class EmployeeController extends Controller
             'urlGenerator' => $this->urlGenerator,
 			'requesttoken' => $requestToken,
 			'assignProjectUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.assignProject', ['userId' => (string)$userId]),
+			'employeeHourlyRates' => $this->employeeHourlyRateService->listRatesForUser((string) $userId),
+			'canManageEmployeeRates' => $this->accessControlService->canManageAppConfiguration($viewerId),
+			'addEmployeeRateUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.addHourlyRate', ['userId' => (string) $userId]),
         ]);
 
         return $this->configureCSP($response);
@@ -330,6 +348,15 @@ class EmployeeController extends Controller
 			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
+		if ($project->getCostRateMode() === CostRateMode::PROJECT_MEMBER) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $this->l->t('This project uses per-person rates. Open the project team page to add this person with their rate.'),
+				'code' => 'project_member_mode',
+				'project_url' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $projectId]) . '#team-section',
+			], 400);
+		}
+
 		try {
 			$member = $this->projectService->addTeamMember($projectId, $userId, $role, $hourlyRate);
 			return new JSONResponse([
@@ -338,7 +365,33 @@ class EmployeeController extends Controller
 				'message' => $this->l->t('Team member added successfully'),
 			]);
 		} catch (\Exception $e) {
-			return new JSONResponse(['error' => $this->l->t('Could not assign employee to project.')], 400);
+			return new JSONResponse(['error' => $e->getMessage() ?: $this->l->t('Could not assign employee to project.')], 400);
+		}
+	}
+
+	#[NoAdminRequired]
+	public function addHourlyRate(string $userId): JSONResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		try {
+			$row = $this->employeeHourlyRateService->addRateRow($userId, [
+				'hourly_rate' => $this->request->getParam('hourly_rate'),
+				'effective_from' => $this->request->getParam('effective_from'),
+			], $user->getUID());
+			return new JSONResponse([
+				'success' => true,
+				'rate' => [
+					'id' => $row->getId(),
+					'hourly_rate' => $row->getHourlyRate(),
+					'effective_from' => $row->getEffectiveFrom()->format('Y-m-d'),
+				],
+				'message' => $this->l->t('Rate saved. Past time entries keep their previous rate.'),
+			]);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 400);
 		}
 	}
 

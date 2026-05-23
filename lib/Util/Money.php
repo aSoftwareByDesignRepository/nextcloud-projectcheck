@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Fixed-point money/decimal arithmetic helper.
  *
- * Audit reference: `pm/app-ideas/projectcheck/AUDIT-FINDINGS.md` finding A5 -
+ * Audit reference: `pm/app-ideas/projectcheck/README.md` §11.3 finding A5 -
  * float math on monetary values introduces rounding drift in totals,
  * thresholds and budget warnings. All financially-relevant calculations now
  * route through this helper, which uses BCMath when available (the default in

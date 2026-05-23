@@ -5,12 +5,16 @@ declare(strict_types=1);
 /**
  * Budget alert service for projectcheck app
  *
+ * Cron and notification helpers delegate to {@see BudgetService} for all
+ * spent/cost/percentage math (Money-safe, frozen entry rates).
+ *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
  */
 
 namespace OCA\ProjectCheck\Service;
 
+use OCA\ProjectCheck\Db\Project;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IUserSession;
@@ -23,378 +27,202 @@ use Psr\Log\LoggerInterface;
  */
 class BudgetAlertService
 {
-    /** @var IConfig */
-    private $config;
+	/** @var IConfig */
+	private $config;
 
-    /** @var IUserSession */
-    private $userSession;
+	/** @var IUserSession */
+	private $userSession;
 
-    /** @var NotificationManager */
-    private $notificationManager;
+	/** @var NotificationManager */
+	private $notificationManager;
 
-    /** @var IUserManager */
-    private $userManager;
+	/** @var IUserManager */
+	private $userManager;
 
-    /** @var LoggerInterface */
-    private $logger;
+	/** @var LoggerInterface */
+	private $logger;
 
-    /** @var ProjectService */
-    private $projectService;
+	/** @var ProjectService */
+	private $projectService;
 
-    /** @var TimeEntryService */
-    private $timeEntryService;
+	/** @var BudgetService */
+	private $budgetService;
 
-    /** @var IL10N */
-    private $l10n;
+	/** @var IL10N */
+	private $l10n;
 
-    /** @var LocaleFormatService */
-    private $localeFormat;
+	/** @var string */
+	private $appName = 'projectcheck';
 
-    /** @var string */
-    private $appName = 'projectcheck';
+	public function __construct(
+		IConfig $config,
+		IUserSession $userSession,
+		NotificationManager $notificationManager,
+		IUserManager $userManager,
+		LoggerInterface $logger,
+		ProjectService $projectService,
+		BudgetService $budgetService,
+		IL10N $l10n,
+	) {
+		$this->config = $config;
+		$this->userSession = $userSession;
+		$this->notificationManager = $notificationManager;
+		$this->userManager = $userManager;
+		$this->logger = $logger;
+		$this->projectService = $projectService;
+		$this->budgetService = $budgetService;
+		$this->l10n = $l10n;
+	}
 
-    /**
-     * BudgetAlertService constructor
-     *
-     * @param IConfig $config
-     * @param IUserSession $userSession
-     * @param NotificationManager $notificationManager
-     * @param IUserManager $userManager
-     * @param LoggerInterface $logger
-     * @param ProjectService $projectService
-     * @param TimeEntryService $timeEntryService
-     * @param IL10N $l10n
-     * @param LocaleFormatService $localeFormat
-     */
-    public function __construct(
-        IConfig $config,
-        IUserSession $userSession,
-        NotificationManager $notificationManager,
-        IUserManager $userManager,
-        LoggerInterface $logger,
-        ProjectService $projectService,
-        TimeEntryService $timeEntryService,
-        IL10N $l10n,
-        LocaleFormatService $localeFormat
-    ) {
-        $this->config = $config;
-        $this->userSession = $userSession;
-        $this->notificationManager = $notificationManager;
-        $this->userManager = $userManager;
-        $this->logger = $logger;
-        $this->projectService = $projectService;
-        $this->timeEntryService = $timeEntryService;
-        $this->l10n = $l10n;
-        $this->localeFormat = $localeFormat;
-    }
+	/**
+	 * Check all projects for budget alerts
+	 *
+	 * @param string|null $userId
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function checkBudgetAlerts($userId = null): array
+	{
+		$alerts = [];
 
-    /**
-     * Check all projects for budget alerts
-     *
-     * @param string|null $userId
-     * @return array
-     */
-    public function checkBudgetAlerts($userId = null)
-    {
-        $alerts = [];
+		try {
+			$projects = $this->projectService->getProjectsByUser($userId, 1000);
 
-        try {
-            // Get all projects for the user
-            $projects = $this->projectService->getProjectsByUser($userId, 1000);
+			foreach ($projects as $project) {
+				$projectAlerts = $this->checkProjectBudget($project, $userId);
+				$alerts = array_merge($alerts, $projectAlerts);
+			}
+		} catch (\Exception $e) {
+			$this->logger->error('Error checking budget alerts: ' . $e->getMessage(), [
+				'app' => $this->appName,
+				'userId' => $userId,
+			]);
+		}
 
-            foreach ($projects as $project) {
-                $projectAlerts = $this->checkProjectBudget($project, $userId);
-                $alerts = array_merge($alerts, $projectAlerts);
-            }
-        } catch (\Exception $e) {
-            $this->logger->error('Error checking budget alerts: ' . $e->getMessage(), [
-                'app' => $this->appName,
-                'userId' => $userId
-            ]);
-        }
+		return $alerts;
+	}
 
-        return $alerts;
-    }
+	/**
+	 * Check budget for a specific project using BudgetService (Money-safe totals).
+	 *
+	 * @param object $project
+	 * @param string|null $userId
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function checkProjectBudget($project, $userId = null): array
+	{
+		if (!$project instanceof Project) {
+			return [];
+		}
 
-    /**
-     * Check budget for a specific project
-     *
-     * @param object $project
-     * @param string|null $userId
-     * @return array
-     */
-    public function checkProjectBudget($project, $userId = null)
-    {
-        $alerts = [];
+		try {
+			$info = $this->budgetService->getProjectBudgetInfo($project, $userId);
+			if (($info['total_budget'] ?? 0) <= 0 || empty($info['alerts'])) {
+				return [];
+			}
 
-        try {
-            // Get project budget
-            $budget = $project->getBudget();
-            if (!$budget || $budget <= 0) {
-                return $alerts; // No budget set, no alerts
-            }
+			$mapped = [];
+			foreach ($info['alerts'] as $alert) {
+				$type = (string)($alert['type'] ?? 'budget_warning');
+				$mapped[] = [
+					'type' => $this->legacyAlertType($type),
+					'project_id' => (int)($alert['project_id'] ?? $project->getId()),
+					'project_name' => (string)($alert['project_name'] ?? $project->getName()),
+					'spent_amount' => (float)($alert['used_budget'] ?? $info['used_budget']),
+					'budget' => (float)($alert['total_budget'] ?? $info['total_budget']),
+					'percentage_used' => (float)($alert['consumption_percentage'] ?? $info['consumption_percentage']),
+					'remaining_budget' => (float)($alert['remaining_budget'] ?? $info['remaining_budget']),
+					'message' => (string)($alert['message'] ?? ''),
+				];
+			}
 
-            // Calculate spent amount
-            $spentAmount = $this->calculateProjectSpentAmount($project->getId());
+			return $mapped;
+		} catch (\Exception $e) {
+			$this->logger->error('Error checking project budget: ' . $e->getMessage(), [
+				'app' => $this->appName,
+				'projectId' => $project->getId(),
+				'userId' => $userId,
+			]);
 
-            // Calculate percentage used
-            $percentageUsed = ($spentAmount / $budget) * 100;
+			return [];
+		}
+	}
 
-            // Get user's alert thresholds
-            $warningThreshold = $this->getUserBudgetWarningThreshold($userId);
-            $criticalThreshold = $this->getUserBudgetCriticalThreshold($userId);
+	/**
+	 * Map BudgetService alert types to legacy cron log keys.
+	 */
+	private function legacyAlertType(string $type): string
+	{
+		return match ($type) {
+			'budget_exceeded' => 'exceeded',
+			'budget_critical' => 'critical',
+			default => 'warning',
+		};
+	}
 
-            // Check for alerts
-            if ($percentageUsed >= 100) {
-                $alerts[] = $this->createBudgetExceededAlert($project, $spentAmount, $budget, $percentageUsed);
-            } elseif ($percentageUsed >= $criticalThreshold) {
-                $alerts[] = $this->createBudgetCriticalAlert($project, $spentAmount, $budget, $percentageUsed);
-            } elseif ($percentageUsed >= $warningThreshold) {
-                $alerts[] = $this->createBudgetWarningAlert($project, $spentAmount, $budget, $percentageUsed);
-            }
-        } catch (\Exception $e) {
-            $this->logger->error('Error checking project budget: ' . $e->getMessage(), [
-                'app' => $this->appName,
-                'projectId' => $project->getId(),
-                'userId' => $userId
-            ]);
-        }
+	/**
+	 * Send budget alert notifications
+	 *
+	 * @param array<int, array<string, mixed>> $alerts
+	 * @param string|null $userId
+	 */
+	public function sendBudgetAlertNotifications(array $alerts, $userId = null): void
+	{
+		foreach ($alerts as $alert) {
+			$this->sendBudgetAlertNotification($alert, $userId);
+		}
+	}
 
-        return $alerts;
-    }
+	/**
+	 * Send a single budget alert notification
+	 *
+	 * @param array<string, mixed> $alert
+	 * @param string|null $userId
+	 */
+	private function sendBudgetAlertNotification(array $alert, $userId = null): void
+	{
+		try {
+			if (!$this->isBudgetAlertsEnabled($userId)) {
+				return;
+			}
 
-    /**
-     * Calculate spent amount for a project
-     *
-     * @param int $projectId
-     * @return float
-     */
-    private function calculateProjectSpentAmount($projectId)
-    {
-        try {
-            // Get all time entries for the project
-            $timeEntries = $this->timeEntryService->getTimeEntriesByProject($projectId);
+			$notification = $this->notificationManager->createNotification();
+			$notification->setApp($this->appName)
+				->setUser($userId)
+				->setDateTime(new \DateTime())
+				->setObject('project', (string)($alert['project_id'] ?? ''))
+				->setSubject('budget_' . ($alert['type'] ?? 'warning'), [
+					'project_id' => $alert['project_id'] ?? null,
+					'project_name' => $alert['project_name'] ?? '',
+					'percentage_used' => $alert['percentage_used'] ?? 0,
+					'remaining_budget' => $alert['remaining_budget'] ?? 0,
+				])
+				->setMessage('budget_' . ($alert['type'] ?? 'warning'), [
+					'project_name' => $alert['project_name'] ?? '',
+					'percentage_used' => $alert['percentage_used'] ?? 0,
+					'remaining_budget' => $alert['remaining_budget'] ?? 0,
+				]);
 
-            $totalSpent = 0;
-            foreach ($timeEntries as $entry) {
-                $hours = $entry->getHours();
-                $hourlyRate = $entry->getHourlyRate();
-                $totalSpent += $hours * $hourlyRate;
-            }
+			$this->notificationManager->notify($notification);
+		} catch (\Exception $e) {
+			$this->logger->error('Error sending budget alert notification: ' . $e->getMessage(), [
+				'app' => $this->appName,
+				'alert' => $alert,
+				'userId' => $userId,
+			]);
+		}
+	}
 
-            return $totalSpent;
-        } catch (\Exception $e) {
-            $this->logger->error('Error calculating project spent amount: ' . $e->getMessage(), [
-                'app' => $this->appName,
-                'projectId' => $projectId
-            ]);
-            return 0;
-        }
-    }
+	private function isBudgetAlertsEnabled($userId = null): bool
+	{
+		if ($userId === null) {
+			$user = $this->userSession->getUser();
+			$userId = $user ? $user->getUID() : null;
+		}
 
-    /**
-     * Create budget warning alert
-     *
-     * @param object $project
-     * @param float $spentAmount
-     * @param float $budget
-     * @param float $percentageUsed
-     * @return array
-     */
-    private function createBudgetWarningAlert($project, $spentAmount, $budget, $percentageUsed)
-    {
-        return [
-            'type' => 'warning',
-            'project_id' => $project->getId(),
-            'project_name' => $project->getName(),
-            'spent_amount' => $spentAmount,
-            'budget' => $budget,
-            'percentage_used' => $percentageUsed,
-            'remaining_budget' => $budget - $spentAmount,
-            'message' => $this->l10n->t(
-                'Project "%1$s" budget consumption is at %2$s',
-                [
-                    $project->getName(),
-                    $this->localeFormat->percent((float)$percentageUsed, 1),
-                ]
-            )
-        ];
-    }
+		if (!$userId) {
+			return true;
+		}
 
-    /**
-     * Create budget critical alert
-     *
-     * @param object $project
-     * @param float $spentAmount
-     * @param float $budget
-     * @param float $percentageUsed
-     * @return array
-     */
-    private function createBudgetCriticalAlert($project, $spentAmount, $budget, $percentageUsed)
-    {
-        return [
-            'type' => 'critical',
-            'project_id' => $project->getId(),
-            'project_name' => $project->getName(),
-            'spent_amount' => $spentAmount,
-            'budget' => $budget,
-            'percentage_used' => $percentageUsed,
-            'remaining_budget' => $budget - $spentAmount,
-            'message' => $this->l10n->t(
-                'Project "%1$s" is approaching budget limit (%2$s used)',
-                [
-                    $project->getName(),
-                    $this->localeFormat->percent((float)$percentageUsed, 1),
-                ]
-            )
-        ];
-    }
-
-    /**
-     * Create budget exceeded alert
-     *
-     * @param object $project
-     * @param float $spentAmount
-     * @param float $budget
-     * @param float $percentageUsed
-     * @return array
-     */
-    private function createBudgetExceededAlert($project, $spentAmount, $budget, $percentageUsed)
-    {
-        return [
-            'type' => 'exceeded',
-            'project_id' => $project->getId(),
-            'project_name' => $project->getName(),
-            'spent_amount' => $spentAmount,
-            'budget' => $budget,
-            'percentage_used' => $percentageUsed,
-            'remaining_budget' => $budget - $spentAmount,
-            'message' => $this->l10n->t(
-                'Project "%1$s" has exceeded its budget by %2$s (%3$s over)',
-                [
-                    $project->getName(),
-                    $this->localeFormat->currency((float)($spentAmount - $budget)),
-                    $this->localeFormat->percent((float)($percentageUsed - 100), 1),
-                ]
-            )
-        ];
-    }
-
-    /**
-     * Send budget alert notifications
-     *
-     * @param array $alerts
-     * @param string|null $userId
-     * @return void
-     */
-    public function sendBudgetAlertNotifications($alerts, $userId = null)
-    {
-        foreach ($alerts as $alert) {
-            $this->sendBudgetAlertNotification($alert, $userId);
-        }
-    }
-
-    /**
-     * Send a single budget alert notification
-     *
-     * @param array $alert
-     * @param string|null $userId
-     * @return void
-     */
-    private function sendBudgetAlertNotification($alert, $userId = null)
-    {
-        try {
-            // Check if user has budget alerts enabled
-            if (!$this->isBudgetAlertsEnabled($userId)) {
-                return;
-            }
-
-            $notification = $this->notificationManager->createNotification();
-            $notification->setApp($this->appName)
-                ->setUser($userId)
-                ->setDateTime(new \DateTime())
-                ->setObject('project', $alert['project_id'])
-                ->setSubject('budget_' . $alert['type'], [
-                    'project_id' => $alert['project_id'],
-                    'project_name' => $alert['project_name'],
-                    'percentage_used' => $alert['percentage_used'],
-                    'remaining_budget' => $alert['remaining_budget']
-                ])
-                ->setMessage('budget_' . $alert['type'], [
-                    'project_name' => $alert['project_name'],
-                    'percentage_used' => $alert['percentage_used'],
-                    'remaining_budget' => $alert['remaining_budget']
-                ]);
-
-            $this->notificationManager->notify($notification);
-        } catch (\Exception $e) {
-            $this->logger->error('Error sending budget alert notification: ' . $e->getMessage(), [
-                'app' => $this->appName,
-                'alert' => $alert,
-                'userId' => $userId
-            ]);
-        }
-    }
-
-    /**
-     * Get user's budget warning threshold
-     *
-     * @param string|null $userId
-     * @return int
-     */
-    private function getUserBudgetWarningThreshold($userId = null)
-    {
-        if ($userId === null) {
-            $user = $this->userSession->getUser();
-            $userId = $user ? $user->getUID() : null;
-        }
-
-        $fallback = $this->config->getAppValue($this->appName, 'budget_warning_threshold', '80');
-        if (!$userId) {
-            return (int) $fallback;
-        }
-
-        return (int) $this->config->getUserValue($userId, $this->appName, 'budget_warning_threshold', $fallback);
-    }
-
-    /**
-     * Get user's budget critical threshold
-     *
-     * @param string|null $userId
-     * @return int
-     */
-    private function getUserBudgetCriticalThreshold($userId = null)
-    {
-        if ($userId === null) {
-            $user = $this->userSession->getUser();
-            $userId = $user ? $user->getUID() : null;
-        }
-
-        $fallback = $this->config->getAppValue($this->appName, 'budget_critical_threshold', '90');
-        if (!$userId) {
-            return (int) $fallback;
-        }
-
-        return (int) $this->config->getUserValue($userId, $this->appName, 'budget_critical_threshold', $fallback);
-    }
-
-    /**
-     * Check if budget alerts are enabled for user
-     *
-     * @param string|null $userId
-     * @return bool
-     */
-    private function isBudgetAlertsEnabled($userId = null)
-    {
-        if ($userId === null) {
-            $user = $this->userSession->getUser();
-            $userId = $user ? $user->getUID() : null;
-        }
-
-        if (!$userId) {
-            return true; // Default enabled
-        }
-
-        return $this->config->getUserValue($userId, $this->appName, 'budget_alerts', 'true') === 'true';
-    }
+		return $this->config->getUserValue($userId, $this->appName, 'budget_alerts', 'true') === 'true';
+	}
 }

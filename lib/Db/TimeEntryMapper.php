@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Db;
 
+use OCA\ProjectCheck\Util\Money;
 use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
@@ -288,15 +289,19 @@ class TimeEntryMapper extends QBMapper
 	public function getTotalCostForProject(int $projectId): float
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select($qb->createFunction('SUM(hours * hourly_rate)'))
+		$qb->select('hours', 'hourly_rate')
 			->from($this->getTableName())
 			->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId)));
 
 		$result = $qb->executeQuery();
-		$total = $result->fetchColumn();
+		$total = '0';
+		while ($row = $result->fetch()) {
+			$line = Money::mul($row['hours'] ?? 0, $row['hourly_rate'] ?? 0);
+			$total = Money::add($total, $line);
+		}
 		$result->closeCursor();
 
-		return (float) $total;
+		return Money::asFloat($total);
 	}
 
 	/**

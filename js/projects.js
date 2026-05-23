@@ -305,31 +305,24 @@
 	 * Remove team member
 	 */
 	function removeTeamMember(projectId, userId) {
-		if (!confirm(t('projectcheck', 'Are you sure you want to remove this team member?'))) {
+		if (typeof window.projectcheckDeletionModal === 'undefined') {
+			showNotification(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'), 'error');
 			return;
 		}
 
-		fetch(OC.generateUrl('/apps/projectcheck/projects/' + projectId + '/members/' + userId), {
-			method: 'DELETE',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-Requested-With': 'XMLHttpRequest',
-				'requesttoken': OC.requestToken
-			}
-		})
-			.then(response => response.json())
-			.then(data => {
-				if (data.success) {
-					// Refresh team members list
-					showTeamMembers(projectId);
-				} else {
-					alert(t('projectcheck', 'Error removing team member') + ': ' + data.error);
-				}
-			})
-			.catch(error => {
-				console.error('Error removing team member:', error);
-				alert(t('projectcheck', 'Error removing team member. Please try again.'));
-			});
+		const deleteUrl = OC.generateUrl('/apps/projectcheck/projects/' + projectId + '/members/' + userId);
+		window.projectcheckDeletionModal.show({
+			entityType: 'member',
+			entityId: userId,
+			entityName: t('projectcheck', 'Team member'),
+			deleteUrl: deleteUrl,
+			simpleConfirm: true,
+			confirmMessage: t('projectcheck', 'Are you sure you want to remove this team member?'),
+			onSuccess: function () {
+				showTeamMembers(projectId);
+			},
+			onCancel: function () {}
+		});
 	}
 
 	/**
@@ -337,7 +330,7 @@
 	 */
 	function showProjectDeletionModal(projectId, projectName) {
 		if (typeof window.projectcheckDeletionModal === 'undefined') {
-			confirmDeleteProject(projectId, projectName);
+			showNotification(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'), 'error');
 			return;
 		}
 
@@ -368,16 +361,10 @@
 	}
 
 	/**
-	 * Confirm delete project function (global) - fallback method
+	 * Delete project (opens accessible confirmation modal).
 	 */
 	window.confirmDeleteProject = function (projectId, projectName) {
-		const name = (projectName !== undefined && projectName !== null && String(projectName).length > 0)
-			? String(projectName)
-			: t('projectcheck', 'this project');
-		const template = t('projectcheck', 'Are you sure you want to delete the project "%s"? This action cannot be undone.');
-		if (confirm(String(template).replace(/%s/g, name))) {
-			deleteProject(projectId);
-		}
+		showProjectDeletionModal(projectId, projectName);
 	};
 
 	/**
@@ -508,6 +495,11 @@
 		const rateInput = document.getElementById('hourly_rate');
 		const hoursOutput = document.getElementById('available_hours');
 
+		// Project create/edit uses project-form-cost-rates.js (mode-aware capacity).
+		if (!budgetInput || !rateInput || !hoursOutput || hoursOutput.classList.contains('pc-capacity-input')) {
+			return;
+		}
+
 		if (budgetInput && rateInput && hoursOutput) {
 			function calculateHours() {
 				const budget = parseFloat(budgetInput.value) || 0;
@@ -515,11 +507,20 @@
 
 				if (rate > 0) {
 					const hours = budget / rate;
-					hoursOutput.textContent = hours.toFixed(2);
-					hoursOutput.classList.remove('error');
+					if ('value' in hoursOutput) {
+						hoursOutput.value = hours.toFixed(2);
+					} else {
+						hoursOutput.textContent = hours.toFixed(2);
+					}
+					hoursOutput.classList.remove('error', 'pc-capacity-input--unavailable');
 				} else {
-					hoursOutput.textContent = '0.00';
-					hoursOutput.classList.add('error');
+					if ('value' in hoursOutput) {
+						hoursOutput.value = '';
+						hoursOutput.placeholder = '—';
+					} else {
+						hoursOutput.textContent = '—';
+					}
+					hoursOutput.classList.add('pc-capacity-input--unavailable');
 				}
 			}
 

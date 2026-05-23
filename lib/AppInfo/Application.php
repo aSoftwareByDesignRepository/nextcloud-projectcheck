@@ -64,6 +64,39 @@ class Application extends App implements IBootstrap
 		});
 		$context->registerMiddleware(\OCA\ProjectCheck\Middleware\AppAccessMiddleware::class);
 
+		$context->registerService(\OCA\ProjectCheck\Db\EmployeeHourlyRateMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\EmployeeHourlyRateMapper($c->query(\OCP\IDBConnection::class));
+		});
+		$context->registerService(\OCA\ProjectCheck\Db\ProjectMemberHourlyRateMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\ProjectMemberHourlyRateMapper($c->query(\OCP\IDBConnection::class));
+		});
+		$context->registerService(\OCA\ProjectCheck\Service\EmployeeHourlyRateService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\EmployeeHourlyRateService(
+				$c->query(\OCA\ProjectCheck\Db\EmployeeHourlyRateMapper::class),
+				$c->query(\OCA\ProjectCheck\Service\AccessControlService::class),
+				$c->query(\OCP\IUserManager::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\Psr\Log\LoggerInterface::class)
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Service\ProjectMemberHourlyRateService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\ProjectMemberHourlyRateService(
+				$c->query(\OCA\ProjectCheck\Db\ProjectMemberHourlyRateMapper::class),
+				$c->query(\OCP\IDBConnection::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\Psr\Log\LoggerInterface::class)
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Service\HourlyRateService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\HourlyRateService(
+				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Service\EmployeeHourlyRateService::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectMemberHourlyRateService::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID)
+			);
+		});
+
 		// Register services
 		$context->registerService('ProjectService', function ($c) {
 			return new \OCA\ProjectCheck\Service\ProjectService(
@@ -74,7 +107,8 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IGroupManager::class),
 				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class),
 				$c->query(\OCA\ProjectCheck\Service\BudgetService::class),
-				$c->query(\OCA\ProjectCheck\Service\AccessControlService::class)
+				$c->query(\OCA\ProjectCheck\Service\AccessControlService::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectMemberHourlyRateService::class)
 			);
 		});
 
@@ -92,6 +126,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class),
 				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class),
 				$c->query('ProjectService'),
+				$c->query(\OCA\ProjectCheck\Service\HourlyRateService::class),
 				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID)
 			);
 		});
@@ -213,9 +248,8 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IUserManager::class),
 				$c->query(\Psr\Log\LoggerInterface::class),
 				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
-				$c->query(\OCA\ProjectCheck\Service\TimeEntryService::class),
+				$c->query(\OCA\ProjectCheck\Service\BudgetService::class),
 				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
-				$c->query(\OCA\ProjectCheck\Service\LocaleFormatService::class)
 			);
 		});
 

@@ -97,8 +97,12 @@
      */
     function showCustomerDeletionModal(customerId, customerName, deleteUrl) {
         if (typeof window.projectcheckDeletionModal === 'undefined') {
-            // Fallback to native confirm when the shared modal script is not loaded
-            confirmDeleteCustomer(customerId, customerName);
+            if (typeof OC !== 'undefined' && OC.Notification) {
+                OC.Notification.showTemporary(
+                    t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'),
+                    { type: 'error' }
+                );
+            }
             return;
         }
 
@@ -129,22 +133,6 @@
             onCancel: function () {
             }
         });
-    }
-
-    /**
-     * Fallback: Confirm delete customer (old method)
-     */
-    function confirmDeleteCustomer(customerId, customerName) {
-        const displayName = customerName && String(customerName).trim()
-            ? customerName
-            : t('projectcheck', 'this customer');
-        const message = t('projectcheck', 'Are you sure you want to delete %s? This action cannot be undone.', displayName);
-
-        if (!confirm(message)) {
-            return;
-        }
-
-        deleteCustomer(customerId, { strategy: 'restrict' });
     }
 
     /**

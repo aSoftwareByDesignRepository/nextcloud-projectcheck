@@ -1,0 +1,44 @@
+<?php
+/**
+ * ProjectCheck page shell (after navigation.php).
+ *
+ * @var string $pageId
+ * @var string $pageTitle translated page title (optional)
+ * @var string $pageHelp optional lead text
+ * @var string $pageKicker optional label above the title
+ * @var string $pageTitleId id attribute for h1 (default pc-page-title)
+ * @var string $mainContentId id for main landmark (default pc-main-content)
+ * @var string $mainContentClass extra classes on main landmark
+ * @var string $wrapperClass classes on #app-content-wrapper (default pc-shell)
+ * @var bool $includeScopeStrip include scope-strip-project.php when true
+ */
+$pageId = isset($pageId) ? (string)$pageId : (string)($_['pageId'] ?? 'page');
+$pageTitle = (string)($pageTitle ?? $_['pageTitle'] ?? '');
+$pageHelp = (string)($pageHelp ?? $_['pageHelp'] ?? '');
+$pageKicker = (string)($pageKicker ?? $_['pageKicker'] ?? '');
+$pageTitleId = (string)($pageTitleId ?? $_['pageTitleId'] ?? 'pc-page-title');
+$mainContentId = (string)($mainContentId ?? $_['mainContentId'] ?? 'pc-main-content');
+$mainContentClass = trim('pc-main ' . (string)($mainContentClass ?? $_['mainContentClass'] ?? ''));
+$wrapperClass = (string)($wrapperClass ?? $_['wrapperClass'] ?? 'pc-shell');
+$includeScopeStrip = !empty($includeScopeStrip) || !empty($_['includeScopeStrip']);
+?>
+<div id="app-content" class="pc-app pc-app--<?php p($pageId); ?>" role="main">
+	<a class="pc-skip-link" href="#<?php p($mainContentId); ?>"><?php p($l->t('Skip to main content')); ?></a>
+	<div id="pc-live-region" class="pc-sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+	<div id="pc-alert-region" class="pc-sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
+	<div id="app-content-wrapper" class="<?php p($wrapperClass); ?>">
+		<?php if ($pageTitle !== ''): ?>
+			<header class="pc-page-header" aria-labelledby="<?php p($pageTitleId); ?>">
+				<?php if ($pageKicker !== ''): ?>
+					<p class="pc-page-header__kicker"><?php p($pageKicker); ?></p>
+				<?php endif; ?>
+				<h1 id="<?php p($pageTitleId); ?>"><?php p($pageTitle); ?></h1>
+				<?php if ($pageHelp !== ''): ?>
+					<p class="pc-page-header__lead"><?php p($pageHelp); ?></p>
+				<?php endif; ?>
+			</header>
+		<?php endif; ?>
+		<?php if ($includeScopeStrip): ?>
+			<?php include __DIR__ . '/../parts/scope-strip-project.php'; ?>
+		<?php endif; ?>
+		<main id="<?php p($mainContentId); ?>" class="<?php p($mainContentClass); ?>" tabindex="-1">
