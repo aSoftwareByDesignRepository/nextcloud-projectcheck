@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.47 - 2026-05-25
+
+### Changed
+
+- **DB-standards alignment (Oracle/MySQL/PostgreSQL portability):** every migration declares `: ?ISchemaWrapper` and wraps `createTable` / column additions in `hasTable` / `hasColumn` guards (idempotent across replays). Primary keys and indexes use explicit short names (`pc_*_pk`, `pc_*_idx`). `PcCoreSchemaBootstrap` helpers now return `false` instead of bailing early so re-runs after partial failures finish the schema.
+- **Budget display: "Over by X" instead of negative remaining.** `BudgetService` now returns `over_budget_amount` alongside `is_over_budget` (computed via Money fixed-point so display never drifts). Project detail and budget bar both flip to "Over by X" via the new shared `templates/parts/budget-remaining-line.php` partial; the duplicate "Over Budget" breakdown row is removed.
+- **Time entries:** moved the filter container CSS out of an inline `<style>` block (with CSP nonce) into `css/time-entries.css`.
+
+### Added
+
+- **`OCA\ProjectCheck\Repair\UninstallDropTables` + `<repair-steps><uninstall>` in `appinfo/info.xml`:** auto-generated drop list keeps every projectcheck table ever created in sync. Disabling the app now drops all `pc_*` (and legacy) tables, `migrations` rows, and app config — no orphan data on remove. Regenerate with `php scripts/check-nextcloud-db-standards.php sync-uninstall --app=projectcheck`.
+- **l10n:** `Over by %s` (en: `Over by %s`, de: `Überschreitung um %s`).
+- **Tests:** `BudgetServiceTest` covers the new `over_budget_amount` field.
+
+### Bumped
+
+- **Nextcloud `max-version`:** `33` (latest stable major).
+
 ## 2.0.46 - 2026-05-23
 
 ### Fixed
