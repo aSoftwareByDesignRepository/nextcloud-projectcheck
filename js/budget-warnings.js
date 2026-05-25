@@ -263,8 +263,15 @@
 		var modClass = 'ok';
 
 		if (wouldExceed) {
-			var overRaw = (impact.additional_cost - impact.remaining_budget_after);
-			var over = overRaw > 0 ? overRaw : 0;
+			var over = 0;
+			if (typeof impact.over_budget_after === 'number' && isFinite(impact.over_budget_after) && impact.over_budget_after > 0) {
+				over = impact.over_budget_after;
+			} else {
+				var remainingAfter = parseNumber(impact.remaining_budget_after);
+				if (remainingAfter < 0) {
+					over = -remainingAfter;
+				}
+			}
 			message = tPl('This entry would exceed the project budget by {amount}.', {
 				amount: formatEur(over)
 			});

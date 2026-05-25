@@ -176,7 +176,7 @@ include __DIR__ . '/common/page-start.php';
                         <div class="stat-label"><?php p($l->t('BUDGET USED')); ?></div>
                         <?php if (isset($budgetInfo['total_budget']) && $budgetInfo['total_budget'] > 0): ?>
                             <div class="stat-sub">
-                                <?php p($l->t('%s remaining', [($fmt ? $fmt->currency((float)$budgetInfo['remaining_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['remaining_budget'], 2))])); ?>
+                                <?php include __DIR__ . '/parts/budget-remaining-line.php'; ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -432,7 +432,7 @@ include __DIR__ . '/common/page-start.php';
                                     <span class="budget-percentage budget-<?php p($budgetInfo['warning_level']); ?>">
                                         <?php p($l->t('%s%% used', [number_format((float)$budgetInfo['consumption_percentage'], 1, '.', '')])); ?>
                                     </span>
-                                    <span class="budget-remaining"><?php p($l->t('%s remaining', [($fmt ? $fmt->currency((float)$budgetInfo['remaining_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['remaining_budget'], 2))])); ?></span>
+                                    <span class="budget-remaining"><?php include __DIR__ . '/parts/budget-remaining-line.php'; ?></span>
                                 <?php else: ?>
                                     <span class="budget-percentage"><?php p($l->t('%s%% used', [number_format((float)round(($budgetConsumption / max(1, $project->getTotalBudget() ?? 1)) * 100, 1), 1, '.', '')])); ?></span>
                                     <span class="budget-remaining"><?php p($l->t('%s remaining', [($fmt ? $fmt->currency((float)(($project->getTotalBudget() ?? 0) - $budgetConsumption)) : $currencyCode . ' ' . number_format((float)(($project->getTotalBudget() ?? 0) - $budgetConsumption), 2))])); ?></span>
@@ -458,8 +458,16 @@ include __DIR__ . '/common/page-start.php';
                                 <span class="breakdown-value consumed"><?php p($fmt ? $fmt->currency((float)($budgetInfo['used_budget'] ?? $budgetConsumption)) : $currencyCode . ' ' . number_format((float)($budgetInfo['used_budget'] ?? $budgetConsumption), 2)); ?></span>
                             </div>
                             <div class="breakdown-item">
-                                <span class="breakdown-label"><?php p($l->t('Remaining')); ?></span>
-                                <span class="breakdown-value remaining"><?php p($fmt ? $fmt->currency((float)($budgetInfo['remaining_budget'] ?? (($project->getTotalBudget() ?? 0) - $budgetConsumption))) : $currencyCode . ' ' . number_format((float)($budgetInfo['remaining_budget'] ?? (($project->getTotalBudget() ?? 0) - $budgetConsumption)), 2)); ?></span>
+                                <span class="breakdown-label"><?php p(!empty($budgetInfo['is_over_budget']) ? $l->t('Over Budget') : $l->t('Remaining')); ?></span>
+                                <span class="breakdown-value remaining<?php echo !empty($budgetInfo['is_over_budget']) ? ' over-budget' : ''; ?>">
+                                    <?php
+                                    if (!empty($budgetInfo['is_over_budget']) && !empty($budgetInfo['over_budget_amount'])) {
+                                        p($fmt ? $fmt->currency((float)$budgetInfo['over_budget_amount']) : $currencyCode . ' ' . number_format((float)$budgetInfo['over_budget_amount'], 2));
+                                    } else {
+                                        p($fmt ? $fmt->currency((float)($budgetInfo['remaining_budget'] ?? (($project->getTotalBudget() ?? 0) - $budgetConsumption))) : $currencyCode . ' ' . number_format((float)($budgetInfo['remaining_budget'] ?? (($project->getTotalBudget() ?? 0) - $budgetConsumption)), 2));
+                                    }
+                                    ?>
+                                </span>
                             </div>
                             <div class="breakdown-item breakdown-item--capacity">
                                 <span class="breakdown-label"><?php p($l->t('Hours (estimate)')); ?></span>
@@ -467,12 +475,6 @@ include __DIR__ . '/common/page-start.php';
                                     <?php include __DIR__ . '/parts/capacity-hours-display.php'; ?>
                                 </span>
                             </div>
-                            <?php if (isset($budgetInfo['is_over_budget']) && $budgetInfo['is_over_budget']): ?>
-                                <div class="breakdown-item over-budget">
-                                    <span class="breakdown-label"><?php p($l->t('Over Budget')); ?></span>
-                                    <span class="breakdown-value over-budget"><?php p($fmt ? $fmt->currency((float)($budgetInfo['used_budget'] - $budgetInfo['total_budget'])) : $currencyCode . ' ' . number_format((float)($budgetInfo['used_budget'] - $budgetInfo['total_budget']), 2)); ?></span>
-                                </div>
-                            <?php endif; ?>
                         </div>
                     </div>
 

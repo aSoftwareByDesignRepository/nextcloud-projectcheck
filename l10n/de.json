@@ -4,6 +4,7 @@
         "%d items have been processed successfully.": "%d Elemente wurden erfolgreich verarbeitet.",
         "%d items processed successfully, %d failed.": "%d Elemente erfolgreich verarbeitet, %d fehlgeschlagen.",
         "%s remaining": "%s verbleibend",
+        "Over by %s": "Überschreitung um %s",
         "%s%% used": "%s%% verwendet",
         "%sh remaining": "%sh verbleibend",
         "(today)": "(heute)",

@@ -100,6 +100,7 @@ class BudgetService
                 'capacity_rate' => 0.0,
                 'warning_level' => 'none',
                 'is_over_budget' => false,
+                'over_budget_amount' => 0.0,
                 'warning_threshold' => $this->getBudgetWarningThreshold($userId),
                 'critical_threshold' => $this->getBudgetCriticalThreshold($userId),
                 'alerts' => []
@@ -108,10 +109,15 @@ class BudgetService
 
         // Fixed-point math (audit ref. A5): every operation goes through
         // Money so the displayed totals never drift due to IEEE-754.
-        $remainingBudget = Money::asFloat(Money::sub($totalBudget, $usedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE);
-        if ($remainingBudget < 0) {
-            $remainingBudget = 0.0;
+        $remainingRaw = Money::asFloat(Money::sub($totalBudget, $usedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE);
+        $overBudgetAmount = 0.0;
+        if (Money::compare((string)$remainingRaw, '0', Money::MONEY_SCALE) < 0) {
+            $overBudgetAmount = Money::asFloat(
+                Money::normalize(-$remainingRaw, Money::MONEY_SCALE),
+                Money::MONEY_SCALE
+            );
         }
+        $remainingBudget = $remainingRaw < 0 ? 0.0 : $remainingRaw;
         // Bounded percentage: never let display rounding push a 99.999%
         // value to "100% / exceeded" or vice-versa.
         $consumptionPercentage = Money::asFloat(
@@ -139,6 +145,7 @@ class BudgetService
             'capacity_rate' => $capacity['rate'],
             'warning_level' => $warningLevel,
             'is_over_budget' => $isOverBudget,
+            'over_budget_amount' => $overBudgetAmount,
             'warning_threshold' => $this->getBudgetWarningThreshold($userId),
             'critical_threshold' => $this->getBudgetCriticalThreshold($userId),
             'alerts' => $alerts
@@ -199,8 +206,9 @@ class BudgetService
             return 'critical';
         }
 
-        $criticalThreshold = $this->getBudgetCriticalThreshold($userId);
-        $warningThreshold = $this->getBudgetWarningThreshold($userId);
+        $thresholds = $this->getNormalizedBudgetThresholds($userId);
+        $criticalThreshold = $thresholds['critical'];
+        $warningThreshold = $thresholds['warning'];
 
         if ($consumptionPercentage >= $criticalThreshold) {
             return 'critical';
@@ -298,13 +306,7 @@ class BudgetService
      */
     private function getBudgetWarningThreshold(?string $userId = null): float
     {
-        if ($userId) {
-            $threshold = $this->config->getUserValue($userId, $this->appName, 'budget_warning_threshold', '80');
-        } else {
-            $threshold = $this->config->getAppValue($this->appName, 'budget_warning_threshold', '80');
-        }
-
-        return (float) $threshold;
+        return $this->getNormalizedBudgetThresholds($userId)['warning'];
     }
 
     /**
@@ -315,13 +317,43 @@ class BudgetService
      */
     private function getBudgetCriticalThreshold(?string $userId = null): float
     {
+        return $this->getNormalizedBudgetThresholds($userId)['critical'];
+    }
+
+    /**
+     * Load and normalize warning/critical thresholds (0–100, warning < critical).
+     *
+     * Defensive against legacy or manually edited config where warning >= critical,
+     * which would otherwise mark every project as critical.
+     *
+     * @return array{warning: float, critical: float}
+     */
+    private function getNormalizedBudgetThresholds(?string $userId = null): array
+    {
         if ($userId) {
-            $threshold = $this->config->getUserValue($userId, $this->appName, 'budget_critical_threshold', '90');
+            $appWarning = $this->config->getAppValue($this->appName, 'budget_warning_threshold', '80');
+            $appCritical = $this->config->getAppValue($this->appName, 'budget_critical_threshold', '90');
+            $warning = (float) $this->config->getUserValue($userId, $this->appName, 'budget_warning_threshold', $appWarning);
+            $critical = (float) $this->config->getUserValue($userId, $this->appName, 'budget_critical_threshold', $appCritical);
         } else {
-            $threshold = $this->config->getAppValue($this->appName, 'budget_critical_threshold', '90');
+            $warning = (float) $this->config->getAppValue($this->appName, 'budget_warning_threshold', '80');
+            $critical = (float) $this->config->getAppValue($this->appName, 'budget_critical_threshold', '90');
         }
 
-        return (float) $threshold;
+        $warning = max(0.0, min(100.0, $warning));
+        $critical = max(0.0, min(100.0, $critical));
+
+        if ($warning >= $critical) {
+            if ($critical >= 100.0) {
+                return ['warning' => 99.0, 'critical' => 100.0];
+            }
+            $warning = max(0.0, $critical - 1.0);
+            if ($warning >= $critical) {
+                return ['warning' => 80.0, 'critical' => 90.0];
+            }
+        }
+
+        return ['warning' => $warning, 'critical' => $critical];
     }
 
     /**
@@ -344,6 +376,7 @@ class BudgetService
                 'new_consumption' => 0,
                 'additional_cost' => $additionalCostFloat,
                 'remaining_budget_after' => 0,
+                'over_budget_after' => 0,
                 'would_exceed_budget' => false,
                 'warning_level_after' => 'none'
             ];
@@ -355,6 +388,13 @@ class BudgetService
             Money::MONEY_SCALE
         );
         $remainingAfter = Money::asFloat(Money::sub($budgetInfo['total_budget'], $newUsedBudget, Money::MONEY_SCALE), Money::MONEY_SCALE);
+        $overBudgetAfter = 0.0;
+        if (Money::compare((string)$remainingAfter, '0', Money::MONEY_SCALE) < 0) {
+            $overBudgetAfter = Money::asFloat(
+                Money::normalize(-$remainingAfter, Money::MONEY_SCALE),
+                Money::MONEY_SCALE
+            );
+        }
 
         return [
             'has_budget' => true,
@@ -362,6 +402,7 @@ class BudgetService
             'new_consumption' => $newConsumptionPercentage,
             'additional_cost' => $additionalCostFloat,
             'remaining_budget_after' => $remainingAfter,
+            'over_budget_after' => $overBudgetAfter,
             'would_exceed_budget' => Money::compare($newConsumptionPercentage, '100', Money::MONEY_SCALE) > 0,
             'warning_level_after' => $this->getWarningLevel($newConsumptionPercentage, $userId)
         ];

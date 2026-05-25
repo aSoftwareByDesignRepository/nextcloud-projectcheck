@@ -195,6 +195,85 @@ class BudgetServiceTest extends TestCase {
 		$this->assertSame(4000.0, $info['remaining_budget']);
 	}
 
+	public function testGetProjectBudgetInfoExposesOverBudgetAmount(): void {
+		$project = new Project();
+		$project->setId(13);
+		$project->setName('Over');
+		$project->setTotalBudget(1000.00);
+		$project->setHourlyRate(50.0);
+
+		$this->timeEntryMapper->method('getTotalCostForProject')->willReturn(1250.00);
+		$this->timeEntryMapper->method('getTotalHoursForProject')->willReturn(25.0);
+
+		$info = $this->service->getProjectBudgetInfo($project);
+
+		$this->assertTrue($info['is_over_budget']);
+		$this->assertSame(250.0, $info['over_budget_amount']);
+		$this->assertSame(0.0, $info['remaining_budget']);
+	}
+
+	public function testCheckTimeEntryBudgetImpactReportsOverBudgetAfter(): void {
+		$project = new Project();
+		$project->setId(14);
+		$project->setTotalBudget(1000.00);
+		$project->setHourlyRate(100.0);
+
+		$this->timeEntryMapper->method('getTotalCostForProject')->willReturn(900.00);
+		$this->timeEntryMapper->method('getTotalHoursForProject')->willReturn(9.0);
+
+		// +200 cost => 1100 used => 100 over
+		$impact = $this->service->checkTimeEntryBudgetImpact($project, 2.0, 100.0);
+		$this->assertTrue($impact['would_exceed_budget']);
+		$this->assertSame(100.0, $impact['over_budget_after']);
+		$this->assertSame(-100.0, $impact['remaining_budget_after']);
+	}
+
+	public function testNormalizedThresholdsWhenWarningExceedsCritical(): void {
+		$config = $this->createMock(IConfig::class);
+		$config->method('getAppValue')->willReturnCallback(static function (string $app, string $key, string $default = '') {
+			if ($key === 'budget_warning_threshold') {
+				return '95';
+			}
+			if ($key === 'budget_critical_threshold') {
+				return '90';
+			}
+			return $default;
+		});
+		$config->method('getUserValue')->willReturnCallback(static function (string $user, string $app, string $key, $default = '') {
+			return $default;
+		});
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		$localeFormat = $this->createMock(LocaleFormatService::class);
+		$localeFormat->method('currency')->willReturn('€0.00');
+		$localeFormat->method('percent')->willReturn('0 %');
+
+		$service = new BudgetService(
+			$this->timeEntryMapper,
+			$config,
+			$logger,
+			$l10n,
+			$localeFormat,
+			'projectcheck'
+		);
+
+		$project = new Project();
+		$project->setId(15);
+		$project->setTotalBudget(1000.00);
+		$project->setHourlyRate(50.0);
+
+		// 89.5% consumed — above normalized warning (89), below critical (90)
+		$this->timeEntryMapper->method('getTotalCostForProject')->willReturn(895.00);
+		$this->timeEntryMapper->method('getTotalHoursForProject')->willReturn(17.9);
+
+		$info = $service->getProjectBudgetInfo($project);
+		$this->assertSame('warning', $info['warning_level']);
+		$this->assertSame(89.0, $info['warning_threshold']);
+		$this->assertSame(90.0, $info['critical_threshold']);
+	}
+
 	public function testCheckTimeEntryBudgetImpactUsesUserThresholds(): void {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getAppValue')->willReturnCallback(static function (string $app, string $key, string $default = '') {

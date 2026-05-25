@@ -207,7 +207,172 @@
 	z-index: 1;
 }
 
-/* Filters Container */
+/* Filters Container — time entries page (card layout) */
+.pc-app--time-entries .filters-container {
+	background: linear-gradient(
+		135deg,
+		var(--color-main-background) 0%,
+		var(--color-background-hover) 100%
+	);
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-radius: var(--pc-radius-md, 12px);
+	padding: var(--pc-space-5, 24px);
+	margin-bottom: var(--pc-space-5, 24px);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--pc-space-4, 20px);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 4%, transparent);
+}
+
+.pc-app--time-entries .search-input-wrapper {
+	position: relative;
+	flex: 1 1 320px;
+	min-width: min(100%, 280px);
+}
+
+.pc-app--time-entries .search-input {
+	width: 100%;
+	min-height: var(--pc-touch-min, 44px);
+	padding: var(--pc-space-3, 12px) var(--pc-space-4, 16px) var(--pc-space-3, 12px) 2.75rem;
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-radius: var(--pc-radius-sm, 8px);
+	font-size: var(--pc-fs-md, 1rem);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pc-app--time-entries .search-input:focus-visible {
+	outline: none;
+	border-color: var(--color-primary-element);
+	box-shadow: var(--pc-shadow-focus);
+}
+
+.pc-app--time-entries .search-icon {
+	position: absolute;
+	left: var(--pc-space-3, 12px);
+	top: 50%;
+	transform: translateY(-50%);
+	pointer-events: none;
+	color: var(--pc-muted);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.pc-app--time-entries .search-icon .lucide-icon {
+	width: 1.125rem;
+	height: 1.125rem;
+}
+
+.pc-app--time-entries .filter-controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: var(--pc-space-4, 16px);
+	width: 100%;
+}
+
+.pc-app--time-entries .filter-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-1, 6px);
+	min-width: min(100%, 200px);
+	flex: 1 1 200px;
+}
+
+.pc-app--time-entries .filter-label {
+	font-size: var(--pc-fs-xs, 0.75rem);
+	font-weight: 600;
+	color: var(--pc-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.pc-app--time-entries .filter-select,
+.pc-app--time-entries .filter-date {
+	min-height: var(--pc-touch-min, 44px);
+	padding: var(--pc-space-3, 12px) var(--pc-space-3, 14px);
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-radius: var(--pc-radius-sm, 8px);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	width: 100%;
+}
+
+.pc-app--time-entries .filter-select:focus-visible,
+.pc-app--time-entries .filter-date:focus-visible {
+	outline: none;
+	border-color: var(--color-primary-element);
+	box-shadow: var(--pc-shadow-focus);
+}
+
+.pc-app--time-entries .filter-actions {
+	display: flex;
+	gap: var(--pc-space-2, 10px);
+	margin-left: auto;
+	flex-wrap: wrap;
+}
+
+.pc-app--time-entries .pagination {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--pc-space-3, 12px);
+	margin-top: var(--pc-space-4, 16px);
+	flex-wrap: wrap;
+}
+
+.pc-app--time-entries .time-entries-empty {
+	display: grid;
+	justify-items: center;
+	text-align: center;
+	gap: var(--pc-space-3, 0.85rem);
+	padding: clamp(2rem, 6vw, 3rem) clamp(1rem, 4vw, 2rem);
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-radius: var(--pc-radius-md, 12px);
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--color-primary-element-light) 34%, transparent),
+		transparent 60%
+	),
+	var(--color-main-background);
+}
+
+.pc-app--time-entries .time-entries-empty__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 3.3rem;
+	height: 3.3rem;
+	border-radius: var(--pc-radius-pill, 999px);
+	color: var(--color-primary-element);
+	background: color-mix(in srgb, var(--color-primary-element-light) 65%, var(--color-main-background));
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
+}
+
+@media (max-width: 768px) {
+	.pc-app--time-entries .filter-controls {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.pc-app--time-entries .filter-actions {
+		margin-left: 0;
+		width: 100%;
+		justify-content: stretch;
+	}
+
+	.pc-app--time-entries .filter-actions .button {
+		flex: 1 1 auto;
+		justify-content: center;
+		min-height: var(--pc-touch-min, 44px);
+	}
+}
+
+/* Legacy filters row (if used elsewhere on this page) */
 .filters-container {
 	padding: 1.5rem 2rem;
 	background: var(--color-background-hover);
