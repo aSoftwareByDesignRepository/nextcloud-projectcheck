@@ -49,7 +49,7 @@ class Version2000Date202501280001 extends SimpleMigrationStep
 	 * @param array $options
 	 * @return null|ISchemaWrapper
 	 */
-	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options)
+	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper
 	{
 		// NO SCHEMA CHANGES!
 		// Both apps use the same tables, so we don't need to create new tables

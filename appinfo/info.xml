@@ -87,6 +87,9 @@
 		<post-migration>
 			<step>OCA\ProjectCheck\Repair\EnsureProjectCheckSchema</step>
 		</post-migration>
+		<uninstall>
+			<step>OCA\ProjectCheck\Repair\UninstallDropTables</step>
+		</uninstall>
 	</repair-steps>
 
 	<release>
