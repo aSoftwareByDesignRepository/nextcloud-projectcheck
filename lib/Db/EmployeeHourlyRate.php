@@ -29,7 +29,7 @@ use OCP\AppFramework\Db\Entity;
  */
 class EmployeeHourlyRate extends Entity
 {
-	protected $tableName = 'pc_employee_hourly_rates';
+	protected $tableName = 'pc_emp_rates';
 	protected $userId;
 	protected $hourlyRate;
 	protected $effectiveFrom;

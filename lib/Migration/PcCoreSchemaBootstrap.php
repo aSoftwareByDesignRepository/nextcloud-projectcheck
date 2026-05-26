@@ -82,74 +82,7 @@ final class PcCoreSchemaBootstrap
 	 */
 	public static function ensureRateTables(ISchemaWrapper $schema): bool
 	{
-		$changed = false;
-
-		if (!$schema->hasTable('pc_employee_hourly_rates')) {
-			$table = $schema->createTable('pc_employee_hourly_rates');
-			$table->addColumn('id', Types::BIGINT, [
-				'autoincrement' => true,
-				'notnull' => true,
-				'length' => 20,
-				'unsigned' => true,
-			]);
-			$table->addColumn('user_id', Types::STRING, [
-				'notnull' => true,
-				'length' => 64,
-			]);
-			$table->addColumn('hourly_rate', Types::DECIMAL, [
-				'notnull' => true,
-				'precision' => 12,
-				'scale' => 4,
-				'default' => '0',
-			]);
-			$table->addColumn('effective_from', Types::DATE, ['notnull' => true]);
-			$table->addColumn('created_by', Types::STRING, [
-				'notnull' => true,
-				'length' => 64,
-			]);
-			$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
-			$table->setPrimaryKey(['id']);
-			$table->addUniqueIndex(['user_id', 'effective_from'], 'pc_emp_rate_user_eff_uq');
-			$table->addIndex(['user_id'], 'pc_emp_rate_user_idx');
-			$changed = true;
-		}
-
-		if (!$schema->hasTable('pc_project_member_hourly_rates')) {
-			$table = $schema->createTable('pc_project_member_hourly_rates');
-			$table->addColumn('id', Types::BIGINT, [
-				'autoincrement' => true,
-				'notnull' => true,
-				'length' => 20,
-				'unsigned' => true,
-			]);
-			$table->addColumn('project_id', Types::BIGINT, [
-				'notnull' => true,
-				'length' => 20,
-				'unsigned' => true,
-			]);
-			$table->addColumn('user_id', Types::STRING, [
-				'notnull' => true,
-				'length' => 64,
-			]);
-			$table->addColumn('hourly_rate', Types::DECIMAL, [
-				'notnull' => true,
-				'precision' => 12,
-				'scale' => 4,
-				'default' => '0',
-			]);
-			$table->addColumn('effective_from', Types::DATE, ['notnull' => true]);
-			$table->addColumn('created_by', Types::STRING, [
-				'notnull' => true,
-				'length' => 64,
-			]);
-			$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
-			$table->setPrimaryKey(['id']);
-			$table->addUniqueIndex(['project_id', 'user_id', 'effective_from'], 'pc_mem_rate_proj_user_eff_uq');
-			$table->addIndex(['project_id', 'user_id'], 'pc_mem_rate_proj_user_idx');
-			$changed = true;
-		}
-
-		return $changed;
+		return RateHistoryTables::apply($schema);
 	}
 
 	private static function ensureCustomers(ISchemaWrapper $schema): bool

@@ -1,15 +1,55 @@
 /**
- * Project detail: file upload dropzone and delete handlers.
+ * Project detail: file upload (dropzone + native picker) and delete.
+ *
+ * Hardening goals (audit reference, "files-ux-2026"):
+ *  - One coherent upload surface: a single dropzone plus the hidden file
+ *    input. The header "Add files" label and any in-list dropzone all
+ *    trigger the same input, so we have one source of truth for state.
+ *  - Concurrency safe: only one upload is in flight at a time; all
+ *    triggers (label, dropzone click, drag-drop) are disabled while
+ *    busy, so a double-click cannot enqueue duplicate uploads.
+ *  - Client-side validation mirrors the server limits without leaking
+ *    secrets — the limits come from window.projectDetailFilesConfig.
+ *    The server remains authoritative.
+ *  - Document-wide drag highlight gives a visible target anywhere on
+ *    the page, but drops only count when they land on the dropzone.
+ *  - After a successful upload we redirect to `?uploaded=N` so the
+ *    page reload renders a confirmation banner; we strip the param
+ *    from the URL right after to keep the address bar clean and to
+ *    avoid double-rendering on later reloads.
+ *  - All status messages route through ProjectCheckNotify (or the
+ *    aria-live #pc-alert-region fallback) so screen readers are kept
+ *    in the loop.
  */
 (function () {
 	'use strict';
 
 	const cfg = window.projectDetailFilesConfig || {};
+	const msg = cfg.messages || {};
+	const limits = cfg.limits || {};
+	const MAX_FILES_PER_UPLOAD = Number.isFinite(Number(limits.maxFiles)) && Number(limits.maxFiles) > 0
+		? Number(limits.maxFiles)
+		: 20;
+	const MAX_FILE_SIZE_BYTES = Number.isFinite(Number(limits.maxBytes)) && Number(limits.maxBytes) > 0
+		? Number(limits.maxBytes)
+		: 52428800;
 
-	function fileNotify(message) {
-		if (typeof window.ProjectCheckNotify !== 'undefined') {
-			window.ProjectCheckNotify.error(message);
+	function fileNotify(message, type) {
+		if (!message) {
 			return;
+		}
+		if (typeof window.ProjectCheckNotify !== 'undefined') {
+			if (type === 'error') {
+				window.ProjectCheckNotify.error(message);
+			} else if (typeof window.ProjectCheckNotify[type] === 'function') {
+				window.ProjectCheckNotify[type](message);
+			} else {
+				window.ProjectCheckNotify.show(message, type || 'info');
+			}
+			return;
+		}
+		if (typeof OC !== 'undefined' && OC.Notification) {
+			OC.Notification.showTemporary(message);
 		}
 		const region = document.getElementById('pc-alert-region');
 		if (region) {
@@ -17,17 +57,42 @@
 		}
 	}
 
+	/**
+	 * Show the "uploaded N files" success banner immediately on a fresh
+	 * page load that follows a successful upload, then strip the URL
+	 * parameter so a manual refresh does not replay the banner.
+	 */
+	function consumeUploadedParam() {
+		if (!window.history || typeof window.history.replaceState !== 'function') {
+			return;
+		}
+		const url = new URL(window.location.href);
+		if (!url.searchParams.has('uploaded')) {
+			return;
+		}
+		url.searchParams.delete('uploaded');
+		// Preserve fragment & path; just drop the marker.
+		window.history.replaceState({}, '', url.toString());
+	}
+
 	document.addEventListener('DOMContentLoaded', () => {
+		consumeUploadedParam();
+
 		const filesList = document.querySelector('.project-files-list');
 		const requestTokenInput = document.querySelector('input[name="requesttoken"]');
-		const requestToken = requestTokenInput ? requestTokenInput.value : (typeof OC !== 'undefined' ? OC.requestToken : '');
+		const requestToken = requestTokenInput
+			? requestTokenInput.value
+			: (typeof OC !== 'undefined' ? OC.requestToken : '');
 		const fileInput = document.getElementById('project_files_upload');
 		const uploadForm = document.getElementById('project-file-upload-form');
 		const dropzone = document.getElementById('project-files-dropzone');
-		const maxFilesPerUpload = 20;
-		const maxFileSizeBytes = 52428800;
-		const msg = cfg.messages || {};
+		const filesSection = document.getElementById('files-section');
+		const headerAddButton = document.querySelector('label.pc-section__primary-action[for="project_files_upload"]');
 
+		let isUploading = false;
+		let documentDragDepth = 0;
+
+		// ===== Delete handlers =====
 		if (filesList) {
 			filesList.addEventListener('click', async (event) => {
 				const button = event.target.closest('.delete-file-btn');
@@ -55,7 +120,7 @@
 						simpleConfirm: true,
 						confirmMessage: confirmMessage,
 						onSuccess: function () {
-							const row = button.closest('.project-file-item, li, tr');
+							const row = button.closest('.project-file-row');
 							if (row) {
 								row.remove();
 							}
@@ -64,6 +129,7 @@
 					});
 					return;
 				}
+				// Non-modal fallback path. Still goes through requesttoken-protected DELETE.
 				const url = new URL(deleteUrl, window.location.origin);
 				if (requestToken) {
 					url.searchParams.set('requesttoken', requestToken);
@@ -90,23 +156,76 @@
 					}
 				} catch (error) {
 					console.error(error);
-					fileNotify(error?.message || msg.deleteFailed || 'Could not delete the file.');
+					fileNotify(error?.message || msg.deleteFailed || 'Could not delete the file.', 'error');
 				}
 			});
 		}
 
-		async function submitFiles(files) {
-			if (!uploadForm || !files || files.length === 0) {
-				return;
+		// ===== Upload triggers + state =====
+		function setUploading(state) {
+			isUploading = !!state;
+			if (dropzone) {
+				dropzone.classList.toggle('is-uploading', isUploading);
+				if (isUploading) {
+					dropzone.setAttribute('aria-busy', 'true');
+					dropzone.setAttribute('aria-disabled', 'true');
+					if (!dropzone.dataset.originalText) {
+						dropzone.dataset.originalText = dropzone.textContent || '';
+					}
+				} else {
+					dropzone.removeAttribute('aria-busy');
+					dropzone.removeAttribute('aria-disabled');
+				}
 			}
+			if (fileInput) {
+				fileInput.disabled = isUploading;
+			}
+			if (headerAddButton) {
+				headerAddButton.classList.toggle('is-disabled', isUploading);
+				if (isUploading) {
+					headerAddButton.setAttribute('aria-disabled', 'true');
+				} else {
+					headerAddButton.removeAttribute('aria-disabled');
+				}
+			}
+		}
 
-			if (files.length > maxFilesPerUpload) {
-				fileNotify(msg.tooManyFiles || 'You can upload up to 20 files at once.');
+		function validateBatch(files) {
+			if (!files || files.length === 0) {
+				return msg.noFiles || 'No files selected.';
+			}
+			if (files.length > MAX_FILES_PER_UPLOAD) {
+				return msg.tooManyFiles || ('You can upload up to ' + MAX_FILES_PER_UPLOAD + ' files at once.');
+			}
+			for (let i = 0; i < files.length; i++) {
+				const f = files[i];
+				if (!f) {
+					continue;
+				}
+				if (f.size === 0) {
+					return (msg.uploadFailed || 'Upload failed.');
+				}
+				if (f.size > MAX_FILE_SIZE_BYTES) {
+					return msg.fileTooLarge || 'One or more files are too large.';
+				}
+			}
+			return null;
+		}
+
+		async function submitFiles(files) {
+			if (!uploadForm || !fileInput) {
 				return;
 			}
-			const hasTooLargeFile = Array.from(files).some((file) => file.size > maxFileSizeBytes);
-			if (hasTooLargeFile) {
-				fileNotify(msg.fileTooLarge || 'One or more files exceed the 50 MB limit.');
+			if (isUploading) {
+				fileNotify(msg.inProgress || 'An upload is already in progress.', 'info');
+				return;
+			}
+			const error = validateBatch(files);
+			if (error) {
+				fileNotify(error, 'error');
+				if (fileInput) {
+					fileInput.value = '';
+				}
 				return;
 			}
 
@@ -116,12 +235,8 @@
 				formData.append('requesttoken', requestToken);
 			}
 
-			if (dropzone) {
-				dropzone.classList.add('is-uploading');
-				dropzone.setAttribute('aria-busy', 'true');
-				dropzone.dataset.originalText = dropzone.textContent || '';
-				dropzone.textContent = msg.uploading || 'Uploading files…';
-			}
+			setUploading(true);
+			fileNotify(msg.uploadStart || msg.uploading || 'Uploading…', 'info');
 
 			try {
 				const response = await fetch(uploadForm.action, {
@@ -137,27 +252,26 @@
 
 				const payload = await response.json().catch(() => ({}));
 				if (!response.ok || payload.success !== true) {
-					throw new Error(payload.error || msg.uploadFailed || 'Upload failed.');
+					throw new Error((payload && payload.error) || msg.uploadFailed || 'Upload failed.');
 				}
 
-				window.location.reload();
-			} catch (error) {
-				console.error(error);
-				fileNotify(error?.message || msg.uploadFailed || 'Upload failed.');
-			} finally {
-				if (dropzone) {
-					dropzone.classList.remove('is-uploading');
-					dropzone.removeAttribute('aria-busy');
-					if (dropzone.dataset.originalText) {
-						dropzone.textContent = dropzone.dataset.originalText;
-					}
-				}
+				const uploadedCount = Math.max(1, files.length);
+				const reloadUrl = new URL(window.location.href);
+				reloadUrl.searchParams.set('uploaded', String(uploadedCount));
+				// Drop any prior marker(s) so the banner shows the new total only.
+				reloadUrl.hash = '#files-section';
+				window.location.href = reloadUrl.toString();
+			} catch (err) {
+				console.error(err);
+				fileNotify((err && err.message) || msg.uploadFailed || 'Upload failed.', 'error');
+				setUploading(false);
 				if (fileInput) {
 					fileInput.value = '';
 				}
 			}
 		}
 
+		// Native picker -> submit
 		if (fileInput && uploadForm) {
 			fileInput.addEventListener('change', () => {
 				if (fileInput.files && fileInput.files.length > 0) {
@@ -166,9 +280,19 @@
 			});
 		}
 
+		// Dropzone keyboard / pointer activation + drag-and-drop
 		if (dropzone && fileInput) {
-			const activateInput = () => fileInput.click();
-			dropzone.addEventListener('click', activateInput);
+			const activateInput = () => {
+				if (isUploading) {
+					return;
+				}
+				fileInput.click();
+			};
+			dropzone.addEventListener('click', (e) => {
+				// Avoid double-firing when an inner label propagates a click.
+				e.preventDefault();
+				activateInput();
+			});
 			dropzone.addEventListener('keydown', (event) => {
 				if (event.key === 'Enter' || event.key === ' ') {
 					event.preventDefault();
@@ -178,8 +302,14 @@
 
 			['dragenter', 'dragover'].forEach((name) => {
 				dropzone.addEventListener(name, (event) => {
+					if (isUploading) {
+						return;
+					}
 					event.preventDefault();
 					event.stopPropagation();
+					if (event.dataTransfer) {
+						event.dataTransfer.dropEffect = 'copy';
+					}
 					dropzone.classList.add('is-dragover');
 				});
 			});
@@ -198,11 +328,82 @@
 				event.preventDefault();
 				event.stopPropagation();
 				dropzone.classList.remove('is-dragover');
+				if (isUploading) {
+					return;
+				}
 				const files = event.dataTransfer?.files;
 				if (files && files.length > 0) {
 					submitFiles(files);
 				}
 			});
 		}
+
+		// Document-wide drag visual cue, so users find the target anywhere on the page.
+		if (filesSection && dropzone) {
+			const documentHasFiles = (event) => {
+				if (!event || !event.dataTransfer) {
+					return false;
+				}
+				const types = event.dataTransfer.types;
+				if (!types) {
+					return false;
+				}
+				for (let i = 0; i < types.length; i++) {
+					if (types[i] === 'Files' || types[i] === 'application/x-moz-file') {
+						return true;
+					}
+				}
+				return false;
+			};
+
+			window.addEventListener('dragenter', (event) => {
+				if (isUploading || !documentHasFiles(event)) {
+					return;
+				}
+				documentDragDepth += 1;
+				filesSection.classList.add('is-document-dragover');
+			});
+
+			window.addEventListener('dragleave', () => {
+				documentDragDepth = Math.max(0, documentDragDepth - 1);
+				if (documentDragDepth === 0) {
+					filesSection.classList.remove('is-document-dragover');
+				}
+			});
+
+			window.addEventListener('drop', () => {
+				documentDragDepth = 0;
+				filesSection.classList.remove('is-document-dragover');
+			});
+
+			// Block default "open file in browser" behaviour when the drop
+			// misses the dropzone, so a stray release does not navigate away
+			// from the project page.
+			window.addEventListener('dragover', (event) => {
+				if (!documentHasFiles(event)) {
+					return;
+				}
+				event.preventDefault();
+			});
+			window.addEventListener('drop', (event) => {
+				if (!documentHasFiles(event)) {
+					return;
+				}
+				const targetIsInsideDropzone = dropzone.contains(event.target);
+				if (!targetIsInsideDropzone) {
+					event.preventDefault();
+				}
+			});
+		}
+
+		// Warn the user before accidental navigation while an upload is in flight.
+		window.addEventListener('beforeunload', (event) => {
+			if (!isUploading) {
+				return undefined;
+			}
+			event.preventDefault();
+			event.returnValue = '';
+			return '';
+		});
 	});
 })();

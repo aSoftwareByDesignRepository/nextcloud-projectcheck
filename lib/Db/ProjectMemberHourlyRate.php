@@ -31,7 +31,7 @@ use OCP\AppFramework\Db\Entity;
  */
 class ProjectMemberHourlyRate extends Entity
 {
-	protected $tableName = 'pc_project_member_hourly_rates';
+	protected $tableName = 'pc_pm_rates';
 	protected $projectId;
 	protected $userId;
 	protected $hourlyRate;

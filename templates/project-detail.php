@@ -21,6 +21,11 @@ Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'budget-alerts');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/progress-bars');
+// Required so empty-state and pc-section surface treatments are fully styled
+// on this page (icon halo, lead text, CTA, focus rings). Other pages already
+// pull this in; project-detail historically did not, which left empty states
+// visually flat.
+Util::addStyle('projectcheck', 'common/accessibility');
 
 if (!isset($project) || !($project instanceof \OCA\ProjectCheck\Db\Project)) {
     throw new Exception('Project not found');
@@ -37,6 +42,8 @@ $canAddTimeEntry = $_['canAddTimeEntry'] ?? $project->allowsTimeTracking();
 $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
 $bulkAddSuccess = isset($_GET['bulk_add_success']) && (string)$_GET['bulk_add_success'] === '1';
 $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_count']) : 0;
+$uploadSuccessCount = isset($_GET['uploaded']) ? max(0, (int)$_GET['uploaded']) : 0;
+$uploadSuccess = $uploadSuccessCount > 0;
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -82,6 +89,13 @@ include __DIR__ . '/common/page-start.php';
             <div class="notice notice-success" role="status" aria-live="polite" aria-atomic="true">
                 <i class="icon icon-checkmark" aria-hidden="true"></i>
                 <span><?php p($l->t('Added %d users to the project', [$bulkAddAddedCount])); ?></span>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($uploadSuccess): ?>
+            <div class="notice notice-success" role="status" aria-live="polite" aria-atomic="true">
+                <i class="icon icon-checkmark" aria-hidden="true"></i>
+                <span><?php p($l->n('Uploaded %n file.', 'Uploaded %n files.', $uploadSuccessCount)); ?></span>
             </div>
         <?php endif; ?>
 
@@ -566,40 +580,75 @@ include __DIR__ . '/common/page-start.php';
         </div>
 
         <!-- Project Files -->
-        <div class="section">
-            <div class="section-header section-header--files">
-                <h3><i class="icon-project-files"></i> <?php p($l->t('Project Files')); ?></h3>
-				<?php if ($canManageFiles): ?>
-					<form id="project-file-upload-form"
-						class="inline-form file-upload-bar"
-						action="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.upload', ['projectId' => $projectId])); ?>"
-						method="POST"
-						enctype="multipart/form-data">
-						<input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
-						<label class="button secondary ghost" for="project_files_upload">
-							<i class="icon-upload"></i>
-							<?php p($l->t('Select files')); ?>
-						</label>
-						<input type="file"
-							id="project_files_upload"
-							name="project_files[]"
-							aria-label="<?php p($l->t('Upload project files')); ?>"
-							class="file-input-hidden"
-							multiple
-							required>
-					</form>
-					<div class="project-files-dropzone" id="project-files-dropzone" tabindex="0" role="button" aria-label="<?php p($l->t('Drag files here to upload')); ?>">
-						<span class="project-files-dropzone__text"><?php p($l->t('Drag files here to upload')); ?></span>
-					</div>
-				<?php endif; ?>
+        <?php
+        $hasProjectFiles = !empty($projectFiles);
+        $fileLimitBytes = \OCA\ProjectCheck\Service\ProjectFileService::MAX_FILE_SIZE_BYTES;
+        $fileLimitLabel = Util::humanFileSize($fileLimitBytes);
+        $maxFiles = \OCA\ProjectCheck\Service\ProjectFileService::MAX_FILES_PER_UPLOAD;
+        $filesHeadingId = 'pc-files-heading';
+        ?>
+        <div class="section pc-section pc-files-section" id="files-section" aria-labelledby="<?php p($filesHeadingId); ?>">
+            <div class="section-header pc-section__header">
+                <div class="pc-section__title-wrap">
+                    <h3 id="<?php p($filesHeadingId); ?>" class="pc-section-title">
+                        <i class="icon-project-files" aria-hidden="true"></i>
+                        <?php p($l->t('Project Files')); ?>
+                    </h3>
+                    <p class="pc-section-intro">
+                        <?php p($l->t('Keep contracts, briefs, and other documents together with the project.')); ?>
+                    </p>
+                </div>
+                <?php if ($canManageFiles && $hasProjectFiles): ?>
+                    <div class="section-header-actions">
+                        <label class="button primary pc-section__primary-action" for="project_files_upload">
+                            <span data-lucide="upload-cloud" class="lucide-icon" aria-hidden="true"></span>
+                            <span class="pc-section__primary-action-label"><?php p($l->t('Add files')); ?></span>
+                        </label>
+                    </div>
+                <?php endif; ?>
             </div>
-            <div class="section-content">
-                <?php if (!empty($projectFiles)): ?>
-                    <ul class="project-files-list">
+            <div class="section-content pc-files-section__content">
+                <?php if ($canManageFiles): ?>
+                    <form id="project-file-upload-form"
+                        class="pc-file-upload-form"
+                        action="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.upload', ['projectId' => $projectId])); ?>"
+                        method="POST"
+                        enctype="multipart/form-data">
+                        <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
+                        <label class="pc-sr-only" for="project_files_upload"><?php p($l->t('Choose project files to upload')); ?></label>
+                        <input type="file"
+                            id="project_files_upload"
+                            name="project_files[]"
+                            aria-describedby="pc-files-upload-hint"
+                            class="pc-file-input"
+                            multiple
+                            required>
+                    </form>
+                <?php endif; ?>
+
+                <?php if ($hasProjectFiles): ?>
+                    <?php if ($canManageFiles): ?>
+                        <div class="pc-file-dropzone pc-file-dropzone--compact"
+                            id="project-files-dropzone"
+                            tabindex="0"
+                            role="button"
+                            aria-controls="project_files_upload"
+                            aria-describedby="pc-files-upload-hint"
+                            aria-label="<?php p($l->t('Add more files: drag and drop here, or press Enter to choose files.')); ?>">
+                            <span data-lucide="upload-cloud" class="lucide-icon pc-file-dropzone__icon" aria-hidden="true"></span>
+                            <span class="pc-file-dropzone__text">
+                                <strong class="pc-file-dropzone__title"><?php p($l->t('Drop files to upload')); ?></strong>
+                                <span class="pc-file-dropzone__hint" id="pc-files-upload-hint">
+                                    <?php p($l->t('Up to %1$d files, %2$s each.', [$maxFiles, $fileLimitLabel])); ?>
+                                </span>
+                            </span>
+                        </div>
+                    <?php endif; ?>
+                    <ul class="project-files-list" aria-label="<?php p($l->t('Project files')); ?>">
                         <?php foreach ($projectFiles as $file): ?>
                             <li class="project-file-row" data-file-id="<?php p($file->getId()); ?>">
                                 <div class="file-info">
-                                    <i class="icon-file-custom"></i>
+                                    <i class="icon-file-custom" aria-hidden="true"></i>
                                     <div class="file-meta">
                                         <a class="file-name"
                                             href="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
@@ -608,9 +657,9 @@ include __DIR__ . '/common/page-start.php';
                                         </a>
                                         <div class="file-details">
                                             <span><?php p($l->t('Uploaded by %s', [$file->getUploadedBy()])); ?></span>
-                                            <span>•</span>
+                                            <span aria-hidden="true">•</span>
                                             <span><?php p($file->getCreatedAt() ? $file->getCreatedAt()->format('d.m.Y H:i') : ''); ?></span>
-                                            <span>•</span>
+                                            <span aria-hidden="true">•</span>
                                             <span><?php p(Util::humanFileSize($file->getSize())); ?></span>
                                         </div>
                                     </div>
@@ -618,36 +667,51 @@ include __DIR__ . '/common/page-start.php';
                                 <div class="file-actions">
                                     <a class="button secondary"
                                         href="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
-                                        target="_blank" rel="noreferrer noopener">
-                                        <i class="icon icon-download"></i>
-                                        <?php p($l->t('Download')); ?>
+                                        target="_blank" rel="noreferrer noopener"
+                                        aria-label="<?php p($l->t('Download %s', [$file->getDisplayName()])); ?>">
+                                        <i class="icon icon-download" aria-hidden="true"></i>
+                                        <span><?php p($l->t('Download')); ?></span>
                                     </a>
                                     <?php if ($canManageFiles): ?>
                                         <button type="button"
                                             class="button danger ghost delete-file-btn"
                                             data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.delete', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
                                             data-file-name="<?php p($file->getDisplayName()); ?>"
-                                            aria-label="<?php p($l->t('Delete file')); ?>">
-                                            <i class="icon icon-delete"></i>
-                                            <?php p($l->t('Delete')); ?>
+                                            aria-label="<?php p($l->t('Delete %s', [$file->getDisplayName()])); ?>">
+                                            <i class="icon icon-delete" aria-hidden="true"></i>
+                                            <span><?php p($l->t('Delete')); ?></span>
                                         </button>
                                     <?php endif; ?>
                                 </div>
                             </li>
                         <?php endforeach; ?>
                     </ul>
+                <?php elseif ($canManageFiles): ?>
+                    <div class="pc-file-dropzone pc-file-dropzone--empty"
+                        id="project-files-dropzone"
+                        tabindex="0"
+                        role="button"
+                        aria-controls="project_files_upload"
+                        aria-describedby="pc-files-upload-hint"
+                        aria-label="<?php p($l->t('Upload project files: drag and drop here, or press Enter to choose files.')); ?>">
+                        <div class="pc-file-dropzone__icon-wrap" aria-hidden="true">
+                            <span data-lucide="upload-cloud" class="lucide-icon pc-file-dropzone__icon"></span>
+                        </div>
+                        <p class="pc-file-dropzone__title"><?php p($l->t('Drop files here to upload')); ?></p>
+                        <p class="pc-file-dropzone__lead">
+                            <?php p($l->t('Add contracts, briefs, or other documents — drag and drop, or press Enter to browse.')); ?>
+                        </p>
+                        <p class="pc-file-dropzone__hint" id="pc-files-upload-hint">
+                            <?php p($l->t('Up to %1$d files per upload, %2$s each. Executable file types are blocked.', [$maxFiles, $fileLimitLabel])); ?>
+                        </p>
+                    </div>
                 <?php else: ?>
                     <?php
                     $iconLucide = 'folder';
                     $title = $l->t('No files uploaded yet');
-                    $description = $l->t('Add contracts, checklists, or other documents to keep everything in one place.');
-                    if ($canManageFiles) {
-                        $ctaLabel = $l->t('Upload files');
-                        $ctaTag = 'label';
-                        $ctaFor = 'project_files_upload';
-                    }
+                    $description = $l->t('Once a project manager adds files, they will appear here.');
                     include __DIR__ . '/parts/pc-empty-state.php';
-                    unset($iconLucide, $title, $description, $ctaLabel, $ctaTag, $ctaFor, $ctaHref, $ctaIconLucide, $hint);
+                    unset($iconLucide, $title, $description);
                     ?>
                 <?php endif; ?>
             </div>
@@ -841,8 +905,16 @@ include __DIR__ . '/common/page-start.php';
                     $title = $l->t('No team members yet');
                     $description = $l->t('Add the first person to this project to start collaboration and time tracking.');
                     $ariaLive = 'polite';
+                    if (!empty($canAddTeamMember) && $canAddTeamMember) {
+                        $ctaTag = 'button';
+                        $ctaLabel = $l->t('Add first team member');
+                        $ctaIconLucide = 'plus';
+                        $ctaAriaControls = 'addTeamMemberModal';
+                        $ctaAriaHasPopup = 'dialog';
+                        $ctaData = ['action' => 'open-add-team-member'];
+                    }
                     include __DIR__ . '/parts/pc-empty-state.php';
-                    unset($iconLucide, $title, $description, $ariaLive, $role, $ctaHref, $ctaLabel, $hint, $ctaTag, $ctaFor, $ctaIconLucide);
+                    unset($iconLucide, $title, $description, $ariaLive, $role, $ctaHref, $ctaLabel, $hint, $ctaTag, $ctaFor, $ctaIconLucide, $ctaAriaControls, $ctaAriaHasPopup, $ctaData);
                     ?>
                     <?php endif; ?>
                 </div>
@@ -1006,13 +1078,20 @@ include __DIR__ . '/common/page-start.php';
         ],
     ];
     $projectDetailFilesConfig = [
+        'limits' => [
+            'maxFiles' => \OCA\ProjectCheck\Service\ProjectFileService::MAX_FILES_PER_UPLOAD,
+            'maxBytes' => \OCA\ProjectCheck\Service\ProjectFileService::MAX_FILE_SIZE_BYTES,
+        ],
         'messages' => [
             'deleteConfirm' => $l->t('Delete this file?'),
             'deleteFailed' => $l->t('Could not delete the file. Please try again.'),
-            'tooManyFiles' => $l->t('You can upload up to 20 files at once.'),
-            'fileTooLarge' => $l->t('One or more files exceed the 50 MB limit.'),
+            'tooManyFiles' => $l->t('You can upload up to %d files at once.', [\OCA\ProjectCheck\Service\ProjectFileService::MAX_FILES_PER_UPLOAD]),
+            'fileTooLarge' => $l->t('One or more files exceed the %s per-file limit.', [Util::humanFileSize(\OCA\ProjectCheck\Service\ProjectFileService::MAX_FILE_SIZE_BYTES)]),
+            'noFiles' => $l->t('No files selected.'),
             'uploadFailed' => $l->t('Upload failed. Please try again.'),
             'uploading' => $l->t('Uploading files…'),
+            'uploadStart' => $l->t('Upload started. Please wait…'),
+            'inProgress' => $l->t('An upload is already in progress.'),
         ],
     ];
     $projectDetailRatesConfig = [

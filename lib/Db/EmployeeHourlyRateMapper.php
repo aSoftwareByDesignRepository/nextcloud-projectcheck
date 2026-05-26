@@ -19,7 +19,7 @@ class EmployeeHourlyRateMapper extends QBMapper
 {
 	public function __construct(IDBConnection $db)
 	{
-		parent::__construct($db, 'pc_employee_hourly_rates', EmployeeHourlyRate::class);
+		parent::__construct($db, 'pc_emp_rates', EmployeeHourlyRate::class);
 	}
 
 	/**

@@ -749,4 +749,93 @@ class TimeEntryService
 	{
 		return $this->timeEntryMapper->getProductivityAnalysisForEmployee($userId, $projectIds);
 	}
+
+	/**
+	 * Create or update a billing time row from ArbeitszeitCheck (same-server integration).
+	 *
+	 * @param int|null $existingPcEntryId Existing pc_time_entries.id linked from at_entries, or null to insert
+	 * @return int pc_time_entries.id
+	 * @throws \Exception
+	 */
+	public function upsertFromArbeitszeitCheckBilling(
+		string $actorUserId,
+		string $billableUserId,
+		?int $existingPcEntryId,
+		int $projectId,
+		\DateTimeInterface $dateOnly,
+		float $hours,
+		string $description,
+	): int {
+		if (!$this->projectService->mayBillArbeitszeitCheckTimeForUser($actorUserId, $billableUserId, $projectId)) {
+			throw new \Exception($this->l->t('Access denied'));
+		}
+
+		$parsedDate = \DateTime::createFromInterface($dateOnly);
+		$parsedDate->setTime(0, 0, 0);
+
+		$resolvedRate = $this->resolveAndAssertClientRate($projectId, $billableUserId, $parsedDate, null);
+
+		$hours = round(max(0.0, $hours), 2);
+		if ($hours <= 0.0) {
+			throw new \Exception($this->l->t('Hours must be greater than zero'));
+		}
+		if ($hours > 999.99) {
+			$hours = 999.99;
+		}
+
+		$desc = $description;
+		if (mb_strlen($desc) > 65000) {
+			$desc = mb_substr($desc, 0, 65000);
+		}
+
+		if ($existingPcEntryId !== null && $existingPcEntryId > 0) {
+			$existing = $this->getTimeEntry($existingPcEntryId);
+			if ($existing === null || $existing->getUserId() !== $billableUserId) {
+				throw new \Exception($this->l->t('Time entry not found'));
+			}
+
+			$existing->setProjectId($projectId);
+			$existing->setDate($parsedDate);
+			$existing->setHours($hours);
+			$existing->setDescription($desc);
+			$existing->setHourlyRate($resolvedRate);
+			$existing->setUpdatedAt(new \DateTime());
+
+			$updated = $this->timeEntryMapper->update($existing);
+			return (int)$updated->getId();
+		}
+
+		$timeEntry = new TimeEntry();
+		$timeEntry->setProjectId($projectId);
+		$timeEntry->setUserId($billableUserId);
+		$timeEntry->setDate($parsedDate);
+		$timeEntry->setHours($hours);
+		$timeEntry->setDescription($desc);
+		$timeEntry->setHourlyRate($resolvedRate);
+		$timeEntry->setCreatedAt(new \DateTime());
+		$timeEntry->setUpdatedAt(new \DateTime());
+
+		$inserted = $this->timeEntryMapper->insert($timeEntry);
+		return (int)$inserted->getId();
+	}
+
+	/**
+	 * Delete a billing row linked from ArbeitszeitCheck (integration path).
+	 *
+	 * @throws \Exception
+	 */
+	public function deleteFromArbeitszeitCheckBilling(string $actorUserId, string $billableUserId, int $pcEntryId): void
+	{
+		$row = $this->getTimeEntry($pcEntryId);
+		if ($row === null || $row->getUserId() !== $billableUserId) {
+			throw new \Exception($this->l->t('Time entry not found'));
+		}
+
+		$pid = (int)$row->getProjectId();
+		if (!$this->projectService->mayBillArbeitszeitCheckTimeForUser($actorUserId, $billableUserId, $pid)) {
+			throw new \Exception($this->l->t('Access denied'));
+		}
+
+		$this->timeEntryMapper->delete($row);
+	}
 }

@@ -1027,6 +1027,43 @@ class ProjectService
 	}
 
 	/**
+	 * Whether ArbeitszeitCheck may create/update/delete a ProjectCheck billing row (pc_time_entries)
+	 * for {@code $billableUserId} on {@code $projectId}, with {@code $actorUserId} performing the write.
+	 *
+	 * Rules:
+	 * - Project exists and accepts new time (Active / On Hold).
+	 * - Billable user must be allowed to log on the project (member/creator/admin access; for
+	 *   {@see CostRateMode::PROJECT_MEMBER} pricing they must be an active team member).
+	 * - Self-service: actor and billable user are the same → allowed when the billable checks pass.
+	 * - Delegation (manager on behalf of employee): actor must be a ProjectCheck project editor
+	 *   (creator or org/system app admin), not merely a fellow team member — defense in depth
+	 *   together with ArbeitszeitCheck’s own manager–employee permission checks.
+	 */
+	public function mayBillArbeitszeitCheckTimeForUser(string $actorUserId, string $billableUserId, int $projectId): bool
+	{
+		$project = $this->getProject($projectId);
+		if ($project === null || !$project->allowsTimeTracking()) {
+			return false;
+		}
+
+		if (!$this->canUserAccessProject($billableUserId, $projectId)) {
+			return false;
+		}
+
+		if ($project->getCostRateMode() === CostRateMode::PROJECT_MEMBER) {
+			if (!$this->isActiveTeamMember($projectId, $billableUserId)) {
+				return false;
+			}
+		}
+
+		if ($actorUserId === $billableUserId) {
+			return true;
+		}
+
+		return $this->hasGlobalProjectAccess($actorUserId) || $this->canUserEditProject($actorUserId, $projectId);
+	}
+
+	/**
 	 * Unified global-access check: Nextcloud system admins and delegated app administrators.
 	 */
 	private function hasGlobalProjectAccess(string $userId): bool

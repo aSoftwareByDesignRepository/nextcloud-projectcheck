@@ -108,34 +108,6 @@
 	display: block;
 }
 
-.inline-form {
-	display: flex;
-	gap: 10px;
-	align-items: center;
-	flex-wrap: wrap;
-}
-
-.section-header--files {
-	align-items: center;
-}
-
-.section-header--files h3 {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-}
-
-.section-header--files h3 i {
-	display: inline-block;
-	color: var(--color-primary);
-	background-color: currentColor;
-	width: 24px;
-	height: 24px;
-	mask-size: contain;
-	-webkit-mask-size: contain;
-	vertical-align: middle;
-}
-
 .icon-project-files {
 	display: inline-block;
 	width: 24px;
@@ -158,35 +130,233 @@
 	-webkit-mask-size: contain;
 }
 
-.file-upload-bar {
-	background: var(--color-main-background);
-	padding: 8px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: 10px;
-	box-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text) 5%, transparent);
-	gap: 10px;
+/* --------------------------------------------------------------------------
+ * Project files: section header, upload form, and dropzone.
+ * One coherent surface for uploading — no duplicated affordances.
+ * -------------------------------------------------------------------------- */
+
+/* Two-row header layout for sections with a title + intro pair plus a
+ * primary action. We scope to `.pc-files-section` so existing
+ * pc-section__header layouts (e.g. team section) keep their flow.
+ * Avoids `:has()` for broader browser compatibility. */
+.pc-files-section .section-header.pc-section__header {
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var(--pc-space-4, 1rem);
 }
 
-.file-upload-bar .button {
+.pc-section__title-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-1, 0.25rem);
+	min-width: 0;
+	flex: 1 1 18rem;
+}
+
+.pc-section__title-wrap .pc-section-intro {
+	margin: 0;
+	max-width: 56ch;
+}
+
+.pc-section__primary-action {
+	min-height: var(--pc-touch-min, 44px);
 	display: inline-flex;
 	align-items: center;
-	gap: 8px;
+	gap: var(--pc-space-2, 0.5rem);
+	cursor: pointer;
+	white-space: nowrap;
 }
 
-.file-upload-bar .button i {
-	display: block;
+.pc-section__primary-action .lucide-icon {
+	width: 1.125rem;
+	height: 1.125rem;
 }
 
-.file-input-hidden {
-	display: none;
+.pc-section__primary-action.is-disabled,
+.pc-section__primary-action[aria-disabled="true"] {
+	pointer-events: none;
+	opacity: 0.6;
+	cursor: not-allowed;
 }
 
-.file-upload-bar .button {
+/* Hidden, but reachable by AT and triggered by labels/dropzone clicks. */
+.pc-file-input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+.pc-file-upload-form {
 	margin: 0;
 }
 
+.pc-file-dropzone {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--pc-space-3, 0.75rem);
+	width: 100%;
+	min-height: var(--pc-touch-min, 44px);
+	padding: var(--pc-space-5, 1.5rem);
+	border: 2px dashed var(--color-border, #e1e5eb);
+	border-radius: var(--pc-radius-md, 12px);
+	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 4%, var(--color-main-background));
+	color: var(--color-main-text);
+	text-align: center;
+	cursor: pointer;
+	transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.pc-file-dropzone:hover {
+	border-color: var(--color-primary-element);
+	background: color-mix(in srgb, var(--color-primary-element) 8%, var(--color-main-background));
+}
+
+.pc-file-dropzone:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 3px;
+	box-shadow: var(--pc-shadow-focus, 0 0 0 3px color-mix(in srgb, var(--color-primary-element) 45%, transparent));
+}
+
+.pc-file-dropzone.is-dragover {
+	border-color: var(--color-primary-element);
+	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
+	transform: scale(1.005);
+}
+
+.pc-file-dropzone.is-uploading,
+.pc-file-dropzone[aria-busy="true"] {
+	opacity: 0.75;
+	cursor: progress;
+}
+
+.pc-file-dropzone[aria-disabled="true"] {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.pc-file-dropzone__icon-wrap {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 4.5rem;
+	height: 4.5rem;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--color-primary-element) 14%, transparent);
+	color: var(--color-primary-element);
+}
+
+.pc-file-dropzone__icon-wrap .lucide-icon,
+.pc-file-dropzone__icon {
+	width: 1.75rem;
+	height: 1.75rem;
+	color: var(--color-primary-element);
+}
+
+.pc-file-dropzone__title {
+	margin: 0;
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.pc-file-dropzone__lead {
+	margin: 0;
+	max-width: 42rem;
+	font-size: 0.95rem;
+	line-height: 1.5;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-file-dropzone__hint {
+	margin: 0;
+	font-size: 0.85rem;
+	line-height: 1.45;
+	color: var(--color-text-maxcontrast);
+}
+
+/* Large variant — used as the primary call-to-action when the section is empty. */
+.pc-file-dropzone--empty {
+	padding: clamp(2rem, 5vw, 3rem) var(--pc-space-5, 1.5rem);
+	gap: var(--pc-space-3, 0.75rem);
+}
+
+.pc-file-dropzone--empty .pc-file-dropzone__title {
+	font-size: 1.2rem;
+}
+
+/* Compact variant — strip above the file list. Title and hint flow inline. */
+.pc-file-dropzone--compact {
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: var(--pc-space-3, 0.75rem);
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+	margin-bottom: var(--pc-space-4, 1rem);
+}
+
+.pc-file-dropzone--compact .pc-file-dropzone__icon {
+	width: 1.5rem;
+	height: 1.5rem;
+	flex-shrink: 0;
+}
+
+.pc-file-dropzone--compact .pc-file-dropzone__text {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: center;
+	gap: var(--pc-space-1, 0.25rem) var(--pc-space-3, 0.75rem);
+}
+
+.pc-file-dropzone--compact .pc-file-dropzone__title {
+	font-size: 1rem;
+}
+
+/* Document-wide drag overlay marker (project-detail-files.js toggles this). */
+.pc-files-section.is-document-dragover .pc-file-dropzone {
+	border-color: var(--color-primary-element);
+	background: color-mix(in srgb, var(--color-primary-element) 8%, var(--color-main-background));
+}
+
 .project-files-list {
-	margin-top: 12px;
+	margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pc-file-dropzone {
+		transition: none;
+	}
+	.pc-file-dropzone.is-dragover {
+		transform: none;
+	}
+}
+
+@media (max-width: 600px) {
+	.pc-files-section .section-header.pc-section__header {
+		flex-direction: column;
+	}
+
+	.pc-files-section .section-header-actions {
+		width: 100%;
+	}
+
+	.pc-files-section .pc-section__primary-action {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.pc-file-dropzone--compact {
+		flex-direction: column;
+	}
 }
 
 /* Spacing below the header section on projects page */
@@ -7388,17 +7558,40 @@ body {
 	outline-offset: 3px;
 }
 
-.pc-pricing-fieldset[aria-disabled="true"] .pc-pricing-card {
+/*
+ * Disabled state (locked fieldset).
+ * Scoped per-card via :has(:disabled) so it beats :hover and :has(:checked)
+ * on specificity and source order — otherwise the primary-colored ring,
+ * border and background tint leak through on the still-selected card.
+ */
+.pc-pricing-card:has(.pc-pricing-card__input:disabled),
+.pc-pricing-card:has(.pc-pricing-card__input:disabled) .pc-pricing-card__input {
 	cursor: not-allowed;
 }
 
-.pc-pricing-fieldset[aria-disabled="true"] .pc-pricing-card__input {
-	cursor: not-allowed;
-}
-
-.pc-pricing-fieldset[aria-disabled="true"] .pc-pricing-card__surface {
-	opacity: 0.88;
+.pc-pricing-card:has(.pc-pricing-card__input:disabled) .pc-pricing-card__surface,
+.pc-pricing-card:has(.pc-pricing-card__input:disabled):hover .pc-pricing-card__surface {
+	border-color: var(--color-border);
+	background: var(--color-main-background);
 	box-shadow: none;
+	opacity: 0.7;
+}
+
+/* Keep a subtle accent on the locked-in selection — no glowing ring. */
+.pc-pricing-card:has(.pc-pricing-card__input:disabled:checked) .pc-pricing-card__surface {
+	border-color: color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
+	background: color-mix(in srgb, var(--color-primary-element) 6%, var(--color-main-background));
+	box-shadow: none;
+}
+
+.pc-pricing-card:has(.pc-pricing-card__input:disabled) .pc-pricing-card__icon {
+	background: color-mix(in srgb, var(--color-text-maxcontrast) 12%, var(--color-main-background));
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-pricing-card:has(.pc-pricing-card__input:disabled:checked) .pc-pricing-card__icon {
+	background: color-mix(in srgb, var(--color-primary-element) 14%, var(--color-main-background));
+	color: var(--color-primary-element);
 }
 
 .pc-pricing-card__icon {
@@ -7617,33 +7810,6 @@ body {
 .projectcheck-access-denied__icon .pc-icon {
 	width: 2.5rem;
 	height: 2.5rem;
-}
-
-.project-files-dropzone {
-	margin-top: 0.75rem;
-	padding: 0.9rem 1rem;
-	border: 1px dashed var(--color-border);
-	border-radius: var(--pc-radius-md, 8px);
-	background: var(--color-main-background);
-	color: var(--color-text-maxcontrast);
-	cursor: pointer;
-	min-height: var(--pc-touch-min, 44px);
-}
-
-.project-files-dropzone:focus-visible {
-	outline: 2px solid var(--color-primary-element);
-	outline-offset: 2px;
-	box-shadow: var(--pc-shadow-focus);
-}
-
-.project-files-dropzone.is-dragover {
-	border-color: var(--color-primary-element);
-	background: var(--color-background-hover);
-}
-
-.project-files-dropzone.is-uploading {
-	opacity: 0.7;
-	cursor: wait;
 }
 
 /* Capacity hours (planning estimates vs budget-only) */

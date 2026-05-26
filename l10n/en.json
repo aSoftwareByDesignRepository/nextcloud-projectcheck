@@ -1146,6 +1146,26 @@
         "💰 Billable Work": "💰 Billable Work",
         "💻 Product Development": "💻 Product Development",
         "📊 Why This Matters": "📊 Why This Matters",
-        "🔬 Research & Development": "🔬 Research & Development"
+        "🔬 Research & Development": "🔬 Research & Development",
+        "Keep contracts, briefs, and other documents together with the project.": "Keep contracts, briefs, and other documents together with the project.",
+        "Add files": "Add files",
+        "Choose project files to upload": "Choose project files to upload",
+        "Add more files: drag and drop here, or press Enter to choose files.": "Add more files: drag and drop here, or press Enter to choose files.",
+        "Drop files to upload": "Drop files to upload",
+        "Up to %1$d files, %2$s each.": "Up to %1$d files, %2$s each.",
+        "Upload project files: drag and drop here, or press Enter to choose files.": "Upload project files: drag and drop here, or press Enter to choose files.",
+        "Drop files here to upload": "Drop files here to upload",
+        "Add contracts, briefs, or other documents — drag and drop, or press Enter to browse.": "Add contracts, briefs, or other documents — drag and drop, or press Enter to browse.",
+        "Up to %1$d files per upload, %2$s each. Executable file types are blocked.": "Up to %1$d files per upload, %2$s each. Executable file types are blocked.",
+        "Once a project manager adds files, they will appear here.": "Once a project manager adds files, they will appear here.",
+        "Add first team member": "Add first team member",
+        "Download %s": "Download %s",
+        "Delete %s": "Delete %s",
+        "You can upload up to %d files at once.": "You can upload up to %d files at once.",
+        "One or more files exceed the %s per-file limit.": "One or more files exceed the %s per-file limit.",
+        "No files selected.": "No files selected.",
+        "Upload started. Please wait…": "Upload started. Please wait…",
+        "An upload is already in progress.": "An upload is already in progress.",
+        "_Uploaded %n file._::_Uploaded %n files._": ["Uploaded %n file.","Uploaded %n files."]
     }
 }

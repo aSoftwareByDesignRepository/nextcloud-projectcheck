@@ -34,7 +34,9 @@ final class UninstallDropTables implements IRepairStep
 	public const TABLES = [
 		'customers',
 		'pc_customers',
+		'pc_emp_rates',
 		'pc_employee_hourly_rates',
+		'pc_pm_rates',
 		'pc_project_files',
 		'pc_project_member_hourly_rates',
 		'pc_project_members',

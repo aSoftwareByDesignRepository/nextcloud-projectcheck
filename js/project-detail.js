@@ -637,6 +637,17 @@ const projectcheckToken = cfg.requestToken || '';
         if (addTeamMemberBtn) {
             addTeamMemberBtn.addEventListener('click', showAddTeamMemberModal);
         }
+        // Empty-state CTA(s) that should open the same dialog (e.g. the
+        // in-context "Add first team member" button). We bind via event
+        // delegation so any future placement of the action still works.
+        document.addEventListener('click', function (event) {
+            const target = event.target instanceof Element ? event.target.closest('[data-action="open-add-team-member"]') : null;
+            if (!target) {
+                return;
+            }
+            event.preventDefault();
+            showAddTeamMemberModal();
+        });
         const openStatusBtn = document.getElementById('open-status-modal-btn');
         if (openStatusBtn) {
             openStatusBtn.addEventListener('click', showStatusChangeModal);

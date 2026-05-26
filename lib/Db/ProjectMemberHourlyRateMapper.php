@@ -18,7 +18,7 @@ class ProjectMemberHourlyRateMapper extends QBMapper
 {
 	public function __construct(IDBConnection $db)
 	{
-		parent::__construct($db, 'pc_project_member_hourly_rates', ProjectMemberHourlyRate::class);
+		parent::__construct($db, 'pc_pm_rates', ProjectMemberHourlyRate::class);
 	}
 
 	/**

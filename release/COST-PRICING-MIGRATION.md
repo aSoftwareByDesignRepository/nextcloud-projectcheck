@@ -6,8 +6,8 @@
 ## What changes
 
 1. **`pc_projects.cost_rate_mode`** — defaults to `project` for existing rows (unchanged billing behaviour).
-2. **`pc_employee_hourly_rates`** — append-only employee rate history (admin-maintained).
-3. **`pc_project_member_hourly_rates`** — per-person project rates with effective-from dates.
+2. **`pc_emp_rates`** — append-only employee rate history (admin-maintained). Legacy name `pc_employee_hourly_rates` is renamed by migration 2011.
+3. **`pc_pm_rates`** — per-person project rates with effective-from dates. Legacy name `pc_project_member_hourly_rates` is renamed by migration 2011.
 4. Legacy positive `pc_project_members.hourly_rate` values are **seeded** into history where applicable.
 
 ## After upgrade

@@ -1146,6 +1146,26 @@
         "💰 Billable Work": "💰 Abrechenbare Arbeit",
         "💻 Product Development": "💻 Produktentwicklung",
         "📊 Why This Matters": "📊 Warum das wichtig ist",
-        "🔬 Research & Development": "🔬 Forschung & Entwicklung"
+        "🔬 Research & Development": "🔬 Forschung & Entwicklung",
+        "Keep contracts, briefs, and other documents together with the project.": "Verträge, Briefings und andere Dokumente an einem Ort mit dem Projekt aufbewahren.",
+        "Add files": "Dateien hinzufügen",
+        "Choose project files to upload": "Projektdateien zum Hochladen auswählen",
+        "Add more files: drag and drop here, or press Enter to choose files.": "Weitere Dateien hinzufügen: hierher ziehen und ablegen oder Enter drücken zum Auswählen.",
+        "Drop files to upload": "Dateien zum Hochladen ablegen",
+        "Up to %1$d files, %2$s each.": "Bis zu %1$d Dateien, je %2$s.",
+        "Upload project files: drag and drop here, or press Enter to choose files.": "Projektdateien hochladen: hierher ziehen und ablegen oder Enter drücken zum Auswählen.",
+        "Drop files here to upload": "Dateien hier ablegen zum Hochladen",
+        "Add contracts, briefs, or other documents — drag and drop, or press Enter to browse.": "Verträge, Briefings oder andere Dokumente hinzufügen – ziehen und ablegen oder Enter drücken zum Auswählen.",
+        "Up to %1$d files per upload, %2$s each. Executable file types are blocked.": "Bis zu %1$d Dateien pro Hochladevorgang, je %2$s. Ausführbare Dateitypen sind nicht erlaubt.",
+        "Once a project manager adds files, they will appear here.": "Sobald eine Projektleitung Dateien hinzufügt, erscheinen sie hier.",
+        "Add first team member": "Erstes Teammitglied hinzufügen",
+        "Download %s": "%s herunterladen",
+        "Delete %s": "%s löschen",
+        "You can upload up to %d files at once.": "Sie können bis zu %d Dateien gleichzeitig hochladen.",
+        "One or more files exceed the %s per-file limit.": "Eine oder mehrere Dateien überschreiten das Limit von %s pro Datei.",
+        "No files selected.": "Keine Dateien ausgewählt.",
+        "Upload started. Please wait…": "Hochladevorgang gestartet. Bitte warten…",
+        "An upload is already in progress.": "Ein Hochladevorgang läuft bereits.",
+        "_Uploaded %n file._::_Uploaded %n files._": ["Eine Datei hochgeladen.","%n Dateien hochgeladen."]
     }
 }
