@@ -364,7 +364,8 @@ class CacheManager {
             } else if (resource.type === 'image') {
                 return this.preloadImage(resource.url);
             } else if (resource.type === 'script') {
-                return this.preloadScript(resource.url);
+                // Do not inject <script> tags — breaks Nextcloud CSP (nonce-only script-src).
+                return Promise.resolve(resource.url);
             } else if (resource.type === 'style') {
                 return this.preloadStyle(resource.url);
             }
@@ -382,19 +383,6 @@ class CacheManager {
             img.onload = () => resolve(url);
             img.onerror = () => reject(new Error(`Failed to preload image: ${url}`));
             img.src = url;
-        });
-    }
-
-    /**
-     * Preload script
-     */
-    preloadScript(url) {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.onload = () => resolve(url);
-            script.onerror = () => reject(new Error(`Failed to preload script: ${url}`));
-            script.src = url;
-            document.head.appendChild(script);
         });
     }
 

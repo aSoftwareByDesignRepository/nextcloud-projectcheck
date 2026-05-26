@@ -1,6 +1,6 @@
 /**
  * Registers the ProjectCheck service worker (app-scoped) when supported.
- * Skips incompatibles: no SW API, or non-secure contexts (except local dev).
+ * Requires worker-src 'self' in CSP (CSPListener + CSPService).
  */
 (function () {
 	'use strict';
@@ -17,13 +17,26 @@
 	}
 
 	var webroot = typeof OC.webroot === 'string' ? OC.webroot : '';
-	var path = webroot + '/apps/projectcheck/sw.js';
 	var scope = webroot + '/apps/projectcheck/';
 
-	// Single registration; updates handled by SW (skip waiting / message handler)
+	// Route-served worker (not static sw.js — static workers violate nonce-only script-src CSP).
+	var useIndexPhp = window.location.pathname.indexOf('/index.php/') !== -1
+		|| window.location.pathname === '/index.php';
+	var scriptUrl = useIndexPhp
+		? webroot + '/index.php/apps/projectcheck/service-worker.js'
+		: webroot + '/apps/projectcheck/service-worker.js';
+
 	navigator.serviceWorker
-		.register(path, { scope: scope, updateViaCache: 'none' })
-		.catch(function () {
-			// Intentionally silent: broken SW must not break the app
+		.register(scriptUrl, { scope: scope, updateViaCache: 'none' })
+		.then(function (registration) {
+			if (registration.waiting) {
+				registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+			}
+		})
+		.catch(function (err) {
+			// Log in dev tools only; SW is optional for core functionality.
+			if (typeof console !== 'undefined' && console.debug) {
+				console.debug('[projectcheck] service worker registration failed:', err);
+			}
 		});
 })();

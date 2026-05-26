@@ -257,8 +257,8 @@ async function removePendingAction(actionId) {
 self.addEventListener('push', event => {
     const options = {
         body: event.data ? event.data.text() : 'New notification',
-        icon: '/img/notification-icon.png',
-        badge: '/img/badge-icon.png',
+        icon: 'img/app.svg',
+        badge: 'img/app.svg',
         vibrate: [100, 50, 100],
         data: {
             dateOfArrival: Date.now(),
@@ -268,12 +268,12 @@ self.addEventListener('push', event => {
             {
                 action: 'explore',
                 title: 'View',
-                icon: '/img/checkmark.png'
+                icon: 'img/app.svg'
             },
             {
                 action: 'close',
                 title: 'Close',
-                icon: '/img/xmark.png'
+                icon: 'img/app.svg'
             }
         ]
     };

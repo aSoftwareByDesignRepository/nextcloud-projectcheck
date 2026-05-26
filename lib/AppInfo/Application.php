@@ -361,6 +361,10 @@ class Application extends App implements IBootstrap
 		// Register event listeners
 		$context->registerEventListener(UserDeletedEvent::class, \OCA\ProjectCheck\Listener\UserDeletedListener::class);
 		$context->registerEventListener(BeforeTemplateRenderedEvent::class, \OCA\ProjectCheck\Listener\EnrichTemplateNavigationContext::class);
+		$context->registerEventListener(
+			\OCP\Security\CSP\AddContentSecurityPolicyEvent::class,
+			\OCA\ProjectCheck\Listener\CSPListener::class,
+		);
 	}
 
 	/**

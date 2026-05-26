@@ -14,6 +14,9 @@ return [
 		// Main page route
 		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 
+		// Service worker (CSP-safe; do not load sw.js as a static script asset)
+		['name' => 'service_worker#script', 'url' => '/service-worker.js', 'verb' => 'GET'],
+
 		// Project management routes
 		['name' => 'project#index', 'url' => '/projects', 'verb' => 'GET'],
 		['name' => 'project#create', 'url' => '/projects/create', 'verb' => 'GET'],

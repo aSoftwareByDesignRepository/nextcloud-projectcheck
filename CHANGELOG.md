@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.48 - 2026-05-26
+
+### Fixed
+
+- **Pricing mode cards:** disabled cards no longer show the primary focus ring; styles use `:has(:disabled)` so locked modes stay visually inactive over `:checked` / `:hover`.
+- **Project files:** refreshed upload/dropzone layout and project-detail files UX.
+
+### Changed
+
+- **Rate history migrations:** consolidated rate-table bootstrap into `RateHistoryTables` / `RateTableRenamer`; added migration `Version2011Date20260526120000`.
+- **`info.xml` dependencies:** declare `mysql` and `pgsql` under `<dependencies>` for DB standards linting.
+
 ## 2.0.47 - 2026-05-25
 
 ### Changed

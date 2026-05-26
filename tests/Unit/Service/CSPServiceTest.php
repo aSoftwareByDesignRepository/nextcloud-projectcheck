@@ -19,6 +19,14 @@ use ReflectionNamedType;
 
 class CSPServiceTest extends TestCase
 {
+	public function testDefaultPolicyAllowsAppServiceWorker(): void
+	{
+		$ref = new ReflectionClass(CSPService::class);
+		$service = $ref->newInstanceWithoutConstructor();
+		$policyString = $service->getDefaultPolicy()->buildPolicy();
+		$this->assertStringContainsString('worker-src \'self\'', $policyString);
+	}
+
 	public function testConstructorRequiresContentSecurityPolicyNonceManager(): void
 	{
 		$ref = new ReflectionClass(CSPService::class);

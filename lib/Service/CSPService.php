@@ -42,6 +42,10 @@ class CSPService
         // Clickjacking protection (allow framing by self only)
         $policy->addAllowedFrameAncestorDomain("'self'");
 
+        // App-scoped service worker (service-worker-register.js → /apps/projectcheck/sw.js).
+        // Without worker-src, browsers fall back to nonce-only script-src and block registration.
+        $policy->addAllowedWorkerSrcDomain('\'self\'');
+
         return $policy;
     }
 

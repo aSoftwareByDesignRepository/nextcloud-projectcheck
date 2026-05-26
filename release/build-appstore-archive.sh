@@ -65,9 +65,18 @@ if [[ "${PACK_BASE}" == "${APP}" ]]; then
 	# Monorepo (…/apps/projectcheck) or standalone clone checked out as …/projectcheck
 	(cd "${PACK_PARENT}" && tar \
 		--exclude="${APP}/node_modules" \
+		--exclude="${APP}/node_modules.broken-*" \
 		--exclude="${APP}/.git" \
+		--exclude="${APP}/.github" \
+		--exclude="${APP}/test-results" \
+		--exclude="${APP}/.phpunit.result.cache" \
+		--exclude="${APP}/playwright-report" \
+		--exclude="${APP}/e2e" \
+		--exclude="${APP}/.auth" \
 		--exclude="${APP}/release/${APP}-*.tar.gz" \
 		--exclude="${APP}/tests" \
+		--exclude="${APP}/scripts" \
+		--exclude="${APP}/build" \
 		--exclude="${APP}/phpunit.xml" \
 		-czf "${OUT}" "${APP}")
 else
@@ -75,9 +84,18 @@ else
 	(cd "${APP_DIR}" && tar \
 		--transform "s,^,${APP}/," \
 		--exclude='node_modules' \
+		--exclude='node_modules.broken-*' \
 		--exclude='.git' \
+		--exclude='.github' \
+		--exclude='test-results' \
+		--exclude='.phpunit.result.cache' \
+		--exclude='playwright-report' \
+		--exclude='e2e' \
+		--exclude='.auth' \
 		--exclude='release/projectcheck-*.tar.gz' \
 		--exclude='tests' \
+		--exclude='scripts' \
+		--exclude='build' \
 		--exclude='phpunit.xml' \
 		-czf "${OUT}" .)
 fi
