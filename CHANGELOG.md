@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.49 - 2026-05-27
+
+### Added
+
+- **Project edit — team callout:** Prominent callout on the project form deep-links to the team section on project detail, with permission-aware copy, member count, and secondary footer links.
+
+### Changed
+
+- **Time entries:** Clearer admin override messaging on project detail and the time-entry form; tighter server-side checks when adding time on behalf of others.
+- **Team roster:** Improved rate-mode handling and project mapper hydration for member lists.
+
+### Fixed
+
+- **Tests:** `ProjectMapperHydrationTest`, `HourlyRateServiceTest`, and `ProjectServiceTest` cover team roster and rate-mode edge cases.
+
 ## 2.0.48 - 2026-05-26
 
 ### Fixed
