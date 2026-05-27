@@ -28,8 +28,18 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 $isEdit = isset($isEdit) ? $isEdit : (isset($timeEntry) && $timeEntry instanceof \OCA\ProjectCheck\Db\TimeEntry);
 $pageId = $isEdit ? 'time-entry-edit' : 'time-entry-create';
 $pageTitle = $isEdit ? $l->t('Edit Time Entry') : $l->t('Add Time Entry');
-$pageHelp = $l->t('You can log time only for projects with status Active or On Hold that you can access (creator, admin, or active team member).');
+$pageHelp = $l->t('Log time for Active or On Hold projects you are on. Administrators may also log time on projects that use one fixed rate or organisation-wide employee rates without being on the team.');
 include __DIR__ . '/common/page-start.php';
+
+/**
+ * @var array<int, array{is_team_member: bool, admin_override: bool}> $membershipFlags
+ *
+ * Provided by the controller so the form can render the admin-override notice
+ * without an extra round-trip when the current project is preselected.
+ */
+$membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMembershipFlags'])
+	? $_['projectMembershipFlags']
+	: [];
 ?>
 		<?php
 		// Server IL10N for budget-warnings.js: browser t() does not resolve app l10n; embed text in DOM (not script order sensitive).
@@ -71,13 +81,21 @@ include __DIR__ . '/common/page-start.php';
 				<div class="form-row">
 					<div class="form-group">
 						<label for="project_id" class="required"><?php p($l->t('Project')); ?></label>
-						<select name="project_id" id="project_id" class="form-input form-select" required>
+						<select name="project_id" id="project_id" class="form-input form-select" required
+							aria-describedby="project_id-help project_id-error">
 							<option value=""><?php p($l->t('Select a project')); ?></option>
 							<?php if (!empty($projects)): ?>
-								<?php foreach ($projects as $project): ?>
-									<option value="<?php p($project->getId()); ?>"
+								<?php foreach ($projects as $project):
+									$pid = (int) $project->getId();
+									$flags = $membershipFlags[$pid] ?? ['is_team_member' => false, 'admin_override' => false];
+									$isMember = !empty($flags['is_team_member']);
+									$adminOverride = !empty($flags['admin_override']);
+								?>
+									<option value="<?php p($pid); ?>"
 										data-cost-rate-mode="<?php p($project->getCostRateMode()); ?>"
-										<?php if ($isEdit && $timeEntry->getProjectId() == $project->getId()) echo 'selected'; ?>>
+										data-is-team-member="<?php p($isMember ? '1' : '0'); ?>"
+										data-admin-override="<?php p($adminOverride ? '1' : '0'); ?>"
+										<?php if ($isEdit && $timeEntry->getProjectId() == $pid) echo 'selected'; ?>>
 										<?php p($project->getName()); ?> (<?php p($project->getStatus()); ?>)
 									</option>
 								<?php endforeach; ?>
@@ -85,6 +103,9 @@ include __DIR__ . '/common/page-start.php';
 								<option value="" disabled><?php p($l->t('No projects available')); ?></option>
 							<?php endif; ?>
 						</select>
+						<p class="form-hint" id="project_id-help">
+							<?php p($l->t('Only projects you can log time on are listed. Per-person priced projects require an active team membership with a personal hourly rate.')); ?>
+						</p>
 						<div class="error-message" id="project_id-error"></div>
 					</div>
 				</div>
@@ -93,6 +114,63 @@ include __DIR__ . '/common/page-start.php';
 						<?php p($l->t('No selectable project found. Check project status and team assignment.')); ?>
 					</div>
 				<?php endif; ?>
+
+				<?php
+				/*
+				 * Admin-override callout. Hidden by default; shown via JS when the selected
+				 * project is one the current user can log time on only because of their
+				 * administrative role. Pre-renders hint text in edit mode so there is no
+				 * flicker and screen readers get the full message immediately.
+				 */
+				$initialOverrideVisible = false;
+				$initialOverrideHint = '';
+				if ($isEdit && isset($timeEntry)) {
+					$initialPid = (int) $timeEntry->getProjectId();
+					$initialFlags = $membershipFlags[$initialPid] ?? null;
+					$initialOverrideVisible = is_array($initialFlags) && !empty($initialFlags['admin_override']);
+					if ($initialOverrideVisible) {
+						foreach ($projects as $project) {
+							if ((int) $project->getId() !== $initialPid) {
+								continue;
+							}
+							$initialMode = strtolower((string) $project->getCostRateMode());
+							if ($initialMode === 'project') {
+								$initialOverrideHint = $l->t('This project uses one fixed hourly rate for everyone. Your entry will be billed at that project rate.');
+							} elseif ($initialMode === 'employee') {
+								$initialOverrideHint = $l->t('This project uses your organisation-wide employee hourly rate. Make sure a rate is effective for you on the work date.');
+							}
+							break;
+						}
+					}
+				}
+				?>
+				<aside id="pc-admin-override-banner"
+					class="pc-form-callout pc-form-callout--admin-override<?php p($initialOverrideVisible ? '' : ' pc-form-callout--hidden'); ?>"
+					role="note"
+					aria-labelledby="pc-admin-override-title"
+					aria-describedby="pc-admin-override-desc pc-admin-override-hint"
+					data-pc-mode-project-label="<?php p($l->t('This project uses one fixed hourly rate for everyone. Your entry will be billed at that project rate.')); ?>"
+					data-pc-mode-employee-label="<?php p($l->t('This project uses your organisation-wide employee hourly rate. Make sure a rate is effective for you on the work date.')); ?>">
+					<div class="pc-form-callout__icon" aria-hidden="true">
+						<span data-lucide="shield-check" class="lucide-icon"></span>
+					</div>
+					<div class="pc-form-callout__body">
+						<h2 id="pc-admin-override-title" class="pc-form-callout__title">
+							<?php p($l->t('Administrator time entry')); ?>
+							<span class="pc-form-callout__count pc-form-callout__count--muted" aria-hidden="true">
+								<?php p($l->t('Admin')); ?>
+							</span>
+						</h2>
+						<p id="pc-admin-override-desc" class="pc-form-callout__text">
+							<?php p($l->t('You are not on this project team. Your administrator role lets you record your own time here only.')); ?>
+						</p>
+						<p id="pc-admin-override-hint" class="pc-form-callout__hint<?php p($initialOverrideHint === '' ? ' pc-form-callout__hint--empty' : ''); ?>">
+							<?php if ($initialOverrideHint !== '') {
+								p($initialOverrideHint);
+							} ?>
+						</p>
+					</div>
+				</aside>
 
 				<!-- Project Budget Information -->
 				<div id="budget-info-section" class="form-row" style="display: none;">

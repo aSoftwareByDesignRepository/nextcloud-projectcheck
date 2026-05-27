@@ -426,3 +426,9 @@
 	margin-top: 2px;
 	font-weight: normal;
 }
+
+/* Admin-override callout: layout lives in projects.css (.pc-form-callout--admin-override).
+ * Spacing inside the time-entry form card only. */
+.time-entry-form .pc-form-callout--admin-override {
+	margin: var(--pc-space-4, 1rem) 0 var(--pc-space-5, 1.5rem);
+}

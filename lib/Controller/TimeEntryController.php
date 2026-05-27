@@ -273,7 +273,10 @@ class TimeEntryController extends Controller
 
 		$userId = $user->getUID();
 
-		// Get all projects for time entry selection (exclude completed/cancelled)
+		// Get all projects for time entry selection (exclude completed/cancelled).
+		// `getProjectsForUserTimeEntry` already honours the membership / admin override
+		// rules — non-member admins only see projects with a fixed project rate or
+		// employee master rate.
 		$userProjects = $this->projectService->getProjectsForUserTimeEntry($user->getUID(), ['status' => ['Active', 'On Hold']]);
 		$userProjects = array_values(array_filter($userProjects, static function ($project) {
 			$status = trim((string)$project->getStatus());
@@ -284,12 +287,14 @@ class TimeEntryController extends Controller
 
 		$userProjects = $this->sortProjectsByName($userProjects);
 
-		// Get common stats for the sidebar
+		$projectMembershipFlags = $this->buildProjectMembershipFlags($userId, $userProjects);
+
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
 
 		$response = new TemplateResponse($this->appName, 'time-entry-form', [
 			'timeEntry' => null,
 			'projects' => $userProjects,
+			'projectMembershipFlags' => $projectMembershipFlags,
 			'isEdit' => false,
 			'stats' => $stats,
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
@@ -298,6 +303,34 @@ class TimeEntryController extends Controller
 		]);
 
 		return $this->configureCSP($response);
+	}
+
+	/**
+	 * Build a per-project map flagging team membership and admin override usage,
+	 * so the form can render a clear "logging as administrator" notice for the
+	 * currently selected project without an extra round-trip.
+	 *
+	 * @param list<\OCA\ProjectCheck\Db\Project> $projects
+	 * @return array<int, array{is_team_member: bool, admin_override: bool}>
+	 */
+	private function buildProjectMembershipFlags(string $userId, array $projects): array
+	{
+		$flags = [];
+		foreach ($projects as $project) {
+			$pid = (int) $project->getId();
+			if ($pid <= 0) {
+				continue;
+			}
+			$isMember = $this->projectService->isActiveTeamMember($pid, $userId);
+			$flags[$pid] = [
+				'is_team_member' => $isMember,
+				// Admin override is *visible* only when the user is not on the team
+				// but is still allowed to log time on this project.
+				'admin_override' => !$isMember
+					&& $this->projectService->isUsingAdminTimeEntryOverride($userId, $pid),
+			];
+		}
+		return $flags;
 	}
 
 	/**
@@ -459,12 +492,14 @@ class TimeEntryController extends Controller
 		$userProjects = $this->projectService->getProjectsForUserTimeEntry($user->getUID(), ['status' => ['Active', 'On Hold', 'Completed', 'Archived']]);
 		$userProjects = $this->sortProjectsByName($userProjects);
 
-		// Get common stats for the sidebar
+		$projectMembershipFlags = $this->buildProjectMembershipFlags($userId, $userProjects);
+
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
 
 		$response = new TemplateResponse($this->appName, 'time-entry-form', [
 			'timeEntry' => $timeEntry,
 			'projects' => $userProjects,
+			'projectMembershipFlags' => $projectMembershipFlags,
 			'isEdit' => true,
 			'stats' => $stats,
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),

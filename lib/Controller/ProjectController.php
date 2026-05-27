@@ -520,7 +520,12 @@ class ProjectController extends Controller
 		$canChangeStatus = $this->projectService->canUserChangeProjectStatus($uid, $id);
 		$canManageFiles = $canEdit;
 		$canManageMembers = $this->projectService->canUserManageMembers($uid, $id) && $project->isEditableState();
-		$canAddTimeEntry = $project->allowsTimeTracking() && $this->projectService->canUserAccessProject($uid, $id);
+		// canAddTimeEntry honours the per-mode admin override (admins may log time
+		// on projects with a fixed project rate or employee master rate even when
+		// they are not on the team).
+		$canAddTimeEntry = $this->projectService->canUserAddTimeEntryForProject($uid, $id);
+		$usingAdminTimeEntryOverride = $canAddTimeEntry
+			&& $this->projectService->isUsingAdminTimeEntryOverride($uid, $id);
 		$canViewMemberTimeEntries = $this->projectService->canUserAccessProject($uid, $id);
 		$canViewMemberProfiles = $this->projectService->canUserAccessProject($uid, $id);
 
@@ -565,6 +570,7 @@ class ProjectController extends Controller
 			'canAddTeamMember' => $canManageMembers,
 			'canManageMembers' => $canManageMembers,
 			'canAddTimeEntry' => $canAddTimeEntry,
+			'usingAdminTimeEntryOverride' => $usingAdminTimeEntryOverride,
 			'canViewMemberTimeEntries' => $canViewMemberTimeEntries,
 			'canViewMemberProfiles' => $canViewMemberProfiles,
 			'allowedStatusTargets' => $allowedStatusTargets,
@@ -708,7 +714,7 @@ class ProjectController extends Controller
 			if (!$project) {
 				return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
 			}
-			if (!$this->projectService->canUserAccessProject($user->getUID(), $projectId)) {
+			if (!$this->projectService->canUserAddTimeEntryForProject($user->getUID(), $projectId)) {
 				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 			}
 
@@ -807,6 +813,23 @@ class ProjectController extends Controller
 			$currency = 'EUR';
 		}
 
+		// Team management lives on the project detail page, NOT on this edit
+		// form. The classic UX trap is users opening "Edit project" expecting
+		// the team list to be in there. We surface a prominent callout in the
+		// edit template that deep-links to the team section, including a
+		// live count so people see at a glance what already exists.
+		$uid = $user->getUID();
+		$projectShowUrl = $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $id]);
+		// The fragment "#team-section" mirrors the id rendered in
+		// templates/project-detail.php and is part of the public navigation
+		// contract for this view. Keep both in sync if either is renamed.
+		$teamSectionUrl = $projectShowUrl . '#team-section';
+		$teamRoster = $this->projectService->getProjectTeamGrouped($id);
+		$teamMembersActiveCount = count($teamRoster['active'] ?? []);
+		$teamMembersFormerCount = count($teamRoster['former'] ?? []);
+		$canManageMembers = $this->projectService->canUserManageMembers($uid, $id)
+			&& $project->isEditableState();
+
 		$response = new TemplateResponse($this->appName, 'project-form', [
 			'project' => $project,
 			'mode' => 'edit',
@@ -818,6 +841,11 @@ class ProjectController extends Controller
 			'orgCurrency' => $currency,
 			'costRateModeLocked' => $this->projectService->projectHasLoggedTime($id),
 			'employeesIndexUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.index'),
+			'projectShowUrl' => $projectShowUrl,
+			'teamSectionUrl' => $teamSectionUrl,
+			'teamMembersActiveCount' => $teamMembersActiveCount,
+			'teamMembersFormerCount' => $teamMembersFormerCount,
+			'canManageMembers' => $canManageMembers,
 		]);
 
 		return $this->configureCSP($response);
@@ -1160,9 +1188,14 @@ class ProjectController extends Controller
 		}
 
 		try {
+			// Pre-existing bug fixed: mapProjectMembersToRoster() requires the project's
+			// cost-rate mode to decide whether to emit per-member rate history. Without it
+			// the call raised a TypeError before any data was returned.
+			$project = $this->projectService->getProject($id);
+			$mode = $project !== null ? (string) $project->getCostRateMode() : CostRateMode::DEFAULT;
 			$g = $this->projectService->getProjectTeamGrouped($id);
-			$rosterA = $this->mapProjectMembersToRoster($id, $g['active'], false);
-			$rosterF = $this->mapProjectMembersToRoster($id, $g['former'], true);
+			$rosterA = $this->mapProjectMembersToRoster($id, $g['active'], false, $mode);
+			$rosterF = $this->mapProjectMembersToRoster($id, $g['former'], true, $mode);
 
 			return new DataResponse([
 				'success' => true,

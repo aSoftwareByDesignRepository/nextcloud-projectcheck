@@ -119,6 +119,72 @@ class ProjectService
 		return $this->getProjectMemberActive($projectId, $userId) !== null;
 	}
 
+	/**
+	 * Whether a system or app administrator may add their own time entries to a project even
+	 * though they are not on the project team.
+	 *
+	 * Allowed for {@see CostRateMode::PROJECT} (fixed project rate) and {@see CostRateMode::EMPLOYEE}
+	 * (organisation-wide employee master rate). Not allowed for
+	 * {@see CostRateMode::PROJECT_MEMBER} pricing because the per-member rate would not exist
+	 * for the non-member admin — there is no rate to charge against.
+	 *
+	 * This is the *capability* check (mode + admin status). It does NOT check whether the
+	 * project is currently accepting new time entries; combine with {@see Project::allowsTimeTracking()}.
+	 */
+	public function isAdminTimeEntryOverrideEligible(string $userId, string $costRateMode): bool
+	{
+		$mode = CostRateMode::normalize($costRateMode);
+		if ($mode === CostRateMode::PROJECT_MEMBER) {
+			return false;
+		}
+		return $this->hasGlobalProjectAccess($userId);
+	}
+
+	/**
+	 * Whether the user may *log* time on a specific project (server-authoritative).
+	 *
+	 * Composes the three independent rules into a single check used by controllers,
+	 * pickers and templates so they all agree:
+	 *  - the project must currently accept time entries (Active / On Hold),
+	 *  - the user must be allowed to see the project at all, and
+	 *  - the user must either be on the team or qualify for the admin override.
+	 */
+	public function canUserAddTimeEntryForProject(string $userId, int $projectId): bool
+	{
+		$project = $this->getProject($projectId);
+		if ($project === null) {
+			return false;
+		}
+		if (!$project->allowsTimeTracking()) {
+			return false;
+		}
+		if (!$this->canUserAccessProject($userId, $projectId)) {
+			return false;
+		}
+		if ($this->isActiveTeamMember($projectId, $userId)) {
+			return true;
+		}
+		return $this->isAdminTimeEntryOverrideEligible($userId, (string) $project->getCostRateMode());
+	}
+
+	/**
+	 * Convenience: would this user be using the *admin override* if they logged time on
+	 * the given project right now (i.e. they qualify for the override and are not on
+	 * the team)? Used by the UI to surface a clear "you are logging as administrator"
+	 * notice and badge.
+	 */
+	public function isUsingAdminTimeEntryOverride(string $userId, int $projectId): bool
+	{
+		$project = $this->getProject($projectId);
+		if ($project === null) {
+			return false;
+		}
+		if ($this->isActiveTeamMember($projectId, $userId)) {
+			return false;
+		}
+		return $this->isAdminTimeEntryOverrideEligible($userId, (string) $project->getCostRateMode());
+	}
+
 	public function getActiveProjectMember(int $projectId, string $userId): ?ProjectMember
 	{
 		return $this->getProjectMemberActive($projectId, $userId);
@@ -180,7 +246,18 @@ class ProjectService
 	}
 
 	/**
-	 * getProjects() result restricted to projects the user may access (time entry pickers, etc.)
+	 * getProjects() result restricted to the projects this user may log time on.
+	 *
+	 * Used to populate the time-entry form's project picker. Tighter than plain
+	 * "can access" because:
+	 *   - the project must currently accept time entries (Active / On Hold), and
+	 *   - non-member admins are only allowed for project- or employee-rate projects
+	 *     (per-member pricing has no rate they could be charged at).
+	 *
+	 * Historical (archived/completed) projects are intentionally excluded here.
+	 * Callers that explicitly need archived results for the *filter* dropdown
+	 * (e.g. read-only history filters) keep using {@see canUserAccessProject}
+	 * via the dedicated paths in {@see TimeEntryController}.
 	 *
 	 * @param array<string, mixed> $filters
 	 * @return list<Project>
@@ -190,7 +267,18 @@ class ProjectService
 		$all = $this->getProjects($filters);
 		$out = [];
 		foreach ($all as $p) {
-			if ($this->canUserAccessProject($userId, (int) $p->getId())) {
+			$pid = (int) $p->getId();
+			if (!$p->allowsTimeTracking()) {
+				// Keep historical projects available to the *list filter* dropdown
+				// (which passes statuses including Archived/Completed) so users can
+				// review old entries. They are filtered out for the *create* form
+				// at the controller level via the status whitelist.
+				if ($this->canUserAccessProject($userId, $pid)) {
+					$out[] = $p;
+				}
+				continue;
+			}
+			if ($this->canUserAddTimeEntryForProject($userId, $pid)) {
 				$out[] = $p;
 			}
 		}
@@ -1046,14 +1134,12 @@ class ProjectService
 			return false;
 		}
 
-		if (!$this->canUserAccessProject($billableUserId, $projectId)) {
+		// The billable user must be allowed to log time on this project under the same
+		// rules as the in-app form. canUserAddTimeEntryForProject also enforces the
+		// PROJECT_MEMBER membership rule and the admin-override eligibility — keeping
+		// the integration in lock-step with the UI prevents drift.
+		if (!$this->canUserAddTimeEntryForProject($billableUserId, $projectId)) {
 			return false;
-		}
-
-		if ($project->getCostRateMode() === CostRateMode::PROJECT_MEMBER) {
-			if (!$this->isActiveTeamMember($projectId, $billableUserId)) {
-				return false;
-			}
 		}
 
 		if ($actorUserId === $billableUserId) {

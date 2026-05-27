@@ -55,6 +55,7 @@
 		addRealTimeValidation();
 		initializeCharacterCount();
 		initializeProjectRateSync();
+		updateAdminOverrideBanner();
 		calculateTotalCost();
 
 		const isEdit = window.timeEntryFormData && window.timeEntryFormData.isEdit;
@@ -99,7 +100,10 @@
 
 		const projectSelect = document.getElementById('project_id');
 		if (projectSelect) {
-			projectSelect.addEventListener('change', () => resolveRateFromServer());
+			projectSelect.addEventListener('change', () => {
+				updateAdminOverrideBanner();
+				resolveRateFromServer();
+			});
 		}
 		const dateInput = document.getElementById('date');
 		if (dateInput) {
@@ -552,6 +556,63 @@
 
 	function initializeProjectRateSync() {
 		resolveRateFromServer();
+	}
+
+	/**
+	 * Show / hide the "logging as administrator" banner based on the selected
+	 * project's data-admin-override attribute (server-authoritative). The body
+	 * text is tailored to the project's cost-rate mode so admins know exactly
+	 * which rate will be applied.
+	 */
+	function updateAdminOverrideBanner() {
+		const banner = document.getElementById('pc-admin-override-banner');
+		if (!banner) {
+			return;
+		}
+		const projectSelect = document.getElementById('project_id');
+		const hintEl = document.getElementById('pc-admin-override-hint');
+		const hideBanner = () => {
+			banner.classList.add('pc-form-callout--hidden');
+			if (hintEl) {
+				hintEl.textContent = '';
+				hintEl.classList.add('pc-form-callout__hint--empty');
+			}
+		};
+		if (!projectSelect) {
+			hideBanner();
+			return;
+		}
+		const opt = projectSelect.options[projectSelect.selectedIndex];
+		const adminOverride = !!opt && opt.getAttribute('data-admin-override') === '1';
+		if (!adminOverride) {
+			hideBanner();
+			return;
+		}
+
+		const mode = (opt.getAttribute('data-cost-rate-mode') || '').toLowerCase();
+		if (hintEl) {
+			let modeText = '';
+			if (mode === 'project') {
+				modeText = banner.getAttribute('data-pc-mode-project-label') || '';
+			} else if (mode === 'employee') {
+				modeText = banner.getAttribute('data-pc-mode-employee-label') || '';
+			}
+			hintEl.textContent = modeText;
+			if (modeText) {
+				hintEl.classList.remove('pc-form-callout__hint--empty');
+			} else {
+				hintEl.classList.add('pc-form-callout__hint--empty');
+			}
+		}
+		banner.classList.remove('pc-form-callout--hidden');
+		// Icon may have been skipped while the callout was hidden (catalog hydrates on show).
+		const iconEl = banner.querySelector('[data-lucide]');
+		if (iconEl) {
+			iconEl.removeAttribute('data-lucide-hydrated');
+		}
+		if (window.ProjectCheckIcons && typeof window.ProjectCheckIcons.hydrate === 'function') {
+			window.ProjectCheckIcons.hydrate(banner);
+		}
 	}
 
 	/**

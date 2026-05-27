@@ -39,6 +39,7 @@ $budgetConsumption = isset($budgetConsumption) ? $budgetConsumption : 0;
 $warningLevel = isset($warningLevel) ? $warningLevel : 'none';
 $allowedStatusTargets = $_['allowedStatusTargets'] ?? [];
 $canAddTimeEntry = $_['canAddTimeEntry'] ?? $project->allowsTimeTracking();
+$usingAdminTimeEntryOverride = !empty($_['usingAdminTimeEntryOverride']);
 $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
 $bulkAddSuccess = isset($_GET['bulk_add_success']) && (string)$_GET['bulk_add_success'] === '1';
 $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_count']) : 0;
@@ -724,6 +725,12 @@ include __DIR__ . '/common/page-start.php';
                     <h3><i class="icon-time-custom" aria-hidden="true"></i> <?php p($l->t('Recent Time Entries')); ?></h3>
                     <div class="section-header-actions">
                         <?php if ($canAddTimeEntry): ?>
+                            <?php if ($usingAdminTimeEntryOverride): ?>
+                                <span class="pc-admin-override-badge" title="<?php p($l->t('You can log time on this project because of your administrator role, not because you are on the team.')); ?>">
+                                    <span data-lucide="shield-check" class="lucide-icon" aria-hidden="true"></span>
+                                    <span class="pc-admin-override-badge__text"><?php p($l->t('Admin override')); ?></span>
+                                </span>
+                            <?php endif; ?>
                             <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId])); ?>" class="button primary">
                                 <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
                                 <?php p($l->t('Add time entry')); ?>
@@ -776,6 +783,9 @@ include __DIR__ . '/common/page-start.php';
                     if ($canAddTimeEntry) {
                         $ctaHref = $urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId]);
                         $ctaLabel = $l->t('Add first time entry');
+                        if ($usingAdminTimeEntryOverride) {
+                            $description = $l->t('Start tracking time. You can log your own time here because of your administrator role, even though you are not on the team.');
+                        }
                     } else {
                         $hint = $l->t('Time tracking is not available for this project status. Change status to Active or On Hold to add entries.');
                     }

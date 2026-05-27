@@ -1,7 +1,18 @@
 <?php
 
 /**
- * Project creation/editing form template
+ * Project creation/editing form template.
+ *
+ * Nextcloud renders this through TemplateResponse, which extract()-s the
+ * payload array into local scope before invoking the template. The
+ * documented variables below are guaranteed to exist (or to be null/absent
+ * in $_ which we handle defensively). Declared for static analysis so that
+ * intelephense and PHPStan stop flagging template-injected variables.
+ *
+ * @var \OCP\IL10N $l
+ * @var array<string,mixed> $_
+ * @var \OCP\IURLGenerator $urlGenerator
+ * @var \OCA\ProjectCheck\Db\Project|null $project
  *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
@@ -26,6 +37,29 @@ $selectedCostRateMode = $isEdit ? $project->getCostRateMode() : \OCA\ProjectChec
 $employeesIndexUrl = $_['employeesIndexUrl'] ?? '';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 	$currencyCode = 'EUR';
+}
+
+// Team management deep-link. Edit-only; the variables stay empty in create
+// mode because there is no project yet to deep-link to. The fragment must
+// match the id of the team section rendered in project-detail.php.
+$teamSectionUrl = ($isEdit && isset($_['teamSectionUrl']) && is_string($_['teamSectionUrl'])) ? $_['teamSectionUrl'] : '';
+$projectShowUrl = ($isEdit && isset($_['projectShowUrl']) && is_string($_['projectShowUrl'])) ? $_['projectShowUrl'] : '';
+$teamMembersActiveCount = isset($_['teamMembersActiveCount']) ? max(0, (int)$_['teamMembersActiveCount']) : 0;
+$teamMembersFormerCount = isset($_['teamMembersFormerCount']) ? max(0, (int)$_['teamMembersFormerCount']) : 0;
+$canManageMembers = !empty($_['canManageMembers']);
+$teamTotalCount = $teamMembersActiveCount + $teamMembersFormerCount;
+
+// Resolve callout copy once so the template body stays branch-free. Wording
+// adapts to manager vs viewer perms so we never advertise an action the
+// user cannot perform on the destination page.
+if ($canManageMembers) {
+	$teamCalloutTitle = $l->t('Looking to add or remove team members?');
+	$teamCalloutText = $l->t('Team members are managed on the project page, not in this edit form. Open it to add people, set their hourly rates, and review who can log time.');
+	$teamCalloutCta = $l->t('Manage team');
+} else {
+	$teamCalloutTitle = $l->t('Looking for the team list?');
+	$teamCalloutText = $l->t('The team list lives on the project page, not in this edit form. Open it to see who can log time and their hours.');
+	$teamCalloutCta = $l->t('View team');
 }
 ?>
 
@@ -60,11 +94,47 @@ include __DIR__ . '/common/page-start.php';
             </ol>
         </nav>
         <?php endif; ?>
+
+        <?php if ($isEdit && $teamSectionUrl !== ''): ?>
+        <aside class="pc-form-callout" role="note" aria-labelledby="pc-team-callout-title" aria-describedby="pc-team-callout-desc">
+            <div class="pc-form-callout__icon" aria-hidden="true">
+                <span data-lucide="users" class="lucide-icon"></span>
+            </div>
+            <div class="pc-form-callout__body">
+                <h2 id="pc-team-callout-title" class="pc-form-callout__title">
+                    <?php p($teamCalloutTitle); ?>
+                    <?php if ($teamTotalCount > 0): ?>
+                        <span class="pc-form-callout__count" aria-label="<?php p($l->n('%n team member', '%n team members', $teamTotalCount)); ?>">
+                            <?php p($teamTotalCount); ?>
+                        </span>
+                    <?php endif; ?>
+                </h2>
+                <p id="pc-team-callout-desc" class="pc-form-callout__text">
+                    <?php p($teamCalloutText); ?>
+                </p>
+                <p class="pc-form-callout__hint">
+                    <?php p($l->t('Tip: save this form first if you have unsaved changes — leaving the page will discard them.')); ?>
+                </p>
+            </div>
+            <div class="pc-form-callout__actions">
+                <a class="button primary pc-form-callout__cta" href="<?php p($teamSectionUrl); ?>" rel="noopener">
+                    <span data-lucide="users" class="lucide-icon" aria-hidden="true"></span>
+                    <span><?php p($teamCalloutCta); ?></span>
+                </a>
+            </div>
+        </aside>
+        <?php endif; ?>
+
         <div class="section pc-section">
             <div class="actions">
                 <a href="<?php p($_['indexUrl'] ?? '/projects'); ?>" class="button">
                     ← <?php p($l->t('Back to Projects')); ?>
                 </a>
+                <?php if ($isEdit && $projectShowUrl !== ''): ?>
+                    <a href="<?php p($projectShowUrl); ?>" class="button">
+                        <?php p($l->t('View project')); ?>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -344,6 +414,12 @@ include __DIR__ . '/common/page-start.php';
                     <a href="<?php p($_['indexUrl'] ?? '/projects'); ?>" class="button">
                         <?php p($l->t('Cancel')); ?>
                     </a>
+                    <?php if ($isEdit && $teamSectionUrl !== ''): ?>
+                        <a href="<?php p($teamSectionUrl); ?>" class="button pc-form-actions__secondary-link" rel="noopener">
+                            <span data-lucide="users" class="lucide-icon" aria-hidden="true"></span>
+                            <span><?php p($canManageMembers ? $l->t('Manage team') : $l->t('View team')); ?></span>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </form>
         </div>

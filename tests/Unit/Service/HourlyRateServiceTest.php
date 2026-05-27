@@ -22,12 +22,14 @@ class HourlyRateServiceTest extends TestCase
 		bool $onTeam = true,
 		float $employeeRate = 85.0,
 		float $memberRate = 0.0,
+		bool $adminOverrideEligible = false,
 	): HourlyRateService {
 		$projectMapper = $this->createMock(ProjectMapper::class);
 		$projectMapper->method('find')->willReturn($project);
 
 		$projectService = $this->createMock(ProjectService::class);
 		$projectService->method('isActiveTeamMember')->willReturn($onTeam);
+		$projectService->method('isAdminTimeEntryOverrideEligible')->willReturn($adminOverrideEligible);
 
 		$employeeRates = $this->createMock(EmployeeHourlyRateService::class);
 		$employeeRates->method('resolveRateForDate')->willReturn($employeeRate);
@@ -83,6 +85,48 @@ class HourlyRateServiceTest extends TestCase
 		$svc = $this->makeService($this->projectWithMode(CostRateMode::PROJECT), false);
 		$this->expectException(RateResolutionException::class);
 		$svc->resolveForTimeEntry(1, 'alice', new \DateTime('2026-01-15'));
+	}
+
+	public function testAdminOverrideAllowsProjectModeWithoutTeamMembership(): void
+	{
+		$svc = $this->makeService(
+			$this->projectWithMode(CostRateMode::PROJECT, 95.0),
+			false,
+			85.0,
+			0.0,
+			true,
+		);
+		$rate = $svc->resolveForTimeEntry(1, 'admin', new \DateTime('2026-05-01'));
+		$this->assertEqualsWithDelta(95.0, $rate, HourlyRateService::CLIENT_TOLERANCE);
+	}
+
+	public function testAdminOverrideAllowsEmployeeModeWithoutTeamMembership(): void
+	{
+		$svc = $this->makeService(
+			$this->projectWithMode(CostRateMode::EMPLOYEE),
+			false,
+			110.0,
+			0.0,
+			true,
+		);
+		$rate = $svc->resolveForTimeEntry(1, 'admin', new \DateTime('2026-05-01'));
+		$this->assertEqualsWithDelta(110.0, $rate, HourlyRateService::CLIENT_TOLERANCE);
+	}
+
+	public function testAdminOverrideDoesNotApplyToProjectMemberMode(): void
+	{
+		// Even with admin override eligibility, PROJECT_MEMBER pricing requires
+		// active team membership because per-member rates are not available
+		// for non-members.
+		$svc = $this->makeService(
+			$this->projectWithMode(CostRateMode::PROJECT_MEMBER),
+			false,
+			85.0,
+			62.5,
+			true,
+		);
+		$this->expectException(RateResolutionException::class);
+		$svc->resolveForTimeEntry(1, 'admin', new \DateTime('2026-05-01'));
 	}
 
 	public function testAssertClientRateTamper(): void

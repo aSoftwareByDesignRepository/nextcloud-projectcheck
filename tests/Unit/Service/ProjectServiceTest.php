@@ -228,4 +228,64 @@ class ProjectServiceTest extends TestCase {
 			'cost_rate_mode' => CostRateMode::EMPLOYEE,
 		]);
 	}
+
+	/**
+	 * @return ProjectService a ProjectService whose admin checks return {@code $isAdmin}.
+	 */
+	private function adminProbeService(bool $isAdmin): ProjectService
+	{
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn($isAdmin);
+		$accessControl = $this->createMock(AccessControlService::class);
+		$accessControl->method('isSystemAdministrator')->willReturn($isAdmin);
+		$accessControl->method('canManageAppConfiguration')->willReturn($isAdmin);
+		$db = $this->createMock(IDBConnection::class);
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->method('getUser')->willReturn(null);
+		return new ProjectService(
+			$db,
+			$userSession,
+			$this->createMock(IUserManager::class),
+			$this->createMock(IConfig::class),
+			$groupManager,
+			null,
+			null,
+			$accessControl
+		);
+	}
+
+	public function testIsAdminTimeEntryOverrideEligibleAllowsAdminForProjectMode(): void
+	{
+		$svc = $this->adminProbeService(true);
+		$this->assertTrue($svc->isAdminTimeEntryOverrideEligible('alice', CostRateMode::PROJECT));
+	}
+
+	public function testIsAdminTimeEntryOverrideEligibleAllowsAdminForEmployeeMode(): void
+	{
+		$svc = $this->adminProbeService(true);
+		$this->assertTrue($svc->isAdminTimeEntryOverrideEligible('alice', CostRateMode::EMPLOYEE));
+	}
+
+	public function testIsAdminTimeEntryOverrideEligibleRefusesAdminForProjectMemberMode(): void
+	{
+		$svc = $this->adminProbeService(true);
+		$this->assertFalse($svc->isAdminTimeEntryOverrideEligible('alice', CostRateMode::PROJECT_MEMBER));
+	}
+
+	public function testIsAdminTimeEntryOverrideEligibleRefusesNonAdmin(): void
+	{
+		$svc = $this->adminProbeService(false);
+		$this->assertFalse($svc->isAdminTimeEntryOverrideEligible('bob', CostRateMode::PROJECT));
+		$this->assertFalse($svc->isAdminTimeEntryOverrideEligible('bob', CostRateMode::EMPLOYEE));
+		$this->assertFalse($svc->isAdminTimeEntryOverrideEligible('bob', CostRateMode::PROJECT_MEMBER));
+	}
+
+	public function testIsAdminTimeEntryOverrideEligibleHandlesUnknownMode(): void
+	{
+		// Unknown/empty modes normalise to {@see CostRateMode::DEFAULT} which is
+		// PROJECT; admin override applies because PROJECT is non-PROJECT_MEMBER.
+		$svc = $this->adminProbeService(true);
+		$this->assertTrue($svc->isAdminTimeEntryOverrideEligible('alice', ''));
+		$this->assertTrue($svc->isAdminTimeEntryOverrideEligible('alice', 'totally-not-a-mode'));
+	}
 }

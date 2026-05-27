@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Db;
 
+use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
@@ -301,7 +302,17 @@ class ProjectMapper extends QBMapper
 	}
 
 	/**
-	 * Map database row to entity
+	 * Map database row to entity.
+	 *
+	 * Note: this override hydrates the Project entity directly instead of using
+	 * {@see Project::fromRow()} so we can apply SafeDateTime parsing to
+	 * date columns. Every column that exists on `pc_projects` MUST be mapped
+	 * here — fields silently left out default to NULL on the entity, which
+	 * in turn causes `getCostRateMode()` / `getProjectType()` to fall back to
+	 * the "project" / "client" defaults regardless of what is stored. That
+	 * is a security bug for pricing: an EMPLOYEE- or PROJECT_MEMBER-priced
+	 * project would be billed at the project rate when read via
+	 * {@see ProjectMapper::find()}.
 	 *
 	 * @param array $row Database row
 	 * @return Project
@@ -323,10 +334,15 @@ class ProjectMapper extends QBMapper
 		$project->setStartDate(SafeDateTime::fromOptional($row['start_date'] ?? null));
 		$project->setEndDate(SafeDateTime::fromOptional($row['end_date'] ?? null));
 		$project->setTags($row['tags']);
+		// projectType / costRateMode default to NULL when omitted — coerce here so
+		// downstream getters never see a NULL value even on legacy rows where
+		// the column was added in a later migration with no backfill.
+		$project->setProjectType((string) ($row['project_type'] ?? 'client'));
+		$project->setCostRateMode(CostRateMode::normalize($row['cost_rate_mode'] ?? null));
 		$project->setCreatedBy($row['created_by']);
 		$project->setCreatedAt(SafeDateTime::fromRequired($row['created_at'] ?? null, 'projects.created_at'));
 		$project->setUpdatedAt(SafeDateTime::fromRequired($row['updated_at'] ?? null, 'projects.updated_at'));
-		
+
 		return $project;
 	}
 }

@@ -56,15 +56,31 @@ class HourlyRateService
 			);
 		}
 
+		$mode = CostRateMode::normalize($project->getCostRateMode());
+
+		// Membership rule: ordinary users must be on the team. System and app admins may
+		// log their own time without team membership, but only when the project has a
+		// fixed project rate or uses organisation-wide employee rates. Per-member
+		// pricing (PROJECT_MEMBER) still requires team membership: there is no rate to
+		// charge a non-member against, so allowing the override there would silently
+		// fail or, worse, fall back to a wrong rate.
 		if (!$this->projectService->isActiveTeamMember($projectId, $userId)) {
-			throw new RateResolutionException(
-				$this->l->t('You must be on the project team to log time. Ask a project manager to add you under Team on the project page.'),
-				'not_on_team'
-			);
+			if ($mode === CostRateMode::PROJECT_MEMBER) {
+				throw new RateResolutionException(
+					$this->l->t('Per-person pricing is used for this project. You must be on the team with an hourly rate to log time here. Ask a project manager to add you under Team.'),
+					'not_on_team'
+				);
+			}
+			if (!$this->projectService->isAdminTimeEntryOverrideEligible($userId, $mode)) {
+				throw new RateResolutionException(
+					$this->l->t('You must be on the project team to log time. Ask a project manager to add you under Team on the project page.'),
+					'not_on_team'
+				);
+			}
+			// Admin override path — fall through to rate resolution below.
 		}
 
 		$entryYmd = $entryDate->format('Y-m-d');
-		$mode = CostRateMode::normalize($project->getCostRateMode());
 
 		$rate = match ($mode) {
 			CostRateMode::PROJECT => $this->resolveProjectModeRate($project),
