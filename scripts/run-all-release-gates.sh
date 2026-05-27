@@ -36,5 +36,5 @@ fi
 
 echo
 echo "=== All release gates finished ==="
-echo "Evidence: release/AUDIT-EVIDENCE.md"
-echo "Manual sign-off: pm/app-ideas/projectcheck/UAT-CHECKLIST.md"
+echo "Evidence: nextcloud-development ready2publish/ (private monorepo)"
+echo "Manual sign-off: planning/app-ideas/projectcheck/UAT-CHECKLIST.md"

@@ -101,4 +101,4 @@ else
 fi
 
 echo "Done: ${OUT}"
-echo "Next: sha256sum / sha512sum, openssl signature (see release/APPSTORE-RELEASE.md)"
+echo "Next: sha256sum / sha512sum, openssl signature (see nextcloud-development ready2publish/APPSTORE-RELEASE.md)"
