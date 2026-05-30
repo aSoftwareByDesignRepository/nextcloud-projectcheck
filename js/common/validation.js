@@ -4,11 +4,38 @@
  */
 /* global t */
 
-function escapeHtml(text) {
-	if (text == null) return '';
-	const div = document.createElement('div');
-	div.textContent = String(text);
-	return div.innerHTML;
+function appendListItems(ul, items, fieldKey, messageKey) {
+	items.forEach(function (item) {
+		const li = document.createElement('li');
+		const strong = document.createElement('strong');
+		strong.appendChild(document.createTextNode(String(item[fieldKey] || '') + ':'));
+		li.appendChild(strong);
+		li.appendChild(document.createTextNode(' ' + String(item[messageKey] || '')));
+		ul.appendChild(li);
+	});
+}
+
+function buildSubmissionAlert(type, label, message) {
+	const alert = document.createElement('div');
+	alert.className = 'alert alert--' + type;
+	alert.setAttribute('role', type === 'error' ? 'alert' : 'status');
+	const strong = document.createElement('strong');
+	strong.appendChild(document.createTextNode(label + ' '));
+	alert.appendChild(strong);
+	alert.appendChild(document.createTextNode(message));
+	const dismiss = document.createElement('button');
+	dismiss.type = 'button';
+	dismiss.className = 'alert__dismiss';
+	dismiss.setAttribute('aria-label', typeof t === 'function' ? t('projectcheck', 'Dismiss') : 'Dismiss');
+	dismiss.appendChild(document.createTextNode('\u00D7'));
+	dismiss.addEventListener('click', function () {
+		const parent = alert.parentElement;
+		if (parent) {
+			parent.remove();
+		}
+	});
+	alert.appendChild(dismiss);
+	return alert;
 }
 
 const ProjectControlValidation = {
@@ -504,12 +531,12 @@ const ProjectControlValidation = {
       form.insertBefore(errorContainer, form.firstChild);
     }
     
-    errorContainer.innerHTML = `
-      <div class="alert alert--error">
-        <strong>Submission Error:</strong> ${escapeHtml(message)}
-        <button type="button" class="alert__dismiss" onclick="this.parentElement.parentElement.remove()">×</button>
-      </div>
-    `;
+    errorContainer.replaceChildren();
+    errorContainer.appendChild(buildSubmissionAlert(
+      'error',
+      typeof t === 'function' ? t('projectcheck', 'Submission Error:') : 'Submission Error:',
+      message
+    ));
     errorContainer.style.display = 'block';
   },
 
@@ -524,12 +551,12 @@ const ProjectControlValidation = {
       form.insertBefore(infoContainer, form.firstChild);
     }
     
-    infoContainer.innerHTML = `
-      <div class="alert alert--info">
-        <strong>Info:</strong> ${escapeHtml(message)}
-        <button type="button" class="alert__dismiss" onclick="this.parentElement.parentElement.remove()">×</button>
-      </div>
-    `;
+    infoContainer.replaceChildren();
+    infoContainer.appendChild(buildSubmissionAlert(
+      'info',
+      typeof t === 'function' ? t('projectcheck', 'Info:') : 'Info:',
+      message
+    ));
     infoContainer.style.display = 'block';
   },
 
@@ -843,12 +870,15 @@ const ProjectControlValidation = {
       form.insertBefore(errorContainer, form.firstChild);
     }
     
-    errorContainer.innerHTML = `
-      <h4>Please fix the following errors:</h4>
-      <ul>
-        ${errors.map(error => `<li><strong>${escapeHtml(error.field)}:</strong> ${escapeHtml(error.message)}</li>`).join('')}
-      </ul>
-    `;
+    errorContainer.replaceChildren();
+    const heading = document.createElement('h4');
+    heading.appendChild(document.createTextNode(
+      typeof t === 'function' ? t('projectcheck', 'Please fix the following errors:') : 'Please fix the following errors:'
+    ));
+    const ul = document.createElement('ul');
+    appendListItems(ul, errors, 'field', 'message');
+    errorContainer.appendChild(heading);
+    errorContainer.appendChild(ul);
     errorContainer.style.display = 'block';
     
     // Hide success container
@@ -869,12 +899,15 @@ const ProjectControlValidation = {
       form.insertBefore(warningContainer, form.firstChild);
     }
     
-    warningContainer.innerHTML = `
-      <h4>Please review the following warnings:</h4>
-      <ul>
-        ${warnings.map(warning => `<li><strong>${escapeHtml(warning.field)}:</strong> ${escapeHtml(warning.message)}</li>`).join('')}
-      </ul>
-    `;
+    warningContainer.replaceChildren();
+    const heading = document.createElement('h4');
+    heading.appendChild(document.createTextNode(
+      typeof t === 'function' ? t('projectcheck', 'Please review the following warnings:') : 'Please review the following warnings:'
+    ));
+    const ul = document.createElement('ul');
+    appendListItems(ul, warnings, 'field', 'message');
+    warningContainer.appendChild(heading);
+    warningContainer.appendChild(ul);
     warningContainer.style.display = 'block';
   },
 

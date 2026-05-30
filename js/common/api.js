@@ -60,11 +60,21 @@
 		return data;
 	}
 
+	/**
+	 * POST delete (Nextcloud CSRF). Appends /delete when the path has no action suffix.
+	 */
+	function postDelete(path, params) {
+		const normalized = String(path).replace(/\/?$/, '/delete');
+		return request(normalized, { method: 'POST', params });
+	}
+
 	window.ProjectCheckApi = {
 		get: (path, params) => request(path, { method: 'GET', params }),
 		post: (path, body, params) => request(path, { method: 'POST', body, params }),
 		put: (path, body, params) => request(path, { method: 'PUT', body, params }),
-		del: (path, params) => request(path, { method: 'DELETE', params }),
+		/** @deprecated Use postDelete — DELETE + query token is unreliable under CSP. */
+		del: (path, params) => postDelete(path, params),
+		postDelete,
 		request,
 	};
 

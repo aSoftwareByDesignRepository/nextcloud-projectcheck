@@ -115,4 +115,12 @@ class ProjectFileControllerTest extends TestCase {
 		$body = $response->getData();
 		$this->assertStringNotContainsString('Access denied', (string)$body['error']);
 	}
+
+	public function testDeletePostSucceedsForAuthorisedUser(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->fileService->expects($this->once())->method('deleteFile')->with(7, 99, 'alice');
+		$response = $this->controller->deletePost(7, 99);
+		$this->assertSame(200, $response->getStatus());
+		$this->assertTrue($response->getData()['success']);
+	}
 }

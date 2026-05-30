@@ -336,7 +336,7 @@ include __DIR__ . '/common/page-start.php';
                         </a>
                         <button type="button" class="button danger delete-time-entry" id="delete-time-entry-btn"
                             data-id="<?php p((string)$timeEntryId); ?>"
-                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.delete', ['id' => $timeEntryId])); ?>"
+                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.deletePost', ['id' => $timeEntryId])); ?>"
                             data-index-url="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>"
                             data-confirm="<?php p($l->t('Are you sure you want to delete this time entry? This action cannot be undone.')); ?>"
                             aria-label="<?php p($l->t('Delete time entry')); ?>">

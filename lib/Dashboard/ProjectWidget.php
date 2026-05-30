@@ -23,7 +23,9 @@ use OCP\IUserSession;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\ProjectService;
-use RuntimeException;
+use OCA\ProjectCheck\Exception\SchemaRepairFailedException;
+use OCA\ProjectCheck\Service\SchemaGuardService;
+use Psr\Log\LoggerInterface;
 
 /**
  * Dashboard widget for project overview
@@ -48,6 +50,12 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
     /** @var BudgetService */
     private $budgetService;
 
+    /** @var SchemaGuardService */
+    private $schemaGuard;
+
+    /** @var LoggerInterface */
+    private $logger;
+
     /**
      * ProjectWidget constructor
      *
@@ -57,6 +65,8 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
      * @param ProjectService $projectService
      * @param AccessControlService $accessControl
      * @param BudgetService $budgetService
+     * @param SchemaGuardService $schemaGuard
+     * @param LoggerInterface $logger
      */
     public function __construct(
         IL10N $l10n,
@@ -64,7 +74,9 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
         IUserSession $userSession,
         ProjectService $projectService,
         AccessControlService $accessControl,
-        BudgetService $budgetService
+        BudgetService $budgetService,
+        SchemaGuardService $schemaGuard,
+        LoggerInterface $logger
     ) {
         $this->l10n = $l10n;
         $this->urlGenerator = $urlGenerator;
@@ -72,6 +84,8 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
         $this->projectService = $projectService;
         $this->accessControl = $accessControl;
         $this->budgetService = $budgetService;
+        $this->schemaGuard = $schemaGuard;
+        $this->logger = $logger;
     }
 
     public function load(): void
@@ -126,18 +140,24 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
         if (!$this->accessControl->canUseApp($userId)) {
             return [];
         }
-        return [
+
+        $buttons = [
             new WidgetButton(
                 WidgetButton::TYPE_MORE,
                 $this->l10n->t('View all projects'),
                 $this->urlGenerator->linkToRoute('projectcheck.project.index')
             ),
-            new WidgetButton(
+        ];
+
+        if ($this->projectService->canUserCreateProject($userId)) {
+            $buttons[] = new WidgetButton(
                 WidgetButton::TYPE_SETUP,
                 $this->l10n->t('Add project'),
                 $this->urlGenerator->linkToRoute('projectcheck.project.create')
-            )
-        ];
+            );
+        }
+
+        return $buttons;
     }
 
     /**
@@ -155,6 +175,7 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
         }
 
         try {
+            $this->schemaGuard->ensureReady();
             $projects = $this->projectService->getProjectsByUser($userId, $limit);
             $items = [];
 
@@ -174,7 +195,19 @@ class ProjectWidget implements IAPIWidget, IButtonWidget, IIconWidget, IWidget
             }
 
             return $items;
-        } catch (\Exception $e) {
+        } catch (SchemaRepairFailedException $e) {
+            $this->logger->error('ProjectCheck dashboard widget blocked: schema repair failed', [
+                'app' => 'projectcheck',
+                'userId' => $userId,
+                'exception' => $e,
+            ]);
+            return [];
+        } catch (\Throwable $e) {
+            $this->logger->error('ProjectCheck dashboard widget failed', [
+                'app' => 'projectcheck',
+                'userId' => $userId,
+                'exception' => $e,
+            ]);
             return [];
         }
     }

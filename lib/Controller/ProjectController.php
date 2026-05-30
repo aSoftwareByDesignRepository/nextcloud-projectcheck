@@ -16,6 +16,7 @@ use OCA\ProjectCheck\Service\HourlyRateService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Exception\RateResolutionException;
+use OCA\ProjectCheck\Util\RateResolutionMessage;
 use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Util\ProjectCapacity;
 use OCA\ProjectCheck\Service\BudgetService;
@@ -52,6 +53,7 @@ use OCP\IUserManager;
 class ProjectController extends Controller
 {
 	use CSPTrait;
+	use ErrorPageTrait;
 	use StatsTrait;
 
 	/** @var ProjectService */
@@ -244,7 +246,7 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('User not authenticated')], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('User not authenticated')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -339,13 +341,13 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('User not authenticated')], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('User not authenticated')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$userId = $user->getUID();
 		if (!$this->projectService->canUserCreateProject($userId)) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Access denied')], 'main');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPage($this->l->t('Access denied')), 'main');
 			return $this->configureCSP($response, 'main');
 		}
 
@@ -471,17 +473,17 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('User not authenticated')], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('User not authenticated')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$project = $this->projectService->getProject($id);
 		if (!$project) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Project not found')], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageProjects($this->l->t('Project not found')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 		if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Access denied')], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('Access denied')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -621,7 +623,7 @@ class ProjectController extends Controller
 		} catch (RateResolutionException $e) {
 			return new JSONResponse([
 				'success' => false,
-				'error' => $e->getMessage(),
+				'error' => RateResolutionMessage::forException($e, $this->l),
 				'code' => $e->getCodeKey(),
 			], 400);
 		} catch (\Throwable $e) {
@@ -732,7 +734,8 @@ class ProjectController extends Controller
 			} catch (RateResolutionException $e) {
 				return new JSONResponse([
 					'success' => false,
-					'error' => $e->getMessage(),
+					'error' => RateResolutionMessage::forException($e, $this->l),
+					'code' => $e->getCodeKey(),
 				], 400);
 			}
 
@@ -788,17 +791,17 @@ class ProjectController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('User not authenticated')], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('User not authenticated')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$project = $this->projectService->getProject($id);
 		if (!$project) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Project not found')], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageProjects($this->l->t('Project not found')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
-			$response = new TemplateResponse($this->appName, 'error', ['error' => $this->l->t('Access denied')], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('Access denied')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -1005,36 +1008,99 @@ class ProjectController extends Controller
 			return new RedirectResponse($url);
 		}
 
+		return $this->finishProjectDeletionResponse($id, $user->getUID());
+	}
+
+	/**
+	 * Delete project via POST (deletion modal / forms — reliable CSRF with requesttoken body).
+	 *
+	 * @param int $id
+	 * @return DataResponse
+	 */
+	#[NoAdminRequired]
+	public function deletePost(int $id): DataResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
+		}
+		if (!$this->projectService->canUserDeleteProject($user->getUID(), $id)) {
+			return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
+		}
+
+		$response = $this->finishProjectDeletionResponse($id, $user->getUID());
+		if ($response instanceof DataResponse) {
+			return $response;
+		}
+
+		return new DataResponse($this->errorPayload($this->l->t('Could not delete project.')), 400);
+	}
+
+	/**
+	 * @return DataResponse|RedirectResponse
+	 */
+	private function finishProjectDeletionResponse(int $id, string $uid): DataResponse|RedirectResponse
+	{
 		try {
-			// Get project info before deletion for activity logging
 			$project = $this->projectService->getProject($id);
+			if (!$project) {
+				throw new \Exception('Project not found');
+			}
 			$impact = $this->deletionService->getProjectDeletionImpact($id);
 
+			$this->purgeProjectFilesForDeletion($id, $uid);
 			$this->projectService->deleteProject($id);
 
-			// Log activity
-			if ($project) {
-				$this->activityService->logProjectDeleted($user->getUID(), $project, $impact);
+			try {
+				$this->activityService->logProjectDeleted($uid, $project, $impact);
+			} catch (\Throwable $activityError) {
+				// Deletion succeeded; activity stream failure must not roll back UX.
 			}
 
-			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
 				return new DataResponse(['success' => true, 'message' => $this->l->t('Project deleted successfully')]);
 			}
 
-			// Redirect to projects list with success message
 			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'success', 'deleted' => 'true']);
 			return new RedirectResponse($url);
-		} catch (\Exception $e) {
-			// Return appropriate response based on request type
+		} catch (\Throwable $e) {
+			$message = $this->mapProjectDeletionError($e);
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse($this->errorPayload($this->l->t('Could not delete project.')), 400);
+				$status = $message === $this->l->t('Project not found') ? 404 : 400;
+				return new DataResponse($this->errorPayload($message), $status);
 			}
 
-			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Could not delete project.')]);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $message]);
 			return new RedirectResponse($url);
 		}
+	}
+
+	/**
+	 * Remove uploaded files before deleting the project row (storage + DB metadata).
+	 */
+	private function purgeProjectFilesForDeletion(int $projectId, string $uid): void
+	{
+		try {
+			$files = $this->projectFileService->listFiles($projectId, $uid);
+		} catch (\Throwable $e) {
+			return;
+		}
+		foreach ($files as $file) {
+			try {
+				$this->projectFileService->deleteFile($projectId, $file->getId(), $uid);
+			} catch (\Throwable $e) {
+				// Best-effort; DB project delete must not be blocked by a single file.
+			}
+		}
+	}
+
+	private function mapProjectDeletionError(\Throwable $e): string
+	{
+		if ($e->getMessage() === 'Project not found') {
+			return $this->l->t('Project not found');
+		}
+
+		return $this->l->t('Could not delete project.');
 	}
 
 	/**
@@ -1535,6 +1601,43 @@ class ProjectController extends Controller
 			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
 		}
 
+		return $this->executeRemoveTeamMember($id, $userId);
+	}
+
+	/**
+	 * Remove team member via POST (deletion modal — CSRF-safe).
+	 *
+	 * @param int $id Project ID
+	 * @param string $userId Member user ID
+	 * @return DataResponse
+	 */
+	#[NoAdminRequired]
+	public function removeTeamMemberPost(int $id, string $userId): DataResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		$project = $this->projectService->getProject($id);
+		if ($project === null) {
+			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
+		}
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+		if (!$project->isEditableState()) {
+			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
+
+		$response = $this->executeRemoveTeamMember($id, $userId);
+		return $response instanceof DataResponse ? $response : new DataResponse(['error' => $this->l->t('Could not remove team member.')], 400);
+	}
+
+	/**
+	 * @return DataResponse
+	 */
+	private function executeRemoveTeamMember(int $id, string $userId): DataResponse
+	{
 		try {
 			$targetUserId = trim($userId);
 			if ($targetUserId === '') {
@@ -1547,7 +1650,6 @@ class ProjectController extends Controller
 				'message' => $this->l->t('Team member removed successfully'),
 			]);
 		} catch (\Exception $e) {
-			// Removed logger call
 			return new DataResponse(['error' => $this->l->t('Could not remove team member.')], 400);
 		}
 	}

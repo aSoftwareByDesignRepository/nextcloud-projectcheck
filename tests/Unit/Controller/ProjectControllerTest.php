@@ -24,6 +24,7 @@ use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
+use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -851,6 +852,31 @@ class ProjectControllerTest extends TestCase {
 	}
 
 	/**
+	 * Deletion modal uses POST /projects/{id}/delete (reliable CSRF).
+	 */
+	public function testProjectDeletionPost(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+
+		$project = new Project();
+		$project->setId(1);
+		$project->setName('Test Project');
+		$project->setStatus('Active');
+
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
+		$this->projectService->method('canUserDeleteProject')->with('testuser', 1)->willReturn(true);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
+		$this->projectService->method('deleteProject')->with(1)->willReturn(true);
+
+		$response = $this->controller->deletePost(1);
+
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+	}
+
+	/**
 	 * Test error handling for invalid data
 	 */
 	public function testErrorHandlingForInvalidData(): void {
@@ -893,8 +919,9 @@ class ProjectControllerTest extends TestCase {
 		$this->assertEquals('error', $response->getTemplateName());
 
 		$params = $response->getParams();
-		$this->assertArrayHasKey('error', $params);
-		$this->assertEquals('User not authenticated', $params['error']);
+		$this->assertArrayHasKey('message', $params);
+		$this->assertArrayHasKey('homeUrl', $params);
+		$this->assertStringContainsString('User not authenticated', (string) $params['message']);
 	}
 
 	/**
@@ -954,5 +981,63 @@ class ProjectControllerTest extends TestCase {
 		$response = $this->controller->resolveHourlyRate(9);
 
 		$this->assertEquals(403, $response->getStatus());
+	}
+
+	/**
+	 * Rate-resolution API must not echo raw exception text (audit / info leak).
+	 */
+	public function testResolveHourlyRateDoesNotExposeInternalExceptionText(): void {
+		$leaked = 'INTERNAL_SQL_or_stack_trace_xyz_9f3a';
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('canUserAccessProject')->with('alice', 9)->willReturn(true);
+		$this->request->method('getParam')->willReturnCallback(static function (string $key, $default = null) {
+			return match ($key) {
+				'date' => '2026-04-01',
+				'user_id' => '',
+				default => $default,
+			};
+		});
+		$this->hourlyRateService->method('resolvePreview')->willThrowException(
+			new RateResolutionException($leaked, 'employee_rate_missing')
+		);
+
+		$response = $this->controller->resolveHourlyRate(9);
+
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertFalse($data['success']);
+		$this->assertSame('employee_rate_missing', $data['code']);
+		$this->assertStringNotContainsString($leaked, (string) ($data['error'] ?? ''));
+		$this->assertStringContainsString('employee hourly rate', (string) $data['error']);
+	}
+
+	public function testCheckBudgetImpactDoesNotExposeInternalExceptionText(): void {
+		$leaked = 'SECRET_RATE_DEBUG_b7c2';
+		$project = $this->createMock(Project::class);
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('getProject')->with(9)->willReturn($project);
+		$this->projectService->method('canUserAddTimeEntryForProject')->with('alice', 9)->willReturn(true);
+		$this->request->method('getParam')->willReturnCallback(static function (string $key, $default = null) {
+			return match ($key) {
+				'project_id' => '9',
+				'additional_hours' => '2',
+				'entry_date' => '2026-04-01',
+				default => $default,
+			};
+		});
+		$this->hourlyRateService->method('resolveForTimeEntry')->willThrowException(
+			new RateResolutionException($leaked, 'rate_tamper')
+		);
+
+		$response = $this->controller->checkBudgetImpact();
+
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertFalse($data['success']);
+		$this->assertSame('rate_tamper', $data['code']);
+		$this->assertStringNotContainsString($leaked, (string) ($data['error'] ?? ''));
+		$this->assertStringContainsString('hourly rate', (string) $data['error']);
 	}
 }

@@ -4,11 +4,12 @@
  */
 
 const ProjectControlComponents = {
-  escapeHtml(text) {
-    if (text === null || text === undefined) return '';
-    const div = document.createElement('div');
-    div.textContent = String(text);
-    return div.innerHTML;
+  getDom() {
+    return window.ProjectCheckDom || null;
+  },
+
+  toastIcons() {
+    return { success: '\u2713', error: '\u2717', warning: '\u26A0', info: '\u2139' };
   },
 
   /**
@@ -40,22 +41,23 @@ const ProjectControlComponents = {
       });
     });
 
-    // Close modals on backdrop click
-    document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('modal-backdrop')) {
-        this.closeModal(e.target.querySelector('.modal'));
-      }
-    });
-
-    // Close modals on escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const openModal = document.querySelector('.modal-backdrop');
-        if (openModal) {
-          this.closeModal(openModal.querySelector('.modal'));
+    // Fallback dismissal only when shared a11y helper is unavailable.
+    if (!window.ProjectCheckModalA11y) {
+      document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-backdrop')) {
+          this.closeModal(e.target.querySelector('.modal'));
         }
-      }
-    });
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const openModal = document.querySelector('.modal-backdrop');
+          if (openModal) {
+            this.closeModal(openModal.querySelector('.modal'));
+          }
+        }
+      });
+    }
   },
 
   /**
@@ -148,31 +150,53 @@ const ProjectControlComponents = {
       onClose = null
     } = options;
 
-    const modal = document.createElement('div');
-    modal.className = `modal modal--${size}`;
+    const Dom = this.getDom();
+    const titleId = id + '-title';
+    const modal = Dom ? Dom.createEl('div', `modal modal--${size}`) : document.createElement('div');
+    if (!Dom) {
+      modal.className = `modal modal--${size}`;
+    }
     modal.id = id;
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-hidden', 'true');
+    modal.setAttribute('aria-labelledby', titleId);
 
-    modal.innerHTML = `
-      <div class="modal-header">
-        <h2 class="modal-title">${this.escapeHtml(title)}</h2>
-        ${closable ? `<button type="button" class="modal-close" aria-label="${t('projectcheck', 'Close modal')}">&times;</button>` : ''}
-      </div>
-      <div class="modal-body">
-        ${content}
-      </div>
-    `;
+    const header = Dom ? Dom.createEl('div', 'modal-header') : document.createElement('div');
+    header.className = 'modal-header';
+    const titleEl = Dom ? Dom.createEl('h2', 'modal-title') : document.createElement('h2');
+    titleEl.className = 'modal-title';
+    titleEl.id = titleId;
+    titleEl.appendChild(document.createTextNode(title));
+    header.appendChild(titleEl);
 
-    // Add event listeners
     if (closable) {
-      const closeBtn = modal.querySelector('.modal-close');
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'modal-close';
+      closeBtn.setAttribute('aria-label', t('projectcheck', 'Close modal'));
+      closeBtn.appendChild(document.createTextNode('\u00D7'));
       closeBtn.addEventListener('click', () => {
         this.closeModal(modal);
-        if (onClose) onClose();
+        if (onClose) {
+          onClose();
+        }
       });
+      header.appendChild(closeBtn);
     }
+
+    const body = Dom ? Dom.createEl('div', 'modal-body') : document.createElement('div');
+    body.className = 'modal-body';
+    if (content instanceof Node) {
+      body.appendChild(content);
+    } else if (typeof content === 'string' && content !== '') {
+      const p = document.createElement('p');
+      p.textContent = content;
+      body.appendChild(p);
+    }
+
+    modal.appendChild(header);
+    modal.appendChild(body);
 
     // Store callbacks
     modal.dataset.onOpen = onOpen ? onOpen.toString() : '';
@@ -393,14 +417,17 @@ const ProjectControlComponents = {
     alert.setAttribute('aria-live', type === 'error' || type === 'warning' ? 'assertive' : 'polite');
     alert.setAttribute('aria-atomic', 'true');
 
-    alert.innerHTML = `
-      <div class="alert-icon" aria-hidden="true">${this.getAlertIcon(type)}</div>
-      <div class="alert-content">
-        ${title ? `<div class="alert-title">${this.escapeHtml(title)}</div>` : ''}
-        <div class="alert-message">${this.escapeHtml(message)}</div>
-      </div>
-      ${dismissible ? `<button type="button" class="alert-close" aria-label="${t('projectcheck', 'Dismiss alert')}"><span aria-hidden="true">&times;</span></button>` : ''}
-    `;
+    const Dom = this.getDom();
+    if (Dom) {
+      Dom.populateInlineAlert(alert, {
+        type: type,
+        title: title,
+        message: message,
+        dismissible: dismissible,
+        dismissLabel: t('projectcheck', 'Dismiss alert'),
+        icons: this.toastIcons()
+      });
+    }
 
     if (autoDismiss) {
       alert.dataset.autoDismiss = autoDismiss;
@@ -423,13 +450,7 @@ const ProjectControlComponents = {
    * Get alert icon
    */
   getAlertIcon(type) {
-    const icons = {
-      success: '✓',
-      error: '✗',
-      warning: '⚠',
-      info: 'ℹ'
-    };
-    return icons[type] || icons.info;
+    return (this.toastIcons())[type] || this.toastIcons().info;
   },
 
   // ===== TAB COMPONENTS =====
@@ -667,8 +688,6 @@ const ProjectControlComponents = {
         element.className = value;
       } else if (key === 'textContent') {
         element.textContent = value;
-      } else if (key === 'innerHTML') {
-        element.innerHTML = value;
       } else {
         element.setAttribute(key, value);
       }

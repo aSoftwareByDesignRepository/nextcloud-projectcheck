@@ -33,22 +33,36 @@ $pageHelp = $isGlobalViewer
 	: $l->t('Review your own time tracking and yearly performance.');
 include __DIR__ . '/common/page-start.php';
 ?>
+<?php
+$baseUrl = $urlGenerator->linkToRoute('projectcheck.employee.index');
+$hasSearch = ($_['filters']['search'] ?? '') !== '';
+$searchValue = (string)($_['filters']['search'] ?? '');
+
+// Column labels reused for both <th> headers and per-cell data-labels
+// (the responsive stacked layout reads data-label to caption each value).
+$colRank = $l->t('Rank');
+$colEmployee = $l->t('Employee');
+$colHours = $l->t('Total Hours');
+$colRevenue = $l->t('Total Revenue');
+$colRate = $l->t('Avg. Hourly Rate');
+$colActions = $l->t('Actions');
+?>
         <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
                 <ol>
+                    <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>"><?php p($l->t('Dashboard')); ?></a></li>
                     <li aria-current="page"><?php p($l->t('Employees')); ?></li>
                 </ol>
             </nav>
         </div>
 
         <!-- Page actions -->
-        <div class="section page-header-section pc-section">
+        <div class="section header-section pc-section">
             <div class="header-content">
-                <div class="header-text">
                 <div class="header-actions">
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>" class="button secondary">
-                        <i data-lucide="arrow-left" class="lucide-icon"></i>
+                        <i data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></i>
                         <?php p($l->t('Back to Dashboard')); ?>
                     </a>
                 </div>
@@ -74,28 +88,22 @@ include __DIR__ . '/common/page-start.php';
         <!-- Team Overview Stats -->
         <div class="section team-overview">
             <div class="section-header">
-                    <h3><i data-lucide="users" class="lucide-icon"></i> <?php p($isGlobalViewer ? $l->t('Team Overview') : $l->t('Personal Overview')); ?></h3>
+                    <h3><i data-lucide="users" class="lucide-icon" aria-hidden="true"></i> <?php p($isGlobalViewer ? $l->t('Team Overview') : $l->t('Personal Overview')); ?></h3>
             </div>
             <div class="section-content">
                 <?php
-                // Calculate team totals
-                $teamTotalHours = 0;
-                $teamTotalCost = 0;
-                $teamTotalEmployees = 0;
-
-                if (!empty($_['employeeComparisonStats'])) {
-                    foreach ($_['employeeComparisonStats'] as $employee) {
-                        $teamTotalHours += $employee['total_hours'];
-                        $teamTotalCost += $employee['total_cost'];
-                        $teamTotalEmployees++;
-                    }
-                }
+                // Team totals are computed server-side across the full (search-filtered)
+                // result set so the cards stay correct across pagination.
+                $teamTotals = $_['teamTotals'] ?? null;
+                $teamTotalEmployees = (int)($teamTotals['employees'] ?? count($_['employeeComparisonStats'] ?? []));
+                $teamTotalHours = (float)($teamTotals['hours'] ?? 0);
+                $teamTotalCost = (float)($teamTotals['cost'] ?? 0);
                 ?>
 
                 <div class="overview-cards">
                     <div class="overview-card">
                         <div class="card-icon">
-                            <i data-lucide="users" class="lucide-icon"></i>
+                            <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
                         </div>
                         <div class="card-content">
                             <div class="card-value"><?php p($teamTotalEmployees); ?></div>
@@ -105,7 +113,7 @@ include __DIR__ . '/common/page-start.php';
 
                     <div class="overview-card">
                         <div class="card-icon">
-                            <i data-lucide="clock" class="lucide-icon"></i>
+                            <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
                         </div>
                         <div class="card-content">
                             <div class="card-value"><?php p(number_format($teamTotalHours, 1)); ?>h</div>
@@ -115,7 +123,7 @@ include __DIR__ . '/common/page-start.php';
 
                     <div class="overview-card">
                         <div class="card-icon">
-                            <i data-lucide="euro" class="lucide-icon"></i>
+                            <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
                         </div>
                         <div class="card-content">
                             <div class="card-value"><?php p($fmt ? $fmt->currency((float)$teamTotalCost) : $currencyCode . ' ' . number_format((float)$teamTotalCost, 2)); ?></div>

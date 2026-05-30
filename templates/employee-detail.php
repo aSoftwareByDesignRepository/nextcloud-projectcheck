@@ -40,7 +40,7 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
         employeeId: '<?php p($eid); ?>',
         assignProjectUrl: '<?php p($_['assignProjectUrl'] ?? ''); ?>',
         addEmployeeRateUrl: '<?php p($_['addEmployeeRateUrl'] ?? ''); ?>',
-        unassignProjectUrlTemplate: '<?php p($urlGenerator->linkToRoute('projectcheck.employee.unassignProject', ['userId' => 'USER_ID', 'projectId' => 'PROJECT_ID'])); ?>'
+        unassignProjectUrlTemplate: '<?php p($urlGenerator->linkToRoute('projectcheck.employee.unassignProjectPost', ['userId' => 'USER_ID', 'projectId' => 'PROJECT_ID'])); ?>'
     };
 </script>
 

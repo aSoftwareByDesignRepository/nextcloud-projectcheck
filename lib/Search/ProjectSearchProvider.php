@@ -12,8 +12,10 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Search;
 
 use OCA\ProjectCheck\Service\AccessControlService;
-use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
+use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Exception\SchemaRepairFailedException;
+use OCA\ProjectCheck\Service\SchemaGuardService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -51,6 +53,9 @@ class ProjectSearchProvider implements IProvider
 	/** @var LoggerInterface */
 	private $logger;
 
+	/** @var SchemaGuardService */
+	private $schemaGuard;
+
 	/**
 	 * ProjectSearchProvider constructor
 	 *
@@ -60,6 +65,7 @@ class ProjectSearchProvider implements IProvider
 	 * @param CustomerService $customerService
 	 * @param TimeEntryService $timeEntryService
 	 * @param AccessControlService $accessControl
+	 * @param SchemaGuardService $schemaGuard
 	 * @param LoggerInterface $logger
 	 */
 	public function __construct(
@@ -69,6 +75,7 @@ class ProjectSearchProvider implements IProvider
 		CustomerService $customerService,
 		TimeEntryService $timeEntryService,
 		AccessControlService $accessControl,
+		SchemaGuardService $schemaGuard,
 		LoggerInterface $logger
 	) {
 		$this->l10n = $l10n;
@@ -77,6 +84,7 @@ class ProjectSearchProvider implements IProvider
 		$this->customerService = $customerService;
 		$this->timeEntryService = $timeEntryService;
 		$this->accessControl = $accessControl;
+		$this->schemaGuard = $schemaGuard;
 		$this->logger = $logger;
 	}
 
@@ -112,6 +120,16 @@ class ProjectSearchProvider implements IProvider
 	public function search(IUser $user, ISearchQuery $query): SearchResult
 	{
 		if (!$this->accessControl->canUseApp($user->getUID())) {
+			return SearchResult::complete($this->getName(), []);
+		}
+
+		try {
+			$this->schemaGuard->ensureReady();
+		} catch (SchemaRepairFailedException $e) {
+			$this->logger->error('ProjectCheck search blocked: schema repair failed', [
+				'app' => 'projectcheck',
+				'exception' => $e,
+			]);
 			return SearchResult::complete($this->getName(), []);
 		}
 

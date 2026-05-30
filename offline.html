@@ -1,292 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offline — ProjectCheck</title>
-    <style>
-        :root {
-            --color-primary: #0082c9;
-            --color-primary-hover: #006aa3;
-            --color-background: #ffffff;
-            --color-text: #333333;
-            --color-border: #e1e5e9;
-            --color-error: #e74c3c;
-            --color-warning: #f39c12;
-            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Offline — ProjectCheck</title>
+	<style>
+		:root {
+			--color-primary: #0082c9;
+			--color-primary-hover: #006aa3;
+			--color-background: #ffffff;
+			--color-main-text: #222222;
+			--color-text-maxcontrast: #555555;
+			--color-warning: #c98600;
+			--color-error: #e9322d;
+			--color-success: #27ae60;
+			--font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+			--pc-space-3: 0.75rem;
+			--pc-space-4: 1rem;
+			--pc-space-5: 1.25rem;
+			--pc-space-6: 1.5rem;
+		}
 
-        * {
-            box-sizing: border-box;
-        }
+		* { box-sizing: border-box; }
 
-        html {
-            font-size: 14px;
-            line-height: 1.5;
-        }
+		html {
+			font-size: 16px;
+			line-height: 1.5;
+		}
 
-        body {
-            font-family: var(--font-family);
-            color: var(--color-text);
-            background-color: var(--color-background);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+		body {
+			font-family: var(--font-family);
+			color: var(--color-main-text);
+			background: var(--color-background);
+			margin: 0;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: var(--pc-space-4);
+			-webkit-font-smoothing: antialiased;
+		}
 
-        .offline-container {
-            text-align: center;
-            max-width: 500px;
-            padding: 2rem;
-        }
+		.projectcheck-status-page {
+			max-width: 32rem;
+			width: 100%;
+			text-align: center;
+			padding: var(--pc-space-6);
+		}
 
-        .offline-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 2rem;
-            background-color: var(--color-warning);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: white;
-        }
+		.projectcheck-status-page__icon {
+			display: flex;
+			justify-content: center;
+			margin-bottom: var(--pc-space-4);
+			color: var(--color-warning);
+			font-size: 2.75rem;
+			line-height: 1;
+		}
 
-        .offline-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--color-text);
-        }
+		.projectcheck-status-page__title {
+			margin: 0 0 var(--pc-space-3);
+			font-size: 1.25rem;
+			font-weight: 600;
+		}
 
-        .offline-message {
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-            color: #2e2e2e;
-        }
+		.projectcheck-status-page__message {
+			margin: 0 0 var(--pc-space-5);
+			color: var(--color-text-maxcontrast);
+		}
 
-        .offline-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+		.projectcheck-status-page__actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: var(--pc-space-3);
+			justify-content: center;
+		}
 
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-align: center;
-            text-decoration: none;
-            border: 1px solid transparent;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background-color: var(--color-primary);
-            color: white;
-        }
+		.btn {
+			display: inline-block;
+			padding: 0.75rem 1.25rem;
+			font-size: 0.9375rem;
+			font-weight: 500;
+			border: 1px solid transparent;
+			border-radius: 4px;
+			cursor: pointer;
+			background: var(--color-primary);
+			color: #fff;
+			text-decoration: none;
+		}
 
-        .btn:hover {
-            background-color: var(--color-primary-hover);
-        }
+		.btn:hover { background: var(--color-primary-hover); }
 
-        .btn:focus-visible {
-            outline: 3px solid #005fcc;
-            outline-offset: 2px;
-        }
+		.btn:focus-visible {
+			outline: 3px solid #005fcc;
+			outline-offset: 2px;
+		}
 
-        .btn-secondary:focus-visible {
-            outline-color: var(--color-primary);
-        }
+		.btn--secondary {
+			background: transparent;
+			color: var(--color-primary);
+			border-color: var(--color-primary);
+		}
 
-        .btn-secondary {
-            background-color: transparent;
-            color: var(--color-primary);
-            border-color: var(--color-primary);
-        }
+		.btn--secondary:hover {
+			background: var(--color-primary);
+			color: #fff;
+		}
 
-        .btn-secondary:hover {
-            background-color: var(--color-primary);
-            color: white;
-        }
+		.offline-status {
+			margin-top: var(--pc-space-5);
+			padding: var(--pc-space-4);
+			background: #f4f6f8;
+			border-radius: 4px;
+			font-size: 0.875rem;
+			color: var(--color-text-maxcontrast);
+		}
 
-        .offline-status {
-            margin-top: 2rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            color: #666;
-        }
+		.status-indicator {
+			display: inline-block;
+			width: 0.5rem;
+			height: 0.5rem;
+			border-radius: 50%;
+			background: var(--color-error);
+			margin-right: 0.5rem;
+			vertical-align: middle;
+		}
 
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--color-error);
-            margin-right: 0.5rem;
-        }
+		.status-indicator--online { background: var(--color-success); }
 
-        .status-indicator.online {
-            background-color: #27ae60;
-        }
+		@media (prefers-color-scheme: dark) {
+			:root {
+				--color-background: #1a1a1a;
+				--color-main-text: #ffffff;
+				--color-text-maxcontrast: #cccccc;
+			}
+			.offline-status { background: #2a2a2a; }
+		}
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --color-background: #1a1a1a;
-                --color-text: #ffffff;
-                --color-border: #404040;
-            }
-
-            .offline-status {
-                background-color: #2a2a2a;
-                color: #ccc;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .offline-container {
-                padding: 1rem;
-            }
-
-            .offline-title {
-                font-size: 1.25rem;
-            }
-
-            .offline-actions {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
-        }
-    </style>
+		@media (max-width: 480px) {
+			.projectcheck-status-page { padding: var(--pc-space-4); }
+			.projectcheck-status-page__actions { flex-direction: column; }
+			.btn { width: 100%; }
+		}
+	</style>
 </head>
 <body>
-    <main class="offline-container" role="main" aria-labelledby="offline-heading">
-        <div class="offline-icon" aria-hidden="true">
-            📶
-        </div>
-        
-        <h1 class="offline-title" id="offline-heading">You’re offline</h1>
-        
-        <p class="offline-message">
-            There is no internet connection right now. ProjectCheck needs a connection for most features. You can try again in a moment.
-        </p>
-        
-        <div class="offline-actions">
-            <button type="button" class="btn" onclick="window.location.reload()">
-                Try again
-            </button>
-            <button type="button" class="btn btn-secondary" onclick="checkConnection()">
-                Check connection
-            </button>
-        </div>
-        
-        <div class="offline-status" role="status" aria-live="polite">
-            <span class="status-indicator" id="statusIndicator" aria-hidden="true"></span>
-            <span id="statusText">Checking connection…</span>
-        </div>
-    </main>
+	<main class="projectcheck-status-page" role="main" aria-labelledby="offline-heading">
+		<div class="projectcheck-status-page__icon" aria-hidden="true">📶</div>
+		<h1 class="projectcheck-status-page__title" id="offline-heading">You’re offline</h1>
+		<p class="projectcheck-status-page__message">
+			There is no internet connection right now. ProjectCheck needs a connection for most features.
+			When you are back online, use <strong>Try again</strong> to reload.
+		</p>
+		<div class="projectcheck-status-page__actions">
+			<button type="button" class="btn" id="btn-reload">Try again</button>
+			<button type="button" class="btn btn--secondary" id="btn-check">Check connection</button>
+		</div>
+		<div class="offline-status" role="status" aria-live="polite">
+			<span class="status-indicator" id="statusIndicator" aria-hidden="true"></span>
+			<span id="statusText">Checking connection…</span>
+		</div>
+	</main>
+	<script>
+		(function () {
+			'use strict';
 
-    <script>
-        // Check connection status
-        function checkConnection() {
-            const statusIndicator = document.getElementById('statusIndicator');
-            const statusText = document.getElementById('statusText');
-            
-            statusText.textContent = 'Checking connection…';
-            statusIndicator.className = 'status-indicator';
-            
-            // Try to fetch a small resource to test connectivity
-            fetch('/favicon.ico', { 
-                method: 'HEAD',
-                cache: 'no-cache'
-            })
-            .then(() => {
-                statusIndicator.className = 'status-indicator online';
-                statusText.textContent = 'Connection restored. Reloading…';
-                
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            })
-            .catch(() => {
-                statusIndicator.className = 'status-indicator';
-                statusText.textContent = 'Still offline. Please check your internet connection.';
-            });
-        }
+			var statusIndicator = document.getElementById('statusIndicator');
+			var statusText = document.getElementById('statusText');
 
-        // Monitor connection status (no periodic fetch — avoids noise and battery use)
-        function updateConnectionStatus() {
-            const statusIndicator = document.getElementById('statusIndicator');
-            const statusText = document.getElementById('statusText');
-            
-            if (navigator.onLine) {
-                statusIndicator.className = 'status-indicator online';
-                statusText.textContent = 'Connection restored. Reloading…';
-                
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                statusIndicator.className = 'status-indicator';
-                statusText.textContent = 'You are still offline.';
-            }
-        }
+			function instanceRoot() {
+				var path = self.location.pathname || '';
+				var marker = '/apps/projectcheck/';
+				var idx = path.indexOf(marker);
+				if (idx === -1) {
+					return '';
+				}
+				return path.substring(0, idx);
+			}
 
-        // Listen for online/offline events
-        window.addEventListener('online', updateConnectionStatus);
-        window.addEventListener('offline', updateConnectionStatus);
+			function connectivityProbeUrl() {
+				return instanceRoot() + '/index.php/core/img/favicon/favicon.ico';
+			}
 
-        // Initial status
-        (function initStatus() {
-            const statusIndicator = document.getElementById('statusIndicator');
-            const statusText = document.getElementById('statusText');
-            if (navigator.onLine) {
-                statusText.textContent = 'Browser reports online. If the app does not load, use the Try again button.';
-                statusIndicator.className = 'status-indicator online';
-            } else {
-                updateConnectionStatus();
-            }
-        })();
+			function setOfflineStatus(message) {
+				statusIndicator.className = 'status-indicator';
+				statusText.textContent = message;
+			}
 
-        // Try to reload when connection is restored
-        let reloadAttempts = 0;
-        const maxReloadAttempts = 10;
+			function setOnlineStatus(message) {
+				statusIndicator.className = 'status-indicator status-indicator--online';
+				statusText.textContent = message;
+			}
 
-        function attemptReload() {
-            if (reloadAttempts >= maxReloadAttempts) {
-                return;
-            }
+			function probeConnection() {
+				setOfflineStatus('Checking connection…');
+				return fetch(connectivityProbeUrl(), {
+					method: 'HEAD',
+					cache: 'no-cache',
+					credentials: 'same-origin'
+				});
+			}
 
-            reloadAttempts++;
-            
-            fetch('/favicon.ico', { 
-                method: 'HEAD',
-                cache: 'no-cache'
-            })
-            .then(() => {
-                window.location.reload();
-            })
-            .catch(() => {
-                // Try again in 5 seconds
-                setTimeout(attemptReload, 5000);
-            });
-        }
+			function checkConnection() {
+				probeConnection()
+					.then(function () {
+						setOnlineStatus('Connection restored. Reloading…');
+						setTimeout(function () { window.location.reload(); }, 800);
+					})
+					.catch(function () {
+						setOfflineStatus('Still offline. Check your network, then try again.');
+					});
+			}
 
-        // Start attempting to reload after 10 seconds
-        setTimeout(attemptReload, 10000);
-    </script>
+			function onOnline() {
+				checkConnection();
+			}
+
+			function onOffline() {
+				setOfflineStatus('You are still offline.');
+			}
+
+			document.getElementById('btn-reload').addEventListener('click', function () {
+				window.location.reload();
+			});
+			document.getElementById('btn-check').addEventListener('click', checkConnection);
+			window.addEventListener('online', onOnline);
+			window.addEventListener('offline', onOffline);
+
+			if (navigator.onLine) {
+				setOnlineStatus('Browser reports online. If the app does not load, use Try again.');
+			} else {
+				onOffline();
+			}
+		})();
+	</script>
 </body>
 </html>

@@ -6,6 +6,7 @@ namespace OCA\ProjectCheck\Tests\Unit\Migration;
 
 use OCA\ProjectCheck\Migration\LegacyTableRenamer;
 use OCA\ProjectCheck\Migration\ProjectCheckSchemaEnsurer;
+use OCA\ProjectCheck\Migration\ProjectCheckTableCatalog;
 use PHPUnit\Framework\TestCase;
 
 class PcCoreSchemaBootstrapTest extends TestCase
@@ -15,6 +16,7 @@ class PcCoreSchemaBootstrapTest extends TestCase
 		$renamed = array_values(LegacyTableRenamer::RENAMES);
 		foreach (['pc_customers', 'pc_projects', 'pc_project_members', 'pc_time_entries'] as $required) {
 			self::assertContains($required, $renamed);
+			self::assertContains($required, ProjectCheckTableCatalog::REQUIRED_TABLES);
 			self::assertContains($required, ProjectCheckSchemaEnsurer::REQUIRED_TABLES);
 		}
 	}

@@ -146,32 +146,7 @@ class ProjectMemberController extends Controller
             return new JSONResponse(['error' => $this->l->t('Method not allowed')], 405);
         }
 
-        try {
-            // Get member info before deletion for activity logging
-            $member = $this->projectMemberService->getProjectMember($id);
-            if (!$member) {
-                return new JSONResponse(['error' => $this->l->t('Project member not found')], 404);
-            }
-            if (!$this->projectService->canUserManageMembers($user->getUID(), (int)$member->getProjectId())) {
-                return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
-            }
-
-            // Remove the member using canonical project workflow
-            $this->projectService->removeTeamMember((int)$member->getProjectId(), (string)$member->getUserId());
-
-            // Log activity
-            $this->activityService->logMemberRemoved($user->getUID(), $member);
-
-            return new JSONResponse([
-                'success' => true,
-                'message' => $this->l->t('Project member removed successfully')
-            ]);
-        } catch (\Exception $e) {
-            return new JSONResponse([
-                'success' => false,
-                'error' => $this->l->t('Could not remove project member.')
-            ], 400);
-        }
+        return $this->executeRemoveMember($id, $user->getUID());
     }
 
     /**
@@ -186,7 +161,44 @@ class ProjectMemberController extends Controller
     #[NoAdminRequired]
     public function removePost(int $id): JSONResponse
     {
-        // Delegate to the remove method
-        return $this->remove($id);
+        $user = $this->userSession->getUser();
+        if (!$user) {
+            return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+        }
+
+        if (!$this->canManageMemberId($user->getUID(), $id)) {
+            return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+        }
+
+        return $this->executeRemoveMember($id, $user->getUID());
+    }
+
+    /**
+     * @return JSONResponse
+     */
+    private function executeRemoveMember(int $id, string $actorUid): JSONResponse
+    {
+        try {
+            $member = $this->projectMemberService->getProjectMember($id);
+            if (!$member) {
+                return new JSONResponse(['error' => $this->l->t('Project member not found')], 404);
+            }
+            if (!$this->projectService->canUserManageMembers($actorUid, (int)$member->getProjectId())) {
+                return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+            }
+
+            $this->projectService->removeTeamMember((int)$member->getProjectId(), (string)$member->getUserId());
+            $this->activityService->logMemberRemoved($actorUid, $member);
+
+            return new JSONResponse([
+                'success' => true,
+                'message' => $this->l->t('Project member removed successfully')
+            ]);
+        } catch (\Exception $e) {
+            return new JSONResponse([
+                'success' => false,
+                'error' => $this->l->t('Could not remove project member.')
+            ], 400);
+        }
     }
 }

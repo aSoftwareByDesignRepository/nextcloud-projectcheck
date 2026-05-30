@@ -1,6 +1,10 @@
 /**
  * Customer detail JavaScript for projectcheck app
  *
+ * Legacy AJAX helper for optional #projects-list containers. The primary
+ * customer detail page is server-rendered; this module stays DOM-safe and
+ * webroot-aware when used.
+ *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
  */
@@ -8,183 +12,206 @@
 (function () {
 	'use strict';
 
-	// Initialize customer detail when DOM is ready
 	document.addEventListener('DOMContentLoaded', function () {
-		// Initialize Lucide icons if available
 		if (window.LucideIcons && window.LucideIcons.initialize) {
 			window.LucideIcons.initialize();
+		}
+		if (!document.getElementById('projects-list')) {
+			return;
 		}
 		initializeCustomerDetail();
 	});
 
-	/**
-	 * Initialize customer detail functionality
-	 */
 	function initializeCustomerDetail() {
-		// Get customer ID from URL
 		const customerId = getCustomerIdFromUrl();
 		if (!customerId) {
 			showError(t('projectcheck', 'Customer ID not found'));
 			return;
 		}
-
-		// Load customer projects
 		loadCustomerProjects(customerId);
-
-		// Load customer statistics
 		loadCustomerStats(customerId);
-
-		// Add event listeners
-		addEventListeners();
 	}
 
-	/**
-	 * Get customer ID from URL
-	 */
 	function getCustomerIdFromUrl() {
 		const pathParts = window.location.pathname.split('/');
 		const customerIndex = pathParts.indexOf('customers');
 		if (customerIndex !== -1 && pathParts[customerIndex + 1]) {
-			return parseInt(pathParts[customerIndex + 1]);
+			return parseInt(pathParts[customerIndex + 1], 10);
 		}
-		return null;
+		return window.projectControlData && window.projectControlData.customerId
+			? window.projectControlData.customerId
+			: null;
 	}
 
-	/**
-	 * Load customer projects
-	 */
+	function requestHeaders() {
+		const token = (typeof OC !== 'undefined' && OC.requestToken)
+			|| (window.projectControlData && window.projectControlData.requestToken)
+			|| '';
+		return {
+			requesttoken: token,
+			'X-Requested-With': 'XMLHttpRequest'
+		};
+	}
+
 	function loadCustomerProjects(customerId) {
 		const projectsList = document.getElementById('projects-list');
-		if (!projectsList) return;
+		if (!projectsList) {
+			return;
+		}
+		setListState(projectsList, 'div', 'loading', t('projectcheck', 'Loading projects...'));
 
-		// Show loading state
-		projectsList.innerHTML = '<div class="loading">' + t('projectcheck', 'Loading projects...') + '</div>';
+		const url = typeof OC !== 'undefined' && OC.generateUrl
+			? OC.generateUrl('/apps/projectcheck/api/projects/by-customer/{id}', { id: customerId })
+			: '/apps/projectcheck/api/projects/by-customer/' + customerId;
 
-		// Make AJAX request to get projects for this customer
-		fetch(`/apps/projectcheck/api/projects/by-customer/${customerId}`, {
-			headers: {
-				'requesttoken': window.projectControlData?.requestToken || ''
-			}
-		})
-			.then(response => {
+		fetch(url, { headers: requestHeaders() })
+			.then(function (response) {
 				if (!response.ok) {
 					throw new Error(t('projectcheck', 'Failed to load projects'));
 				}
 				return response.json();
 			})
-			.then(data => {
+			.then(function (data) {
 				if (data.success && data.projects) {
 					displayProjects(data.projects);
 				} else {
 					showNoProjects();
 				}
 			})
-			.catch(error => {
+			.catch(function (error) {
 				console.error('Error loading projects:', error);
 				showError(t('projectcheck', 'Failed to load projects'));
 			});
 	}
 
-	/**
-	 * Display projects in the list
-	 */
+	function setListState(container, tagName, className, text) {
+		container.replaceChildren();
+		const el = document.createElement(tagName);
+		if (className) {
+			el.className = className;
+		}
+		el.textContent = text;
+		container.appendChild(el);
+	}
+
 	function displayProjects(projects) {
 		const projectsList = document.getElementById('projects-list');
-		if (!projectsList) return;
-
-		if (projects.length === 0) {
+		if (!projectsList) {
+			return;
+		}
+		if (!projects.length) {
 			showNoProjects();
 			return;
 		}
 
-		const lblBudget = escapeHtml(t('projectcheck', 'Budget'));
-		const lblProgress = escapeHtml(t('projectcheck', 'Progress'));
-		const lblStart = escapeHtml(t('projectcheck', 'Start'));
-		const lblEnd = escapeHtml(t('projectcheck', 'End'));
-
-		const projectsHtml = projects.map(project => {
-			const name = escapeHtml(String(project.name ?? ''));
-			const status = escapeHtml(String(project.status ?? ''));
-			const budget = escapeHtml(formatCurrency(project.budget));
-			const progressNum = Number(project.progress);
-			const progressTxt = Number.isFinite(progressNum)
-				? escapeHtml(window.ProjectCheckFormat
-					? window.ProjectCheckFormat.percent(progressNum, 0)
-					: progressNum.toFixed(0) + '%')
-				: '\u2014';
-			const startDate = escapeHtml(formatDate(project.start_date));
-			const endDate = escapeHtml(formatDate(project.end_date));
-			const id = Number(project.id);
-			const statusClass = escapeHtml(String((project.status ?? '').toLowerCase()));
-			return `<div class="project-item">
-				<div class="project-header">
-					<h4><a href="/apps/projectcheck/projects/${id}">${name}</a></h4>
-					<span class="project-status status-${statusClass}">${status}</span>
-				</div>
-				<div class="project-details">
-					<div class="project-info">
-						<span class="project-budget">${lblBudget}: ${budget}</span>
-						<span class="project-progress">${lblProgress}: ${progressTxt}</span>
-					</div>
-					<div class="project-dates">
-						<span class="project-start">${lblStart}: ${startDate}</span>
-						<span class="project-end">${lblEnd}: ${endDate}</span>
-					</div>
-				</div>
-			</div>`;
-		}).join('');
-
-		projectsList.innerHTML = projectsHtml;
+		projectsList.replaceChildren();
+		projects.forEach(function (project) {
+			projectsList.appendChild(buildProjectItem(project));
+		});
 	}
 
-	/**
-	 * Show no projects message
-	 */
+	function buildProjectItem(project) {
+		const item = document.createElement('div');
+		item.className = 'project-item';
+
+		const header = document.createElement('div');
+		header.className = 'project-header';
+
+		const title = document.createElement('h4');
+		const link = document.createElement('a');
+		const projectId = Number(project.id);
+		link.href = typeof OC !== 'undefined' && OC.generateUrl
+			? OC.generateUrl('/apps/projectcheck/projects/{id}', { id: projectId })
+			: '/apps/projectcheck/projects/' + projectId;
+		link.appendChild(document.createTextNode(String(project.name ?? '')));
+		title.appendChild(link);
+
+		const status = document.createElement('span');
+		status.className = 'project-status status-' + String((project.status ?? '').toLowerCase());
+		status.appendChild(document.createTextNode(String(project.status ?? '')));
+
+		header.appendChild(title);
+		header.appendChild(status);
+
+		const details = document.createElement('div');
+		details.className = 'project-details';
+
+		const info = document.createElement('div');
+		info.className = 'project-info';
+		info.appendChild(makeLabelSpan(t('projectcheck', 'Budget'), formatCurrency(project.budget)));
+		const progressNum = Number(project.progress);
+		const progressTxt = Number.isFinite(progressNum)
+			? (window.ProjectCheckFormat
+				? window.ProjectCheckFormat.percent(progressNum, 0)
+				: progressNum.toFixed(0) + '%')
+			: '\u2014';
+		info.appendChild(makeLabelSpan(t('projectcheck', 'Progress'), progressTxt));
+
+		const dates = document.createElement('div');
+		dates.className = 'project-dates';
+		dates.appendChild(makeLabelSpan(t('projectcheck', 'Start'), formatDate(project.start_date)));
+		dates.appendChild(makeLabelSpan(t('projectcheck', 'End'), formatDate(project.end_date)));
+
+		details.appendChild(info);
+		details.appendChild(dates);
+		item.appendChild(header);
+		item.appendChild(details);
+		return item;
+	}
+
+	function makeLabelSpan(label, value) {
+		const span = document.createElement('span');
+		span.appendChild(document.createTextNode(label + ': ' + value));
+		return span;
+	}
+
 	function showNoProjects() {
 		const projectsList = document.getElementById('projects-list');
-		if (!projectsList) return;
-
+		if (!projectsList) {
+			return;
+		}
 		const customerId = getCustomerIdFromUrl();
-		projectsList.innerHTML = `
-			<div class="no-projects">
-				<p>${t('projectcheck', 'No projects found for this customer.')}</p>
-				<a href="/apps/projectcheck/projects/create?customer_id=${encodeURIComponent(String(customerId || ''))}" class="button primary">
-					${t('projectcheck', 'Create First Project')}
-				</a>
-			</div>
-		`;
+		projectsList.replaceChildren();
+
+		const wrap = document.createElement('div');
+		wrap.className = 'no-projects';
+
+		const message = document.createElement('p');
+		message.appendChild(document.createTextNode(t('projectcheck', 'No projects found for this customer.')));
+		wrap.appendChild(message);
+
+		const link = document.createElement('a');
+		link.className = 'button primary';
+		link.href = typeof OC !== 'undefined' && OC.generateUrl
+			? OC.generateUrl('/apps/projectcheck/projects/create', { customer_id: customerId })
+			: '/apps/projectcheck/projects/create?customer_id=' + encodeURIComponent(String(customerId || ''));
+		link.appendChild(document.createTextNode(t('projectcheck', 'Create First Project')));
+		wrap.appendChild(link);
+		projectsList.appendChild(wrap);
 	}
 
-	/**
-	 * Load customer statistics
-	 */
 	function loadCustomerStats(customerId) {
-		// Make AJAX request to get customer statistics
-		fetch(`/apps/projectcheck/api/customers/stats?customer_id=${customerId}`, {
-			headers: {
-				'requesttoken': window.projectControlData?.requestToken || ''
-			}
-		})
-			.then(response => {
+		const url = typeof OC !== 'undefined' && OC.generateUrl
+			? OC.generateUrl('/apps/projectcheck/api/customers/stats', { customer_id: customerId })
+			: '/apps/projectcheck/api/customers/stats?customer_id=' + customerId;
+
+		fetch(url, { headers: requestHeaders() })
+			.then(function (response) {
 				if (!response.ok) {
 					throw new Error('Failed to load statistics');
 				}
 				return response.json();
 			})
-			.then(data => {
+			.then(function (data) {
 				if (data.success && data.stats) {
 					displayStats(data.stats);
 				}
 			})
-			.catch(error => {
+			.catch(function (error) {
 				console.error('Error loading statistics:', error);
-				// Don't show error for stats, just leave them as "-"
 			});
 	}
 
-	/**
-	 * Display customer statistics
-	 */
 	function displayStats(stats) {
 		const totalProjects = document.getElementById('total-projects');
 		const activeProjects = document.getElementById('active-projects');
@@ -197,37 +224,17 @@
 		if (totalRevenue) totalRevenue.textContent = formatCurrency(stats.total_revenue || 0);
 	}
 
-	/**
-	 * Add event listeners
-	 */
-	function addEventListeners() {
-		// Add any additional event listeners here
-	}
-
-	/**
-	 * Show error message
-	 */
 	function showError(message) {
 		const projectsList = document.getElementById('projects-list');
-		if (projectsList) {
-			projectsList.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+		if (!projectsList) {
+			return;
 		}
+		const err = document.createElement('div');
+		err.className = 'error';
+		err.textContent = message;
+		projectsList.replaceChildren(err);
 	}
 
-	/**
-	 * Utility function to escape HTML
-	 */
-	function escapeHtml(text) {
-		const div = document.createElement('div');
-		div.textContent = text;
-		return div.innerHTML;
-	}
-
-	/**
-	 * Format currency in the user's locale and the org-configured currency.
-	 * Delegates to {@link window.ProjectCheckFormat} so we never hard-code
-	 * a locale or currency code (audit ref. B10).
-	 */
 	function formatCurrency(amount) {
 		if (window.ProjectCheckFormat) {
 			return window.ProjectCheckFormat.currencyFmt(amount);
@@ -236,7 +243,6 @@
 		if (!Number.isFinite(n)) {
 			return '\u2014';
 		}
-		// Boot-order fallback only; primary path is ProjectCheckFormat above.
 		const code = (window.ProjectCheckConfig && typeof window.ProjectCheckConfig.currency === 'string'
 			&& /^[A-Z]{3}$/i.test(window.ProjectCheckConfig.currency))
 			? window.ProjectCheckConfig.currency.toUpperCase()
@@ -268,5 +274,4 @@
 		}
 		return n.toFixed(1) + '\u00A0h';
 	}
-
 })();

@@ -16,12 +16,16 @@
 		return;
 	}
 
+	var path = window.location.pathname || '';
+	// Worker route is registered under /apps/projectcheck/ only (not custom_apps asset URLs).
+	if (path.indexOf('/apps/projectcheck') === -1) {
+		return;
+	}
+
 	var webroot = typeof OC.webroot === 'string' ? OC.webroot : '';
 	var scope = webroot + '/apps/projectcheck/';
 
-	// Route-served worker (not static sw.js — static workers violate nonce-only script-src CSP).
-	var useIndexPhp = window.location.pathname.indexOf('/index.php/') !== -1
-		|| window.location.pathname === '/index.php';
+	var useIndexPhp = path.indexOf('/index.php/') !== -1 || path === '/index.php';
 	var scriptUrl = useIndexPhp
 		? webroot + '/index.php/apps/projectcheck/service-worker.js'
 		: webroot + '/apps/projectcheck/service-worker.js';
@@ -34,7 +38,6 @@
 			}
 		})
 		.catch(function (err) {
-			// Log in dev tools only; SW is optional for core functionality.
 			if (typeof console !== 'undefined' && console.debug) {
 				console.debug('[projectcheck] service worker registration failed:', err);
 			}

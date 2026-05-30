@@ -26,12 +26,14 @@ return [
 		['name' => 'project#update', 'url' => '/projects/{id}', 'verb' => 'PUT'],
 		['name' => 'project#updatePost', 'url' => '/projects/{id}/update', 'verb' => 'POST'],
 		['name' => 'project#delete', 'url' => '/projects/{id}', 'verb' => 'DELETE'],
+		['name' => 'project#deletePost', 'url' => '/projects/{id}/delete', 'verb' => 'POST'],
 		['name' => 'project#changeStatus', 'url' => '/projects/{id}/status', 'verb' => 'PUT'],
 		['name' => 'project#changeStatusPost', 'url' => '/projects/{id}/status', 'verb' => 'POST'],
 		['name' => 'projectfile#upload', 'url' => '/projects/{projectId}/files', 'verb' => 'POST'],
 		['name' => 'projectfile#list', 'url' => '/projects/{projectId}/files', 'verb' => 'GET'],
 		['name' => 'projectfile#download', 'url' => '/projects/{projectId}/files/{fileId}/download', 'verb' => 'GET'],
 		['name' => 'projectfile#delete', 'url' => '/projects/{projectId}/files/{fileId}', 'verb' => 'DELETE'],
+		['name' => 'projectfile#deletePost', 'url' => '/projects/{projectId}/files/{fileId}/delete', 'verb' => 'POST'],
 
 		// Team member management routes
 		['name' => 'project#getTeamMembers', 'url' => '/projects/{id}/members', 'verb' => 'GET'],
@@ -39,6 +41,7 @@ return [
 		['name' => 'project#addAllTeamMembers', 'url' => '/projects/{id}/members/add-all', 'verb' => 'POST'],
 		['name' => 'project#updateTeamMember', 'url' => '/projects/{id}/members/{userId}', 'verb' => 'PUT'],
 		['name' => 'project#removeTeamMember', 'url' => '/projects/{id}/members/{userId}', 'verb' => 'DELETE'],
+		['name' => 'project#removeTeamMemberPost', 'url' => '/projects/{id}/members/{userId}/remove', 'verb' => 'POST'],
 		['name' => 'project#searchAssignableUsers', 'url' => '/projects/{id}/members/search-users', 'verb' => 'GET'],
 
 		// Search and filtering routes
@@ -98,11 +101,13 @@ return [
 		['name' => 'employee#getStats', 'url' => '/api/employees/stats', 'verb' => 'GET'],
 		['name' => 'employee#assignProject', 'url' => '/employees/{userId}/projects', 'verb' => 'POST'],
 		['name' => 'employee#unassignProject', 'url' => '/employees/{userId}/projects/{projectId}', 'verb' => 'DELETE'],
+		['name' => 'employee#unassignProjectPost', 'url' => '/employees/{userId}/projects/{projectId}/remove', 'verb' => 'POST'],
 		['name' => 'timeentry#show', 'url' => '/time-entries/{id}', 'verb' => 'GET'],
 		['name' => 'timeentry#edit', 'url' => '/time-entries/{id}/edit', 'verb' => 'GET'],
 		['name' => 'timeentry#update', 'url' => '/time-entries/{id}', 'verb' => 'PUT'],
 		['name' => 'timeentry#updatePost', 'url' => '/time-entries/{id}/update', 'verb' => 'POST'],
 		['name' => 'timeentry#delete', 'url' => '/time-entries/{id}', 'verb' => 'DELETE'],
+		['name' => 'timeentry#deletePost', 'url' => '/time-entries/{id}/delete', 'verb' => 'POST'],
 		['name' => 'timeentry#getDeletionImpact', 'url' => '/api/time-entries/{id}/deletion-impact', 'verb' => 'GET'],
 		['name' => 'timeentry#getStats', 'url' => '/api/time-entries/stats', 'verb' => 'GET'],
 

@@ -44,6 +44,7 @@ use Psr\Log\LoggerInterface;
 class TimeEntryController extends Controller
 {
 	use CSPTrait;
+	use ErrorPageTrait;
 	use StatsTrait;
 
 	/** @var IUserSession */
@@ -141,9 +142,9 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('User not authenticated')
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('User not authenticated')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -265,9 +266,9 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('User not authenticated')
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('User not authenticated')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -408,26 +409,26 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('User not authenticated')
-			]);
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPage(
+				$this->l->t('User not authenticated')
+			));
 			return $this->configureCSP($response);
 		}
 
 		$timeEntry = $this->timeEntryService->getTimeEntry($id);
 		if (!$timeEntry) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('Time entry not found')
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('Time entry not found')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$uid = $user->getUID();
 		$isOwner = $timeEntry->getUserId() === $uid;
 		if (!$isOwner && !$this->projectService->canUserViewAllTimeEntries($uid)) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('Access denied')
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('Access denied')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -465,25 +466,25 @@ class TimeEntryController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('User not authenticated')
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('User not authenticated')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$timeEntry = $this->timeEntryService->getTimeEntry($id);
 		if (!$timeEntry) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('Time entry not found')
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('Time entry not found')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		// Check if user has access to this time entry
 		if ($timeEntry->getUserId() !== $user->getUID()) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('Access denied')
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('Access denied')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -654,6 +655,26 @@ class TimeEntryController extends Controller
 				'error' => $this->l->t('Could not delete time entry.')
 			], $status);
 		}
+	}
+
+	/**
+	 * Delete time entry via POST (deletion modal — CSRF-safe).
+	 *
+	 * @param int|string $id Time entry ID
+	 * @return JSONResponse
+	 */
+	#[NoAdminRequired]
+	public function deletePost($id): JSONResponse
+	{
+		$response = $this->delete($id);
+		if ($response instanceof JSONResponse) {
+			return $response;
+		}
+
+		return new JSONResponse([
+			'success' => false,
+			'error' => $this->l->t('Could not delete time entry.'),
+		], 400);
 	}
 
 	/**

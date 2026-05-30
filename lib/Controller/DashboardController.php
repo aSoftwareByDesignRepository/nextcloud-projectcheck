@@ -27,6 +27,7 @@ use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Traits\StatsTrait;
 use OCP\IL10N;
+use Psr\Log\LoggerInterface;
 
 /**
  * Dashboard controller for project overview and statistics
@@ -34,6 +35,7 @@ use OCP\IL10N;
 class DashboardController extends Controller
 {
 	use CSPTrait;
+	use ErrorPageTrait;
 	use StatsTrait;
 
 	/** @var IUserSession */
@@ -57,6 +59,9 @@ class DashboardController extends Controller
 	/** @var IL10N */
 	private $l;
 
+	/** @var LoggerInterface */
+	private $logger;
+
 	/**
 	 * DashboardController constructor
 	 *
@@ -69,6 +74,7 @@ class DashboardController extends Controller
 	 * @param BudgetService $budgetService
 	 * @param IURLGenerator $urlGenerator
 	 * @param CSPService $cspService
+	 * @param LoggerInterface $logger
 	 */
 	public function __construct(
 		$appName,
@@ -80,7 +86,8 @@ class DashboardController extends Controller
 		BudgetService $budgetService,
 		IURLGenerator $urlGenerator,
 		CSPService $cspService,
-		IL10N $l
+		IL10N $l,
+		LoggerInterface $logger
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
@@ -90,6 +97,7 @@ class DashboardController extends Controller
 		$this->budgetService = $budgetService;
 		$this->urlGenerator = $urlGenerator;
 		$this->l = $l;
+		$this->logger = $logger;
 		$this->setCspService($cspService);
 	}
 
@@ -104,9 +112,9 @@ class DashboardController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('User not authenticated')
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('User not authenticated')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -274,6 +282,12 @@ class DashboardController extends Controller
 				'recentTimeEntries' => $timeEntriesWithProjectInfo
 			];
 		} catch (\Exception $e) {
+			$this->logger->error('ProjectCheck dashboard stats failed', [
+				'app' => 'projectcheck',
+				'userId' => $userId,
+				'exception' => $e,
+			]);
+
 			return [
 				'totalProjects' => 0,
 				'activeProjects' => 0,
@@ -285,7 +299,7 @@ class DashboardController extends Controller
 				'totalCustomers' => 0,
 				'recentProjects' => [],
 				'recentTimeEntries' => [],
-				'error' => $e->getMessage()
+				'error' => 'stats_unavailable',
 			];
 		}
 	}

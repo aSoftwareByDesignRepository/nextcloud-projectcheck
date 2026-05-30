@@ -12,6 +12,7 @@ use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
+use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCA\ProjectCheck\Service\EmployeeHourlyRateService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
@@ -48,6 +49,9 @@ class EmployeeControllerTest extends TestCase
 	/** @var AccessControlService|\PHPUnit\Framework\MockObject\MockObject */
 	private $accessControl;
 
+	/** @var EmployeeHourlyRateService|\PHPUnit\Framework\MockObject\MockObject */
+	private $employeeHourlyRateService;
+
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -56,7 +60,7 @@ class EmployeeControllerTest extends TestCase
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->timeEntryService = $this->createMock(TimeEntryService::class);
 		$this->projectService = $this->createMock(ProjectService::class);
-		$employeeHourlyRateService = $this->createMock(EmployeeHourlyRateService::class);
+		$this->employeeHourlyRateService = $this->createMock(EmployeeHourlyRateService::class);
 		$this->customerService = $this->createMock(CustomerService::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
 		$urlGenerator->method('linkToRoute')->willReturnCallback(
@@ -82,7 +86,7 @@ class EmployeeControllerTest extends TestCase
 			$this->userManager,
 			$this->timeEntryService,
 			$this->projectService,
-			$employeeHourlyRateService,
+			$this->employeeHourlyRateService,
 			$this->customerService,
 			$urlGenerator,
 			$config,
@@ -153,6 +157,22 @@ class EmployeeControllerTest extends TestCase
 		$this->assertEquals(403, $response->getStatus());
 	}
 
+	public function testUnassignProjectPostRemovesMemberWhenAllowed(): void
+	{
+		$project = new Project();
+		$project->setId(8);
+		$project->setStatus('Active');
+		$this->projectService->method('getProject')->with(8)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('manager1', 8)->willReturn(true);
+		$this->projectService->expects($this->once())->method('removeTeamMember')->with(8, 'employee1');
+
+		$response = $this->controller->unassignProjectPost('employee1', 8);
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertEquals(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+	}
+
 	public function testAssignProjectRejectedForProjectMemberMode(): void
 	{
 		$target = $this->createMock(IUser::class);
@@ -218,6 +238,35 @@ class EmployeeControllerTest extends TestCase
 
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(200, $response->getStatus());
+	}
+
+	public function testAssignProjectDoesNotExposeInternalRateExceptionText(): void
+	{
+		$leaked = 'INTERNAL_ASSIGN_RATE_leak_42';
+		$target = $this->createMock(IUser::class);
+		$this->userManager->method('get')->with('employee1')->willReturn($target);
+		$this->request->method('getParam')->willReturnMap([
+			['project_id', 0, 9],
+			['hourly_rate', null, '60'],
+			['role', null, 'member'],
+		]);
+		$project = new Project();
+		$project->setId(9);
+		$project->setStatus('Active');
+		$project->setCostRateMode(CostRateMode::DEFAULT);
+		$this->projectService->method('getProject')->with(9)->willReturn($project);
+		$this->projectService->method('canUserManageMembers')->with('manager1', 9)->willReturn(true);
+		$this->projectService->method('addTeamMember')->willThrowException(
+			new RateResolutionException($leaked, 'employee_rate_missing')
+		);
+
+		$response = $this->controller->assignProject('employee1');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame('employee_rate_missing', $data['code'] ?? null);
+		$this->assertStringNotContainsString($leaked, (string) ($data['error'] ?? ''));
 	}
 
 	public function testIndexScopesNonAdminEmployeeOverviewToOwnData(): void

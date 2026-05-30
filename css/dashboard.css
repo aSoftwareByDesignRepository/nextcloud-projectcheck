@@ -1050,3 +1050,22 @@ body {
 		justify-content: center;
 	}
 }
+
+/* Recent project cards — keyboard focus (WCAG 2.1 AA) */
+.project-card.dashboard-card:focus-visible {
+	outline: 2px solid var(--color-border-focus, var(--color-primary-element));
+	outline-offset: 3px;
+}
+
+.project-card.dashboard-card {
+	cursor: pointer;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.project-card.dashboard-card:hover {
+	transform: translateY(-2px);
+}
+
+.overview-stat-compact {
+	transition: transform 0.15s ease;
+}

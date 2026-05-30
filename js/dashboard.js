@@ -8,340 +8,194 @@
 (function () {
 	'use strict';
 
-	// Initialize dashboard when DOM is ready
+	const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
 	document.addEventListener('DOMContentLoaded', function () {
-		// Initialize Lucide icons if available
 		if (window.LucideIcons && window.LucideIcons.initialize) {
 			window.LucideIcons.initialize();
 		}
 		initializeDashboard();
 	});
 
-	/**
-	 * Initialize dashboard functionality
-	 */
 	function initializeDashboard() {
-		// Add event listeners for interactive elements
-		addEventListeners();
-
-		// Initialize progress bars with animation
-		initializeProgressBars();
-
-		// Set up auto-refresh for stats (every 5 minutes)
+		enhanceOverviewStats();
+		enhanceProjectCards();
+		animateProgressBars();
 		setupAutoRefresh();
 	}
 
 	/**
-	 * Add event listeners to dashboard elements
+	 * Subtle hover feedback on overview stat tiles (matches .overview-stat-compact).
 	 */
-	function addEventListeners() {
-		// Add click handlers for project items
-		const projectItems = document.querySelectorAll('.project-item');
-		projectItems.forEach(function (item) {
-			item.addEventListener('click', function (e) {
-				// Don't trigger if clicking on action buttons
-				if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
-					return;
-				}
-
-				// Find the view link and navigate to it
-				const viewLink = item.querySelector('.project-actions a');
-				if (viewLink) {
-					window.location.href = viewLink.href;
-				}
-			});
-		});
-
-		// Add hover effects for stat cards
-		const statCards = document.querySelectorAll('.stat-card');
-		statCards.forEach(function (card) {
+	function enhanceOverviewStats() {
+		document.querySelectorAll('.overview-stat-compact').forEach(function (card) {
 			card.addEventListener('mouseenter', function () {
 				this.style.transform = 'translateY(-2px)';
 			});
-
 			card.addEventListener('mouseleave', function () {
-				this.style.transform = 'translateY(0)';
-			});
-		});
-
-		// Add click handlers for quick action buttons
-		const actionButtons = document.querySelectorAll('.action-buttons .button');
-		actionButtons.forEach(function (button) {
-			button.addEventListener('click', function (e) {
-				const originalText = this.textContent;
-				this.textContent = t('projectcheck', 'Loading…');
-				this.disabled = true;
-				this.setAttribute('aria-busy', 'true');
-
-				setTimeout(function () {
-					button.textContent = originalText;
-					button.disabled = false;
-					button.removeAttribute('aria-busy');
-				}, 1000);
+				this.style.transform = '';
 			});
 		});
 	}
 
 	/**
-	 * Initialize progress bars with animation
+	 * Entire recent-project card navigates via its primary title link (keyboard friendly).
 	 */
-	function initializeProgressBars() {
-		const progressBars = document.querySelectorAll('.progress-fill');
+	function enhanceProjectCards() {
+		document.querySelectorAll('.project-card.dashboard-card').forEach(function (card) {
+			const primaryLink = card.querySelector('.project-name a');
+			if (!primaryLink) {
+				return;
+			}
+			card.setAttribute('tabindex', '0');
+			card.setAttribute('role', 'link');
+			card.setAttribute('aria-label', primaryLink.textContent.trim());
 
-		progressBars.forEach(function (bar) {
-			const width = bar.style.width;
-			const percentage = parseFloat(width);
-
-			// Reset width to 0 for animation
-			bar.style.width = '0%';
-
-			// Animate to target width
-			setTimeout(function () {
-				bar.style.width = width;
-
-				// Add warning/critical classes from server thresholds when available.
-				const warnThreshold = parseFloat(bar.dataset.warningThreshold || '80');
-				const critThreshold = parseFloat(bar.dataset.criticalThreshold || '90');
-				if (percentage >= critThreshold) {
-					bar.classList.add('critical');
-				} else if (percentage >= warnThreshold) {
-					bar.classList.add('warning');
+			function goToProject(event) {
+				if (event.target.closest('a, button')) {
+					return;
 				}
-			}, 100);
+				primaryLink.click();
+			}
+
+			card.addEventListener('click', goToProject);
+			card.addEventListener('keydown', function (event) {
+				if (event.key === 'Enter' || event.key === ' ') {
+					event.preventDefault();
+					primaryLink.click();
+				}
+			});
 		});
 	}
 
 	/**
-	 * Set up auto-refresh for dashboard stats
+	 * Animate progress bars rendered server-side (.progress-fill, .budget-progress-fill).
 	 */
-	function setupAutoRefresh() {
-		// Refresh stats every 5 minutes
-		setInterval(function () {
-			refreshStats();
-		}, 5 * 60 * 1000);
+	function animateProgressBars() {
+		document.querySelectorAll('.progress-fill, .budget-progress-fill').forEach(function (bar) {
+			const width = bar.style.width;
+			if (!width || width === '0%') {
+				return;
+			}
+			const percentage = parseFloat(width);
+			const warnThreshold = parseFloat(bar.dataset.warningThreshold || bar.closest('[data-warning-threshold]')?.dataset.warningThreshold || '80');
+			const critThreshold = parseFloat(bar.dataset.criticalThreshold || bar.closest('[data-critical-threshold]')?.dataset.criticalThreshold || '90');
+
+			bar.style.width = '0%';
+			window.requestAnimationFrame(function () {
+				setTimeout(function () {
+					bar.style.width = width;
+					bar.classList.remove('warning', 'critical');
+					if (percentage >= critThreshold) {
+						bar.classList.add('critical');
+					} else if (percentage >= warnThreshold) {
+						bar.classList.add('warning');
+					}
+				}, 80);
+			});
+		});
 	}
 
-	/**
-	 * Refresh dashboard statistics via AJAX
-	 */
+	function setupAutoRefresh() {
+		const section = document.querySelector('.stats-overview-section');
+		if (!section) {
+			return;
+		}
+		window.setInterval(refreshStats, REFRESH_INTERVAL_MS);
+	}
+
 	function refreshStats() {
 		fetch(OC.generateUrl('/apps/projectcheck/api/dashboard/stats'), {
 			method: 'GET',
 			headers: {
-				'Content-Type': 'application/json',
-				'requesttoken': OC.requestToken
-			}
+				'Accept': 'application/json',
+				'requesttoken': OC.requestToken,
+			},
+			credentials: 'same-origin',
 		})
 			.then(function (response) {
 				if (!response.ok) {
-					throw new Error('Network response was not ok');
+					throw new Error('stats_request_failed');
 				}
 				return response.json();
 			})
 			.then(function (data) {
-				updateStatsDisplay(data);
+				if (data.error === 'stats_unavailable') {
+					return;
+				}
+				updateOverviewStats(data);
 			})
-			.catch(function (error) {
-				console.error('Error refreshing stats:', error);
+			.catch(function () {
+				// Silent fail — server-rendered values remain valid.
 			});
 	}
 
 	/**
-	 * Update the stats display with new data
+	 * Updates overview tiles using data-dashboard-stat attributes from the template.
 	 */
-	function updateStatsDisplay(stats) {
-		// Update stat numbers with animation
-		updateStatNumber('totalProjects', stats.totalProjects);
-		updateStatNumber('activeProjects', stats.activeProjects);
-		updateStatNumber('completedProjects', stats.completedProjects);
-		updateStatNumber('totalBudget', stats.totalBudget, true);
+	function updateOverviewStats(stats) {
+		document.querySelectorAll('[data-dashboard-stat]').forEach(function (tile) {
+			const key = tile.getAttribute('data-dashboard-stat');
+			const valueNode = tile.querySelector('[data-dashboard-value]');
+			const detailNode = tile.querySelector('[data-dashboard-detail]');
+			if (!valueNode) {
+				return;
+			}
 
-		// Update progress bar
-		updateProgressBar(stats.consumptionPercentage);
-
-		// Update recent projects if available
-		if (stats.recentProjects) {
-			updateRecentProjects(stats.recentProjects);
-		}
-	}
-
-	/**
-	 * Update a stat number with animation
-	 */
-	function updateStatNumber(statType, newValue, isCurrency = false) {
-		const statElements = document.querySelectorAll('.stat-number');
-
-		statElements.forEach(function (element) {
-			const parentCard = element.closest('.stat-card');
-			const statLabel = parentCard.querySelector('.stat-label');
-
-			if (statLabel.textContent.toLowerCase().includes(statType.toLowerCase())) {
-				const currentValue = parseFloat(element.textContent.replace(/[^0-9.-]+/g, ''));
-				const targetValue = parseFloat(newValue);
-
-				if (currentValue !== targetValue) {
-					animateNumber(element, currentValue, targetValue, isCurrency);
-				}
+			switch (key) {
+				case 'projects':
+					valueNode.textContent = formatNumber(stats.totalProjects);
+					if (detailNode) {
+						detailNode.textContent = formatNumber(stats.activeProjects) + ' ' + t('projectcheck', 'active');
+					}
+					break;
+				case 'budget':
+					valueNode.textContent = formatCurrency(stats.totalBudget);
+					if (detailNode) {
+						detailNode.textContent = formatPercent(stats.consumptionPercentage) + ' ' + t('projectcheck', 'used');
+					}
+					break;
+				case 'hours':
+					valueNode.textContent = formatHours(stats.totalHours);
+					break;
+				case 'customers':
+					valueNode.textContent = formatNumber(stats.totalCustomers);
+					break;
+				default:
+					break;
 			}
 		});
 	}
 
-	/**
-	 * Animate number change
-	 */
-	function animateNumber(element, start, end, isCurrency = false) {
-		const duration = 1000; // 1 second
-		const startTime = performance.now();
-
-		function updateNumber(currentTime) {
-			const elapsed = currentTime - startTime;
-			const progress = Math.min(elapsed / duration, 1);
-
-			// Easing function for smooth animation
-			const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-			const currentValue = start + (end - start) * easeOutQuart;
-
-			// Locale-aware formatting. Audit ref. B10/H28: never hard-code a
-			// locale or a currency symbol in animated values.
-			let formattedValue;
-			if (isCurrency) {
-				formattedValue = window.ProjectCheckFormat
-					? window.ProjectCheckFormat.currencyFmt(currentValue)
-					: currentValue.toFixed(2);
-			} else {
-				formattedValue = window.ProjectCheckFormat
-					? window.ProjectCheckFormat.number(Math.round(currentValue))
-					: Math.round(currentValue).toString();
-			}
-
-			element.textContent = formattedValue;
-
-			if (progress < 1) {
-				requestAnimationFrame(updateNumber);
-			}
-		}
-
-		requestAnimationFrame(updateNumber);
+	function formatNumber(value) {
+		const n = Number(value) || 0;
+		return window.ProjectCheckFormat
+			? window.ProjectCheckFormat.number(Math.round(n))
+			: String(Math.round(n));
 	}
 
-	/**
-	 * Update progress bar with new percentage
-	 */
-	function updateProgressBar(percentage) {
-		const progressFill = document.querySelector('.progress-fill');
-		const progressText = document.querySelector('.progress-text');
-
-		if (progressFill && progressText) {
-			// Animate to new width
-			progressFill.style.width = percentage + '%';
-
-			// Update text
-			progressText.textContent = percentage + '% consumed';
-
-			// Update classes based on configured thresholds (fallback 80/90).
-			progressFill.classList.remove('warning', 'critical');
-			const bar = progressFill.closest('[data-warning-threshold]') || progressFill;
-			const warnThreshold = parseFloat(bar.dataset.warningThreshold || '80');
-			const critThreshold = parseFloat(bar.dataset.criticalThreshold || '90');
-			if (percentage >= critThreshold) {
-				progressFill.classList.add('critical');
-			} else if (percentage >= warnThreshold) {
-				progressFill.classList.add('warning');
-			}
-		}
+	function formatCurrency(value) {
+		const n = Number(value) || 0;
+		return window.ProjectCheckFormat
+			? window.ProjectCheckFormat.currencyFmt(n)
+			: n.toFixed(2);
 	}
 
-	/**
-	 * Update recent projects list
-	 */
-	function updateRecentProjects(projects) {
-		const projectList = document.querySelector('.project-list');
-
-		if (!projectList || !projects.length) {
-			return;
-		}
-
-		// Clear existing projects
-		projectList.innerHTML = '';
-
-		// Add new projects
-		projects.forEach(function (project) {
-			const projectItem = createProjectItem(project);
-			projectList.appendChild(projectItem);
-		});
-
-		// Re-add event listeners
-		addEventListeners();
+	function formatPercent(value) {
+		const n = Number(value) || 0;
+		return window.ProjectCheckFormat
+			? window.ProjectCheckFormat.percent(n, 0)
+			: String(Math.round(n)) + '%';
 	}
 
-	/**
-	 * Create a project item element.
-	 *
-	 * Audit ref. B10 (locale-aware) + XSS-hardening: build the DOM with
-	 * textContent so untrusted project fields can never escape into HTML.
-	 */
-	function createProjectItem(project) {
-		const item = document.createElement('div');
-		item.className = 'project-item';
-
-		const info = document.createElement('div');
-		info.className = 'project-info';
-		const name = document.createElement('div');
-		name.className = 'project-name';
-		name.textContent = String(project.name || '');
-		info.appendChild(name);
-
-		const statusToken = String(project.status || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-');
-		const status = document.createElement('div');
-		status.className = 'project-status status-' + statusToken;
-		status.textContent = String(project.status || '');
-		info.appendChild(status);
-		item.appendChild(info);
-
-		const budget = document.createElement('div');
-		budget.className = 'project-budget';
-		budget.textContent = window.ProjectCheckFormat
-			? window.ProjectCheckFormat.currencyFmt(project.totalBudget)
-			: String(parseFloat(project.totalBudget || 0).toFixed(2));
-		item.appendChild(budget);
-
-		const actions = document.createElement('div');
-		actions.className = 'project-actions';
-		const link = document.createElement('a');
-		link.href = OC.generateUrl('/apps/projectcheck/projects/' + encodeURIComponent(String(project.id)));
-		link.className = 'button';
-		link.textContent = (typeof t === 'function') ? t('projectcheck', 'View') : 'View';
-		actions.appendChild(link);
-		item.appendChild(actions);
-
-		return item;
+	function formatHours(value) {
+		const n = Number(value) || 0;
+		return window.ProjectCheckFormat
+			? window.ProjectCheckFormat.hours(n)
+			: n + 'h';
 	}
 
-	/**
-	 * Show notification message
-	 */
-	function showNotification(message, type = 'info') {
-		const notification = document.createElement('div');
-		notification.className = `notification notification-${type}`;
-		notification.textContent = message;
-
-		// Add to page
-		document.body.appendChild(notification);
-
-		// Remove after 3 seconds
-		setTimeout(function () {
-			notification.remove();
-		}, 3000);
-	}
-
-	/**
-	 * Productivity info popup.
-	 *
-	 * Audit ref. AUDIT-FINDINGS C13/D17: every modal in the app must share
-	 * one accessible primitive with focus trap, Escape handling, restore
-	 * focus and a single backdrop dismissal contract. Delegates entirely
-	 * to {@link window.ProjectCheckModalA11y}.
-	 */
+	/* Productivity modal — shared a11y primitive (AUDIT-FINDINGS C13/D17). */
 	let productivityRestoreScroll = '';
 
 	function showProductivityInfoPopup() {
@@ -411,14 +265,11 @@
 		}
 	});
 
-	// Export functions for global access if needed
-	const _dashboardApi = {
+	const dashboardApi = {
 		refreshStats: refreshStats,
-		showNotification: showNotification,
 		showProductivityInfoPopup: showProductivityInfoPopup,
-		hideProductivityInfoPopup: hideProductivityInfoPopup
+		hideProductivityInfoPopup: hideProductivityInfoPopup,
 	};
-	window.ProjectCheckDashboard = _dashboardApi;
-	window.ProjectControlDashboard = _dashboardApi;
-
+	window.ProjectCheckDashboard = dashboardApi;
+	window.ProjectControlDashboard = dashboardApi;
 })();

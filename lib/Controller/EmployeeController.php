@@ -32,6 +32,8 @@ use OCA\ProjectCheck\Db\UserAccountSnapshotMapper;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCP\IConfig;
 use OCP\IL10N;
+use OCA\ProjectCheck\Exception\RateResolutionException;
+use OCA\ProjectCheck\Util\RateResolutionMessage;
 use OCA\ProjectCheck\Traits\StatsTrait;
 
 /**
@@ -40,6 +42,7 @@ use OCA\ProjectCheck\Traits\StatsTrait;
 class EmployeeController extends Controller
 {
     use CSPTrait;
+    use ErrorPageTrait;
     use StatsTrait;
 
     /** @var IUserSession */
@@ -141,9 +144,9 @@ class EmployeeController extends Controller
     {
         $user = $this->userSession->getUser();
         if (!$user) {
-            $response = new TemplateResponse($this->appName, 'error', [
-                'message' => $this->l->t('User not authenticated')
-            ], 'guest');
+            $response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+                $this->l->t('User not authenticated')
+            ), 'guest');
             return $this->configureCSP($response, 'guest');
         }
 
@@ -157,7 +160,10 @@ class EmployeeController extends Controller
         $employeeYearlyStats = $this->timeEntryService->getEmployeeYearlyStats($accessibleProjectIds, $visibleUserIds);
 
         // Filters and pagination
-        $search = $this->request->getParam('search', '');
+        // getParam can return an array (e.g. ?search[]=x); coerce to a trimmed
+        // string so downstream mb_strtolower()/filtering never receives non-strings.
+        $searchRaw = $this->request->getParam('search', '');
+        $search = is_string($searchRaw) ? trim($searchRaw) : '';
         $page = max(1, (int)$this->request->getParam('page', 1));
         $appItemsPerPage = $this->config->getAppValue($this->appName, 'items_per_page', '20');
         $defaultItemsPerPage = (int)$this->config->getUserValue($userId, $this->appName, 'items_per_page', $appItemsPerPage);
@@ -184,6 +190,21 @@ class EmployeeController extends Controller
         $offset = ($page - 1) * $perPage;
         $employeeComparisonStats = array_slice($employeeComparisonStatsAll, $offset, $perPage);
 
+        // Team totals must reflect the full (search-filtered) result set, not just
+        // the current page — otherwise the overview cards under-report once the
+        // list spans more than one page. (Audit: pagination/aggregate consistency.)
+        $teamTotalHours = 0.0;
+        $teamTotalCost = 0.0;
+        foreach ($employeeComparisonStatsAll as $row) {
+            $teamTotalHours += (float)($row['total_hours'] ?? 0);
+            $teamTotalCost += (float)($row['total_cost'] ?? 0);
+        }
+        $teamTotals = [
+            'employees' => $totalEmployees,
+            'hours' => $teamTotalHours,
+            'cost' => $teamTotalCost,
+        ];
+
         // Get employee project type statistics
         $employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId, $accessibleProjectIds);
         $detailedEmployeeProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectTypeForEmployees($accessibleProjectIds, $visibleUserIds);
@@ -201,6 +222,7 @@ class EmployeeController extends Controller
             'detailedEmployeeProjectTypeStats' => $detailedEmployeeProjectTypeStats,
             'usersWithTimeEntries' => $usersWithTimeEntries,
             'isGlobalViewer' => $isGlobalViewer,
+            'teamTotals' => $teamTotals,
             'filters' => [
                 'search' => $search,
             ],
@@ -230,9 +252,9 @@ class EmployeeController extends Controller
     {
         $user = $this->userSession->getUser();
         if (!$user) {
-            $response = new TemplateResponse($this->appName, 'error', [
-                'message' => $this->l->t('User not authenticated')
-            ], 'guest');
+            $response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+                $this->l->t('User not authenticated')
+            ), 'guest');
             return $this->configureCSP($response, 'guest');
         }
 
@@ -247,9 +269,9 @@ class EmployeeController extends Controller
         if ($employeeUser === null && $snapshot === null) {
 			$hasHistory = $this->timeEntryService->getTimeEntriesByUser($userId) !== [];
 			if (!$hasHistory) {
-				$response = new TemplateResponse($this->appName, 'error', [
-					'message' => $this->l->t('Employee not found')
-				], 'guest');
+				$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+					$this->l->t('Employee not found')
+				), 'guest');
 				return $this->configureCSP($response, 'guest');
 			}
 		}
@@ -364,8 +386,13 @@ class EmployeeController extends Controller
 				'member' => $member,
 				'message' => $this->l->t('Team member added successfully'),
 			]);
+		} catch (RateResolutionException $e) {
+			return new JSONResponse([
+				'error' => RateResolutionMessage::forException($e, $this->l),
+				'code' => $e->getCodeKey(),
+			], 400);
 		} catch (\Exception $e) {
-			return new JSONResponse(['error' => $e->getMessage() ?: $this->l->t('Could not assign employee to project.')], 400);
+			return new JSONResponse(['error' => $this->l->t('Could not assign employee to project.')], 400);
 		}
 	}
 
@@ -390,8 +417,13 @@ class EmployeeController extends Controller
 				],
 				'message' => $this->l->t('Rate saved. Past time entries keep their previous rate.'),
 			]);
+		} catch (RateResolutionException $e) {
+			return new JSONResponse([
+				'error' => RateResolutionMessage::forException($e, $this->l),
+				'code' => $e->getCodeKey(),
+			], 400);
 		} catch (\Exception $e) {
-			return new JSONResponse(['error' => $e->getMessage()], 400);
+			return new JSONResponse(['error' => $this->l->t('Could not save rate. Please check your input.')], 400);
 		}
 	}
 
@@ -402,6 +434,26 @@ class EmployeeController extends Controller
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+
+		return $this->finishUnassignProject($user->getUID(), $userId, $projectId);
+	}
+
+	/**
+	 * Remove employee from project via POST (deletion modal — reliable CSRF).
+	 */
+	#[NoAdminRequired]
+	public function unassignProjectPost(string $userId, int $projectId): JSONResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+
+		return $this->finishUnassignProject($user->getUID(), $userId, $projectId);
+	}
+
+	private function finishUnassignProject(string $actorUid, string $memberUserId, int $projectId): JSONResponse
+	{
 		$project = $this->projectService->getProject($projectId);
 		if ($project === null) {
 			return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
@@ -409,12 +461,12 @@ class EmployeeController extends Controller
 		if (!$project->isEditableState()) {
 			return new JSONResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
 		}
-		if (!$this->projectService->canUserManageMembers($user->getUID(), $projectId)) {
+		if (!$this->projectService->canUserManageMembers($actorUid, $projectId)) {
 			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
 		try {
-			$this->projectService->removeTeamMember($projectId, $userId);
+			$this->projectService->removeTeamMember($projectId, $memberUserId);
 			return new JSONResponse([
 				'success' => true,
 				'message' => $this->l->t('Team member removed successfully'),

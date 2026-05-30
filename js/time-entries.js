@@ -198,7 +198,7 @@
 			return;
 		}
 
-		const deleteUrl = OC.generateUrl('/apps/projectcheck/time-entries/' + entryId);
+		const deleteUrl = OC.generateUrl('/apps/projectcheck/time-entries/{id}/delete', { id: entryId });
 
 		// Show the modal
 		window.projectcheckDeletionModal.show({
@@ -220,43 +220,6 @@
 			onCancel: function () {
 			}
 		});
-	}
-
-	/**
-	 * Delete time entry via AJAX
-	 */
-	function deleteTimeEntry(entryId) {
-		const url = OC.generateUrl('/apps/projectcheck/time-entries/' + entryId);
-		const token = (typeof OC !== 'undefined' && OC.requestToken) ? OC.requestToken : (document.querySelector('input[name="requesttoken"]')?.value || document.querySelector('meta[name="requesttoken"]')?.content || '');
-
-		fetch(url, {
-			method: 'DELETE',
-			credentials: 'same-origin',
-			headers: {
-				'Content-Type': 'application/json',
-				'requesttoken': token || '',
-				'X-Requested-With': 'XMLHttpRequest'
-			}
-		})
-			.then(response => response.json())
-			.then(data => {
-				if (data.success) {
-					// Remove the row from the table
-					const row = document.querySelector(`tr[data-entry-id="${entryId}"]`);
-					if (row) {
-						row.remove();
-						updateEmptyState();
-					}
-
-					// Show success message
-					showMessage(t('projectcheck', 'Time entry was deleted successfully!'), 'success');
-				} else {
-					showMessage(data.message || t('projectcheck', 'Failed to delete time entry'), 'error');
-				}
-			})
-			.catch(() => {
-				showMessage(t('projectcheck', 'An error occurred while deleting the time entry'), 'error');
-			});
 	}
 
 	/**

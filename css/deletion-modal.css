@@ -89,7 +89,7 @@
     color: var(--color-main-text);
 }
 
-.projectcheck-deletion-modal__close:focus {
+.projectcheck-deletion-modal__close:focus-visible {
     outline: 2px solid var(--color-primary-element);
     outline-offset: 2px;
 }
@@ -222,6 +222,21 @@
     margin-bottom: 1.5rem;
 }
 
+.projectcheck-deletion-modal__strategy-fieldset {
+    border: none;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+.projectcheck-deletion-modal__strategy-legend {
+    font-size: 0.875rem;
+    color: var(--color-text-maxcontrast);
+    margin-bottom: 0.75rem;
+    padding: 0;
+    line-height: 1.4;
+}
+
 .projectcheck-deletion-modal__strategy-title {
     font-size: 1rem;
     font-weight: 600;
@@ -245,6 +260,8 @@
 
 .projectcheck-deletion-modal__strategy-option {
     display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     align-items: flex-start;
     gap: 0.75rem;
     cursor: pointer;
@@ -257,16 +274,28 @@
     background: var(--color-background-hover);
 }
 
+/* Override Nextcloud core input { width: 130px; min-height: var(--default-clickable-area) } */
 .projectcheck-deletion-modal__strategy-option input[type="radio"] {
-    margin: 0;
-    margin-top: 0.125rem;
+    flex: 0 0 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
+    min-width: 1.125rem;
+    max-width: 1.125rem;
+    min-height: 0;
+    margin: 0.2em 0 0 0;
+    padding: 0;
+    align-self: flex-start;
+    accent-color: var(--color-primary-element);
+    cursor: pointer;
+    box-sizing: border-box;
 }
 
 .projectcheck-deletion-modal__strategy-label {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     color: var(--color-main-text);
     font-size: 0.875rem;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .projectcheck-deletion-modal__strategy-label strong {
@@ -297,9 +326,13 @@
     font-size: 0.875rem;
 }
 
-.projectcheck-deletion-modal__reassign-options select:focus {
+.projectcheck-deletion-modal__reassign-options select:focus-visible {
     outline: 2px solid var(--color-primary-element);
     outline-offset: 2px;
+}
+
+.projectcheck-deletion-modal__reassign-options[hidden] {
+    display: none !important;
 }
 
 /* Action Buttons */
@@ -352,9 +385,22 @@
     border-color: var(--color-error-hover);
 }
 
-.projectcheck-deletion-modal__btn:focus {
+.projectcheck-deletion-modal__btn:focus-visible {
     outline: 2px solid var(--color-primary-element);
     outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .projectcheck-deletion-modal__spinner {
+        animation: none;
+        border-top-color: var(--color-primary-element);
+    }
+
+    .projectcheck-deletion-modal__close,
+    .projectcheck-deletion-modal__btn,
+    .projectcheck-deletion-modal__strategy-option {
+        transition: none;
+    }
 }
 
 /* Error State */

@@ -219,8 +219,7 @@
 	function showTeamMembers(projectId) {
 		currentProjectId = projectId;
 
-		// Show loading state
-		elements.teamMembersList.innerHTML = '<div class="loading">' + t('projectcheck', 'Loading team members…') + '</div>';
+		setTeamListMessage('div', 'loading', t('projectcheck', 'Loading team members…'));
 		elements.teamModal.classList.add('show');
 
 		// Fetch team members
@@ -235,94 +234,160 @@
 				if (data.success) {
 					renderTeamMembers(data.teamMembers, data.teamMembersFormer);
 				} else {
-					elements.teamMembersList.innerHTML = '<p class="error">' + t('projectcheck', 'Error loading team members') + '</p>';
+					setTeamListMessage('p', 'error', t('projectcheck', 'Error loading team members'));
 				}
 			})
 			.catch(error => {
 				console.error('Error fetching team members:', error);
-				elements.teamMembersList.innerHTML = '<p class="error">' + t('projectcheck', 'Error loading team members') + '</p>';
+				setTeamListMessage('p', 'error', t('projectcheck', 'Error loading team members'));
 			});
 	}
 
 	/**
 	 * Render team members in modal (active = manageable; former = read-only)
 	 */
+	function setTeamListMessage(tagName, className, text) {
+		const list = elements.teamMembersList;
+		if (!list) {
+			return;
+		}
+		list.replaceChildren();
+		const el = document.createElement(tagName);
+		el.className = className;
+		el.textContent = text;
+		list.appendChild(el);
+	}
+
+	function appendTeamMemberRow(parent, member, isFormer) {
+		const row = document.createElement('div');
+		row.className = 'team-member' + (isFormer ? ' team-member--former' : '');
+
+		const info = document.createElement('div');
+		info.className = 'team-member-info';
+
+		const nameEl = document.createElement('div');
+		nameEl.className = 'team-member-name';
+		nameEl.appendChild(document.createTextNode(member.name || member.user_id || ''));
+		if (isFormer) {
+			const badge = document.createElement('span');
+			badge.className = 'pc-badge pc-badge--neutral';
+			badge.appendChild(document.createTextNode(' ' + t('projectcheck', 'Former')));
+			nameEl.appendChild(badge);
+		}
+
+		const roleEl = document.createElement('div');
+		roleEl.className = 'team-member-role';
+		roleEl.appendChild(document.createTextNode(member.role || ''));
+
+		info.appendChild(nameEl);
+		info.appendChild(roleEl);
+
+		if (member.hourly_rate !== null && member.hourly_rate !== undefined && member.hourly_rate !== '') {
+			const rateEl = document.createElement('div');
+			rateEl.className = 'team-member-rate';
+			rateEl.appendChild(document.createTextNode(formatCurrency(member.hourly_rate) + '/h'));
+			info.appendChild(rateEl);
+		}
+
+		row.appendChild(info);
+
+		if (!isFormer) {
+			const actions = document.createElement('div');
+			actions.className = 'team-member-actions';
+			const removeBtn = document.createElement('button');
+			removeBtn.type = 'button';
+			removeBtn.className = 'button secondary small remove-member-btn';
+			removeBtn.dataset.userId = String(member.user_id || '');
+			removeBtn.setAttribute('aria-label', t('projectcheck', 'Remove from project'));
+			removeBtn.appendChild(document.createTextNode(t('projectcheck', 'Remove')));
+			removeBtn.addEventListener('click', function () {
+				removeTeamMember(currentProjectId, member);
+			});
+			actions.appendChild(removeBtn);
+			row.appendChild(actions);
+		}
+
+		parent.appendChild(row);
+	}
+
 	function renderTeamMembers(teamMembers, teamMembersFormer) {
 		const former = teamMembersFormer || [];
+		const list = elements.teamMembersList;
+		if (!list) {
+			return;
+		}
+		list.replaceChildren();
+
 		if (teamMembers.length === 0 && former.length === 0) {
-			elements.teamMembersList.innerHTML = '<p>' + t('projectcheck', 'No team members assigned to this project.') + '</p>';
+			setTeamListMessage('p', '', t('projectcheck', 'No team members assigned to this project.'));
 			return;
 		}
 
-		const row = (member, isFormer) => {
-			const name = escapeHtml(member.name || member.user_id || '');
-			const uid = escapeHtml(member.user_id || '');
-			const role = escapeHtml(member.role || '');
-			const removeBtn = isFormer
-				? ''
-				: `<div class="team-member-actions">
-					<button type="button" class="button secondary small remove-member-btn" data-user-id="${uid}" aria-label="${t('projectcheck', 'Remove from project')}">
-						${t('projectcheck', 'Remove')}
-					</button>
-				</div>`;
-			const badge = isFormer ? ` <span class="pc-badge pc-badge--neutral">${t('projectcheck', 'Former')}</span>` : '';
-			const memberRate = (member.hourly_rate !== null && member.hourly_rate !== undefined && member.hourly_rate !== '')
-				? `${escapeHtml(formatCurrency(member.hourly_rate))}/h`
-				: '';
-			return `
-			<div class="team-member${isFormer ? ' team-member--former' : ''}">
-				<div class="team-member-info">
-					<div class="team-member-name">${name}${badge}</div>
-					<div class="team-member-role">${role}</div>
-					${memberRate ? `<div class="team-member-rate">${memberRate}</div>` : ''}
-				</div>
-				${removeBtn}
-			</div>`;
-		};
-
-		let html = '';
 		if (teamMembers.length > 0) {
-			html += '<div role="group" aria-label="' + escapeHtml(t('projectcheck', 'Current team')) + '">';
-			html += teamMembers.map(m => row(m, false)).join('');
-			html += '</div>';
+			const activeGroup = document.createElement('div');
+			activeGroup.setAttribute('role', 'group');
+			activeGroup.setAttribute('aria-label', t('projectcheck', 'Current team'));
+			teamMembers.forEach(function (member) {
+				appendTeamMemberRow(activeGroup, member, false);
+			});
+			list.appendChild(activeGroup);
 		}
 		if (former.length > 0) {
-			html += '<p class="team-modal-former-intro">' + escapeHtml(t('projectcheck', 'Former team members (account removed)')) + '</p>';
-			html += '<div role="group" aria-label="' + escapeHtml(t('projectcheck', 'Former team members')) + '">';
-			html += former.map(m => row(m, true)).join('');
-			html += '</div>';
-		}
-		elements.teamMembersList.innerHTML = html;
-
-		elements.teamMembersList.querySelectorAll('.remove-member-btn').forEach(btn => {
-			btn.addEventListener('click', function () {
-				removeTeamMember(currentProjectId, this.dataset.userId);
+			const intro = document.createElement('p');
+			intro.className = 'team-modal-former-intro';
+			intro.appendChild(document.createTextNode(t('projectcheck', 'Former team members (account removed)')));
+			list.appendChild(intro);
+			const formerGroup = document.createElement('div');
+			formerGroup.setAttribute('role', 'group');
+			formerGroup.setAttribute('aria-label', t('projectcheck', 'Former team members'));
+			former.forEach(function (member) {
+				appendTeamMemberRow(formerGroup, member, true);
 			});
-		});
+			list.appendChild(formerGroup);
+		}
 	}
 
 	/**
 	 * Remove team member
 	 */
-	function removeTeamMember(projectId, userId) {
+	function removeTeamMember(projectId, member) {
 		if (typeof window.projectcheckDeletionModal === 'undefined') {
 			showNotification(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'), 'error');
 			return;
 		}
 
-		const deleteUrl = OC.generateUrl('/apps/projectcheck/projects/' + projectId + '/members/' + userId);
-		window.projectcheckDeletionModal.show({
+		const memberId = member && member.id != null ? member.id : null;
+		const userId = member && member.user_id ? String(member.user_id) : '';
+		const memberName = member && (member.name || member.user_id)
+			? String(member.name || member.user_id)
+			: t('projectcheck', 'Team member');
+
+		const deleteUrl = OC.generateUrl('/apps/projectcheck/projects/{id}/members/{userId}/remove', {
+			id: projectId,
+			userId: userId
+		});
+
+		const modalOptions = {
 			entityType: 'member',
-			entityId: userId,
-			entityName: t('projectcheck', 'Team member'),
+			entityId: memberId != null ? memberId : userId,
+			entityName: memberName,
 			deleteUrl: deleteUrl,
-			simpleConfirm: true,
-			confirmMessage: t('projectcheck', 'Are you sure you want to remove this team member?'),
 			onSuccess: function () {
 				showTeamMembers(projectId);
 			},
 			onCancel: function () {}
-		});
+		};
+
+		if (memberId != null) {
+			modalOptions.impactUrl = OC.generateUrl('/apps/projectcheck/api/project-members/{id}/deletion-impact', {
+				id: memberId
+			});
+		} else {
+			modalOptions.simpleConfirm = true;
+			modalOptions.confirmMessage = t('projectcheck', 'Are you sure you want to remove this team member?');
+		}
+
+		window.projectcheckDeletionModal.show(modalOptions);
 	}
 
 	/**
@@ -334,7 +399,7 @@
 			return;
 		}
 
-		const deleteUrl = OC.generateUrl('/apps/projectcheck/projects/' + projectId);
+		const deleteUrl = OC.generateUrl('/apps/projectcheck/projects/{id}/delete', { id: projectId });
 
 		// Show the modal
 		window.projectcheckDeletionModal.show({
@@ -366,64 +431,6 @@
 	window.confirmDeleteProject = function (projectId, projectName) {
 		showProjectDeletionModal(projectId, projectName);
 	};
-
-	/**
-	 * Delete project function
-	 */
-	function deleteProject(projectId) {
-		const deleteBtn = document.querySelector(`button[data-project-id="${projectId}"]`);
-		if (deleteBtn) {
-			const originalContent = deleteBtn.innerHTML;
-			deleteBtn.innerHTML = '<span class="icon icon-loading"></span>';
-			deleteBtn.disabled = true;
-
-			// Send delete request
-			const deleteUrl = OC.generateUrl('/apps/projectcheck/projects/' + projectId);
-			fetch(deleteUrl, {
-				method: 'DELETE',
-				headers: {
-					'X-Requested-With': 'XMLHttpRequest',
-					'requesttoken': OC.requestToken
-				}
-			})
-				.then(response => {
-					if (!response.ok) {
-						throw new Error(`HTTP error! status: ${response.status}`);
-					}
-					return response.json();
-				})
-				.then(data => {
-					if (data.success) {
-						// Remove project row from table
-						const projectRow = deleteBtn.closest('tr');
-						if (projectRow) {
-							projectRow.remove();
-						}
-
-					// Show success message
-					showNotification(t('projectcheck', 'Project deleted successfully'), 'success');
-
-					// Reload page to update stats
-					setTimeout(() => {
-						window.location.reload();
-					}, 1000);
-				} else {
-					alert(t('projectcheck', 'Error deleting project') + ': ' + (data.error || t('projectcheck', 'Unknown error')));
-				}
-			})
-			.catch(error => {
-				console.error('Error deleting project:', error);
-				alert(t('projectcheck', 'Error deleting project. Please try again.'));
-			})
-				.finally(() => {
-					// Reset button state
-					if (deleteBtn) {
-						deleteBtn.innerHTML = originalContent;
-						deleteBtn.disabled = false;
-					}
-				});
-		}
-	}
 
 	/**
 	 * Close modal
@@ -461,15 +468,6 @@
 			// Fallback to alert
 			alert(message);
 		}
-	}
-
-	/**
-	 * Escape HTML to prevent XSS
-	 */
-	function escapeHtml(text) {
-		const div = document.createElement('div');
-		div.textContent = text;
-		return div.innerHTML;
 	}
 
 	function formatCurrency(amount) {

@@ -62,6 +62,25 @@ class Application extends App implements IBootstrap
 				$c->query(\Psr\Log\LoggerInterface::class)
 			);
 		});
+		$context->registerService(\OCA\ProjectCheck\Service\SchemaGuardService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\SchemaGuardService(
+				$c->query(\OCP\IDBConnection::class),
+				$c->query(\OCP\IConfig::class),
+				$c->query(\Psr\Log\LoggerInterface::class),
+				$c->query(\OCP\Lock\ILockingProvider::class),
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Middleware\SchemaGuardMiddleware::class, function ($c) {
+			return new \OCA\ProjectCheck\Middleware\SchemaGuardMiddleware(
+				$c->query(\OCA\ProjectCheck\Service\SchemaGuardService::class),
+				$c->query(\OCP\IRequest::class),
+				$c->query(\OCP\L10N\IFactory::class),
+				$c->query(\OCP\IURLGenerator::class),
+				$c->query(\OCA\ProjectCheck\Service\CSPService::class),
+				$c->query(\Psr\Log\LoggerInterface::class)
+			);
+		});
+		$context->registerMiddleware(\OCA\ProjectCheck\Middleware\SchemaGuardMiddleware::class);
 		$context->registerMiddleware(\OCA\ProjectCheck\Middleware\AppAccessMiddleware::class);
 
 		$context->registerService(\OCA\ProjectCheck\Db\EmployeeHourlyRateMapper::class, function ($c) {

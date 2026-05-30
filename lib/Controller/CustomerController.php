@@ -38,6 +38,7 @@ use OCA\ProjectCheck\Traits\StatsTrait;
 class CustomerController extends Controller
 {
 	use CSPTrait;
+	use ErrorPageTrait;
 	use StatsTrait;
 
 	/** @var IUserSession */
@@ -167,10 +168,9 @@ class CustomerController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'User not authenticated',
-				'urlGenerator' => $this->urlGenerator
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('User not authenticated')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -255,19 +255,17 @@ class CustomerController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'User not authenticated',
-				'urlGenerator' => $this->urlGenerator
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('User not authenticated')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$userId = $user->getUID();
 		if (!$this->projectService->canUserCreateCustomer($userId)) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('Access denied'),
-				'urlGenerator' => $this->urlGenerator
-			], 'main');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPage(
+				$this->l->t('Access denied')
+			), 'main');
 			return $this->configureCSP($response);
 		}
 
@@ -345,26 +343,23 @@ class CustomerController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'User not authenticated',
-				'urlGenerator' => $this->urlGenerator
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('User not authenticated')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$customer = $this->customerService->getCustomer($id);
 		if (!$customer) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'Customer not found',
-				'urlGenerator' => $this->urlGenerator
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageCustomers(
+				$this->l->t('Customer not found')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 		if (!$this->customerService->canUserViewCustomer($user->getUID(), (int) $id)) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('Access denied'),
-				'urlGenerator' => $this->urlGenerator
-			]);
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPage(
+				$this->l->t('Access denied')
+			));
 			return $this->configureCSP($response, 'main');
 		}
 
@@ -419,26 +414,23 @@ class CustomerController extends Controller
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'User not authenticated',
-				'urlGenerator' => $this->urlGenerator
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
+				$this->l->t('User not authenticated')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
 		$customer = $this->customerService->getCustomer($id);
 		if (!$customer) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => 'Customer not found',
-				'urlGenerator' => $this->urlGenerator
-			], 'guest');
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageCustomers(
+				$this->l->t('Customer not found')
+			), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 		if (!$this->customerService->canUserEditCustomer($user->getUID(), (int) $id)) {
-			$response = new TemplateResponse($this->appName, 'error', [
-				'message' => $this->l->t('Access denied'),
-				'urlGenerator' => $this->urlGenerator
-			]);
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPage(
+				$this->l->t('Access denied')
+			));
 			return $this->configureCSP($response, 'main');
 		}
 
@@ -636,7 +628,13 @@ class CustomerController extends Controller
 			$options = ['strategy' => $strategy];
 			if ($strategy === 'reassign' && $reassignCustomerId !== null) {
 				$rid = (int) $reassignCustomerId;
-				if ($rid > 0 && !$this->customerService->canUserViewCustomer($uid, $rid)) {
+				if ($rid <= 0) {
+					return new JSONResponse([
+						'success' => false,
+						'error' => $this->l->t('Select a customer to reassign projects to.')
+					], 400);
+				}
+				if (!$this->customerService->canUserViewCustomer($uid, $rid)) {
 					return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
 				}
 				$options['reassignCustomerId'] = $rid;
@@ -653,9 +651,34 @@ class CustomerController extends Controller
 
 			return new JSONResponse([
 				'success' => false,
-				'error' => $this->l->t('Could not delete customer.')
+				'error' => $this->customerDeletionErrorMessage($e, (string)($this->request->getParam('strategy', 'restrict')))
 			], 400);
 		}
+	}
+
+	/**
+	 * Map deletion exceptions to user-facing, translatable messages.
+	 */
+	private function customerDeletionErrorMessage(\Exception $e, string $strategy): string
+	{
+		$msg = $e->getMessage();
+		if ($strategy === 'restrict' && str_contains($msg, 'project')) {
+			return $this->l->t('This customer has associated projects. Choose Cascade or Reassign to continue.');
+		}
+		if ($strategy === 'reassign' && str_contains($msg, 'Reassignment target')) {
+			return $this->l->t('Select a customer to reassign projects to.');
+		}
+		if (str_contains($msg, 'same customer')) {
+			return $this->l->t('Cannot reassign projects to the same customer.');
+		}
+		if (str_contains($msg, 'Invalid deletion strategy')) {
+			return $this->l->t('Invalid deletion strategy.');
+		}
+		if (str_contains($msg, 'not found')) {
+			return $this->l->t('Customer not found');
+		}
+
+		return $this->l->t('Could not delete customer.');
 	}
 
 	/**

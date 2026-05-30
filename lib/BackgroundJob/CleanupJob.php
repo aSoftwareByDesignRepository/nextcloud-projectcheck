@@ -15,9 +15,10 @@ use OCP\BackgroundJob\IJobList;
 use OCP\BackgroundJob\Job;
 use OCP\BackgroundJob\IJob;
 use Psr\Log\LoggerInterface;
-use OCA\ProjectCheck\Service\ProjectService;
-use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\CustomerService;
+use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\SchemaGuardService;
+use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\IConfig;
 
 /**
@@ -40,6 +41,9 @@ class CleanupJob extends Job implements IJob
 	/** @var IConfig */
 	private $config;
 
+	/** @var SchemaGuardService */
+	private $schemaGuard;
+
     /**
      * CleanupJob constructor
      *
@@ -48,13 +52,15 @@ class CleanupJob extends Job implements IJob
      * @param TimeEntryService $timeEntryService
      * @param CustomerService $customerService
 	 * @param IConfig $config
+	 * @param SchemaGuardService $schemaGuard
      */
     public function __construct(
         LoggerInterface $logger,
         ProjectService $projectService,
         TimeEntryService $timeEntryService,
         CustomerService $customerService,
-		IConfig $config
+		IConfig $config,
+		SchemaGuardService $schemaGuard
     ) {
         parent::__construct();
         $this->logger = $logger;
@@ -62,6 +68,7 @@ class CleanupJob extends Job implements IJob
         $this->timeEntryService = $timeEntryService;
         $this->customerService = $customerService;
 		$this->config = $config;
+		$this->schemaGuard = $schemaGuard;
     }
 
     /**
@@ -74,6 +81,7 @@ class CleanupJob extends Job implements IJob
         $this->logger->info('Starting ProjectControl cleanup job', ['app' => 'projectcheck']);
 
         try {
+            $this->schemaGuard->ensureReady();
             // Clean up old time entries (older than 2 years)
             $this->cleanupOldTimeEntries();
 

@@ -859,11 +859,8 @@ class ProjectService
 			throw new \Exception('Project not found');
 		}
 
-		// Check if project has active team members (former/archived do not block deletion)
-		$activeTeam = $this->getProjectTeamGrouped($id)['active'] ?? [];
-		if ($activeTeam !== [] && $project->isActive()) {
-			throw new \Exception('Cannot delete project with active team members');
-		}
+		// Cascade delete (time entries, team members) runs in the transaction below.
+		// The deletion modal shows impact counts before the user confirms.
 
 		// Start transaction for data integrity
 		$this->db->beginTransaction();

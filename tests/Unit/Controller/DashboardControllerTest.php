@@ -19,6 +19,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Smoke tests for {@see DashboardController}.
@@ -52,6 +53,8 @@ class DashboardControllerTest extends TestCase {
 	private $cspService;
 	/** @var IL10N|\PHPUnit\Framework\MockObject\MockObject */
 	private $l;
+	/** @var LoggerInterface|\PHPUnit\Framework\MockObject\MockObject */
+	private $logger;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -71,6 +74,44 @@ class DashboardControllerTest extends TestCase {
 		$this->cspService->method('applyPolicyWithNonce')->willReturnArgument(0);
 		$this->l = $this->createMock(IL10N::class);
 		$this->l->method('t')->willReturnCallback(static fn ($s, $p = []) => (string)$s);
+		$this->logger = $this->createMock(LoggerInterface::class);
+	}
+
+	public function testGetStatsDoesNotExposeInternalExceptionText(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('getAccessibleProjectIdListForUser')->willReturn([42]);
+		$this->projectService->method('getProjectsByIdList')->willThrowException(
+			new \RuntimeException('SQLSTATE[42S02]: secret internal table oc_pc_time_entries missing')
+		);
+		$this->customerService->method('getCustomerListFiltersForUser')->willReturn([]);
+		$this->customerService->method('getCustomers')->willReturn([]);
+		$this->timeEntryService->method('getYearlyStatsForAllProjects')->willReturn([]);
+		$this->timeEntryService->method('getDetailedYearlyStats')->willReturn([]);
+		$this->timeEntryService->method('getYearlyStatsByProjectType')->willReturn([]);
+		$this->timeEntryService->method('getDetailedYearlyStatsByProjectType')->willReturn([]);
+		$this->timeEntryService->method('getProductivityAnalysis')->willReturn([]);
+		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([]);
+
+		$this->logger->expects($this->once())->method('error');
+
+		$response = $this->makeController()->getStats();
+		$body = $response->getData();
+
+		self::assertSame(200, $response->getStatus());
+		self::assertSame('stats_unavailable', $body['error']);
+		self::assertStringNotContainsString('SQLSTATE', json_encode($body, JSON_THROW_ON_ERROR));
+		self::assertStringNotContainsString('oc_pc_time_entries', json_encode($body, JSON_THROW_ON_ERROR));
+	}
+
+	public function testIndexErrorPageUsesErrorPageParamsShape(): void {
+		$this->userSession->method('getUser')->willReturn(null);
+
+		$response = $this->makeController()->index();
+		$params = $response->getParams();
+
+		self::assertArrayHasKey('message', $params);
+		self::assertArrayHasKey('homeUrl', $params);
+		self::assertArrayNotHasKey('error', $params);
 	}
 
 	private function makeController(): DashboardController {
@@ -84,7 +125,8 @@ class DashboardControllerTest extends TestCase {
 			$this->budgetService,
 			$this->urlGenerator,
 			$this->cspService,
-			$this->l
+			$this->l,
+			$this->logger
 		);
 	}
 

@@ -1,0 +1,55 @@
+/**
+ * Shared layout for access-denied, schema error, and generic error pages.
+ * WCAG 2.1 AA: clear hierarchy, focusable actions, sufficient contrast via theme tokens.
+ */
+
+.projectcheck-status-page {
+	max-width: 32rem;
+	margin: var(--pc-space-6, 1.5rem) auto;
+	padding: var(--pc-space-6, 1.5rem);
+	text-align: center;
+}
+
+.projectcheck-status-page__icon {
+	display: flex;
+	justify-content: center;
+	margin-bottom: var(--pc-space-4, 1rem);
+	color: var(--color-warning, #c98600);
+}
+
+.projectcheck-status-page__icon--error {
+	color: var(--color-error, #e9322d);
+}
+
+.projectcheck-status-page__icon .pc-icon {
+	width: 2.75rem;
+	height: 2.75rem;
+}
+
+.projectcheck-status-page__title {
+	margin: 0 0 var(--pc-space-3, 0.75rem);
+	font-size: var(--font-size-large, 1.25rem);
+	font-weight: var(--font-weight-bold, 600);
+	color: var(--color-main-text);
+}
+
+.projectcheck-status-page__message {
+	margin: 0 0 var(--pc-space-5, 1.25rem);
+	font-size: var(--font-size-default, 1rem);
+	line-height: 1.5;
+	color: var(--color-text-maxcontrast);
+}
+
+.projectcheck-status-page__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--pc-space-3, 0.75rem);
+	justify-content: center;
+}
+
+@media (max-width: 480px) {
+	.projectcheck-status-page {
+		margin: var(--pc-space-4, 1rem);
+		padding: var(--pc-space-4, 1rem);
+	}
+}

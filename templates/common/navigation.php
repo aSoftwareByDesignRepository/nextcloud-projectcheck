@@ -12,6 +12,8 @@
 // page module that calls window.ProjectCheckFormat (audit ref. AUDIT-FINDINGS B10/H28).
 // Registered first so the script bucket exists; pc-l10n is then prepended so it still loads first.
 \OCP\Util::addScript('projectcheck', 'common/format');
+\OCP\Util::addScript('projectcheck', 'common/escape');
+\OCP\Util::addScript('projectcheck', 'common/dom-ui');
 // Patch window.t before other app scripts; keep first in the projectcheck bundle (prepend list).
 \OCP\Util::addScript('projectcheck', 'pc-l10n', 'core', true);
 // Shared modal accessibility helper (focus trap, Escape, backdrop, restore focus).

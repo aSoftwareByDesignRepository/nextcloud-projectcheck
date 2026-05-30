@@ -129,35 +129,10 @@
 					});
 					return;
 				}
-				// Non-modal fallback path. Still goes through requesttoken-protected DELETE.
-				const url = new URL(deleteUrl, window.location.origin);
-				if (requestToken) {
-					url.searchParams.set('requesttoken', requestToken);
-				}
-				try {
-					const response = await fetch(url.toString(), {
-						method: 'DELETE',
-						headers: {
-							requesttoken: requestToken,
-							Accept: 'application/json',
-							'X-Requested-With': 'XMLHttpRequest',
-						},
-						credentials: 'same-origin',
-					});
-
-					if (!response.ok) {
-						const data = await response.json().catch(() => ({}));
-						throw new Error(data.error || msg.deleteFailed || 'Failed to delete');
-					}
-
-					const row = button.closest('.project-file-row');
-					if (row) {
-						row.remove();
-					}
-				} catch (error) {
-					console.error(error);
-					fileNotify(error?.message || msg.deleteFailed || 'Could not delete the file.', 'error');
-				}
+				fileNotify(
+					msg.deleteFailed || t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'),
+					'error'
+				);
 			});
 		}
 

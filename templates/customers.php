@@ -199,22 +199,25 @@ include __DIR__ . '/common/page-start.php';
                                             <span class="icon icon-rename" aria-hidden="true"></span>
                                         </a>
                                         <?php endif; ?>
-                                        <?php if ($customer->getCanDelete()): ?>
+                                        <?php if (!empty($_['editableCustomerIds'][(int)$customer->getId()])): ?>
+                                            <?php
+                                            $projectCount = (int)($customer->getProjectCount() ?? 0);
+                                            $hasProjects = $projectCount > 0;
+                                            $deleteTitle = $hasProjects
+                                                ? $l->t('Delete customer (choose how to handle projects)')
+                                                : $l->t('Delete Customer');
+                                            $deleteAria = $hasProjects
+                                                ? $l->t('Delete customer %s (choose how to handle associated projects)', [$customer->getName() ?? ''])
+                                                : $l->t('Delete customer %s', [$customer->getName() ?? '']);
+                                            ?>
                                             <button type="button" class="action-item delete-customer-btn"
                                                 data-customer-id="<?php p($customer->getId()); ?>"
                                                 data-customer-name="<?php p($customer->getName()); ?>"
-                                                data-delete-url="<?php p($_['deleteUrl'] ?? ''); ?>"
-                                                title="<?php p($l->t('Delete Customer')); ?>"
-                                                aria-label="<?php p($l->t('Delete customer %s', [$customer->getName() ?? ''])); ?>">
+                                                data-delete-url="<?php p(str_replace('CUSTOMER_ID', (string)$customer->getId(), $_['deleteUrl'] ?? '')); ?>"
+                                                title="<?php p($deleteTitle); ?>"
+                                                aria-label="<?php p($deleteAria); ?>">
                                                 <span class="icon icon-delete" aria-hidden="true"></span>
                                             </button>
-                                        <?php else: ?>
-                                            <span class="action-item disabled"
-                                                role="img"
-                                                aria-label="<?php p($l->t('Cannot delete customer %s with associated projects', [$customer->getName() ?? ''])); ?>"
-                                                title="<?php p($l->t('Cannot delete customer with associated projects')); ?>">
-                                                <span class="icon icon-delete" style="opacity: 0.3;" aria-hidden="true"></span>
-                                            </span>
                                         <?php endif; ?>
                                     </div>
                                 </td>

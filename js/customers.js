@@ -93,9 +93,32 @@
     }
 
     /**
+     * @param {string} customerId
+     * @param {string} deleteUrl From data-delete-url (may still contain CUSTOMER_ID placeholder)
+     * @returns {string}
+     */
+    function resolveCustomerDeleteUrl(customerId, deleteUrl) {
+        const id = String(customerId || '').trim();
+        if (!id) {
+            return deleteUrl || '';
+        }
+        if (deleteUrl && deleteUrl.indexOf('CUSTOMER_ID') !== -1) {
+            return deleteUrl.split('CUSTOMER_ID').join(encodeURIComponent(id));
+        }
+        if (deleteUrl) {
+            return deleteUrl;
+        }
+        if (typeof OC !== 'undefined' && OC.generateUrl) {
+            return OC.generateUrl('/apps/projectcheck/customers/{id}/delete', { id: id });
+        }
+        return '/index.php/apps/projectcheck/customers/' + encodeURIComponent(id) + '/delete';
+    }
+
+    /**
      * Show customer deletion modal
      */
     function showCustomerDeletionModal(customerId, customerName, deleteUrl) {
+        deleteUrl = resolveCustomerDeleteUrl(customerId, deleteUrl);
         if (typeof window.projectcheckDeletionModal === 'undefined') {
             if (typeof OC !== 'undefined' && OC.Notification) {
                 OC.Notification.showTemporary(
@@ -106,17 +129,7 @@
             return;
         }
 
-        // Set up success callback
-        window.projectcheckDeletionModal.onSuccess = function (entity) {
-            // Remove the row from the table
-            const row = document.querySelector(`tr[data-customer-id="${entity.id}"]`);
-            if (row) {
-                row.remove();
-                updateEmptyState();
-            }
-        };
-
-        // Show the modal
+        // Set up success callback via show() options only (legacy onSuccess cleared on close).
         window.projectcheckDeletionModal.show({
             entityType: 'customer',
             entityId: customerId,
@@ -144,7 +157,7 @@
         const deleteButton = document.querySelector(`button[data-customer-id="${customerId}"]`);
 
         if (deleteButton && deleteButton.dataset.deleteUrl) {
-            url = deleteButton.dataset.deleteUrl.replace('CUSTOMER_ID', customerId);
+            url = resolveCustomerDeleteUrl(customerId, deleteButton.dataset.deleteUrl);
         } else {
             // Use Nextcloud's URL generation if available, otherwise fallback to hardcoded URL
             url = typeof OC !== 'undefined' && OC.generateUrl ?
@@ -155,23 +168,23 @@
         const token = document.querySelector('input[name="requesttoken"]')?.value ||
             (typeof OC !== 'undefined' ? OC.requestToken : '');
 
-        const bodyParams = new URLSearchParams();
-        bodyParams.append('_method', 'DELETE');
+        const formData = new FormData();
+        formData.append('requesttoken', token);
         if (options.strategy) {
-            bodyParams.append('strategy', options.strategy);
+            formData.append('strategy', options.strategy);
         }
         if (options.strategy === 'reassign' && options.reassignCustomerId) {
-            bodyParams.append('reassign_customer_id', options.reassignCustomerId);
+            formData.append('reassign_customer_id', options.reassignCustomerId);
         }
 
         fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
                 'X-Requested-With': 'XMLHttpRequest',
                 'requesttoken': token
             },
-            body: bodyParams.toString()
+            body: formData,
+            credentials: 'same-origin'
         })
             .then(response => {
                 if (!response.ok) {

@@ -5,6 +5,120 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.59 - 2026-05-30
+
+### Fixed
+
+- **Deletion modal close crash:** `ProjectCheckModalA11y.detach()` no longer re-enters `closeDeletionModal()` with a null `currentModal` reference.
+- **Dependency load errors:** impact fetch handles non-JSON and HTTP error responses instead of throwing parse errors.
+- **Customer delete with projects:** delete action available for editable customers; modal enforces cascade/reassign when projects exist; clearer server error messages.
+- **Strategy radio layout:** overrides Nextcloud core `input { width: 130px }` so radios align inline with labels.
+
+## 2.0.58 - 2026-05-30
+
+### Fixed
+
+- **Customer delete 403:** list template now substitutes `CUSTOMER_ID` in `data-delete-url` (same as show/edit links); JS resolves the placeholder before opening the deletion modal.
+
+## 2.0.57 - 2026-05-30
+
+### Fixed
+
+- **Project delete returned 400** on active projects with team members: removed a guard that contradicted the deletion modal’s cascade (time entries and members are removed in the same transaction). Uploaded project files are purged before the project row is deleted.
+
+## 2.0.56 - 2026-05-30
+
+### Fixed
+
+- **All destructive UI actions** now use `POST` + `FormData` `requesttoken` (files, employee project unassign, customers legacy path); removed remaining `DELETE` fetch paths in time-entries, project files fallback, and unreliable `_method=DELETE` on customer delete.
+- **Deletion modal:** normalizes delete URLs for customers, files, and employee unassign; delete button gets an explicit `aria-label`.
+
+### Added
+
+- Routes/controllers: `projectfile#deletePost`, `employee#unassignProjectPost`.
+- `ProjectCheckApi.postDelete()`; `del()` delegates to POST delete for CSP/CSRF safety.
+
+## 2.0.55 - 2026-05-30
+
+### Fixed
+
+- **Project/time-entry/member deletion:** mutating deletes use `POST` + `FormData` `requesttoken` (`/projects/{id}/delete`, `/time-entries/{id}/delete`, `/members/{userId}/remove`) instead of `DELETE` with token in the query string (Nextcloud CSRF returned 400).
+- **Deletion modal:** success path no longer shows a follow-up error toast after a successful delete.
+- **Service worker:** register only on `/apps/projectcheck/` pages over HTTPS or localhost (avoids insecure registration when assets load from `custom_apps`).
+
+### Changed
+
+- **Templates:** project-detail team removal and time-entry detail use POST delete routes.
+
+## 2.0.54 - 2026-05-30
+
+### Added
+
+- **Security tests:** controller tests ensure rate-resolution JSON never echoes raw `RateResolutionException` text (`ProjectController`, `EmployeeController`).
+
+### Verified
+
+- **221 PHPUnit** and **audit gates** (l10n, DB naming, Lucide) pass on host.
+- **31 Playwright smoke/workflow tests** pass against Docker (`e2e/run-smoke.sh`).
+
+## 2.0.53 - 2026-05-30
+
+### Fixed
+
+- **Feedback UI (XSS):** `messaging.js`, `components.js`, and `validation.js` build toasts, alerts, and modals with DOM APIs via shared `common/dom-ui.js` (no `innerHTML` for dynamic content).
+- **Validation:** removed inline `onclick` dismiss handlers on form submission alerts (CSP-safe listeners).
+
+### Changed
+
+- **Modals:** `components.js` skips duplicate Escape/backdrop handlers when `ProjectCheckModalA11y` is loaded.
+
+## 2.0.52 - 2026-05-30
+
+### Fixed
+
+- **Deletion modal:** rebuilt with DOM APIs only (no `innerHTML`); integrates `ProjectCheckModalA11y` focus trap; validates customer reassign strategy before submit.
+- **Projects team modal:** member removal uses roster `id` for impact analysis URL (was incorrectly using `user_id` when impact fetch was enabled).
+- **Projects list:** removed unused legacy `deleteProject()` path that surfaced raw API errors in `alert()`.
+
+### Changed
+
+- **Deletion modal UX:** `:focus-visible` styles, `prefers-reduced-motion`, `hidden` for reassign panel, `aria-live` on body.
+
+## 2.0.51 - 2026-05-30
+
+### Fixed
+
+- **Security:** rate-resolution JSON APIs map errors by `code` via `RateResolutionMessage` (no raw exception text in responses).
+- **XSS hardening:** team modal in `projects.js` builds roster rows with DOM APIs; shared `common/escape.js` for escaping.
+- **Service worker:** removed unimplemented background-sync, IndexedDB queue, and push-notification stubs (cache + offline fallback only).
+- **Offline page:** aligned with status-page layout, WCAG focus styles, and webroot-aware connectivity probe.
+
+### Added
+
+- **Tests:** `RateResolutionMessageTest`.
+
+## 2.0.50 - 2026-05-30
+
+### Fixed
+
+- **Runtime schema repair:** `SchemaGuardMiddleware` and `SchemaGuardService` reconcile missing `pc_*` tables (including `pc_time_entries`) on the first app request, dashboard widget load, search, and cleanup job — fixes 500s when migrations were marked complete without creating every table.
+- **Schema completeness:** `ProjectCheckTableCatalog` lists all runtime-required tables; repair also renames legacy rate tables and runs on fresh install (`repair-steps` install), matching BudgetCheck.
+- **Schema repair concurrency:** exclusive lock prevents parallel DDL from concurrent requests; wait/retry when another request is repairing.
+- **Security:** dashboard stats API no longer returns raw exception messages; schema-guard JSON uses translated user text only.
+- **Error UX:** unified `templates/error.php` and `access-denied.php` with `status-pages.css`, CSP on schema errors, and `ErrorPageParams` helper.
+- **Dashboard JS:** aligned with `overview-stat-compact` / `dashboard-card` DOM; live stat refresh via `data-dashboard-stat` attributes.
+- **Dashboard widget:** “Add project” only when `canUserCreateProject`; schema failures logged instead of silent empty lists.
+- **Error pages:** all controllers use `ErrorPageParams` / `ErrorPageTrait` (consistent layout, home + contextual back links, no raw exception text).
+- **Customer pages:** untranslated error strings fixed; `EmployeeController` API errors no longer leak internal exception messages.
+
+### Changed
+
+- **Accessibility:** overview stats `aria-live="polite"`; recent project cards keyboard-activatable with visible `:focus-visible` styles.
+
+### Added
+
+- **Tests:** `ErrorPageParamsTest`, dashboard stats API security test (no SQL/internal leak on failure).
+
 ## 2.0.49 - 2026-05-27
 
 ### Added

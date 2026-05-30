@@ -676,7 +676,7 @@ include __DIR__ . '/common/page-start.php';
                                     <?php if ($canManageFiles): ?>
                                         <button type="button"
                                             class="button danger ghost delete-file-btn"
-                                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.delete', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
+                                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.deletePost', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
                                             data-file-name="<?php p($file->getDisplayName()); ?>"
                                             aria-label="<?php p($l->t('Delete %s', [$file->getDisplayName()])); ?>">
                                             <i class="icon icon-delete" aria-hidden="true"></i>
@@ -872,7 +872,7 @@ include __DIR__ . '/common/page-start.php';
                                         <button type="button" class="action-btn remove-member-btn"
                                             data-member-id="<?php p($member['id'] ?? ''); ?>"
                                             data-user-id="<?php p($member['user_id'] ?? ''); ?>"
-                                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.project.removeTeamMember', ['id' => $projectId, 'userId' => (string)($member['user_id'] ?? '')])); ?>"
+                                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.project.removeTeamMemberPost', ['id' => $projectId, 'userId' => (string)($member['user_id'] ?? '')])); ?>"
                                             data-impact-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectmember.getDeletionImpact', ['id' => (int)($member['id'] ?? 0)])); ?>"
                                             data-member-name="<?php p($member['name'] ?? $l->t('Unknown')); ?>"
                                             title="<?php p($l->t('Remove from project')); ?>"

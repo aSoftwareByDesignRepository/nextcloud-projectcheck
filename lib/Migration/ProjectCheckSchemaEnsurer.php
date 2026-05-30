@@ -25,13 +25,8 @@ use RuntimeException;
 
 final class ProjectCheckSchemaEnsurer
 {
-	/** Tables the app cannot function without. */
-	public const REQUIRED_TABLES = [
-		'pc_customers',
-		'pc_projects',
-		'pc_project_members',
-		'pc_time_entries',
-	];
+	/** @var list<string> */
+	public const REQUIRED_TABLES = ProjectCheckTableCatalog::REQUIRED_TABLES;
 
 	public function __construct(
 		private IDBConnection $db,
@@ -45,6 +40,7 @@ final class ProjectCheckSchemaEnsurer
 	public function ensure(IOutput $output): void
 	{
 		(new LegacyTableRenamer($this->db, $this->config))->run($output);
+		(new RateTableRenamer($this->db, $this->config))->run($output);
 
 		$schemaWrapper = $this->createSchemaWrapper();
 		$schema = $schemaWrapper;
@@ -64,6 +60,12 @@ final class ProjectCheckSchemaEnsurer
 	{
 		foreach (self::REQUIRED_TABLES as $table) {
 			if (!$this->db->tableExists($table)) {
+				return false;
+			}
+		}
+
+		foreach (array_keys(LegacyTableRenamer::RENAMES) as $legacy) {
+			if ($this->db->tableExists($legacy)) {
 				return false;
 			}
 		}

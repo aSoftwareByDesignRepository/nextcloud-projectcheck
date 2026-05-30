@@ -205,7 +205,7 @@ function initializeEmployeeDetail() {
 
 			if (typeof window.projectcheckDeletionModal !== 'undefined') {
 				window.projectcheckDeletionModal.show({
-					entityType: 'member',
+					entityType: 'employee_unassign',
 					entityId: projectId,
 					entityName: projectName,
 					deleteUrl: url,

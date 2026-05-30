@@ -192,9 +192,29 @@ class ProjectFileController extends Controller
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 
+		return $this->finishFileDeletion($projectId, $fileId, $user->getUID());
+	}
+
+	/**
+	 * Delete project file via POST (deletion modal — reliable CSRF with requesttoken body).
+	 */
+	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
+	public function deletePost(int $projectId, int $fileId): DataResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+
+		return $this->finishFileDeletion($projectId, $fileId, $user->getUID());
+	}
+
+	private function finishFileDeletion(int $projectId, int $fileId, string $uid): DataResponse
+	{
 		try {
-			$this->fileService->deleteFile($projectId, $fileId, $user->getUID());
-			return new DataResponse(['success' => true]);
+			$this->fileService->deleteFile($projectId, $fileId, $uid);
+			return new DataResponse(['success' => true, 'message' => $this->l->t('File deleted successfully')]);
 		} catch (\Throwable $e) {
 			return new DataResponse(['error' => $this->l->t('Could not delete the file.')], 400);
 		}

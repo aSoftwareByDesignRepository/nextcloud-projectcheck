@@ -33,6 +33,7 @@ use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Log\Audit\CriticalActionPerformedEvent;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCA\ProjectCheck\Util\ErrorPageParams;
 use OCA\ProjectCheck\Service\SavePolicyUiStrings;
 use OCA\ProjectCheck\Service\OrgPolicySaveAudit;
 use OCA\ProjectCheck\Service\ProjectService;
@@ -189,16 +190,20 @@ class AppConfigController extends Controller
 		$user = $this->userSession->getUser();
 		$l = $this->l10nFactory->get('projectcheck');
 		if ($user === null) {
-			return new TemplateResponse('projectcheck', 'error', [
-				'message' => $l->t('User not authenticated'),
-				'urlGenerator' => $this->urlGenerator,
-			], 'guest');
+			$response = new TemplateResponse('projectcheck', 'error', ErrorPageParams::forGuest(
+				$l,
+				$this->urlGenerator,
+				$l->t('User not authenticated'),
+			), 'guest');
+			return $this->configureCSP($response, 'guest');
 		}
 		if (!$this->accessControl->canManageOrganization($user->getUID())) {
-			return new TemplateResponse('projectcheck', 'error', [
-				'message' => $l->t('You do not have permission to change organization settings for ProjectCheck.'),
-				'urlGenerator' => $this->urlGenerator,
-			]);
+			$response = new TemplateResponse('projectcheck', 'error', ErrorPageParams::build(
+				$l,
+				$this->urlGenerator,
+				$l->t('You do not have permission to change organization settings for ProjectCheck.'),
+			));
+			return $this->configureCSP($response, 'main');
 		}
 		$resp = $this->buildFormParameters($l);
 		$response = new TemplateResponse('projectcheck', 'org-app-settings', $resp);

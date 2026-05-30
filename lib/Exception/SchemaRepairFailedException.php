@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @copyright Copyright (c) 2026, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+namespace OCA\ProjectCheck\Exception;
+
+use RuntimeException;
+
+/**
+ * Raised when automatic schema repair could not complete.
+ */
+class SchemaRepairFailedException extends RuntimeException
+{
+}

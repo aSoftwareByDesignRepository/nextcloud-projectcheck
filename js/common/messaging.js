@@ -20,11 +20,12 @@ const ProjectControlMessaging = {
     });
   },
 
-  escapeHtml(text) {
-    if (text === null || text === undefined) return '';
-    const div = document.createElement('div');
-    div.textContent = String(text);
-    return div.innerHTML;
+  getDom() {
+    return window.ProjectCheckDom || null;
+  },
+
+  toastIcons() {
+    return { success: '\u2713', error: '\u2717', warning: '\u26A0', info: '\u2139' };
   },
 
   /**
@@ -101,57 +102,54 @@ const ProjectControlMessaging = {
     toast.setAttribute('aria-live', live);
     toast.setAttribute('aria-atomic', 'true');
     toast.setAttribute('tabindex', '-1');
-    
-    const icon = this.getToastIcon(type);
-    const hasTitle = Boolean(title);
-    
-    toast.innerHTML = `
-      <span class="toast-icon" aria-hidden="true">${icon}</span>
-      <div class="toast-content">
-        ${hasTitle ? `<div class="toast-title">${this.escapeHtml(title)}</div>` : ''}
-        <div class="toast-message">${this.escapeHtml(message)}</div>
-        ${actions.length > 0 ? this.createToastActions(actions) : ''}
-      </div>
-      ${dismissible ? `<button type="button" class="toast-close" aria-label="${this.tr('Close notification')}"><span aria-hidden="true">&times;</span></button>` : ''}
-    `;
-    
-    // Add event listeners
-    if (dismissible) {
-      const closeBtn = toast.querySelector('.toast-close');
-      closeBtn.addEventListener('click', () => {
-        this.dismissToast(toast);
+
+    const Dom = this.getDom();
+    const self = this;
+    if (Dom) {
+      Dom.populateToast(toast, {
+        type: type,
+        title: title || '',
+        message: message,
+        dismissible: dismissible,
+        dismissLabel: this.tr('Close notification'),
+        icons: this.toastIcons(),
+        actions: actions
+      }, function (actionsWrap, actionList) {
+        actionList.forEach(function (action) {
+          const btn = Dom.createEl('button', 'toast-action');
+          btn.type = 'button';
+          if (action.name) {
+            btn.dataset.action = String(action.name);
+          }
+          if (action.primary) {
+            btn.dataset.primary = 'true';
+          }
+          btn.appendChild(Dom.textNode(action.label));
+          actionsWrap.appendChild(btn);
+        });
       });
     }
-    
-    // Add action event listeners
-    const actionButtons = toast.querySelectorAll('.toast-action');
-    actionButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
+
+    if (dismissible) {
+      const closeBtn = toast.querySelector('.toast-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          this.dismissToast(toast);
+        });
+      }
+    }
+
+    toast.querySelectorAll('.toast-action').forEach(function (button) {
+      button.addEventListener('click', function (e) {
         e.preventDefault();
         const action = button.dataset.action;
         if (action) {
-          this.handleToastAction(toast, action);
+          self.handleToastAction(toast, action);
         }
       });
     });
-    
-    return toast;
-  },
 
-  /**
-   * Create toast actions
-   */
-  createToastActions(actions) {
-    const actionsHtml = actions.map(action => `
-      <button type="button" 
-              class="toast-action" 
-              data-action="${this.escapeHtml(action.name)}"
-              ${action.primary ? 'data-primary="true"' : ''}>
-        ${this.escapeHtml(action.label)}
-      </button>
-    `).join('');
-    
-    return `<div class="toast-actions">${actionsHtml}</div>`;
+    return toast;
   },
 
   /**
@@ -189,13 +187,7 @@ const ProjectControlMessaging = {
    * Get toast icon
    */
   getToastIcon(type) {
-    const icons = {
-      success: '✓',
-      error: '✗',
-      warning: '⚠',
-      info: 'ℹ'
-    };
-    return icons[type] || icons.info;
+    return (this.toastIcons())[type] || this.toastIcons().info;
   },
 
   // ===== CONVENIENCE METHODS =====
@@ -251,16 +243,17 @@ const ProjectControlMessaging = {
       alert.dataset.autoDismiss = autoDismiss;
     }
 
-    const icon = this.getAlertIcon(type);
-    
-    alert.innerHTML = `
-      <div class="alert-icon" aria-hidden="true">${icon}</div>
-      <div class="alert-content">
-        ${title ? `<div class="alert-title">${this.escapeHtml(title)}</div>` : ''}
-        <div class="alert-message">${this.escapeHtml(message)}</div>
-      </div>
-      ${dismissible ? `<button type="button" class="alert-close" aria-label="${this.tr('Dismiss alert')}"><span aria-hidden="true">&times;</span></button>` : ''}
-    `;
+    const Dom = this.getDom();
+    if (Dom) {
+      Dom.populateInlineAlert(alert, {
+        type: type,
+        title: title,
+        message: message,
+        dismissible: dismissible,
+        dismissLabel: this.tr('Dismiss alert'),
+        icons: this.toastIcons()
+      });
+    }
 
     container.appendChild(alert);
 
@@ -346,24 +339,25 @@ const ProjectControlMessaging = {
    * Create confirmation modal
    */
   createConfirmModal(title, message, confirmText, cancelText, type) {
+    const titleId = 'pc-confirm-modal-title-' + Date.now();
+    const Dom = this.getDom();
+    if (Dom) {
+      return Dom.buildConfirmModal(titleId, {
+        title: title,
+        message: message,
+        confirmText: confirmText,
+        cancelText: cancelText,
+        type: type
+      });
+    }
     const modal = document.createElement('div');
     modal.className = `modal modal--sm modal--${type}`;
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
-    
-    modal.innerHTML = `
-      <div class="modal-header">
-        <h2 class="modal-title">${this.escapeHtml(title)}</h2>
-      </div>
-      <div class="modal-body">
-        <p>${this.escapeHtml(message)}</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn--secondary modal-cancel">${this.escapeHtml(cancelText)}</button>
-        <button type="button" class="btn btn--${type} modal-confirm">${this.escapeHtml(confirmText)}</button>
-      </div>
-    `;
-    
+    modal.setAttribute('aria-labelledby', titleId);
+    const p = document.createElement('p');
+    p.textContent = message;
+    modal.appendChild(p);
     return modal;
   },
 
@@ -816,45 +810,79 @@ const ProjectControlMessaging = {
    * Create persistent notification element
    */
   createPersistentNotification(messageData) {
-    const notification = document.createElement('div');
+    const Dom = this.getDom();
     const nType = messageData.type || 'info';
+    const notification = document.createElement('div');
     notification.className = `persistent-notification persistent-notification--${nType}`;
-    notification.setAttribute('data-message-id', messageData.id);
+    if (messageData.id) {
+      notification.setAttribute('data-message-id', String(messageData.id));
+    }
     notification.setAttribute('role', nType === 'error' || nType === 'warning' ? 'alert' : 'status');
     notification.setAttribute('aria-live', nType === 'error' || nType === 'warning' ? 'assertive' : 'polite');
     notification.setAttribute('aria-atomic', 'true');
-    
-    notification.innerHTML = `
-      <div class="persistent-notification__icon" aria-hidden="true">
-        ${this.getToastIcon(nType)}
-      </div>
-      <div class="persistent-notification__content">
-        <div class="persistent-notification__title">${this.escapeHtml(messageData.title || '')}</div>
-        <div class="persistent-notification__message">${this.escapeHtml(messageData.message)}</div>
-      </div>
-      <div class="persistent-notification__actions">
-        <button type="button" class="persistent-notification__acknowledge" aria-label="${this.tr('Acknowledge')}">
-          <span aria-hidden="true">✓</span>
-        </button>
-        <button type="button" class="persistent-notification__dismiss" aria-label="${this.tr('Dismiss')}">
-          <span aria-hidden="true">×</span>
-        </button>
-      </div>
-    `;
-    
-    // Add event listeners
-    const acknowledgeBtn = notification.querySelector('.persistent-notification__acknowledge');
-    const dismissBtn = notification.querySelector('.persistent-notification__dismiss');
-    
+
+    const iconWrap = Dom
+      ? Dom.createEl('div', 'persistent-notification__icon')
+      : document.createElement('div');
+    iconWrap.className = 'persistent-notification__icon';
+    iconWrap.setAttribute('aria-hidden', 'true');
+    iconWrap.appendChild(document.createTextNode(this.getToastIcon(nType)));
+
+    const content = Dom
+      ? Dom.createEl('div', 'persistent-notification__content')
+      : document.createElement('div');
+    content.className = 'persistent-notification__content';
+    const titleEl = Dom
+      ? Dom.createEl('div', 'persistent-notification__title')
+      : document.createElement('div');
+    titleEl.className = 'persistent-notification__title';
+    titleEl.appendChild(document.createTextNode(messageData.title || ''));
+    const msgEl = Dom
+      ? Dom.createEl('div', 'persistent-notification__message')
+      : document.createElement('div');
+    msgEl.className = 'persistent-notification__message';
+    msgEl.appendChild(document.createTextNode(messageData.message || ''));
+    content.appendChild(titleEl);
+    content.appendChild(msgEl);
+
+    const actions = Dom
+      ? Dom.createEl('div', 'persistent-notification__actions')
+      : document.createElement('div');
+    actions.className = 'persistent-notification__actions';
+
+    const acknowledgeBtn = document.createElement('button');
+    acknowledgeBtn.type = 'button';
+    acknowledgeBtn.className = 'persistent-notification__acknowledge';
+    acknowledgeBtn.setAttribute('aria-label', this.tr('Acknowledge'));
+    const ackIcon = document.createElement('span');
+    ackIcon.setAttribute('aria-hidden', 'true');
+    ackIcon.appendChild(document.createTextNode('\u2713'));
+    acknowledgeBtn.appendChild(ackIcon);
+
+    const dismissBtn = document.createElement('button');
+    dismissBtn.type = 'button';
+    dismissBtn.className = 'persistent-notification__dismiss';
+    dismissBtn.setAttribute('aria-label', this.tr('Dismiss'));
+    const dismissIcon = document.createElement('span');
+    dismissIcon.setAttribute('aria-hidden', 'true');
+    dismissIcon.appendChild(document.createTextNode('\u00D7'));
+    dismissBtn.appendChild(dismissIcon);
+
+    actions.appendChild(acknowledgeBtn);
+    actions.appendChild(dismissBtn);
+    notification.appendChild(iconWrap);
+    notification.appendChild(content);
+    notification.appendChild(actions);
+
     acknowledgeBtn.addEventListener('click', () => {
       this.acknowledgeMessage(messageData.id);
       notification.remove();
     });
-    
+
     dismissBtn.addEventListener('click', () => {
       notification.remove();
     });
-    
+
     return notification;
   },
 
@@ -871,62 +899,45 @@ const ProjectControlMessaging = {
    * Create history modal
    */
   createHistoryModal(history) {
-    const modal = document.createElement('div');
-    modal.className = 'modal modal--lg';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-    
-    const historyHtml = history.length > 0 
-      ? history.map(msg => `
-          <div class="history-item history-item--${msg.type} ${msg.acknowledged ? 'history-item--acknowledged' : ''}">
-            <div class="history-item__icon">${this.getToastIcon(msg.type)}</div>
-            <div class="history-item__content">
-              <div class="history-item__title">${this.escapeHtml(msg.title || '')}</div>
-              <div class="history-item__message">${this.escapeHtml(msg.message)}</div>
-              <div class="history-item__timestamp">${this.escapeHtml(new Date(msg.timestamp).toLocaleString())}</div>
-            </div>
-            <div class="history-item__status">
-              ${msg.acknowledged ? `✓ ${this.escapeHtml(this.tr('Acknowledged'))}` : `⚠ ${this.escapeHtml(this.tr('Pending'))}`}
-            </div>
-          </div>
-        `).join('')
-      : `<div class="history-empty">${this.escapeHtml(this.tr('No message history found.'))}</div>`;
-    
-    modal.innerHTML = `
-      <div class="modal-header">
-        <h2 class="modal-title">${this.escapeHtml(this.tr('Message History'))}</h2>
-      </div>
-      <div class="modal-body">
-        <div class="history-list">
-          ${historyHtml}
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn--secondary modal-clear-history">${this.escapeHtml(this.tr('Clear History'))}</button>
-        <button type="button" class="btn btn--primary modal-export-history">${this.escapeHtml(this.tr('Export'))}</button>
-        <button type="button" class="btn btn--secondary modal-cancel">${this.escapeHtml(this.tr('Close'))}</button>
-      </div>
-    `;
-    
-    // Add event listeners
+    const titleId = 'pc-history-modal-title-' + Date.now();
+    const Dom = this.getDom();
+    const modal = Dom
+      ? Dom.buildHistoryModal(titleId, history, {
+        title: this.tr('Message History'),
+        clearLabel: this.tr('Clear History'),
+        exportLabel: this.tr('Export'),
+        closeLabel: this.tr('Close'),
+        emptyLabel: this.tr('No message history found.'),
+        acknowledgedLabel: this.tr('Acknowledged'),
+        pendingLabel: this.tr('Pending'),
+        icons: this.toastIcons()
+      })
+      : document.createElement('div');
+
     const clearBtn = modal.querySelector('.modal-clear-history');
     const exportBtn = modal.querySelector('.modal-export-history');
     const closeBtn = modal.querySelector('.modal-cancel');
-    
-    clearBtn.addEventListener('click', () => {
-      this.clearMessageHistory();
-      this.closeModal(modal);
-      this.show('info', this.tr('Message history has been cleared.'));
-    });
-    
-    exportBtn.addEventListener('click', () => {
-      this.exportMessageHistory();
-    });
-    
-    closeBtn.addEventListener('click', () => {
-      this.closeModal(modal);
-    });
-    
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.clearMessageHistory();
+        this.closeModal(modal);
+        this.show('info', this.tr('Message history has been cleared.'));
+      });
+    }
+
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        this.exportMessageHistory();
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        this.closeModal(modal);
+      });
+    }
+
     return modal;
   },
 
