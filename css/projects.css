@@ -999,6 +999,14 @@ body {
 	color: inherit;
 }
 
+.emptycontent .emptycontent__icon .lucide-icon,
+.emptycontent .emptycontent__icon .lucide-icon svg {
+	display: block;
+	width: 1.6rem;
+	height: 1.6rem;
+	color: inherit;
+}
+
 .emptycontent h2 {
 	font-size: clamp(1.15rem, 2.5vw, 1.5rem);
 	font-weight: 700;
@@ -7283,180 +7291,406 @@ body {
 	}
 }
 
-.employees-filters--accessible {
-	margin-bottom: 1.25rem;
-}
+/* ==========================================================================
+   Employees listing — search toolbar, ranked table, responsive stacking.
+   Scoped to .pc-app--employees (the page shell class); theme variables only.
+   ========================================================================== */
 
-.employees-filters--accessible .employees-search {
-	width: 100%;
-	max-width: 32rem;
-	padding: 0.65rem 0.85rem;
-	font-size: 1rem;
-	border: 2px solid var(--color-border);
-	border-radius: var(--border-radius, 8px);
-	background: var(--color-main-background);
-	color: var(--color-main-text);
-	min-height: 44px;
-	box-sizing: border-box;
-}
-
-.employees-filters--accessible .employees-search:focus-visible {
-	outline: 2px solid var(--color-primary-element);
-	outline-offset: 2px;
-}
-
-/* Employees listing (moved from inline template; theme variables only) */
-.employees-page .filters-container {
-	background: var(--color-main-background);
-	border: 2px solid var(--color-border);
-	border-radius: 12px;
-	padding: 1.25rem 1.5rem;
+/* Top bar: breadcrumb on the left, page action on the right */
+.pc-app--employees .employees-pagebar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 1rem;
 	margin-bottom: 1.5rem;
+}
+
+.pc-app--employees .employees-pagebar .breadcrumb {
+	margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Unified panel: a single card holds the search toolbar, the ranked table and
+   the pagination footer. The .section class supplies the card chrome
+   (background / border / radius / shadow); we reset its padding and lay the
+   parts out as header → body → footer.
+   -------------------------------------------------------------------------- */
+.pc-app--employees .employees-panel {
+	padding: 0;
+}
+
+/* Toolbar header (native GET <form>, works without JS) */
+.pc-app--employees .employees-panel__toolbar {
+	padding: 1rem 1.25rem;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.pc-app--employees .employees-search-form {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 1.25rem;
-}
-
-.employees-page .search-input-wrapper {
-	position: relative;
-	flex: 1;
-	min-width: min(100%, 20rem);
-}
-
-.employees-page .search-input {
+	gap: 1rem;
 	width: 100%;
-	padding: 0.65rem 0.85rem;
+}
+
+/* Search field: the icon lives in a full-height box, so it is always centred
+   on both axes regardless of the input height (no transform rounding). */
+.pc-app--employees .employees-search {
+	position: relative;
+	display: flex;
+	flex: 1 1 18rem;
+	min-width: min(100%, 16rem);
+}
+
+/* Must override .lucide-icon-host { height: 1.125em } or the icon box shrinks to
+   the top of the field instead of stretching with the input. */
+.pc-app--employees .employees-search__icon,
+.pc-app--employees .employees-search__icon.lucide-icon-host {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 2.6rem;
+	height: auto;
+	min-height: 0;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-maxcontrast);
+	pointer-events: none;
+	z-index: 1;
+}
+
+.pc-app--employees .employees-search__icon > svg,
+.pc-app--employees .employees-search__icon > .lucide-icon {
+	display: block;
+	flex-shrink: 0;
+	width: 1.2rem;
+	height: 1.2rem;
+	margin: 0;
+}
+
+.pc-app--employees .employees-search__input {
+	width: 100%;
+	min-height: 44px;
+	/* left padding matches the icon box width so text starts right after it */
+	padding: 0.5rem 0.85rem 0.5rem 2.6rem;
 	border: 2px solid var(--color-border);
 	border-radius: 8px;
 	font-size: 1rem;
 	background: var(--color-main-background);
 	color: var(--color-main-text);
-	min-height: 44px;
 	box-sizing: border-box;
 }
 
-.employees-page .search-input:focus-visible {
+.pc-app--employees .employees-search__input:focus-visible {
 	outline: 2px solid var(--color-primary-element);
 	outline-offset: 2px;
+	border-color: var(--color-primary-element);
 }
 
-.employees-page .filter-actions {
+.pc-app--employees .employees-search__actions {
 	display: flex;
 	gap: 0.75rem;
 	flex-wrap: wrap;
 }
 
-.employees-page .filter-actions .button,
-.employees-page .filter-actions .btn {
+.pc-app--employees .employees-search__actions .button {
 	min-height: 44px;
-	min-width: 44px;
-	padding: 0.5rem 1rem;
+	justify-content: center;
 }
 
-.employees-page .employees-table-wrap {
+/* Button icons: .lucide-icon-host (set by icons.js on hydrate) centres the SVG
+   inside its box; see common/base.css and dashboard.css for the global rules. */
+.pc-app--employees .button .lucide-icon-host {
+	color: inherit;
+}
+
+/* Empty-state icon centring (drop the global -2px nudge inside the circle) */
+.pc-app--employees .emptycontent .emptycontent__icon .lucide-icon,
+.pc-app--employees .emptycontent .emptycontent__icon .lucide-icon svg {
+	margin: 0;
+}
+
+/* No-match state renders inside the panel below the toolbar: drop the card
+   chrome so it reads as part of the panel rather than a box inside a box. */
+.pc-app--employees .employees-panel .emptycontent {
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	border-radius: 0;
+}
+
+/* Scrollable body (data tables may scroll horizontally per WCAG 1.4.10) */
+.pc-app--employees .employees-table-wrap {
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
-	margin: 0 -0.25rem;
-	padding: 0 0.25rem;
 }
 
-.employees-page .employees-table {
+/* Inset outline so it is not clipped by the panel's overflow:hidden corners */
+.pc-app--employees .employees-table-wrap:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: -2px;
+}
+
+.pc-app--employees .employees-table {
 	width: 100%;
 	border-collapse: separate;
 	border-spacing: 0;
 	background: var(--color-main-background);
-	border-radius: 8px;
-	overflow: hidden;
-	border: 1px solid var(--color-border);
 }
 
-.employees-page .employees-table thead {
+.pc-app--employees .employees-table thead {
 	background: var(--color-background-hover);
 }
 
-.employees-page .employees-table th {
-	padding: 1rem;
+.pc-app--employees .employees-table thead th {
+	padding: 0.9rem 1rem;
 	text-align: left;
 	font-weight: 600;
 	color: var(--color-main-text);
 	border-bottom: 2px solid var(--color-border);
+	white-space: nowrap;
 }
 
-.employees-page .employees-table tbody tr {
+.pc-app--employees .employees-table thead th.col-num,
+.pc-app--employees .employees-table thead th.col-actions {
+	text-align: right;
+}
+
+.pc-app--employees .employees-table tbody tr {
 	border-bottom: 1px solid var(--color-border);
 }
 
-.employees-page .employees-table tbody tr:hover {
+.pc-app--employees .employees-table tbody tr:last-child {
+	border-bottom: 0;
+}
+
+.pc-app--employees .employees-table tbody tr:hover {
 	background: var(--color-background-hover);
 }
 
-.employees-page .employees-table td {
-	padding: 1rem;
+.pc-app--employees .employees-table td,
+.pc-app--employees .employees-table tbody th {
+	padding: 0.85rem 1rem;
 	vertical-align: middle;
+	color: var(--color-main-text);
 }
 
-.employees-page .employees-table td .lucide-icon {
-	width: 16px;
-	height: 16px;
-	display: inline-block;
-	vertical-align: middle;
-	margin-right: 4px;
+/* Numeric columns: right-aligned with tabular figures for easy comparison */
+.pc-app--employees .employees-table .col-num {
+	text-align: right;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
 }
 
-.employees-page .employees-table td .button {
+.pc-app--employees .employees-table .col-actions {
+	text-align: right;
+	white-space: nowrap;
+}
+
+/* Metric cells: icon + value on one centred flex row (uses .lucide-icon-host from icons.js) */
+.pc-app--employees .employees-metric {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.35rem;
+	max-width: 100%;
+}
+
+.pc-app--employees .employees-metric .lucide-icon-host {
+	flex-shrink: 0;
+	width: 1em;
+	height: 1em;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-app--employees .employees-metric__value {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Rank badge */
+.pc-app--employees .col-rank {
+	white-space: nowrap;
+}
+
+.pc-app--employees .rank-badge {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 0.45rem;
+	min-width: 2.25rem;
+	height: 1.75rem;
+	padding: 0 0.5rem;
+	border-radius: var(--pc-radius-pill, 999px);
+	background: color-mix(in srgb, var(--color-primary-element) 14%, var(--color-main-background));
+	color: var(--color-primary-element);
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
 }
 
-.employees-page .employees-table td .button .lucide-icon {
-	display: block;
-	flex: 0 0 auto;
-	margin-right: 0;
+/* Employee name (row header) */
+.pc-app--employees .employee-name-cell {
+	font-weight: 600;
+	text-align: left;
 }
 
-.employees-page .employees-table td .button .lucide-icon svg {
-	display: block;
-}
-
-.employees-page .employee-name-cell {
-	font-weight: 500;
-}
-
-.employees-page .employee-name-cell a {
+.pc-app--employees .employee-name-cell a {
 	color: var(--color-primary-element);
 	text-decoration: none;
 }
 
-.employees-page .employee-name-cell a:hover {
+.pc-app--employees .employee-name-cell a:hover,
+.pc-app--employees .employee-name-cell a:focus-visible {
 	text-decoration: underline;
 }
 
-.employees-page #no-results-row {
-	background: var(--color-background-hover);
-}
-
-.employees-page .no-results-message {
-	display: flex;
-	flex-direction: column;
+/* Action button inside the table */
+.pc-app--employees .employees-table .col-actions .button {
+	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: 2.5rem 1.25rem;
+	gap: 0.4rem;
+	min-height: 40px;
 }
 
-.employees-page .no-results-message h3 {
-	margin: 0 0 0.5rem;
-	color: var(--color-main-text);
-	font-size: 1.125rem;
-	font-weight: 600;
+.pc-app--employees .employees-table .col-actions .button .lucide-icon-host {
+	color: inherit;
 }
 
-.employees-page .no-results-message p {
-	margin: 0 0 1rem;
-	color: var(--color-text-maxcontrast);
-	font-size: 0.9rem;
+/* Empty-state action button spacing */
+.pc-app--employees .emptycontent .button {
+	margin-top: 0.5rem;
+}
+
+/* Pagination as the panel footer: sits flush at the card bottom */
+.pc-app--employees .employees-panel__footer {
+	margin: 0;
+	padding: 0.85rem 1.25rem;
+	border-top: 1px solid var(--color-border);
+}
+
+/* Disabled pagination controls (rendered as non-interactive spans) */
+.pc-app--employees .pagination .button.disabled,
+.pc-app--employees .pagination .button[aria-disabled="true"] {
+	opacity: 0.5;
+	pointer-events: none;
+	cursor: default;
+	box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive: collapse each row into a labelled card on narrow viewports.
+   thead is visually hidden; each cell shows its column name via data-label.
+   -------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+	/* Search input takes the full row; action buttons stack full-width below */
+	.pc-app--employees .employees-search {
+		flex: 1 1 100%;
+	}
+
+	.pc-app--employees .employees-search__actions {
+		width: 100%;
+	}
+
+	.pc-app--employees .employees-search__actions .button {
+		flex: 1 1 auto;
+	}
+
+	/* Stacked cards need breathing room from the panel edges */
+	.pc-app--employees .employees-table-wrap {
+		overflow-x: visible;
+		padding: 1rem;
+	}
+
+	.pc-app--employees .employees-table {
+		border: 0;
+		background: transparent;
+		border-radius: 0;
+	}
+
+	.pc-app--employees .employees-table tbody tr:last-child {
+		margin-bottom: 0;
+	}
+
+	.pc-app--employees .employees-table thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.pc-app--employees .employees-table tbody tr {
+		display: block;
+		margin-bottom: 1rem;
+		padding: 0.5rem 1rem 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--pc-radius-md, 12px);
+		background: var(--color-main-background);
+	}
+
+	.pc-app--employees .employees-table tbody tr:hover {
+		background: var(--color-main-background);
+	}
+
+	.pc-app--employees .employees-table td,
+	.pc-app--employees .employees-table tbody th {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.55rem 0;
+		border-bottom: 1px solid var(--color-border);
+		text-align: right;
+	}
+
+	.pc-app--employees .employees-table td::before,
+	.pc-app--employees .employees-table tbody th::before {
+		content: attr(data-label);
+		font-weight: 600;
+		color: var(--color-text-maxcontrast);
+		text-align: left;
+	}
+
+	/* Hide the small decorative leading icons so label:value stays clean */
+	.pc-app--employees .employees-table .col-num .employees-metric .lucide-icon-host {
+		display: none;
+	}
+
+	/* Rank + name form the card header: no label, left-aligned, no divider */
+	.pc-app--employees .employees-table .col-rank,
+	.pc-app--employees .employees-table .employee-name-cell {
+		justify-content: flex-start;
+		border-bottom: 0;
+		padding: 0.25rem 0;
+		text-align: left;
+	}
+
+	.pc-app--employees .employees-table .col-rank::before,
+	.pc-app--employees .employees-table .employee-name-cell::before,
+	.pc-app--employees .employees-table .col-actions::before {
+		content: none;
+	}
+
+	.pc-app--employees .employees-table .employee-name-cell {
+		font-size: 1.15rem;
+	}
+
+	.pc-app--employees .employees-table .col-actions {
+		display: block;
+		border-bottom: 0;
+		padding-top: 0.85rem;
+	}
+
+	.pc-app--employees .employees-table .col-actions .button {
+		width: 100%;
+	}
 }
 
 /* Pricing section — selectable cards (WCAG 2.1 AA, 44px targets) */

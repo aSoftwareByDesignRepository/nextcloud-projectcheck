@@ -42,9 +42,46 @@
   gap: 0.5rem;
 }
 
-.button .lucide-icon {
+/* Hydrated placeholders: <i data-lucide class="lucide-icon lucide-icon-host"><svg …></i>
+   The host is a flex box so the glyph centres on the label cap-height (no baseline sag). */
+.lucide-icon-host,
+.button > i.lucide-icon,
+.button > [data-lucide].lucide-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.125em;
+  height: 1.125em;
   margin: 0;
-  vertical-align: baseline;
+  padding: 0;
+  line-height: 0;
+  font-style: normal;
+  vertical-align: unset;
+}
+
+.lucide-icon-host > .lucide-icon,
+.lucide-icon-host > svg,
+.button > i.lucide-icon > .lucide-icon,
+.button > i.lucide-icon > svg,
+.button > [data-lucide] > .lucide-icon,
+.button > [data-lucide] > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.button .lucide-icon-host {
+  margin: 0;
+}
+
+.button > svg.lucide-icon {
+  display: block;
+  flex-shrink: 0;
+  width: 1.125em;
+  height: 1.125em;
+  margin: 0;
 }
 
 /* Navigation menu alignment */

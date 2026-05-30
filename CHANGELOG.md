@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.64 - 2026-05-30
+
+### Fixed
+
+- **Search field magnifier sat at the top of the input:** global `.lucide-icon-host { height: 1.125em }` overrode the search icon’s full-height positioning. The search icon host now uses `height: auto` with `top`/`bottom: 0` so it centres on the input. Moved the screen-reader hint outside `.employees-search` so it cannot affect layout.
+
+## 2.0.63 - 2026-05-30
+
+### Fixed
+
+- **Employees table metric icons misaligned:** hours, revenue and rate cells now wrap icon + value in `.employees-metric` (inline-flex, centred on the cap-height). Replaces `inline-block` / `vertical-align: middle` rules that left clock, euro and trending-up glyphs high or low relative to the figures.
+
+## 2.0.62 - 2026-05-30
+
+### Fixed
+
+- **Button icons sat below their labels:** hydrated icons render as `<i class="lucide-icon"><svg class="lucide-icon">…</svg></i>`. Global `vertical-align: baseline` left the SVG at the bottom of the host box (e.g. “View Details”). Icon hosts are now flex-centred (`lucide-icon-host` class from `icons.js`, with CSS fallbacks for direct-child `<i data-lucide>` in buttons).
+
+## 2.0.61 - 2026-05-30
+
+### Fixed
+
+- **Revenue icon showed a flame, not a euro:** the shared `euro` icon used the Lucide *flame* path. Replaced it with the correct euro glyph, fixing the employees revenue column (and every other `icon-money-custom` usage).
+- **Search magnifier misalignment:** the input icon inherited the global `-2px` icon nudge and was centred with a `transform`, leaving it visibly off. It now sits in a full-height flex box (perfectly centred on both axes) with the input's left padding matched to the icon box width.
+- **Button icon/label alignment:** button glyphs now render as block SVGs with the `-2px` nudge neutralised, so the icon centres on the label cap-height.
+
+### Changed
+
+- **Search and table now share one panel:** the search toolbar, the ranked table and the pagination footer live in a single card (header → body → footer) instead of three stacked sections. The no-match empty state renders inside the same panel; when there is no data and no active search, a single clean empty card is shown without a pointless search box. Removed orphaned `.employees-filters--accessible` CSS.
+
+## 2.0.60 - 2026-05-30
+
+### Fixed
+
+- **Employees page rendered unstyled:** the table and search CSS was scoped to an `.employees-page` wrapper that no longer existed in the DOM, so none of it applied. Rules are now scoped to the real `.pc-app--employees` shell class (matching the time-entries convention). The page-actions block also had an unclosed `<div>` that broke the layout; the markup is now balanced.
+- **Team Overview totals were wrong with pagination:** the overview cards summed only the current page. Totals (employees, hours, revenue) are now computed server-side across the full, search-filtered result set.
+- **Wrong empty state for no search matches:** searching with no results showed "No employees have logged time entries yet" instead of a dedicated "No employees match your search" state with a reset action.
+- **Rank restarted on each page:** ranks are now continuous across paginated pages.
+- **Search hardened:** non-string `search` params (e.g. `?search[]=`) are coerced safely before filtering.
+
+### Changed
+
+- **Employees page UX & accessibility (WCAG 2.1 AA):** native GET search `<form>` that works without JavaScript; labelled, keyboard-scrollable table with row headers and `scope` attributes; responsive stacked-card layout on small screens; decorative icons hidden from assistive technology; accessible per-row "View details for …" labels; visible focus styles and 44px touch targets. Added `search`, `search-x` and `rotate-ccw` icons to the shared icon catalog.
+
 ## 2.0.59 - 2026-05-30
 
 ### Fixed

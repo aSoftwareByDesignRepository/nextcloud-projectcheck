@@ -47,26 +47,18 @@ $colRevenue = $l->t('Total Revenue');
 $colRate = $l->t('Avg. Hourly Rate');
 $colActions = $l->t('Actions');
 ?>
-        <!-- Breadcrumb Navigation -->
-        <div class="breadcrumb-container">
+        <!-- Breadcrumb + page actions -->
+        <div class="employees-pagebar">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
                 <ol>
                     <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>"><?php p($l->t('Dashboard')); ?></a></li>
                     <li aria-current="page"><?php p($l->t('Employees')); ?></li>
                 </ol>
             </nav>
-        </div>
-
-        <!-- Page actions -->
-        <div class="section header-section pc-section">
-            <div class="header-content">
-                <div class="header-actions">
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>" class="button secondary">
-                        <i data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></i>
-                        <?php p($l->t('Back to Dashboard')); ?>
-                    </a>
-                </div>
-            </div>
+            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>" class="button secondary">
+                <i data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></i>
+                <?php p($l->t('Back to Dashboard')); ?>
+            </a>
         </div>
 
         <?php if (!$isGlobalViewer): ?>
@@ -134,97 +126,118 @@ $colActions = $l->t('Actions');
             </div>
         </div>
 
-        <!-- Search and Filters -->
-        <div class="section">
-            <div class="filters-container">
-                <div class="search-input-wrapper">
-					<label class="u-visually-hidden" for="employee-search"><?php p($l->t('Search employees...')); ?></label>
-                    <input type="search" id="employee-search" class="search-input" autocomplete="off"
-                        placeholder="<?php p($l->t('Search employees...')); ?>"
-                        value="<?php p($_['filters']['search'] ?? ''); ?>"
-                        aria-describedby="employee-search-hint">
-					<p class="u-visually-hidden" id="employee-search-hint"><?php p($l->t('Filters the table below. Use Apply to search on the server.')); ?></p>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="filter-actions">
-                    <button id="apply-filters" class="btn btn-primary" type="button">
-                        <span class="btn-icon">🔍</span>
-                        <?php p($l->t('Apply Filters')); ?>
-                    </button>
-                    <button id="clear-filters" class="btn btn-secondary" type="button">
-                        <span class="btn-icon">🔄</span>
-                        <?php p($l->t('Reset Search')); ?>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Employee Table -->
-        <div class="section">
-            <?php if (empty($_['employeeComparisonStats'])): ?>
-                <div class="emptycontent">
-                    <span data-lucide="clock" aria-hidden="true"></span>
+        <!-- Employees: one panel holds the search toolbar, the table and pagination -->
+        <?php if (empty($_['employeeComparisonStats']) && !$hasSearch): ?>
+            <!-- Nothing recorded yet and nothing searched: a single clean empty card (no search box) -->
+            <div class="section employees-panel">
+                <div class="emptycontent" role="status">
+                    <span class="emptycontent__icon"><i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i></span>
                     <h2><?php p($l->t('No employees found')); ?></h2>
                     <p><?php p($l->t('No employees have logged time entries yet.')); ?></p>
                 </div>
-            <?php else: ?>
-                <div class="grid-container employees-table-wrap">
-					<table class="employees-table" role="table" aria-label="<?php p($l->t('Employees')); ?>">
+            </div>
+        <?php else: ?>
+            <section class="section employees-panel" aria-label="<?php p($l->t('Employees')); ?>">
+                <!-- Toolbar header: native GET form, fully functional without JS -->
+                <div class="employees-panel__toolbar">
+                    <form class="employees-search-form" method="get" action="<?php p($baseUrl); ?>" role="search" aria-label="<?php p($l->t('Search employees...')); ?>">
+                        <div class="employees-search">
+                            <span class="employees-search__icon" data-lucide="search" aria-hidden="true"></span>
+                            <label class="u-visually-hidden" for="employee-search"><?php p($l->t('Search employees...')); ?></label>
+                            <input type="search" id="employee-search" name="search" class="employees-search__input" autocomplete="off"
+                                placeholder="<?php p($l->t('Search employees...')); ?>"
+                                value="<?php p($searchValue); ?>"
+                                aria-describedby="employee-search-hint">
+                        </div>
+                        <p class="u-visually-hidden" id="employee-search-hint"><?php p($l->t('Type a name and press Enter or Search to filter the list.')); ?></p>
+
+                        <div class="employees-search__actions">
+                            <button type="submit" class="button primary">
+                                <i data-lucide="search" class="lucide-icon" aria-hidden="true"></i>
+                                <span><?php p($l->t('Search')); ?></span>
+                            </button>
+                            <?php if ($hasSearch): ?>
+                                <a class="button secondary" href="<?php p($baseUrl); ?>">
+                                    <i data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></i>
+                                    <span><?php p($l->t('Reset Search')); ?></span>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </form>
+                </div>
+
+                <?php if (empty($_['employeeComparisonStats'])): ?>
+                    <!-- Search returned nothing: contextual empty state inside the same panel -->
+                    <div class="emptycontent" role="status">
+                        <span class="emptycontent__icon"><i data-lucide="search-x" class="lucide-icon" aria-hidden="true"></i></span>
+                        <h2><?php p($l->t('No employees match your search')); ?></h2>
+                        <p><?php p($l->t('Try adjusting your search criteria.')); ?></p>
+                        <a class="button secondary" href="<?php p($baseUrl); ?>">
+                            <i data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></i>
+                            <span><?php p($l->t('Reset Search')); ?></span>
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <?php
+                        $pagination = $_['pagination'] ?? [];
+                        $currentPage = max(1, (int)($pagination['page'] ?? 1));
+                        $totalPages = max(1, (int)($pagination['totalPages'] ?? 1));
+                        $totalEntries = (int)($pagination['totalEntries'] ?? count($_['employeeComparisonStats']));
+                        $perPage = (int)($pagination['perPage'] ?? count($_['employeeComparisonStats']));
+                        $baseQuery = $_['filters'] ?? [];
+                        // Continuous rank across pages (rows are ordered by revenue).
+                        $rankBase = ($currentPage - 1) * $perPage;
+                    ?>
+                    <div class="grid-container employees-table-wrap" tabindex="0" role="region" aria-label="<?php p($l->t('Employees')); ?>">
+                    <table class="employees-table">
+                        <caption class="u-visually-hidden"><?php p($l->t('Employees ranked by total revenue')); ?></caption>
                         <thead>
                             <tr>
-                                <th><?php p($l->t('Rank')); ?></th>
-                                <th><?php p($l->t('Employee')); ?></th>
-                                <th><?php p($l->t('Total Hours')); ?></th>
-                                <th><?php p($l->t('Total Revenue')); ?></th>
-                                <th><?php p($l->t('Avg. Hourly Rate')); ?></th>
-                                <th><?php p($l->t('Actions')); ?></th>
+                                <th scope="col" class="col-rank"><?php p($colRank); ?></th>
+                                <th scope="col"><?php p($colEmployee); ?></th>
+                                <th scope="col" class="col-num"><?php p($colHours); ?></th>
+                                <th scope="col" class="col-num"><?php p($colRevenue); ?></th>
+                                <th scope="col" class="col-num"><?php p($colRate); ?></th>
+                                <th scope="col" class="col-actions"><?php p($colActions); ?></th>
                             </tr>
                         </thead>
                         <tbody id="employees-tbody">
-                            <!-- No Results Message (Hidden by default) -->
-                            <tr id="no-results-row" style="display: none;">
-                                <td colspan="6">
-                                    <div class="no-results-message">
-                                        <div class="no-results-icon">🔍</div>
-                                        <h3><?php p($l->t('No employees match your search')); ?></h3>
-                                        <p><?php p($l->t('Try adjusting your search criteria.')); ?></p>
-                                        <button id="clear-search-inline" class="btn btn-secondary">
-                                            <span class="btn-icon">🔄</span>
-                                            <?php p($l->t('Reset Search')); ?>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-
                             <?php foreach ($_['employeeComparisonStats'] as $index => $employee): ?>
-                                <tr data-employee-name="<?php p(strtolower($employee['user_display_name'])); ?>"
-                                    data-employee-id="<?php p($employee['user_id']); ?>">
-                                    <td>
-                                        <strong>#<?php p($index + 1); ?></strong>
+                                <?php
+                                    $employeeId = (string)($employee['user_id'] ?? '');
+                                    $displayName = (string)($employee['user_display_name'] ?? $employeeId);
+                                    $showUrl = $urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $employeeId]);
+                                ?>
+                                <tr>
+                                    <td class="col-rank" data-label="<?php p($colRank); ?>">
+                                        <span class="rank-badge">#<?php p($rankBase + $index + 1); ?></span>
                                     </td>
-                                    <td class="employee-name-cell">
-                                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $employee['user_id']])); ?>">
-                                            <?php p($employee['user_display_name']); ?>
-                                        </a>
+                                    <th scope="row" class="employee-name-cell" data-label="<?php p($colEmployee); ?>">
+                                        <a href="<?php p($showUrl); ?>"><?php p($displayName); ?></a>
+                                    </th>
+                                    <td class="col-num" data-label="<?php p($colHours); ?>">
+                                        <span class="employees-metric">
+                                            <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
+                                            <span class="employees-metric__value"><?php p(number_format((float)($employee['total_hours'] ?? 0), 1)); ?>h</span>
+                                        </span>
                                     </td>
-                                    <td>
-                                        <i data-lucide="clock" class="lucide-icon"></i>
-                                        <?php p(number_format($employee['total_hours'], 1)); ?>h
+                                    <td class="col-num" data-label="<?php p($colRevenue); ?>">
+                                        <span class="employees-metric">
+                                            <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
+                                            <span class="employees-metric__value"><?php p($fmt ? $fmt->currency((float)($employee['total_cost'] ?? 0)) : $currencyCode . ' ' . number_format((float)($employee['total_cost'] ?? 0), 2)); ?></span>
+                                        </span>
                                     </td>
-                                    <td>
-                                        <i data-lucide="euro" class="lucide-icon"></i>
-                                        <?php p($fmt ? $fmt->currency((float)$employee['total_cost']) : $currencyCode . ' ' . number_format((float)$employee['total_cost'], 2)); ?>
+                                    <td class="col-num" data-label="<?php p($colRate); ?>">
+                                        <span class="employees-metric">
+                                            <i data-lucide="trending-up" class="lucide-icon" aria-hidden="true"></i>
+                                            <span class="employees-metric__value"><?php p($fmt ? $fmt->currency((float)($employee['avg_hourly_rate'] ?? 0)) : $currencyCode . ' ' . number_format((float)($employee['avg_hourly_rate'] ?? 0), 2)); ?>/h</span>
+                                        </span>
                                     </td>
-                                    <td>
-                                        <i data-lucide="trending-up" class="lucide-icon"></i>
-                                        <?php p($fmt ? $fmt->currency((float)$employee['avg_hourly_rate']) : $currencyCode . ' ' . number_format((float)$employee['avg_hourly_rate'], 2)); ?>/h
-                                    </td>
-                                    <td>
-                                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.show', ['userId' => $employee['user_id']])); ?>"
-                                           class="button primary" title="<?php p($l->t('View Details')); ?>">
-                                            <i data-lucide="eye" class="lucide-icon"></i>
-                                            <?php p($l->t('View Details')); ?>
+                                    <td class="col-actions" data-label="<?php p($colActions); ?>">
+                                        <a href="<?php p($showUrl); ?>" class="button primary"
+                                           aria-label="<?php p($l->t('View details for employee %s', [$displayName])); ?>">
+                                            <i data-lucide="eye" class="lucide-icon" aria-hidden="true"></i>
+                                            <span><?php p($l->t('View Details')); ?></span>
                                         </a>
                                     </td>
                                 </tr>
@@ -232,41 +245,35 @@ $colActions = $l->t('Actions');
                         </tbody>
                     </table>
                 </div>
-                <?php
-                    $pagination = $_['pagination'] ?? ['page' => 1, 'totalPages' => 1, 'totalEntries' => count($_['employeeComparisonStats'] ?? []), 'perPage' => count($_['employeeComparisonStats'] ?? [])];
-                    $currentPage = max(1, (int)($pagination['page'] ?? 1));
-                    $totalPages = max(1, (int)($pagination['totalPages'] ?? 1));
-                    $totalEntries = (int)($pagination['totalEntries'] ?? 0);
-                    $perPage = (int)($pagination['perPage'] ?? 0);
-                    $baseUrl = $urlGenerator->linkToRoute('projectcheck.employee.index');
-                    $baseQuery = $_['filters'] ?? [];
-                ?>
                 <?php if ($totalPages > 1): ?>
-                    <div class="pagination">
+                    <?php
+                        $prevQuery = array_merge($baseQuery, ['page' => max(1, $currentPage - 1)]);
+                        $nextQuery = array_merge($baseQuery, ['page' => min($totalPages, $currentPage + 1)]);
+                        $isFirst = $currentPage <= 1;
+                        $isLast = $currentPage >= $totalPages;
+                    ?>
+                    <nav class="pagination employees-panel__footer" aria-label="<?php p($l->t('Pagination')); ?>">
                         <div class="pagination-info">
                             <span><?php p($l->t('Page')); ?> <?php p($currentPage); ?> / <?php p($totalPages); ?></span>
-                            <span>•</span>
+                            <span aria-hidden="true">•</span>
                             <span><?php p($l->t('Total')); ?> <?php p($totalEntries); ?></span>
                         </div>
                         <div class="pagination-actions">
-                            <?php
-                                $prevQuery = array_merge($baseQuery, ['page' => max(1, $currentPage - 1)]);
-                                $nextQuery = array_merge($baseQuery, ['page' => min($totalPages, $currentPage + 1)]);
-                            ?>
-                            <a class="btn btn-secondary <?php echo $currentPage <= 1 ? 'disabled' : ''; ?>"
-                               href="<?php p($currentPage <= 1 ? '#' : $baseUrl . '?' . http_build_query($prevQuery)); ?>"
-                               aria-disabled="<?php echo $currentPage <= 1 ? 'true' : 'false'; ?>">
-                                ‹ <?php p($l->t('Previous')); ?>
-                            </a>
-                            <a class="btn btn-secondary <?php echo $currentPage >= $totalPages ? 'disabled' : ''; ?>"
-                               href="<?php p($currentPage >= $totalPages ? '#' : $baseUrl . '?' . http_build_query($nextQuery)); ?>"
-                               aria-disabled="<?php echo $currentPage >= $totalPages ? 'true' : 'false'; ?>">
-                                <?php p($l->t('Next')); ?> ›
-                            </a>
+                            <?php if ($isFirst): ?>
+                                <span class="button secondary disabled" aria-disabled="true">‹ <?php p($l->t('Previous')); ?></span>
+                            <?php else: ?>
+                                <a class="button secondary" rel="prev" href="<?php p($baseUrl . '?' . http_build_query($prevQuery)); ?>">‹ <?php p($l->t('Previous')); ?></a>
+                            <?php endif; ?>
+                            <?php if ($isLast): ?>
+                                <span class="button secondary disabled" aria-disabled="true"><?php p($l->t('Next')); ?> ›</span>
+                            <?php else: ?>
+                                <a class="button secondary" rel="next" href="<?php p($baseUrl . '?' . http_build_query($nextQuery)); ?>"><?php p($l->t('Next')); ?> ›</a>
+                            <?php endif; ?>
                         </div>
-                    </div>
+                    </nav>
                 <?php endif; ?>
             <?php endif; ?>
-        </div>
+            </section>
+        <?php endif; ?>
 
 <?php include __DIR__ . '/common/page-end.php'; ?>
