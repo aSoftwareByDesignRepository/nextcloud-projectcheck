@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.65 - 2026-05-31
+
+### Fixed
+
+- **Employee detail page crashed for admins:** hourly rate section called non-existent `OCP\Util::getLocale()`; now uses injected `htmlLang` like other date fields.
+- **Hourly rate workflow:** locale-aware rate history display, client-side validation, future-date guard on effective-from, read-only rate history for removed accounts, and API rejection when adding rates for deleted users.
+
+### Changed
+
+- **Employee hourly rate section:** clearer layout, WCAG-oriented form structure (fieldset, hints, table caption), and responsive styling aligned with project team rate UI.
+
 ## 2.0.64 - 2026-05-30
 
 ### Fixed
