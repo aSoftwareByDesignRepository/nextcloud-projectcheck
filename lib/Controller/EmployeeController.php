@@ -324,7 +324,9 @@ class EmployeeController extends Controller
 			'requesttoken' => $requestToken,
 			'assignProjectUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.assignProject', ['userId' => (string)$userId]),
 			'employeeHourlyRates' => $this->employeeHourlyRateService->listRatesForUser((string) $userId),
-			'canManageEmployeeRates' => $this->accessControlService->canManageAppConfiguration($viewerId),
+			'canViewEmployeeRates' => $this->accessControlService->canManageAppConfiguration($viewerId),
+			'canManageEmployeeRates' => $employeeUser !== null
+				&& $this->accessControlService->canManageAppConfiguration($viewerId),
 			'addEmployeeRateUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.addHourlyRate', ['userId' => (string) $userId]),
         ]);
 
@@ -402,6 +404,9 @@ class EmployeeController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		if ($this->userManager->get($userId) === null) {
+			return new JSONResponse(['error' => $this->l->t('Cannot add rates for a removed account.')], 400);
 		}
 		try {
 			$row = $this->employeeHourlyRateService->addRateRow($userId, [

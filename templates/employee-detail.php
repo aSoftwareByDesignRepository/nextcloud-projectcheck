@@ -31,6 +31,8 @@ $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strto
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 	$currencyCode = 'EUR';
 }
+$htmlLang = isset($_['htmlLang']) && is_string($_['htmlLang']) ? $_['htmlLang'] : 'en';
+$todayYmd = gmdate('Y-m-d');
 ?>
 
 <script nonce="<?php p($_['cspNonce']) ?>">
@@ -175,15 +177,36 @@ include __DIR__ . '/common/page-start.php';
             </div>
         <?php endif; ?>
 
-        <?php if (!empty($_['canManageEmployeeRates'])): ?>
-        <section class="pc-section" id="employee-rate-history" aria-labelledby="employee-rates-heading">
-            <h3 id="employee-rates-heading" class="pc-section-title"><?php p($l->t('Hourly rate history')); ?></h3>
-            <p class="pc-section-intro"><?php p($l->t('Append-only rates used when projects price hours by employee. Time entries keep the rate that was effective on the work date.')); ?></p>
-            <?php $rates = $_['employeeHourlyRates'] ?? []; ?>
+        <?php
+        $canViewEmployeeRates = !empty($_['canViewEmployeeRates']);
+        $canManageEmployeeRates = !empty($_['canManageEmployeeRates']);
+        $employeeHourlyRates = $_['employeeHourlyRates'] ?? [];
+        ?>
+        <?php if ($canViewEmployeeRates): ?>
+        <section class="section pc-section" id="employee-rate-history" aria-labelledby="employee-rates-heading">
+            <div class="section-header">
+                <h3 id="employee-rates-heading" class="pc-section-title">
+                    <i data-lucide="banknote" class="lucide-icon primary" aria-hidden="true"></i>
+                    <?php p($l->t('Hourly rate history')); ?>
+                </h3>
+                <p class="pc-section-intro"><?php p($l->t('Append-only rates used when projects price hours by employee. Time entries keep the rate that was effective on the work date.')); ?></p>
+            </div>
+            <div class="section-content">
+            <?php $rates = $employeeHourlyRates; ?>
             <?php if ($rates === []): ?>
-                <p class="form-hint"><?php p($l->t('No rates yet. Add the first rate with an effective-from date on or before the earliest work date you plan to log.')); ?></p>
+                <p class="empty-state-hint" id="employee-rates-empty-hint">
+                    <?php if ($canManageEmployeeRates): ?>
+                        <?php p($l->t('No rates yet. Add the first rate with an effective-from date on or before the earliest work date you plan to log.')); ?>
+                    <?php elseif ($isFormer): ?>
+                        <?php p($l->t('No hourly rates on record for this former account.')); ?>
+                    <?php else: ?>
+                        <?php p($l->t('No hourly rates on record yet.')); ?>
+                    <?php endif; ?>
+                </p>
             <?php else: ?>
+                <div class="employee-rates-table-wrap">
                 <table class="grid employee-rates-table">
+                    <caption class="pc-sr-only"><?php p($l->t('Hourly rate history')); ?></caption>
                     <thead>
                         <tr>
                             <th scope="col"><?php p($l->t('Effective from')); ?></th>
@@ -193,27 +216,37 @@ include __DIR__ . '/common/page-start.php';
                     <tbody>
                         <?php foreach ($rates as $rateRow): ?>
                             <tr>
-                                <td><?php p($rateRow->getEffectiveFrom()->format('d.m.Y')); ?></td>
-                                <td><?php p(number_format((float) $rateRow->getHourlyRate(), 2, '.', '')); ?></td>
+                                <td><?php p($fmt ? $fmt->date($rateRow->getEffectiveFrom()) : $rateRow->getEffectiveFrom()->format('Y-m-d')); ?></td>
+                                <td><?php p($fmt ? $fmt->currency((float) $rateRow->getHourlyRate()) : $currencyCode . ' ' . number_format((float) $rateRow->getHourlyRate(), 2)); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                </div>
             <?php endif; ?>
-            <form id="add-employee-rate-form" class="employee-rate-add-form">
+            <?php if ($canManageEmployeeRates): ?>
+            <form id="add-employee-rate-form" class="employee-rate-add-form" aria-describedby="employee-rate-form-hint">
+                <fieldset class="employee-rate-add-form__fieldset">
+                    <legend class="pc-sr-only"><?php p($l->t('Add hourly rate')); ?></legend>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="employeeRateAmount"><?php p($l->t('New hourly rate (%s)', [$currencyCode])); ?></label>
-                        <input type="number" id="employeeRateAmount" name="hourly_rate" class="form-input" min="0.01" step="0.01" required>
+                        <input type="number" id="employeeRateAmount" name="hourly_rate" class="form-input" min="0.01" step="0.01" inputmode="decimal" required aria-describedby="employee-rate-form-hint">
                     </div>
                     <div class="form-group">
                         <label for="employeeRateEffective"><?php p($l->t('Effective from')); ?></label>
-                        <input type="date" id="employeeRateEffective" name="effective_from" class="form-input" required lang="<?php p(str_replace('_', '-', \OCP\Util::getLocale())); ?>">
+                        <input type="date" id="employeeRateEffective" name="effective_from" class="form-input" required lang="<?php p($htmlLang); ?>" max="<?php p($todayYmd); ?>" value="<?php p($todayYmd); ?>" aria-describedby="employee-rate-form-hint">
                     </div>
                 </div>
+                <p id="employee-rate-form-hint" class="form-hint"><?php p($l->t('Past time entries keep their previous rate. Effective-from cannot be in the future.')); ?></p>
                 <p id="employee-rate-error" class="form-error-text" role="alert" aria-live="assertive"></p>
-                <button type="submit" class="button primary"><?php p($l->t('Add rate')); ?></button>
+                <button type="submit" class="button primary" id="employee-rate-submit"><?php p($l->t('Add rate')); ?></button>
+                </fieldset>
             </form>
+            <?php elseif ($isFormer && $rates !== []): ?>
+                <p class="form-hint"><?php p($l->t('Rates are read-only because this account was removed.')); ?></p>
+            <?php endif; ?>
+            </div>
         </section>
         <?php endif; ?>
 

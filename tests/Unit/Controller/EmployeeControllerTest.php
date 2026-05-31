@@ -269,6 +269,19 @@ class EmployeeControllerTest extends TestCase
 		$this->assertStringNotContainsString($leaked, (string) ($data['error'] ?? ''));
 	}
 
+	public function testAddHourlyRateRejectedForRemovedAccount(): void
+	{
+		$this->userManager->method('get')->with('former1')->willReturn(null);
+		$this->employeeHourlyRateService->expects($this->never())->method('addRateRow');
+
+		$response = $this->controller->addHourlyRate('former1');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
+	}
+
 	public function testIndexScopesNonAdminEmployeeOverviewToOwnData(): void
 	{
 		$this->request->method('getParam')->willReturnMap([

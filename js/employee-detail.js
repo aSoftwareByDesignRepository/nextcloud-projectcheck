@@ -163,6 +163,7 @@ function initializeEmployeeDetail() {
 
 	const rateForm = document.getElementById('add-employee-rate-form');
 	const rateError = document.getElementById('employee-rate-error');
+	const rateSubmit = document.getElementById('employee-rate-submit');
 	if (rateForm && data.addEmployeeRateUrl && window.ProjectCheckApi) {
 		rateForm.addEventListener('submit', async function (event) {
 			event.preventDefault();
@@ -171,10 +172,55 @@ function initializeEmployeeDetail() {
 			}
 			const amount = document.getElementById('employeeRateAmount');
 			const effective = document.getElementById('employeeRateEffective');
+			const rateValue = amount ? parseFloat(String(amount.value).replace(',', '.')) : NaN;
+			const effectiveValue = effective ? String(effective.value).trim() : '';
+			const today = effective && effective.max ? effective.max : '';
+			if (!Number.isFinite(rateValue) || rateValue <= 0) {
+				const message = t('projectcheck', 'Hourly rate must be a positive number');
+				if (rateError) {
+					rateError.textContent = message;
+				}
+				if (amount) {
+					amount.setAttribute('aria-invalid', 'true');
+					amount.focus();
+				}
+				return;
+			}
+			if (amount) {
+				amount.setAttribute('aria-invalid', 'false');
+			}
+			if (!effectiveValue) {
+				const message = t('projectcheck', 'Effective-from date is required');
+				if (rateError) {
+					rateError.textContent = message;
+				}
+				if (effective) {
+					effective.setAttribute('aria-invalid', 'true');
+					effective.focus();
+				}
+				return;
+			}
+			if (today && effectiveValue > today) {
+				const message = t('projectcheck', 'Effective-from date cannot be in the future.');
+				if (rateError) {
+					rateError.textContent = message;
+				}
+				if (effective) {
+					effective.setAttribute('aria-invalid', 'true');
+					effective.focus();
+				}
+				return;
+			}
+			if (effective) {
+				effective.setAttribute('aria-invalid', 'false');
+			}
+			if (rateSubmit) {
+				rateSubmit.disabled = true;
+			}
 			try {
 				await window.ProjectCheckApi.post(data.addEmployeeRateUrl, {
 					hourly_rate: amount ? amount.value : '',
-					effective_from: effective ? effective.value : '',
+					effective_from: effectiveValue,
 				});
 				window.location.reload();
 			} catch (err) {
@@ -183,6 +229,10 @@ function initializeEmployeeDetail() {
 					rateError.textContent = message;
 				} else {
 					notify(message, 'error');
+				}
+			} finally {
+				if (rateSubmit) {
+					rateSubmit.disabled = false;
 				}
 			}
 		});

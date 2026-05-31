@@ -91,14 +91,69 @@
 	grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
 }
 
+.pc-app--employee-detail #employee-rate-history .section-header {
+	padding-bottom: var(--pc-space-3, 0.75rem);
+	border-bottom: 1px solid var(--pc-border, var(--color-border));
+	margin-bottom: var(--pc-space-4, 1rem);
+}
+
+.pc-app--employee-detail #employee-rate-history .pc-section-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0;
+}
+
+.pc-app--employee-detail #employee-rate-history .pc-section-intro {
+	margin: 0.35rem 0 0;
+	color: var(--color-text-maxcontrast);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	max-width: 65ch;
+}
+
+.pc-app--employee-detail .employee-rates-table-wrap {
+	overflow-x: auto;
+	margin-bottom: var(--pc-space-4, 1rem);
+}
+
 .pc-app--employee-detail #employee-rate-history .employee-rates-table {
 	width: 100%;
+	min-width: 16rem;
+}
+
+.pc-app--employee-detail #employee-rate-history .employee-rates-table th,
+.pc-app--employee-detail #employee-rate-history .employee-rates-table td {
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+}
+
+.pc-app--employee-detail .employee-rate-add-form {
+	margin-top: var(--pc-space-4, 1rem);
+	padding-top: var(--pc-space-4, 1rem);
+	border-top: 1px solid var(--pc-border, var(--color-border));
+}
+
+.pc-app--employee-detail .employee-rate-add-form__fieldset {
+	border: 0;
+	margin: 0;
+	padding: 0;
+	min-width: 0;
 }
 
 .pc-app--employee-detail .employee-rate-add-form .form-row {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
 	gap: var(--pc-space-4, 1rem);
+}
+
+.pc-app--employee-detail .employee-rate-add-form .form-hint {
+	margin: 0 0 var(--pc-space-3, 0.75rem);
+	color: var(--color-text-maxcontrast);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	max-width: 65ch;
+}
+
+.pc-app--employee-detail #employee-rate-submit {
+	min-height: var(--pc-touch-min, 44px);
 }
 
 .pc-app--employee-detail .actions-grid {
