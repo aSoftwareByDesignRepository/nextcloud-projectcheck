@@ -1,0 +1,143 @@
+/**
+ * Mobile navigation drawer + in-page Menu button (<1024px).
+ * Desktop: core sticky sidebar via app-layout.css; toggle hidden.
+ */
+
+@media (width < 1024px) {
+	/* Core hamburger fights the NC header — use .pc-nav-toggle in the page header instead. */
+	#content.app-projectcheck #app-navigation-toggle {
+		display: none !important;
+		visibility: hidden !important;
+		pointer-events: none !important;
+	}
+
+	#content.app-projectcheck > #app-content > #app-content-wrapper {
+		padding-inline-start: var(--pc-space-3, 0.75rem);
+	}
+}
+
+@media (width < 1024px) and (min-width: 768px) {
+	#content.app-projectcheck > #app-content > #app-content-wrapper {
+		padding-inline-start: var(--pc-space-4, 1rem);
+	}
+}
+
+/* In-page menu control (page-start.php) */
+.pc-nav-toggle {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	gap: var(--pc-space-2, 8px);
+	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch-min, 44px);
+	padding: 0 var(--pc-space-3, 12px);
+	margin: 0;
+	border: 1px solid var(--color-border, var(--pc-border));
+	border-radius: var(--pc-radius-md, 12px);
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
+	font-family: inherit;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	font-weight: 600;
+	line-height: 1.2;
+	cursor: pointer;
+	touch-action: manipulation;
+	flex-shrink: 0;
+	box-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text, #000) 8%, transparent);
+}
+
+.pc-nav-toggle__icon {
+	display: inline-flex;
+	width: 1.25rem;
+	height: 1.25rem;
+	color: var(--color-main-text);
+}
+
+.pc-nav-toggle__icon .lucide-icon {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.pc-nav-toggle:hover {
+	background-color: var(--color-background-hover);
+	border-color: var(--color-primary-element);
+}
+
+.pc-nav-toggle:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+.pc-nav-toggle[aria-expanded='true'] {
+	background-color: color-mix(
+		in srgb,
+		var(--color-primary-element, #0082c9) 12%,
+		var(--color-main-background)
+	);
+	border-color: var(--color-primary-element);
+}
+
+.pc-page-header__row {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--pc-space-3, 12px);
+}
+
+.pc-page-header__content {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+@media (width < 1024px) {
+	.pc-nav-toggle {
+		display: inline-flex;
+	}
+
+	#content.app-projectcheck > #app-navigation.pc-app-nav:not(.vue) {
+		position: fixed !important;
+		top: var(--pc-nc-header-height, var(--header-height, 50px)) !important;
+		inset-inline-start: 0;
+		width: min(18rem, 88vw) !important;
+		max-width: 88vw;
+		height: var(--body-height, calc(100dvh - var(--header-height, 50px))) !important;
+		z-index: 1999;
+		transform: translateX(-105%) !important;
+		transition: transform 180ms ease;
+		box-shadow:
+			0 4px 16px color-mix(in srgb, var(--color-main-text, #000) 18%, transparent),
+			0 0 0 1px var(--color-border);
+		overflow-x: hidden;
+		overflow-y: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	#content.app-projectcheck > #app-navigation.pc-app-nav.pc-nav--open {
+		transform: translateX(0) !important;
+	}
+
+	body.pc-nav-open {
+		overflow: hidden;
+	}
+}
+
+@media (min-width: 1024px) {
+	.pc-nav-toggle {
+		display: none !important;
+	}
+
+	.pc-page-header__row {
+		display: block;
+	}
+}
+
+@media (width < 1024px) and (forced-colors: active) {
+	.pc-nav-toggle {
+		border: 2px solid ButtonText;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#content.app-projectcheck > #app-navigation.pc-app-nav:not(.vue) {
+		transition: none;
+	}
+}

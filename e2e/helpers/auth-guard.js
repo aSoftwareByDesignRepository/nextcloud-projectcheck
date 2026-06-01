@@ -74,7 +74,7 @@ async function dismissOpenAppNavigation(page) {
 	if (appBox && appBox.width > 200) {
 		return;
 	}
-	const toggle = page.locator('#app-navigation-toggle');
+	const toggle = page.locator('[data-pc-nav-toggle], #app-navigation-toggle').first();
 	if (await toggle.count()) {
 		await toggle.click({ force: true }).catch(() => {});
 		await page.waitForTimeout(300);
@@ -87,6 +87,12 @@ async function dismissOpenAppNavigation(page) {
 			const nav = document.getElementById('app-navigation');
 			if (nav) {
 				nav.classList.add('hidden');
+				nav.classList.remove('pc-nav--open');
+			}
+			document.body.classList.remove('pc-nav-open', 'snapjs-left');
+			const backdrop = document.getElementById('pc-nav-backdrop');
+			if (backdrop) {
+				backdrop.remove();
 			}
 		})
 		.catch(() => {});

@@ -17,14 +17,14 @@
   /* 16px */
   --font-size-lg: 1.125rem;
   /* 18px */
-  --font-size-xl: 1.25rem;
-  /* 20px */
-  --font-size-2xl: 1.5rem;
-  /* 24px */
-  --font-size-3xl: 1.875rem;
-  /* 30px */
-  --font-size-4xl: 2.25rem;
-  /* 36px */
+  --font-size-xl: 1.125rem;
+  /* 18px — mobile-first */
+  --font-size-2xl: 1.375rem;
+  /* 22px */
+  --font-size-3xl: 1.75rem;
+  /* 28px */
+  --font-size-4xl: 2rem;
+  /* 32px */
   --font-size-5xl: 3rem;
   /* 48px */
   --font-size-6xl: 3.75rem;
@@ -195,35 +195,68 @@ h6 {
 }
 
 h1 {
-  font-size: var(--font-size-4xl);
+  font-size: var(--font-size-3xl);
   margin-bottom: 1.5rem;
 }
 
 h2 {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-2xl);
   margin-bottom: 1.25rem;
 }
 
 h3 {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
   margin-bottom: 1rem;
 }
 
 h4 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   margin-bottom: 0.75rem;
 }
 
 h5 {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   margin-bottom: 0.5rem;
 }
 
 h6 {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wide);
+}
+
+@media (min-width: 641px) {
+  :root {
+    --font-size-4xl: 2.25rem;
+    --font-size-3xl: 1.875rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-xl: 1.25rem;
+  }
+
+  h1 {
+    font-size: var(--font-size-4xl);
+  }
+
+  h2 {
+    font-size: var(--font-size-3xl);
+  }
+
+  h3 {
+    font-size: var(--font-size-2xl);
+  }
+
+  h4 {
+    font-size: var(--font-size-xl);
+  }
+
+  h5 {
+    font-size: var(--font-size-lg);
+  }
+
+  h6 {
+    font-size: var(--font-size-base);
+  }
 }
 
 /* Paragraph Styles */
@@ -537,44 +570,6 @@ i {
 
 .text-inverse {
   color: var(--text-color-inverse);
-}
-
-/* Responsive Typography */
-@media (max-width: 640px) {
-  :root {
-    --font-size-4xl: 2rem;
-    /* 32px */
-    --font-size-3xl: 1.75rem;
-    /* 28px */
-    --font-size-2xl: 1.375rem;
-    /* 22px */
-    --font-size-xl: 1.125rem;
-    /* 18px */
-  }
-
-  h1 {
-    font-size: var(--font-size-3xl);
-  }
-
-  h2 {
-    font-size: var(--font-size-2xl);
-  }
-
-  h3 {
-    font-size: var(--font-size-xl);
-  }
-
-  h4 {
-    font-size: var(--font-size-lg);
-  }
-
-  h5 {
-    font-size: var(--font-size-base);
-  }
-
-  h6 {
-    font-size: var(--font-size-sm);
-  }
 }
 
 /* Print Styles */

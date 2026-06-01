@@ -5,9 +5,16 @@
 
 .projectcheck-status-page {
 	max-width: 32rem;
-	margin: var(--pc-space-6, 1.5rem) auto;
-	padding: var(--pc-space-6, 1.5rem);
+	margin: var(--pc-space-4, 1rem);
+	padding: var(--pc-space-4, 1rem);
 	text-align: center;
+}
+
+@media (min-width: 481px) {
+	.projectcheck-status-page {
+		margin: var(--pc-space-6, 1.5rem) auto;
+		padding: var(--pc-space-6, 1.5rem);
+	}
 }
 
 .projectcheck-status-page__icon {
@@ -45,11 +52,4 @@
 	flex-wrap: wrap;
 	gap: var(--pc-space-3, 0.75rem);
 	justify-content: center;
-}
-
-@media (max-width: 480px) {
-	.projectcheck-status-page {
-		margin: var(--pc-space-4, 1rem);
-		padding: var(--pc-space-4, 1rem);
-	}
 }

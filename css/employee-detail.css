@@ -50,10 +50,18 @@
 
 .pc-app--employee-detail .content-grid {
 	display: grid;
-	grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+	/* Mobile base: single column */
+	grid-template-columns: 1fr;
 	gap: var(--pc-space-5, 1.25rem);
 	width: 100%;
 	max-width: 100%;
+}
+
+@media (min-width: 960px) {
+	/* ≥960px desktop: asymmetric two-column layout — unchanged from prior desktop */
+	.pc-app--employee-detail .content-grid {
+		grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+	}
 }
 
 .pc-app--employee-detail #employee-project-assignments {
@@ -211,21 +219,25 @@
 	width: 100%;
 }
 
-@media (max-width: 960px) {
-	.pc-app--employee-detail .content-grid {
-		grid-template-columns: 1fr;
-	}
+/* Mobile base: stack employee profile card */
+.pc-app--employee-detail .pc-employee-profile {
+	flex-direction: column;
+	align-items: stretch;
 }
 
-@media (max-width: 640px) {
+.pc-app--employee-detail .header-actions .button {
+	width: 100%;
+	justify-content: center;
+}
+
+@media (min-width: 640px) {
 	.pc-app--employee-detail .pc-employee-profile {
-		flex-direction: column;
-		align-items: stretch;
+		flex-direction: row;
+		align-items: center;
 	}
 
 	.pc-app--employee-detail .header-actions .button {
-		width: 100%;
-		justify-content: center;
+		width: auto;
 	}
 }
 

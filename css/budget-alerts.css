@@ -14,7 +14,7 @@
 .budget-alerts-section .alert {
     display: flex;
     align-items: flex-start;
-    padding: 0.75rem 1rem;
+    padding: 0.625rem 0.75rem;
     margin-bottom: 0.75rem;
     border-radius: 10px;
     box-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text) 6%, transparent);
@@ -39,8 +39,8 @@
 .budget-alerts-section .alert-icon {
     margin-inline-end: 0.75rem;
     flex-shrink: 0;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.25rem;
+    height: 1.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -54,13 +54,13 @@
 .budget-alerts-section .alert-title {
     font-weight: 600;
     margin: 0 0 0.25rem 0;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     line-height: 1.4;
     color: var(--color-main-text);
 }
 
 .budget-alerts-section .alert-message {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     line-height: 1.5;
     color: var(--color-main-text);
 }
@@ -211,23 +211,19 @@
     background-color: color-mix(in srgb, var(--color-error) 8%, var(--color-background-dark));
 }
 
-/* Responsive: budget cards in project view */
-@media (max-width: 768px) {
+@media (min-width: 768px) {
     .budget-alerts-section .alert {
-        padding: 0.625rem 0.75rem;
+        padding: 0.75rem 1rem;
     }
 
     .budget-alerts-section .alert-icon {
-        width: 1.25rem;
-        height: 1.25rem;
+        width: 1.5rem;
+        height: 1.5rem;
     }
 
-    .budget-alerts-section .alert-title {
-        font-size: 0.8125rem;
-    }
-
+    .budget-alerts-section .alert-title,
     .budget-alerts-section .alert-message {
-        font-size: 0.8125rem;
+        font-size: 0.875rem;
     }
 }
 
@@ -245,7 +241,7 @@
 /* Budget Overview Integration with Form Styling */
 .form-group.budget-overview {
     margin-bottom: 20px;
-    padding: 16px;
+    padding: 12px;
     border: 1px solid var(--color-border);
     border-radius: 10px;
     background: var(--color-main-background);
@@ -261,10 +257,10 @@
 
 .budget-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 12px;
+    grid-template-columns: 1fr;
+    gap: 10px;
     margin-bottom: 16px;
-    padding: 14px;
+    padding: 12px;
     background: var(--color-background-dark);
     border: 1px solid var(--color-border);
     border-radius: 8px;
@@ -288,7 +284,7 @@
 }
 
 .budget-stat-value {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--color-main-text);
     line-height: 1.25;
@@ -366,24 +362,19 @@
     }
 }
 
-/* Responsive adjustments matching form responsiveness */
-@media (max-width: 768px) {
+@media (min-width: 768px) {
     .form-group.budget-overview {
-        padding: 12px;
+        padding: 16px;
     }
 
     .budget-stats-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-        padding: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 12px;
+        padding: 14px;
     }
 
     .budget-stat-value {
-        font-size: 16px;
-    }
-
-    .budget-stat-label {
-        font-size: 12px;
+        font-size: 18px;
     }
 }
 
@@ -484,16 +475,25 @@
 
 .detail-row {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 4px;
+}
+
+@media (min-width: 768px) {
+    .detail-row {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+    }
 }
 
 .detail-label {
     font-size: 12px;
     color: var(--color-text-maxcontrast);
     font-weight: 500;
-    min-width: 60px;
+    min-width: auto;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -502,8 +502,18 @@
     font-size: 13px;
     color: var(--color-text);
     font-weight: 500;
-    text-align: right;
+    text-align: left;
     flex: 1;
+}
+
+@media (min-width: 768px) {
+    .detail-label {
+        min-width: 60px;
+    }
+
+    .detail-value {
+        text-align: right;
+    }
 }
 
 /* Budget Info Styling */
@@ -511,7 +521,13 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    align-items: flex-end;
+    align-items: flex-start;
+}
+
+@media (min-width: 768px) {
+    .budget-info {
+        align-items: flex-end;
+    }
 }
 
 .budget-remaining {
@@ -622,7 +638,13 @@
 
 /* Project Name Cell */
 .project-name-cell {
-    min-width: 200px;
+    min-width: auto;
+}
+
+@media (min-width: 768px) {
+    .project-name-cell {
+        min-width: 200px;
+    }
 }
 
 .project-name-content {
@@ -652,7 +674,7 @@
 
 .project-badges {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
     flex-wrap: nowrap;
     margin-top: 0;
@@ -660,8 +682,8 @@
 }
 
 .budget-warning-badge {
-    font-size: 10.5px;
-    padding: 0 6px;
+    font-size: 10px;
+    padding: 1px 4px;
     border-radius: 999px;
     line-height: 18px;
     height: 18px;
@@ -691,19 +713,45 @@
 
 /* Compact Budget Cell */
 .budget-cell {
-    min-width: 140px;
+    min-width: auto;
 }
 
 .budget-info-compact {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
 }
 
 .budget-main {
     display: flex;
-    align-items: baseline;
-    gap: 4px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+@media (min-width: 768px) {
+    .budget-cell {
+        min-width: 140px;
+    }
+
+    .project-badges {
+        gap: 6px;
+    }
+
+    .budget-warning-badge {
+        font-size: 10.5px;
+        padding: 0 6px;
+    }
+
+    .budget-info-compact {
+        gap: 2px;
+    }
+
+    .budget-main {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 4px;
+    }
 }
 
 .budget-remaining {
@@ -747,7 +795,13 @@
 
 /* Progress Cell */
 .progress-cell {
-    min-width: 120px;
+    min-width: auto;
+}
+
+@media (min-width: 768px) {
+    .progress-cell {
+        min-width: 120px;
+    }
 }
 
 .progress-info {
@@ -822,81 +876,52 @@
     border-inline-start: 2px solid var(--color-error);
 }
 
-/* Mobile responsive adjustments */
-@media (max-width: 768px) {
+.progress-info {
+    gap: 2px;
+}
 
-    /* Table responsive */
-    .project-name-cell,
-    .budget-cell,
-    .progress-cell {
-        min-width: auto;
-    }
+.budget-progress-bar.compact {
+    height: 6px;
+}
 
-    .project-badges {
-        gap: 4px;
-    }
+.project-card.dashboard-card {
+    box-shadow: inset 3px 0 0 currentColor;
+}
 
-    .budget-warning-badge {
-        font-size: 10px;
-        padding: 1px 4px;
-    }
+.project-status-badges {
+    gap: 6px;
+}
 
-    .budget-info-compact {
-        gap: 1px;
-    }
+.budget-status-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+}
 
-    .budget-main {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-    }
+.card-progress-section {
+    margin-top: 10px;
+    padding-top: 10px;
+}
 
-    .progress-info {
-        gap: 2px;
-    }
+.budget-progress-bar.dashboard {
+    height: 6px;
+}
 
+@media (min-width: 768px) {
     .budget-progress-bar.compact {
-        height: 6px;
-    }
-
-    /* Dashboard cards responsive */
-    .project-card.dashboard-card {
-        box-shadow: inset 3px 0 0 currentColor;
-    }
-
-    .project-status-badges {
-        gap: 6px;
+        height: auto;
     }
 
     .budget-status-badge {
-        font-size: 10px;
-        padding: 2px 6px;
-    }
-
-    .detail-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-
-    .detail-label {
-        min-width: auto;
-    }
-
-    .detail-value {
-        text-align: left;
-    }
-
-    .budget-info {
-        align-items: flex-start;
+        font-size: inherit;
+        padding: inherit;
     }
 
     .card-progress-section {
-        margin-top: 10px;
-        padding-top: 10px;
+        margin-top: 12px;
+        padding-top: 12px;
     }
 
     .budget-progress-bar.dashboard {
-        height: 6px;
+        height: 8px;
     }
 }

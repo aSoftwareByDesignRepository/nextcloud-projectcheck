@@ -150,23 +150,40 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* Critical responsive utilities */
-@media (max-width: 768px) {
+/* Critical responsive utilities (mobile-first) */
+.app-content {
+    padding: 0 0.5rem;
+}
+
+.page-title {
+    font-size: 1.25rem;
+}
+
+.table {
+    font-size: 0.875rem;
+}
+
+.table th,
+.table td {
+    padding: 0.5rem;
+}
+
+@media (min-width: 768px) {
     .app-content {
-        padding: 0 0.5rem;
+        padding: 0 1rem;
     }
-    
+
     .page-title {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
     }
-    
+
     .table {
-        font-size: 0.875rem;
+        font-size: 1rem;
     }
-    
+
     .table th,
     .table td {
-        padding: 0.5rem;
+        padding: 0.75rem 1rem;
     }
 }
 

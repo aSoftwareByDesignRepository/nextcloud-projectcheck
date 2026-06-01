@@ -7,13 +7,26 @@
 .stats-container {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .stats-container {
+        gap: 1.5rem;
+    }
 }
 
 .stats-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .stats-row {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
 }
 
 .stats-row.primary {
@@ -32,10 +45,12 @@
     background: var(--color-background-hover);
     border: 1px solid var(--color-border);
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 0.75rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    text-align: center;
+    gap: 0.75rem;
     transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
@@ -64,9 +79,9 @@
     opacity: 1;
 }
 
-.stat-icon {
-    width: 48px;
-    height: 48px;
+.stats-row .stat-icon {
+    width: 36px;
+    height: 36px;
     background: var(--color-primary);
     border-radius: 12px;
     display: flex;
@@ -76,10 +91,30 @@
     position: relative;
 }
 
-.stat-icon .lucide-icon {
-    width: 24px;
-    height: 24px;
+.stats-row .stat-icon .lucide-icon {
+    width: 18px;
+    height: 18px;
     color: var(--pc-text-on-strong);
+}
+
+@media (min-width: 768px) {
+    .stats-row .stat-card {
+        padding: 1.5rem;
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        gap: 1rem;
+    }
+
+    .stats-row .stat-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .stats-row .stat-icon .lucide-icon {
+        width: 24px;
+        height: 24px;
+    }
 }
 
 .stat-content {
@@ -89,7 +124,7 @@
 
 /* Scoped to main content stats only - not sidebar stats */
 .stat-card .stat-number {
-    font-size: 1.75rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--color-text);
     line-height: 1.2;
@@ -100,7 +135,7 @@
 }
 
 .stat-card .stat-label {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     color: var(--color-text-light);
     font-weight: 500;
     text-transform: uppercase;
@@ -125,60 +160,13 @@
     border-left-color: var(--color-success-dark);
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    .stats-row {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
-
-    .stat-card {
-        padding: 1rem;
-    }
-
-    .stat-icon {
-        width: 40px;
-        height: 40px;
-    }
-
-    .stat-icon .lucide-icon {
-        width: 20px;
-        height: 20px;
-    }
-
+@media (min-width: 768px) {
     .stat-card .stat-number {
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .stats-container {
-        gap: 1rem;
-    }
-
-    .stat-card {
-        padding: 0.75rem;
-        flex-direction: column;
-        text-align: center;
-        gap: 0.75rem;
-    }
-
-    .stat-icon {
-        width: 36px;
-        height: 36px;
-    }
-
-    .stat-icon .lucide-icon {
-        width: 18px;
-        height: 18px;
-    }
-
-    .stat-card .stat-number {
-        font-size: 1.25rem;
+        font-size: 1.75rem;
     }
 
     .stat-card .stat-label {
-        font-size: 0.75rem;
+        font-size: 0.875rem;
     }
 }
 
@@ -280,14 +268,14 @@
 
 .analytics-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.5rem;
 }
 
 .analytics-card {
     background-color: var(--color-main-background);
     border-radius: var(--border-radius-large);
-    padding: 1.5rem;
+    padding: 1rem;
     box-shadow: var(--box-shadow-small);
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
@@ -477,8 +465,9 @@
 
 .activity-meta {
     display: flex;
+    flex-direction: column;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.25rem;
     font-size: 0.8rem;
     color: var(--color-text-light);
 }
@@ -517,29 +506,24 @@
     font-style: italic;
 }
 
-/* Responsive Design for Analytics */
-@media screen and (max-width: 1024px) {
+@media (min-width: 768px) {
     .analytics-container {
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     }
-}
-
-@media screen and (max-width: 768px) {
-    .analytics-container {
-        grid-template-columns: 1fr;
-    }
 
     .analytics-card {
-        padding: 1rem;
+        padding: 1.5rem;
     }
 
     .activity-meta {
-        flex-direction: column;
-        gap: 0.25rem;
+        flex-direction: row;
+        gap: 0.5rem;
     }
+}
 
-    .activity-meta span {
-        display: inline-block;
+@media (min-width: 1024px) {
+    .analytics-container {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     }
 }
 
@@ -550,15 +534,15 @@
 
 .analytics-overview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
 }
 
 .analytics-widget {
     background-color: var(--color-main-background);
     border: 1px solid var(--color-border);
     border-radius: 8px;
-    padding: 1rem;
+    padding: 0.75rem;
     transition: all 0.2s ease;
 }
 
@@ -611,12 +595,12 @@
     background-color: var(--color-primary);
     color: var(--color-white);
     border-radius: 50%;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: bold;
     margin-right: 0.5rem;
     flex-shrink: 0;
@@ -696,31 +680,34 @@
     color: var(--pc-emphasis-text-error);
 }
 
-/* Responsive Design for Compact */
-@media screen and (max-width: 768px) {
+.compact-item {
+    font-size: 0.8rem;
+}
+
+@media (min-width: 768px) {
     .analytics-overview {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
     }
 
     .analytics-widget {
-        padding: 0.75rem;
+        padding: 1rem;
     }
 
     .compact-item {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
 
     .compact-rank {
-        width: 16px;
-        height: 16px;
-        font-size: 0.65rem;
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
     }
 }
 
 /* Section spacing improvements */
 .section {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 }
 
 .section:last-child {
@@ -729,13 +716,13 @@
 
 /* Statistics section specific spacing */
 .section:has(.overview-stats) {
-    margin-bottom: 3rem;
+    margin-bottom: 1.5rem;
 }
 
 /* Search and filter section spacing */
 .section:has(.filters-container) {
     margin-top: 1rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
 }
 
 /* Table section spacing */
@@ -746,17 +733,19 @@
 /* Overview Statistics - Enhanced with better spacing */
 .section .overview-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    padding: 1.5rem 2rem;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
     margin: 0;
 }
 
 .section .overview-stat {
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1.25rem;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
     background: linear-gradient(135deg,
             color-mix(in srgb, var(--color-primary) 5%, transparent) 0%,
             color-mix(in srgb, var(--color-primary) 2%, transparent) 100%);
@@ -773,8 +762,8 @@
 }
 
 .section .overview-stat .stat-icon {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg,
             var(--color-primary) 0%,
             var(--color-primary-hover) 100%);
@@ -804,8 +793,15 @@
     min-width: 0;
 }
 
+.section .overview-stat .stat-icon i,
+.section .overview-stat .stat-icon .lucide-icon {
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
 .section .overview-stat .stat-number {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin: 0 0 0.25rem 0;
     color: var(--color-main-text);
@@ -823,93 +819,62 @@
 
 .section .overview-stat .stat-detail {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
     margin-top: 0.25rem;
 }
 
 .section .overview-stat .stat-sub {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--color-text-maxcontrast);
     background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-    padding: 0.2rem 0.4rem;
+    padding: 0.15rem 0.3rem;
     border-radius: 4px;
     white-space: nowrap;
 }
 
-/* Responsive Design for Overview Stats */
-@media screen and (max-width: 768px) {
+@media (min-width: 768px) {
     .section {
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
     }
 
     .section:has(.overview-stats) {
-        margin-bottom: 2rem;
+        margin-bottom: 3rem;
     }
 
     .section:has(.filters-container) {
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
     }
 
     .section .overview-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem 2rem;
+    }
+
+    .section .overview-stat {
+        flex-direction: row;
+        align-items: flex-start;
+        text-align: left;
         gap: 1rem;
-        padding: 1rem;
-    }
-
-    .section .overview-stat {
-        padding: 1rem;
-        gap: 0.75rem;
-    }
-
-    .section .overview-stat .stat-number {
-        font-size: 1.5rem;
-    }
-
-    .section .overview-stat .stat-detail {
-        gap: 0.5rem;
-    }
-
-    .section .overview-stat .stat-sub {
-        font-size: 0.7rem;
-        padding: 0.15rem 0.3rem;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .section {
-        margin-bottom: 1rem;
-    }
-
-    .section:has(.overview-stats) {
-        margin-bottom: 1.5rem;
-    }
-
-    .section:has(.filters-container) {
-        margin-bottom: 1.5rem;
-    }
-
-    .section .overview-stats {
-        padding: 0.75rem;
-        gap: 0.75rem;
-    }
-
-    .section .overview-stat {
-        padding: 0.75rem;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
+        padding: 1.25rem;
     }
 
     .section .overview-stat .stat-icon {
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        height: 48px;
     }
 
-    .section .overview-stat .stat-icon i,
-    .section .overview-stat .stat-icon .lucide-icon {
-        font-size: 1.2rem;
-        width: 1.2rem;
-        height: 1.2rem;
+    .section .overview-stat .stat-number {
+        font-size: 2rem;
+    }
+
+    .section .overview-stat .stat-detail {
+        gap: 0.75rem;
+    }
+
+    .section .overview-stat .stat-sub {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.4rem;
     }
 }

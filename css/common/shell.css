@@ -44,10 +44,26 @@
 	position: relative;
 }
 
+/* Mobile base: full-width shell with compact padding */
 .pc-shell {
-	max-width: 1200px;
+	max-width: 100%;
 	margin: 0 auto;
-	padding: 0 var(--pc-space-4) var(--pc-space-6);
+	padding: var(--pc-space-3) var(--pc-space-3) var(--pc-space-6);
+	box-sizing: border-box;
+}
+
+/* ≥768px tablet: slightly wider padding */
+@media (min-width: 768px) {
+	.pc-shell {
+		padding: var(--pc-space-4) var(--pc-space-4) var(--pc-space-6);
+	}
+}
+
+/* ≥1024px desktop: centered content column — matches pre-change desktop layout */
+@media (min-width: 1024px) {
+	.pc-shell {
+		max-width: 1200px;
+	}
 }
 
 .pc-page-header__kicker {
@@ -77,10 +93,12 @@
 	line-height: var(--pc-line-base);
 }
 
+/* Mobile base: scope strip stacks vertically */
 .pc-scope-strip {
 	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
 	flex-wrap: wrap;
-	align-items: center;
 	gap: var(--pc-space-2) var(--pc-space-3);
 	margin-top: var(--pc-space-3);
 	padding: var(--pc-space-3) var(--pc-space-4);
@@ -88,6 +106,14 @@
 	border-radius: var(--pc-radius-md);
 	background: var(--color-background-hover);
 	font-size: var(--pc-fs-sm);
+}
+
+/* ≥768px tablet/desktop: scope strip inline row */
+@media (min-width: 768px) {
+	.pc-scope-strip {
+		flex-direction: row;
+		align-items: center;
+	}
 }
 
 .pc-scope-strip__item {
@@ -117,16 +143,4 @@
 .pc-main:focus-visible {
 	outline: 2px solid var(--color-primary-element);
 	outline-offset: 4px;
-}
-
-@media (max-width: 768px) {
-	.pc-shell {
-		padding-left: var(--pc-space-3);
-		padding-right: var(--pc-space-3);
-	}
-
-	.pc-scope-strip {
-		flex-direction: column;
-		align-items: flex-start;
-	}
 }

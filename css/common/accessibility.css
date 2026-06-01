@@ -589,8 +589,8 @@ th {
    without breaking the rhythm.
    ============================================================= */
 .pc-section {
-  margin-bottom: 1.75rem;
-  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
   border-radius: var(--radius-base, 8px);
   border: 1px solid var(--color-border, #e1e5eb);
   background: var(--color-main-background, #fff);
@@ -637,10 +637,10 @@ th {
   color: var(--color-primary-element, #0082c9);
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .pc-section {
-    padding: 1rem 1.1rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.75rem;
+    padding: 1.25rem 1.5rem;
   }
 }
 
@@ -649,7 +649,7 @@ th {
   box-sizing: border-box;
   max-width: 28rem;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1rem;
   text-align: center;
   border: 1px dashed var(--color-border, #e1e5eb);
   border-radius: var(--pc-radius-md, 12px);
@@ -705,10 +705,23 @@ th {
 
 .pc-empty-state__cta {
   min-height: 44px;
+  width: 100%;
+  justify-content: center;
   padding: 0.65rem 1.35rem;
   font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
+}
+
+@media (min-width: 481px) {
+  .pc-empty-state {
+    padding: 2rem 1.5rem;
+  }
+
+  .pc-empty-state__cta {
+    width: auto;
+    justify-content: flex-start;
+  }
 }
 
 .pc-empty-state__cta .lucide-icon {
@@ -723,17 +736,6 @@ th {
 
 label.button.primary.pc-empty-state__cta {
   cursor: pointer;
-}
-
-@media (max-width: 480px) {
-  .pc-empty-state {
-    padding: 1.5rem 1rem;
-  }
-
-  .pc-empty-state__cta {
-    width: 100%;
-    justify-content: center;
-  }
 }
 
 /* =============================================================
@@ -803,85 +805,108 @@ label.button.primary.pc-empty-state__cta {
 }
 
 /* =============================================================
-   Compact responsive baseline at 360px (WCAG 1.4.10 Reflow).
+   Compact responsive baseline (WCAG 1.4.10 Reflow) — mobile-first.
    Audit reference: AUDIT-FINDINGS C15 / E21.
-
-   Wide tables and filter rows used to overflow horizontally and
-   hide actions on phones. We collapse them into a card-style
-   stack so the user never has to side-scroll.
    ============================================================= */
-@media (max-width: 480px) {
+.filters-row,
+.filter-row,
+.table-filters {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.filters-row select,
+.filters-row input[type="search"],
+.filters-row input[type="date"],
+.filters-row input[type="text"] {
+  min-width: 0;
+  width: 100%;
+}
+
+.table .action-items {
+  justify-content: flex-end;
+}
+
+.table-actions-sticky {
+  position: sticky;
+  bottom: 0;
+  background: var(--color-main-background);
+  padding: 0.5rem;
+  border-top: 1px solid var(--color-border);
+  z-index: 1;
+}
+
+.budget-cell {
+  min-width: 0 !important;
+  width: auto !important;
+}
+
+.filters-row,
+.filter-row {
+  padding: 0.5rem;
+}
+
+.progress-percentage {
+  min-width: 0;
+}
+
+.pc-collapse-on-xs thead {
+  display: none;
+}
+
+.pc-collapse-on-xs tbody tr {
+  display: block;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.pc-collapse-on-xs tbody td {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+  border: 0;
+}
+
+.pc-collapse-on-xs tbody td::before {
+  content: attr(data-label);
+  font-weight: 600;
+  color: var(--color-text-maxcontrast, #555);
+  flex: 0 0 40%;
+}
+
+@media (min-width: 481px) {
   .filters-row,
   .filter-row,
   .table-filters {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
   }
 
   .filters-row select,
   .filters-row input[type="search"],
   .filters-row input[type="date"],
   .filters-row input[type="text"] {
-    min-width: 0;
-    width: 100%;
-  }
-
-  /* Tables: wrap action items below content instead of pushing them off-screen. */
-  .table .action-items {
-    justify-content: flex-end;
-  }
-
-  /* Sticky actions bar so primary CTA is always reachable. */
-  .table-actions-sticky {
-    position: sticky;
-    bottom: 0;
-    background: var(--color-main-background);
-    padding: 0.5rem;
-    border-top: 1px solid var(--color-border);
-    z-index: 1;
-  }
-}
-
-/* Extra-small (≤360px) hardening: stop budget cells (cited in audit) and
-   similar fixed-width controls from forcing horizontal scroll. */
-@media (max-width: 360px) {
-  .budget-cell {
-    min-width: 0 !important;
-    width: auto !important;
+    width: auto;
   }
 
   .filters-row,
   .filter-row {
-    padding: 0.5rem;
+    padding: 0;
+  }
+
+  .budget-cell {
+    min-width: revert !important;
+    width: revert !important;
   }
 
   .progress-percentage {
-    min-width: 0;
-  }
-
-  /* Convert dense data tables to a card-collapse layout. Pages can opt-in
-     by adding `.pc-collapse-on-xs` to the table element. */
-  .pc-collapse-on-xs thead { display: none; }
-  .pc-collapse-on-xs tbody tr {
-    display: block;
-    margin-bottom: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-  }
-  .pc-collapse-on-xs tbody td {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.25rem 0;
-    border: 0;
-  }
-  .pc-collapse-on-xs tbody td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: var(--color-text-maxcontrast, #555);
-    flex: 0 0 40%;
+    min-width: revert;
   }
 }

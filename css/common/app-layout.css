@@ -3,22 +3,12 @@
  *
  * dashboard.css / projects.css historically set #app-content { display: block }
  * and #app-navigation { position: relative }, which breaks the core #content flex
- * row (sidebar + main). These rules restore side-by-side layout on desktop.
+ * row (sidebar + main). These rules restore side-by-side layout on desktop only.
+ *
+ * Mobile (<1024px): drawer + Menu button in mobile-nav.css (not core #app-navigation-toggle).
  */
 
-#content > #app-navigation:not(.vue) {
-	position: sticky;
-	top: 0;
-	flex: 0 0 300px;
-	width: 300px;
-	min-width: 300px;
-	max-width: 300px;
-	height: 100%;
-	overflow-x: hidden;
-	overflow-y: auto;
-	align-self: stretch;
-}
-
+/* Main content: flex column, prevent horizontal overflow at all breakpoints */
 #content > #app-content {
 	flex: 1 1 auto;
 	min-width: 0;
@@ -32,23 +22,56 @@
 }
 
 #content > #app-content > #app-content-wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
 	width: 100%;
 	max-width: min(1400px, 100%);
 	margin-inline: auto;
 	box-sizing: border-box;
 }
 
-#content > #app-content > #app-content-wrapper.pc-shell {
-	padding-inline: var(--pc-space-4, 1rem);
-	padding-bottom: var(--pc-space-6, 2rem);
+/* Stack shell header above main (core apps.scss defaults wrapper flex to row). */
+#content > #app-content > #app-content-wrapper > .pc-page-header {
+	flex: 0 0 auto;
+	width: 100%;
 }
 
-@media (max-width: 1024px) {
+#content > #app-content > #app-content-wrapper > .pc-main {
+	flex: 1 1 auto;
+	min-width: 0;
+	width: 100%;
+}
+
+/* Mobile base: shell padding (top spacing for page headings) */
+#content > #app-content > #app-content-wrapper.pc-shell {
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-3, 0.75rem) var(--pc-space-6, 2rem);
+}
+
+/* ≥768px tablet: standard shell padding */
+@media (min-width: 768px) {
+	#content > #app-content > #app-content-wrapper.pc-shell {
+		padding: var(--pc-space-4, 1rem) var(--pc-space-4, 1rem) var(--pc-space-6, 2rem);
+	}
+}
+
+/* ≥1024px desktop: sticky sidebar + restore side-by-side flex row with core */
+@media (min-width: 1024px) {
 	#content > #app-navigation:not(.vue) {
-		flex: 0 0 280px;
-		width: 280px;
-		min-width: 280px;
-		max-width: 280px;
+		position: sticky;
+		top: 0;
+		flex: 0 0 300px;
+		width: 300px;
+		min-width: 300px;
+		max-width: 300px;
+		height: 100%;
+		overflow-x: hidden;
+		overflow-y: auto;
+		align-self: stretch;
+	}
+
+	#content > #app-content > #app-content-wrapper.pc-shell {
+		padding: var(--pc-space-4, 1rem) var(--pc-space-4, 1rem) var(--pc-space-6, 2rem);
 	}
 }
 
@@ -57,3 +80,4 @@
 		border-inline-end: 1px solid CanvasText;
 	}
 }
+

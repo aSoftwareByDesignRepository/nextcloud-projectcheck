@@ -748,16 +748,26 @@
   background-color: var(--color-background-secondary);
 }
 
-/* Table Responsive */
-@media (max-width: 768px) {
+/* Table Responsive (mobile-first) */
+.table-responsive {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.table-responsive .table {
+  min-width: 600px;
+}
+
+@media (min-width: 768px) {
   .table-responsive {
     display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+    overflow-x: visible;
+    white-space: normal;
   }
 
   .table-responsive .table {
-    min-width: 600px;
+    min-width: 0;
   }
 }
 
@@ -1324,33 +1334,59 @@
   visibility: visible;
 }
 
-/* Responsive Components */
-@media (max-width: 768px) {
+/* Responsive Components (mobile-first) */
+.form--horizontal,
+.form--inline {
+  flex-direction: column;
+  align-items: stretch;
+}
 
+.form-group--horizontal {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.card-actions {
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.modal-footer {
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.toast-container {
+  left: var(--space-4);
+  right: var(--space-4);
+  max-width: none;
+}
+
+@media (min-width: 768px) {
   .form--horizontal,
   .form--inline {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
   }
 
   .form-group--horizontal {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
   }
 
   .card-actions {
-    flex-direction: column;
-    gap: var(--space-2);
+    flex-direction: row;
+    gap: var(--space-3);
   }
 
   .modal-footer {
-    flex-direction: column;
-    gap: var(--space-2);
+    flex-direction: row;
+    gap: var(--space-3);
   }
 
   .toast-container {
-    left: var(--space-4);
+    left: auto;
     right: var(--space-4);
-    max-width: none;
+    max-width: 24rem;
   }
 }

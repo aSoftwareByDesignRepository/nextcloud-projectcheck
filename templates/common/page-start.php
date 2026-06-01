@@ -29,13 +29,29 @@ $includeScopeStrip = !empty($includeScopeStrip) || !empty($_['includeScopeStrip'
 	<div id="app-content-wrapper" class="<?php p($wrapperClass); ?>">
 		<?php if ($pageTitle !== ''): ?>
 			<header class="pc-page-header" aria-labelledby="<?php p($pageTitleId); ?>">
-				<?php if ($pageKicker !== ''): ?>
-					<p class="pc-page-header__kicker"><?php p($pageKicker); ?></p>
-				<?php endif; ?>
-				<h1 id="<?php p($pageTitleId); ?>"><?php p($pageTitle); ?></h1>
-				<?php if ($pageHelp !== ''): ?>
-					<p class="pc-page-header__lead"><?php p($pageHelp); ?></p>
-				<?php endif; ?>
+				<div class="pc-page-header__row">
+					<button type="button"
+						class="pc-nav-toggle"
+						id="pc-nav-toggle"
+						data-pc-nav-toggle
+						aria-controls="app-navigation"
+						aria-expanded="false"
+						aria-label="<?php p($l->t('Toggle mobile menu')); ?>"
+						data-aria-label-open="<?php p($l->t('Toggle mobile menu')); ?>"
+						data-aria-label-close="<?php p($l->t('Close navigation menu')); ?>">
+						<span class="pc-nav-toggle__icon" data-lucide="menu" aria-hidden="true"></span>
+						<span class="pc-nav-toggle__label"><?php p($l->t('Menu')); ?></span>
+					</button>
+					<div class="pc-page-header__content">
+						<?php if ($pageKicker !== ''): ?>
+							<p class="pc-page-header__kicker"><?php p($pageKicker); ?></p>
+						<?php endif; ?>
+						<h1 id="<?php p($pageTitleId); ?>"><?php p($pageTitle); ?></h1>
+						<?php if ($pageHelp !== ''): ?>
+							<p class="pc-page-header__lead"><?php p($pageHelp); ?></p>
+						<?php endif; ?>
+					</div>
+				</div>
 			</header>
 		<?php endif; ?>
 		<?php if ($includeScopeStrip): ?>

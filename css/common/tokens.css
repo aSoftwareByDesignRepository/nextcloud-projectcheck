@@ -34,6 +34,9 @@
 	--pc-text: var(--color-main-text, #1d1d1d);
 	--pc-border: color-mix(in srgb, var(--color-main-text, #1d1d1d) 14%, transparent);
 	--pc-touch-min: 44px;
+
+	/* Nextcloud global header (core header.scss); used for mobile nav toggle placement */
+	--pc-nc-header-height: var(--header-height, 50px);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -21,6 +21,8 @@
 \OCP\Util::addScript('projectcheck', 'common/modal-a11y');
 // SVG icon injection: external app script (CSP via Nextcloud app resource pipeline, not inline).
 \OCP\Util::addScript('projectcheck', 'navigation-icons');
+// Mobile drawer: in-page Menu button (replaces core #app-navigation-toggle).
+\OCP\Util::addScript('projectcheck', 'pc-mobile-nav');
 // Centralised icon catalog and hydration (audit ref. AUDIT-FINDINGS H22/icon-dedup).
 // Replaces six duplicated inline svgIcons blocks across page templates.
 \OCP\Util::addScript('projectcheck', 'common/icons');
@@ -63,7 +65,7 @@ if (!isset($_['stats']) || empty($_['stats'])) {
 include __DIR__ . '/pc-l10n-bootstrap.php';
 ?>
 
-<div id="app-navigation" role="navigation" aria-label="<?php p($l->t('ProjectCheck primary navigation')); ?>">
+<div id="app-navigation" class="pc-app-nav" role="navigation" aria-label="<?php p($l->t('ProjectCheck primary navigation')); ?>">
     <!-- Sidebar Header -->
     <div class="sidebar-header">
         <div class="app-brand">
