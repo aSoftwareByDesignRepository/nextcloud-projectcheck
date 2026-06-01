@@ -15,7 +15,7 @@
 		WCAG-oriented UI aligned with the Check app family, and append-only rate history.
 	</description>
 
-	<version>2.0.65</version>
+	<version>2.0.67</version>
 	<licence>AGPL-3.0-or-later</licence>
 	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de">Alexander M&#xE4;ule</author>
 

@@ -45,6 +45,9 @@ class EmployeeController extends Controller
     use ErrorPageTrait;
     use StatsTrait;
 
+	/** Route slugs that must not be treated as user IDs (e.g. /employees/all). */
+	private const RESERVED_EMPLOYEE_SLUGS = ['all', 'index', 'list'];
+
     /** @var IUserSession */
     private $userSession;
 
@@ -258,6 +261,13 @@ class EmployeeController extends Controller
             return $this->configureCSP($response, 'guest');
         }
 
+		$userId = (string)$userId;
+		if ($this->isReservedEmployeeSlug($userId)) {
+			return new RedirectResponse(
+				$this->urlGenerator->linkToRoute('projectcheck.employee.index'),
+			);
+		}
+
         $employeeUser = $this->userManager->get($userId);
         $snapshot = $this->userAccountSnapshotMapper->findByUserId($userId);
 		$viewerId = $user->getUID();
@@ -332,6 +342,11 @@ class EmployeeController extends Controller
 
         return $this->configureCSP($response);
     }
+
+	private function isReservedEmployeeSlug(string $userId): bool
+	{
+		return in_array(strtolower($userId), self::RESERVED_EMPLOYEE_SLUGS, true);
+	}
 
 	#[NoAdminRequired]
 	public function assignProject(string $userId): JSONResponse

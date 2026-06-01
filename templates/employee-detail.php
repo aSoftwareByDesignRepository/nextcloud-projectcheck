@@ -35,7 +35,7 @@ $htmlLang = isset($_['htmlLang']) && is_string($_['htmlLang']) ? $_['htmlLang'] 
 $todayYmd = gmdate('Y-m-d');
 ?>
 
-<script nonce="<?php p($_['cspNonce']) ?>">
+<script nonce="<?php p($_['cspNonce'] ?? ''); ?>">
     // Pass PHP variables to JavaScript
     window.projectControlData = {
         requestToken: '<?php p($_['requesttoken']) ?>',

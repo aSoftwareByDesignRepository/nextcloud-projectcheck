@@ -32,9 +32,36 @@
 		applyFiltersBtn: document.getElementById('apply-filters'),
 		clearFiltersBtn: document.getElementById('clear-filters'),
 		exportCsvBtn: document.getElementById('export-csv'),
-		timeEntriesTable: document.querySelector('.grid'),
-		timeEntriesTbody: document.querySelector('.grid tbody')
+		timeEntriesTable: document.getElementById('time-entries-table'),
+		timeEntriesTbody: document.querySelector('#time-entries-table tbody')
 	};
+
+	const HOUR_SCALE = 10000;
+
+	function parseHoursValue(value) {
+		const n = parseFloat(value);
+		return Number.isFinite(n) ? n : 0;
+	}
+
+	function roundHours(value) {
+		return Math.round(value * HOUR_SCALE) / HOUR_SCALE;
+	}
+
+	function subtractHours(a, b) {
+		return roundHours(Math.max(0, parseHoursValue(a) - parseHoursValue(b)));
+	}
+
+	function formatHoursDisplay(hours) {
+		if (typeof window.ProjectCheckFormat !== 'undefined' && typeof window.ProjectCheckFormat.hours === 'function') {
+			return window.ProjectCheckFormat.hours(hours);
+		}
+		return parseHoursValue(hours).toFixed(2) + '\u00A0h';
+	}
+
+	function formatMatchingEntryCount(count) {
+		const safeCount = Math.max(0, parseInt(String(count), 10) || 0);
+		return n('projectcheck', '%n matching entry', '%n matching entries', safeCount);
+	}
 
 	/**
 	 * Initialize the application
@@ -186,7 +213,64 @@
 	 * Update empty state visibility
 	 */
 	function updateEmptyState() {
-		// For server-side paging the no-results row is controlled on render; nothing to do.
+		const table = elements.timeEntriesTable;
+		if (!table) {
+			return;
+		}
+		const remaining = table.querySelectorAll('tbody tr[data-entry-id]').length;
+		if (remaining === 0) {
+			window.location.reload();
+		}
+	}
+
+	/**
+	 * Adjust footer totals after a row is removed (same precision as server data attributes).
+	 */
+	function updateHoursSummaryAfterDelete(deletedHours) {
+		const table = elements.timeEntriesTable;
+		if (!table || deletedHours <= 0) {
+			return;
+		}
+
+		const selectionHours = subtractHours(
+			table.getAttribute('data-selection-hours'),
+			deletedHours
+		);
+		const pageHours = subtractHours(
+			table.getAttribute('data-page-hours'),
+			deletedHours
+		);
+		let selectionCount = Math.max(0, (parseInt(table.getAttribute('data-selection-count'), 10) || 0) - 1);
+		let pageCount = Math.max(0, (parseInt(table.getAttribute('data-page-count'), 10) || 0) - 1);
+
+		table.setAttribute('data-selection-hours', String(selectionHours));
+		table.setAttribute('data-page-hours', String(pageHours));
+		table.setAttribute('data-selection-count', String(selectionCount));
+		table.setAttribute('data-page-count', String(pageCount));
+
+		const selectionHoursEl = document.getElementById('time-entries-selection-hours');
+		const pageHoursEl = document.getElementById('time-entries-page-hours');
+		const metaEl = document.getElementById('time-entries-selection-meta');
+		const liveEl = document.getElementById('time-entries-summary-live');
+
+		if (selectionHoursEl) {
+			selectionHoursEl.textContent = formatHoursDisplay(selectionHours);
+		}
+		if (pageHoursEl) {
+			pageHoursEl.textContent = formatHoursDisplay(pageHours);
+		}
+		if (metaEl) {
+			const metaPage = metaEl.querySelector('.time-entries-summary__meta-page');
+			let metaHtml = formatMatchingEntryCount(selectionCount);
+			if (metaPage) {
+				metaHtml += '<span class="time-entries-summary__meta-sep" aria-hidden="true"> · </span>';
+				metaHtml += metaPage.outerHTML;
+			}
+			metaEl.innerHTML = metaHtml;
+		}
+		if (liveEl) {
+			liveEl.textContent = t('projectcheck', 'Total hours (matching filters)') + ': ' + formatHoursDisplay(selectionHours);
+		}
 	}
 
 	/**
@@ -207,14 +291,14 @@
 			entityName: entryDescription || t('projectcheck', 'Time entry'),
 			deleteUrl: deleteUrl,
 			onSuccess: function (entity) {
-				// Remove the row from the table
 				const row = document.querySelector(`tr[data-entry-id="${entity.id}"]`);
 				if (row) {
+					const deletedHours = parseHoursValue(row.getAttribute('data-entry-hours'));
 					row.remove();
+					updateHoursSummaryAfterDelete(deletedHours);
 					updateEmptyState();
 				}
 
-				// Show success message
 				showMessage(t('projectcheck', 'Time entry was deleted successfully!'), 'success');
 			},
 			onCancel: function () {

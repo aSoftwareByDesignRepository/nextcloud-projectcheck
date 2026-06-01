@@ -189,34 +189,71 @@ class TimeEntryMapper extends QBMapper
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->createFunction('COUNT(*)'));
+		$tablePrefix = $this->configureFilteredListFrom($qb, $filters);
+		$this->applyFilteredListConstraints($qb, $filters, $tablePrefix);
 
-		// Same joins as findWithProjectInfo when filters touch joined tables.
+		$result = $qb->executeQuery();
+		$count = $result->fetchColumn();
+		$result->closeCursor();
+
+		return (int) $count;
+	}
+
+	/**
+	 * Sum hours for entries matching list filters (same keys as count / export).
+	 */
+	public function sumHours(array $filters = []): float
+	{
+		$qb = $this->db->getQueryBuilder();
+		$tablePrefix = $this->configureFilteredListFrom($qb, $filters);
+		$hoursColumn = $tablePrefix . 'hours';
+		$qb->select($qb->createFunction('COALESCE(SUM(' . $hoursColumn . '), 0)'));
+		$this->applyFilteredListConstraints($qb, $filters, $tablePrefix);
+
+		$result = $qb->executeQuery();
+		$total = $result->fetchColumn();
+		$result->closeCursor();
+
+		return Money::asFloat(Money::normalize($total ?? 0, Money::HOUR_SCALE));
+	}
+
+	/**
+	 * @return string Table alias prefix for time-entry columns (`t.` or empty).
+	 */
+	private function configureFilteredListFrom(IQueryBuilder $qb, array $filters): string
+	{
 		$needsProjectJoin = !empty($filters['project_type']) || !empty($filters['search']);
 		if ($needsProjectJoin) {
 			$qb->from($this->getTableName(), 't')
 				->innerJoin('t', 'pc_projects', 'p', $qb->expr()->eq('t.project_id', 'p.id'))
 				->innerJoin('p', 'pc_customers', 'c', $qb->expr()->eq('p.customer_id', 'c.id'));
-		} else {
-			$qb->from($this->getTableName());
+			return 't.';
 		}
-		$t = $needsProjectJoin ? 't.' : '';
 
-		// Apply filters
+		$qb->from($this->getTableName());
+		return '';
+	}
+
+	/**
+	 * @param array<string,mixed> $filters
+	 */
+	private function applyFilteredListConstraints(IQueryBuilder $qb, array $filters, string $tablePrefix): void
+	{
 		if (!empty($filters['project_id'])) {
-			$qb->andWhere($qb->expr()->eq($t . 'project_id', $qb->createNamedParameter($filters['project_id'])));
+			$qb->andWhere($qb->expr()->eq($tablePrefix . 'project_id', $qb->createNamedParameter($filters['project_id'])));
 		}
 		if (array_key_exists('project_ids', $filters) && is_array($filters['project_ids'])) {
 			if ($filters['project_ids'] === []) {
 				$qb->andWhere('1 = 0');
 			} else {
 				$qb->andWhere(
-					$qb->expr()->in($t . 'project_id', $qb->createNamedParameter($filters['project_ids'], IQueryBuilder::PARAM_INT_ARRAY))
+					$qb->expr()->in($tablePrefix . 'project_id', $qb->createNamedParameter($filters['project_ids'], IQueryBuilder::PARAM_INT_ARRAY))
 				);
 			}
 		}
 
 		if (!empty($filters['user_id'])) {
-			$qb->andWhere($qb->expr()->eq($t . 'user_id', $qb->createNamedParameter($filters['user_id'])));
+			$qb->andWhere($qb->expr()->eq($tablePrefix . 'user_id', $qb->createNamedParameter($filters['user_id'])));
 		}
 
 		if (!empty($filters['project_type'])) {
@@ -224,29 +261,23 @@ class TimeEntryMapper extends QBMapper
 		}
 
 		if (!empty($filters['date_from'])) {
-			$qb->andWhere($qb->expr()->gte($t . 'date', $qb->createNamedParameter($filters['date_from'])));
+			$qb->andWhere($qb->expr()->gte($tablePrefix . 'date', $qb->createNamedParameter($filters['date_from'])));
 		}
 
 		if (!empty($filters['date_to'])) {
-			$qb->andWhere($qb->expr()->lte($t . 'date', $qb->createNamedParameter($filters['date_to'])));
+			$qb->andWhere($qb->expr()->lte($tablePrefix . 'date', $qb->createNamedParameter($filters['date_to'])));
 		}
 
 		if (!empty($filters['search'])) {
 			$searchTerm = '%' . $this->db->escapeLikeParameter($filters['search']) . '%';
 			$qb->andWhere(
 				$qb->expr()->orX(
-					$qb->expr()->iLike($t . 'description', $qb->createNamedParameter($searchTerm)),
+					$qb->expr()->iLike($tablePrefix . 'description', $qb->createNamedParameter($searchTerm)),
 					$qb->expr()->iLike('p.name', $qb->createNamedParameter($searchTerm)),
 					$qb->expr()->iLike('c.name', $qb->createNamedParameter($searchTerm))
 				)
 			);
 		}
-
-		$result = $qb->executeQuery();
-		$count = $result->fetchColumn();
-		$result->closeCursor();
-
-		return (int) $count;
 	}
 
 	/**

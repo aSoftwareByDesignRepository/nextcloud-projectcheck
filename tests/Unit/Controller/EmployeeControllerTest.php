@@ -68,6 +68,9 @@ class EmployeeControllerTest extends TestCase
 				if ($route === 'projectcheck.employee.show' && isset($params['userId'])) {
 					return '/index.php/apps/projectcheck/employees/' . $params['userId'];
 				}
+				if ($route === 'projectcheck.employee.index') {
+					return '/index.php/apps/projectcheck/employees';
+				}
 				return '/index.php/' . $route;
 			}
 		);
@@ -223,6 +226,14 @@ class EmployeeControllerTest extends TestCase
 
 		$this->assertInstanceOf(RedirectResponse::class, $response);
 		$this->assertSame('/index.php/apps/projectcheck/employees/manager1', $response->getRedirectURL());
+	}
+
+	public function testShowRedirectsReservedSlugAllToEmployeeIndex(): void
+	{
+		$response = $this->controller->show('all');
+
+		$this->assertInstanceOf(RedirectResponse::class, $response);
+		$this->assertSame('/index.php/apps/projectcheck/employees', $response->getRedirectURL());
 	}
 
 	public function testGetStatsWithoutUserIdReturnsOwnStatsForNonAdmin(): void

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.67 - 2026-06-01
+
+### Added
+
+- **Time entries list:** summary panel below the table shows total hours for all entries matching the active filters (same scope as export), plus a per-page subtotal when results are paginated. Totals update after deleting a row; server uses `SUM(hours)` with the same filter logic as count/export.
+
+## 2.0.66 - 2026-06-01
+
+### Fixed
+
+- **Employees list at `/employees/all`:** reserved slug `all` (and `index` / `list`) no longer hit the detail route; redirects to the employee index so the table and layout render correctly.
+- **Navigation links:** sidebar URLs (`dashboard`, `employees`, etc.) are injected on every ProjectCheck page so templates do not rely on hard-coded paths.
+
 ## 2.0.65 - 2026-05-31
 
 ### Fixed

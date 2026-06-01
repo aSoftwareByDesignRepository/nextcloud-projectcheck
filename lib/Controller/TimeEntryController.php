@@ -24,7 +24,9 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
 use OCP\IConfig;
+use OCA\ProjectCheck\Db\TimeEntry;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCA\ProjectCheck\Util\Money;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\BudgetService;
@@ -210,6 +212,11 @@ class TimeEntryController extends Controller
 		// Get time entries
 		$timeEntries = $this->timeEntryService->getTimeEntriesWithProjectInfo($filters);
 
+		$sumFilters = $filters;
+		unset($sumFilters['limit'], $sumFilters['offset']);
+		$selectionHoursTotal = $this->timeEntryService->sumTimeEntriesHours($sumFilters);
+		$pageHoursTotal = $this->sumHoursOnCurrentPage($timeEntries);
+
 		// Get all projects for filter dropdown (incl. archived for viewing historical entries)
 		$userProjects = $this->projectService->getProjectsForUserTimeEntry($user->getUID(), ['status' => ['Active', 'On Hold', 'Completed', 'Archived']]);
 		$userProjects = $this->sortProjectsByName($userProjects);
@@ -249,10 +256,34 @@ class TimeEntryController extends Controller
 			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => 'ENTRY_ID']),
 			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => 'ENTRY_ID']),
 			'projectShowUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => 'PROJECT_ID']),
-			'exportUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.export')
+			'exportUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.export'),
+			'selectionSummary' => [
+				'hoursTotal' => $selectionHoursTotal,
+				'entryCount' => $totalEntries,
+				'pageHoursTotal' => $pageHoursTotal,
+				'pageEntryCount' => count($timeEntries),
+				'page' => $page,
+				'totalPages' => $totalPages,
+			],
 		]);
 
 		return $this->configureCSP($response);
+	}
+
+	/**
+	 * @param array<int, array{timeEntry?: TimeEntry|null}> $timeEntries
+	 */
+	private function sumHoursOnCurrentPage(array $timeEntries): float
+	{
+		$total = Money::normalize(0, Money::HOUR_SCALE);
+		foreach ($timeEntries as $entry) {
+			$timeEntry = $entry['timeEntry'] ?? null;
+			if (!$timeEntry instanceof TimeEntry) {
+				continue;
+			}
+			$total = Money::add($total, Money::normalize($timeEntry->getHours() ?? 0, Money::HOUR_SCALE));
+		}
+		return Money::asFloat($total);
 	}
 
 	/**

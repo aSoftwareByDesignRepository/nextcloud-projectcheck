@@ -24,10 +24,11 @@ use PHPUnit\Framework\TestCase;
 
 class EnrichTemplateNavigationContextTest extends TestCase
 {
-	private function localeFormatMock(string $currency = 'EUR'): LocaleFormatService
+	private function localeFormatMock(string $currency = 'EUR', string $locale = 'de_DE'): LocaleFormatService
 	{
 		$mock = $this->createMock(LocaleFormatService::class);
 		$mock->method('getCurrency')->willReturn($currency);
+		$mock->method('getLocale')->willReturn($locale);
 		return $mock;
 	}
 
@@ -56,9 +57,16 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$accessControl->method('canManageOrganization')
 			->with('u1')
 			->willReturn(true);
-		$urlGenerator->method('linkToRoute')
-			->with('projectcheck.app_config.settingsIndex')
-			->willReturn('/index.php/apps/projectcheck/organization');
+		$urlGenerator->method('linkToRoute')->willReturnCallback(
+			static function (string $route): string {
+				return match ($route) {
+					'projectcheck.app_config.settingsIndex' => '/index.php/apps/projectcheck/organization',
+					'projectcheck.dashboard.index' => '/index.php/apps/projectcheck/dashboard',
+					'projectcheck.employee.index' => '/index.php/apps/projectcheck/employees',
+					default => '/index.php/' . $route,
+				};
+			},
+		);
 
 		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
 		$listener->handle($event);
@@ -74,6 +82,8 @@ class EnrichTemplateNavigationContextTest extends TestCase
 			$params['orgAppSettingsUrl'] ?? null
 		);
 		$this->assertSame('EUR', $params['orgCurrency'] ?? null);
+		$this->assertSame('de-DE', $params['htmlLang'] ?? null);
+		$this->assertSame('/index.php/apps/projectcheck/employees', $params['employeesUrl'] ?? null);
 		$this->assertInstanceOf(LocaleFormatService::class, $params['fmt'] ?? null);
 	}
 

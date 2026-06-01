@@ -106,4 +106,23 @@ class TimeEntryServiceTest extends TestCase {
 
 		$this->service->updateTimeEntry(99, ['project_id' => 7], 'member-user');
 	}
+
+	public function testSumTimeEntriesHoursStripsPaginationAndDelegatesToMapper(): void {
+		$filters = [
+			'project_id' => 3,
+			'limit' => 20,
+			'offset' => 40,
+		];
+
+		$this->timeEntryMapper->expects($this->once())
+			->method('sumHours')
+			->with($this->callback(static function (array $passed): bool {
+				return ($passed['project_id'] ?? null) === 3
+					&& !array_key_exists('limit', $passed)
+					&& !array_key_exists('offset', $passed);
+			}))
+			->willReturn(12.5);
+
+		$this->assertSame(12.5, $this->service->sumTimeEntriesHours($filters));
+	}
 }

@@ -187,8 +187,26 @@ include __DIR__ . '/common/page-start.php';
                     </div>
                 </div>
             <?php else: ?>
+                <?php
+                $fmt = $_['fmt'] ?? null;
+                $selectionSummary = is_array($_['selectionSummary'] ?? null) ? $_['selectionSummary'] : [];
+                $selectionHoursTotal = (float)($selectionSummary['hoursTotal'] ?? 0);
+                $selectionEntryCount = (int)($selectionSummary['entryCount'] ?? count($timeEntries));
+                $pageHoursTotal = (float)($selectionSummary['pageHoursTotal'] ?? $selectionHoursTotal);
+                $pageEntryCount = (int)($selectionSummary['pageEntryCount'] ?? count($timeEntries));
+                $summaryPage = max(1, (int)($selectionSummary['page'] ?? ($pagination['page'] ?? 1)));
+                $summaryTotalPages = max(1, (int)($selectionSummary['totalPages'] ?? ($pagination['totalPages'] ?? 1)));
+                $showPageHoursSubtotal = $summaryTotalPages > 1;
+                $colHours = $l->t('Hours');
+                ?>
+                <div id="time-entries-summary-live" class="pc-sr-only" aria-live="polite" aria-atomic="true"></div>
                 <div class="grid-container">
-                    <table class="grid time-entries-table">
+                    <table class="grid time-entries-table" id="time-entries-table"
+                        data-selection-hours="<?php p(number_format($selectionHoursTotal, 4, '.', '')); ?>"
+                        data-selection-count="<?php p((string)$selectionEntryCount); ?>"
+                        data-page-hours="<?php p(number_format($pageHoursTotal, 4, '.', '')); ?>"
+                        data-page-count="<?php p((string)$pageEntryCount); ?>"
+                        data-show-page-subtotal="<?php p($showPageHoursSubtotal ? '1' : '0'); ?>">
                         <colgroup>
                             <col class="col-date">
                             <col class="col-project">
@@ -233,11 +251,13 @@ include __DIR__ . '/common/page-start.php';
                                     continue;
                                 }
                                 ?>
+                                <?php $entryHours = (float)($timeEntry->getHours() ?? 0); ?>
                                 <tr data-entry-id="<?php p($timeEntry->getId()); ?>"
                                     data-project-id="<?php p($timeEntry->getProjectId()); ?>"
                                     data-user-id="<?php p($timeEntry->getUserId()); ?>"
                                     data-project-type="<?php p($entry['project_type'] ?? 'client'); ?>"
-                                    data-date-iso="<?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('Y-m-d') : ''); ?>">
+                                    data-date-iso="<?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('Y-m-d') : ''); ?>"
+                                    data-entry-hours="<?php p(number_format($entryHours, 4, '.', '')); ?>">
                                     <td><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : ''); ?></td>
                                     <td>
                                         <a href="<?php p(str_replace('PROJECT_ID', $timeEntry->getProjectId(), $_['projectShowUrl'] ?? '/index.php/apps/projectcheck/projects/')); ?>">
@@ -273,7 +293,9 @@ include __DIR__ . '/common/page-start.php';
                                     </td>
                                     <td><?php p($entry['customerName'] ?? ''); ?></td>
                                     <td><?php p($entry['userDisplayName'] ?? $timeEntry->getUserId() ?? ''); ?></td>
-                                    <td><?php p($timeEntry->getHours() ?? 0); ?></td>
+                                    <td class="col-hours" data-label="<?php p($colHours); ?>">
+                                        <span class="time-entries-hours-value"><?php p($fmt ? $fmt->hours($entryHours) : number_format($entryHours, 2) . 'h'); ?></span>
+                                    </td>
                                     <td class="description-cell"><span class="description-cell__text"><?php p($timeEntry->getDescription() ?? ''); ?></span></td>
                                     <td>
                                         <div class="action-items">
@@ -300,6 +322,43 @@ include __DIR__ . '/common/page-start.php';
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
+                        <tfoot>
+                            <tr class="time-entries-summary">
+                                <th scope="row" colspan="5" class="time-entries-summary__lead" id="time-entries-summary-label">
+                                    <span class="time-entries-summary__title"><?php p($l->t('Total hours (matching filters)')); ?></span>
+                                    <span class="time-entries-summary__meta" id="time-entries-selection-meta">
+                                        <?php p($l->n('%n matching entry', '%n matching entries', $selectionEntryCount)); ?>
+                                        <?php if ($showPageHoursSubtotal): ?>
+                                            <span class="time-entries-summary__meta-sep" aria-hidden="true"> · </span>
+                                            <span class="time-entries-summary__meta-page">
+                                                <?php p($l->t('Page %1$s of %2$s', [(string)$summaryPage, (string)$summaryTotalPages])); ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </span>
+                                </th>
+                                <td colspan="3" class="time-entries-summary__figures" headers="time-entries-summary-label">
+                                    <?php if ($showPageHoursSubtotal): ?>
+                                        <div class="time-entries-summary__stats time-entries-summary__stats--split" id="time-entries-page-hours-wrap">
+                                            <span class="time-entries-summary__stat-label"><?php p($l->t('All matching')); ?></span>
+                                            <span class="time-entries-summary__stat-label"><?php p($l->t('This page')); ?></span>
+                                            <span class="time-entries-summary__stat-value" id="time-entries-selection-hours">
+                                                <?php p($fmt ? $fmt->hours($selectionHoursTotal) : number_format($selectionHoursTotal, 2) . 'h'); ?>
+                                            </span>
+                                            <span class="time-entries-summary__stat-value time-entries-summary__stat-value--muted" id="time-entries-page-hours">
+                                                <?php p($fmt ? $fmt->hours($pageHoursTotal) : number_format($pageHoursTotal, 2) . 'h'); ?>
+                                            </span>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="time-entries-summary__stats">
+                                            <span class="time-entries-summary__stat-label pc-sr-only"><?php p($l->t('Total hours (matching filters)')); ?></span>
+                                            <span class="time-entries-summary__stat-value" id="time-entries-selection-hours">
+                                                <?php p($fmt ? $fmt->hours($selectionHoursTotal) : number_format($selectionHoursTotal, 2) . 'h'); ?>
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 <?php

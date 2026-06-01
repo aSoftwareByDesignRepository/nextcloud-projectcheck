@@ -82,7 +82,6 @@ class TimeEntryControllerTest extends TestCase {
 		$this->projectService->method('getProjectsByIdList')->willReturn([]);
 		$this->projectService->method('canUserViewAllTimeEntries')->willReturn(false);
 		$this->customerService->method('getVisibleCustomerCountForUser')->willReturn(0);
-		$this->timeEntryService->method('countTimeEntries')->willReturn(0);
 		$this->timeEntryService->method('getUsersWithTimeEntries')->willReturn([]);
 		$this->timeEntryService->method('getYearlyStatsByProjectType')->willReturn([]);
 		$this->timeEntryService->method('getDetailedYearlyStatsByProjectType')->willReturn([]);
@@ -167,6 +166,7 @@ class TimeEntryControllerTest extends TestCase {
 		);
 
 		$this->timeEntryService->method('countTimeEntries')->willReturn(1);
+		$this->timeEntryService->method('sumTimeEntriesHours')->willReturn(2.5);
 		$this->projectService->method('getProjectsForUserTimeEntry')->willReturn([]);
 		$this->timeEntryService->method('getUsersWithTimeEntries')->willReturn([
 			['user_id' => 'alice', 'displayname' => 'Alice'],
@@ -189,6 +189,12 @@ class TimeEntryControllerTest extends TestCase {
 		));
 		$this->assertNotEmpty($selectedUserOption);
 		$this->assertNotSame('', trim((string)($selectedUserOption[0]['displayname'] ?? '')));
+		$summary = $params['selectionSummary'] ?? null;
+		$this->assertIsArray($summary);
+		$this->assertSame(2.5, $summary['hoursTotal']);
+		$this->assertSame(1, $summary['entryCount']);
+		$this->assertSame(2.5, $summary['pageHoursTotal']);
+		$this->assertSame(1, $summary['pageEntryCount']);
 	}
 
 	public function testIndexScopesQueriesToAccessibleProjectsForNonGlobalUser(): void {
@@ -214,6 +220,16 @@ class TimeEntryControllerTest extends TestCase {
 					&& ($filters['user_id'] ?? null) === 'member-user';
 			}))
 			->willReturn(0);
+
+		$this->timeEntryService->expects($this->once())
+			->method('sumTimeEntriesHours')
+			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
+				return ($filters['project_ids'] ?? null) === $accessibleProjectIds
+					&& ($filters['user_id'] ?? null) === 'member-user'
+					&& !array_key_exists('limit', $filters)
+					&& !array_key_exists('offset', $filters);
+			}))
+			->willReturn(0.0);
 
 		$this->timeEntryService->expects($this->once())
 			->method('getTimeEntriesWithProjectInfo')

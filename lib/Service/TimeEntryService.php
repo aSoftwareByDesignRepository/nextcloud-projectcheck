@@ -172,6 +172,16 @@ class TimeEntryService
 	}
 
 	/**
+	 * Sum hours for entries matching list filters (ignores pagination).
+	 */
+	public function sumTimeEntriesHours(array $filters = []): float
+	{
+		$sumFilters = $filters;
+		unset($sumFilters['limit'], $sumFilters['offset']);
+		return $this->timeEntryMapper->sumHours($sumFilters);
+	}
+
+	/**
 	 * Update a time entry
 	 *
 	 * @param int $id Time entry ID

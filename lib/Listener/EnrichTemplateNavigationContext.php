@@ -67,6 +67,24 @@ class EnrichTemplateNavigationContext implements IEventListener
 		$params['canManageOrganization'] = $canManageOrganization;
 		$params['canManageOrg'] = $canManageOrganization; // backward compatibility for existing templates
 		$params['orgAppSettingsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
+		if (!isset($params['dashboardUrl'])) {
+			$params['dashboardUrl'] = $this->urlGenerator->linkToRoute('projectcheck.dashboard.index');
+		}
+		if (!isset($params['timeEntriesUrl'])) {
+			$params['timeEntriesUrl'] = $this->urlGenerator->linkToRoute('projectcheck.timeentry.index');
+		}
+		if (!isset($params['projectsUrl'])) {
+			$params['projectsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.project.index');
+		}
+		if (!isset($params['customersUrl'])) {
+			$params['customersUrl'] = $this->urlGenerator->linkToRoute('projectcheck.customer.index');
+		}
+		if (!isset($params['employeesUrl'])) {
+			$params['employeesUrl'] = $this->urlGenerator->linkToRoute('projectcheck.employee.index');
+		}
+		if (!isset($params['settingsUrl'])) {
+			$params['settingsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
+		}
 		$params['jsL10n'] = $this->jsL10nCatalogBuilder->buildForApp();
 		// Locale-aware server-side formatting bridge (audit ref. AUDIT-FINDINGS B10/H28).
 		$params['fmt'] = $this->localeFormat;
