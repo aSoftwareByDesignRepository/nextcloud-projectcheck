@@ -623,7 +623,7 @@
 		`;
 
 		const title = document.createElement('h3');
-		title.textContent = 'Full Description';
+		title.textContent = t('projectcheck', 'Full Description');
 		title.style.cssText = `
 			margin: 0; 
 			color: var(--color-text, #000000); 

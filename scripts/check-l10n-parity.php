@@ -3,10 +3,9 @@
 declare(strict_types=1);
 
 /**
- * Verifies that `l10n/en.json` and `l10n/de.json` contain exactly the same
- * set of msgid keys. The audit (AUDIT-FINDINGS H27) found drift between
- * locales that produced fragmented UX. We run this script in CI / pre-push
- * to keep the catalogs in step.
+ * Verifies that all locale JSON files contain exactly the same set of msgid keys.
+ * The audit (AUDIT-FINDINGS H27) found drift between locales that produced
+ * fragmented UX. We run this script in CI / pre-push to keep the catalogs in step.
  *
  * Exit codes:
  *   0  parity OK
@@ -20,41 +19,41 @@ declare(strict_types=1);
  */
 
 $base = __DIR__ . '/../l10n';
-$enPath = $base . '/en.json';
-$dePath = $base . '/de.json';
+$localeFiles = ['en', 'de', 'fr', 'es'];
+$catalogs = [];
 
-foreach ([$enPath, $dePath] as $path) {
+foreach ($localeFiles as $lang) {
+	$path = $base . '/' . $lang . '.json';
 	if (!is_file($path)) {
 		fwrite(STDERR, "Missing locale file: $path\n");
 		exit(1);
 	}
+	$catalogs[$lang] = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
 }
 
-$en = json_decode((string)file_get_contents($enPath), true, 512, JSON_THROW_ON_ERROR);
-$de = json_decode((string)file_get_contents($dePath), true, 512, JSON_THROW_ON_ERROR);
-
-$enKeys = array_keys($en['translations'] ?? []);
-$deKeys = array_keys($de['translations'] ?? []);
-
-$missingInDe = array_values(array_diff($enKeys, $deKeys));
-$missingInEn = array_values(array_diff($deKeys, $enKeys));
-
-sort($missingInDe);
-sort($missingInEn);
-
+$enKeys = array_keys($catalogs['en']['translations'] ?? []);
+sort($enKeys);
 $ok = true;
-if ($missingInDe !== []) {
-	$ok = false;
-	fwrite(STDERR, "Keys missing in de.json (" . count($missingInDe) . "):\n");
-	foreach ($missingInDe as $key) {
-		fwrite(STDERR, "  - " . $key . "\n");
+
+foreach (array_diff($localeFiles, ['en']) as $lang) {
+	$langKeys = array_keys($catalogs[$lang]['translations'] ?? []);
+	$missing = array_values(array_diff($enKeys, $langKeys));
+	$extra = array_values(array_diff($langKeys, $enKeys));
+	sort($missing);
+	sort($extra);
+	if ($missing !== []) {
+		$ok = false;
+		fwrite(STDERR, "Keys missing in {$lang}.json (" . count($missing) . "):\n");
+		foreach ($missing as $key) {
+			fwrite(STDERR, "  - {$key}\n");
+		}
 	}
-}
-if ($missingInEn !== []) {
-	$ok = false;
-	fwrite(STDERR, "Keys missing in en.json (" . count($missingInEn) . "):\n");
-	foreach ($missingInEn as $key) {
-		fwrite(STDERR, "  - " . $key . "\n");
+	if ($extra !== []) {
+		$ok = false;
+		fwrite(STDERR, "Extra keys in {$lang}.json (" . count($extra) . "):\n");
+		foreach ($extra as $key) {
+			fwrite(STDERR, "  - {$key}\n");
+		}
 	}
 }
 
@@ -63,5 +62,5 @@ if (!$ok) {
 	exit(1);
 }
 
-echo "l10n parity OK (" . count($enKeys) . " keys).\n";
+echo 'l10n parity OK (' . count($enKeys) . " keys, en/de/fr/es).\n";
 exit(0);

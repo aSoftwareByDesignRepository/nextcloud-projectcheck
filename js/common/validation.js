@@ -503,7 +503,7 @@ const ProjectControlValidation = {
       // Show loading state
       if (submitButton) {
         submitButton.disabled = true;
-        submitButton.textContent = 'Submitting...';
+        submitButton.textContent = t('projectcheck', 'Submitting...');
         submitButton.classList.add('btn--loading');
       }
       

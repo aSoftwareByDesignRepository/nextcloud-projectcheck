@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Offline — ProjectCheck</title>
+	<title data-i18n="Offline — ProjectCheck">Offline — ProjectCheck</title>
 	<style>
 		:root {
 			--color-primary: #0082c9;
@@ -146,23 +146,39 @@
 <body>
 	<main class="projectcheck-status-page" role="main" aria-labelledby="offline-heading">
 		<div class="projectcheck-status-page__icon" aria-hidden="true">📶</div>
-		<h1 class="projectcheck-status-page__title" id="offline-heading">You’re offline</h1>
-		<p class="projectcheck-status-page__message">
+		<h1 class="projectcheck-status-page__title" id="offline-heading" data-i18n="You’re offline">You’re offline</h1>
+		<p class="projectcheck-status-page__message" id="offline-message" data-i18n="There is no internet connection right now. ProjectCheck needs a connection for most features. When you are back online, use Try again to reload.">
 			There is no internet connection right now. ProjectCheck needs a connection for most features.
 			When you are back online, use <strong>Try again</strong> to reload.
 		</p>
 		<div class="projectcheck-status-page__actions">
-			<button type="button" class="btn" id="btn-reload">Try again</button>
-			<button type="button" class="btn btn--secondary" id="btn-check">Check connection</button>
+			<button type="button" class="btn" id="btn-reload" data-i18n="Try again">Try again</button>
+			<button type="button" class="btn btn--secondary" id="btn-check" data-i18n="Check connection">Check connection</button>
 		</div>
 		<div class="offline-status" role="status" aria-live="polite">
 			<span class="status-indicator" id="statusIndicator" aria-hidden="true"></span>
-			<span id="statusText">Checking connection…</span>
+			<span id="statusText" data-i18n="Checking connection…">Checking connection…</span>
 		</div>
 	</main>
 	<script>
 		(function () {
 			'use strict';
+
+			var PCID = 'projectcheck';
+			/** @type {Record<string, string>} */
+			var catalog = {};
+
+			/**
+			 * @param {string} appId
+			 * @param {string} msgid
+			 * @returns {string}
+			 */
+			function t(appId, msgid) {
+				if (appId !== PCID) {
+					return msgid;
+				}
+				return (catalog[msgid] !== undefined && catalog[msgid] !== '') ? catalog[msgid] : msgid;
+			}
 
 			var statusIndicator = document.getElementById('statusIndicator');
 			var statusText = document.getElementById('statusText');
@@ -175,6 +191,74 @@
 					return '';
 				}
 				return path.substring(0, idx);
+			}
+
+			function l10nUrl(lang) {
+				return instanceRoot() + '/apps/projectcheck/l10n/' + lang + '.json';
+			}
+
+			function resolveLang() {
+				var raw = (navigator.language || 'en').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+				var candidates = [raw];
+				if (raw.indexOf('-') !== -1) {
+					candidates.push(raw.split('-')[0]);
+				}
+				if (raw.indexOf('_') !== -1) {
+					candidates.push(raw.split('_')[0]);
+				}
+				candidates.push('en');
+				var seen = {};
+				return candidates.filter(function (c) {
+					if (!c || seen[c]) {
+						return false;
+					}
+					seen[c] = true;
+					return true;
+				});
+			}
+
+			function loadCatalog() {
+				var langs = resolveLang();
+				var chain = Promise.reject();
+				langs.forEach(function (lang) {
+					chain = chain.catch(function () {
+						return fetch(l10nUrl(lang), { cache: 'force-cache' }).then(function (res) {
+							if (!res.ok) {
+								throw new Error('l10n ' + lang);
+							}
+							return res.json();
+						});
+					});
+				});
+				return chain.then(function (data) {
+					catalog = (data && data.translations) ? data.translations : {};
+				}).catch(function () {
+					catalog = {};
+				});
+			}
+
+			function applyStaticI18n() {
+				document.querySelectorAll('[data-i18n]').forEach(function (el) {
+					var key = el.getAttribute('data-i18n');
+					if (!key) {
+						return;
+					}
+					var text = t(PCID, key);
+					if (el.id === 'offline-message') {
+						var tryAgain = t(PCID, 'Try again');
+						if (text.indexOf(tryAgain) !== -1) {
+							el.innerHTML = text.replace(tryAgain, '<strong>' + tryAgain + '</strong>');
+						} else {
+							el.textContent = text;
+						}
+						return;
+					}
+					el.textContent = text;
+				});
+				var titleEl = document.querySelector('title[data-i18n]');
+				if (titleEl) {
+					document.title = t(PCID, titleEl.getAttribute('data-i18n') || document.title);
+				}
 			}
 
 			function connectivityProbeUrl() {
@@ -192,7 +276,7 @@
 			}
 
 			function probeConnection() {
-				setOfflineStatus('Checking connection…');
+				setOfflineStatus(t(PCID, 'Checking connection…'));
 				return fetch(connectivityProbeUrl(), {
 					method: 'HEAD',
 					cache: 'no-cache',
@@ -203,11 +287,11 @@
 			function checkConnection() {
 				probeConnection()
 					.then(function () {
-						setOnlineStatus('Connection restored. Reloading…');
+						setOnlineStatus(t(PCID, 'Connection restored. Reloading…'));
 						setTimeout(function () { window.location.reload(); }, 800);
 					})
 					.catch(function () {
-						setOfflineStatus('Still offline. Check your network, then try again.');
+						setOfflineStatus(t(PCID, 'Still offline. Check your network, then try again.'));
 					});
 			}
 
@@ -216,7 +300,7 @@
 			}
 
 			function onOffline() {
-				setOfflineStatus('You are still offline.');
+				setOfflineStatus(t(PCID, 'You are still offline.'));
 			}
 
 			document.getElementById('btn-reload').addEventListener('click', function () {
@@ -226,11 +310,14 @@
 			window.addEventListener('online', onOnline);
 			window.addEventListener('offline', onOffline);
 
-			if (navigator.onLine) {
-				setOnlineStatus('Browser reports online. If the app does not load, use Try again.');
-			} else {
-				onOffline();
-			}
+			loadCatalog().then(function () {
+				applyStaticI18n();
+				if (navigator.onLine) {
+					setOnlineStatus(t(PCID, 'Browser reports online. If the app does not load, use Try again.'));
+				} else {
+					onOffline();
+				}
+			});
 		})();
 	</script>
 </body>
