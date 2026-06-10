@@ -7,6 +7,9 @@
 	<id>projectcheck</id>
 	<name>ProjectCheck</name>
 	<summary>IT project management with time tracking and budget control</summary>
+	<summary lang="fr">Gestion de projets IT avec suivi du temps et contrôle budgétaire</summary>
+	<summary lang="da">IT-projektstyring med tidsregistrering og budgetkontrol</summary>
+	<summary lang="es">Gestión de proyectos IT con registro de tiempo y control presupuestario</summary>
 	<description>
 		IT project management with time tracking, budget control, and server-authoritative cost pricing.
 		Choose how hours are priced (project rate, employee master data, or per-person on the project);
@@ -14,6 +17,45 @@
 		Features include project and customer management, team assignment, budget monitoring,
 		WCAG-oriented UI aligned with the Check app family, and append-only rate history.
 	</description>
+	<description lang="fr"><![CDATA[
+# ProjectCheck
+
+Gestion de projets IT avec suivi du temps, contrôle budgétaire et tarification des coûts côté serveur.
+Choisissez comment les heures sont tarifées (taux projet, données maîtres employé ou par personne sur le projet) ;
+les taux horaires des saisies de temps sont résolus côté serveur à partir de l'historique à date d'effet.
+
+## Fonctionnalités
+
+- Gestion des projets et clients, affectation d'équipe, suivi budgétaire
+- Interface orientée WCAG, alignée sur la famille d'apps Check
+- Historique des tarifs en ajout seul
+	]]></description>
+	<description lang="da"><![CDATA[
+# ProjectCheck
+
+IT-projektstyring med tidsregistrering, budgetkontrol og serverbaseret prissætning.
+Vælg hvordan timer prissættes (projektsats, medarbejderstamdata eller pr. person på projektet);
+timesatser på tidsregistreringer beregnes på serveren ud fra historik med ikrafttrædelsesdato.
+
+## Funktioner
+
+- Projekt- og kundestyring, teamtildeling, budgetovervågning
+- WCAG-orienteret brugerflade i Check-app-familien
+- Kun-tilføjelses taksthistorik
+	]]></description>
+	<description lang="es"><![CDATA[
+# ProjectCheck
+
+Gestión de proyectos IT con registro de tiempo, control presupuestario y precios de coste autoritativos en el servidor.
+Elige cómo se tarifican las horas (tarifa de proyecto, datos maestros del empleado o por persona en el proyecto);
+las tarifas horarias en entradas de tiempo se resuelven en el servidor desde el historial con fecha de vigencia.
+
+## Funciones
+
+- Gestión de proyectos y clientes, asignación de equipos, supervisión presupuestaria
+- Interfaz orientada a WCAG, alineada con la familia de apps Check
+- Historial de tarifas solo de adición
+	]]></description>
 
 	<version>2.0.69</version>
 	<licence>AGPL-3.0-or-later</licence>

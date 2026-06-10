@@ -4,6 +4,18 @@
  */
 /* global t */
 
+/**
+ * @param {string} msgid
+ * @param {...string|number} args
+ * @returns {string}
+ */
+function vt(msgid, ...args) {
+	if (typeof t !== 'function') {
+		return args.length ? String(msgid).replace('%s', String(args[0])) : msgid;
+	}
+	return args.length ? t('projectcheck', msgid, args) : t('projectcheck', msgid);
+}
+
 function appendListItems(ul, items, fieldKey, messageKey) {
 	items.forEach(function (item) {
 		const li = document.createElement('li');
@@ -56,72 +68,72 @@ const ProjectControlValidation = {
   rules: {
     required: {
       test: (value) => !ProjectControlUtils.isEmpty(value),
-      message: 'This field is required'
+      message: () => vt('This field is required')
     },
     
     email: {
       test: (value) => ProjectControlUtils.isEmail(value),
-      message: 'Please enter a valid email address'
+      message: () => vt('Please enter a valid email address')
     },
     
     url: {
       test: (value) => ProjectControlUtils.isUrl(value),
-      message: 'Please enter a valid URL'
+      message: () => vt('Please enter a valid URL')
     },
     
     phone: {
       test: (value) => ProjectControlUtils.isPhone(value),
-      message: 'Please enter a valid phone number'
+      message: () => vt('Please enter a valid phone number')
     },
     
     numeric: {
       test: (value) => ProjectControlUtils.isNumeric(value),
-      message: 'Please enter a valid number'
+      message: () => vt('Please enter a valid number')
     },
     
     minLength: {
       test: (value, min) => value.length >= min,
-      message: (min) => `Must be at least ${min} characters long`
+      message: (min) => vt('Must be at least %s characters long', min)
     },
     
     maxLength: {
       test: (value, max) => value.length <= max,
-      message: (max) => `Must be no more than ${max} characters long`
+      message: (max) => vt('Must be no more than %s characters long', max)
     },
     
     min: {
       test: (value, min) => parseFloat(value) >= parseFloat(min),
-      message: (min) => `Must be at least ${min}`
+      message: (min) => vt('Must be at least %s', min)
     },
     
     max: {
       test: (value, max) => parseFloat(value) <= parseFloat(max),
-      message: (max) => `Must be no more than ${max}`
+      message: (max) => vt('Must be no more than %s', max)
     },
     
     pattern: {
       test: (value, pattern) => new RegExp(pattern).test(value),
-      message: 'Please enter a valid value'
+      message: () => vt('Please enter a valid value')
     },
     
     date: {
       test: (value) => !isNaN(Date.parse(value)),
-      message: 'Please enter a valid date'
+      message: () => vt('Please enter a valid date')
     },
     
     futureDate: {
       test: (value) => new Date(value) > new Date(),
-      message: 'Date must be in the future'
+      message: () => vt('Date must be in the future')
     },
     
     pastDate: {
       test: (value) => new Date(value) < new Date(),
-      message: 'Date must be in the past'
+      message: () => vt('Date must be in the past')
     },
     
     timeFormat: {
       test: (value) => /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value),
-      message: 'Please enter a valid time (HH:MM)'
+      message: () => vt('Please enter a valid time (HH:MM)')
     },
     
     timeRange: {
@@ -132,22 +144,22 @@ const ProjectControlValidation = {
         const maxMinutes = max.split(':').map(Number).reduce((a, b) => a * 60 + b);
         return minutes >= minMinutes && minutes <= maxMinutes;
       },
-      message: (min, max) => `Time must be between ${min} and ${max}`
+      message: (min, max) => vt('Time must be between %s and %s', min, max)
     },
     
     projectName: {
       test: (value) => /^[a-zA-Z0-9\s\-_]{3,50}$/.test(value),
-      message: 'Project name must be 3-50 characters and contain only letters, numbers, spaces, hyphens, and underscores'
+      message: () => vt('Project name must be 3-50 characters and contain only letters, numbers, spaces, hyphens, and underscores')
     },
     
     customerName: {
       test: (value) => /^[a-zA-Z\s]{2,50}$/.test(value),
-      message: 'Customer name must be 2-50 characters and contain only letters and spaces'
+      message: () => vt('Customer name must be 2-50 characters and contain only letters and spaces')
     },
     
     timeEntry: {
       test: (value) => /^([0-9]|[0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(value),
-      message: 'Please enter a valid time entry (HH:MM)'
+      message: () => vt('Please enter a valid time entry (HH:MM)')
     },
     
     timeEntryDuration: {
@@ -156,7 +168,7 @@ const ProjectControlValidation = {
         const minutes = time[0] * 60 + time[1];
         return minutes >= minMinutes;
       },
-      message: (minMinutes) => `Time entry must be at least ${minMinutes} minutes`
+      message: (minMinutes) => vt('Time entry must be at least %s minutes', minMinutes)
     },
     
     noOverlap: {
@@ -212,7 +224,7 @@ const ProjectControlValidation = {
           return true; // Allow submission if overlap check fails
         }
       },
-      message: 'This time entry overlaps with an existing entry'
+      message: () => vt('This time entry overlaps with an existing entry')
     },
     
     projectAssignment: {
@@ -244,7 +256,7 @@ const ProjectControlValidation = {
           return true; // Allow assignment if check fails
         }
       },
-      message: 'User cannot be assigned to this project'
+      message: () => vt('User cannot be assigned to this project')
     },
     
     timeEntryRange: {
@@ -256,7 +268,7 @@ const ProjectControlValidation = {
         }
         return hours >= minHours && hours <= maxHours;
       },
-      message: (minHours, maxHours) => `Time entry must be between ${minHours} and ${maxHours} hours`
+      message: (minHours, maxHours) => vt('Time entry must be between %s and %s hours', minHours, maxHours)
     },
     
     workingHours: {
@@ -274,7 +286,7 @@ const ProjectControlValidation = {
         
         return totalMinutes >= workStart && totalMinutes <= workEnd;
       },
-      message: 'Time must be within working hours (8 AM - 6 PM)'
+      message: () => vt('Time must be within working hours (8 AM - 6 PM)')
     },
     
     projectBudget: {
@@ -307,7 +319,7 @@ const ProjectControlValidation = {
           return true; // Allow if budget check fails
         }
       },
-      message: t('projectcheck', 'This time entry would exceed the project budget')
+      message: () => vt('This time entry would exceed the project budget')
     },
     
     customerActive: {
@@ -333,7 +345,7 @@ const ProjectControlValidation = {
           return true; // Allow if status check fails
         }
       },
-      message: 'This customer is inactive and cannot be assigned to new projects'
+      message: () => vt('This customer is inactive and cannot be assigned to new projects')
     }
   },
 
@@ -361,7 +373,7 @@ const ProjectControlValidation = {
       test: (value) => {
         return ProjectControlUtils.isEmail(value);
       },
-      message: t('projectcheck', 'Please enter a valid customer email address')
+      message: () => vt('Please enter a valid customer email address')
     });
   },
 
@@ -736,7 +748,7 @@ const ProjectControlValidation = {
         }
       } catch (error) {
         console.error(`Validation error for rule ${rule.name}:`, error);
-        errors.push('Validation error occurred');
+        errors.push(vt('Validation error occurred'));
       }
     }
     
@@ -844,7 +856,7 @@ const ProjectControlValidation = {
       form.insertBefore(successContainer, form.firstChild);
     }
     
-    successContainer.textContent = 'Form is valid and ready to submit';
+    successContainer.textContent = vt('Form is valid and ready to submit');
     successContainer.style.display = 'block';
     
     // Hide error and warning containers
@@ -1190,7 +1202,7 @@ const ProjectControlValidation = {
   getValidationMessage(ruleName, params = []) {
     const rule = this.rules[ruleName];
     if (!rule) {
-      return 'Unknown validation rule';
+      return vt('Unknown validation rule');
     }
     
     return typeof rule.message === 'function' 
