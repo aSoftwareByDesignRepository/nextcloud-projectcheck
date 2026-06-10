@@ -10,6 +10,11 @@
 	<summary lang="fr">Gestion de projets IT avec suivi du temps et contrôle budgétaire</summary>
 	<summary lang="da">IT-projektstyring med tidsregistrering og budgetkontrol</summary>
 	<summary lang="es">Gestión de proyectos IT con registro de tiempo y control presupuestario</summary>
+	<summary lang="nl">IT-projectbeheer met tijdregistratie en budgetcontrole</summary>
+	<summary lang="it">Gestione progetti IT con registrazione ore e controllo budget</summary>
+	<summary lang="pl">Zarządzanie projektami IT z rejestracją czasu i kontrolą budżetu</summary>
+	<summary lang="sv">IT-projektledning med tidrapportering och budgetkontroll</summary>
+	<summary lang="nb">IT-prosjektstyring med tidsregistrering og budsjettkontroll</summary>
 	<description>
 		IT project management with time tracking, budget control, and server-authoritative cost pricing.
 		Choose how hours are priced (project rate, employee master data, or per-person on the project);
@@ -55,6 +60,71 @@ las tarifas horarias en entradas de tiempo se resuelven en el servidor desde el 
 - Gestión de proyectos y clientes, asignación de equipos, supervisión presupuestaria
 - Interfaz orientada a WCAG, alineada con la familia de apps Check
 - Historial de tarifas solo de adición
+	]]></description>
+	<description lang="nl"><![CDATA[
+# ProjectCheck
+
+IT-projectbeheer met tijdregistratie, budgetcontrole en server-side kostprijsberekening.
+Kies hoe uren worden geprijsd (projectsat, medewerkerstamgegevens of per persoon op het project);
+uurtarieven op tijdregistraties worden op de server bepaald vanuit historie met ingangsdatum.
+
+## Functies
+
+- Project- en klantbeheer, teamtoewijzing, budgetbewaking
+- WCAG-gerichte interface, afgestemd op de Check-appfamilie
+- Append-only tariefhistorie
+	]]></description>
+	<description lang="it"><![CDATA[
+# ProjectCheck
+
+Gestione progetti IT con registrazione ore, controllo budget e prezzi costo lato server.
+Scegli come vengono prezzate le ore (tariffa progetto, anagrafica dipendente o per persona sul progetto);
+le tariffe orarie sulle registrazioni sono risolte sul server dalla cronologia con data di efficacia.
+
+## Funzionalità
+
+- Gestione progetti e clienti, assegnazione team, monitoraggio budget
+- Interfaccia orientata WCAG, allineata alla famiglia di app Check
+- Cronologia tariffe solo in aggiunta
+	]]></description>
+	<description lang="pl"><![CDATA[
+# ProjectCheck
+
+Zarządzanie projektami IT z rejestracją czasu, kontrolą budżetu i wyceną kosztów po stronie serwera.
+Wybierz sposób wyceny godzin (stawka projektu, dane pracownika lub osoba w projekcie);
+stawki godzinowe w wpisach czasu są ustalane na serwerze z historii obowiązywania.
+
+## Funkcje
+
+- Zarządzanie projektami i klientami, przypisanie zespołu, monitoring budżetu
+- Interfejs zgodny z WCAG, spójny z rodziną aplikacji Check
+- Historia stawek tylko do dopisywania
+	]]></description>
+	<description lang="sv"><![CDATA[
+# ProjectCheck
+
+IT-projektledning med tidrapportering, budgetkontroll och serverauktoritativ kostnadsprissättning.
+Välj hur timmar prissätts (projektsats, medarbetarstamdata eller per person i projektet);
+timpriser på tidposter löses på servern från historik med giltighetsdatum.
+
+## Funktioner
+
+- Projekt- och kundhantering, teamtilldelning, budgetövervakning
+- WCAG-orienterat gränssnitt i Check-appfamiljen
+- Endast tilläggbar taxehistorik
+	]]></description>
+	<description lang="nb"><![CDATA[
+# ProjectCheck
+
+IT-prosjektstyring med tidsregistrering, budsjettkontroll og serverstyrt kostnadsprising.
+Velg hvordan timer prises (prosjektsats, ansattstamdata eller per person på prosjektet);
+timesatser på tidsregistreringer beregnes på serveren fra historikk med ikrafttredelsesdato.
+
+## Funksjoner
+
+- Prosjekt- og kundestyring, teamtildeling, budsjettovervåking
+- WCAG-orientert grensesnitt i Check-appfamilien
+- Kun-tilleggs satshistorikk
 	]]></description>
 
 	<version>2.0.69</version>

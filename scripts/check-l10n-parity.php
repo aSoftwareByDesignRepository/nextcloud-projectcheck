@@ -19,7 +19,7 @@ declare(strict_types=1);
  */
 
 $base = __DIR__ . '/../l10n';
-$localeFiles = ['en', 'de', 'fr', 'es', 'da'];
+$localeFiles = ['en', 'de', 'fr', 'es', 'da', 'nl', 'it', 'pl', 'sv', 'nb'];
 $catalogs = [];
 
 foreach ($localeFiles as $lang) {
@@ -62,5 +62,5 @@ if (!$ok) {
 	exit(1);
 }
 
-echo 'l10n parity OK (' . count($enKeys) . " keys, en/de/fr/es/da).\n";
+echo 'l10n parity OK (' . count($enKeys) . " keys, en/de/fr/es/da/nl/it/pl/sv/nb).\n";
 exit(0);
