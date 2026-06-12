@@ -12,11 +12,15 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\AppInfo;
 
 use OC\Security\CSP\ContentSecurityPolicyNonceManager;
+use OCA\ProjectCheck\Repair\EnsureProjectCheckSchema;
+use OCA\ProjectCheck\Repair\UninstallDropTables;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
+use OCP\IConfig;
+use OCP\IDBConnection;
 use OCP\User\Events\UserDeletedEvent;
 use OCP\INavigationManager;
 use OCP\L10N\IFactory;
@@ -377,6 +381,20 @@ class Application extends App implements IBootstrap
 		$context->registerCapability(\OCA\ProjectCheck\Capabilities::class);
 
 		$context->registerDashboardWidget(\OCA\ProjectCheck\Dashboard\ProjectWidget::class);
+
+		$context->registerService(EnsureProjectCheckSchema::class, function ($c): EnsureProjectCheckSchema {
+			return new EnsureProjectCheckSchema(
+				$c->query(IDBConnection::class),
+				$c->query(IConfig::class),
+			);
+		});
+
+		$context->registerService(UninstallDropTables::class, function ($c): UninstallDropTables {
+			return new UninstallDropTables(
+				$c->query(IDBConnection::class),
+				$c->query(IConfig::class),
+			);
+		});
 
 		// Register event listeners
 		$context->registerEventListener(UserDeletedEvent::class, \OCA\ProjectCheck\Listener\UserDeletedListener::class);
