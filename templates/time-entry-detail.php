@@ -39,6 +39,7 @@ $projectStatusClass = $statusClassByProject[$projectStatus] ?? 'status-on-hold';
 $projectStatusLabel = $projectStatus !== ''
 	? $l->t($projectStatus)
 	: $l->t('Unknown');
+$projectLinkable = !empty($_['projectLinkable']);
 $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) $urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $timeEntry->getProjectId()]);
 ?>
 
@@ -348,10 +349,12 @@ include __DIR__ . '/common/page-start.php';
                         <i class="icon-time-custom"></i>
                         <?php p($l->t('View All Time Entries')); ?>
                     </a>
-                    <a href="<?php p($projectLinkHref); ?>" class="button secondary">
-                        <i class="icon-user-custom"></i>
-                        <?php p($l->t('View Project')); ?>
-                    </a>
+                    <?php if ($projectLinkable): ?>
+                        <a href="<?php p($projectLinkHref); ?>" class="button secondary">
+                            <i class="icon-user-custom"></i>
+                            <?php p($l->t('View Project')); ?>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

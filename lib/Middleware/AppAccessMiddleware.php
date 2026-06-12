@@ -89,14 +89,18 @@ class AppAccessMiddleware extends Middleware
 			|| str_contains($contentType, 'application/json')
 			|| $xRequestedWith === 'xmlhttprequest';
 
+		$l = $this->l10nFactory->get(AccessControlService::APP_ID);
+
 		if ($isApi || $wantsJson || $this->request->getMethod() !== 'GET') {
+			// `error` is surfaced verbatim in UI toasts (deletion modal, forms),
+			// so it must be a human-readable, localized sentence. `code` stays
+			// machine-readable for API consumers.
 			return new JSONResponse([
-				'error' => 'app_access_denied',
-				'message' => 'app_access_denied',
+				'error' => $l->t('You do not have access to ProjectCheck.'),
+				'message' => $l->t('You do not have access to ProjectCheck.'),
+				'code' => 'app_access_denied',
 			], Http::STATUS_FORBIDDEN);
 		}
-
-		$l = $this->l10nFactory->get(AccessControlService::APP_ID);
 		$response = new TemplateResponse(
 			AccessControlService::APP_ID,
 			'access-denied',

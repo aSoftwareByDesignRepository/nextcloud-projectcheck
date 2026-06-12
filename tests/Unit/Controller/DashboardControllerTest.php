@@ -162,23 +162,25 @@ class DashboardControllerTest extends TestCase {
 		$this->customerService->method('getCustomerListFiltersForUser')->willReturn([]);
 		$this->customerService->method('getCustomers')->willReturn([]);
 
-		// Non-global viewer must constrain time-entry queries to [alice].
+		// Personal dashboard stats: user scope [alice], no project scope (all own entries).
 		$this->timeEntryService->expects($this->atLeastOnce())
 			->method('getYearlyStatsForAllProjects')
-			->with($accessible, ['alice'])
+			->with(null, ['alice'])
 			->willReturn([]);
 		$this->timeEntryService->method('getDetailedYearlyStats')
-			->with($accessible, ['alice'])
+			->with(null, ['alice'])
 			->willReturn([]);
 		$this->timeEntryService->method('getYearlyStatsByProjectType')
-			->with($accessible, ['alice'])
+			->with(null, ['alice'])
 			->willReturn([]);
 		$this->timeEntryService->method('getDetailedYearlyStatsByProjectType')
-			->with($accessible, ['alice'])
+			->with(null, ['alice'])
 			->willReturn([]);
 		$this->timeEntryService->method('getProductivityAnalysis')
-			->with($accessible, ['alice'])
+			->with(null, ['alice'])
 			->willReturn([]);
+		$this->timeEntryService->method('getTotalHoursForUser')->with('alice')->willReturn(0.0);
+		$this->timeEntryService->method('getTotalCostForUser')->with('alice')->willReturn(0.0);
 		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([]);
 
 		$response = $this->makeController()->getStats();

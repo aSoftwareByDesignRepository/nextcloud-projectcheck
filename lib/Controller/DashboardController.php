@@ -125,16 +125,19 @@ class DashboardController extends Controller
 		// Get comprehensive statistics
 		$comprehensiveStats = $this->getComprehensiveStats($userId, $accessibleProjectIds);
 
+		$personalUserScope = $isGlobalViewer ? null : [$userId];
+		$statsProjectScope = $this->timeEntryStatsProjectScope($accessibleProjectIds, $personalUserScope, $userId);
+
 		// Get detailed yearly statistics grouped by customer and project
-		$detailedYearlyStats = $this->timeEntryService->getDetailedYearlyStats($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
+		$detailedYearlyStats = $this->timeEntryService->getDetailedYearlyStats($statsProjectScope, $personalUserScope);
 
 		// Get project type statistics
-		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
-		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
-		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
+		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType($statsProjectScope, $personalUserScope);
+		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType($statsProjectScope, $personalUserScope);
+		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis($statsProjectScope, $personalUserScope);
 
 		// Get common stats for the sidebar
-		$commonStats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
+		$commonStats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $userId);
 
 		// Merge stats, with comprehensive stats taking precedence
 		$stats = array_merge($commonStats, $comprehensiveStats);
@@ -188,19 +191,22 @@ class DashboardController extends Controller
 		// Get comprehensive statistics
 		$comprehensiveStats = $this->getComprehensiveStats($userId, $accessibleProjectIds);
 
+		$personalUserScope = $isGlobalViewer ? null : [$userId];
+		$statsProjectScope = $this->timeEntryStatsProjectScope($accessibleProjectIds, $personalUserScope, $userId);
+
 		// Get yearly statistics
-		$yearlyStats = $this->timeEntryService->getYearlyStatsForAllProjects($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
+		$yearlyStats = $this->timeEntryService->getYearlyStatsForAllProjects($statsProjectScope, $personalUserScope);
 
 		// Get detailed yearly statistics grouped by customer and project
-		$detailedYearlyStats = $this->timeEntryService->getDetailedYearlyStats($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
+		$detailedYearlyStats = $this->timeEntryService->getDetailedYearlyStats($statsProjectScope, $personalUserScope);
 
 		// Get project type statistics
-		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
-		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
-		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis($accessibleProjectIds, $isGlobalViewer ? null : [$userId]);
+		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType($statsProjectScope, $personalUserScope);
+		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType($statsProjectScope, $personalUserScope);
+		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis($statsProjectScope, $personalUserScope);
 
 		// Get common stats for the sidebar
-		$commonStats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
+		$commonStats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $userId);
 
 		// Merge stats, with comprehensive stats taking precedence
 		$stats = array_merge($commonStats, $comprehensiveStats);
@@ -248,19 +254,21 @@ class DashboardController extends Controller
 
 				$totalBudget += $project->getTotalBudget();
 
-				// Calculate actual consumption from time entries for this project
+				// Org-wide budget rollups only for global viewers.
 				if ($isGlobalViewer) {
 					$projectSpentData = $this->budgetService->getProjectBudgetInfo($project, $userId);
 					$totalConsumption += $projectSpentData['used_budget'];
-				} else {
-					$totalConsumption += $this->timeEntryService->getTotalCostForProjectAndUser((int) $project->getId(), $userId);
 				}
 			}
 
 			$timeEntryScopeUserIds = $isGlobalViewer ? null : [$userId];
-			$yearlyStats = $this->timeEntryService->getYearlyStatsForAllProjects($accessibleProjectIds, $timeEntryScopeUserIds);
+			$statsProjectScope = $this->timeEntryStatsProjectScope($accessibleProjectIds, $timeEntryScopeUserIds, $userId);
+			$yearlyStats = $this->timeEntryService->getYearlyStatsForAllProjects($statsProjectScope, $timeEntryScopeUserIds);
 			foreach ($yearlyStats as $yearData) {
 				$totalHours += (float) ($yearData['total_hours'] ?? 0);
+				if (!$isGlobalViewer) {
+					$totalConsumption += (float) ($yearData['total_cost'] ?? 0);
+				}
 			}
 
 			$timeEntriesWithProjectInfo = $this->getRecentTimeEntries($accessibleProjectIds, $isGlobalViewer ? null : $userId);
@@ -326,14 +334,39 @@ class DashboardController extends Controller
 	private function getRecentTimeEntries(?array $accessibleProjectIds, ?string $entryOwnerUserId = null): array
 	{
 		$filters = ['limit' => 5];
-		if ($accessibleProjectIds !== null) {
-			$filters['project_ids'] = $accessibleProjectIds;
-		}
 		if ($entryOwnerUserId !== null) {
+			// Restricted to the user's own entries — ownership is sufficient
+			// visibility. Scoping by project access here would hide their own
+			// historical entries on projects they have since left.
 			$filters['user_id'] = $entryOwnerUserId;
+		} elseif ($accessibleProjectIds !== null) {
+			$filters['project_ids'] = $accessibleProjectIds;
 		}
 
 		return $this->timeEntryService->getTimeEntriesWithProjectInfo($filters);
+	}
+
+	/**
+	 * Project scope for time-entry aggregates on the dashboard.
+	 *
+	 * When stats are scoped to the requesting user's own entries, project
+	 * membership must not hide their historical entries (same rule as the list).
+	 *
+	 * @param list<int>|null $accessibleProjectIds
+	 * @param list<string>|null $scopedUserIds
+	 * @return list<int>|null
+	 */
+	private function timeEntryStatsProjectScope(?array $accessibleProjectIds, ?array $scopedUserIds, string $dashboardUserId): ?array
+	{
+		if ($accessibleProjectIds === null) {
+			return null;
+		}
+		if ($scopedUserIds !== null
+			&& count($scopedUserIds) === 1
+			&& $scopedUserIds[0] === $dashboardUserId) {
+			return null;
+		}
+		return $accessibleProjectIds;
 	}
 
 	/**

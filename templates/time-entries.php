@@ -230,6 +230,18 @@ include __DIR__ . '/common/page-start.php';
                             </tr>
                         </thead>
                         <tbody>
+                            <?php
+                            // null = viewer may open every project; otherwise a lookup set of
+                            // accessible ids (own historical entries can sit on projects the
+                            // user has left — those render as text, not as a dead link).
+                            $accessibleProjectIdSet = null;
+                            if (isset($_['accessibleProjectIds']) && is_array($_['accessibleProjectIds'])) {
+                                $accessibleProjectIdSet = [];
+                                foreach ($_['accessibleProjectIds'] as $accessibleId) {
+                                    $accessibleProjectIdSet[(int) $accessibleId] = true;
+                                }
+                            }
+                            ?>
                             <!-- No Results Message (Hidden by default) -->
                             <tr id="no-results-row" style="display: none;">
                                 <td colspan="8">
@@ -260,9 +272,17 @@ include __DIR__ . '/common/page-start.php';
                                     data-entry-hours="<?php p(number_format($entryHours, 4, '.', '')); ?>">
                                     <td><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : ''); ?></td>
                                     <td>
-                                        <a href="<?php p(str_replace('PROJECT_ID', $timeEntry->getProjectId(), $_['projectShowUrl'] ?? '/index.php/apps/projectcheck/projects/')); ?>">
-                                            <?php p($entry['projectName'] ?? $l->t('Unknown Project')); ?>
-                                        </a>
+                                        <?php
+                                        $rowProjectLinkable = $accessibleProjectIdSet === null
+                                            || isset($accessibleProjectIdSet[(int) $timeEntry->getProjectId()]);
+                                        ?>
+                                        <?php if ($rowProjectLinkable): ?>
+                                            <a href="<?php p(str_replace('PROJECT_ID', $timeEntry->getProjectId(), $_['projectShowUrl'] ?? '/index.php/apps/projectcheck/projects/')); ?>">
+                                                <?php p($entry['projectName'] ?? $l->t('Unknown Project')); ?>
+                                            </a>
+                                        <?php else: ?>
+                                            <span><?php p($entry['projectName'] ?? $l->t('Unknown Project')); ?></span>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <?php

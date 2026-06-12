@@ -194,7 +194,8 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 		});
 
 		$projectService = $this->createMock(ProjectService::class);
-		$projectService->method('canUserAccessProject')->willReturn(true);
+		// Moving an entry is gated by the composed "may log time there" check.
+		$projectService->method('canUserAddTimeEntryForProject')->with('alice', 9)->willReturn(true);
 
 		$hourlyRateService = $this->createMock(HourlyRateService::class);
 		$hourlyRateService->expects($this->once())

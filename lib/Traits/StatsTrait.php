@@ -76,18 +76,20 @@ trait StatsTrait
                 $projectBudget = $project->getTotalBudget() ?? 0;
                 $totalBudget += $projectBudget;
 
-                // Get hours and consumption if TimeEntryService is available
-                if ($timeEntryService) {
-					if ($forUserId !== null) {
-						$projectHours = $timeEntryService->getTotalHoursForProjectAndUser((int) $project->getId(), $forUserId);
-						$projectConsumption = $timeEntryService->getTotalCostForProjectAndUser((int) $project->getId(), $forUserId);
-					} else {
-						$projectHours = $timeEntryService->getTotalHoursForProject($project->getId());
-						$projectConsumption = $timeEntryService->getTotalCostForProject($project->getId());
-					}
+                // Org-wide per-project rollups only when no personal user scope is set.
+                if ($timeEntryService && $forUserId === null) {
+					$projectHours = $timeEntryService->getTotalHoursForProject($project->getId());
+					$projectConsumption = $timeEntryService->getTotalCostForProject($project->getId());
                     $totalHours += $projectHours;
                     $totalConsumption += $projectConsumption;
                 }
+            }
+
+            // Personal sidebar totals: all own entries, including on projects the user
+            // has since left (ownership is sufficient — same rule as the list).
+            if ($timeEntryService && $forUserId !== null) {
+                $totalHours = $timeEntryService->getTotalHoursForUser($forUserId);
+                $totalConsumption = $timeEntryService->getTotalCostForUser($forUserId);
             }
 
             // Calculate consumption percentage

@@ -14,7 +14,10 @@ namespace OCA\ProjectCheck\Service;
 use OCA\ProjectCheck\Db\TimeEntry;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
 use OCA\ProjectCheck\Db\ProjectMapper;
+use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Exception\RateResolutionException;
+use OCA\ProjectCheck\Exception\TimeEntryNotFoundException;
+use OCA\ProjectCheck\Exception\ValidationException;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\IL10N;
@@ -63,21 +66,21 @@ class TimeEntryService
 	 */
 	public function createTimeEntry($data, $userId)
 	{
-		$project = $this->projectMapper->find($data['project_id']);
+		$pid = (int) ($data['project_id'] ?? 0);
+		$project = $this->projectMapper->find($pid);
 		if (!$project) {
-			throw new \Exception($this->l->t('Project not found'));
+			throw new ValidationException([], $this->l->t('Project not found'));
 		}
 		if (!$project->allowsTimeTracking()) {
-			throw new \Exception($this->l->t('Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.'));
+			throw new ValidationException([], $this->l->t('Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.'));
 		}
-		$pid = (int) $data['project_id'];
 		if (!$this->projectService->canUserAccessProject($userId, $pid)) {
-			throw new \Exception($this->l->t('Access denied'));
+			throw new PermissionDeniedException('create', 'time entry', $this->l->t('Access denied'));
 		}
 
 		$parsedDate = $this->parseTimeEntryDateString($data['date'] ?? null);
 		if ($parsedDate === null) {
-			throw new \Exception($this->l->t('Date is required'));
+			throw new ValidationException([], $this->l->t('Date is required'));
 		}
 
 		$resolvedRate = $this->resolveAndAssertClientRate(
@@ -88,7 +91,7 @@ class TimeEntryService
 		);
 
 		$timeEntry = new TimeEntry();
-		$timeEntry->setProjectId((int)$data['project_id']);
+		$timeEntry->setProjectId($pid);
 		$timeEntry->setUserId($userId);
 		$timeEntry->setDate($parsedDate);
 		$timeEntry->setHours((float)$data['hours']);
@@ -108,8 +111,13 @@ class TimeEntryService
 	 */
 	public function getTimeEntry($id)
 	{
+		// Defensive cast: route parameters may arrive as numeric strings and the
+		// mapper signature is strictly typed (strict_types=1 at this call site).
+		if (!is_numeric($id)) {
+			return null;
+		}
 		try {
-			return $this->timeEntryMapper->find($id);
+			return $this->timeEntryMapper->find((int) $id);
 		} catch (DoesNotExistException | MultipleObjectsReturnedException $e) {
 			return null;
 		}
@@ -184,22 +192,45 @@ class TimeEntryService
 	/**
 	 * Update a time entry
 	 *
+	 * Permission model (kept consistent with {@see deleteTimeEntry}):
+	 *  - Only the entry owner may update it.
+	 *  - Editing an entry *in place* (project unchanged) only requires ownership.
+	 *    Project status does not gate corrections to historical entries, so owners
+	 *    can still fix hours/description after a project was Completed/Archived or
+	 *    after their team membership ended — the same situations in which they may
+	 *    already delete the entry outright.
+	 *  - *Moving* an entry to a different project is treated like logging new time
+	 *    there: the target must be Active/On Hold and the user must be allowed to
+	 *    log time on it ({@see ProjectService::canUserAddTimeEntryForProject}).
+	 *
+	 * Rate model ("frozen at save"): the stored hourly rate is kept unless a
+	 * rate-relevant field (project or work date) changes, in which case the rate is
+	 * re-resolved server-side. A client-supplied rate is never trusted — it is only
+	 * verified against the authoritative value to detect tampering.
+	 *
 	 * @param int $id Time entry ID
 	 * @param array $data Update data
 	 * @param string $userId User ID
 	 * @return TimeEntry
+	 * @throws TimeEntryNotFoundException
+	 * @throws PermissionDeniedException
 	 * @throws \Exception
 	 */
 	public function updateTimeEntry($id, $data, $userId)
 	{
 		$timeEntry = $this->getTimeEntry($id);
 		if (!$timeEntry) {
-			throw new \Exception($this->l->t('Time entry not found'));
+			throw new TimeEntryNotFoundException((int) $id, $this->l->t('Time entry not found'));
 		}
 
 		if ($timeEntry->getUserId() !== $userId) {
-			throw new \Exception($this->l->t('Access denied'));
+			throw new PermissionDeniedException('update', 'time entry', $this->l->t('Access denied'));
 		}
+
+		$originalProjectId = (int) $timeEntry->getProjectId();
+		$originalDateKey = $timeEntry->getDate() instanceof \DateTimeInterface
+			? $timeEntry->getDate()->format('Y-m-d')
+			: null;
 
 		if (isset($data['project_id'])) {
 			$timeEntry->setProjectId((int)$data['project_id']);
@@ -221,30 +252,54 @@ class TimeEntryService
 			$timeEntry->setDescription((string)$data['description']);
 		}
 
-		$targetProject = $this->projectMapper->find($timeEntry->getProjectId());
+		$targetProjectId = (int) $timeEntry->getProjectId();
+		$projectChanged = $targetProjectId !== $originalProjectId;
+
+		$targetProject = $this->projectMapper->find($targetProjectId);
 		if (!$targetProject) {
-			throw new \Exception($this->l->t('Project not found'));
+			throw new ValidationException([], $this->l->t('Project not found'));
 		}
-		if (!$targetProject->allowsTimeTracking()) {
-			throw new \Exception($this->l->t('Time entries cannot be moved to a project that is not Active or On Hold.'));
-		}
-		if (!$this->projectService->canUserAccessProject($userId, (int) $timeEntry->getProjectId())) {
-			throw new \Exception($this->l->t('Access denied'));
+
+		if ($projectChanged) {
+			if (!$targetProject->allowsTimeTracking()) {
+				throw new ValidationException([], $this->l->t('Time entries cannot be moved to a project that is not Active or On Hold.'));
+			}
+			if (!$this->projectService->canUserAddTimeEntryForProject($userId, $targetProjectId)) {
+				throw new PermissionDeniedException('move', 'time entry', $this->l->t('Access denied'));
+			}
 		}
 
 		$entryDate = $timeEntry->getDate();
 		if (!$entryDate instanceof \DateTimeInterface) {
-			throw new \Exception($this->l->t('Date is required'));
+			throw new ValidationException([], $this->l->t('Date is required'));
 		}
+		$dateChanged = $originalDateKey !== $entryDate->format('Y-m-d');
 
-		$clientRate = $data['hourly_rate'] ?? $timeEntry->getHourlyRate();
-		$resolvedRate = $this->resolveAndAssertClientRate(
-			(int) $timeEntry->getProjectId(),
-			$userId,
-			$entryDate,
-			$clientRate
-		);
-		$timeEntry->setHourlyRate($resolvedRate);
+		$clientRate = $data['hourly_rate'] ?? null;
+		if ($projectChanged || $dateChanged) {
+			// Rate depends on project and work date — re-resolve authoritatively.
+			$resolvedRate = $this->resolveAndAssertClientRate(
+				$targetProjectId,
+				$userId,
+				$entryDate,
+				$clientRate
+			);
+			$timeEntry->setHourlyRate($resolvedRate);
+		} elseif ($clientRate !== null && $clientRate !== '') {
+			// Nothing rate-relevant changed: keep the frozen stored rate, but still
+			// reject a tampered client rate that contradicts it.
+			if (!is_numeric($clientRate)) {
+				throw new ValidationException([], $this->l->t('Invalid hourly rate'));
+			}
+			try {
+				$this->hourlyRateService->assertClientRateMatchesResolved(
+					(float) $clientRate,
+					(float) $timeEntry->getHourlyRate()
+				);
+			} catch (RateResolutionException $e) {
+				throw new ValidationException([], $e->getMessage());
+			}
+		}
 
 		$timeEntry->setUpdatedAt(new \DateTime());
 
@@ -252,7 +307,7 @@ class TimeEntryService
 	}
 
 	/**
-	 * @throws \Exception
+	 * @throws ValidationException
 	 */
 	private function resolveAndAssertClientRate(
 		int $projectId,
@@ -263,17 +318,17 @@ class TimeEntryService
 		try {
 			$resolved = $this->hourlyRateService->resolveForTimeEntry($projectId, $userId, $entryDate);
 		} catch (RateResolutionException $e) {
-			throw new \Exception($e->getMessage());
+			throw new ValidationException([], $e->getMessage());
 		}
 
 		if ($clientRate !== null && $clientRate !== '') {
 			if (!is_numeric($clientRate)) {
-				throw new \Exception($this->l->t('Invalid hourly rate'));
+				throw new ValidationException([], $this->l->t('Invalid hourly rate'));
 			}
 			try {
 				$this->hourlyRateService->assertClientRateMatchesResolved((float) $clientRate, $resolved);
 			} catch (RateResolutionException $e) {
-				throw new \Exception($e->getMessage());
+				throw new ValidationException([], $e->getMessage());
 			}
 		}
 
@@ -281,21 +336,22 @@ class TimeEntryService
 	}
 
 	/**
-	 * Delete a time entry
+	 * Delete a time entry (owner only)
 	 *
 	 * @param int $id Time entry ID
 	 * @param string $userId User ID
-	 * @throws \Exception
+	 * @throws TimeEntryNotFoundException
+	 * @throws PermissionDeniedException
 	 */
 	public function deleteTimeEntry($id, $userId)
 	{
 		$timeEntry = $this->getTimeEntry($id);
 		if (!$timeEntry) {
-			throw new \Exception($this->l->t('Time entry not found'));
+			throw new TimeEntryNotFoundException((int) $id, $this->l->t('Time entry not found'));
 		}
 
 		if ($timeEntry->getUserId() !== $userId) {
-			throw new \Exception($this->l->t('Access denied'));
+			throw new PermissionDeniedException('delete', 'time entry', $this->l->t('Access denied'));
 		}
 
 		$this->timeEntryMapper->delete($timeEntry);
@@ -353,6 +409,16 @@ class TimeEntryService
 	}
 
 	/**
+	 * Distinct ids of projects on which the user owns at least one time entry.
+	 *
+	 * @return list<int>
+	 */
+	public function getProjectIdsWithEntriesForUser(string $userId): array
+	{
+		return $this->timeEntryMapper->findDistinctProjectIdsByUser($userId);
+	}
+
+	/**
 	 * Get total hours for a project
 	 *
 	 * @param int $projectId Project ID
@@ -395,6 +461,14 @@ class TimeEntryService
 	public function getTotalHoursForUser($userId)
 	{
 		return $this->timeEntryMapper->getTotalHoursForUser($userId);
+	}
+
+	/**
+	 * Total billed cost for all of a user's time entries (every project).
+	 */
+	public function getTotalCostForUser(string $userId): float
+	{
+		return $this->timeEntryMapper->getTotalCostForUser($userId);
 	}
 
 	/**

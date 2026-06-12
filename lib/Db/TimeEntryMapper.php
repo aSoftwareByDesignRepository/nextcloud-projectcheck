@@ -156,6 +156,31 @@ class TimeEntryMapper extends QBMapper
 	}
 
 	/**
+	 * Distinct ids of projects on which the user owns at least one time entry.
+	 *
+	 * Used so a user's own historical entries stay reachable (list filter,
+	 * visibility) even after their project membership has ended.
+	 *
+	 * @return list<int>
+	 */
+	public function findDistinctProjectIdsByUser(string $userId): array
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->selectDistinct('project_id')
+			->from($this->getTableName())
+			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)));
+
+		$result = $qb->executeQuery();
+		$ids = [];
+		while ($row = $result->fetch()) {
+			$ids[] = (int) $row['project_id'];
+		}
+		$result->closeCursor();
+
+		return $ids;
+	}
+
+	/**
 	 * Find time entries by date range
 	 *
 	 * @param string $dateFrom Start date (Y-m-d)
@@ -363,6 +388,23 @@ class TimeEntryMapper extends QBMapper
 		$result->closeCursor();
 
 		return (float) $total;
+	}
+
+	/**
+	 * Total billed cost for all of a user's time entries (every project).
+	 */
+	public function getTotalCostForUser(string $userId): float
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->select($qb->createFunction('SUM(hours * hourly_rate)'))
+			->from($this->getTableName())
+			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)));
+
+		$result = $qb->executeQuery();
+		$total = $result->fetchColumn();
+		$result->closeCursor();
+
+		return (float) ($total ?? 0);
 	}
 
 	/**

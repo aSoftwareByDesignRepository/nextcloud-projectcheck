@@ -7,6 +7,8 @@ namespace OCA\ProjectCheck\Tests\Unit\Controller;
 use OCA\ProjectCheck\Controller\TimeEntryController;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\TimeEntry;
+use OCA\ProjectCheck\Exception\PermissionDeniedException;
+use OCA\ProjectCheck\Exception\TimeEntryNotFoundException;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\CSPService;
@@ -86,6 +88,8 @@ class TimeEntryControllerTest extends TestCase {
 		$this->timeEntryService->method('getYearlyStatsByProjectType')->willReturn([]);
 		$this->timeEntryService->method('getDetailedYearlyStatsByProjectType')->willReturn([]);
 		$this->timeEntryService->method('getProductivityAnalysis')->willReturn([]);
+		$this->timeEntryService->method('getTotalHoursForUser')->willReturn(0.0);
+		$this->timeEntryService->method('getTotalCostForUser')->willReturn(0.0);
 
 		$this->controller = new TimeEntryController(
 			'projectcheck',
@@ -197,7 +201,14 @@ class TimeEntryControllerTest extends TestCase {
 		$this->assertSame(1, $summary['pageEntryCount']);
 	}
 
-	public function testIndexScopesQueriesToAccessibleProjectsForNonGlobalUser(): void {
+	/**
+	 * A non-global user's list is restricted to their *own* entries
+	 * (user_id = self). Ownership is sufficient visibility, so the
+	 * project-access scope must NOT additionally be applied — it would
+	 * only hide the user's own historical entries on projects they have
+	 * since left, making them unreachable for editing/deleting.
+	 */
+	public function testIndexDoesNotHideOwnEntriesBehindProjectScopeForNonGlobalUser(): void {
 		$this->request->method('getParam')->willReturnCallback(
 			static function (string $name, $default = null) {
 				return match ($name) {
@@ -212,20 +223,22 @@ class TimeEntryControllerTest extends TestCase {
 		$this->projectService->method('getAccessibleProjectIdListForUser')->with('member-user')->willReturn($accessibleProjectIds);
 		$this->projectService->method('canUserViewAllTimeEntries')->with('member-user')->willReturn(false);
 		$this->projectService->method('getProjectsForUserTimeEntry')->willReturn([]);
+		$this->timeEntryService->method('getProjectIdsWithEntriesForUser')->willReturn([]);
+
+		$ownEntriesOnly = static function (array $filters): bool {
+			return !array_key_exists('project_ids', $filters)
+				&& ($filters['user_id'] ?? null) === 'member-user';
+		};
 
 		$this->timeEntryService->expects($this->once())
 			->method('countTimeEntries')
-			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
-				return ($filters['project_ids'] ?? null) === $accessibleProjectIds
-					&& ($filters['user_id'] ?? null) === 'member-user';
-			}))
+			->with($this->callback($ownEntriesOnly))
 			->willReturn(0);
 
 		$this->timeEntryService->expects($this->once())
 			->method('sumTimeEntriesHours')
-			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
-				return ($filters['project_ids'] ?? null) === $accessibleProjectIds
-					&& ($filters['user_id'] ?? null) === 'member-user'
+			->with($this->callback(static function (array $filters) use ($ownEntriesOnly): bool {
+				return $ownEntriesOnly($filters)
 					&& !array_key_exists('limit', $filters)
 					&& !array_key_exists('offset', $filters);
 			}))
@@ -233,12 +246,11 @@ class TimeEntryControllerTest extends TestCase {
 
 		$this->timeEntryService->expects($this->once())
 			->method('getTimeEntriesWithProjectInfo')
-			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
-				return ($filters['project_ids'] ?? null) === $accessibleProjectIds
-					&& ($filters['user_id'] ?? null) === 'member-user';
-			}))
+			->with($this->callback($ownEntriesOnly))
 			->willReturn([]);
 
+		// The *user filter dropdown* stays scoped to accessible projects —
+		// it lists other people and must not leak inaccessible projects.
 		$this->timeEntryService->expects($this->once())
 			->method('getUsersWithTimeEntries')
 			->with($accessibleProjectIds)
@@ -246,9 +258,56 @@ class TimeEntryControllerTest extends TestCase {
 
 		$response = $this->controller->index();
 		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame($accessibleProjectIds, $response->getParams()['accessibleProjectIds']);
 	}
 
-	public function testExportScopesQueriesToAccessibleProjectsForNonGlobalUser(): void {
+	/**
+	 * The filter dropdown must include projects the user owns entries on but
+	 * can no longer access (membership ended) — those entries are listed, so
+	 * they must be filterable.
+	 */
+	public function testIndexFilterDropdownIncludesProjectsFromOwnEntries(): void {
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $name, $default = null) {
+				return match ($name) {
+					'project_id', 'date_from', 'date_to', 'search', 'user_id', 'project_type' => '',
+					'page' => 1,
+					default => $default,
+				};
+			}
+		);
+
+		$accessible = new Project();
+		$accessible->setId(2);
+		$accessible->setName('Current project');
+
+		$left = new Project();
+		$left->setId(9);
+		$left->setName('Left project');
+
+		$this->projectService->method('getAccessibleProjectIdListForUser')->with('member-user')->willReturn([2]);
+		$this->projectService->method('canUserViewAllTimeEntries')->with('member-user')->willReturn(false);
+		$this->projectService->method('getProjectsForUserTimeEntry')->willReturn([$accessible]);
+		$this->projectService->method('getProject')->with(9)->willReturn($left);
+		$this->timeEntryService->method('getProjectIdsWithEntriesForUser')->with('member-user')->willReturn([2, 9]);
+
+		$this->timeEntryService->method('countTimeEntries')->willReturn(0);
+		$this->timeEntryService->method('sumTimeEntriesHours')->willReturn(0.0);
+		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([]);
+		$this->timeEntryService->method('getUsersWithTimeEntries')->willReturn([]);
+
+		$response = $this->controller->index();
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+
+		$dropdownIds = array_map(
+			static fn ($p) => (int) $p->getId(),
+			$response->getParams()['projects']
+		);
+		$this->assertContains(2, $dropdownIds);
+		$this->assertContains(9, $dropdownIds, 'Project of own historical entries must be filterable');
+	}
+
+	public function testExportDoesNotHideOwnEntriesBehindProjectScopeForNonGlobalUser(): void {
 		$this->request->method('getParam')->willReturnCallback(
 			static function (string $name, $default = null) {
 				return match ($name) {
@@ -264,8 +323,8 @@ class TimeEntryControllerTest extends TestCase {
 
 		$this->timeEntryService->expects($this->once())
 			->method('getTimeEntriesWithProjectInfo')
-			->with($this->callback(static function (array $filters) use ($accessibleProjectIds): bool {
-				return ($filters['project_ids'] ?? null) === $accessibleProjectIds
+			->with($this->callback(static function (array $filters): bool {
+				return !array_key_exists('project_ids', $filters)
 					&& ($filters['user_id'] ?? null) === 'member-user';
 			}))
 			->willReturn([]);
@@ -276,6 +335,39 @@ class TimeEntryControllerTest extends TestCase {
 		$data = $response->getData();
 		$this->assertIsArray($data);
 		$this->assertArrayHasKey('csv_data', $data);
+	}
+
+	/**
+	 * Global viewers can filter by another user; project scope must then apply
+	 * (here: null scope = all projects, so no project_ids filter either, but the
+	 * foreign user filter must be honored as requested).
+	 */
+	public function testExportKeepsProjectScopeWhenFilteringForeignUser(): void {
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $name, $default = null) {
+				return match ($name) {
+					'user_id' => 'someone-else',
+					'project_id', 'date_from', 'date_to', 'search', 'project_type' => '',
+					default => $default,
+				};
+			}
+		);
+
+		$this->projectService->method('getAccessibleProjectIdListForUser')->with('member-user')->willReturn([5]);
+		$this->projectService->method('canUserViewAllTimeEntries')->with('member-user')->willReturn(false);
+
+		// Non-global user asking for someone else's entries is forced back to
+		// their own — and then the project scope is again unnecessary.
+		$this->timeEntryService->expects($this->once())
+			->method('getTimeEntriesWithProjectInfo')
+			->with($this->callback(static function (array $filters): bool {
+				return ($filters['user_id'] ?? null) === 'member-user'
+					&& !array_key_exists('project_ids', $filters);
+			}))
+			->willReturn([]);
+
+		$response = $this->controller->export();
+		$this->assertInstanceOf(DataResponse::class, $response);
 	}
 
 	public function testExportUsesConfiguredCurrencyInCsvHeader(): void {
@@ -297,6 +389,107 @@ class TimeEntryControllerTest extends TestCase {
 		$data = $response->getData();
 		$this->assertIsArray($data);
 		$this->assertStringContainsString('"Hourly Rate (USD)";"Total Amount (USD)"', (string)($data['csv_data'] ?? ''));
+	}
+
+	/**
+	 * Regression guard for the UI delete 500: route handlers receiving {id} must
+	 * declare a native int parameter so the AppFramework dispatcher casts the
+	 * (string) route segment before the call. An untyped parameter put a string
+	 * into the strictly-typed mapper and produced a TypeError on every delete.
+	 */
+	public function testRouteIdParametersAreNativelyTypedInt(): void {
+		foreach (['show', 'edit', 'update', 'updatePost', 'delete', 'deletePost', 'getDeletionImpact'] as $method) {
+			$reflection = new \ReflectionMethod(TimeEntryController::class, $method);
+			$param = $reflection->getParameters()[0];
+			$type = $param->getType();
+			$this->assertInstanceOf(\ReflectionNamedType::class, $type, "$method(\$id) must have a native type");
+			$this->assertSame('int', $type->getName(), "$method(\$id) must be natively typed int");
+		}
+		$projectParam = (new \ReflectionMethod(TimeEntryController::class, 'getForProject'))->getParameters()[0];
+		$projectType = $projectParam->getType();
+		$this->assertInstanceOf(\ReflectionNamedType::class, $projectType);
+		$this->assertSame('int', $projectType->getName());
+	}
+
+	public function testDeletePostReturnsSuccessWithLocalizedMessage(): void {
+		$entry = new TimeEntry();
+		$entry->setId(60);
+		$entry->setProjectId(4);
+		$entry->setUserId('member-user');
+		$entry->setDate(new \DateTime('2026-06-10'));
+		$entry->setHours(2.0);
+		$entry->setHourlyRate(123.0);
+		$entry->setCreatedAt(new \DateTime('2026-06-10 09:00:00'));
+		$entry->setUpdatedAt(new \DateTime('2026-06-10 09:00:00'));
+
+		$this->timeEntryService->method('getTimeEntry')->with(60)->willReturn($entry);
+		$this->timeEntryService->expects($this->once())
+			->method('deleteTimeEntry')
+			->with(60, 'member-user');
+
+		$response = $this->controller->deletePost(60);
+
+		$this->assertSame(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+		$this->assertSame('Time entry was deleted successfully!', $data['message']);
+	}
+
+	public function testDeleteMapsPermissionDeniedTo403(): void {
+		$this->timeEntryService->method('getTimeEntry')->willReturn(null);
+		$this->timeEntryService->method('deleteTimeEntry')
+			->willThrowException(new PermissionDeniedException('delete', 'time entry', 'Access denied'));
+
+		$response = $this->controller->deletePost(61);
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertFalse($response->getData()['success']);
+	}
+
+	public function testDeleteMapsNotFoundTo404(): void {
+		$this->timeEntryService->method('getTimeEntry')->willReturn(null);
+		$this->timeEntryService->method('deleteTimeEntry')
+			->willThrowException(new TimeEntryNotFoundException(62, 'Time entry not found'));
+
+		$response = $this->controller->deletePost(62);
+
+		$this->assertSame(404, $response->getStatus());
+		$this->assertFalse($response->getData()['success']);
+	}
+
+	public function testEditAlwaysIncludesTheEntrysOwnProjectInTheDropdown(): void {
+		$entry = new TimeEntry();
+		$entry->setId(77);
+		$entry->setProjectId(12);
+		$entry->setUserId('member-user');
+		$entry->setDate(new \DateTime('2026-02-06'));
+		$entry->setHours(2.0);
+		$entry->setHourlyRate(121.14);
+		$entry->setCreatedAt(new \DateTime('2026-02-06 09:00:00'));
+		$entry->setUpdatedAt(new \DateTime('2026-02-06 09:00:00'));
+
+		$archivedProject = new Project();
+		$archivedProject->setId(12);
+		$archivedProject->setName('DWE');
+		$archivedProject->setStatus('Archived');
+
+		$otherProject = new Project();
+		$otherProject->setId(4);
+		$otherProject->setName('Lorem ipsum');
+		$otherProject->setStatus('Active');
+
+		$this->timeEntryService->method('getTimeEntry')->with(77)->willReturn($entry);
+		// Picker no longer returns the archived project (e.g. membership ended).
+		$this->projectService->method('getProjectsForUserTimeEntry')->willReturn([$otherProject]);
+		$this->projectService->method('getProject')->with(12)->willReturn($archivedProject);
+
+		$response = $this->controller->edit(77);
+
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$params = $response->getParams();
+		$projectIds = array_map(static fn ($p) => (int) $p->getId(), $params['projects']);
+		$this->assertContains(12, $projectIds, 'The entry\'s own project must stay selectable');
+		$this->assertContains(4, $projectIds);
 	}
 
 	public function testExportNeutralizesCsvFormulaInjectionInTextFields(): void {
@@ -341,6 +534,31 @@ class TimeEntryControllerTest extends TestCase {
 		$this->assertStringContainsString("\"'@calc\"", $csv);
 		$this->assertStringContainsString("\"'=HYPERLINK(\"\"http://evil.local\"\",\"\"click\"\")\"", $csv);
 		$this->assertStringContainsString("\"'-user\"", $csv);
+	}
+
+	public function testShowOmitsProjectLinkWhenViewerCannotAccessProject(): void {
+		$entry = new TimeEntry();
+		$entry->setId(88);
+		$entry->setProjectId(12);
+		$entry->setUserId('member-user');
+		$entry->setDate(new \DateTime('2026-03-01'));
+		$entry->setHours(1.0);
+		$entry->setHourlyRate(100.0);
+		$entry->setCreatedAt(new \DateTime('2026-03-01 10:00:00'));
+		$entry->setUpdatedAt(new \DateTime('2026-03-01 10:00:00'));
+
+		$project = new Project();
+		$project->setId(12);
+		$project->setName('Former team project');
+
+		$this->timeEntryService->method('getTimeEntry')->with(88)->willReturn($entry);
+		$this->projectService->method('getProject')->with(12)->willReturn($project);
+		$this->projectService->method('canUserAccessProject')->with('member-user', 12)->willReturn(false);
+
+		$response = $this->controller->show(88);
+
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertFalse($response->getParams()['projectLinkable']);
 	}
 }
 

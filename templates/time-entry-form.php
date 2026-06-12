@@ -90,12 +90,18 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 									$flags = $membershipFlags[$pid] ?? ['is_team_member' => false, 'admin_override' => false];
 									$isMember = !empty($flags['is_team_member']);
 									$adminOverride = !empty($flags['admin_override']);
+									$isCurrentProject = $isEdit && isset($timeEntry) && (int) $timeEntry->getProjectId() === $pid;
+									// Closed projects appear in edit mode only so the entry's own
+									// project stays selectable; they are not valid move targets
+									// (the server rejects such moves too).
+									$isBlockedMoveTarget = $isEdit && !$isCurrentProject && !$project->allowsTimeTracking();
 								?>
 									<option value="<?php p($pid); ?>"
 										data-cost-rate-mode="<?php p($project->getCostRateMode()); ?>"
 										data-is-team-member="<?php p($isMember ? '1' : '0'); ?>"
 										data-admin-override="<?php p($adminOverride ? '1' : '0'); ?>"
-										<?php if ($isEdit && $timeEntry->getProjectId() == $pid) echo 'selected'; ?>>
+										<?php if ($isCurrentProject) echo 'selected'; ?>
+										<?php if ($isBlockedMoveTarget) echo 'disabled'; ?>>
 										<?php p($project->getName()); ?> (<?php p($project->getStatus()); ?>)
 									</option>
 								<?php endforeach; ?>

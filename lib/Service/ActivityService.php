@@ -15,24 +15,35 @@ use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\Customer;
 use OCA\ProjectCheck\Db\TimeEntry;
 use OCA\ProjectCheck\Db\ProjectMember;
+use OCP\Activity\IEvent;
 use OCP\Activity\IManager;
+use Psr\Log\LoggerInterface;
 
 /**
- * Activity service for logging deletion events
+ * Activity service for logging deletion events.
+ *
+ * Publishing is strictly best-effort: the activity stream must never break the
+ * user action that triggered it (a delete that succeeds in the database has to
+ * be reported as a success even if the stream rejects the event).
  */
 class ActivityService
 {
     /** @var IManager */
     private $activityManager;
 
+    /** @var LoggerInterface */
+    private $logger;
+
     /**
      * ActivityService constructor
      *
      * @param IManager $activityManager
+     * @param LoggerInterface $logger
      */
-    public function __construct(IManager $activityManager)
+    public function __construct(IManager $activityManager, LoggerInterface $logger)
     {
         $this->activityManager = $activityManager;
+        $this->logger = $logger;
     }
 
     /**
@@ -48,6 +59,7 @@ class ActivityService
         $event->setApp('projectcheck')
             ->setType('projectcheck')
             ->setAuthor($userId)
+            ->setAffectedUser($userId)
             ->setObject('project', $project->getId(), $project->getName())
             ->setSubject('project_deleted', [
                 'project_name' => $project->getName(),
@@ -55,7 +67,7 @@ class ActivityService
                 'project_members' => $impact['project_members'] ?? 0
             ]);
 
-        $this->activityManager->publish($event);
+        $this->publishSafely($event, 'project_deleted');
     }
 
     /**
@@ -78,6 +90,7 @@ class ActivityService
         $event->setApp('projectcheck')
             ->setType('projectcheck')
             ->setAuthor($userId)
+            ->setAffectedUser($userId)
             ->setObject('project', $project->getId(), $project->getName())
             ->setSubject('project_status_changed', [
                 'actor' => $userId,
@@ -93,7 +106,7 @@ class ActivityService
             ]);
         }
 
-        $this->activityManager->publish($event);
+        $this->publishSafely($event, 'project_status_changed');
     }
 
     /**
@@ -109,6 +122,7 @@ class ActivityService
         $event->setApp('projectcheck')
             ->setType('projectcheck')
             ->setAuthor($userId)
+            ->setAffectedUser($userId)
             ->setObject('customer', $customer->getId(), $customer->getName())
             ->setSubject('customer_deleted', [
                 'customer_name' => $customer->getName(),
@@ -117,7 +131,7 @@ class ActivityService
                 'project_members' => $impact['project_members'] ?? 0
             ]);
 
-        $this->activityManager->publish($event);
+        $this->publishSafely($event, 'customer_deleted');
     }
 
     /**
@@ -132,6 +146,7 @@ class ActivityService
         $event->setApp('projectcheck')
             ->setType('projectcheck')
             ->setAuthor($userId)
+            ->setAffectedUser($userId)
             ->setObject('time_entry', $timeEntry->getId(), $timeEntry->getDescription() ?: 'Time entry')
             ->setSubject('time_entry_deleted', [
                 'project_id' => $timeEntry->getProjectId(),
@@ -139,7 +154,7 @@ class ActivityService
                 'date' => $timeEntry->getFormattedDate()
             ]);
 
-        $this->activityManager->publish($event);
+        $this->publishSafely($event, 'time_entry_deleted');
     }
 
     /**
@@ -154,6 +169,7 @@ class ActivityService
         $event->setApp('projectcheck')
             ->setType('projectcheck')
             ->setAuthor($userId)
+            ->setAffectedUser($member->getUserId() ?: $userId)
             ->setObject('project_member', $member->getId(), $member->getUserId())
             ->setSubject('member_removed', [
                 'member_user_id' => $member->getUserId(),
@@ -161,6 +177,21 @@ class ActivityService
                 'role' => $member->getRole()
             ]);
 
-        $this->activityManager->publish($event);
+        $this->publishSafely($event, 'member_removed');
+    }
+
+    /**
+     * Publish without ever propagating stream errors to the caller.
+     */
+    private function publishSafely(IEvent $event, string $context): void
+    {
+        try {
+            $this->activityManager->publish($event);
+        } catch (\Throwable $e) {
+            $this->logger->warning('Failed to publish projectcheck activity event', [
+                'context' => $context,
+                'exception' => $e,
+            ]);
+        }
     }
 }

@@ -25,6 +25,9 @@ use OCP\IUserSession;
 use OCP\IURLGenerator;
 use OCP\IConfig;
 use OCA\ProjectCheck\Db\TimeEntry;
+use OCA\ProjectCheck\Exception\PermissionDeniedException;
+use OCA\ProjectCheck\Exception\TimeEntryNotFoundException;
+use OCA\ProjectCheck\Exception\ValidationException;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Util\Money;
 use OCA\ProjectCheck\Service\ProjectService;
@@ -181,7 +184,12 @@ class TimeEntryController extends Controller
 			$filters['user_id'] = $userId;
 		}
 		if ($projectType) $filters['project_type'] = $projectType;
-		if ($accessibleProjectIds !== null) {
+		// Project-access scoping protects *other people's* entries. When the result
+		// set is already restricted to the requesting user's own entries, ownership
+		// is sufficient visibility: applying the scope here would only hide the
+		// user's own historical entries on projects they have since left — making
+		// them unreachable for editing/deleting even though both are permitted.
+		if ($accessibleProjectIds !== null && ($filters['user_id'] ?? '') !== $userId) {
 			$filters['project_ids'] = $accessibleProjectIds;
 		}
 
@@ -219,6 +227,25 @@ class TimeEntryController extends Controller
 
 		// Get all projects for filter dropdown (incl. archived for viewing historical entries)
 		$userProjects = $this->projectService->getProjectsForUserTimeEntry($user->getUID(), ['status' => ['Active', 'On Hold', 'Completed', 'Archived']]);
+
+		// The dropdown must also offer projects the user can no longer access but
+		// still owns entries on (e.g. their team membership ended) — those entries
+		// are listed, so they must be filterable too.
+		$listedProjectIds = [];
+		foreach ($userProjects as $project) {
+			$listedProjectIds[(int) $project->getId()] = true;
+		}
+		foreach ($this->timeEntryService->getProjectIdsWithEntriesForUser($userId) as $ownEntryProjectId) {
+			if (isset($listedProjectIds[$ownEntryProjectId])) {
+				continue;
+			}
+			$ownEntryProject = $this->projectService->getProject($ownEntryProjectId);
+			if ($ownEntryProject !== null) {
+				$userProjects[] = $ownEntryProject;
+				$listedProjectIds[$ownEntryProjectId] = true;
+			}
+		}
+
 		$userProjects = $this->sortProjectsByName($userProjects);
 
 		// Get all users who have time entries
@@ -239,6 +266,10 @@ class TimeEntryController extends Controller
 			'users' => $users,
 			'filters' => $formFilters,
 			'userId' => $userId,
+			// null = all projects accessible; otherwise list of accessible ids.
+			// Rows on inaccessible projects render the project name as text
+			// instead of a link that would lead to an "Access denied" page.
+			'accessibleProjectIds' => $accessibleProjectIds,
 			'canViewAllEntries' => $canViewAllEntries,
 			'stats' => $stats,
 			'projectTypeStats' => $projectTypeStats,
@@ -412,14 +443,21 @@ class TimeEntryController extends Controller
 				'timeEntry' => $timeEntry->getSummary(),
 				'message' => $this->l->t('Time entry created successfully')
 			]);
+		} catch (PermissionDeniedException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $this->l->t('Access denied')
+			], 403);
+		} catch (ValidationException $e) {
+			// Business-rule rejection with an intentional, localized message.
+			$this->logger->info('Time entry creation rejected', ['exception' => $e]);
+			$message = trim($e->getMessage());
+			return new JSONResponse([
+				'success' => false,
+				'error' => $message !== '' ? $message : $this->l->t('Could not create time entry. Please check your input.')
+			], 400);
 		} catch (\Throwable $e) {
 			$this->logger->error('Time entry creation failed', ['exception' => $e]);
-			if ($e->getMessage() === 'Access denied') {
-				return new JSONResponse([
-					'success' => false,
-					'error' => $this->l->t('Access denied')
-				], 403);
-			}
 			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
@@ -436,7 +474,7 @@ class TimeEntryController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function show($id)
+	public function show(int $id)
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
@@ -476,6 +514,7 @@ class TimeEntryController extends Controller
 			'project' => $project,
 			'projectName' => $projectName,
 			'projectShowUrl' => $projectShowUrl,
+			'projectLinkable' => $this->projectService->canUserAccessProject($uid, (int) $timeEntry->getProjectId()),
 			'pricingRateSourceLabel' => $pricingRateSourceLabel,
 			'stats' => $stats,
 			'urlGenerator' => $this->urlGenerator,
@@ -493,7 +532,7 @@ class TimeEntryController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function edit($id)
+	public function edit(int $id)
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
@@ -522,6 +561,26 @@ class TimeEntryController extends Controller
 		$userId = $user->getUID();
 		// Get all projects for time entry selection (incl. archived; moving to a closed project is blocked in the service)
 		$userProjects = $this->projectService->getProjectsForUserTimeEntry($user->getUID(), ['status' => ['Active', 'On Hold', 'Completed', 'Archived']]);
+
+		// The entry's own project must always be present in the dropdown, even when
+		// the owner can no longer see it through the normal picker rules (e.g. their
+		// team membership ended). Otherwise the required select renders without a
+		// selected option and the form cannot be submitted at all.
+		$currentProjectId = (int) $timeEntry->getProjectId();
+		$currentProjectListed = false;
+		foreach ($userProjects as $project) {
+			if ((int) $project->getId() === $currentProjectId) {
+				$currentProjectListed = true;
+				break;
+			}
+		}
+		if (!$currentProjectListed) {
+			$currentProject = $this->projectService->getProject($currentProjectId);
+			if ($currentProject !== null) {
+				$userProjects[] = $currentProject;
+			}
+		}
+
 		$userProjects = $this->sortProjectsByName($userProjects);
 
 		$projectMembershipFlags = $this->buildProjectMembershipFlags($userId, $userProjects);
@@ -552,7 +611,7 @@ class TimeEntryController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	public function update($id)
+	public function update(int $id)
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
@@ -585,14 +644,26 @@ class TimeEntryController extends Controller
 				'timeEntry' => $timeEntry->getSummary(),
 				'message' => $this->l->t('Time entry was updated successfully!')
 			]);
+		} catch (TimeEntryNotFoundException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $this->l->t('Time entry not found')
+			], 404);
+		} catch (PermissionDeniedException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $this->l->t('Access denied')
+			], 403);
+		} catch (ValidationException $e) {
+			// Business-rule rejection with an intentional, localized message.
+			$this->logger->info('Time entry update rejected', ['exception' => $e]);
+			$message = trim($e->getMessage());
+			return new JSONResponse([
+				'success' => false,
+				'error' => $message !== '' ? $message : $this->l->t('Could not update time entry. Please check your input.')
+			], 400);
 		} catch (\Throwable $e) {
 			$this->logger->error('Time entry update failed', ['exception' => $e]);
-			if ($e->getMessage() === 'Access denied') {
-				return new JSONResponse([
-					'success' => false,
-					'error' => $this->l->t('Access denied')
-				], 403);
-			}
 			$status = $e instanceof \Exception ? 400 : 500;
 			return new JSONResponse([
 				'success' => false,
@@ -611,7 +682,7 @@ class TimeEntryController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	public function updatePost($id)
+	public function updatePost(int $id)
 	{
 		// Delegate to update() to keep logic in one place
 		return $this->update($id);
@@ -656,7 +727,7 @@ class TimeEntryController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	public function delete($id)
+	public function delete(int $id)
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
@@ -676,8 +747,18 @@ class TimeEntryController extends Controller
 
 			return new JSONResponse([
 				'success' => true,
-				'message' => 'Time entry deleted successfully'
+				'message' => $this->l->t('Time entry was deleted successfully!')
 			]);
+		} catch (TimeEntryNotFoundException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $this->l->t('Time entry not found')
+			], 404);
+		} catch (PermissionDeniedException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $this->l->t('Access denied')
+			], 403);
 		} catch (\Throwable $e) {
 			$this->logger->error('Time entry delete failed', ['exception' => $e]);
 			$status = $e instanceof \Exception ? 400 : 500;
@@ -691,11 +772,15 @@ class TimeEntryController extends Controller
 	/**
 	 * Delete time entry via POST (deletion modal — CSRF-safe).
 	 *
-	 * @param int|string $id Time entry ID
+	 * The id parameter is natively typed so the AppFramework dispatcher casts the
+	 * route segment to int before the call (a string id previously caused a
+	 * TypeError → HTTP 500 on every UI delete).
+	 *
+	 * @param int $id Time entry ID
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
-	public function deletePost($id): JSONResponse
+	public function deletePost(int $id): JSONResponse
 	{
 		$response = $this->delete($id);
 		if ($response instanceof JSONResponse) {
@@ -716,13 +801,12 @@ class TimeEntryController extends Controller
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function getForProject($projectId)
+	public function getForProject(int $projectId)
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
-		$projectId = (int) $projectId;
 		if (!$this->projectService->canUserAccessProject($user->getUID(), $projectId)) {
 			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
 		}
@@ -835,7 +919,9 @@ class TimeEntryController extends Controller
 			if ($dateFrom) $filters['date_from'] = $dateFrom;
 			if ($dateTo) $filters['date_to'] = $dateTo;
 			if ($search) $filters['search'] = $search;
-			if ($accessibleProjectIds !== null) {
+			// Same rule as index(): only scope by project access when the rows may
+			// belong to someone else. A user's own entries are always exportable.
+			if ($accessibleProjectIds !== null && ($filters['user_id'] ?? '') !== $currentUserId) {
 				$filters['project_ids'] = $accessibleProjectIds;
 			}
 

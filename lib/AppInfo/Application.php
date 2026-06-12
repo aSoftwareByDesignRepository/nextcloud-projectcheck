@@ -192,7 +192,8 @@ class Application extends App implements IBootstrap
 
 		$context->registerService('ActivityService', function ($c) {
 			return new \OCA\ProjectCheck\Service\ActivityService(
-				$c->query(\OCP\Activity\IManager::class)
+				$c->query(\OCP\Activity\IManager::class),
+				$c->query(\Psr\Log\LoggerInterface::class)
 			);
 		});
 

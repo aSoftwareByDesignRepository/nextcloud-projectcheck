@@ -519,6 +519,26 @@
 		return normalizeDateToIso(dateInput.value.trim());
 	}
 
+	/**
+	 * True while the edit form still shows the entry's original project and work
+	 * date. In that state the stored ("frozen at save") rate is authoritative and
+	 * the server keeps it on update, so the form must not replace it.
+	 */
+	function isUnchangedEditEntry() {
+		const isEdit = window.timeEntryFormData && window.timeEntryFormData.isEdit;
+		if (!isEdit) {
+			return false;
+		}
+		const projectSelect = document.getElementById('project_id');
+		const dateInput = document.getElementById('date');
+		if (!projectSelect || !dateInput) {
+			return false;
+		}
+		const selectedOption = projectSelect.options[projectSelect.selectedIndex];
+		return !!selectedOption && selectedOption.defaultSelected
+			&& dateInput.value === dateInput.defaultValue;
+	}
+
 	async function resolveRateFromServer() {
 		const projectSelect = document.getElementById('project_id');
 		const rateInput = document.getElementById('hourly_rate');
@@ -529,6 +549,16 @@
 		const projectId = parseInt(projectSelect.value, 10);
 		const isoDate = getIsoDateFromInput();
 		if (!projectId || !isoDate) {
+			return;
+		}
+		if (isUnchangedEditEntry() && rateInput.defaultValue !== '') {
+			// Keep the entry's frozen rate; the server keeps it too when neither
+			// project nor date changed (re-resolving could silently change billing).
+			rateInput.value = rateInput.defaultValue;
+			if (hint) {
+				hint.textContent = t('projectcheck', 'Rate is set by the server from the project and work date. It cannot be edited.');
+			}
+			calculateTotalCost();
 			return;
 		}
 		rateInput.setAttribute('aria-busy', 'true');
@@ -545,9 +575,19 @@
 				calculateTotalCost();
 			}
 		} catch (err) {
-			rateInput.value = '';
-			if (hint) {
-				hint.textContent = err.message || t('projectcheck', 'Could not resolve hourly rate.');
+			if (isUnchangedEditEntry() && rateInput.defaultValue !== '') {
+				// Resolution can legitimately fail for an unchanged historical entry
+				// (e.g. its project is Completed/Archived). The stored rate stays valid.
+				rateInput.value = rateInput.defaultValue;
+				if (hint) {
+					hint.textContent = t('projectcheck', 'Rate is set by the server from the project and work date. It cannot be edited.');
+				}
+				calculateTotalCost();
+			} else {
+				rateInput.value = '';
+				if (hint) {
+					hint.textContent = err.message || t('projectcheck', 'Could not resolve hourly rate.');
+				}
 			}
 		} finally {
 			rateInput.removeAttribute('aria-busy');
