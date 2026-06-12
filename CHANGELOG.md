@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.70 - 2026-06-12
+
+### Fixed
+
+- **Data loss after Nextcloud upgrade:** `UninstallDropTables` no longer drops tables, migration history, or app settings on the first uninstall repair pass. Nextcloud runs that step when an app is disabled (including auto-disable during a server upgrade for `max-version` mismatch), so force-re-enabling Project Check after upgrading to Hub 26 no longer looks like a fresh install.
+
 ## 2.0.69 - 2026-06-04
 
 ### Changed

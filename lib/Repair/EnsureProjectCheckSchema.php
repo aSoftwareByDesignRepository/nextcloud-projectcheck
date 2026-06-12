@@ -37,6 +37,9 @@ class EnsureProjectCheckSchema implements IRepairStep
 
 	public function run(IOutput $output): void
 	{
+		// Re-enable after auto-disable during a server upgrade must not inherit a pending uninstall pass.
+		$this->config->deleteAppValue(UninstallDropTables::APP_ID, UninstallDropTables::REPAIR_PASS_KEY);
+
 		$ensurer = new ProjectCheckSchemaEnsurer($this->db, $this->config);
 		if ($ensurer->isReady()) {
 			// Fast path: still run renamer (no-op) only when legacy tables linger.

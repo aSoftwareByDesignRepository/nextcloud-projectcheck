@@ -7,9 +7,12 @@ declare(strict_types=1);
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * Drops every table the projectcheck app has ever created, migration rows, and app config.
- * Runs on app disable and before app files are removed (see core Installer / settings).
  *
- * Regenerate via:
+ * Nextcloud runs this step on disable ({@see \OC\App\AppManager::disableApp}) and again on
+ * remove ({@see \OC\Installer::removeApp}). Pass 1 preserves data (e.g. after auto-disable
+ * during a server upgrade); pass 2 performs the actual cleanup on full uninstall.
+ *
+ * Regenerate table list via:
  *     php scripts/check-nextcloud-db-standards.php sync-uninstall --app=projectcheck
  *
  * Uses `DROP TABLE IF EXISTS` (not SchemaWrapper) so IDBConnection injection works on
@@ -26,6 +29,11 @@ use OCP\Migration\IRepairStep;
 final class UninstallDropTables implements IRepairStep
 {
 	public const APP_ID = 'projectcheck';
+
+	/** @see run() — incremented on each uninstall repair invocation */
+	public const REPAIR_PASS_KEY = 'uninstall_repair_pass';
+
+	public const PASSES_BEFORE_DROP = 2;
 
 	/**
 	 * Sorted list of every table this app has ever created across all migrations.
@@ -62,6 +70,18 @@ final class UninstallDropTables implements IRepairStep
 
 	public function run(IOutput $output): void
 	{
+		$pass = (int)$this->config->getAppValue(self::APP_ID, self::REPAIR_PASS_KEY, '0') + 1;
+		if ($pass < self::PASSES_BEFORE_DROP) {
+			$this->config->setAppValue(self::APP_ID, self::REPAIR_PASS_KEY, (string)$pass);
+			$output->info(sprintf(
+				'projectcheck: preserving data on disable (uninstall repair pass %d/%d). '
+				. 'Tables, migration history, and settings are kept until the app is fully removed.',
+				$pass,
+				self::PASSES_BEFORE_DROP,
+			));
+			return;
+		}
+
 		$provider = $this->connection->getDatabaseProvider();
 		$fkChecksDisabled = false;
 		if ($provider === IDBConnection::PLATFORM_MYSQL) {
