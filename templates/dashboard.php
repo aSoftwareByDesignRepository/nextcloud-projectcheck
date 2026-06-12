@@ -43,10 +43,8 @@ $pageHelp = $isGlobalViewer ? $l->t('Overview of your projects and activities') 
 include __DIR__ . '/common/page-start.php';
 ?>
         <!-- Page actions (header actions stay below h1 from page-start) -->
-        <header class="section page-header-section pc-section" aria-labelledby="pc-page-title">
-            <div class="header-content">
-                <div class="header-text">
-                    <div class="header-details">
+        <?php
+        ob_start(); ?>
                         <div class="project-meta" aria-label="<?php p($l->t('Dashboard summary')); ?>">
                             <div class="meta-item">
                                 <i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i>
@@ -57,9 +55,9 @@ include __DIR__ . '/common/page-start.php';
                                 <span><?php p(($_['stats']['totalProjects'] ?? 0) . ' ' . $l->t('Projects')); ?></span>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="header-actions" role="group" aria-label="<?php p($l->t('Primary actions')); ?>">
+        <?php
+        $headerMetaHtml = ob_get_clean();
+        ob_start(); ?>
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="button primary">
                         <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
                         <?php p($l->t('New Time Entry')); ?>
@@ -70,9 +68,11 @@ include __DIR__ . '/common/page-start.php';
                         <?php p($l->t('New Project')); ?>
                     </a>
                     <?php endif; ?>
-                </div>
-            </div>
-        </header>
+        <?php
+        $headerActionsHtml = ob_get_clean();
+        $headerActionsLabel = $l->t('Primary actions');
+        include __DIR__ . '/common/page-header-section.php';
+        ?>
 
         <?php if (!$isGlobalViewer): ?>
             <div class="section pc-section--ghost" aria-labelledby="dash-scope-title">

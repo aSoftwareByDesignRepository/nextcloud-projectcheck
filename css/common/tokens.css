@@ -3,7 +3,10 @@
  * Colors inherit from Nextcloud; spacing, radii, type, and tints only.
  * WCAG 2.1 AA: 44px touch targets, visible focus, prefers-reduced-motion.
  */
-:root {
+/* Also scoped to body so Nextcloud-variable-based tokens follow the active
+   theme (theming sets its variables on body[data-theme-*], not :root). */
+:root,
+body {
 	--pc-breakpoint-sm: 480px;
 	--pc-breakpoint-md: 768px;
 	--pc-breakpoint-lg: 1024px;

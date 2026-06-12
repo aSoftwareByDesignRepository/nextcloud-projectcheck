@@ -1312,6 +1312,9 @@
         "This customer is inactive and cannot be assigned to new projects": "This customer is inactive and cannot be assigned to new projects",
         "Validation error occurred": "Validation error occurred",
         "Form is valid and ready to submit": "Form is valid and ready to submit",
-        "Unknown validation rule": "Unknown validation rule"
+        "Unknown validation rule": "Unknown validation rule",
+        "Page actions": "Page actions",
+        "Customer actions": "Customer actions",
+        "Time entry actions": "Time entry actions"
     }
 }

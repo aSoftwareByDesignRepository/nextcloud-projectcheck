@@ -28,20 +28,18 @@ $pageTitle = $l->t('Customers');
 $pageHelp = $l->t('Manage your customer relationships');
 include __DIR__ . '/common/page-start.php';
 ?>
-        <div class="section pc-section">
-            <div class="header-content">
-                <div class="header-text">
-                    <p class="pc-page-header__lead"><?php p($pageHelp); ?></p>
-                </div>
-                <div class="header-actions">
+        <?php
+        // Lead text already rendered under the h1 by page-start.php — the bar only carries actions.
+        ob_start(); ?>
                     <?php if (!empty($_['canCreateCustomer'])): ?>
                     <a href="<?php p($_['urlGenerator']->linkToRoute('projectcheck.customer.create')); ?>" class="button primary">
                         <?php p($l->t('Add New Customer')); ?>
                     </a>
                     <?php endif; ?>
-                </div>
-            </div>
-        </div>
+        <?php
+        $headerActionsHtml = ob_get_clean();
+        include __DIR__ . '/common/page-header-section.php';
+        ?>
 
         <!-- Success/Error Messages -->
         <?php if (isset($_GET['message']) && $_GET['message'] === 'success'): ?>

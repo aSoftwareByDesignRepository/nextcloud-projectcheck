@@ -1312,6 +1312,9 @@
         "This customer is inactive and cannot be assigned to new projects": "Denne kunden er inaktiv og kan ikke tildeles nye prosjekter",
         "Validation error occurred": "Det oppstod en valideringsfeil",
         "Form is valid and ready to submit": "Skjemaet er gyldig og klart til innsending",
-        "Unknown validation rule": "Ukjent valideringsregel"
+        "Unknown validation rule": "Ukjent valideringsregel",
+        "Page actions": "Sidehandlinger",
+        "Customer actions": "Kundehandlinger",
+        "Time entry actions": "Handlinger for timeregistrering"
     }
 }

@@ -22,18 +22,16 @@ $pageTitle = $l->t('Time Entries');
 $pageHelp = $l->t('Track and manage your time entries');
 include __DIR__ . '/common/page-start.php';
 ?>
-        <div class="section pc-section">
-            <div class="header-content">
-                <div class="header-text">
-                    <p class="pc-page-header__lead"><?php p($pageHelp); ?></p>
-                </div>
-                <div class="header-actions">
+        <?php
+        // Lead text already rendered under the h1 by page-start.php — the bar only carries actions.
+        ob_start(); ?>
                     <a href="<?php p($_['createUrl'] ?? '/index.php/apps/projectcheck/time-entries/create'); ?>" class="button primary">
                         <?php p($l->t('Add Time Entry')); ?>
                     </a>
-                </div>
-            </div>
-        </div>
+        <?php
+        $headerActionsHtml = ob_get_clean();
+        include __DIR__ . '/common/page-header-section.php';
+        ?>
 
         <!-- Success/Error Messages -->
         <?php if (isset($_GET['message']) && $_GET['message'] === 'success'): ?>

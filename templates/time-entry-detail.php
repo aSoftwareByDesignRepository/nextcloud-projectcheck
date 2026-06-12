@@ -61,10 +61,8 @@ include __DIR__ . '/common/page-start.php';
             </nav>
         </div>
 
-        <div class="section page-header-section pc-section">
-            <div class="header-content">
-                <div class="header-text">
-                    <div class="header-details">
+        <?php
+        ob_start(); ?>
                         <div class="project-meta">
                             <div class="meta-item">
                                 <i class="icon-calendar-custom"></i>
@@ -83,9 +81,9 @@ include __DIR__ . '/common/page-start.php';
                                 <span><?php p($timeEntry->getUserId() === $userId ? $l->t('Your time entry') : $l->t('Time entry by %s', [$timeEntry->getUserId()])); ?></span>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="header-actions">
+        <?php
+        $headerMetaHtml = ob_get_clean();
+        ob_start(); ?>
                     <?php if ($timeEntry->getUserId() === $userId): ?>
                         <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $timeEntryId])); ?>" class="button secondary">
                             <i class="icon-edit-custom"></i>
@@ -96,9 +94,11 @@ include __DIR__ . '/common/page-start.php';
                         <i class="icon-time-custom"></i>
                         <?php p($l->t('Back to List')); ?>
                     </a>
-                </div>
-            </div>
-        </div>
+        <?php
+        $headerActionsHtml = ob_get_clean();
+        $headerActionsLabel = $l->t('Time entry actions');
+        include __DIR__ . '/common/page-header-section.php';
+        ?>
 
         <!-- Time Entry Statistics -->
         <div class="section stats-section">

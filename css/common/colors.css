@@ -10,7 +10,11 @@
  * - Text on solid success/warning/error buttons: `var(--color-primary-element-text)` (Nextcloud “on strong” fill).
  */
 
-:root {
+/* Also scoped to body: Nextcloud theming sets the underlying variables on
+   body[data-theme-*], so aliases must be re-evaluated there or they freeze
+   to the :root (light) values in dark mode. */
+:root,
+body {
   /* Aliases to Nextcloud variables - do not override */
   --color-primary: var(--color-primary-element);
   --color-primary-hover: var(--color-primary-element-hover);

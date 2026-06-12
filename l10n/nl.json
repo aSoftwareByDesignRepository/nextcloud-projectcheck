@@ -1312,6 +1312,9 @@
         "This customer is inactive and cannot be assigned to new projects": "Deze klant is inactief en kan niet worden toegewezen aan nieuwe projecten",
         "Validation error occurred": "Er is een validatiefout opgetreden",
         "Form is valid and ready to submit": "Het formulier is geldig en klaar om te verzenden",
-        "Unknown validation rule": "Onbekende validatieregel"
+        "Unknown validation rule": "Onbekende validatieregel",
+        "Page actions": "Pagina-acties",
+        "Customer actions": "Klantacties",
+        "Time entry actions": "Acties voor tijdsregistratie"
     }
 }

@@ -1312,6 +1312,9 @@
         "This customer is inactive and cannot be assigned to new projects": "Este cliente está inactivo y no puede asignarse a nuevos proyectos",
         "Validation error occurred": "Se produjo un error de validación",
         "Form is valid and ready to submit": "El formulario es válido y está listo para enviarse",
-        "Unknown validation rule": "Regla de validación desconocida"
+        "Unknown validation rule": "Regla de validación desconocida",
+        "Page actions": "Acciones de la página",
+        "Customer actions": "Acciones del cliente",
+        "Time entry actions": "Acciones de la entrada de tiempo"
     }
 }

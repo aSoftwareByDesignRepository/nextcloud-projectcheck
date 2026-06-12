@@ -1,0 +1,123 @@
+/**
+ * Canonical page header section — shared by all ProjectCheck views.
+ *
+ * Rendered by templates/common/page-header-section.php. Selectors are scoped
+ * with .section.pc-section.pc-page-header-section so they reliably override
+ * the older per-page header styles (projects.css, customers.css,
+ * dashboard.css, time-entries.css) regardless of stylesheet order.
+ */
+
+.section.pc-section.pc-page-header-section {
+	margin: 0 0 2rem 0;
+	padding: 0;
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-bottom: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 12px);
+	box-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text) 4%, transparent);
+	overflow: hidden;
+}
+
+/* Mobile base: stacked lead/meta above actions */
+.section.pc-section.pc-page-header-section .header-content {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	align-items: stretch;
+	padding: 1.25rem 1.5rem;
+	margin: 0;
+	background: linear-gradient(135deg,
+			color-mix(in srgb, var(--color-primary) 3%, transparent) 0%,
+			color-mix(in srgb, var(--color-primary) 1%, transparent) 100%);
+	border: none;
+}
+
+.section.pc-section.pc-page-header-section .header-text {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.75rem;
+	flex: 1;
+	min-width: 0;
+	text-align: start;
+}
+
+.section.pc-section.pc-page-header-section .header-text .pc-page-header__lead {
+	margin: 0;
+	font-size: 1rem;
+	line-height: 1.5;
+	color: var(--color-text-maxcontrast);
+}
+
+.section.pc-section.pc-page-header-section .header-details {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.section.pc-section.pc-page-header-section .header-details .project-meta,
+.section.pc-section.pc-page-header-section .header-details .customer-meta,
+.section.pc-section.pc-page-header-section .header-details .employee-meta {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	gap: 0.5rem 1.25rem;
+}
+
+.section.pc-section.pc-page-header-section .meta-item {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.section.pc-section.pc-page-header-section .meta-item i {
+	color: var(--color-primary);
+}
+
+/* Mobile: full-width action buttons */
+.section.pc-section.pc-page-header-section .header-actions {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: nowrap;
+	gap: 0.75rem;
+	align-items: stretch;
+	justify-content: flex-start;
+	width: 100%;
+	flex-shrink: 0;
+}
+
+.section.pc-section.pc-page-header-section .header-actions .button {
+	justify-content: center;
+}
+
+/* Always-visible keyboard focus for header actions (WCAG 2.4.7), independent
+   of which page stylesheets happen to be loaded. */
+.section.pc-section.pc-page-header-section .header-actions a:focus-visible,
+.section.pc-section.pc-page-header-section .header-actions button:focus-visible {
+	outline: 2px solid var(--color-primary-element, var(--color-primary));
+	outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+	.section.pc-section.pc-page-header-section .header-content {
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		gap: 2rem;
+		padding: 1.5rem 2rem;
+	}
+
+	.section.pc-section.pc-page-header-section .header-actions {
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: flex-end;
+		width: auto;
+		/* Keeps actions right-aligned when the bar has no lead/meta block. */
+		margin-inline-start: auto;
+	}
+}

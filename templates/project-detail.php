@@ -101,10 +101,8 @@ include __DIR__ . '/common/page-start.php';
         <?php endif; ?>
 
         <!-- Page Header: title + key actions (single focal area) -->
-        <div class="section page-header-section project-detail-hero pc-section">
-            <div class="header-content">
-                <div class="header-text">
-                    <div class="header-details">
+        <?php
+        ob_start(); ?>
                         <?php if (!empty($pricingModeLabel)): ?>
                             <p class="pc-scope-strip__badge" role="status">
                                 <span class="pc-pricing-badge-label"><?php p($l->t('How hours are priced:')); ?></span>
@@ -127,9 +125,9 @@ include __DIR__ . '/common/page-start.php';
                                 <span><?php p($project->getCreatedAt() ? $project->getCreatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></span>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="header-actions project-detail-hero__actions" role="group" aria-label="<?php p($l->t('Project actions')); ?>">
+        <?php
+        $headerMetaHtml = ob_get_clean();
+        ob_start(); ?>
                     <?php if (!empty($canChangeStatus) && $canChangeStatus && $allowedStatusTargets !== []): ?>
                         <button type="button" class="button" id="open-status-modal-btn">
                             <?php p($l->t('Change status')); ?>
@@ -141,9 +139,11 @@ include __DIR__ . '/common/page-start.php';
                             <?php p($l->t('Edit project')); ?>
                         </a>
                     <?php endif; ?>
-                </div>
-            </div>
-        </div>
+        <?php
+        $headerActionsHtml = ob_get_clean();
+        $headerActionsLabel = $l->t('Project actions');
+        include __DIR__ . '/common/page-header-section.php';
+        ?>
 
         <!-- Budget Alerts -->
         <?php if (isset($budgetInfo['alerts']) && !empty($budgetInfo['alerts'])): ?>

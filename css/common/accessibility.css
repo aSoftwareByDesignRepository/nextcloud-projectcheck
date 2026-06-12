@@ -104,7 +104,9 @@
 
 /* High Contrast Mode Support - Nextcloud themes provide high-contrast variable values */
 @media (prefers-contrast: high) {
-  :root {
+  /* body included: Nextcloud theming defines its variables on body[data-theme-*]. */
+  :root,
+  body {
     --color-primary: var(--color-primary-element);
     --color-primary-hover: var(--color-primary-element-hover);
     --color-error: var(--color-error);

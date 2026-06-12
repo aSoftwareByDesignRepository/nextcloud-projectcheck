@@ -51,10 +51,8 @@ include __DIR__ . '/common/page-start.php';
 		</div>
 
 		<!-- Customer meta + actions -->
-		<div class="section page-header-section pc-section">
-			<div class="header-content">
-				<div class="header-text">
-					<div class="header-details">
+		<?php
+		ob_start(); ?>
 						<div class="customer-meta">
 							<?php if ($customer->getEmail()): ?>
 								<span class="meta-item">
@@ -69,26 +67,28 @@ include __DIR__ . '/common/page-start.php';
 								</span>
 							<?php endif; ?>
 						</div>
-					</div>
-				</div>
-				<div class="header-actions">
-					<?php if ($canCreateProject): ?>
+		<?php
+		$headerMetaHtml = ob_get_clean();
+		ob_start(); ?>
+					<?php if ($canEditCustomer): ?>
 					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.edit', ['id' => $customer->getId()])); ?>"
-						class="button secondary" role="button">
-						<i data-lucide="edit" class="lucide-icon"></i>
+						class="button secondary">
+						<i data-lucide="edit" class="lucide-icon" aria-hidden="true"></i>
 						<?php p($l->t('Edit Customer')); ?>
 					</a>
 					<?php endif; ?>
-					<?php if ($canEditCustomer): ?>
+					<?php if ($canCreateProject): ?>
 					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>"
 						class="button primary">
-						<i data-lucide="plus" class="lucide-icon"></i>
+						<i data-lucide="plus" class="lucide-icon" aria-hidden="true"></i>
 						<?php p($l->t('New Project')); ?>
 					</a>
 					<?php endif; ?>
-				</div>
-			</div>
-		</div>
+		<?php
+		$headerActionsHtml = ob_get_clean();
+		$headerActionsLabel = $l->t('Customer actions');
+		include __DIR__ . '/common/page-header-section.php';
+		?>
 
 		<div class="section">
 			<div class="section-content">

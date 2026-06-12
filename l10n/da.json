@@ -1312,6 +1312,9 @@
         "Validation error occurred": "Der opstod en valideringsfejl",
         "Form is valid and ready to submit": "Formularen er gyldig og klar til indsendelse",
         "Unknown validation rule": "Ukendt valideringsregel",
-        "One rate for the whole project": "Én sats for hele projektet"
+        "One rate for the whole project": "Én sats for hele projektet",
+        "Page actions": "Sidehandlinger",
+        "Customer actions": "Kundehandlinger",
+        "Time entry actions": "Handlinger for tidsregistrering"
     }
 }

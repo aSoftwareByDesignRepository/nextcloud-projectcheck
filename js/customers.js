@@ -241,10 +241,14 @@
         messageDiv.appendChild(icon);
         messageDiv.appendChild(span);
 
-        // Insert after header
+        // Insert after the page header bar; fall back to the top of the main
+        // content area when the bar is not rendered (e.g. read-only users).
         const header = document.querySelector('.header-content');
         if (header && header.parentNode) {
             header.parentNode.insertBefore(messageDiv, header.nextSibling);
+        } else {
+            const main = document.getElementById('pc-main-content') || document.querySelector('main') || document.body;
+            main.insertBefore(messageDiv, main.firstChild);
         }
 
         // Auto-hide after 5 seconds
