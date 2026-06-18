@@ -27,6 +27,10 @@ foreach ($candidates as $candidate) {
 
 if ($base !== null) {
 	require_once $base;
+	$integrationBootstrap = dirname(__DIR__, 3) . '/scripts/phpunit-integration-bootstrap.php';
+	if (is_file($integrationBootstrap)) {
+		require_once $integrationBootstrap;
+	}
 	if (!class_exists(\Test\TestCase::class)) {
 		$shim = __DIR__ . '/shim/TestCase.php';
 		if (is_file($shim)) {
