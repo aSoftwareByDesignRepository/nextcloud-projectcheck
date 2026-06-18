@@ -32,6 +32,10 @@ final class ServiceContainerDiRegistrationTest extends TestCase
 			if (!str_starts_with($fqcn, self::APP_NAMESPACE . '\\')) {
 				continue;
 			}
+			// Console commands extend symfony/console; standalone CI stubs that parent in bootstrap.
+			if (str_contains($fqcn, '\\Command\\')) {
+				continue;
+			}
 			$cases[$fqcn] = [$fqcn, $factory['argCount']];
 		}
 

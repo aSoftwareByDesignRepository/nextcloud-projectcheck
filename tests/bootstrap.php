@@ -31,12 +31,6 @@ if ($base !== null) {
 	if (is_file($integrationBootstrap)) {
 		require_once $integrationBootstrap;
 	}
-	if (!class_exists(\Test\TestCase::class)) {
-		$shim = __DIR__ . '/shim/TestCase.php';
-		if (is_file($shim)) {
-			require_once $shim;
-		}
-	}
 }
 
 $autoload = dirname(__DIR__) . '/vendor/autoload.php';
@@ -47,6 +41,17 @@ if (!is_file($autoload)) {
 }
 
 require_once $autoload;
+
+if (!class_exists(\Test\TestCase::class)) {
+	$shim = __DIR__ . '/shim/TestCase.php';
+	if (is_file($shim)) {
+		require_once $shim;
+	}
+}
+
+if (!class_exists(\Symfony\Component\Console\Command\Command::class, false)) {
+	eval('namespace Symfony\Component\Console\Command; class Command {}');
+}
 
 /* Nextcloud’s OCP\Util::addStyle() delegates to \OC_Util, which is not present in this unit-test
  * environment. Provide a no-op so listeners that register styles (e.g. common/colors.css) can run. */
