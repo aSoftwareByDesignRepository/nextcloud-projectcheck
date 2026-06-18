@@ -193,9 +193,7 @@ timesatser på tidsregistreringer beregnes på serveren fra historikk med ikraft
 
 	<settings>
 		<admin>OCA\ProjectCheck\Settings\AdminSettings</admin>
-		<admin-section>OCA\ProjectCheck\Settings\Section</admin-section>
 		<personal>OCA\ProjectCheck\Settings\PersonalSettings</personal>
-		<personal-section>OCA\ProjectCheck\Settings\Section</personal-section>
 	</settings>
 
 	<repair-steps>

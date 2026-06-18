@@ -82,7 +82,7 @@ class PersonalSettings implements ISettings
 		if ($user === null || !$this->accessControl->canUseApp($user->getUID())) {
 			return null;
 		}
-		return 'projectcheck';
+		return 'additional';
 	}
 
 	public function getPriority(): int

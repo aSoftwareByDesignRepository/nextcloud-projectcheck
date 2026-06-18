@@ -97,7 +97,7 @@ class AdminSettings implements ISettings
      */
     public function getSection()
     {
-        return 'projectcheck';
+        return 'additional';
     }
 
     /**
