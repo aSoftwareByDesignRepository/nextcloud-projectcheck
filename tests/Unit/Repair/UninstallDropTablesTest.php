@@ -10,6 +10,7 @@ use OCP\IDBConnection;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 final class UninstallDropTablesTest extends TestCase
 {
@@ -25,15 +26,11 @@ final class UninstallDropTablesTest extends TestCase
 		$this->output = $this->createMock(IOutput::class);
 	}
 
-	public function testFirstPassPreservesDataOnDisable(): void
+	public function testDisablePathPreservesDataAndClearsLegacyPassKey(): void
 	{
 		$this->config->expects(self::once())
-			->method('getAppValue')
-			->with(UninstallDropTables::APP_ID, UninstallDropTables::REPAIR_PASS_KEY, '0')
-			->willReturn('0');
-		$this->config->expects(self::once())
-			->method('setAppValue')
-			->with(UninstallDropTables::APP_ID, UninstallDropTables::REPAIR_PASS_KEY, '1');
+			->method('deleteAppValue')
+			->with(UninstallDropTables::APP_ID, UninstallDropTables::REPAIR_PASS_KEY);
 		$this->connection->expects(self::never())->method('executeStatement');
 		$this->config->expects(self::never())->method('deleteAppValues');
 
@@ -41,13 +38,35 @@ final class UninstallDropTablesTest extends TestCase
 		$step->run($this->output);
 	}
 
-	public function testSecondPassDropsTablesAndClearsMetadata(): void
+	public function testDoubleDisableIsIdempotent(): void
 	{
+		$this->config->expects(self::exactly(2))
+			->method('deleteAppValue')
+			->with(UninstallDropTables::APP_ID, UninstallDropTables::REPAIR_PASS_KEY);
+		$this->connection->expects(self::never())->method('executeStatement');
+		$this->config->expects(self::never())->method('deleteAppValues');
+
+		$step = new UninstallDropTables($this->connection, $this->config);
+		$step->run($this->output);
+		$step->run($this->output);
+	}
+
+	public function testDisableClearsStaleLegacyPassCounterWithoutDropping(): void
+	{
+		$this->config->method('getAppValue')->willReturn('1');
 		$this->config->expects(self::once())
-			->method('getAppValue')
-			->with(UninstallDropTables::APP_ID, UninstallDropTables::REPAIR_PASS_KEY, '0')
-			->willReturn('1');
-		$this->config->expects(self::never())->method('setAppValue');
+			->method('deleteAppValue')
+			->with(UninstallDropTables::APP_ID, UninstallDropTables::REPAIR_PASS_KEY);
+		$this->connection->expects(self::never())->method('executeStatement');
+		$this->config->expects(self::never())->method('deleteAppValues');
+
+		$step = new UninstallDropTables($this->connection, $this->config);
+		$step->run($this->output);
+	}
+
+	public function testDropAllTablesAndClearsMetadata(): void
+	{
+		$this->config->expects(self::never())->method('deleteAppValue');
 
 		$this->connection->method('getDatabaseProvider')->willReturn(IDBConnection::PLATFORM_SQLITE);
 		$this->connection->method('tableExists')->willReturn(false);
@@ -67,6 +86,8 @@ final class UninstallDropTablesTest extends TestCase
 			->with(UninstallDropTables::APP_ID);
 
 		$step = new UninstallDropTables($this->connection, $this->config);
-		$step->run($this->output);
+		$method = (new ReflectionClass(UninstallDropTables::class))->getMethod('dropAllTablesAndMetadata');
+		$method->setAccessible(true);
+		$method->invoke($step, $this->output);
 	}
 }

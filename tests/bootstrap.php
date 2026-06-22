@@ -42,6 +42,13 @@ if (!is_file($autoload)) {
 
 require_once $autoload;
 
+if ($base === null) {
+	$ocpStubs = dirname(__DIR__, 3) . '/scripts/phpunit-ocp-doctrine-stubs.php';
+	if (is_file($ocpStubs)) {
+		require_once $ocpStubs;
+	}
+}
+
 if (!class_exists(\Test\TestCase::class)) {
 	$shim = __DIR__ . '/shim/TestCase.php';
 	if (is_file($shim)) {

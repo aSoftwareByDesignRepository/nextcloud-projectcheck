@@ -9,8 +9,9 @@ declare(strict_types=1);
  * Drops every table the projectcheck app has ever created, migration rows, and app config.
  *
  * Nextcloud runs this step on disable ({@see \OC\App\AppManager::disableApp}) and again on
- * remove ({@see \OC\Installer::removeApp}). Pass 1 preserves data (e.g. after auto-disable
- * during a server upgrade); pass 2 performs the actual cleanup on full uninstall.
+ * remove ({@see \OC\Installer::removeApp}, {@see \OCA\Settings\Controller\AppSettingsController::uninstallApp}).
+ * Disable (including auto-disable during a server upgrade) always preserves data; only an
+ * explicit app removal drops tables.
  *
  * Regenerate table list via:
  *     php scripts/check-nextcloud-db-standards.php sync-uninstall --app=projectcheck
@@ -30,10 +31,11 @@ final class UninstallDropTables implements IRepairStep
 {
 	public const APP_ID = 'projectcheck';
 
-	/** @see run() — incremented on each uninstall repair invocation */
+	/**
+	 * Legacy counter from the two-pass implementation. Cleared on disable and by schema
+	 * repair steps so upgrades never inherit a stale value.
+	 */
 	public const REPAIR_PASS_KEY = 'uninstall_repair_pass';
-
-	public const PASSES_BEFORE_DROP = 2;
 
 	/**
 	 * Sorted list of every table this app has ever created across all migrations.
@@ -42,11 +44,7 @@ final class UninstallDropTables implements IRepairStep
 	public const TABLES = [
 		'customers',
 		'pc_customers',
-		'pc_emp_rates',
-		'pc_employee_hourly_rates',
-		'pc_pm_rates',
 		'pc_project_files',
-		'pc_project_member_hourly_rates',
 		'pc_project_members',
 		'pc_projects',
 		'pc_time_entries',
@@ -70,18 +68,21 @@ final class UninstallDropTables implements IRepairStep
 
 	public function run(IOutput $output): void
 	{
-		$pass = (int)$this->config->getAppValue(self::APP_ID, self::REPAIR_PASS_KEY, '0') + 1;
-		if ($pass < self::PASSES_BEFORE_DROP) {
-			$this->config->setAppValue(self::APP_ID, self::REPAIR_PASS_KEY, (string)$pass);
-			$output->info(sprintf(
-				'projectcheck: preserving data on disable (uninstall repair pass %d/%d). '
-				. 'Tables, migration history, and settings are kept until the app is fully removed.',
-				$pass,
-				self::PASSES_BEFORE_DROP,
-			));
+		if (UninstallRepairFlow::isRemovalContext()) {
+			$this->dropAllTablesAndMetadata($output);
 			return;
 		}
 
+		// Disable path (manual or auto during server upgrade): idempotent — never drop.
+		$this->config->deleteAppValue(self::APP_ID, self::REPAIR_PASS_KEY);
+		$output->info(
+			'projectcheck: preserving data on disable. '
+			. 'Tables, migration history, and settings are kept until the app is fully removed.'
+		);
+	}
+
+	private function dropAllTablesAndMetadata(IOutput $output): void
+	{
 		$provider = $this->connection->getDatabaseProvider();
 		$fkChecksDisabled = false;
 		if ($provider === IDBConnection::PLATFORM_MYSQL) {
