@@ -49,7 +49,7 @@ Schluss mit Wechseln zwischen Tabellenkalkulation und dem nächsten SaaS-Tool: *
 
 **Voraussetzungen:** Nextcloud **32–33**, PHP **8.2–8.5**, Datenbank **MySQL/MariaDB** oder **PostgreSQL**.
 
-**Manuelle Installation aus Git** (z. B. für eigene Builds): Repository [nextcloud-projectcheck](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck) nach `apps/projectcheck` klonen, `composer install --no-dev`, `npm ci` und `npm run build` ausführen, im Nextcloud-Stammverzeichnis `php occ app:enable projectcheck`. Vor einem Release: `composer test` und `npm test`. Abhängigkeiten prüfen mit `composer audit` und `npm audit` (kritische Befunde ernst nehmen). Betrieb und Notfall — **[`docs/OPERATIONS.md`](docs/OPERATIONS.md)**.
+**Manuelle Installation aus Git** (z. B. für eigene Builds): Repository [nextcloud-projectcheck](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck) nach `apps/projectcheck` klonen, `composer install --no-dev`, `npm ci` und `npm run build` ausführen, im Nextcloud-Stammverzeichnis `php occ app:enable projectcheck`. Vor einem Release: `composer test` und `npm test`. Abhängigkeiten prüfen mit `composer audit` und `npm audit` (kritische Befunde ernst nehmen).
 
 ### Dokumentation
 
@@ -100,7 +100,7 @@ Stop switching between spreadsheets and yet another cloud tool. **ProjectCheck**
 
 **Requirements:** Nextcloud **32–33**, PHP **8.2–8.5**, and a supported database (**MySQL/MariaDB** or **PostgreSQL**).
 
-**Install from git** (for custom builds): clone [nextcloud-projectcheck](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck) into `apps/projectcheck`, then use **pinned installs**: `composer install --no-dev`, `npm ci`, `npm run build`, then from your Nextcloud root `php occ app:enable projectcheck`. Run `composer test` and `npm test` before a release. Supply-chain checks: `composer audit` and `npm audit` (treat **critical** issues on production dependencies as blockers). Operations and recovery for org settings: **[`docs/OPERATIONS.md`](docs/OPERATIONS.md)**.
+**Install from git** (for custom builds): clone [nextcloud-projectcheck](https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck) into `apps/projectcheck`, then use **pinned installs**: `composer install --no-dev`, `npm ci`, `npm run build`, then from your Nextcloud root `php occ app:enable projectcheck`. Run `composer test` and `npm test` before a release. Supply-chain checks: `composer audit` and `npm audit` (treat **critical** issues on production dependencies as blockers).
 
 ### Documentation
 

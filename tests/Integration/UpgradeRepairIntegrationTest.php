@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Tests\Integration;
 
+use OCA\ProjectCheck\Repair\BackupBeforeUpdate;
 use OCA\ProjectCheck\Repair\EnsureProjectCheckSchema;
 use OCA\ProjectCheck\Repair\UninstallDropTables;
+use OCA\ProjectCheck\Service\UpgradeBackupService;
 use OCP\Migration\IOutput;
 use Test\TestCase;
 
@@ -14,6 +16,8 @@ class UpgradeRepairIntegrationTest extends TestCase
 	public function testRepairStepsResolveFromContainer(): void
 	{
 		foreach ([
+			UpgradeBackupService::class,
+			BackupBeforeUpdate::class,
 			EnsureProjectCheckSchema::class,
 			UninstallDropTables::class,
 		] as $class) {

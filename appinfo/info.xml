@@ -200,6 +200,9 @@ timesatser på tidsregistreringer beregnes på serveren fra historikk med ikraft
 		<install>
 			<step>OCA\ProjectCheck\Repair\EnsureProjectCheckSchema</step>
 		</install>
+		<pre-migration>
+			<step>OCA\ProjectCheck\Repair\BackupBeforeUpdate</step>
+		</pre-migration>
 		<post-migration>
 			<step>OCA\ProjectCheck\Repair\EnsureProjectCheckSchema</step>
 		</post-migration>
@@ -207,6 +210,10 @@ timesatser på tidsregistreringer beregnes på serveren fra historikk med ikraft
 			<step>OCA\ProjectCheck\Repair\UninstallDropTables</step>
 		</uninstall>
 	</repair-steps>
+
+	<commands>
+		<command>OCA\ProjectCheck\Command\UpgradeBackupCommand</command>
+	</commands>
 
 	<release>
 		<databases>

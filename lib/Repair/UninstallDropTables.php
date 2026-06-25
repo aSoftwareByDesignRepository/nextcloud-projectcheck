@@ -22,6 +22,9 @@ declare(strict_types=1);
  */
 namespace OCA\ProjectCheck\Repair;
 
+use OCP\Files\Folder;
+use OCP\Files\IRootFolder;
+use OCP\Files\NotFoundException;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
@@ -44,7 +47,11 @@ final class UninstallDropTables implements IRepairStep
 	public const TABLES = [
 		'customers',
 		'pc_customers',
+		'pc_emp_rates',
+		'pc_employee_hourly_rates',
+		'pc_pm_rates',
 		'pc_project_files',
+		'pc_project_member_hourly_rates',
 		'pc_project_members',
 		'pc_projects',
 		'pc_time_entries',
@@ -58,6 +65,7 @@ final class UninstallDropTables implements IRepairStep
 	public function __construct(
 		private readonly IDBConnection $connection,
 		private readonly IConfig $config,
+		private readonly IRootFolder $rootFolder,
 	) {
 	}
 
@@ -108,8 +116,10 @@ final class UninstallDropTables implements IRepairStep
 
 		$this->config->deleteAppValues(self::APP_ID);
 
+		$this->purgeUpgradeBackupSnapshots($output);
+
 		$output->info(sprintf(
-			'projectcheck: dropped %d of %d table(s); removed %d migration row(s) and app config.',
+			'projectcheck: dropped %d of %d table(s); removed %d migration row(s), app config, and upgrade-backup snapshots.',
 			$dropped,
 			count(self::TABLES),
 			$migrationsRemoved,
@@ -137,5 +147,30 @@ final class UninstallDropTables implements IRepairStep
 		}
 
 		return true;
+	}
+
+	/**
+	 * Pre-update JSON snapshots contain full table exports — remove on explicit app removal.
+	 */
+	private function purgeUpgradeBackupSnapshots(IOutput $output): void
+	{
+		$instanceId = (string)$this->config->getSystemValue('instanceid', '');
+		if ($instanceId === '') {
+			return;
+		}
+
+		$path = 'appdata_' . $instanceId . '/' . self::APP_ID . '/upgrade-backups';
+		try {
+			$node = $this->rootFolder->get($path);
+		} catch (NotFoundException) {
+			return;
+		}
+
+		if (!$node instanceof Folder) {
+			return;
+		}
+
+		$node->delete();
+		$output->info('projectcheck: removed upgrade-backup snapshots from app data.');
 	}
 }
