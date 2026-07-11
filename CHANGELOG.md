@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.71 - 2026-07-11
+
+### Added
+
+- **Upgrade backup:** Pre-migration repair step snapshots ProjectCheck data before schema migrations run; `occ projectcheck:upgrade-backup` for manual backups and restore workflows.
+
+### Fixed
+
+- **Disable vs uninstall:** `UninstallRepairFlow` preserves tables when the app is disabled (including auto-disable during server upgrade); data is dropped only on explicit app removal.
+- **Project list filters:** Qualified SQL column names fix filtered project queries on some database backends.
+- **Admin settings:** ProjectCheck settings moved to the Additional settings section (fixes broken sidebar icons in Nextcloud 34).
+- **Upgrade safety:** Repair-step classes registered in `Application.php` to prevent `ArgumentCountError` during `occ upgrade`.
+
+### Changed
+
+- **UI:** Shared page header section and refreshed list view l10n.
+
 ## 2.0.70 - 2026-06-12
 
 ### Fixed
