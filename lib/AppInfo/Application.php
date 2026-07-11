@@ -387,6 +387,8 @@ class Application extends App implements IBootstrap
 
 		$context->registerDashboardWidget(\OCA\ProjectCheck\Dashboard\ProjectWidget::class);
 
+		$context->registerSearchProvider(\OCA\ProjectCheck\Search\ProjectSearchProvider::class);
+
 		$context->registerService(UpgradeBackupService::class, function ($c): UpgradeBackupService {
 			return new UpgradeBackupService(
 				$c->query(IDBConnection::class),

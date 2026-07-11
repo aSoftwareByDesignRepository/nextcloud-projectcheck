@@ -241,9 +241,11 @@ class ProjectMapper extends QBMapper
 		}
 
 		if (!empty($filters['search'])) {
+			$search = '%' . $filters['search'] . '%';
 			$qb->andWhere($qb->expr()->orX(
-				$qb->expr()->like('p.name', $qb->createNamedParameter('%' . $filters['search'] . '%')),
-				$qb->expr()->like('p.short_description', $qb->createNamedParameter('%' . $filters['search'] . '%'))
+				$qb->expr()->like('p.name', $qb->createNamedParameter($search)),
+				$qb->expr()->like('p.short_description', $qb->createNamedParameter($search)),
+				$qb->expr()->like('c.name', $qb->createNamedParameter($search)),
 			));
 		}
 

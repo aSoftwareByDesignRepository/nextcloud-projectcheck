@@ -141,7 +141,7 @@ class ProjectSearchProvider implements IProvider
 		$appIcon = $this->resolveAppIconPath();
 
 		try {
-			// Search projects
+			// Search projects (visibility-scoped)
 			$projects = $this->projectService->searchProjects($searchTerm, $user->getUID(), $limit);
 			foreach ($projects as $project) {
 				$results[] = new SearchResultEntry(
@@ -154,8 +154,9 @@ class ProjectSearchProvider implements IProvider
 				);
 			}
 
-			// Search customers
-			$customers = $this->customerService->searchCustomers($searchTerm, $user->getUID(), $limit);
+			// Search customers (visibility-scoped)
+			$customers = $this->customerService->searchCustomersForUser($user->getUID(), $searchTerm);
+			$customers = array_slice($customers, 0, $limit);
 			foreach ($customers as $customer) {
 				$results[] = new SearchResultEntry(
 					$appIcon,
@@ -167,8 +168,12 @@ class ProjectSearchProvider implements IProvider
 				);
 			}
 
-			// Search time entries
-			$timeEntries = $this->timeEntryService->searchTimeEntries($searchTerm, $user->getUID(), $limit);
+			// Search time entries (scoped to the requesting user)
+			$timeEntries = array_slice(
+				$this->timeEntryService->searchTimeEntries($searchTerm, $user->getUID()),
+				0,
+				$limit,
+			);
 			foreach ($timeEntries as $timeEntry) {
 				$project = $this->projectService->getProject($timeEntry->getProjectId());
 				$projectName = $project ? $project->getName() : $this->l10n->t('Unknown Project');

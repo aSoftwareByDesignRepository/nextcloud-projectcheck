@@ -458,24 +458,24 @@ class ProjectService
 				foreach ($filters['status'] as $status) {
 					$statusParams[] = $qb->createNamedParameter($status);
 				}
-				$qb->andWhere($qb->expr()->in('status', $statusParams));
+				$qb->andWhere($qb->expr()->in('p.status', $statusParams));
 			} else {
 				// Handle single status
-				$qb->andWhere($qb->expr()->eq('status', $qb->createNamedParameter($filters['status'])));
+				$qb->andWhere($qb->expr()->eq('p.status', $qb->createNamedParameter($filters['status'])));
 			}
 		}
 
 		if (!empty($filters['customer_id'])) {
-			$qb->andWhere($qb->expr()->eq('customer_id', $qb->createNamedParameter($filters['customer_id'], IQueryBuilder::PARAM_INT)));
+			$qb->andWhere($qb->expr()->eq('p.customer_id', $qb->createNamedParameter($filters['customer_id'], IQueryBuilder::PARAM_INT)));
 		}
 
 
 		if (!empty($filters['priority'])) {
-			$qb->andWhere($qb->expr()->eq('priority', $qb->createNamedParameter($filters['priority'])));
+			$qb->andWhere($qb->expr()->eq('p.priority', $qb->createNamedParameter($filters['priority'])));
 		}
 
 		if (!empty($filters['project_type'])) {
-			$qb->andWhere($qb->expr()->eq('project_type', $qb->createNamedParameter($filters['project_type'])));
+			$qb->andWhere($qb->expr()->eq('p.project_type', $qb->createNamedParameter($filters['project_type'])));
 		}
 
 		// Optional hard project-id scope (used for per-user visibility scoping).
@@ -491,9 +491,11 @@ class ProjectService
 		}
 
 		if (!empty($filters['search'])) {
+			$search = '%' . $filters['search'] . '%';
 			$qb->andWhere($qb->expr()->orX(
-				$qb->expr()->like('name', $qb->createNamedParameter('%' . $filters['search'] . '%')),
-				$qb->expr()->like('short_description', $qb->createNamedParameter('%' . $filters['search'] . '%'))
+				$qb->expr()->like('p.name', $qb->createNamedParameter($search)),
+				$qb->expr()->like('p.short_description', $qb->createNamedParameter($search)),
+				$qb->expr()->like('c.name', $qb->createNamedParameter($search)),
 			));
 		}
 
@@ -896,14 +898,21 @@ class ProjectService
 	}
 
 	/**
-	 * Search projects by name or description
+	 * Search projects by name, description, or customer name.
 	 *
-	 * @param string $query
-	 * @return array
+	 * @return list<Project>
 	 */
-	public function searchProjects(string $query): array
+	public function searchProjects(string $query, ?string $userId = null, ?int $limit = null): array
 	{
-		return $this->getProjects(['search' => $query]);
+		$filters = ['search' => $query];
+		if ($limit !== null && $limit > 0) {
+			$filters['limit'] = $limit;
+		}
+		if ($userId !== null) {
+			return $this->getUserScopedProjects($userId, $filters);
+		}
+
+		return $this->getProjects($filters);
 	}
 
 	/**
