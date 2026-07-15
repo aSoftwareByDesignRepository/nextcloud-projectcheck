@@ -51,6 +51,33 @@ $isGlobalViewer = !empty($_['isGlobalViewer']);
 $pageId = 'employee-detail';
 $pageTitle = $empDisplay;
 $pageHelp = $l->t('Employee performance and time tracking statistics');
+ob_start(); ?>
+                <?php if ($isFormer): ?>
+                    <span class="pc-badge pc-badge--neutral" role="status"><?php p($l->t('Former user — account was removed. Statistics are historical data.')); ?></span>
+                <?php endif; ?>
+                <div class="employee-meta">
+                    <span class="meta-item">
+                        <span data-lucide="user" class="lucide-icon" aria-hidden="true"></span>
+                        <span><?php p($eid); ?></span>
+                    </span>
+                    <?php if (!$isFormer): ?>
+                    <span class="meta-item">
+                        <span data-lucide="mail" class="lucide-icon" aria-hidden="true"></span>
+                        <span><?php p($empEmail !== '' && $empEmail !== null ? $empEmail : $l->t('No email')); ?></span>
+                    </span>
+                    <?php endif; ?>
+                </div>
+<?php
+$pageHeaderMetaHtml = ob_get_clean();
+ob_start(); ?>
+                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.index')); ?>"
+                    class="button secondary">
+                    <span data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></span>
+                    <?php p($l->t('Back to Employees')); ?>
+                </a>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Page actions');
 include __DIR__ . '/common/page-start.php';
 ?>
         <!-- Breadcrumb Navigation -->
@@ -80,31 +107,6 @@ include __DIR__ . '/common/page-start.php';
         <?php endif; ?>
 
         <section class="pc-employee-profile" aria-label="<?php p($l->t('Employee profile')); ?>">
-            <div class="pc-employee-profile__meta">
-                <?php if ($isFormer): ?>
-                    <span class="pc-badge pc-badge--neutral" role="status"><?php p($l->t('Former user — account was removed. Statistics are historical data.')); ?></span>
-                <?php endif; ?>
-                <div class="employee-meta">
-                    <span class="meta-item">
-                        <i data-lucide="user" class="lucide-icon primary" aria-hidden="true"></i>
-                        <span><?php p($eid); ?></span>
-                    </span>
-                    <?php if (!$isFormer): ?>
-                    <span class="meta-item">
-                        <i data-lucide="mail" class="lucide-icon primary" aria-hidden="true"></i>
-                        <span><?php p($empEmail !== '' && $empEmail !== null ? $empEmail : $l->t('No email')); ?></span>
-                    </span>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="header-actions">
-                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.index')); ?>"
-                    class="button secondary">
-                    <i data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></i>
-                    <?php p($l->t('Back to Employees')); ?>
-                </a>
-            </div>
-        </section>
 
         <!-- Yearly Performance Dashboard -->
         <?php if (!empty($yearlyStats)): ?>

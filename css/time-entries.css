@@ -6,10 +6,6 @@
  * @license AGPL-3.0-or-later
  */
 
-#time-entry-search {
-	padding-left: 36px;
-}
-
 .stat-item {
 	text-align: center;
 	padding: 0.75rem;
@@ -46,7 +42,6 @@
 /* Page background — layout handled by common/app-layout.css + page-start shell */
 #app-content.pc-app--time-entries {
 	background: var(--color-main-background);
-	min-height: 100vh;
 	position: relative;
 }
 
@@ -64,14 +59,31 @@
 	}
 }
 
-/* Section Styling */
-.section {
+/* Section Styling — time entries uses a single unified panel instead */
+.pc-app--time-entries .section:not(.time-entries-panel):not(.pc-section.pc-page-header-section) {
 	background: var(--color-main-background);
-	border-radius: 16px;
-	margin-bottom: 2rem;
+	border-radius: var(--pc-radius-md, 12px);
+	margin-bottom: var(--pc-space-5, 1.5rem);
 	overflow: hidden;
-	box-shadow: 0 2px 20px var(--color-shadow-light);
 	border: 1px solid var(--color-border);
+}
+
+/* Unified panel: toolbar + table + footer in one surface */
+.pc-app--time-entries .time-entries-panel {
+	padding: 0;
+	margin-bottom: var(--pc-space-5, 1.5rem);
+	overflow: visible;
+}
+
+.pc-app--time-entries .time-entries-panel__toolbar {
+	padding: 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.pc-app--time-entries .time-entries-panel__footer {
+	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem) var(--pc-space-5, 1.5rem);
+	border-top: 1px solid var(--color-border);
+	background: var(--color-main-background);
 }
 
 /* Header Content — mobile base stacks title/actions; desktop row at ≥768px */
@@ -167,8 +179,25 @@
 
 .button:not(.primary) {
 	background: var(--color-background-hover);
-	color: var(--color-text);
+	color: var(--color-main-text);
 	border: 1px solid var(--color-border);
+}
+
+.button.secondary {
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border);
+}
+
+.button.secondary:hover {
+	background: var(--color-background-hover);
+}
+
+.button.disabled,
+.button[aria-disabled="true"] {
+	opacity: 0.55;
+	pointer-events: none;
+	cursor: not-allowed;
 }
 
 .button:not(.primary):hover {
@@ -182,7 +211,7 @@
 	align-items: center;
 	gap: 0.75rem;
 	padding: 1rem 1.5rem;
-	margin: 1rem 2rem;
+	margin: 0 0 var(--pc-space-4, 1rem);
 	border-radius: 8px;
 	font-size: 0.875rem;
 	position: relative;
@@ -225,63 +254,18 @@
 	z-index: 1;
 }
 
-/* Filters Container — time entries page (card layout) */
+/* Filters Container — time entries page (flat toolbar inside panel) */
 .pc-app--time-entries .filters-container {
-	background: linear-gradient(
-		135deg,
-		var(--color-main-background) 0%,
-		var(--color-background-hover) 100%
-	);
-	border: 1px solid var(--pc-border, var(--color-border));
-	border-radius: var(--pc-radius-md, 12px);
-	padding: var(--pc-space-5, 24px);
-	margin-bottom: var(--pc-space-5, 24px);
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
+	margin-bottom: 0;
 	display: flex;
 	flex-wrap: wrap;
-	align-items: center;
-	gap: var(--pc-space-4, 20px);
-	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 4%, transparent);
-}
-
-.pc-app--time-entries .search-input-wrapper {
-	position: relative;
-	flex: 1 1 320px;
-	min-width: min(100%, 280px);
-}
-
-.pc-app--time-entries .search-input {
-	width: 100%;
-	min-height: var(--pc-touch-min, 44px);
-	padding: var(--pc-space-3, 12px) var(--pc-space-4, 16px) var(--pc-space-3, 12px) 2.75rem;
-	border: 1px solid var(--pc-border, var(--color-border));
-	border-radius: var(--pc-radius-sm, 8px);
-	font-size: var(--pc-fs-md, 1rem);
-	background: var(--color-main-background);
-	color: var(--color-main-text);
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.pc-app--time-entries .search-input:focus-visible {
-	outline: none;
-	border-color: var(--color-primary-element);
-	box-shadow: var(--pc-shadow-focus);
-}
-
-.pc-app--time-entries .search-icon {
-	position: absolute;
-	left: var(--pc-space-3, 12px);
-	top: 50%;
-	transform: translateY(-50%);
-	pointer-events: none;
-	color: var(--pc-muted);
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.pc-app--time-entries .search-icon .lucide-icon {
-	width: 1.125rem;
-	height: 1.125rem;
+	align-items: flex-end;
+	gap: var(--pc-space-4, 1rem);
+	box-shadow: none;
 }
 
 /* Mobile base: stack filter controls vertically */
@@ -351,6 +335,13 @@
 	flex: 1 1 auto;
 	justify-content: center;
 	min-height: var(--pc-touch-min, 44px);
+	gap: var(--pc-space-2, 0.5rem);
+}
+
+.pc-app--time-entries .filter-actions .button .lucide-icon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
 }
 
 @media (min-width: 768px) {
@@ -380,14 +371,10 @@
 	text-align: center;
 	gap: var(--pc-space-3, 0.85rem);
 	padding: clamp(2rem, 6vw, 3rem) clamp(1rem, 4vw, 2rem);
-	border: 1px solid var(--pc-border, var(--color-border));
-	border-radius: var(--pc-radius-md, 12px);
-	background: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--color-primary-element-light) 34%, transparent),
-		transparent 60%
-	),
-	var(--color-main-background);
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	box-shadow: none;
 }
 
 .pc-app--time-entries .time-entries-empty__icon {
@@ -483,11 +470,19 @@
 /* Table Styling - Nextcloud-native, variables only */
 .grid {
 	width: 100%;
-	table-layout: fixed;
 	border-collapse: collapse;
 	background: var(--color-main-background);
+}
+
+.grid:not(.time-entries-table) {
+	table-layout: fixed;
 	word-wrap: break-word;
 	word-break: break-word;
+}
+
+.grid.time-entries-table {
+	table-layout: auto;
+	word-break: normal;
 }
 
 .grid thead {
@@ -512,7 +507,8 @@
 	box-sizing: border-box;
 }
 
-.grid-container {
+.grid-container,
+.time-entries-table-wrap {
 	overflow-x: auto;
 	width: 100%;
 	max-width: 100%;
@@ -520,37 +516,39 @@
 }
 
 /*
- * Time Entries Table - Column layout and wrapping
- * Narrow: Date, Type, Hours. Wide: Description. Scoped to avoid affecting customers table.
+ * Time Entries Table — clean single-surface layout (no column gaps / nested boxes)
  */
 .time-entries-table {
-	border-collapse: separate;
-	border-spacing: 8px 0;
-	/* Mobile/tablet: min-width enables horizontal scroll inside .grid-container */
-	min-width: 700px;
-}
-
-@media (min-width: 1024px) {
-	/* ≥1024px desktop: table fits container without forced min-width */
-	.time-entries-table {
-		min-width: 0;
-		width: 100%;
-	}
+	border-collapse: collapse;
+	border-spacing: 0;
+	width: 100%;
+	table-layout: auto;
 }
 
 .time-entries-table th,
 .time-entries-table td {
-	padding-inline: 12px;
+	padding: 0.75rem 1rem;
+	vertical-align: middle;
 }
 
-.time-entries-table col.col-date { width: 110px; }
-.time-entries-table col.col-project { width: 12%; }
-.time-entries-table col.col-type { width: 4%; }
-.time-entries-table col.col-customer { width: 15%; }
-.time-entries-table col.col-user { width: 9%; }
-.time-entries-table col.col-hours { width: 6%; }
-.time-entries-table col.col-description { width: 42%; }
-.time-entries-table col.col-actions { width: 9%; }
+.time-entries-table thead th {
+	white-space: nowrap;
+}
+
+.time-entries-table col.col-date { width: 6.5rem; }
+.time-entries-table col.col-project { width: 14%; }
+.time-entries-table col.col-type { width: 4.5rem; }
+.time-entries-table col.col-customer { width: 12%; }
+.time-entries-table col.col-user { width: 10%; }
+.time-entries-table col.col-hours { width: 5.5rem; }
+.time-entries-table col.col-description { width: auto; }
+.time-entries-table col.col-actions { width: 8.5rem; }
+
+.time-entries-table thead th.col-actions,
+.time-entries-table tbody td.col-actions {
+	white-space: nowrap;
+	text-align: right;
+}
 
 
 .time-entries-table tbody tr:hover,
@@ -563,13 +561,11 @@
 	white-space: nowrap;
 }
 
-/* Hours column: keep header and body cells within bounds */
-.time-entries-table thead th:nth-child(6),
-.time-entries-table tbody td:nth-child(6) {
+/* Hours column: tabular numbers, never truncate the header label */
+.time-entries-table thead th.col-hours,
+.time-entries-table tbody td.col-hours {
 	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	max-width: 0;
+	text-align: right;
 }
 
 .time-entries-hours-value {
@@ -707,14 +703,7 @@
 	overflow: visible;
 }
 
-/* Description: wrap freely, no truncation */
-.time-entries-table .description-cell,
-.time-entries-table .description-cell__text {
-	word-wrap: break-word;
-	overflow-wrap: break-word;
-	white-space: normal;
-	line-height: 1.5;
-}
+/* Description: ellipsis in table; full text in detail view, export, and title tooltip */
 
 /* Project/Customer/User: allow wrap to multiple lines, no truncation */
 .time-entries-table td:nth-child(2),
@@ -726,25 +715,25 @@
 	min-width: 0;
 }
 
-/* Project Type Icons - minimal, variables only */
-.project-type-icon {
+/* Project Type Icons — subtle, no extra box chrome */
+.pc-app--time-entries .project-type-icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	font-size: 1rem;
-	width: 28px;
-	height: 28px;
+	width: 1.75rem;
+	height: 1.75rem;
 	border-radius: var(--border-radius);
-	background: var(--color-background-hover);
-	border: 1px solid var(--color-border);
+	background: transparent;
+	border: 0;
 	cursor: help;
 	position: relative;
 	flex-shrink: 0;
+	line-height: 1;
 }
 
-.project-type-icon:hover {
-	background: var(--color-primary-element-light);
-	border-color: var(--color-primary-element);
+.pc-app--time-entries .project-type-icon:hover {
+	background: var(--color-background-hover);
 }
 
 /* Project Type Display (Icon + Text for analysis tables) */
@@ -862,6 +851,16 @@
 	border-color: var(--color-border);
 }
 
+/* Time entries: keep type icons flat (no per-type tinted boxes) */
+.pc-app--time-entries .project-type-icon[data-project-type] {
+	background: transparent;
+	border: 0;
+}
+
+.pc-app--time-entries .project-type-icon[data-project-type]:hover {
+	background: var(--color-background-hover);
+}
+
 /* Universal class for handling long text descriptions */
 .text-truncate {
 	overflow: hidden;
@@ -934,14 +933,16 @@
 	text-decoration: underline;
 }
 
-/* Action Items */
+/* Action items: canonical styles in common/list-table.css */
+
+/* Legacy global action-item rules below — kept for other pages */
 .action-items {
 	display: flex;
 	gap: 0.5rem;
 	align-items: center;
 }
 
-/* Mobile base: 44px touch targets for row actions */
+/* Mobile base: 44px touch targets for row actions (non–time-entries pages) */
 .action-item {
 	display: flex;
 	align-items: center;
@@ -976,9 +977,20 @@
 }
 
 .action-item.delete-entry-btn:hover,
-.action-item.delete-entry-btn:focus-visible {
+.action-item.delete-entry-btn:focus-visible,
+.action-item.action-item--danger:hover,
+.action-item.action-item--danger:focus-visible {
 	background: var(--color-error);
 	color: var(--color-error-text, var(--color-primary-element-text));
+}
+
+.action-item.action-item--danger {
+	color: var(--color-error);
+}
+
+.action-item .lucide-icon {
+	width: 1rem;
+	height: 1rem;
 }
 
 .action-item:focus-visible {
@@ -1049,8 +1061,8 @@
 
 /* Dark Mode Enhancements */
 @media (prefers-color-scheme: dark) {
-	.section {
-		box-shadow: 0 2px 20px color-mix(in srgb, var(--color-main-text) 20%, transparent);
+	.pc-app--time-entries .time-entries-panel {
+		box-shadow: none;
 	}
 
 	.button.primary {
@@ -1059,5 +1071,45 @@
 
 	.button.primary:hover {
 		box-shadow: 0 6px 20px color-mix(in srgb, var(--color-primary) 50%, transparent);
+	}
+}
+
+/* Time entries — mobile card layout for summary footer (narrow viewports only) */
+@media (max-width: 720px) {
+	.pc-app--time-entries .time-entries-table {
+		border: 0;
+		background: transparent;
+		min-width: 0;
+		width: 100%;
+	}
+
+	.pc-app--time-entries .time-entries-table tfoot {
+		display: block;
+		margin: 0 var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
+		border: 1px solid var(--color-border);
+		border-radius: var(--pc-radius-md, 12px);
+		background: color-mix(in srgb, var(--color-primary-element-light) 28%, var(--color-main-background));
+	}
+
+	.pc-app--time-entries .time-entries-panel__footer.pagination {
+		margin-bottom: var(--pc-space-2, 0.5rem);
+	}
+
+	.pc-app--time-entries .time-entries-table tfoot tr {
+		display: block;
+		padding: var(--pc-space-4, 1rem);
+	}
+
+	.pc-app--time-entries .time-entries-table tfoot th,
+	.pc-app--time-entries .time-entries-table tfoot td {
+		display: block;
+		padding: 0;
+		border: 0;
+		text-align: left;
+	}
+
+	.pc-app--time-entries .time-entries-table tfoot .time-entries-summary__figures {
+		text-align: left;
+		margin-top: var(--pc-space-3, 0.75rem);
 	}
 }

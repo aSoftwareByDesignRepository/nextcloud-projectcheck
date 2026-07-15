@@ -1,0 +1,427 @@
+/**
+ * Shared list/table panel — filters + data table + footer in one surface.
+ * Used by time entries, projects, and customers index pages.
+ *
+ * @copyright Copyright (c) 2026, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+.pc-list-panel,
+.pc-app--time-entries .time-entries-panel,
+.pc-app--employees .employees-panel {
+	padding: 0;
+	margin-bottom: var(--pc-space-5, 1.5rem);
+	overflow: visible;
+}
+
+.pc-list-panel__toolbar,
+.pc-app--time-entries .time-entries-panel__toolbar,
+.pc-app--employees .employees-panel__toolbar {
+	padding: 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.pc-list-panel__footer,
+.pc-app--time-entries .time-entries-panel__footer,
+.pc-app--employees .employees-panel__footer {
+	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
+	border-top: 1px solid var(--color-border);
+	background: var(--color-main-background);
+}
+
+.pc-list-panel .filters-container,
+.pc-app--time-entries .filters-container {
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
+	margin-bottom: 0;
+	box-shadow: none;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: var(--pc-space-4, 1rem);
+}
+
+/* Shared search field with inset icon (all list panels) */
+.pc-list-panel .search-input-wrapper,
+.pc-app--time-entries .search-input-wrapper {
+	position: relative;
+	display: block;
+	flex: 1 1 320px;
+	min-width: min(100%, 280px);
+}
+
+.pc-list-panel .search-input,
+.pc-app--time-entries .search-input {
+	width: 100%;
+	min-height: var(--pc-touch-min, 44px);
+	padding: var(--pc-space-3, 12px) var(--pc-space-4, 16px) var(--pc-space-3, 12px) 2.75rem;
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-radius: var(--pc-radius-sm, 8px);
+	font-size: var(--pc-fs-md, 1rem);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+}
+
+.pc-list-panel .search-input:focus-visible,
+.pc-app--time-entries .search-input:focus-visible {
+	outline: none;
+	border-color: var(--color-primary-element);
+	box-shadow: var(--pc-shadow-focus);
+}
+
+.pc-list-panel .pc-list-search-icon,
+.pc-list-panel .time-entries-search-icon,
+.pc-app--time-entries .pc-list-search-icon,
+.pc-app--time-entries .time-entries-search-icon {
+	position: absolute !important;
+	inset-block-start: 50%;
+	inset-inline-start: var(--pc-space-3, 12px);
+	transform: translateY(-50%);
+	pointer-events: none;
+	color: var(--color-text-maxcontrast, var(--pc-muted));
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	z-index: 1;
+}
+
+.pc-list-panel .pc-list-search-icon .lucide-icon,
+.pc-list-panel .time-entries-search-icon .lucide-icon,
+.pc-app--time-entries .pc-list-search-icon .lucide-icon,
+.pc-app--time-entries .time-entries-search-icon .lucide-icon {
+	width: 1.125rem;
+	height: 1.125rem;
+}
+
+.pc-list-table-wrap,
+.pc-app--time-entries .time-entries-table-wrap {
+	overflow-x: auto;
+	width: 100%;
+	max-width: 100%;
+	-webkit-overflow-scrolling: touch;
+	padding: 0;
+}
+
+/* Data tables inside list panels */
+.pc-list-panel .pc-data-table,
+.pc-app--time-entries .time-entries-table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	background: var(--color-main-background);
+}
+
+.pc-list-panel .pc-data-table .action-items,
+.pc-app--time-entries .time-entries-table .action-items {
+	display: inline-flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.35rem;
+	min-width: 0;
+}
+
+.pc-list-panel .pc-data-table .action-item,
+.pc-app--time-entries .time-entries-table .action-item {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	min-width: 2rem;
+	min-height: 2rem;
+	padding: 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	cursor: pointer;
+	transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+	text-decoration: none;
+	box-sizing: border-box;
+}
+
+.pc-list-panel .pc-data-table .action-item .lucide-icon,
+.pc-list-panel .pc-data-table .action-item .lucide-icon-host,
+.pc-app--time-entries .time-entries-table .action-item .lucide-icon,
+.pc-app--time-entries .time-entries-table .action-item .lucide-icon-host {
+	width: 1rem;
+	height: 1rem;
+	color: currentColor;
+}
+
+.pc-list-panel .pc-data-table .action-item:hover,
+.pc-list-panel .pc-data-table .action-item:focus-visible,
+.pc-app--time-entries .time-entries-table .action-item:hover,
+.pc-app--time-entries .time-entries-table .action-item:focus-visible {
+	background: var(--color-primary-element);
+	border-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+	transform: none;
+}
+
+.pc-list-panel .pc-data-table .action-item.action-item--danger,
+.pc-app--time-entries .time-entries-table .action-item.action-item--danger {
+	color: var(--color-error-text, #ffffff);
+	border: 1.5px solid var(--color-error);
+	background: var(--color-error);
+}
+
+.pc-list-panel .pc-data-table .action-item.action-item--danger .lucide-icon,
+.pc-list-panel .pc-data-table .action-item.action-item--danger .lucide-icon-host,
+.pc-app--time-entries .time-entries-table .action-item.action-item--danger .lucide-icon,
+.pc-app--time-entries .time-entries-table .action-item.action-item--danger .lucide-icon-host {
+	color: currentColor;
+	stroke: currentColor;
+}
+
+.pc-list-panel .pc-data-table .action-item.action-item--danger:hover,
+.pc-list-panel .pc-data-table .action-item.action-item--danger:focus-visible,
+.pc-app--time-entries .time-entries-table .action-item.action-item--danger:hover,
+.pc-app--time-entries .time-entries-table .action-item.action-item--danger:focus-visible {
+	background: color-mix(in srgb, var(--color-error) 88%, #000000);
+	border-color: color-mix(in srgb, var(--color-error) 88%, #000000);
+	color: var(--color-error-text, #ffffff);
+}
+
+.pc-list-panel .pc-data-table .action-item:focus-visible,
+.pc-app--time-entries .time-entries-table .action-item:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+	.pc-list-panel .pc-data-table .action-item.action-item--danger,
+	.pc-app--time-entries .time-entries-table .action-item.action-item--danger {
+		border: 2px solid ButtonText;
+		color: ButtonText;
+		background: Canvas;
+	}
+}
+
+@media (pointer: coarse) {
+	.pc-list-panel .pc-data-table .action-item,
+	.pc-app--time-entries .time-entries-table .action-item {
+		width: var(--pc-touch-min, 44px);
+		height: var(--pc-touch-min, 44px);
+		min-width: var(--pc-touch-min, 44px);
+		min-height: var(--pc-touch-min, 44px);
+	}
+}
+
+.pc-list-panel .pc-data-table .project-type-icon,
+.pc-app--time-entries .project-type-icon {
+	background: transparent;
+	border: 0;
+}
+
+.pc-list-panel .pc-data-table .project-type-icon[data-project-type]:hover,
+.pc-app--time-entries .project-type-icon[data-project-type]:hover {
+	background: var(--color-background-hover);
+}
+
+/* List-panel tables: flat surface (no nested card chrome from legacy .grid) */
+.pc-list-panel .pc-data-table.grid,
+.pc-app--time-entries .time-entries-table.grid {
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	overflow: visible;
+	table-layout: auto;
+	word-break: normal;
+}
+
+.pc-list-panel .pc-data-table thead th,
+.pc-app--time-entries .time-entries-table thead th {
+	white-space: nowrap;
+}
+
+/* Truncated text cells — full value in detail view and exports */
+.pc-list-panel .pc-data-table .description-cell,
+.pc-app--time-entries .time-entries-table .description-cell {
+	max-width: 14rem;
+	min-width: 0;
+}
+
+.pc-list-panel .pc-data-table .description-cell__text,
+.pc-app--time-entries .time-entries-table .description-cell__text {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Desktop-first table cells (card layout only below 721px) */
+.pc-list-panel .pc-data-table tbody td,
+.pc-app--time-entries .time-entries-table tbody td {
+	display: table-cell;
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--color-border);
+	text-align: inherit;
+	vertical-align: middle;
+}
+
+.pc-list-panel .pc-data-table tbody td::before,
+.pc-app--time-entries .time-entries-table tbody td::before {
+	content: none;
+}
+
+.pc-list-panel .pc-data-table tbody td.col-actions,
+.pc-list-panel .pc-data-table tbody td:last-child:has(.action-items),
+.pc-app--time-entries .time-entries-table tbody td.col-actions {
+	white-space: nowrap;
+	text-align: right;
+	vertical-align: middle;
+}
+
+.pc-list-panel .pc-data-table tbody td.col-actions .action-items,
+.pc-list-panel .pc-data-table tbody td:last-child:has(.action-items) .action-items,
+.pc-app--time-entries .time-entries-table tbody td.col-actions .action-items {
+	justify-content: flex-end;
+	flex-wrap: nowrap;
+	flex-direction: row;
+}
+
+/* Narrow viewports: labelled card rows (WCAG 1.4.10) */
+@media (max-width: 720px) {
+	.pc-list-table-wrap,
+	.pc-app--time-entries .time-entries-table-wrap {
+		overflow-x: visible;
+	}
+
+	.pc-list-panel .pc-data-table thead,
+	.pc-app--time-entries .time-entries-table thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.pc-list-panel .pc-data-table tbody tr[data-entry-id],
+	.pc-list-panel .pc-data-table tbody tr[data-project-id],
+	.pc-list-panel .pc-data-table tbody tr[data-customer-id],
+	.pc-app--time-entries .time-entries-table tbody tr[data-entry-id] {
+		display: block;
+		margin: 0 var(--pc-space-4, 1rem) var(--pc-space-4, 1rem);
+		padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+		border: 1px solid var(--color-border);
+		border-radius: var(--pc-radius-md, 12px);
+		background: var(--color-main-background);
+	}
+
+	.pc-list-panel .pc-data-table tbody tr[data-entry-id]:hover,
+	.pc-list-panel .pc-data-table tbody tr[data-entry-id]:focus-within,
+	.pc-list-panel .pc-data-table tbody tr[data-project-id]:hover,
+	.pc-list-panel .pc-data-table tbody tr[data-project-id]:focus-within,
+	.pc-list-panel .pc-data-table tbody tr[data-customer-id]:hover,
+	.pc-list-panel .pc-data-table tbody tr[data-customer-id]:focus-within,
+	.pc-app--time-entries .time-entries-table tbody tr[data-entry-id]:hover,
+	.pc-app--time-entries .time-entries-table tbody tr[data-entry-id]:focus-within {
+		background: var(--color-main-background);
+		box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
+	}
+
+	.pc-list-panel .pc-data-table tbody td,
+	.pc-app--time-entries .time-entries-table tbody td {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		justify-content: flex-start;
+		gap: var(--pc-space-1, 0.35rem);
+		padding: 0.55rem 0;
+		border-bottom: 1px solid var(--color-border);
+		text-align: left;
+		min-width: 0;
+		word-break: normal;
+		overflow-wrap: anywhere;
+	}
+
+	.pc-list-panel .pc-data-table tbody td::before,
+	.pc-app--time-entries .time-entries-table tbody td::before {
+		content: attr(data-label);
+		font-weight: 600;
+		font-size: var(--pc-fs-xs, 0.75rem);
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--color-text-maxcontrast);
+		text-align: left;
+		flex: none;
+		max-width: none;
+	}
+
+	.pc-list-panel .pc-data-table tbody td.col-actions,
+	.pc-list-panel .pc-data-table tbody td:last-child:has(.action-items),
+	.pc-app--time-entries .time-entries-table tbody td.col-actions {
+		display: block;
+		border-bottom: 0;
+		padding-top: var(--pc-space-3, 0.75rem);
+	}
+
+	.pc-list-panel .pc-data-table tbody td.col-actions::before,
+	.pc-list-panel .pc-data-table tbody td:last-child:has(.action-items)::before,
+	.pc-app--time-entries .time-entries-table tbody td.col-actions::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: var(--pc-space-2, 0.5rem);
+	}
+
+	.pc-list-panel .pc-data-table tbody td.col-actions .action-items,
+	.pc-list-panel .pc-data-table tbody td:last-child:has(.action-items) .action-items,
+	.pc-app--time-entries .time-entries-table tbody td.col-actions .action-items {
+		justify-content: flex-start;
+		flex-wrap: nowrap;
+		flex-direction: row;
+	}
+
+	.pc-list-panel .pc-data-table .description-cell,
+	.pc-app--time-entries .time-entries-table .description-cell {
+		max-width: none;
+	}
+
+	.pc-list-panel .pc-data-table .description-cell__text,
+	.pc-app--time-entries .time-entries-table .description-cell__text {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
+		white-space: normal;
+		text-overflow: ellipsis;
+	}
+}
+
+.pc-list-panel .pc-data-table.projects-table {
+	min-width: 960px;
+}
+
+.pc-list-panel .pc-data-table.customers-table {
+	min-width: 640px;
+}
+
+@media (min-width: 1024px) {
+	.pc-list-panel .pc-data-table.projects-table,
+	.pc-list-panel .pc-data-table.customers-table {
+		min-width: 0;
+		width: 100%;
+	}
+}
+
+.pc-list-panel .pc-data-table tbody tr:hover,
+.pc-list-panel .pc-data-table tbody tr:focus-within {
+	background: var(--color-background-dark);
+}
+
+.pc-list-panel .emptycontent {
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	padding: clamp(2rem, 6vw, 3rem) clamp(1rem, 4vw, 2rem);
+}
+

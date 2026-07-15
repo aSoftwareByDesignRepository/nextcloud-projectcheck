@@ -77,6 +77,14 @@ class TimeEntry extends Entity
 	}
 
 	/**
+	 * Whether the given Nextcloud user id owns this entry (timing-safe compare).
+	 */
+	public function isOwnedBy(string $userId): bool
+	{
+		return hash_equals((string) $this->getUserId(), (string) $userId);
+	}
+
+	/**
 	 * Calculate the cost for this time entry.
 	 *
 	 * Uses fixed-point math so totals are not subject to IEEE-754 drift

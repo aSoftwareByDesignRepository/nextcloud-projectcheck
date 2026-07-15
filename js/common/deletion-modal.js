@@ -14,8 +14,19 @@
 	let currentEntity = null;
 	let currentCallbacks = {
 		onSuccess: null,
-		onCancel: null
+		onCancel: null,
+		onRelease: null
 	};
+
+	function invokeReleaseCallback() {
+		if (typeof currentCallbacks.onRelease === 'function') {
+			try {
+				currentCallbacks.onRelease();
+			} catch (releaseError) {
+				console.error('Deletion modal release callback failed:', releaseError);
+			}
+		}
+	}
 
 	/**
 	 * @param {string} tag
@@ -346,7 +357,11 @@
 		};
 		currentCallbacks = {
 			onSuccess: typeof options.onSuccess === 'function' ? options.onSuccess : null,
-			onCancel: typeof options.onCancel === 'function' ? options.onCancel : null
+			onCancel: typeof options.onCancel === 'function' ? options.onCancel : null,
+			onRelease: typeof options.onRelease === 'function' ? options.onRelease : null,
+			// When a page supplies onSuccess it usually shows its own inline notice; skip the
+			// floating OC toast unless the caller opts in explicitly.
+			showSuccessToast: options.showSuccessToast === true
 		};
 
 		const shell = mountModalShell();
@@ -698,7 +713,8 @@
 			body: formData,
 			headers: {
 				'X-Requested-With': 'XMLHttpRequest',
-				requesttoken: requestToken
+				requesttoken: requestToken,
+				Accept: 'application/json'
 			},
 			credentials: 'same-origin'
 		};
@@ -715,27 +731,48 @@
 				if (!response.ok) {
 					showErrorMessage(data.error || data.message || t('projectcheck', 'Failed to delete item'));
 					resetDeleteButton();
+					invokeReleaseCallback();
 					return;
 				}
 				if (data.success) {
 					const onSuccessCallback = currentCallbacks.onSuccess;
+					const showSuccessToast = currentCallbacks.showSuccessToast === true;
 					const deletedEntity = currentEntity ? Object.assign({}, currentEntity) : null;
+					const successMessage = data.message || t('projectcheck', 'Item deleted successfully');
 					closeDeletionModal();
-					showSuccessMessage(data.message || t('projectcheck', 'Item deleted successfully'));
+					let callbackFailed = false;
 					if (typeof onSuccessCallback === 'function') {
-						onSuccessCallback(deletedEntity);
-					} else {
+						try {
+							onSuccessCallback(deletedEntity);
+						} catch (callbackError) {
+							callbackFailed = true;
+							console.error('Deletion succeeded but post-delete callback failed:', callbackError);
+						}
+					}
+					const shouldToast = showSuccessToast
+						|| typeof onSuccessCallback !== 'function'
+						|| callbackFailed;
+					if (shouldToast) {
+						showSuccessMessage(successMessage);
+					}
+					if (typeof onSuccessCallback !== 'function') {
 						window.location.reload();
+					} else if (callbackFailed) {
+						window.setTimeout(function () {
+							window.location.reload();
+						}, 800);
 					}
 					return;
 				}
 				showErrorMessage(data.error || data.message || t('projectcheck', 'Failed to delete item'));
 				resetDeleteButton();
+				invokeReleaseCallback();
 			})
 			.catch(function (error) {
 				console.error('Deletion error:', error);
 				showErrorMessage(t('projectcheck', 'An error occurred while deleting the item'));
 				resetDeleteButton();
+				invokeReleaseCallback();
 			});
 	}
 
@@ -809,7 +846,8 @@
 		currentEntity = null;
 		currentCallbacks = {
 			onSuccess: null,
-			onCancel: null
+			onCancel: null,
+			onRelease: null
 		};
 
 		if (window.ProjectCheckModalA11y && dialogEl) {
@@ -890,7 +928,9 @@
 		const id = encodeURIComponent(String(entityId));
 		return url
 			.split('CUSTOMER_ID').join(id)
-			.split('PROJECT_ID').join(id);
+			.split('PROJECT_ID').join(id)
+			.split('ENTRY_ID').join(id)
+			.split('TIME_ENTRY_ID').join(id);
 	}
 
 	window.projectcheckDeletionModal = {

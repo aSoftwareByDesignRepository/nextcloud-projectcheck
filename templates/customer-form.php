@@ -18,6 +18,14 @@ style('projectcheck', 'navigation');
 $pageId = $isEdit ? 'customer-edit' : 'customer-create';
 $pageTitle = $isEdit ? $l->t('Edit Customer') : $l->t('Add Customer');
 $pageHelp = $isEdit ? $l->t('Update customer information') : $l->t('Create a new customer with complete contact details');
+ob_start(); ?>
+					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.index')); ?>" class="button secondary">
+						<span data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></span>
+						<?php p($l->t('Cancel')); ?>
+					</a>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Page actions');
 include __DIR__ . '/common/page-start.php';
 ?>
 		<div class="customer-form-container pc-section">

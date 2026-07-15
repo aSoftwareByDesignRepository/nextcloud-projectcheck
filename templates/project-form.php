@@ -69,6 +69,20 @@ if ($canManageMembers) {
 $pageId = $isEdit ? 'project-edit' : 'project-create';
 $pageTitle = $isEdit ? $l->t('Edit Project') : $l->t('Create New Project');
 $pageHelp = $isEdit ? $l->t('Update project information') : $l->t('Create a new project');
+ob_start(); ?>
+                <a href="<?php p($_['indexUrl'] ?? '/projects'); ?>" class="button secondary">
+                    <span data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></span>
+                    <?php p($l->t('Back to Projects')); ?>
+                </a>
+                <?php if ($isEdit && $projectShowUrl !== ''): ?>
+                <a href="<?php p($projectShowUrl); ?>" class="button secondary">
+                    <span data-lucide="eye" class="lucide-icon" aria-hidden="true"></span>
+                    <?php p($l->t('View project')); ?>
+                </a>
+                <?php endif; ?>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Page actions');
 include __DIR__ . '/common/page-start.php';
 ?>
         <?php if (!$isEdit): ?>
@@ -124,19 +138,6 @@ include __DIR__ . '/common/page-start.php';
             </div>
         </aside>
         <?php endif; ?>
-
-        <div class="section pc-section">
-            <div class="actions">
-                <a href="<?php p($_['indexUrl'] ?? '/projects'); ?>" class="button">
-                    ← <?php p($l->t('Back to Projects')); ?>
-                </a>
-                <?php if ($isEdit && $projectShowUrl !== ''): ?>
-                    <a href="<?php p($projectShowUrl); ?>" class="button">
-                        <?php p($l->t('View project')); ?>
-                    </a>
-                <?php endif; ?>
-            </div>
-        </div>
 
         <!-- Project Form -->
         <div class="section">

@@ -10,5 +10,5 @@ $pageId = isset($pageId) ? (string)$pageId : (string)($_['pageId'] ?? 'page');
 	<a class="pc-skip-link" href="#pc-main-content"><?php p($l->t('Skip to main content')); ?></a>
 	<div id="pc-live-region" class="pc-sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 	<div id="pc-alert-region" class="pc-sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
-	<div id="app-content-wrapper" class="pc-shell">
+	<div id="app-content-wrapper" class="pc-shell pc-app-shell-stack">
 		<main id="pc-main-content" class="pc-main" tabindex="-1">

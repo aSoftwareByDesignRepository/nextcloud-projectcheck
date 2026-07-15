@@ -38,6 +38,41 @@ $canCreateProject = !empty($_['canCreateProject']);
 $pageId = 'customer-detail';
 $pageTitle = $customer->getName();
 $pageHelp = $l->t('Customer details and associated projects');
+ob_start(); ?>
+						<div class="customer-meta">
+							<?php if ($customer->getEmail()): ?>
+								<span class="meta-item">
+									<span data-lucide="mail" class="lucide-icon" aria-hidden="true"></span>
+									<a href="mailto:<?php p($customer->getEmail()); ?>"><?php p($customer->getEmail()); ?></a>
+								</span>
+							<?php endif; ?>
+							<?php if ($customer->getPhone()): ?>
+								<span class="meta-item">
+									<span data-lucide="phone" class="lucide-icon" aria-hidden="true"></span>
+									<a href="tel:<?php p($customer->getPhone()); ?>"><?php p($customer->getPhone()); ?></a>
+								</span>
+							<?php endif; ?>
+						</div>
+<?php
+$pageHeaderMetaHtml = ob_get_clean();
+ob_start(); ?>
+					<?php if ($canEditCustomer): ?>
+					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.edit', ['id' => $customer->getId()])); ?>"
+						class="button secondary">
+						<span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
+						<?php p($l->t('Edit Customer')); ?>
+					</a>
+					<?php endif; ?>
+					<?php if ($canCreateProject): ?>
+					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>"
+						class="button primary">
+						<span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
+						<?php p($l->t('New Project')); ?>
+					</a>
+					<?php endif; ?>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Customer actions');
 include __DIR__ . '/common/page-start.php';
 ?>
 		<!-- Breadcrumb Navigation -->
@@ -49,46 +84,6 @@ include __DIR__ . '/common/page-start.php';
 				</ol>
 			</nav>
 		</div>
-
-		<!-- Customer meta + actions -->
-		<?php
-		ob_start(); ?>
-						<div class="customer-meta">
-							<?php if ($customer->getEmail()): ?>
-								<span class="meta-item">
-									<i data-lucide="mail" class="lucide-icon primary"></i>
-									<a href="mailto:<?php p($customer->getEmail()); ?>"><?php p($customer->getEmail()); ?></a>
-								</span>
-							<?php endif; ?>
-							<?php if ($customer->getPhone()): ?>
-								<span class="meta-item">
-									<i data-lucide="phone" class="lucide-icon primary"></i>
-									<a href="tel:<?php p($customer->getPhone()); ?>"><?php p($customer->getPhone()); ?></a>
-								</span>
-							<?php endif; ?>
-						</div>
-		<?php
-		$headerMetaHtml = ob_get_clean();
-		ob_start(); ?>
-					<?php if ($canEditCustomer): ?>
-					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.edit', ['id' => $customer->getId()])); ?>"
-						class="button secondary">
-						<i data-lucide="edit" class="lucide-icon" aria-hidden="true"></i>
-						<?php p($l->t('Edit Customer')); ?>
-					</a>
-					<?php endif; ?>
-					<?php if ($canCreateProject): ?>
-					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>"
-						class="button primary">
-						<i data-lucide="plus" class="lucide-icon" aria-hidden="true"></i>
-						<?php p($l->t('New Project')); ?>
-					</a>
-					<?php endif; ?>
-		<?php
-		$headerActionsHtml = ob_get_clean();
-		$headerActionsLabel = $l->t('Customer actions');
-		include __DIR__ . '/common/page-header-section.php';
-		?>
 
 		<div class="section">
 			<div class="section-content">
@@ -105,7 +100,8 @@ include __DIR__ . '/common/page-start.php';
 		</div>
 
 		<!-- Customer Statistics -->
-		<div class="section stats-section">
+		<section class="section stats-section pc-stats-panel pc-section" aria-labelledby="customer-detail-stats-title">
+			<h3 id="customer-detail-stats-title" class="stats-section__title u-visually-hidden"><?php p($l->t('Customer Statistics')); ?></h3>
 			<div class="stats-container">
 				<!-- Primary Statistics Row -->
 				<div class="stats-row primary">
@@ -227,7 +223,7 @@ include __DIR__ . '/common/page-start.php';
 					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 
 		<!-- Yearly Performance Dashboard -->
 		<?php if (!empty($yearlyStats)): ?>

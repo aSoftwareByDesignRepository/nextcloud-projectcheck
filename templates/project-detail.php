@@ -60,6 +60,47 @@ $pageId = 'project-detail';
 $pageTitle = $project->getName();
 $pageHelp = $l->t('Status, customer, and time tracking in one place.');
 $includeScopeStrip = true;
+ob_start(); ?>
+                        <?php if (!empty($pricingModeLabel)): ?>
+                            <p class="pc-scope-strip__badge" role="status">
+                                <span class="pc-pricing-badge-label"><?php p($l->t('How hours are priced:')); ?></span>
+                                <strong><?php p($pricingModeLabel); ?></strong>
+                            </p>
+                        <?php endif; ?>
+                        <div class="project-meta">
+                            <div class="meta-item">
+                                <span data-lucide="building-2" class="lucide-icon" aria-hidden="true"></span>
+                                <?php if ($customerName && $project->getCustomerId()): ?>
+                                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => $project->getCustomerId()])); ?>" class="customer-link">
+                                        <?php p($customerName); ?>
+                                    </a>
+                                <?php else: ?>
+                                    <span><?php p($l->t('Customer #%s', [$project->getCustomerId()])); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="meta-item">
+                                <span data-lucide="calendar" class="lucide-icon" aria-hidden="true"></span>
+                                <span><?php p($project->getCreatedAt() ? $project->getCreatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></span>
+                            </div>
+                        </div>
+<?php
+$pageHeaderMetaHtml = ob_get_clean();
+ob_start(); ?>
+                    <?php if (!empty($canChangeStatus) && $canChangeStatus && $allowedStatusTargets !== []): ?>
+                        <button type="button" class="button secondary" id="open-status-modal-btn">
+                            <span data-lucide="refresh-cw" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Change status')); ?>
+                        </button>
+                    <?php endif; ?>
+                    <?php if (!empty($canEdit) && $canEdit): ?>
+                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.edit', ['id' => $projectId])); ?>" class="button primary">
+                            <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Edit project')); ?>
+                        </a>
+                    <?php endif; ?>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Project actions');
 include __DIR__ . '/common/page-start.php';
 ?>
         <!-- Breadcrumb Navigation -->
@@ -100,51 +141,6 @@ include __DIR__ . '/common/page-start.php';
             </div>
         <?php endif; ?>
 
-        <!-- Page Header: title + key actions (single focal area) -->
-        <?php
-        ob_start(); ?>
-                        <?php if (!empty($pricingModeLabel)): ?>
-                            <p class="pc-scope-strip__badge" role="status">
-                                <span class="pc-pricing-badge-label"><?php p($l->t('How hours are priced:')); ?></span>
-                                <strong><?php p($pricingModeLabel); ?></strong>
-                            </p>
-                        <?php endif; ?>
-                        <div class="project-meta">
-                            <div class="meta-item">
-                                <i class="icon-user-custom" aria-hidden="true"></i>
-                                <?php if ($customerName && $project->getCustomerId()): ?>
-                                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => $project->getCustomerId()])); ?>" class="customer-link">
-                                        <?php p($customerName); ?>
-                                    </a>
-                                <?php else: ?>
-                                    <span><?php p($l->t('Customer #%s', [$project->getCustomerId()])); ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="meta-item">
-                                <i class="icon-calendar-custom" aria-hidden="true"></i>
-                                <span><?php p($project->getCreatedAt() ? $project->getCreatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></span>
-                            </div>
-                        </div>
-        <?php
-        $headerMetaHtml = ob_get_clean();
-        ob_start(); ?>
-                    <?php if (!empty($canChangeStatus) && $canChangeStatus && $allowedStatusTargets !== []): ?>
-                        <button type="button" class="button" id="open-status-modal-btn">
-                            <?php p($l->t('Change status')); ?>
-                        </button>
-                    <?php endif; ?>
-                    <?php if (!empty($canEdit) && $canEdit): ?>
-                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.edit', ['id' => $projectId])); ?>" class="button primary">
-                            <i class="icon-edit-custom" aria-hidden="true"></i>
-                            <?php p($l->t('Edit project')); ?>
-                        </a>
-                    <?php endif; ?>
-        <?php
-        $headerActionsHtml = ob_get_clean();
-        $headerActionsLabel = $l->t('Project actions');
-        include __DIR__ . '/common/page-header-section.php';
-        ?>
-
         <!-- Budget Alerts -->
         <?php if (isset($budgetInfo['alerts']) && !empty($budgetInfo['alerts'])): ?>
             <div class="section budget-alerts-section">
@@ -167,7 +163,7 @@ include __DIR__ . '/common/page-start.php';
         <?php endif; ?>
 
         <!-- Project Statistics -->
-        <div class="section stats-section" aria-labelledby="pc-project-key-figures">
+        <section class="section stats-section pc-stats-panel pc-section" aria-labelledby="pc-project-key-figures">
             <h3 id="pc-project-key-figures" class="stats-section__title"><?php p($l->t('Key figures')); ?></h3>
             <div class="stats-container">
                 <div class="stat-card">
@@ -215,7 +211,7 @@ include __DIR__ . '/common/page-start.php';
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Yearly Statistics -->
         <?php if (!empty($yearlyStats)): ?>

@@ -191,6 +191,36 @@
 			}
 			return this.number(n, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + '\u00A0h';
 		},
+
+		/**
+		 * Round hours to two decimal places (matches PHP Money::HOUR_SCALE).
+		 *
+		 * @param {*} value
+		 * @returns {number}
+		 */
+		roundHours(value) {
+			const n = toFiniteNumber(value);
+			if (n === null) {
+				return 0;
+			}
+			const factor = 100;
+			return Math.round(n * factor) / factor;
+		},
+
+		/**
+		 * Subtract hour values with non-negative, two-decimal rounding.
+		 *
+		 * @param {*} total
+		 * @param {*} amount
+		 * @returns {number}
+		 */
+		subtractHours(total, amount) {
+			const a = toFiniteNumber(total);
+			const b = toFiniteNumber(amount);
+			const safeTotal = a === null ? 0 : a;
+			const safeAmount = b === null ? 0 : b;
+			return this.roundHours(Math.max(0, safeTotal - safeAmount));
+		},
 	};
 
 	root.ProjectCheckFormat = ProjectCheckFormat;

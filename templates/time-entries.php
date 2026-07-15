@@ -20,18 +20,16 @@ Util::addStyle('projectcheck', 'navigation');
 $pageId = 'time-entries';
 $pageTitle = $l->t('Time Entries');
 $pageHelp = $l->t('Track and manage your time entries');
-include __DIR__ . '/common/page-start.php';
-?>
-        <?php
-        // Lead text already rendered under the h1 by page-start.php — the bar only carries actions.
-        ob_start(); ?>
+ob_start(); ?>
                     <a href="<?php p($_['createUrl'] ?? '/index.php/apps/projectcheck/time-entries/create'); ?>" class="button primary">
+                        <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Add Time Entry')); ?>
                     </a>
-        <?php
-        $headerActionsHtml = ob_get_clean();
-        include __DIR__ . '/common/page-header-section.php';
-        ?>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Page actions');
+include __DIR__ . '/common/page-start.php';
+?>
 
         <!-- Success/Error Messages -->
         <?php if (isset($_GET['message']) && $_GET['message'] === 'success'): ?>
@@ -59,17 +57,29 @@ include __DIR__ . '/common/page-start.php';
         <?php endif; ?>
 
 
-        <!-- Search and Filter Section -->
-        <div class="section">
+        <?php
+        $colDate = $l->t('Date');
+        $colProject = $l->t('Project');
+        $colType = $l->t('Type');
+        $colCustomer = $l->t('Customer');
+        $colUser = $l->t('User');
+        $colHours = $l->t('Hours');
+        $colDescription = $l->t('Description');
+        $colActions = $l->t('Actions');
+        ?>
+
+        <!-- Filters + table: one panel (no nested boxes) -->
+        <div class="section time-entries-panel pc-list-panel pc-section">
+            <div class="time-entries-panel__toolbar">
             <div class="filters-container">
                 <!-- Search Input -->
                 <div class="search-input-wrapper">
+                    <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
                     <input type="text" id="time-entry-search" class="search-input"
                         placeholder="<?php p($l->t('Search descriptions, projects, or customers...')); ?>"
                         value="<?php p($filters['search'] ?? ''); ?>"
                         aria-label="<?php p($l->t('Search descriptions, projects, or customers')); ?>"
                         autocomplete="off">
-                    <span class="search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
                 </div>
 
                 <!-- Filter Controls -->
@@ -153,24 +163,22 @@ include __DIR__ . '/common/page-start.php';
 
                 <!-- Action Buttons -->
                 <div class="filter-actions">
-                    <button id="apply-filters" class="btn btn-primary">
-                        <span class="btn-icon" aria-hidden="true">🔍</span>
+                    <button type="button" id="apply-filters" class="button primary">
+                        <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Apply Filters')); ?>
                     </button>
-                    <button id="clear-filters" class="btn btn-secondary">
-                        <span class="btn-icon" aria-hidden="true">🔄</span>
+                    <button type="button" id="clear-filters" class="button secondary">
+                        <span data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Reset Filters')); ?>
                     </button>
-                    <button id="export-csv" class="btn btn-primary">
-                        <span class="btn-icon" aria-hidden="true">📊</span>
-                        <?php p($l->t('Export')); ?>
+                    <button type="button" id="export-csv" class="button secondary" aria-busy="false">
+                        <span data-lucide="download" class="lucide-icon" aria-hidden="true"></span>
+                        <span class="export-csv__label"><?php p($l->t('Export')); ?></span>
                     </button>
                 </div>
             </div>
-        </div>
+            </div>
 
-        <!-- Time Entries Table -->
-        <div class="section">
             <?php if (empty($timeEntries)): ?>
                 <div class="time-entries-empty">
                     <div class="time-entries-empty__icon" aria-hidden="true">
@@ -195,10 +203,12 @@ include __DIR__ . '/common/page-start.php';
                 $summaryPage = max(1, (int)($selectionSummary['page'] ?? ($pagination['page'] ?? 1)));
                 $summaryTotalPages = max(1, (int)($selectionSummary['totalPages'] ?? ($pagination['totalPages'] ?? 1)));
                 $showPageHoursSubtotal = $summaryTotalPages > 1;
-                $colHours = $l->t('Hours');
                 ?>
                 <div id="time-entries-summary-live" class="pc-sr-only" aria-live="polite" aria-atomic="true"></div>
-                <div class="grid-container">
+                <div class="time-entries-table-wrap"
+                    tabindex="0"
+                    role="region"
+                    aria-label="<?php p($l->t('Time entries')); ?>">
                     <table class="grid time-entries-table" id="time-entries-table"
                         data-selection-hours="<?php p(number_format($selectionHoursTotal, 4, '.', '')); ?>"
                         data-selection-count="<?php p((string)$selectionEntryCount); ?>"
@@ -217,14 +227,14 @@ include __DIR__ . '/common/page-start.php';
                         </colgroup>
                         <thead>
                             <tr>
-                                <th><?php p($l->t('Date')); ?></th>
-                                <th><?php p($l->t('Project')); ?></th>
-                                <th><?php p($l->t('Type')); ?></th>
-                                <th><?php p($l->t('Customer')); ?></th>
-                                <th><?php p($l->t('User')); ?></th>
-                                <th><?php p($l->t('Hours')); ?></th>
-                                <th><?php p($l->t('Description')); ?></th>
-                                <th><?php p($l->t('Actions')); ?></th>
+                                <th scope="col"><?php p($colDate); ?></th>
+                                <th scope="col"><?php p($colProject); ?></th>
+                                <th scope="col" class="col-type"><?php p($colType); ?></th>
+                                <th scope="col"><?php p($colCustomer); ?></th>
+                                <th scope="col"><?php p($colUser); ?></th>
+                                <th scope="col" class="col-hours"><?php p($colHours); ?></th>
+                                <th scope="col"><?php p($colDescription); ?></th>
+                                <th scope="col" class="col-actions"><?php p($colActions); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -240,20 +250,6 @@ include __DIR__ . '/common/page-start.php';
                                 }
                             }
                             ?>
-                            <!-- No Results Message (Hidden by default) -->
-                            <tr id="no-results-row" style="display: none;">
-                                <td colspan="8">
-                                    <div class="no-results-message">
-                                        <div class="no-results-icon" aria-hidden="true">🔍</div>
-                                        <h3><?php p($l->t('No time entries match your filters')); ?></h3>
-                                        <p><?php p($l->t('Try adjusting your search criteria or clear the filters to see all entries.')); ?></p>
-                                        <button id="clear-filters-inline" class="btn btn-secondary">
-                                            <span class="btn-icon" aria-hidden="true">🔄</span>
-                                            <?php p($l->t('Reset Filters')); ?>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
                             <?php foreach ($timeEntries as $entry): ?>
                                 <?php
                                 $timeEntry = $entry['timeEntry'];
@@ -268,8 +264,8 @@ include __DIR__ . '/common/page-start.php';
                                     data-project-type="<?php p($entry['project_type'] ?? 'client'); ?>"
                                     data-date-iso="<?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('Y-m-d') : ''); ?>"
                                     data-entry-hours="<?php p(number_format($entryHours, 4, '.', '')); ?>">
-                                    <td><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : ''); ?></td>
-                                    <td>
+                                    <td data-label="<?php p($colDate); ?>"><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : ''); ?></td>
+                                    <td data-label="<?php p($colProject); ?>">
                                         <?php
                                         $rowProjectLinkable = $accessibleProjectIdSet === null
                                             || isset($accessibleProjectIdSet[(int) $timeEntry->getProjectId()]);
@@ -282,7 +278,7 @@ include __DIR__ . '/common/page-start.php';
                                             <span><?php p($entry['projectName'] ?? $l->t('Unknown Project')); ?></span>
                                         <?php endif; ?>
                                     </td>
-                                    <td>
+                                    <td data-label="<?php p($colType); ?>">
                                         <?php
                                         $projectType = $entry['project_type'] ?? 'client';
                                         $displayName = $entry['project_type_display_name'] ?? 'Client Project';
@@ -309,30 +305,36 @@ include __DIR__ . '/common/page-start.php';
                                             <?php p($icon); ?>
                                         </span>
                                     </td>
-                                    <td><?php p($entry['customerName'] ?? ''); ?></td>
-                                    <td><?php p($entry['userDisplayName'] ?? $timeEntry->getUserId() ?? ''); ?></td>
+                                    <td data-label="<?php p($colCustomer); ?>"><?php p($entry['customerName'] ?? ''); ?></td>
+                                    <td data-label="<?php p($colUser); ?>"><?php p($entry['userDisplayName'] ?? $timeEntry->getUserId() ?? ''); ?></td>
                                     <td class="col-hours" data-label="<?php p($colHours); ?>">
                                         <span class="time-entries-hours-value"><?php p($fmt ? $fmt->hours($entryHours) : number_format($entryHours, 2) . 'h'); ?></span>
                                     </td>
-                                    <td class="description-cell"><span class="description-cell__text"><?php p($timeEntry->getDescription() ?? ''); ?></span></td>
-                                    <td>
-                                        <div class="action-items">
+                                    <?php $entryDescription = (string)($timeEntry->getDescription() ?? ''); ?>
+                                    <td class="description-cell" data-label="<?php p($colDescription); ?>"<?php if ($entryDescription !== ''): ?> title="<?php p($entryDescription); ?>"<?php endif; ?>>
+                                        <span class="description-cell__text"><?php p($entryDescription); ?></span>
+                                    </td>
+                                    <td class="col-actions" data-label="<?php p($colActions); ?>">
+                                        <div class="action-items" role="group" aria-label="<?php p($l->t('Time entry actions')); ?>">
                                             <a href="<?php p(str_replace('ENTRY_ID', $timeEntry->getId(), $_['showUrl'] ?? '/index.php/apps/projectcheck/time-entries/')); ?>"
-                                                class="action-item" title="<?php p($l->t('View Details')); ?>"
+                                                class="action-item action-item--view" title="<?php p($l->t('View Details')); ?>"
                                                 aria-label="<?php p($l->t('View time entry details')); ?>">
-                                                <span class="icon icon-details" aria-hidden="true"></span>
+                                                <span data-lucide="eye" class="lucide-icon" aria-hidden="true"></span>
                                             </a>
-                                            <?php if ($timeEntry->getUserId() === $_['userId']): ?>
-                                                <a href="<?php p(str_replace('ENTRY_ID', $timeEntry->getId(), $_['editUrl'] ?? '/index.php/apps/projectcheck/time-entries/edit/')); ?>"
-                                                    class="action-item" title="<?php p($l->t('Edit Time Entry')); ?>" aria-label="<?php p($l->t('Edit time entry')); ?>">
-                                                    <span class="icon icon-rename"></span>
+                                            <?php if ($timeEntry->isOwnedBy((string)($_['userId'] ?? ''))): ?>
+                                                <a href="<?php p(str_replace('ENTRY_ID', (string)$timeEntry->getId(), $_['editUrl'] ?? '/index.php/apps/projectcheck/time-entries/edit/')); ?>"
+                                                    class="action-item action-item--edit" title="<?php p($l->t('Edit Time Entry')); ?>" aria-label="<?php p($l->t('Edit time entry')); ?>">
+                                                    <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
+                                                    <span class="action-item__label pc-sr-only"><?php p($l->t('Edit')); ?></span>
                                                 </a>
-                                                <button type="button" class="action-item delete-entry-btn"
-                                                    data-entry-id="<?php p($timeEntry->getId()); ?>"
+                                                <button type="button" class="action-item action-item--danger delete-entry-btn"
+                                                    data-entry-id="<?php p((string)$timeEntry->getId()); ?>"
                                                     data-entry-description="<?php p($timeEntry->getDescription() ?? ''); ?>"
+                                                    data-delete-url="<?php p(str_replace('ENTRY_ID', (string)$timeEntry->getId(), $_['deleteUrl'] ?? '')); ?>"
                                                     title="<?php p($l->t('Delete Time Entry')); ?>"
                                                     aria-label="<?php p($l->t('Delete time entry')); ?>">
-                                                    <span class="icon icon-delete"></span>
+                                                    <span data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></span>
+                                                    <span class="action-item__label pc-sr-only"><?php p($l->t('Delete')); ?></span>
                                                 </button>
                                             <?php endif; ?>
                                         </div>
@@ -345,7 +347,7 @@ include __DIR__ . '/common/page-start.php';
                                 <th scope="row" colspan="5" class="time-entries-summary__lead" id="time-entries-summary-label">
                                     <span class="time-entries-summary__title"><?php p($l->t('Total hours (matching filters)')); ?></span>
                                     <span class="time-entries-summary__meta" id="time-entries-selection-meta">
-                                        <?php p($l->n('%n matching entry', '%n matching entries', $selectionEntryCount)); ?>
+                                        <span id="time-entries-selection-count"><?php p($l->n('%n matching entry', '%n matching entries', $selectionEntryCount)); ?></span>
                                         <?php if ($showPageHoursSubtotal): ?>
                                             <span class="time-entries-summary__meta-sep" aria-hidden="true"> · </span>
                                             <span class="time-entries-summary__meta-page">
@@ -392,7 +394,7 @@ include __DIR__ . '/common/page-start.php';
                     unset($baseQuery['limit'], $baseQuery['offset']);
                 ?>
                 <?php if ($totalPages > 1): ?>
-                    <div class="pagination">
+                    <div class="time-entries-panel__footer pagination">
                         <div class="pagination-info">
                             <span><?php p($l->t('Page')); ?> <?php p($currentPage); ?> / <?php p($totalPages); ?></span>
                             <span>•</span>
@@ -404,18 +406,18 @@ include __DIR__ . '/common/page-start.php';
                                 $nextQuery = array_merge($baseQuery, ['page' => min($totalPages, $currentPage + 1)]);
                             ?>
                             <?php if ($currentPage > 1): ?>
-                            <a class="btn btn-secondary" href="<?php p($baseUrl . '?' . http_build_query($prevQuery)); ?>">
+                            <a class="button secondary" href="<?php p($baseUrl . '?' . http_build_query($prevQuery)); ?>">
                                 ‹ <?php p($l->t('Previous')); ?>
                             </a>
                             <?php else: ?>
-                            <span class="btn btn-secondary disabled" aria-disabled="true"><?php p($l->t('Previous')); ?></span>
+                            <span class="button secondary disabled" aria-disabled="true"><?php p($l->t('Previous')); ?></span>
                             <?php endif; ?>
                             <?php if ($currentPage < $totalPages): ?>
-                            <a class="btn btn-secondary" href="<?php p($baseUrl . '?' . http_build_query($nextQuery)); ?>">
+                            <a class="button secondary" href="<?php p($baseUrl . '?' . http_build_query($nextQuery)); ?>">
                                 <?php p($l->t('Next')); ?> ›
                             </a>
                             <?php else: ?>
-                            <span class="btn btn-secondary disabled" aria-disabled="true"><?php p($l->t('Next')); ?></span>
+                            <span class="button secondary disabled" aria-disabled="true"><?php p($l->t('Next')); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>

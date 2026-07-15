@@ -1,459 +1,450 @@
 /**
- * Time entry form styles for projectcheck app
+ * Time entry form — flat layout inside .pc-main (no outer card wrapper).
  */
 
-.time-entry-form-container {
-	max-width: min(800px, 100%);
-	margin: 0 auto;
-	padding: var(--pc-space-3, 0.75rem);
+/* Reinforce column shell (NC core defaults #app-content-wrapper to flex row). */
+#content.app-projectcheck > #app-content.pc-app--time-entry-create > #app-content-wrapper,
+#content.app-projectcheck > #app-content.pc-app--time-entry-edit > #app-content-wrapper {
+	display: flex !important;
+	flex-direction: column !important;
+	flex-wrap: nowrap !important;
+	align-items: stretch !important;
+	width: 100% !important;
+}
+
+#content.app-projectcheck > #app-content.pc-app--time-entry-create > #app-content-wrapper > .pc-page-header,
+#content.app-projectcheck > #app-content.pc-app--time-entry-edit > #app-content-wrapper > .pc-page-header,
+#content.app-projectcheck > #app-content.pc-app--time-entry-create > #app-content-wrapper > .pc-main,
+#content.app-projectcheck > #app-content.pc-app--time-entry-edit > #app-content-wrapper > .pc-main {
+	width: 100% !important;
+	max-width: 100% !important;
+}
+
+.pc-app--time-entry-create #app-content-wrapper,
+.pc-app--time-entry-edit #app-content-wrapper,
+.pc-app--time-entry-create .pc-main,
+.pc-app--time-entry-edit .pc-main,
+.pc-app--time-entry-create .time-entry-form,
+.pc-app--time-entry-edit .time-entry-form {
+	background: transparent !important;
+	border: 0 !important;
+	box-shadow: none !important;
+	border-radius: 0 !important;
+}
+
+.pc-app--time-entry-create .pc-main,
+.pc-app--time-entry-edit .pc-main {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	padding: 0;
+}
+
+.time-entry-form {
+	width: 100%;
+	max-width: 100%;
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	color: var(--color-main-text, var(--color-text));
 	box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
-	.time-entry-form-container {
-		padding: 20px;
-	}
-}
-
-/* Mobile base: stack form header vertically */
-.time-entry-form-header {
-	display: flex;
-	flex-direction: column;
-	gap: 15px;
-	align-items: stretch;
-	margin-bottom: 30px;
-	padding-bottom: 20px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-@media (min-width: 768px) {
-	.time-entry-form-header {
-		flex-direction: row;
-		justify-content: space-between;
-		align-items: center;
-		gap: 0;
-	}
-}
-
-.time-entry-form-header h2 {
-	margin: 0;
-	color: var(--color-primary);
-	font-size: 24px;
-	font-weight: 600;
-}
-
 .time-entry-form-intro {
-	margin: 0 0 16px;
-	padding: 12px 14px;
+	margin: 0 0 var(--pc-space-4, 1rem);
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
 	border: 1px solid var(--color-border);
-	border-radius: 8px;
-	background: var(--color-main-background);
+	border-radius: var(--pc-radius-md, 12px);
+	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 5%, var(--color-main-background));
 	color: var(--color-main-text);
 }
 
 .time-entry-form-note {
-	margin: 0 0 20px;
-	padding: 12px 14px;
-	border-radius: 8px;
+	margin: 0 0 var(--pc-space-5, 1.25rem);
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+	border-radius: var(--pc-radius-md, 12px);
 	border: 1px solid var(--color-warning);
 	background: var(--color-background-warning);
 	color: var(--color-main-text);
 }
 
-.form-actions {
+/* Vertical rhythm between fields */
+.time-entry-form .form-row {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	gap: var(--pc-space-4, 1rem);
+	margin: 0 0 var(--pc-space-5, 1.25rem);
+}
+
+.time-entry-form .form-row--split {
+	gap: var(--pc-space-4, 1rem);
 }
 
 @media (min-width: 768px) {
-	.form-actions {
-		flex-direction: row;
+	.time-entry-form .form-row--split {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--pc-space-4, 1rem);
+	}
+
+	.time-entry-form .form-row--split-4 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
-/* Form — mobile base: compact padding */
-.time-entry-form {
-	background: var(--color-background);
-	border-radius: 8px;
-	padding: 20px;
-	border: 1px solid var(--color-border);
-	position: relative;
-	box-sizing: border-box;
-	max-width: 100%;
-}
-
-@media (min-width: 768px) {
-	.time-entry-form {
-		padding: 30px;
+@media (min-width: 1024px) {
+	.time-entry-form .form-row--split-4 {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 }
 
-/* Mobile base: labels stack above full-width inputs */
-.form-row {
-	display: flex;
-	flex-direction: column;
-	gap: 15px;
-	margin-bottom: 20px;
+.time-entry-form .form-group {
+	flex: 1 1 auto;
+	min-width: 0;
+	margin: 0;
 }
 
-@media (min-width: 768px) {
-	.form-row {
-		flex-direction: row;
-		gap: 20px;
-	}
-}
-
-.form-group {
-	flex: 1;
-}
-
-.form-group label {
+.time-entry-form .form-group label {
 	display: block;
-	margin-bottom: 8px;
-	font-weight: 500;
-	color: var(--color-text);
+	margin-bottom: var(--pc-space-2, 0.5rem);
+	font-weight: 600;
+	color: var(--color-main-text, var(--color-text));
 }
 
-.form-group label.required::after {
+.time-entry-form .form-group label.required::after {
 	content: ' *';
 	color: var(--pc-emphasis-text-error);
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.time-entry-form .form-group input,
+.time-entry-form .form-group textarea {
 	width: 100%;
 	padding: 10px 12px;
 	border: 1px solid var(--color-border);
-	border-radius: 4px;
-	background: var(--color-background);
-	color: var(--color-text);
+	border-radius: var(--pc-radius-sm, 8px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
 	font-size: var(--pc-fs-sm, 0.875rem);
 	min-height: var(--pc-touch-min, 44px);
 	transition: border-color 0.2s ease, box-shadow 0.2s ease;
 	box-sizing: border-box;
 }
 
-/* Datepicker-only: no manual input, open via calendar only */
-.datepicker-only,
-.form-group input.datepicker-only {
-	cursor: pointer;
-	caret-color: transparent;
-}
-.datepicker-only:focus,
-.form-group input.datepicker-only:focus {
-	outline: 2px solid var(--color-primary-element);
-	outline-offset: 2px;
-}
-
-/* Date picker specific styling */
-.form-group input[type="date"] {
-	min-height: 42px;
-	cursor: pointer;
-	position: relative;
-}
-
-.form-group input[type="date"]::-webkit-calendar-picker-indicator {
-	cursor: pointer;
-	opacity: 0.6;
-	filter: invert(var(--background-invert-if-dark, 0));
-}
-
-.form-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
-	opacity: 1;
-}
-
-/* Enhanced select styling for better theme compatibility */
-.form-group select {
+/* Native select: beat Nextcloud core inputs.css (height: 36px clips text) */
+#app-content.pc-app--time-entry-create .time-entry-form #project_id,
+#app-content.pc-app--time-entry-edit .time-entry-form #project_id,
+#app-content.pc-app--time-entry-create .time-entry-form select.form-input.form-select,
+#app-content.pc-app--time-entry-edit .time-entry-form select.form-input.form-select,
+.time-entry-form .form-group select.form-input.form-select,
+.time-entry-form .form-group #project_id {
+	width: 100% !important;
+	max-width: 100% !important;
+	min-height: var(--default-clickable-area, var(--pc-touch-min, 44px)) !important;
+	height: auto !important;
+	line-height: 1.35 !important;
+	padding: 0.65rem 2.75rem 0.65rem 0.75rem !important;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	background-color: var(--color-main-background) !important;
+	color: var(--color-main-text);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	box-sizing: border-box;
+	display: block;
+	overflow: visible;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	-webkit-appearance: none;
 	-moz-appearance: none;
 	appearance: none;
-	background-color: var(--color-main-background, var(--color-background));
-	color: var(--color-main-text, var(--color-text));
-	border: 1px solid var(--color-border-dark, var(--color-border));
-	background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-	background-repeat: no-repeat;
-	background-position: right 12px center;
-	background-size: 16px;
-	padding-right: 40px;
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 12px center !important;
+	background-size: 16px !important;
 }
 
-.form-group select:focus {
-	background-color: var(--color-main-background, var(--color-background));
-	color: var(--color-main-text, var(--color-text));
+.time-entry-form .form-hint {
+	margin-top: var(--pc-space-2, 0.5rem);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: 1.45;
+	color: var(--color-text-maxcontrast, var(--pc-muted));
+	max-width: 65ch;
 }
 
-/* Select option styling - using Nextcloud CSS variables */
-.form-group select option {
-	background-color: var(--color-main-background, var(--color-background));
-	color: var(--color-main-text, var(--color-text));
-	padding: 8px 12px;
-	font-size: 14px;
-	line-height: 1.4;
-}
-
-/* Checked/selected option */
-.form-group select option:checked {
-	background-color: var(--color-primary-element, var(--color-primary));
-	color: var(--pc-text-on-strong);
-}
-
-/* Hover state for options */
-.form-group select option:hover {
-	background-color: var(--color-background-hover, var(--color-background-dark));
-}
-
-/* Dark theme support using data-theme attribute (for projectcheck app) */
-[data-theme="dark"] .form-group select,
-[data-theme="dark"] .form-group select option {
-	background-color: var(--color-main-background, #181818);
-	color: var(--color-main-text, #e0e0e0);
-}
-
-/* Dark theme support using prefers-color-scheme (for Nextcloud core) */
-@media (prefers-color-scheme: dark) {
-
-	.form-group select,
-	.form-group select option {
-		background-color: var(--color-main-background, #181818);
-		color: var(--color-main-text, #e0e0e0);
-	}
-
-	.form-group select {
-		background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-	}
-}
-
-/* Specific styling for the project select dropdown */
-#project_id {
-	background-color: var(--color-main-background, var(--color-background));
-	color: var(--color-main-text, var(--color-text));
-}
-
-#project_id option {
-	background-color: var(--color-main-background, var(--color-background));
-	color: var(--color-main-text, var(--color-text));
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.time-entry-form .form-group input:focus,
+.time-entry-form .form-group select:focus,
+.time-entry-form .form-group textarea:focus {
 	outline: none;
-	border-color: var(--color-primary);
-	box-shadow: 0 0 0 2px var(--color-primary-light);
+	border-color: var(--color-primary-element, var(--color-primary));
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-element, #0082c9) 25%, transparent);
 }
 
-.form-group input[readonly] {
+.time-entry-form .form-group input:focus-visible,
+.time-entry-form .form-group select:focus-visible,
+.time-entry-form .form-group textarea:focus-visible {
+	outline: 2px solid var(--color-primary-element, var(--color-primary));
+	outline-offset: 2px;
+}
+
+.time-entry-form .form-group input[readonly],
+.time-entry-form .form-group input.readonly {
 	background: var(--color-background-hover);
 	color: var(--color-text-maxcontrast);
 	cursor: not-allowed;
 }
 
-.form-group textarea {
+.time-entry-form .form-group textarea {
 	resize: vertical;
 	min-height: 100px;
 	font-family: inherit;
 }
 
-/* Character count */
-.char-count {
+.time-entry-form .char-count {
 	text-align: right;
-	font-size: 12px;
+	font-size: var(--pc-fs-xs, 0.75rem);
 	color: var(--color-text-maxcontrast);
-	margin-top: 5px;
+	margin-top: var(--pc-space-2, 0.5rem);
 }
 
-.char-count.warning {
-	color: var(--pc-emphasis-text-warning);
-}
-
-.char-count.error {
+.time-entry-form .error-message {
 	color: var(--pc-emphasis-text-error);
-}
-
-/* Error messages */
-.error-message {
-	color: var(--pc-emphasis-text-error);
-	font-size: 12px;
-	margin-top: 5px;
-	min-height: 16px;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	margin-top: var(--pc-space-2, 0.5rem);
+	min-height: 1rem;
 }
 
 .time-entry-form-errors {
 	min-height: 1px;
-	margin-top: 8px;
+	margin-top: var(--pc-space-2, 0.5rem);
 	font-weight: 600;
 	color: var(--pc-emphasis-text-error);
 }
 
-.form-group.has-error input,
-.form-group.has-error select,
-.form-group.has-error textarea {
+.time-entry-form .form-group.has-error input,
+.time-entry-form .form-group.has-error select,
+.time-entry-form .form-group.has-error textarea {
 	border-color: var(--color-error);
 }
 
-.form-group input.has-error,
-.form-group select.has-error,
-.form-group textarea.has-error {
-	border-color: var(--color-error);
-}
-
-.form-group.has-error input:focus,
-.form-group.has-error select:focus,
-.form-group.has-error textarea:focus {
-	box-shadow: 0 0 0 2px var(--color-error-light);
-}
-
-/* Form actions */
-.form-actions {
+/* Footer actions — primary submit only (Cancel lives in page header) */
+.time-entry-form > .form-actions {
 	display: flex;
-	gap: 15px;
-	margin-top: 30px;
-	padding-top: 20px;
+	flex-direction: column;
+	gap: var(--pc-space-3, 0.75rem);
+	margin-top: var(--pc-space-6, 2rem);
+	padding-top: var(--pc-space-5, 1.25rem);
 	border-top: 1px solid var(--color-border);
 }
 
-.form-actions .btn {
+@media (min-width: 768px) {
+	.time-entry-form > .form-actions {
+		flex-direction: row;
+		align-items: center;
+	}
+}
+
+.time-entry-form > .form-actions .btn {
 	padding: 10px 20px;
-	border-radius: 4px;
-	font-size: 14px;
-	font-weight: 500;
+	border-radius: var(--pc-radius-sm, 8px);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	font-weight: 600;
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition: background-color 0.2s ease, border-color 0.2s ease;
 	border: none;
 	text-decoration: none;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-}
-
-.form-actions .btn-primary {
-	background: var(--color-primary);
-	color: var(--pc-text-on-strong);
-}
-
-.form-actions .btn-primary:hover {
-	background: var(--color-primary-hover);
-}
-
-.form-actions .btn-secondary {
-	background: var(--color-background-hover);
-	color: var(--color-text);
-	border: 1px solid var(--color-border);
-}
-
-.form-actions .btn-secondary:hover {
-	background: var(--color-background-dark);
-}
-
-/* Loading state */
-.time-entry-form.loading {
-	opacity: 0.6;
-	pointer-events: none;
-}
-
-.time-entry-form.loading::after {
-	content: '';
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 20px;
-	height: 20px;
-	border: 2px solid var(--color-primary);
-	border-top: 2px solid transparent;
-	border-radius: 50%;
-	animation: spin 1s linear infinite;
-}
-
-/* Success message */
-.success-message {
-	background: var(--color-success);
-	color: var(--pc-text-on-strong);
-	padding: 15px;
-	border-radius: 4px;
-	margin-bottom: 20px;
-	display: none;
-}
-
-.success-message.show {
-	display: block;
-}
-
-.form-actions .btn {
-	width: 100%;
 	min-height: var(--pc-touch-min, 44px);
 }
 
-@media (min-width: 768px) {
-	.form-actions .btn {
-		width: auto;
-	}
+.time-entry-form > .form-actions .btn-primary {
+	background: var(--color-primary-element, var(--color-primary));
+	color: var(--color-primary-element-text, var(--pc-text-on-strong));
 }
 
-/* Animations */
-@keyframes spin {
-	0% {
-		transform: rotate(0deg);
-	}
-
-	100% {
-		transform: rotate(360deg);
-	}
+.time-entry-form > .form-actions .btn-primary:hover {
+	background: var(--color-primary-element-hover, var(--color-primary-hover));
 }
 
-@keyframes fadeIn {
-	from {
-		opacity: 0;
-		transform: translateY(-10px);
-	}
-
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-.time-entry-form {
-	animation: fadeIn 0.3s ease;
-}
-
-/* Focus styles for accessibility */
-.form-group input:focus-visible,
-.form-group select:focus-visible,
-.form-group textarea:focus-visible {
-	outline: 2px solid var(--color-primary);
+.time-entry-form > .form-actions .btn:focus-visible {
+	outline: 2px solid var(--color-primary-element);
 	outline-offset: 2px;
 }
 
-/* Disabled state */
-.form-group input:disabled,
-.form-group select:disabled,
-.form-group textarea:disabled {
-	background: var(--color-background-hover);
-	color: var(--color-text-maxcontrast);
-	cursor: not-allowed;
+.time-entry-form.loading {
+	pointer-events: none;
+	opacity: 0.7;
 }
 
-/* Readonly state for hourly rate */
-.form-group input.readonly {
-	background: var(--color-background-hover);
-	color: var(--color-text-maxcontrast);
-	cursor: not-allowed;
-	border-color: var(--color-border-maxcontrast);
+/* Admin override callout — single accent panel (no extra wrapper) */
+#pc-admin-override-banner.pc-form-callout--admin-override:not(.pc-form-callout--hidden) {
+	display: flex !important;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: flex-start;
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0 0 var(--pc-space-5, 1.25rem);
 }
 
-/* Remaining hours display */
-.budget-stat-sub {
+#pc-admin-override-banner.pc-form-callout--admin-override .pc-form-callout__title {
+	font-size: clamp(var(--pc-fs-md, 1rem), 2.5vw, var(--pc-fs-lg, 1.125rem));
+}
+
+#pc-admin-override-banner.pc-form-callout--admin-override .pc-form-callout__text,
+#pc-admin-override-banner.pc-form-callout--admin-override .pc-form-callout__hint {
+	word-wrap: break-word;
+	overflow-wrap: anywhere;
+	color: var(--color-main-text);
+}
+
+#pc-admin-override-banner.pc-form-callout--admin-override .pc-form-callout__hint {
+	color: var(--color-text-maxcontrast, var(--pc-muted));
+}
+
+/* Budget overview — one panel, flat stat grid (no box-in-box) */
+.time-entry-form .form-group.budget-overview {
+	margin: 0 0 var(--pc-space-5, 1.25rem);
+	padding: var(--pc-space-4, 1rem);
+	border: 1px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 22%, var(--color-border));
+	border-radius: var(--pc-radius-md, 12px);
+	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 6%, var(--color-main-background));
+}
+
+.time-entry-form .form-group.budget-overview > label {
 	display: block;
-	font-size: 12px;
+	margin: 0 0 var(--pc-space-3, 0.75rem);
+	font-size: var(--pc-fs-md, 1rem);
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.time-entry-form .budget-stats-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--pc-space-3, 0.75rem);
+	margin: 0 0 var(--pc-space-4, 1rem);
+	padding: 0;
+	background: transparent;
+	border: 0;
+}
+
+@media (min-width: 600px) {
+	.time-entry-form .budget-stats-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (min-width: 1024px) {
+	.time-entry-form .budget-stats-grid {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
+
+.time-entry-form .budget-stat-item {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-1, 0.25rem);
+	min-height: auto;
+	padding: var(--pc-space-4, 1rem);
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	background: var(--color-background-hover);
+}
+
+.time-entry-form .budget-stat-label {
+	font-size: var(--pc-fs-sm, 0.875rem);
 	color: var(--color-text-maxcontrast);
-	margin-top: 2px;
+}
+
+.time-entry-form .budget-stat-value {
+	font-size: var(--pc-fs-md, 1rem);
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.time-entry-form .budget-stat-sub {
+	display: block;
+	font-size: var(--pc-fs-xs, 0.75rem);
+	color: var(--color-text-maxcontrast);
+	margin-top: var(--pc-space-1, 0.25rem);
 	font-weight: normal;
 }
 
-/* Admin-override callout: layout lives in projects.css (.pc-form-callout--admin-override).
- * Spacing inside the time-entry form card only. */
-.time-entry-form .pc-form-callout--admin-override {
-	margin: var(--pc-space-4, 1rem) 0 var(--pc-space-5, 1.5rem);
+.time-entry-form .budget-progress-container {
+	margin-top: var(--pc-space-2, 0.5rem);
+}
+
+/* Danger zone (edit) */
+.pc-app--time-entry-edit .pc-form-danger-zone {
+	margin-top: var(--pc-space-6, 2rem);
+	padding: var(--pc-space-5, 1.25rem);
+	border: 1px solid color-mix(in srgb, var(--color-error) 45%, var(--color-border));
+	border-radius: var(--pc-radius-md, 12px);
+	background: color-mix(in srgb, var(--color-error) 8%, var(--color-main-background));
+}
+
+.pc-form-danger-zone__header {
+	display: flex;
+	align-items: center;
+	gap: var(--pc-space-3, 0.75rem);
+	margin-bottom: var(--pc-space-3, 0.75rem);
+}
+
+.pc-form-danger-zone__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	color: var(--color-error);
+	flex-shrink: 0;
+}
+
+.pc-form-danger-zone__title {
+	margin: 0;
+	font-size: var(--pc-fs-md, 1rem);
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.pc-form-danger-zone__text {
+	margin: 0 0 var(--pc-space-4, 1rem);
+	color: var(--color-text-maxcontrast);
+	line-height: 1.5;
+}
+
+.pc-form-danger-zone__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--pc-space-2, 0.5rem);
+	min-height: var(--pc-touch-min, 44px);
+	padding-inline: var(--pc-space-4, 1rem);
+	background: var(--color-error);
+	color: var(--color-error-text, var(--color-primary-element-text));
+	border: 1px solid color-mix(in srgb, var(--color-error) 80%, var(--color-border));
+	border-radius: var(--pc-radius-sm, 8px);
+}
+
+.pc-form-danger-zone__btn:hover,
+.pc-form-danger-zone__btn:focus-visible {
+	background: color-mix(in srgb, var(--color-error) 88%, var(--color-main-text));
+	color: var(--color-error-text, var(--color-primary-element-text));
+}
+
+.pc-form-danger-zone__btn:focus-visible {
+	outline: 2px solid var(--color-error);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.time-entry-form .form-group input,
+	.time-entry-form .form-group select,
+	.time-entry-form .form-group textarea {
+		transition: none;
+	}
 }

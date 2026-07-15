@@ -21,14 +21,37 @@
 	overflow-y: auto;
 }
 
-#content > #app-content > #app-content-wrapper {
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
-	width: 100%;
-	max-width: min(1400px, 100%);
+#content > #app-content > #app-content-wrapper,
+#content[class*='app-'] > #app-content > #app-content-wrapper,
+#content[class*='app-'] > #app-content.pc-app > #app-content-wrapper,
+#content[class*='app-'] > #app-content.pc-app > #app-content-wrapper.pc-shell,
+#content[class*='app-'] > #app-content.pc-app > #app-content-wrapper.pc-app-shell-stack {
+	display: flex !important;
+	flex-direction: column !important;
+	flex-wrap: nowrap !important;
+	align-items: stretch !important;
+	width: 100% !important;
+	max-width: min(1400px, 100%) !important;
 	margin-inline: auto;
 	box-sizing: border-box;
+}
+
+#content > #app-content > #app-content-wrapper > .pc-page-header,
+#content > #app-content > #app-content-wrapper > .pc-main,
+#content > #app-content > #app-content-wrapper > .section,
+#content[class*='app-'] > #app-content > #app-content-wrapper > .pc-page-header,
+#content[class*='app-'] > #app-content > #app-content-wrapper > .pc-main,
+#content[class*='app-'] > #app-content > #app-content-wrapper > .section {
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 0;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+}
+
+#content > #app-content > #app-content-wrapper > .pc-main,
+#content[class*='app-'] > #app-content > #app-content-wrapper > .pc-main {
+	flex: 1 1 auto;
 }
 
 /* Stack shell header above main (core apps.scss defaults wrapper flex to row). */

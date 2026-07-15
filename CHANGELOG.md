@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.72 - 2026-07-15
+
+### Added
+
+- **Shared list panels:** new `list-table.css` and `stats-panel.css` unify filters, data tables, footers, and summary panels across time entries, projects, customers, and employees.
+- **Time entry delete from edit/detail:** delete URL wired on the time entry form and detail pages with the shared deletion modal.
+
+### Fixed
+
+- **Time entry ownership checks:** `TimeEntry::isOwnedBy()` uses a timing-safe compare for access control on show, edit, update, and delete.
+- **Stylesheet loading:** shell, layout, and mobile-nav CSS load as linked stylesheets (via `EnrichTemplateNavigationContext`) instead of `@import` in `app.css`, so theme tokens apply reliably.
+
+### Changed
+
+- **Page header:** inline breadcrumbs, meta strips, and action button styling aligned across list and detail pages.
+- **Time entries UI:** refactored list JavaScript (shared hour formatting, export guard, row action icons, deletion modal integration).
+- **Time entry form:** refreshed layout and styling consistent with the shared panel system.
+
 ## 2.0.71 - 2026-07-11
 
 ### Added

@@ -11,7 +11,6 @@ use OCP\Util;
 
 Util::addScript('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'projects');
-Util::addStyle('projectcheck', 'dashboard');
 Util::addStyle('projectcheck', 'navigation');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
@@ -26,20 +25,18 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 $pageId = 'projects';
 $pageTitle = $l->t('Projects');
 $pageHelp = $l->t('Manage your projects and track their progress');
-include __DIR__ . '/common/page-start.php';
-?>
-        <?php
-        // Lead text already rendered under the h1 by page-start.php — the bar only carries actions.
-        ob_start(); ?>
+ob_start(); ?>
                     <?php if (!empty($_['canCreateProject'])): ?>
                     <a href="<?php p($_['createUrl']); ?>" class="button primary">
+                        <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Create New Project')); ?>
                     </a>
                     <?php endif; ?>
-        <?php
-        $headerActionsHtml = ob_get_clean();
-        include __DIR__ . '/common/page-header-section.php';
-        ?>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Page actions');
+include __DIR__ . '/common/page-start.php';
+?>
 
         <!-- Success/Error Messages -->
         <?php if (isset($_GET['message']) && $_GET['message'] === 'success'): ?>
@@ -67,64 +64,75 @@ include __DIR__ . '/common/page-start.php';
         <?php endif; ?>
 
         <!-- Project Statistics Overview -->
-        <div class="section projects-content-section" aria-label="<?php p($l->t('Summary')); ?>">
-            <div class="section-header">
-                <h3><?php p($l->t('Project statistics')); ?></h3>
-                <p><?php p($l->t('Overview of your project portfolio and performance')); ?></p>
-            </div>
+        <section class="section pc-stats-panel pc-section stats-overview-section" aria-labelledby="projects-stats-title">
+            <header class="pc-stats-panel__header section-header">
+                <h3 class="pc-section__title" id="projects-stats-title"><?php p($l->t('Project statistics')); ?></h3>
+                <p class="pc-section__intro"><?php p($l->t('Overview of your project portfolio and performance')); ?></p>
+            </header>
 
-            <div class="overview-stats-compact">
-                <div class="overview-stat-compact">
-                    <i data-lucide="folder" class="lucide-icon"></i>
-                    <div class="stat-content">
-                        <div class="stat-number"><?php p($_['stats']['totalProjects'] ?? 0); ?></div>
-                        <div class="stat-label"><?php p($l->t('Projects')); ?></div>
-                        <div class="stat-detail">
+            <ul class="pc-stats-grid" role="list">
+                <li class="pc-stat-card">
+                    <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="folder" class="lucide-icon"></i></span>
+                    <div class="pc-stat-card__body">
+                        <div class="pc-stat-card__value"><?php p($_['stats']['totalProjects'] ?? 0); ?></div>
+                        <div class="pc-stat-card__label"><?php p($l->t('Projects')); ?></div>
+                        <div class="pc-stat-card__detail">
                             <span><?php p($_['stats']['activeProjects'] ?? 0); ?> <?php p($l->t('active')); ?></span>
                         </div>
                     </div>
-                </div>
+                </li>
 
-                <div class="overview-stat-compact">
-                    <i data-lucide="users" class="lucide-icon"></i>
-                    <div class="stat-content">
-                        <div class="stat-number"><?php p($_['stats']['totalCustomers'] ?? 0); ?></div>
-                        <div class="stat-label"><?php p($l->t('Customers')); ?></div>
-                        <div class="stat-detail">
+                <li class="pc-stat-card">
+                    <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="users" class="lucide-icon"></i></span>
+                    <div class="pc-stat-card__body">
+                        <div class="pc-stat-card__value"><?php p($_['stats']['totalCustomers'] ?? 0); ?></div>
+                        <div class="pc-stat-card__label"><?php p($l->t('Customers')); ?></div>
+                        <div class="pc-stat-card__detail">
                             <span><?php p($l->t('active')); ?></span>
                         </div>
                     </div>
-                </div>
+                </li>
 
-                <div class="overview-stat-compact">
-                    <i data-lucide="clock" class="lucide-icon"></i>
-                    <div class="stat-content">
-                        <div class="stat-number"><?php p($_['stats']['totalHours'] ?? 0); ?>h</div>
-                        <div class="stat-label"><?php p($l->t('Hours')); ?></div>
-                        <div class="stat-detail">
+                <li class="pc-stat-card">
+                    <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="clock" class="lucide-icon"></i></span>
+                    <div class="pc-stat-card__body">
+                        <div class="pc-stat-card__value"><?php p($_['stats']['totalHours'] ?? 0); ?>h</div>
+                        <div class="pc-stat-card__label"><?php p($l->t('Hours')); ?></div>
+                        <div class="pc-stat-card__detail">
                             <span><?php p($l->t('total')); ?></span>
                         </div>
                     </div>
-                </div>
+                </li>
 
-                <div class="overview-stat-compact">
-                    <i data-lucide="euro" class="lucide-icon"></i>
-                    <div class="stat-content">
-                        <div class="stat-number"><?php p($fmt ? $fmt->currency((float)($_['stats']['totalBudget'] ?? 0)) : $currencyCode . ' ' . number_format((float)($_['stats']['totalBudget'] ?? 0), 0)); ?></div>
-                        <div class="stat-label"><?php p($l->t('Budget')); ?></div>
-                        <div class="stat-detail">
+                <li class="pc-stat-card">
+                    <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="euro" class="lucide-icon"></i></span>
+                    <div class="pc-stat-card__body">
+                        <div class="pc-stat-card__value"><?php p($fmt ? $fmt->currency((float)($_['stats']['totalBudget'] ?? 0)) : $currencyCode . ' ' . number_format((float)($_['stats']['totalBudget'] ?? 0), 0)); ?></div>
+                        <div class="pc-stat-card__label"><?php p($l->t('Budget')); ?></div>
+                        <div class="pc-stat-card__detail">
                             <span><?php p($_['stats']['consumptionPercentage'] ?? 0); ?>% <?php p($l->t('used')); ?></span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
+                </li>
+            </ul>
+        </section>
 
-        <!-- Search and filter -->
-        <div class="section projects-filters-section" aria-label="<?php p($l->t('Search and filter')); ?>">
+        <!-- Search, filter, and project list (one panel) -->
+        <?php
+        $colName = $l->t('Name');
+        $colCustomer = $l->t('Customer');
+        $colType = $l->t('Type');
+        $colStatus = $l->t('Status');
+        $colBudget = $l->t('Budget');
+        $colProgress = $l->t('Progress');
+        $colActions = $l->t('Actions');
+        ?>
+        <div class="section pc-list-panel pc-section" aria-label="<?php p($l->t('Project list')); ?>">
+            <div class="pc-list-panel__toolbar">
             <div class="filters-container">
-                <div class="searchbox">
-                    <input type="search" id="project-search"
+                <div class="search-input-wrapper">
+                    <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
+                    <input type="search" id="project-search" class="search-input"
                         placeholder="<?php p($l->t('Search projects…')); ?>"
                         value="<?php p($_['filters']['search'] ?? ''); ?>"
                         aria-label="<?php p($l->t('Search projects')); ?>"
@@ -175,17 +183,17 @@ include __DIR__ . '/common/page-start.php';
                     </select>
 
                     <button id="apply-filters" class="button primary" type="button">
+                        <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Apply Filters')); ?>
                     </button>
-                    <button id="clear-filters" class="button" type="button">
+                    <button id="clear-filters" class="button secondary" type="button">
+                        <span data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Clear Filters')); ?>
                     </button>
                 </div>
             </div>
-        </div>
+            </div>
 
-        <!-- Project list -->
-        <div class="section projects-table-section" aria-label="<?php p($l->t('Project list')); ?>">
             <?php if (empty($_['projects'])): ?>
                 <div class="emptycontent">
                     <div class="icon-folder"></div>
@@ -193,8 +201,8 @@ include __DIR__ . '/common/page-start.php';
                     <p><?php p($l->t('Create your first project to get started!')); ?></p>
                 </div>
             <?php else: ?>
-            <div class="projectcheck-table-wrap">
-                <table class="grid projects-table">
+            <div class="pc-list-table-wrap" tabindex="0" role="region" aria-label="<?php p($l->t('Projects')); ?>">
+                <table class="grid projects-table pc-data-table">
                     <thead>
                         <tr>
                             <?php
@@ -219,7 +227,7 @@ include __DIR__ . '/common/page-start.php';
                                 <?php endif; ?>
                             </th>
                             <?php endforeach; ?>
-                            <th><?php p($l->t('Actions')); ?></th>
+                            <th scope="col" class="col-actions"><?php p($colActions); ?></th>
                         </tr>
                     </thead>
                     <tbody id="projects-tbody">
@@ -229,8 +237,9 @@ include __DIR__ . '/common/page-start.php';
                             $budgetInfo = $projectData['budgetInfo'] ?? null;
                             $canEditRow = (bool)($projectData['canEdit'] ?? true);
                             ?>
-                            <tr class="project-row <?php if ($budgetInfo): ?>budget-status-<?php p($budgetInfo['warning_level']); ?><?php endif; ?>">
-                                <td class="project-name-cell">
+                            <tr class="project-row <?php if ($budgetInfo): ?>budget-status-<?php p($budgetInfo['warning_level']); ?><?php endif; ?>"
+                                data-project-id="<?php p($project->getId()); ?>">
+                                <td class="project-name-cell" data-label="<?php p($colName); ?>">
                                     <div class="project-name-content">
                                         <a href="<?php p(str_replace('PROJECT_ID', $project->getId(), $_['showUrl'])); ?>" class="project-title">
                                             <?php p($project->getName()); ?>
@@ -257,8 +266,8 @@ include __DIR__ . '/common/page-start.php';
                                         </div>
                                     </div>
                                 </td>
-                                <td><?php p($project->getCustomerName() ?? $l->t('N/A')); ?></td>
-                                <td>
+                                <td data-label="<?php p($colCustomer); ?>"><?php p($project->getCustomerName() ?? $l->t('N/A')); ?></td>
+                                <td data-label="<?php p($colType); ?>">
                                     <?php
                                     // Icon mapping for project types
                                     $iconMapping = [
@@ -283,12 +292,12 @@ include __DIR__ . '/common/page-start.php';
                                         <?php p($icon); ?>
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="<?php p($colStatus); ?>">
                                     <span class="status-badge status-<?php echo strtolower(str_replace(' ', '-', $project->getStatus())); ?>">
                                         <?php p($l->t($project->getStatus())); ?>
                                     </span>
                                 </td>
-                                <td class="budget-cell">
+                                <td class="budget-cell" data-label="<?php p($colBudget); ?>">
                                     <?php if ($budgetInfo): ?>
                                         <div class="budget-info-compact">
                                             <div class="budget-main">
@@ -335,7 +344,7 @@ include __DIR__ . '/common/page-start.php';
                                         </div>
                                     <?php endif; ?>
                                 </td>
-                                <td class="progress-cell">
+                                <td class="progress-cell" data-label="<?php p($colProgress); ?>">
                                     <?php if ($budgetInfo): ?>
                                         <div class="progress-info">
                                             <div class="budget-progress-bar compact">
@@ -360,29 +369,29 @@ include __DIR__ . '/common/page-start.php';
                                         </div>
                                     <?php endif; ?>
                                 </td>
-                                <td>
-                                    <div class="action-items">
+                                <td class="col-actions" data-label="<?php p($colActions); ?>">
+                                    <div class="action-items" role="group" aria-label="<?php p($l->t('Project actions')); ?>">
                                         <a href="<?php p(str_replace('PROJECT_ID', $project->getId(), $_['showUrl'])); ?>"
-                                            class="action-item"
+                                            class="action-item action-item--view"
                                             title="<?php p($l->t('View project')); ?>"
                                             aria-label="<?php p($l->t('View project %s', [$project->getName()])); ?>">
-                                            <span class="icon icon-details" aria-hidden="true"></span>
+                                            <span data-lucide="eye" class="lucide-icon" aria-hidden="true"></span>
                                         </a>
                                         <?php if ($canEditRow) { ?>
                                         <a href="<?php p(str_replace('PROJECT_ID', $project->getId(), $_['editUrl'])); ?>"
-                                            class="action-item"
+                                            class="action-item action-item--edit"
                                             title="<?php p($l->t('Edit project')); ?>"
                                             aria-label="<?php p($l->t('Edit project %s', [$project->getName()])); ?>">
-                                            <span class="icon icon-rename" aria-hidden="true"></span>
+                                            <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
                                         </a>
                                         <?php } ?>
                                         <?php if (!empty($projectData['canEdit'])): ?>
-                                        <button type="button" class="action-item delete-project-btn"
+                                        <button type="button" class="action-item action-item--danger delete-project-btn"
                                             data-project-id="<?php p($project->getId()); ?>"
                                             data-project-name="<?php p($project->getName()); ?>"
                                             title="<?php p($l->t('Delete Project')); ?>"
                                             aria-label="<?php p($l->t('Delete project %s', [$project->getName()])); ?>">
-                                            <span class="icon icon-delete" aria-hidden="true"></span>
+                                            <span data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></span>
                                         </button>
                                         <?php endif; ?>
                                     </div>
@@ -403,7 +412,7 @@ include __DIR__ . '/common/page-start.php';
                     unset($baseQuery['limit'], $baseQuery['offset']);
                 ?>
                 <?php if ($totalPages > 1): ?>
-                    <div class="pagination">
+                    <div class="pc-list-panel__footer pagination">
                         <div class="pagination-info">
                             <span><?php p($l->t('Page')); ?> <?php p($currentPage); ?> / <?php p($totalPages); ?></span>
                             <span>•</span>

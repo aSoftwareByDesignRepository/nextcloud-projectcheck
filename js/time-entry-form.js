@@ -57,6 +57,8 @@
 		initializeProjectRateSync();
 		updateAdminOverrideBanner();
 		calculateTotalCost();
+		initializeDeleteAction();
+		hydrateFormIcons();
 
 		const isEdit = window.timeEntryFormData && window.timeEntryFormData.isEdit;
 		const dateInput = document.getElementById('date');
@@ -100,7 +102,9 @@
 
 		const projectSelect = document.getElementById('project_id');
 		if (projectSelect) {
+			syncProjectSelectTitle(projectSelect);
 			projectSelect.addEventListener('change', () => {
+				syncProjectSelectTitle(projectSelect);
 				updateAdminOverrideBanner();
 				resolveRateFromServer();
 			});
@@ -294,54 +298,151 @@
 	}
 
 	/**
+	 * Build the JSON body for create/update — only server-known fields, no CSRF tokens.
+	 */
+	function buildSubmitPayload(data) {
+		const payload = {
+			project_id: data.project_id,
+			date: data.date,
+			hours: data.hours,
+			description: data.description || '',
+		};
+		if (data.hourly_rate !== null && data.hourly_rate !== undefined && data.hourly_rate !== '') {
+			payload.hourly_rate = data.hourly_rate;
+		}
+		return payload;
+	}
+
+	/**
+	 * Apply API failure payload (validation errors or single message).
+	 *
+	 * @returns {boolean} true when field errors were shown
+	 */
+	function handleSubmitFailure(result) {
+		if (result && result.errors && typeof result.errors === 'object') {
+			displayErrors(result.errors);
+			return true;
+		}
+		const message = (result && (result.error || result.message))
+			? String(result.error || result.message)
+			: t('projectcheck', 'Failed to save time entry');
+		showNotification(message, 'error');
+		return false;
+	}
+
+	/**
 	 * Submit time entry data
 	 */
-	function submitTimeEntryData(data, form) {
+	async function submitTimeEntryData(data, form) {
+		if (!window.ProjectCheckApi) {
+			showNotification(t('projectcheck', 'An error occurred while saving the time entry'), 'error');
+			return;
+		}
+
 		const isEdit = window.timeEntryFormData && window.timeEntryFormData.isEdit;
-		const url = isEdit
-			? OC.generateUrl('/apps/projectcheck/time-entries/' + window.timeEntryFormData.timeEntryId)
-			: OC.generateUrl('/apps/projectcheck/time-entries');
+		const path = isEdit
+			? '/apps/projectcheck/time-entries/' + window.timeEntryFormData.timeEntryId
+			: '/apps/projectcheck/time-entries';
+		const payload = buildSubmitPayload(data);
 
-		const method = isEdit ? 'PUT' : 'POST';
-
-		// Mark form as submitting and show loading state
 		form.classList.add('submitting');
 		showLoadingState(form, true);
 
-		fetch(url, {
-			method: method,
-			headers: {
-				'Content-Type': 'application/json',
-				'requesttoken': OC.requestToken
-			},
-			body: JSON.stringify(data)
-		})
-			.then(response => response.json())
-			.then(result => {
-				if (result.success) {
-					showNotification(result.message || t('projectcheck', 'Time entry saved successfully'), 'success');
+		try {
+			const result = isEdit
+				? await window.ProjectCheckApi.put(path, payload)
+				: await window.ProjectCheckApi.post(path, payload);
 
-					// Redirect to time entries list after a short delay
-					setTimeout(() => {
-						window.location.href = OC.generateUrl('/apps/projectcheck/time-entries');
-					}, 1500);
-				} else {
-					if (result.errors) {
-						displayErrors(result.errors);
-					} else {
-						showNotification(result.error || t('projectcheck', 'Failed to save time entry'), 'error');
+			if (result && result.success) {
+				showNotification(result.message || t('projectcheck', 'Time entry saved successfully'), 'success');
+				setTimeout(() => {
+					window.location.href = OC.generateUrl('/apps/projectcheck/time-entries');
+				}, 1500);
+				return;
+			}
+
+			handleSubmitFailure(result);
+			form.classList.remove('submitting');
+			showLoadingState(form, false);
+		} catch (error) {
+			const payloadData = error && error.payload;
+			if (payloadData && payloadData.errors) {
+				handleSubmitFailure(payloadData);
+			} else {
+				showNotification(
+					(error && error.message)
+						? error.message
+						: t('projectcheck', 'An error occurred while saving the time entry'),
+					'error',
+				);
+			}
+			form.classList.remove('submitting');
+			showLoadingState(form, false);
+		}
+	}
+
+	function hydrateFormIcons() {
+		if (!window.ProjectCheckIcons || typeof window.ProjectCheckIcons.hydrate !== 'function') {
+			return;
+		}
+		const container = document.getElementById('time-entry-form');
+		if (container) {
+			window.ProjectCheckIcons.hydrate(container);
+		}
+	}
+
+	/**
+	 * Delete own time entry (edit form danger zone).
+	 */
+	function initializeDeleteAction() {
+		const deleteBtn = document.getElementById('delete-time-entry-btn');
+		if (!deleteBtn) {
+			return;
+		}
+		deleteBtn.addEventListener('click', function () {
+			openTimeEntryDeleteModal(deleteBtn);
+		});
+	}
+
+	function openTimeEntryDeleteModal(trigger) {
+		const entryId = trigger.getAttribute('data-entry-id');
+		const deleteUrl = trigger.getAttribute('data-delete-url');
+		const indexUrl = trigger.getAttribute('data-index-url');
+		const description = trigger.getAttribute('data-entry-description') || '';
+		const confirmMessage = t('projectcheck', 'Are you sure you want to delete this time entry? This action cannot be undone.');
+
+		if (!entryId || !deleteUrl) {
+			showNotification(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'), 'error');
+			return;
+		}
+		if (typeof window.projectcheckDeletionModal === 'undefined') {
+			showNotification(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'), 'error');
+			return;
+		}
+
+		const entityLabel = description.trim() !== ''
+			? description.trim()
+			: t('projectcheck', 'Time entry');
+
+		window.projectcheckDeletionModal.show({
+			entityType: 'time_entry',
+			entityId: entryId,
+			entityName: entityLabel,
+			deleteUrl: deleteUrl,
+			simpleConfirm: true,
+			confirmMessage: confirmMessage,
+			onSuccess: function () {
+				showNotification(t('projectcheck', 'Time entry was deleted successfully!'), 'success');
+				setTimeout(function () {
+					if (indexUrl) {
+						window.location.href = indexUrl;
+						return;
 					}
-					// Re-enable form only on error
-					form.classList.remove('submitting');
-					showLoadingState(form, false);
-				}
-			})
-			.catch(error => {
-				showNotification(t('projectcheck', 'An error occurred while saving the time entry'), 'error');
-				// Re-enable form on error
-				form.classList.remove('submitting');
-				showLoadingState(form, false);
-			});
+					window.location.href = OC.generateUrl('/apps/projectcheck/time-entries');
+				}, 800);
+			},
+			onCancel: function () {},
+		});
 	}
 
 	/**
@@ -604,6 +705,51 @@
 	 * text is tailored to the project's cost-rate mode so admins know exactly
 	 * which rate will be applied.
 	 */
+	function syncAdminOverrideBannerAria(banner, hintEl, hintText) {
+		const hint = (hintText || '').trim();
+		banner.setAttribute(
+			'aria-describedby',
+			hint !== '' ? 'pc-admin-override-desc pc-admin-override-hint' : 'pc-admin-override-desc',
+		);
+	}
+
+	function announceAdminOverrideBanner(banner) {
+		const live = document.getElementById('pc-live-region');
+		if (!live) {
+			return;
+		}
+		const titleEl = document.getElementById('pc-admin-override-title');
+		const descEl = document.getElementById('pc-admin-override-desc');
+		const hintEl = document.getElementById('pc-admin-override-hint');
+		const parts = [];
+		if (titleEl) {
+			parts.push(titleEl.textContent.replace(/\s+/g, ' ').trim());
+		}
+		if (descEl) {
+			parts.push(descEl.textContent.replace(/\s+/g, ' ').trim());
+		}
+		if (hintEl && !hintEl.classList.contains('pc-form-callout__hint--empty')) {
+			const hint = hintEl.textContent.replace(/\s+/g, ' ').trim();
+			if (hint !== '') {
+				parts.push(hint);
+			}
+		}
+		live.textContent = parts.filter(Boolean).join('. ');
+	}
+
+	function syncProjectSelectTitle(projectSelect) {
+		if (!projectSelect) {
+			return;
+		}
+		const opt = projectSelect.options[projectSelect.selectedIndex];
+		const label = opt && opt.value ? String(opt.text).trim() : '';
+		if (label) {
+			projectSelect.setAttribute('title', label);
+		} else {
+			projectSelect.removeAttribute('title');
+		}
+	}
+
 	function updateAdminOverrideBanner() {
 		const banner = document.getElementById('pc-admin-override-banner');
 		if (!banner) {
@@ -611,12 +757,15 @@
 		}
 		const projectSelect = document.getElementById('project_id');
 		const hintEl = document.getElementById('pc-admin-override-hint');
+		const wasHidden = banner.classList.contains('pc-form-callout--hidden');
 		const hideBanner = () => {
 			banner.classList.add('pc-form-callout--hidden');
+			banner.setAttribute('aria-hidden', 'true');
 			if (hintEl) {
 				hintEl.textContent = '';
 				hintEl.classList.add('pc-form-callout__hint--empty');
 			}
+			syncAdminOverrideBannerAria(banner, hintEl, '');
 		};
 		if (!projectSelect) {
 			hideBanner();
@@ -630,13 +779,13 @@
 		}
 
 		const mode = (opt.getAttribute('data-cost-rate-mode') || '').toLowerCase();
+		let modeText = '';
+		if (mode === 'project') {
+			modeText = banner.getAttribute('data-pc-mode-project-label') || '';
+		} else if (mode === 'employee') {
+			modeText = banner.getAttribute('data-pc-mode-employee-label') || '';
+		}
 		if (hintEl) {
-			let modeText = '';
-			if (mode === 'project') {
-				modeText = banner.getAttribute('data-pc-mode-project-label') || '';
-			} else if (mode === 'employee') {
-				modeText = banner.getAttribute('data-pc-mode-employee-label') || '';
-			}
 			hintEl.textContent = modeText;
 			if (modeText) {
 				hintEl.classList.remove('pc-form-callout__hint--empty');
@@ -644,13 +793,19 @@
 				hintEl.classList.add('pc-form-callout__hint--empty');
 			}
 		}
+		syncAdminOverrideBannerAria(banner, hintEl, modeText);
 		banner.classList.remove('pc-form-callout--hidden');
-		// Icon may have been skipped while the callout was hidden (catalog hydrates on show).
-		const iconEl = banner.querySelector('[data-lucide]');
-		if (iconEl) {
-			iconEl.removeAttribute('data-lucide-hydrated');
+		banner.removeAttribute('aria-hidden');
+		if (wasHidden) {
+			announceAdminOverrideBanner(banner);
 		}
-		if (window.ProjectCheckIcons && typeof window.ProjectCheckIcons.hydrate === 'function') {
+		const iconEl = banner.querySelector('[data-lucide]');
+		if (
+			iconEl
+			&& iconEl.getAttribute('data-lucide-hydrated') !== '1'
+			&& window.ProjectCheckIcons
+			&& typeof window.ProjectCheckIcons.hydrate === 'function'
+		) {
 			window.ProjectCheckIcons.hydrate(banner);
 		}
 	}
@@ -691,13 +846,26 @@
 	}
 
 	/**
-	 * Show notification
+	 * Show notification (ProjectCheckNotify → OC toast → inline alert region).
 	 */
 	function showNotification(message, type = 'info') {
-		OC.Notification.show(message, {
-			type: type,
-			timeout: 5
-		});
+		const text = String(message || '').trim();
+		if (text === '') {
+			return;
+		}
+		if (window.ProjectCheckNotify) {
+			if (type === 'error') {
+				window.ProjectCheckNotify.error(text);
+			} else {
+				window.ProjectCheckNotify.show(text, type);
+			}
+			return;
+		}
+		const region = document.getElementById('pc-alert-region')
+			|| document.getElementById('time-entry-form-errors');
+		if (region) {
+			region.textContent = text;
+		}
 	}
 
 	// Initialize when DOM is ready

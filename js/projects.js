@@ -93,10 +93,16 @@
 		// Delete project buttons
 		document.addEventListener('click', function (e) {
 			if (e.target.closest('.delete-project-btn')) {
+				if (deletionModalOpen) {
+					return;
+				}
 				const button = e.target.closest('.delete-project-btn');
+				if (button.disabled) {
+					return;
+				}
 				const projectId = button.getAttribute('data-project-id');
 				const projectName = button.getAttribute('data-project-name');
-				showProjectDeletionModal(projectId, projectName);
+				showProjectDeletionModal(projectId, projectName, button);
 			}
 		});
 
@@ -390,38 +396,51 @@
 		window.projectcheckDeletionModal.show(modalOptions);
 	}
 
+	/** @type {boolean} */
+	let deletionModalOpen = false;
+
 	/**
 	 * Show project deletion modal
 	 */
-	function showProjectDeletionModal(projectId, projectName) {
+	function showProjectDeletionModal(projectId, projectName, triggerButton) {
 		if (typeof window.projectcheckDeletionModal === 'undefined') {
 			showNotification(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'), 'error');
 			return;
 		}
 
+		if (deletionModalOpen) {
+			return;
+		}
+		deletionModalOpen = true;
+		if (triggerButton) {
+			triggerButton.disabled = true;
+		}
+
 		const deleteUrl = OC.generateUrl('/apps/projectcheck/projects/{id}/delete', { id: projectId });
 
-		// Show the modal
+		function releaseDeletionTrigger() {
+			deletionModalOpen = false;
+			if (triggerButton) {
+				triggerButton.disabled = false;
+			}
+		}
+
 		window.projectcheckDeletionModal.show({
 			entityType: 'project',
 			entityId: projectId,
 			entityName: projectName,
 			deleteUrl: deleteUrl,
-			onSuccess: function (entity) {
-				// Remove the row from the table
-				const row = document.querySelector(`tr[data-project-id="${entity.id}"]`);
-				if (row) {
-					row.remove();
-				}
-
-				// Show success message and reload after delay
-				showNotification(t('projectcheck', 'Project deleted successfully'), 'success');
-				setTimeout(() => {
-					window.location.reload();
-				}, 1000);
+			onSuccess: function () {
+				releaseDeletionTrigger();
+				const url = new URL(window.location.href);
+				url.searchParams.set('message', 'success');
+				url.searchParams.set('deleted', '1');
+				window.location.href = url.toString();
 			},
 			onCancel: function () {
-			}
+				releaseDeletionTrigger();
+			},
+			onRelease: releaseDeletionTrigger
 		});
 	}
 
@@ -461,12 +480,25 @@
 	 * Show notification
 	 */
 	function showNotification(message, type = 'info') {
-		// Use Nextcloud's notification system if available
-		if (typeof OC !== 'undefined' && OC.Notification) {
-			OC.Notification.show(message, { type: type });
-		} else {
-			// Fallback to alert
-			alert(message);
+		const text = String(message || '').trim();
+		if (text === '') {
+			return;
+		}
+		if (window.ProjectCheckNotify) {
+			if (type === 'error') {
+				window.ProjectCheckNotify.error(text);
+			} else {
+				window.ProjectCheckNotify.show(text, type);
+			}
+			return;
+		}
+		if (typeof OC !== 'undefined' && OC.Notification && typeof OC.Notification.showTemporary === 'function') {
+			OC.Notification.showTemporary(text, type === 'error' ? { type: 'error' } : undefined);
+			return;
+		}
+		const region = document.getElementById('pc-alert-region');
+		if (region) {
+			region.textContent = text;
 		}
 	}
 

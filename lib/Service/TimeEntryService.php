@@ -223,7 +223,7 @@ class TimeEntryService
 			throw new TimeEntryNotFoundException((int) $id, $this->l->t('Time entry not found'));
 		}
 
-		if ($timeEntry->getUserId() !== $userId) {
+		if (!$timeEntry->isOwnedBy($userId)) {
 			throw new PermissionDeniedException('update', 'time entry', $this->l->t('Access denied'));
 		}
 
@@ -350,7 +350,7 @@ class TimeEntryService
 			throw new TimeEntryNotFoundException((int) $id, $this->l->t('Time entry not found'));
 		}
 
-		if ($timeEntry->getUserId() !== $userId) {
+		if (!$timeEntry->isOwnedBy($userId)) {
 			throw new PermissionDeniedException('delete', 'time entry', $this->l->t('Access denied'));
 		}
 

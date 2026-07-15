@@ -40,39 +40,35 @@ $isGlobalViewer = !empty($_['isGlobalViewer']);
 $pageId = 'dashboard';
 $pageTitle = $l->t('Dashboard');
 $pageHelp = $isGlobalViewer ? $l->t('Overview of your projects and activities') : $l->t('Overview of the projects you can access and your own logged work');
-include __DIR__ . '/common/page-start.php';
-?>
-        <!-- Page actions (header actions stay below h1 from page-start) -->
-        <?php
-        ob_start(); ?>
+ob_start(); ?>
                         <div class="project-meta" aria-label="<?php p($l->t('Dashboard summary')); ?>">
                             <div class="meta-item">
-                                <i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i>
+                                <span data-lucide="calendar" class="lucide-icon" aria-hidden="true"></span>
                                 <span><?php p($fmt ? $fmt->date(new \DateTime()) : date('d.m.Y')); ?></span>
                             </div>
                             <div class="meta-item">
-                                <i data-lucide="folder" class="lucide-icon primary" aria-hidden="true"></i>
+                                <span data-lucide="folder" class="lucide-icon" aria-hidden="true"></span>
                                 <span><?php p(($_['stats']['totalProjects'] ?? 0) . ' ' . $l->t('Projects')); ?></span>
                             </div>
                         </div>
-        <?php
-        $headerMetaHtml = ob_get_clean();
-        ob_start(); ?>
+<?php
+$pageHeaderMetaHtml = ob_get_clean();
+ob_start(); ?>
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="button primary">
-                        <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
+                        <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('New Time Entry')); ?>
                     </a>
                     <?php if (!empty($_['canCreateProject'])): ?>
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create')); ?>" class="button secondary">
-                        <i data-lucide="plus" class="lucide-icon" aria-hidden="true"></i>
+                        <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('New Project')); ?>
                     </a>
                     <?php endif; ?>
-        <?php
-        $headerActionsHtml = ob_get_clean();
-        $headerActionsLabel = $l->t('Primary actions');
-        include __DIR__ . '/common/page-header-section.php';
-        ?>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Primary actions');
+include __DIR__ . '/common/page-start.php';
+?>
 
         <?php if (!$isGlobalViewer): ?>
             <div class="section pc-section--ghost" aria-labelledby="dash-scope-title">
@@ -139,52 +135,52 @@ include __DIR__ . '/common/page-start.php';
         <?php endif; ?>
 
         <!-- Statistics Overview -->
-        <section class="section stats-overview-section pc-section" aria-labelledby="dash-overview-stats-title">
-            <div class="section-header">
+        <section class="section pc-stats-panel pc-section stats-overview-section" aria-labelledby="dash-overview-stats-title">
+            <header class="pc-stats-panel__header section-header">
                 <h3 class="pc-section__title" id="dash-overview-stats-title"><?php p($l->t('Overview Statistics')); ?></h3>
                 <p class="pc-section__intro"><?php p($l->t('Key metrics and project insights')); ?></p>
-            </div>
+            </header>
 
-            <ul class="overview-stats-compact" role="list" aria-live="polite">
-                <li class="overview-stat-compact" data-dashboard-stat="projects">
-                    <i data-lucide="folder" class="lucide-icon" aria-hidden="true"></i>
-                    <div class="stat-content">
-                        <div class="stat-number" data-dashboard-value aria-describedby="dash-stat-projects-label"><?php p($fmt ? $fmt->number((int)($_['stats']['totalProjects'] ?? 0)) : (int)($_['stats']['totalProjects'] ?? 0)); ?></div>
-                        <div class="stat-label" id="dash-stat-projects-label"><?php p($l->t('Projects')); ?></div>
-                        <div class="stat-detail">
+            <ul class="pc-stats-grid" role="list" aria-live="polite">
+                <li class="pc-stat-card" data-dashboard-stat="projects">
+                    <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="folder" class="lucide-icon"></i></span>
+                    <div class="pc-stat-card__body">
+                        <div class="pc-stat-card__value" data-dashboard-value aria-describedby="dash-stat-projects-label"><?php p($fmt ? $fmt->number((int)($_['stats']['totalProjects'] ?? 0)) : (int)($_['stats']['totalProjects'] ?? 0)); ?></div>
+                        <div class="pc-stat-card__label" id="dash-stat-projects-label"><?php p($l->t('Projects')); ?></div>
+                        <div class="pc-stat-card__detail">
                             <span data-dashboard-detail><?php p(($fmt ? $fmt->number((int)($_['stats']['activeProjects'] ?? 0)) : (int)($_['stats']['activeProjects'] ?? 0)) . ' ' . $l->t('active')); ?></span>
                         </div>
                     </div>
                 </li>
 
-                <li class="overview-stat-compact" data-dashboard-stat="budget">
-                    <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
-                    <div class="stat-content">
-                        <div class="stat-number" data-dashboard-value aria-describedby="dash-stat-budget-label"><?php p($fmt ? $fmt->currency((float)($_['stats']['totalBudget'] ?? 0)) : $currencyCode . ' ' . number_format((float)($_['stats']['totalBudget'] ?? 0), 0)); ?></div>
-                        <div class="stat-label" id="dash-stat-budget-label"><?php p($l->t('Budget')); ?></div>
-                        <div class="stat-detail">
+                <li class="pc-stat-card" data-dashboard-stat="budget">
+                    <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="euro" class="lucide-icon"></i></span>
+                    <div class="pc-stat-card__body">
+                        <div class="pc-stat-card__value" data-dashboard-value aria-describedby="dash-stat-budget-label"><?php p($fmt ? $fmt->currency((float)($_['stats']['totalBudget'] ?? 0)) : $currencyCode . ' ' . number_format((float)($_['stats']['totalBudget'] ?? 0), 0)); ?></div>
+                        <div class="pc-stat-card__label" id="dash-stat-budget-label"><?php p($l->t('Budget')); ?></div>
+                        <div class="pc-stat-card__detail">
                             <span data-dashboard-detail><?php p(($fmt ? $fmt->percent((float)($_['stats']['consumptionPercentage'] ?? 0), 0) : ((int)($_['stats']['consumptionPercentage'] ?? 0)) . '%') . ' ' . $l->t('used')); ?></span>
                         </div>
                     </div>
                 </li>
 
-                <li class="overview-stat-compact" data-dashboard-stat="hours">
-                    <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
-                    <div class="stat-content">
-                        <div class="stat-number" data-dashboard-value aria-describedby="dash-stat-hours-label"><?php p($fmt ? $fmt->hours((float)($_['stats']['totalHours'] ?? 0)) : ((float)($_['stats']['totalHours'] ?? 0)) . 'h'); ?></div>
-                        <div class="stat-label" id="dash-stat-hours-label"><?php p($l->t('Hours')); ?></div>
-                        <div class="stat-detail">
+                <li class="pc-stat-card" data-dashboard-stat="hours">
+                    <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="clock" class="lucide-icon"></i></span>
+                    <div class="pc-stat-card__body">
+                        <div class="pc-stat-card__value" data-dashboard-value aria-describedby="dash-stat-hours-label"><?php p($fmt ? $fmt->hours((float)($_['stats']['totalHours'] ?? 0)) : ((float)($_['stats']['totalHours'] ?? 0)) . 'h'); ?></div>
+                        <div class="pc-stat-card__label" id="dash-stat-hours-label"><?php p($l->t('Hours')); ?></div>
+                        <div class="pc-stat-card__detail">
                             <span data-dashboard-detail><?php p($l->t('total')); ?></span>
                         </div>
                     </div>
                 </li>
 
-                <li class="overview-stat-compact" data-dashboard-stat="customers">
-                    <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
-                    <div class="stat-content">
-                        <div class="stat-number" data-dashboard-value aria-describedby="dash-stat-customers-label"><?php p($fmt ? $fmt->number((int)($_['stats']['totalCustomers'] ?? 0)) : (int)($_['stats']['totalCustomers'] ?? 0)); ?></div>
-                        <div class="stat-label" id="dash-stat-customers-label"><?php p($l->t('Customers')); ?></div>
-                        <div class="stat-detail">
+                <li class="pc-stat-card" data-dashboard-stat="customers">
+                    <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="users" class="lucide-icon"></i></span>
+                    <div class="pc-stat-card__body">
+                        <div class="pc-stat-card__value" data-dashboard-value aria-describedby="dash-stat-customers-label"><?php p($fmt ? $fmt->number((int)($_['stats']['totalCustomers'] ?? 0)) : (int)($_['stats']['totalCustomers'] ?? 0)); ?></div>
+                        <div class="pc-stat-card__label" id="dash-stat-customers-label"><?php p($l->t('Customers')); ?></div>
+                        <div class="pc-stat-card__detail">
                             <span data-dashboard-detail><?php p($l->t('active')); ?></span>
                         </div>
                     </div>

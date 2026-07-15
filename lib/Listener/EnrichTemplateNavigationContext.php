@@ -50,8 +50,14 @@ class EnrichTemplateNavigationContext implements IEventListener
 		if ($response->getApp() !== Application::APP_ID) {
 			return;
 		}
-		// WCAG / theming: semantic tokens (--pc-*, *-light tints) must load on every view, every theme.
+		// WCAG / theming: semantic tokens (--pc-*, shell layout) must load on every view, every theme.
 		Util::addStyle(Application::APP_ID, 'app', true);
+		Util::addStyle(Application::APP_ID, 'common/shell', true);
+		Util::addStyle(Application::APP_ID, 'common/app-layout', true);
+		Util::addStyle(Application::APP_ID, 'common/mobile-nav', true);
+		Util::addStyle(Application::APP_ID, 'common/accessibility', true);
+		Util::addStyle(Application::APP_ID, 'common/list-table', true);
+		Util::addStyle(Application::APP_ID, 'common/stats-panel', true);
 		if (!$event->isLoggedIn()) {
 			return;
 		}

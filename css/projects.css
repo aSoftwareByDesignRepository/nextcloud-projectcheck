@@ -7816,180 +7816,176 @@ body {
 	border-radius: 0;
 }
 
-/* Narrow viewports: card rows with data-label; table layout from 721px */
+/* Employees table — desktop-first; card rows only on narrow viewports */
 .pc-app--employees .employees-table-wrap {
-	overflow-x: visible;
-	padding: 1rem;
+	overflow-x: auto;
+	padding: 0;
 	-webkit-overflow-scrolling: touch;
 }
 
 .pc-app--employees .employees-table {
-	border: 0;
-	background: transparent;
-	border-radius: 0;
-}
-
-.pc-app--employees .employees-table tbody tr:last-child {
-	margin-bottom: 0;
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	background: var(--color-main-background);
 }
 
 .pc-app--employees .employees-table thead {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0 0 0 0);
+	background: var(--color-background-hover);
+}
+
+.pc-app--employees .employees-table thead th {
+	padding: 0.9rem 1rem;
+	text-align: left;
+	font-weight: 600;
+	color: var(--color-main-text);
+	border-bottom: 2px solid var(--color-border);
 	white-space: nowrap;
-	border: 0;
+}
+
+.pc-app--employees .employees-table thead th.col-num,
+.pc-app--employees .employees-table thead th.col-actions {
+	text-align: right;
 }
 
 .pc-app--employees .employees-table tbody tr {
-	display: block;
-	margin-bottom: 1rem;
-	padding: 0.5rem 1rem 1rem;
-	border: 1px solid var(--color-border);
-	border-radius: var(--pc-radius-md, 12px);
-	background: var(--color-main-background);
+	display: table-row;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .pc-app--employees .employees-table tbody tr:hover {
-	background: var(--color-main-background);
+	background: var(--color-background-hover);
+}
+
+.pc-app--employees .employees-table tbody tr:last-child {
+	border-bottom: 0;
+	margin-bottom: 0;
 }
 
 .pc-app--employees .employees-table td,
 .pc-app--employees .employees-table tbody th {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
-	padding: 0.55rem 0;
+	display: table-cell;
+	padding: 0.85rem 1rem;
 	border-bottom: 1px solid var(--color-border);
-	text-align: right;
+	text-align: inherit;
+	vertical-align: middle;
+	color: var(--color-main-text);
 }
 
 .pc-app--employees .employees-table td::before,
 .pc-app--employees .employees-table tbody th::before {
-	content: attr(data-label);
-	font-weight: 600;
-	color: var(--color-text-maxcontrast);
-	text-align: left;
+	content: none;
 }
 
 .pc-app--employees .employees-table .col-num .employees-metric .lucide-icon-host {
-	display: none;
+	display: inline-flex;
 }
 
 .pc-app--employees .employees-table .col-rank,
 .pc-app--employees .employees-table .employee-name-cell {
-	justify-content: flex-start;
 	border-bottom: 0;
-	padding: 0.25rem 0;
+	padding: 0.85rem 1rem;
 	text-align: left;
-}
-
-.pc-app--employees .employees-table .col-rank::before,
-.pc-app--employees .employees-table .employee-name-cell::before,
-.pc-app--employees .employees-table .col-actions::before {
-	content: none;
-}
-
-.pc-app--employees .employees-table .employee-name-cell {
-	font-size: 1.15rem;
+	font-size: inherit;
 }
 
 .pc-app--employees .employees-table .col-actions {
-	display: block;
-	border-bottom: 0;
-	padding-top: 0.85rem;
+	display: table-cell;
+	padding: 0.85rem 1rem;
+	text-align: right;
 }
 
 .pc-app--employees .employees-table .col-actions .button {
-	width: 100%;
+	width: auto;
 }
 
-@media (min-width: 721px) {
-	.pc-app--employees .employees-search {
-		flex: 1 1 18rem;
-	}
-
-	.pc-app--employees .employees-search__actions {
-		width: auto;
-	}
-
-	.pc-app--employees .employees-search__actions .button {
-		flex: 0 1 auto;
-	}
-
+@media (max-width: 720px) {
 	.pc-app--employees .employees-table-wrap {
-		overflow-x: auto;
-		padding: 0;
+		overflow-x: visible;
+		padding: 1rem;
 	}
 
 	.pc-app--employees .employees-table {
-		border-collapse: separate;
-		border-spacing: 0;
-		background: var(--color-main-background);
+		border: 0;
+		background: transparent;
+		border-radius: 0;
 	}
 
 	.pc-app--employees .employees-table thead {
-		position: static;
-		width: auto;
-		height: auto;
+		position: absolute;
+		width: 1px;
+		height: 1px;
 		padding: 0;
-		margin: 0;
-		overflow: visible;
-		clip: auto;
-		white-space: normal;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
 		border: 0;
 	}
 
 	.pc-app--employees .employees-table tbody tr {
-		display: table-row;
-		margin-bottom: 0;
-		padding: 0;
-		border: 0;
-		border-radius: 0;
-		background: transparent;
+		display: block;
+		margin-bottom: 1rem;
+		padding: 0.5rem 1rem 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--pc-radius-md, 12px);
+		background: var(--color-main-background);
 	}
 
 	.pc-app--employees .employees-table tbody tr:hover {
-		background: var(--color-background-hover);
+		background: var(--color-main-background);
 	}
 
 	.pc-app--employees .employees-table td,
 	.pc-app--employees .employees-table tbody th {
-		display: table-cell;
-		padding: 0.85rem 1rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.55rem 0;
 		border-bottom: 1px solid var(--color-border);
-		text-align: inherit;
+		text-align: right;
 	}
 
 	.pc-app--employees .employees-table td::before,
 	.pc-app--employees .employees-table tbody th::before {
-		content: none;
+		content: attr(data-label);
+		font-weight: 600;
+		color: var(--color-text-maxcontrast);
+		text-align: left;
 	}
 
 	.pc-app--employees .employees-table .col-num .employees-metric .lucide-icon-host {
-		display: inline-flex;
+		display: none;
 	}
 
 	.pc-app--employees .employees-table .col-rank,
 	.pc-app--employees .employees-table .employee-name-cell {
+		justify-content: flex-start;
 		border-bottom: 0;
-		padding: 0.85rem 1rem;
+		padding: 0.25rem 0;
 		text-align: left;
-		font-size: inherit;
+	}
+
+	.pc-app--employees .employees-table .col-rank::before,
+	.pc-app--employees .employees-table .employee-name-cell::before,
+	.pc-app--employees .employees-table .col-actions::before {
+		content: none;
+	}
+
+	.pc-app--employees .employees-table .employee-name-cell {
+		font-size: 1.15rem;
 	}
 
 	.pc-app--employees .employees-table .col-actions {
-		display: table-cell;
-		padding: 0.85rem 1rem;
+		display: block;
+		border-bottom: 0;
+		padding-top: 0.85rem;
+		text-align: left;
 	}
 
 	.pc-app--employees .employees-table .col-actions .button {
-		width: auto;
+		width: 100%;
 	}
 }
 
@@ -8004,36 +8000,16 @@ body {
 }
 
 @media (min-width: 721px) {
-	.pc-app--employees .employees-table thead {
-		background: var(--color-background-hover);
+	.pc-app--employees .employees-search {
+		flex: 1 1 18rem;
 	}
 
-	.pc-app--employees .employees-table thead th {
-		padding: 0.9rem 1rem;
-		text-align: left;
-		font-weight: 600;
-		color: var(--color-main-text);
-		border-bottom: 2px solid var(--color-border);
-		white-space: nowrap;
+	.pc-app--employees .employees-search__actions {
+		width: auto;
 	}
 
-	.pc-app--employees .employees-table thead th.col-num,
-	.pc-app--employees .employees-table thead th.col-actions {
-		text-align: right;
-	}
-
-	.pc-app--employees .employees-table tbody tr {
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	.pc-app--employees .employees-table tbody tr:last-child {
-		border-bottom: 0;
-	}
-
-	.pc-app--employees .employees-table td,
-	.pc-app--employees .employees-table tbody th {
-		vertical-align: middle;
-		color: var(--color-main-text);
+	.pc-app--employees .employees-search__actions .button {
+		flex: 0 1 auto;
 	}
 }
 
@@ -8203,20 +8179,33 @@ body {
 	cursor: pointer;
 }
 
+/*
+ * Visually hide the native radio — do NOT use a full-card opacity overlay.
+ * Disabled radios ignore opacity:0 in several engines and paint the default
+ * control on top of the card copy (audit / production bug on locked projects).
+ * The wrapping <label> keeps click targets; :has(:focus-visible) styles the surface.
+ */
 .pc-pricing-card__input {
 	position: absolute;
-	inset: 0;
-	z-index: 2;
-	width: 100%;
-	height: 100%;
-	margin: 0;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
 	opacity: 0;
-	cursor: pointer;
+	pointer-events: none;
 }
 
 .pc-pricing-card__surface {
 	position: relative;
-	z-index: 1;
+	z-index: 0;
 	display: flex;
 	align-items: flex-start;
 	gap: var(--pc-space-3, 0.75rem);
@@ -8228,7 +8217,6 @@ body {
 	background: var(--color-main-background);
 	box-shadow: 0 1px 2px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 	transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-	pointer-events: none;
 }
 
 .pc-pricing-card:hover .pc-pricing-card__surface {
@@ -8252,8 +8240,7 @@ body {
  * on specificity and source order — otherwise the primary-colored ring,
  * border and background tint leak through on the still-selected card.
  */
-.pc-pricing-card:has(.pc-pricing-card__input:disabled),
-.pc-pricing-card:has(.pc-pricing-card__input:disabled) .pc-pricing-card__input {
+.pc-pricing-card:has(.pc-pricing-card__input:disabled) {
 	cursor: not-allowed;
 }
 
@@ -8318,6 +8305,11 @@ body {
 	font-size: 0.9rem;
 	line-height: 1.45;
 	color: var(--color-text-maxcontrast);
+}
+
+.pc-pricing-card:has(.pc-pricing-card__input:disabled:not(:checked)) .pc-pricing-card__indicator {
+	opacity: 0;
+	visibility: hidden;
 }
 
 .pc-pricing-card__indicator {
@@ -8468,7 +8460,7 @@ body {
 @media (min-width: 721px) {
 	.pc-form-callout {
 		grid-template-columns: auto 1fr auto;
-		grid-template-areas: none;
+		grid-template-areas: "icon body actions";
 		padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
 	}
 }
@@ -8486,10 +8478,23 @@ body {
 	flex-shrink: 0;
 }
 
-.pc-form-callout__icon .lucide-icon {
+.pc-form-callout__icon .lucide-icon,
+.pc-form-callout__icon .lucide-icon-host {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	width: 1.125rem;
 	height: 1.125rem;
 	color: currentColor;
+	margin: 0;
+	flex-shrink: 0;
+}
+
+.pc-form-callout__icon .lucide-icon-host > .lucide-icon,
+.pc-form-callout__icon .lucide-icon-host > svg {
+	display: block;
+	width: 100%;
+	height: 100%;
 	margin: 0;
 }
 
@@ -8499,7 +8504,8 @@ body {
 		height: 2.75rem;
 	}
 
-	.pc-form-callout__icon .lucide-icon {
+	.pc-form-callout__icon .lucide-icon,
+	.pc-form-callout__icon .lucide-icon-host {
 		width: 1.375rem;
 		height: 1.375rem;
 	}
@@ -8618,9 +8624,34 @@ body {
 	display: none !important;
 }
 
-.pc-form-callout--admin-override {
-	align-items: start;
+/* Admin override: flex row (not grid) — two children only; grid callout rules break icon/body layout. */
+.pc-form-callout--admin-override:not(.pc-form-callout--hidden) {
+	display: flex !important;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: flex-start;
+	gap: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+	grid-template-columns: unset !important;
+	grid-template-areas: unset !important;
 	animation: pc-callout-in 0.28s ease;
+}
+
+.pc-form-callout--admin-override:not(.pc-form-callout--hidden) .pc-form-callout__icon {
+	flex: 0 0 auto;
+	grid-area: unset !important;
+	align-self: flex-start;
+}
+
+.pc-form-callout--admin-override:not(.pc-form-callout--hidden) .pc-form-callout__body {
+	flex: 1 1 auto;
+	min-width: 0;
+	grid-area: unset !important;
+}
+
+@media (min-width: 721px) {
+	.pc-form-callout--admin-override:not(.pc-form-callout--hidden) {
+		padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
+	}
 }
 
 @keyframes pc-callout-in {
@@ -8646,6 +8677,14 @@ body {
 	padding: 0 0.5rem;
 }
 
+@media (forced-colors: active) {
+	.pc-form-callout__count--muted {
+		background: Canvas;
+		color: CanvasText;
+		border: 1px solid CanvasText;
+	}
+}
+
 .pc-form-callout__hint--empty {
 	display: none;
 }
@@ -8654,6 +8693,35 @@ body {
 	.pc-form-callout--admin-override {
 		animation: none;
 	}
+}
+
+/* =============================================================
+   Shell layout guard — core NC may set #app-content-wrapper to
+   flex-direction: row (header beside main). Force column stack.
+   ============================================================= */
+#app-content.pc-app #app-content-wrapper,
+#app-content.pc-app #app-content-wrapper.pc-shell {
+	display: flex !important;
+	flex-direction: column !important;
+	flex-wrap: nowrap !important;
+	align-items: stretch !important;
+	width: 100% !important;
+	max-width: min(1400px, 100%) !important;
+	box-sizing: border-box;
+}
+
+#app-content.pc-app #app-content-wrapper > .pc-page-header,
+#app-content.pc-app #app-content-wrapper > .pc-main,
+#app-content.pc-app #app-content-wrapper > .section {
+	flex: 0 0 auto;
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+#app-content.pc-app #app-content-wrapper > .pc-main {
+	flex: 1 1 auto;
 }
 
 /* Project detail: compact chip beside “Add time entry” */

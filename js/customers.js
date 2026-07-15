@@ -13,8 +13,8 @@
     const elements = {
         searchInput: document.getElementById('customer-search'),
         clearFiltersBtn: document.getElementById('clear-filters'),
-        customersTable: document.querySelector('.grid'),
-        customersTbody: document.querySelector('.grid tbody')
+        customersTable: document.querySelector('.customers-table'),
+        customersTbody: document.querySelector('.customers-table tbody')
     };
 
     /**
@@ -55,11 +55,17 @@
         // Delete customer buttons
         document.addEventListener('click', function (e) {
             if (e.target.closest('.delete-customer-btn')) {
+                if (deletionModalOpen) {
+                    return;
+                }
                 const button = e.target.closest('.delete-customer-btn');
+                if (button.disabled) {
+                    return;
+                }
                 const customerId = button.getAttribute('data-customer-id');
                 const customerName = button.getAttribute('data-customer-name');
                 const deleteUrl = button.getAttribute('data-delete-url');
-                showCustomerDeletionModal(customerId, customerName, deleteUrl);
+                showCustomerDeletionModal(customerId, customerName, deleteUrl, button);
             }
         });
     }
@@ -89,7 +95,14 @@
      * Update empty state visibility
      */
     function updateEmptyState() {
-        // For server-side paging, the empty state is handled on render.
+        const tbody = elements.customersTbody;
+        if (!tbody) {
+            return;
+        }
+        const remaining = tbody.querySelectorAll('tr[data-customer-id]').length;
+        if (remaining === 0) {
+            window.location.reload();
+        }
     }
 
     /**
@@ -114,10 +127,13 @@
         return '/index.php/apps/projectcheck/customers/' + encodeURIComponent(id) + '/delete';
     }
 
+    /** @type {boolean} */
+    let deletionModalOpen = false;
+
     /**
      * Show customer deletion modal
      */
-    function showCustomerDeletionModal(customerId, customerName, deleteUrl) {
+    function showCustomerDeletionModal(customerId, customerName, deleteUrl, triggerButton) {
         deleteUrl = resolveCustomerDeleteUrl(customerId, deleteUrl);
         if (typeof window.projectcheckDeletionModal === 'undefined') {
             if (typeof OC !== 'undefined' && OC.Notification) {
@@ -129,22 +145,39 @@
             return;
         }
 
-        // Set up success callback via show() options only (legacy onSuccess cleared on close).
+        if (deletionModalOpen) {
+            return;
+        }
+        deletionModalOpen = true;
+        if (triggerButton) {
+            triggerButton.disabled = true;
+        }
+
+        function releaseDeletionTrigger() {
+            deletionModalOpen = false;
+            if (triggerButton) {
+                triggerButton.disabled = false;
+            }
+        }
+
         window.projectcheckDeletionModal.show({
             entityType: 'customer',
             entityId: customerId,
             entityName: customerName,
             deleteUrl: deleteUrl,
             onSuccess: function (entity) {
-                // Remove the row from the table
+                releaseDeletionTrigger();
                 const row = document.querySelector(`tr[data-customer-id="${entity.id}"]`);
                 if (row) {
                     row.remove();
                     updateEmptyState();
                 }
+                showMessage(t('projectcheck', 'Customer deleted successfully'), 'success');
             },
             onCancel: function () {
-            }
+                releaseDeletionTrigger();
+            },
+            onRelease: releaseDeletionTrigger
         });
     }
 
@@ -217,13 +250,11 @@
      */
     function showMessage(message, type) {
         const level = type || 'info';
-        // Remove existing messages
-        const existingMessages = document.querySelectorAll('.notice');
+        const existingMessages = document.querySelectorAll('.pc-page-notice, .notice');
         existingMessages.forEach(msg => msg.remove());
 
-        // Create new message
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'notice notice-' + level;
+        messageDiv.className = 'notice notice-' + level + ' pc-page-notice';
         messageDiv.setAttribute('role', level === 'error' ? 'alert' : 'status');
         messageDiv.setAttribute('aria-live', level === 'error' ? 'assertive' : 'polite');
         messageDiv.setAttribute('aria-atomic', 'true');
@@ -241,17 +272,27 @@
         messageDiv.appendChild(icon);
         messageDiv.appendChild(span);
 
-        // Insert after the page header bar; fall back to the top of the main
-        // content area when the bar is not rendered (e.g. read-only users).
-        const header = document.querySelector('.header-content');
-        if (header && header.parentNode) {
-            header.parentNode.insertBefore(messageDiv, header.nextSibling);
-        } else {
-            const main = document.getElementById('pc-main-content') || document.querySelector('main') || document.body;
+        const main = document.getElementById('pc-main-content') || document.querySelector('.pc-main');
+        if (main) {
             main.insertBefore(messageDiv, main.firstChild);
+        } else {
+            const pageHeader = document.querySelector('.pc-page-header');
+            if (pageHeader && pageHeader.parentNode) {
+                pageHeader.parentNode.insertBefore(messageDiv, pageHeader.nextSibling);
+            } else {
+                document.body.insertBefore(messageDiv, document.body.firstChild);
+            }
         }
 
-        // Auto-hide after 5 seconds
+        const liveRegion = document.getElementById('pc-live-region');
+        if (liveRegion) {
+            liveRegion.textContent = message;
+        }
+
+        requestAnimationFrame(function () {
+            messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
         setTimeout(() => {
             if (messageDiv.parentNode) {
                 messageDiv.remove();

@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Unified page header section (lead text / meta items on the left, actions on the right).
+ * Optional secondary header bar (meta + actions) below the page title.
  *
- * Include after common/page-start.php. All pages share the same markup and the
- * canonical styling from css/common/page-header.css so the bar looks identical
- * across views.
+ * Prefer setting $pageHeaderMetaHtml and $pageHeaderActionsHtml on
+ * common/page-start.php so actions sit in the unified page header.
+ * This partial remains for legacy includes only.
  *
- * Caller variables (all optional, unset again at the end):
+ * Include after common/page-start.php.
  *
  * @var string $headerLead         plain-text lead line (escaped here)
  * @var string $headerMetaHtml     pre-rendered, already escaped meta HTML (badges, meta items)

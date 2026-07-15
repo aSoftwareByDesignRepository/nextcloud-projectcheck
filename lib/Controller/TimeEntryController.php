@@ -286,6 +286,7 @@ class TimeEntryController extends Controller
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => 'ENTRY_ID']),
 			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => 'ENTRY_ID']),
+			'deleteUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.deletePost', ['id' => 'ENTRY_ID']),
 			'projectShowUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => 'PROJECT_ID']),
 			'exportUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.export'),
 			'selectionSummary' => [
@@ -493,7 +494,7 @@ class TimeEntryController extends Controller
 		}
 
 		$uid = $user->getUID();
-		$isOwner = $timeEntry->getUserId() === $uid;
+		$isOwner = $timeEntry->isOwnedBy($uid);
 		if (!$isOwner && !$this->projectService->canUserViewAllTimeEntries($uid)) {
 			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
 				$this->l->t('Access denied')
@@ -551,7 +552,7 @@ class TimeEntryController extends Controller
 		}
 
 		// Check if user has access to this time entry
-		if ($timeEntry->getUserId() !== $user->getUID()) {
+		if (!$timeEntry->isOwnedBy($user->getUID())) {
 			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
 				$this->l->t('Access denied')
 			), 'guest');
@@ -593,9 +594,11 @@ class TimeEntryController extends Controller
 			'projectMembershipFlags' => $projectMembershipFlags,
 			'isEdit' => true,
 			'stats' => $stats,
+			'userId' => $userId,
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'storeUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.store'),
 			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.updatePost', ['id' => $timeEntry->getId()]),
+			'deleteUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.deletePost', ['id' => $timeEntry->getId()]),
 		]);
 
 		return $this->configureCSP($response);
@@ -703,7 +706,7 @@ class TimeEntryController extends Controller
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
 		$te = $this->timeEntryService->getTimeEntry($id);
-		if (!$te || $te->getUserId() !== $user->getUID()) {
+		if (!$te || !$te->isOwnedBy($user->getUID())) {
 			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
 		}
 

@@ -49,6 +49,41 @@ $projectLinkHref = isset($projectShowUrl) ? (string) $projectShowUrl : (string) 
 $pageId = 'time-entry-detail';
 $pageTitle = $l->t('Time Entry Details');
 $pageHelp = $l->t('Time entry information and associated details');
+ob_start(); ?>
+                        <div class="project-meta">
+                            <div class="meta-item">
+                                <span data-lucide="calendar" class="lucide-icon" aria-hidden="true"></span>
+                                <span><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : $l->t('Unknown')); ?></span>
+                            </div>
+                            <div class="meta-item">
+                                <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
+                                <span><?php p($timeEntry->getHours()); ?> <?php p($l->t('hours')); ?></span>
+                            </div>
+                            <div class="meta-item">
+                                <span data-lucide="euro" class="lucide-icon" aria-hidden="true"></span>
+                                <span><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
+                            </div>
+                            <div class="meta-item">
+                                <span data-lucide="user" class="lucide-icon" aria-hidden="true"></span>
+                                <span><?php p($timeEntry->isOwnedBy((string)($userId ?? '')) ? $l->t('Your time entry') : $l->t('Time entry by %s', [$timeEntry->getUserId()])); ?></span>
+                            </div>
+                        </div>
+<?php
+$pageHeaderMetaHtml = ob_get_clean();
+ob_start(); ?>
+                    <?php if ($timeEntry->isOwnedBy((string)($userId ?? ''))): ?>
+                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $timeEntryId])); ?>" class="button secondary">
+                            <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Edit Time Entry')); ?>
+                        </a>
+                    <?php endif; ?>
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="button secondary">
+                        <span data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></span>
+                        <?php p($l->t('Back to List')); ?>
+                    </a>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Time entry actions');
 include __DIR__ . '/common/page-start.php';
 ?>
         <!-- Breadcrumb Navigation -->
@@ -61,47 +96,9 @@ include __DIR__ . '/common/page-start.php';
             </nav>
         </div>
 
-        <?php
-        ob_start(); ?>
-                        <div class="project-meta">
-                            <div class="meta-item">
-                                <i class="icon-calendar-custom"></i>
-                                <span><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : 'Unknown'); ?></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="icon-time-custom"></i>
-                                <span><?php p($timeEntry->getHours()); ?> <?php p($l->t('hours')); ?></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="icon-money-custom"></i>
-                                <span><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="icon-user-custom"></i>
-                                <span><?php p($timeEntry->getUserId() === $userId ? $l->t('Your time entry') : $l->t('Time entry by %s', [$timeEntry->getUserId()])); ?></span>
-                            </div>
-                        </div>
-        <?php
-        $headerMetaHtml = ob_get_clean();
-        ob_start(); ?>
-                    <?php if ($timeEntry->getUserId() === $userId): ?>
-                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $timeEntryId])); ?>" class="button secondary">
-                            <i class="icon-edit-custom"></i>
-                            <?php p($l->t('Edit Time Entry')); ?>
-                        </a>
-                    <?php endif; ?>
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="button secondary">
-                        <i class="icon-time-custom"></i>
-                        <?php p($l->t('Back to List')); ?>
-                    </a>
-        <?php
-        $headerActionsHtml = ob_get_clean();
-        $headerActionsLabel = $l->t('Time entry actions');
-        include __DIR__ . '/common/page-header-section.php';
-        ?>
-
         <!-- Time Entry Statistics -->
-        <div class="section stats-section">
+        <section class="section stats-section pc-stats-panel pc-section" aria-labelledby="time-entry-stats-title">
+            <h3 id="time-entry-stats-title" class="stats-section__title u-visually-hidden"><?php p($l->t('Summary')); ?></h3>
             <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon">
@@ -140,7 +137,7 @@ include __DIR__ . '/common/page-start.php';
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Content Grid -->
         <div class="content-grid">
@@ -330,7 +327,7 @@ include __DIR__ . '/common/page-start.php';
             </div>
             <div class="section-content">
                 <div class="actions-grid">
-                    <?php if ($timeEntry->getUserId() === $_['userId']): ?>
+                    <?php if ($timeEntry->isOwnedBy((string)($_['userId'] ?? ''))): ?>
                         <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $timeEntryId])); ?>" class="button primary">
                             <i class="icon-edit-custom"></i>
                             <?php p($l->t('Edit Time Entry')); ?>

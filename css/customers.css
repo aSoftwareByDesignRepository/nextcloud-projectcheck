@@ -1093,15 +1093,17 @@
 	}
 }
 
-/* Action Items */
-.action-items {
+/* Action Items — legacy pages only; list panels use common/list-table.css */
+.section:not(.pc-list-panel) .action-items,
+.customer-detail .action-items {
 	display: flex;
 	flex-direction: column;
 	gap: 0.25rem;
 	align-items: stretch;
 }
 
-.action-item {
+.section:not(.pc-list-panel) .action-item,
+.customer-detail .action-item {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1116,29 +1118,34 @@
 	text-decoration: none;
 }
 
-.action-item:hover {
+.section:not(.pc-list-panel) .action-item:hover,
+.customer-detail .action-item:hover {
 	background: var(--color-primary);
 	color: var(--color-primary-text);
 	transform: scale(1.1);
 }
 
-.action-item.delete-customer-btn:hover {
+.section:not(.pc-list-panel) .action-item.delete-customer-btn:hover,
+.customer-detail .action-item.delete-customer-btn:hover {
 	background: var(--color-error);
 	color: var(--color-button-danger-text);
 }
 
-.action-item .icon {
+.section:not(.pc-list-panel) .action-item .icon,
+.customer-detail .action-item .icon {
 	font-size: 0.875rem;
 }
 
 @media (min-width: 768px) {
-	.action-items {
+	.section:not(.pc-list-panel) .action-items,
+	.customer-detail .action-items {
 		flex-direction: row;
 		gap: 0.5rem;
 		align-items: center;
 	}
 
-	.action-item {
+	.section:not(.pc-list-panel) .action-item,
+	.customer-detail .action-item {
 		width: 2rem;
 		height: 2rem;
 	}

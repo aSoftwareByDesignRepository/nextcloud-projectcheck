@@ -29,8 +29,16 @@ $isEdit = isset($isEdit) ? $isEdit : (isset($timeEntry) && $timeEntry instanceof
 $pageId = $isEdit ? 'time-entry-edit' : 'time-entry-create';
 $pageTitle = $isEdit ? $l->t('Edit Time Entry') : $l->t('Add Time Entry');
 $pageHelp = $l->t('Log time for Active or On Hold projects you are on. Administrators may also log time on projects that use one fixed rate or organisation-wide employee rates without being on the team.');
+ob_start(); ?>
+					<a href="<?php p($_['indexUrl']); ?>" class="button secondary">
+						<?php p($l->t('Cancel')); ?>
+					</a>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Page actions');
 include __DIR__ . '/common/page-start.php';
-
+?>
+<?php
 /**
  * @var array<int, array{is_team_member: bool, admin_override: bool}> $membershipFlags
  *
@@ -57,16 +65,7 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 			<span data-budget-tpl="over-budget"><?php p($l->t('Over budget')); ?></span>
 			<span data-budget-tpl="with-entry"><?php p($l->t('incl. this entry')); ?></span>
 		</div>
-		<div class="time-entry-form-container pc-section">
-			<div class="time-entry-form-header">
-				<div class="form-actions">
-					<a href="<?php p($_['indexUrl']); ?>" class="btn btn-secondary">
-						<?php p($l->t('Cancel')); ?>
-					</a>
-				</div>
-			</div>
-
-			<form id="time-entry-form" class="time-entry-form" method="POST" action="<?php p($isEdit ? $_['updateUrl'] : $_['storeUrl']); ?>">
+		<form id="time-entry-form" class="time-entry-form" method="POST" action="<?php p($isEdit ? $_['updateUrl'] : $_['storeUrl']); ?>">
 				<?php if ($isEdit && isset($timeEntry)): ?>
 					<input type="hidden" name="_method" value="PUT">
 					<script nonce="<?php p($_['cspNonce']) ?>">
@@ -154,7 +153,9 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 					class="pc-form-callout pc-form-callout--admin-override<?php p($initialOverrideVisible ? '' : ' pc-form-callout--hidden'); ?>"
 					role="note"
 					aria-labelledby="pc-admin-override-title"
-					aria-describedby="pc-admin-override-desc pc-admin-override-hint"
+					aria-describedby="<?php p($initialOverrideHint !== '' ? 'pc-admin-override-desc pc-admin-override-hint' : 'pc-admin-override-desc'); ?>"<?php if (!$initialOverrideVisible) {
+						echo ' aria-hidden="true"';
+					} ?>
 					data-pc-mode-project-label="<?php p($l->t('This project uses one fixed hourly rate for everyone. Your entry will be billed at that project rate.')); ?>"
 					data-pc-mode-employee-label="<?php p($l->t('This project uses your organisation-wide employee hourly rate. Make sure a rate is effective for you on the work date.')); ?>">
 					<div class="pc-form-callout__icon" aria-hidden="true">
@@ -227,7 +228,7 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 				}
 				$todayIso = (new \DateTime('today'))->format('Y-m-d');
 				?>
-				<div class="form-row">
+				<div class="form-row form-row--split form-row--split-4">
 					<div class="form-group">
 						<label for="date" class="required"><?php p($l->t('Date')); ?></label>
 						<input type="date" name="date" id="date" class="form-input" required
@@ -239,9 +240,7 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 						<p class="form-hint" id="date-hint"><?php p($l->t('Use the calendar or type the work date. Future dates are not allowed.')); ?></p>
 						<div class="error-message" id="date-error"></div>
 					</div>
-				</div>
 
-				<div class="form-row">
 					<div class="form-group">
 						<label for="hours" class="required"><?php p($l->t('Hours')); ?></label>
 						<input type="number" name="hours" id="hours" class="form-input" step="0.25" min="0.25" max="24" required
@@ -287,11 +286,32 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 							<?php p($l->t('Create Time Entry')); ?>
 						<?php endif; ?>
 					</button>
-					<a href="<?php p($_['indexUrl']); ?>" class="btn btn-secondary">
-						<?php p($l->t('Cancel')); ?>
-					</a>
 				</div>
 				<div id="time-entry-form-errors" class="time-entry-form-errors" role="alert" aria-live="assertive"></div>
 			</form>
-		</div>
+
+			<?php if ($isEdit && isset($timeEntry) && $timeEntry->isOwnedBy((string)($_['userId'] ?? ''))): ?>
+				<section class="pc-form-danger-zone" aria-labelledby="pc-time-entry-danger-title">
+					<div class="pc-form-danger-zone__header">
+						<span class="pc-form-danger-zone__icon" data-lucide="alert-triangle" aria-hidden="true"></span>
+						<h2 id="pc-time-entry-danger-title" class="pc-form-danger-zone__title">
+							<?php p($l->t('Delete time entry')); ?>
+						</h2>
+					</div>
+					<p class="pc-form-danger-zone__text">
+						<?php p($l->t('Remove this time entry permanently. This cannot be undone.')); ?>
+					</p>
+					<button type="button"
+						class="btn btn-danger pc-form-danger-zone__btn"
+						id="delete-time-entry-btn"
+						data-entry-id="<?php p((string)$timeEntry->getId()); ?>"
+						data-delete-url="<?php p($_['deleteUrl'] ?? ''); ?>"
+						data-index-url="<?php p($_['indexUrl']); ?>"
+						data-entry-description="<?php p($timeEntry->getDescription() ?? ''); ?>"
+						aria-describedby="pc-time-entry-danger-title">
+						<span data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></span>
+						<?php p($l->t('Delete Time Entry')); ?>
+					</button>
+				</section>
+			<?php endif; ?>
 <?php include __DIR__ . '/common/page-end.php'; ?>

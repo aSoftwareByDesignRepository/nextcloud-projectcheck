@@ -10,7 +10,6 @@
 use OCP\Util;
 
 Util::addScript('projectcheck', 'employees');
-Util::addStyle('projectcheck', 'dashboard');
 Util::addStyle('projectcheck', 'projects');
 Util::addScript('projectcheck', 'common/icons');
 Util::addStyle('projectcheck', 'navigation');
@@ -31,6 +30,14 @@ $pageTitle = $isGlobalViewer ? $l->t('Employees') : $l->t('Your work overview');
 $pageHelp = $isGlobalViewer
 	? $l->t('Track employee performance and time tracking statistics')
 	: $l->t('Review your own time tracking and yearly performance.');
+ob_start(); ?>
+            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>" class="button secondary">
+                <span data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></span>
+                <?php p($l->t('Back to Dashboard')); ?>
+            </a>
+<?php
+$pageHeaderActionsHtml = ob_get_clean();
+$pageHeaderActionsLabel = $l->t('Page actions');
 include __DIR__ . '/common/page-start.php';
 ?>
 <?php
@@ -47,19 +54,12 @@ $colRevenue = $l->t('Total Revenue');
 $colRate = $l->t('Avg. Hourly Rate');
 $colActions = $l->t('Actions');
 ?>
-        <!-- Breadcrumb + page actions -->
-        <div class="employees-pagebar">
-            <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
-                <ol>
-                    <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>"><?php p($l->t('Dashboard')); ?></a></li>
-                    <li aria-current="page"><?php p($l->t('Employees')); ?></li>
-                </ol>
-            </nav>
-            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>" class="button secondary">
-                <i data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></i>
-                <?php p($l->t('Back to Dashboard')); ?>
-            </a>
-        </div>
+        <nav class="breadcrumb breadcrumb--inline" aria-label="<?php p($l->t('Breadcrumb')); ?>">
+            <ol>
+                <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.dashboard.index')); ?>"><?php p($l->t('Dashboard')); ?></a></li>
+                <li aria-current="page"><?php p($l->t('Employees')); ?></li>
+            </ol>
+        </nav>
 
         <?php if (!$isGlobalViewer): ?>
             <div class="section">
@@ -78,11 +78,13 @@ $colActions = $l->t('Actions');
         <?php endif; ?>
 
         <!-- Team Overview Stats -->
-        <div class="section team-overview">
-            <div class="section-header">
-                    <h3><i data-lucide="users" class="lucide-icon" aria-hidden="true"></i> <?php p($isGlobalViewer ? $l->t('Team Overview') : $l->t('Personal Overview')); ?></h3>
-            </div>
-            <div class="section-content">
+        <section class="section pc-stats-panel pc-section team-overview" aria-labelledby="employees-stats-title">
+            <header class="pc-stats-panel__header section-header">
+                <h3 class="pc-section__title" id="employees-stats-title">
+                    <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
+                    <?php p($isGlobalViewer ? $l->t('Team Overview') : $l->t('Personal Overview')); ?>
+                </h3>
+            </header>
                 <?php
                 // Team totals are computed server-side across the full (search-filtered)
                 // result set so the cards stay correct across pagination.
@@ -92,44 +94,37 @@ $colActions = $l->t('Actions');
                 $teamTotalCost = (float)($teamTotals['cost'] ?? 0);
                 ?>
 
-                <div class="overview-cards">
-                    <div class="overview-card">
-                        <div class="card-icon">
-                            <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
+                <ul class="pc-stats-grid" role="list">
+                    <li class="pc-stat-card">
+                        <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="users" class="lucide-icon"></i></span>
+                        <div class="pc-stat-card__body">
+                            <div class="pc-stat-card__value"><?php p($teamTotalEmployees); ?></div>
+                            <div class="pc-stat-card__label"><?php p($l->t('Employees')); ?></div>
                         </div>
-                        <div class="card-content">
-                            <div class="card-value"><?php p($teamTotalEmployees); ?></div>
-                            <div class="card-label"><?php p($l->t('Employees')); ?></div>
-                        </div>
-                    </div>
+                    </li>
 
-                    <div class="overview-card">
-                        <div class="card-icon">
-                            <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
+                    <li class="pc-stat-card">
+                        <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="clock" class="lucide-icon"></i></span>
+                        <div class="pc-stat-card__body">
+                            <div class="pc-stat-card__value"><?php p(number_format($teamTotalHours, 1)); ?>h</div>
+                            <div class="pc-stat-card__label"><?php p($l->t('Total Hours')); ?></div>
                         </div>
-                        <div class="card-content">
-                            <div class="card-value"><?php p(number_format($teamTotalHours, 1)); ?>h</div>
-                            <div class="card-label"><?php p($l->t('Total Hours')); ?></div>
-                        </div>
-                    </div>
+                    </li>
 
-                    <div class="overview-card">
-                        <div class="card-icon">
-                            <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
+                    <li class="pc-stat-card">
+                        <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="euro" class="lucide-icon"></i></span>
+                        <div class="pc-stat-card__body">
+                            <div class="pc-stat-card__value"><?php p($fmt ? $fmt->currency((float)$teamTotalCost) : $currencyCode . ' ' . number_format((float)$teamTotalCost, 2)); ?></div>
+                            <div class="pc-stat-card__label"><?php p($l->t('Total Revenue')); ?></div>
                         </div>
-                        <div class="card-content">
-                            <div class="card-value"><?php p($fmt ? $fmt->currency((float)$teamTotalCost) : $currencyCode . ' ' . number_format((float)$teamTotalCost, 2)); ?></div>
-                            <div class="card-label"><?php p($l->t('Total Revenue')); ?></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </li>
+                </ul>
+        </section>
 
         <!-- Employees: one panel holds the search toolbar, the table and pagination -->
         <?php if (empty($_['employeeComparisonStats']) && !$hasSearch): ?>
             <!-- Nothing recorded yet and nothing searched: a single clean empty card (no search box) -->
-            <div class="section employees-panel">
+            <div class="section employees-panel pc-list-panel pc-section">
                 <div class="emptycontent" role="status">
                     <span class="emptycontent__icon"><i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i></span>
                     <h2><?php p($l->t('No employees found')); ?></h2>
@@ -137,7 +132,7 @@ $colActions = $l->t('Actions');
                 </div>
             </div>
         <?php else: ?>
-            <section class="section employees-panel" aria-label="<?php p($l->t('Employees')); ?>">
+            <section class="section employees-panel pc-list-panel pc-section" aria-label="<?php p($l->t('Employees')); ?>">
                 <!-- Toolbar header: native GET form, fully functional without JS -->
                 <div class="employees-panel__toolbar">
                     <form class="employees-search-form" method="get" action="<?php p($baseUrl); ?>" role="search" aria-label="<?php p($l->t('Search employees...')); ?>">
