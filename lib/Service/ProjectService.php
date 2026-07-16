@@ -1970,8 +1970,10 @@ class ProjectService
 			if ($startDate === null || $endDate === null) {
 				throw new \Exception('Invalid start or end date');
 			}
-			if ($endDate <= $startDate) {
-				throw new \Exception('End date must be after start date');
+			// Same-day projects are allowed; the form hint and client-side
+			// validation both promise "on or after the start date".
+			if ($endDate < $startDate) {
+				throw new \Exception('End date must be on or after the start date');
 			}
 		}
 

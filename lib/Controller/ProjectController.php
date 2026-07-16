@@ -956,13 +956,14 @@ class ProjectController extends Controller
 			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'success', 'project_name' => $project->getName()]);
 			return new RedirectResponse($url);
 		} catch (\Exception $e) {
+			$safeError = $this->toSafeProjectErrorMessage($e, $this->l->t('Could not update project. Please check your input.'));
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('Could not update project. Please check your input.')], 400);
+				return new DataResponse(['error' => $safeError], 400);
 			}
 
 			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Could not update project. Please check your input.')]);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $safeError]);
 			return new RedirectResponse($url);
 		}
 	}
@@ -1766,7 +1767,7 @@ class ProjectController extends Controller
 				'message' => $this->l->t('Project created successfully')
 			]);
 		} catch (\Exception $e) {
-			return new DataResponse($this->errorPayload($this->l->t('Could not create project. Please check your input.')), 400);
+			return new DataResponse($this->errorPayload($this->toSafeProjectErrorMessage($e, $this->l->t('Could not create project. Please check your input.'))), 400);
 		}
 	}
 
@@ -1865,7 +1866,7 @@ class ProjectController extends Controller
 				'message' => $this->l->t('Project updated successfully')
 			]);
 		} catch (\Exception $e) {
-			return new DataResponse($this->errorPayload($this->l->t('Could not update project. Please check your input.')), 400);
+			return new DataResponse($this->errorPayload($this->toSafeProjectErrorMessage($e, $this->l->t('Could not update project. Please check your input.'))), 400);
 		}
 	}
 
@@ -2018,6 +2019,21 @@ class ProjectController extends Controller
 		$message = trim($e->getMessage());
 		if ($message === '') {
 			return $fallback;
+		}
+
+		// Known service-layer validation errors, localized so users can see
+		// what to correct instead of a generic "check your input" message.
+		$localized = match ($message) {
+			'Hourly rate is required when the project has a budget in project-rate mode' => $this->l->t('Hourly rate is required when the project has a budget and uses one rate for the whole project.'),
+			'Budget too low for the specified hourly rate' => $this->l->t('Budget too low for the specified hourly rate.'),
+			'End date must be on or after the start date' => $this->l->t('End date must be on or after the start date.'),
+			'Invalid start or end date' => $this->l->t('Invalid start or end date.'),
+			'The pricing method cannot be changed after time has been logged on this project.' => $this->l->t('The pricing method is locked because time has already been logged on this project.'),
+			'Customer not found' => $this->l->t('Customer not found'),
+			default => null,
+		};
+		if ($localized !== null) {
+			return $localized;
 		}
 
 		$allowlistPatterns = [

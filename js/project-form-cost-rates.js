@@ -99,6 +99,18 @@
 			rateLabel.textContent = rateLabel.dataset.labelProject || rateLabel.textContent;
 			rateInput.required = needsProjectRate;
 			rateInput.setAttribute('aria-required', needsProjectRate ? 'true' : 'false');
+			// `required` alone does not catch a pre-filled "0.00" rate (the
+			// field is non-empty), but the server rejects budget > 0 with
+			// rate <= 0 in this mode — surface that before submitting.
+			if (needsProjectRate && parseAmount(rateInput) <= 0) {
+				rateInput.setCustomValidity(
+					typeof t === 'function'
+						? t('projectcheck', 'Hourly rate is required')
+						: 'Hourly rate is required'
+				);
+			} else {
+				rateInput.setCustomValidity('');
+			}
 			if (capacityHint) {
 				capacityHint.textContent = capacityHint.dataset.hintProject || '';
 			}
@@ -107,6 +119,7 @@
 			rateLabel.textContent = rateLabel.dataset.labelPlanning || rateLabel.textContent;
 			rateInput.required = false;
 			rateInput.removeAttribute('aria-required');
+			rateInput.setCustomValidity('');
 			if (capacityHint) {
 				capacityHint.textContent = capacityHint.dataset.hintPlanning || '';
 			}

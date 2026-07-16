@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.73 - 2026-07-16
+
+### Fixed
+
+- **Project budget edits:** saving a project no longer fails with a generic error when the input is rejected server-side. Users now see the actual, localized reason (for example: hourly rate required when the project has a budget and uses one rate for the whole project, or budget too low for the hourly rate).
+- **Same-day project dates:** projects with the same start and end date are accepted again; the server now matches the form's "end date must be on or after the start date" rule instead of rejecting equal dates.
+- **Project form:** the edit form flags a missing/zero project hourly rate before submitting when the project has a budget and uses the one-rate-for-the-whole-project pricing method (a pre-filled rate of `0.00` previously slipped past the browser's required check).
+- **l10n:** completed missing translations for the time-entry deletion hint and the start-date validation message in fr/es/da/nl/it/pl/sv/nb.
+
 ## 2.0.72 - 2026-07-15
 
 ### Added

@@ -136,7 +136,7 @@ class ProjectServiceTest extends TestCase {
 
 	public function testCreateProjectRejectsInvalidDateRangeEarly(): void {
 		$this->expectException(\Exception::class);
-		$this->expectExceptionMessage('End date must be after start date');
+		$this->expectExceptionMessage('End date must be on or after the start date');
 		$this->projectService->createProject([
 			'name' => 'Test Project',
 			'short_description' => 'A test project',
@@ -146,6 +146,31 @@ class ProjectServiceTest extends TestCase {
 			'start_date' => '2024-01-01',
 			'end_date' => '2023-12-31',
 		]);
+	}
+
+	/**
+	 * Same-day projects are valid: the form hint and client-side validation
+	 * promise "end date on or after the start date". Regression test for the
+	 * server rejecting start == end while the UI allowed it.
+	 */
+	public function testCreateProjectAcceptsSameDayDateRange(): void {
+		try {
+			$this->projectService->createProject([
+				'name' => 'Test Project',
+				'short_description' => 'A test project',
+				'customer_id' => 1,
+				'hourly_rate' => 50.0,
+				'total_budget' => 5000.0,
+				'start_date' => '2024-01-01',
+				'end_date' => '2024-01-01',
+			]);
+		} catch (\Throwable $e) {
+			$this->assertStringNotContainsString('End date must be', $e->getMessage(), 'Same-day date range must pass validation');
+			// Any other failure comes from the mocked DB layer, which is fine:
+			// validation happens before the insert.
+			return;
+		}
+		$this->addToAssertionCount(1);
 	}
 
 	/**
