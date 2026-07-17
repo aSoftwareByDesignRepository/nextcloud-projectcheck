@@ -1,8 +1,8 @@
 /**
  * Employees page progressive enhancement for the projectcheck app.
  *
- * The employee search is a plain GET <form> and works fully without
- * JavaScript. This module only refines the experience:
+ * The employee search is a plain GET <form> (class employees-search-form) and
+ * works fully without JavaScript. This module only refines the experience:
  *   - trims the query so stray whitespace never triggers a "no results" view;
  *   - removes the empty `search` param so the URL stays clean;
  *   - always resets to page 1 on a new search.

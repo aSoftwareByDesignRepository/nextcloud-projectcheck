@@ -41,10 +41,29 @@
 	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
 	margin-bottom: 0;
 	box-shadow: none;
+	/* One inline toolbar: search + filters share a wrapping row */
 	display: flex;
+	flex-direction: row;
 	flex-wrap: wrap;
-	align-items: flex-end;
-	gap: var(--pc-space-4, 1rem);
+	align-items: center;
+	gap: 0.75rem 1rem;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+.pc-list-panel .filters-row,
+.pc-app--time-entries .filters-row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 0;
+	margin: 0;
 }
 
 /* Shared search field with inset icon (all list panels) */
@@ -52,8 +71,79 @@
 .pc-app--time-entries .search-input-wrapper {
 	position: relative;
 	display: block;
-	flex: 1 1 320px;
-	min-width: min(100%, 280px);
+	flex: 1 1 16rem;
+	min-width: min(100%, 12rem);
+	max-width: 22rem;
+}
+
+.pc-list-panel .filters-row select,
+.pc-list-panel .filters-row input[type="date"],
+.pc-app--time-entries .filters-row select,
+.pc-app--time-entries .filters-row input[type="date"] {
+	width: auto;
+	min-width: 10rem;
+	max-width: 100%;
+	flex: 0 1 auto;
+	min-height: var(--pc-touch-min, 44px);
+	box-sizing: border-box;
+}
+
+.pc-list-panel .filters-row .button,
+.pc-list-panel .filters-row .pc-export,
+.pc-app--time-entries .filters-row .button,
+.pc-app--time-entries .filters-row .pc-export {
+	flex: 0 0 auto;
+	width: auto;
+	align-self: center;
+}
+
+.pc-list-panel .filters-row .pc-filter-field {
+	display: inline-flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	gap: 0.25rem;
+	min-width: 10rem;
+	flex: 0 1 auto;
+}
+
+.pc-list-panel .filters-row .pc-filter-field select {
+	width: 100%;
+	min-width: 0;
+}
+
+@media (max-width: 560px) {
+	.pc-list-panel .filters-container,
+	.pc-app--time-entries .filters-container,
+	.pc-list-panel .filters-row,
+	.pc-app--time-entries .filters-row {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.pc-list-panel .search-input-wrapper,
+	.pc-app--time-entries .search-input-wrapper {
+		max-width: none;
+		flex: 1 1 auto;
+		width: 100%;
+	}
+
+	.pc-list-panel .filters-row select,
+	.pc-list-panel .filters-row .button,
+	.pc-list-panel .filters-row .pc-export,
+	.pc-list-panel .filters-row .pc-export__toggle,
+	.pc-app--time-entries .filters-row select,
+	.pc-app--time-entries .filters-row .button,
+	.pc-app--time-entries .filters-row .pc-export,
+	.pc-app--time-entries .filters-row .pc-export__toggle {
+		width: 100%;
+		min-width: 0;
+	}
+
+	.pc-list-panel .filters-row .pc-export,
+	.pc-app--time-entries .filters-row .pc-export {
+		display: flex;
+		flex-direction: column;
+	}
 }
 
 .pc-list-panel .search-input,
@@ -246,6 +336,18 @@
 }
 
 /* Truncated text cells — full value in detail view and exports */
+/* Hours value — tabular nums (shared across index + embedded tables) */
+.pc-list-panel .time-entries-hours-value,
+.pc-data-table .time-entries-hours-value {
+	font-variant-numeric: tabular-nums;
+}
+
+.pc-list-panel .pc-data-table thead th.col-hours,
+.pc-list-panel .pc-data-table tbody td.col-hours {
+	white-space: nowrap;
+	text-align: right;
+}
+
 .pc-list-panel .pc-data-table .description-cell,
 .pc-app--time-entries .time-entries-table .description-cell {
 	max-width: 14rem;
@@ -599,3 +701,25 @@
 	padding: clamp(2rem, 6vw, 3rem) clamp(1rem, 4vw, 2rem);
 }
 
+
+
+/* Employees list — rank badge in shared data table */
+.pc-app--employees .rank-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2.25rem;
+	min-height: 2rem;
+	padding: 0.2rem 0.5rem;
+	border-radius: var(--pc-radius-sm, 8px);
+	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
+	color: var(--color-main-text);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	font-size: 0.875rem;
+}
+
+.pc-app--employees .pc-list-panel form.filters-container {
+	/* form element is the flex toolbar */
+	margin: 0;
+}

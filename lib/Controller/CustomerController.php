@@ -1370,11 +1370,13 @@ class CustomerController extends Controller
 		$enrichedProjects = [];
 
 		foreach ($projects as $project) {
+			$canEdit = $this->projectService->canUserEditProject($userId, (int)$project->getId());
 			try {
 				$budgetInfo = $this->budgetService->getProjectBudgetInfo($project, $userId);
 				$enrichedProjects[] = [
 					'project' => $project,
-					'budgetInfo' => $budgetInfo
+					'budgetInfo' => $budgetInfo,
+					'canEdit' => $canEdit,
 				];
 			} catch (\Exception $e) {
 				// If budget info fails, include project without budget data
@@ -1386,8 +1388,9 @@ class CustomerController extends Controller
 						'remaining_budget' => $project->getTotalBudget() ?? 0,
 						'consumption_percentage' => 0,
 						'warning_level' => 'safe',
-						'used_hours' => 0
-					]
+						'used_hours' => 0,
+					],
+					'canEdit' => $canEdit,
 				];
 			}
 		}

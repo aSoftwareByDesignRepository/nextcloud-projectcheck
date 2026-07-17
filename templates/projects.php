@@ -14,6 +14,8 @@ Util::addScript('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/list-table');
+// Last: shared index section chrome (matches detail Key figures headers).
+Util::addStyle('projectcheck', 'common/list-layout');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -67,11 +69,11 @@ include __DIR__ . '/common/page-start.php';
 
         <!-- Project Statistics Overview -->
         <section class="section pc-stats-panel pc-section stats-overview-section" aria-labelledby="projects-stats-title">
-            <header class="pc-stats-panel__header section-header">
-                <h3 class="pc-section__title" id="projects-stats-title"><?php p($l->t('Project statistics')); ?></h3>
-                <p class="pc-section__intro"><?php p($l->t('Overview of your project portfolio and performance')); ?></p>
-            </header>
-
+            <div class="section-header">
+                <h3 id="projects-stats-title"><i data-lucide="bar-chart-3" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project statistics')); ?></h3>
+                <p><?php p($l->t('Overview of your project portfolio and performance')); ?></p>
+            </div>
+            <div class="section-content">
             <ul class="pc-stats-grid" role="list">
                 <li class="pc-stat-card">
                     <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="folder" class="lucide-icon"></i></span>
@@ -117,6 +119,7 @@ include __DIR__ . '/common/page-start.php';
                     </div>
                 </li>
             </ul>
+            </div>
         </section>
 
         <!-- Search, filter, and project list (one panel) -->
@@ -131,7 +134,11 @@ include __DIR__ . '/common/page-start.php';
         $colActions = $l->t('Actions');
         $settlementInfoByProject = $_['settlementInfoByProject'] ?? [];
         ?>
-        <div class="section pc-list-panel pc-section" aria-label="<?php p($l->t('Project list')); ?>">
+        <div class="section pc-list-panel pc-section" aria-labelledby="pc-projects-list-heading">
+            <div class="section-header">
+                <h3 id="pc-projects-list-heading"><i data-lucide="folder" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project list')); ?></h3>
+                <p><?php p($l->t('Search and filter')); ?></p>
+            </div>
             <div class="pc-list-panel__toolbar">
             <div class="filters-container">
                 <div class="search-input-wrapper">

@@ -15,6 +15,7 @@ style('projectcheck', 'navigation');
 style('projectcheck', 'common/progress-bars');
 style('projectcheck', 'customer-statistics');
 style('projectcheck', 'common/list-table');
+style('projectcheck', 'common/detail-layout');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -103,7 +104,11 @@ include __DIR__ . '/common/page-start.php';
 
 		<!-- Customer Statistics -->
 		<section class="section stats-section pc-stats-panel pc-section" aria-labelledby="customer-detail-stats-title">
-			<h3 id="customer-detail-stats-title" class="stats-section__title u-visually-hidden"><?php p($l->t('Customer Statistics')); ?></h3>
+			<div class="section-header">
+				<h3 id="customer-detail-stats-title"><i data-lucide="bar-chart-3" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Key figures')); ?></h3>
+				<p><?php p($l->t('Customer status at a glance')); ?></p>
+			</div>
+			<div class="section-content">
 			<div class="stats-container">
 				<!-- Primary Statistics Row -->
 				<div class="stats-row primary">
@@ -225,13 +230,14 @@ include __DIR__ . '/common/page-start.php';
 					</div>
 				</div>
 			</div>
+			</div>
 		</section>
 
 		<!-- Yearly Performance Dashboard -->
 		<?php if (!empty($yearlyStats)): ?>
-			<div class="section yearly-stats-section">
+			<section class="section yearly-stats-section pc-section" aria-labelledby="pc-customer-yearly-heading">
 				<div class="section-header">
-					<h3><i data-lucide="calendar" class="lucide-icon primary"></i> <?php p($l->t('Yearly Performance Dashboard')); ?></h3>
+					<h3 id="pc-customer-yearly-heading"><i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Year by year')); ?></h3>
 					<p><?php p($l->t('Track hours and costs across all projects for this customer')); ?></p>
 				</div>
 				<div class="section-content">
@@ -295,14 +301,14 @@ include __DIR__ . '/common/page-start.php';
 						<?php endforeach; ?>
 					</div>
 				</div>
-			</div>
+			</section>
 		<?php endif; ?>
 
 		<!-- Project Type Analysis Dashboard -->
 		<?php if (!empty($_['projectTypeStats'])): ?>
-			<div class="section project-type-stats-section">
+			<section class="section project-type-stats-section pc-section" aria-labelledby="pc-customer-type-heading">
 				<div class="section-header">
-					<h3><i data-lucide="pie-chart" class="lucide-icon primary"></i> <?php p($l->t('Project Type Analysis')); ?></h3>
+					<h3 id="pc-customer-type-heading"><i data-lucide="pie-chart" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project Type Analysis')); ?></h3>
 					<p><?php p($l->t('Analyze productivity by project type to identify billable vs overhead work')); ?></p>
 				</div>
 				<div class="section-content">
@@ -369,15 +375,16 @@ include __DIR__ . '/common/page-start.php';
 						<?php endforeach; ?>
 					</div>
 				</div>
-			</div>
+			</section>
 		<?php endif; ?>
 
 		<!-- Main Content Grid -->
 		<div class="content-grid">
 			<!-- Customer Information -->
-			<div class="section info-section">
+			<div class="section info-section pc-section" aria-labelledby="pc-customer-info-heading">
 				<div class="section-header">
-					<h3><i data-lucide="info" class="lucide-icon primary"></i> <?php p($l->t('Customer Information')); ?></h3>
+					<h3 id="pc-customer-info-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Customer Information')); ?></h3>
+					<p><?php p($l->t('Name, contact, and other details for this customer.')); ?></p>
 				</div>
 				<div class="section-content">
 					<div class="info-grid">
@@ -434,11 +441,11 @@ include __DIR__ . '/common/page-start.php';
 			<!-- Invoicing overview (derived from project counters — never hand-edited) -->
 			<section class="section pc-section pc-invoicing-section" aria-labelledby="customer-invoicing-title">
 				<div class="section-header">
-					<h3 class="pc-section__title" id="customer-invoicing-title">
+					<h3 id="customer-invoicing-title">
 						<span data-lucide="receipt" class="lucide-icon primary" aria-hidden="true"></span>
 						<?php p($l->t('Invoicing overview')); ?>
 					</h3>
-					<p class="pc-section__intro"><?php p($l->t('How much work for this customer is still open or waiting to be paid.')); ?></p>
+					<p><?php p($l->t('How much work for this customer is still open or waiting to be paid.')); ?></p>
 				</div>
 				<div class="section-content">
 					<?php if ($customerSettlement): ?>
@@ -474,26 +481,25 @@ include __DIR__ . '/common/page-start.php';
 			</section>
 
 			<!-- Associated Projects -->
-			<div class="section projects-section">
+			<div class="section projects-section pc-cd-span-full" aria-labelledby="pc-customer-projects-heading">
 				<div class="section-header">
-					<h3><i data-lucide="folder" class="lucide-icon primary"></i> <?php p($l->t('Associated Projects')); ?></h3>
+					<h3 id="pc-customer-projects-heading"><i data-lucide="folder" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Associated Projects')); ?></h3>
+					<p><?php p($l->t('Projects for this customer')); ?></p>
+					<?php if ($canCreateProject): ?>
 					<div class="section-header-actions">
-						<?php if ($canCreateProject): ?>
 						<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>"
 							class="button primary">
-							<i data-lucide="plus" class="lucide-icon"></i>
+							<i data-lucide="plus" class="lucide-icon" aria-hidden="true"></i>
 							<?php p($l->t('Create New Project')); ?>
 						</a>
-						<?php endif; ?>
 					</div>
+					<?php endif; ?>
 				</div>
 				<div class="section-content">
 					<?php if (empty($_['projects'])): ?>
-						<div class="empty-state">
-							<div class="empty-icon">
-								<i data-lucide="folder" class="lucide-icon"></i>
-							</div>
-							<h4><?php p($l->t('No projects found')); ?></h4>
+						<div class="emptycontent" role="status">
+							<span class="emptycontent__icon" aria-hidden="true"><i data-lucide="folder" class="lucide-icon"></i></span>
+							<h2><?php p($l->t('No projects found')); ?></h2>
 							<p><?php p($l->t('This customer doesn\'t have any projects yet.')); ?></p>
 							<?php if ($canCreateProject): ?>
 							<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>" class="button primary">
@@ -503,141 +509,204 @@ include __DIR__ . '/common/page-start.php';
 							<?php endif; ?>
 						</div>
 					<?php else: ?>
-						<div class="projects-grid">
-							<?php foreach ($_['projects'] as $projectData): ?>
-								<?php
-								$project = $projectData['project'] ?? $projectData;
-								$budgetInfo = $projectData['budgetInfo'] ?? null;
-								$projectSettlement = $settlementInfoByProject[(int)$project->getId()] ?? null;
-								?>
-								<div class="project-card dashboard-card <?php if ($budgetInfo): ?>budget-status-<?php p($budgetInfo['warning_level']); ?><?php endif; ?>">
-									<div class="card-header">
-										<div class="card-title-section">
-											<h4 class="project-name">
-												<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $project->getId()])); ?>">
-													<?php p($project->getName()); ?>
-												</a>
-											</h4>
-											<div class="project-status-badges">
-												<?php
-												// Icon mapping for project types
-												$iconMapping = [
-													'client' => '👥',
-													'admin' => '⚙️',
-													'sales' => '📈',
-													'customer' => '🎧',
-													'product' => '💻',
-													'meeting' => '🤝',
-													'internal' => '🏢',
-													'research' => '🔬',
-													'training' => '🎓',
-													'other' => '📋'
-												];
-												$projectType = strtolower($project->getProjectType());
-												$icon = $iconMapping[$projectType] ?? '📋';
-												$displayName = $project->getProjectTypeDisplayName();
-												?>
+						<?php
+						$colName = $l->t('Name');
+						$colType = $l->t('Type');
+						$colStatus = $l->t('Status');
+						$colBudget = $l->t('Budget');
+						$colProgress = $l->t('Progress');
+						$colInvoicing = $l->t('Settlement');
+						$colActions = $l->t('Actions');
+						$iconMapping = [
+							'client' => '👥',
+							'admin' => '⚙️',
+							'sales' => '📈',
+							'customer' => '🎧',
+							'product' => '💻',
+							'meeting' => '🤝',
+							'internal' => '🏢',
+							'research' => '🔬',
+							'training' => '🎓',
+							'other' => '📋',
+						];
+						?>
+						<div class="pc-list-table-wrap pc-customer-projects-table-wrap" tabindex="0" role="region" aria-label="<?php p($l->t('Associated Projects')); ?>">
+							<table class="grid projects-table pc-data-table pc-customer-projects-table">
+								<caption class="pc-sr-only"><?php p($l->t('Projects for this customer')); ?></caption>
+								<thead>
+									<tr>
+										<th scope="col"><?php p($colName); ?></th>
+										<th scope="col"><?php p($colType); ?></th>
+										<th scope="col"><?php p($colStatus); ?></th>
+										<th scope="col"><?php p($colBudget); ?></th>
+										<th scope="col"><?php p($colProgress); ?></th>
+										<th scope="col" class="col-invoicing"><?php p($colInvoicing); ?></th>
+										<th scope="col" class="col-actions"><?php p($colActions); ?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ($_['projects'] as $projectData): ?>
+										<?php
+										$project = $projectData['project'] ?? $projectData;
+										$budgetInfo = $projectData['budgetInfo'] ?? null;
+										$canEditRow = !empty($projectData['canEdit']);
+										$projectSettlement = $settlementInfoByProject[(int)$project->getId()] ?? null;
+										$showUrl = $urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $project->getId()]);
+										$editUrl = $urlGenerator->linkToRoute('projectcheck.project.edit', ['id' => $project->getId()]);
+										$projectType = strtolower((string)$project->getProjectType());
+										$icon = $iconMapping[$projectType] ?? '📋';
+										$displayName = $project->getProjectTypeDisplayName();
+										$warningLevel = is_array($budgetInfo) ? (string)($budgetInfo['warning_level'] ?? 'none') : 'none';
+										$consumption = is_array($budgetInfo) ? (float)($budgetInfo['consumption_percentage'] ?? 0) : 0.0;
+										?>
+										<tr class="project-row<?php if ($warningLevel !== '' && $warningLevel !== 'none'): ?> budget-status-<?php p($warningLevel); ?><?php endif; ?>"
+											data-project-id="<?php p($project->getId()); ?>">
+											<th scope="row" class="project-name-cell" data-label="<?php p($colName); ?>">
+												<div class="project-name-content">
+													<a href="<?php p($showUrl); ?>" class="project-title"><?php p($project->getName()); ?></a>
+													<div class="project-badges">
+														<span class="priority-badge priority-<?php p(strtolower((string)$project->getPriority())); ?>">
+															<?php p($l->t((string)$project->getPriority())); ?>
+														</span>
+														<?php if ($consumption >= 100): ?>
+															<span class="budget-warning-badge critical" title="<?php p($l->t('Budget Exceeded')); ?>">
+																⚠️ <?php p($l->t('Over Budget')); ?>
+															</span>
+														<?php elseif ($warningLevel === 'critical'): ?>
+															<span class="budget-warning-badge critical" title="<?php p($l->t('Budget Critical')); ?>">
+																⚠️ <?php p($l->t('Critical')); ?>
+															</span>
+														<?php elseif ($warningLevel === 'warning'): ?>
+															<span class="budget-warning-badge warning" title="<?php p($l->t('Budget Warning')); ?>">
+																⚠️ <?php p($l->t('Warning')); ?>
+															</span>
+														<?php endif; ?>
+													</div>
+												</div>
+											</th>
+											<td data-label="<?php p($colType); ?>">
 												<span class="project-type-icon"
 													data-project-type="<?php p($projectType); ?>"
 													title="<?php p($displayName); ?>">
 													<?php p($icon); ?>
 												</span>
-												<span class="status-badge status-<?php p(strtolower(str_replace(' ', '-', $project->getStatus()))); ?>">
-													<?php p($project->getStatus()); ?>
+												<span class="pc-sr-only"><?php p($l->t((string)$displayName)); ?></span>
+											</td>
+											<td data-label="<?php p($colStatus); ?>">
+												<span class="status-badge status-<?php p(strtolower(str_replace(' ', '-', (string)$project->getStatus()))); ?>">
+													<?php p($l->t((string)$project->getStatus())); ?>
 												</span>
-												<?php if ($projectSettlement): ?>
-													<?php
-													$chipKind = 'posture';
-													$chipValue = (string)($projectSettlement['posture'] ?? 'n_a');
-													include __DIR__ . '/parts/settlement-chip.php';
-													?>
-												<?php endif; ?>
+											</td>
+											<td class="budget-cell" data-label="<?php p($colBudget); ?>">
 												<?php if ($budgetInfo): ?>
-													<?php if ($budgetInfo['consumption_percentage'] >= 100): ?>
-														<span class="budget-status-badge critical">⚠️ <?php p($l->t('Over Budget')); ?></span>
-													<?php elseif ($budgetInfo['warning_level'] === 'critical'): ?>
-														<span class="budget-status-badge critical">⚠️ <?php p($l->t('Critical')); ?></span>
-													<?php elseif ($budgetInfo['warning_level'] === 'warning'): ?>
-														<span class="budget-status-badge warning">⚠️ <?php p($l->t('Warning')); ?></span>
-													<?php else: ?>
-														<span class="budget-status-badge safe">✅ <?php p($l->t('On Track')); ?></span>
-													<?php endif; ?>
+													<div class="budget-info-compact">
+														<div class="budget-main">
+															<div class="budget-line">
+																<span class="budget-label"><?php p($l->t('Total Budget:')); ?></span>
+																<span class="budget-total"><?php p($fmt ? $fmt->currency((float)$budgetInfo['total_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['total_budget'], 2)); ?></span>
+															</div>
+															<div class="budget-line">
+																<span class="budget-label"><?php p($l->t('Used:')); ?></span>
+																<span class="budget-used"><?php p($fmt ? $fmt->currency((float)$budgetInfo['used_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['used_budget'], 2)); ?></span>
+															</div>
+															<div class="budget-line">
+																<span class="budget-label"><?php p($l->t('Remaining:')); ?></span>
+																<span class="budget-remaining <?php p($warningLevel); ?>">
+																	<?php p($fmt ? $fmt->currency((float)$budgetInfo['remaining_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['remaining_budget'], 2)); ?>
+																</span>
+															</div>
+														</div>
+														<div class="budget-secondary">
+															<span class="budget-percentage <?php p($warningLevel); ?>">
+																<?php p(round($consumption)); ?>% <?php p($l->t('used')); ?>
+															</span>
+														</div>
+													</div>
 												<?php else: ?>
-							<span class="budget-status-badge safe">✅ <?php p($l->t('On Track')); ?></span>
+													<div class="budget-info-compact">
+														<div class="budget-main">
+															<div class="budget-line">
+																<span class="budget-label"><?php p($l->t('Total Budget:')); ?></span>
+																<span class="budget-total"><?php p($fmt ? $fmt->currency((float)($project->getTotalBudget() ?? 0)) : $currencyCode . ' ' . number_format((float)($project->getTotalBudget() ?? 0), 2)); ?></span>
+															</div>
+														</div>
+													</div>
 												<?php endif; ?>
-											</div>
-										</div>
-									</div>
-									<div class="card-content">
-										<?php if ($projectSettlement): ?>
-											<?php
-											$progress = is_array($projectSettlement['progress'] ?? null) ? $projectSettlement['progress'] : [];
-											$progressVariant = 'compact';
-											$progressId = 'pc-cust-proj-stl-' . (int)$project->getId();
-											include __DIR__ . '/parts/settlement-progress.php';
-											?>
-										<?php endif; ?>
-										<div class="project-details">
-											<?php if ($projectSettlement && (float)($projectSettlement['outstanding_hours'] ?? 0) > 0): ?>
-												<div class="detail-row">
-													<span class="detail-label"><?php p($l->t('Not yet paid:')); ?></span>
-													<span class="detail-value">
-														<?php p($l->t('%1$s h · %2$s', [
-															number_format((float)$projectSettlement['outstanding_hours'], 2),
-															$fmt ? $fmt->currency((float)$projectSettlement['outstanding_amount']) : $currencyCode . ' ' . number_format((float)$projectSettlement['outstanding_amount'], 2),
-														])); ?>
-													</span>
-												</div>
-											<?php endif; ?>
-											<?php if ($budgetInfo): ?>
-												<div class="detail-row budget-detail">
-													<span class="detail-label"><?php p($l->t('Budget:')); ?></span>
-													<span class="detail-value budget-info">
-														<span class="budget-remaining <?php p($budgetInfo['warning_level']); ?>">
-															<?php p($fmt ? $fmt->currency((float)$budgetInfo['remaining_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['remaining_budget'], 2)); ?>
-														</span>
-														<span class="budget-separator"><?php p($l->t('remaining of')); ?></span>
-														<span class="budget-total"><?php p($fmt ? $fmt->currency((float)$budgetInfo['total_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['total_budget'], 2)); ?></span>
-													</span>
-												</div>
-												<div class="detail-row">
-													<span class="detail-label"><?php p($l->t('Progress:')); ?></span>
-													<span class="detail-value progress-info">
-														<span class="usage-stats">
-															<?php p(round($budgetInfo['consumption_percentage'])); ?>% <?php p($l->t('used')); ?>
-															• <?php p(number_format($budgetInfo['used_hours'], 1)); ?>h <?php p($l->t('logged')); ?>
+											</td>
+											<td class="progress-cell" data-label="<?php p($colProgress); ?>">
+												<?php if ($budgetInfo): ?>
+													<div class="progress-info">
+														<div class="budget-progress-bar compact">
+															<div class="budget-progress-fill <?php p($warningLevel); ?>"
+																style="width: <?php p(min(100, $consumption)); ?>%"></div>
+														</div>
+														<span class="hours-logged">
+															<?php p(number_format((float)($budgetInfo['used_hours'] ?? 0), 1)); ?>h <?php p($l->t('logged')); ?>
 															<?php if (!empty($budgetInfo['hours_estimated']) && ($budgetInfo['available_hours'] ?? 0) > 0): ?>
-																· <?php p($l->t('%sh remaining (estimate)', [number_format((float) $budgetInfo['remaining_hours'], 1, '.', '')])); ?>
+																<span class="hours-capacity-estimate" title="<?php p($l->t('Estimated capacity based on planning or project rate')); ?>">
+																	· <?php p($l->t('%sh remaining (estimate)', [number_format((float)$budgetInfo['remaining_hours'], 1, '.', '')])); ?>
+																</span>
 															<?php endif; ?>
 														</span>
-													</span>
+													</div>
+												<?php else: ?>
+													<div class="progress-info">
+														<div class="budget-progress-bar compact">
+															<div class="budget-progress-fill" style="width: 0%"></div>
+														</div>
+														<span class="hours-logged">0h <?php p($l->t('logged')); ?></span>
+													</div>
+												<?php endif; ?>
+											</td>
+											<td class="col-invoicing" data-label="<?php p($colInvoicing); ?>">
+												<?php if ($projectSettlement !== null): ?>
+													<div class="pc-invoicing-cell">
+														<?php
+														$chipKind = 'posture';
+														$chipValue = (string)($projectSettlement['posture'] ?? 'n_a');
+														include __DIR__ . '/parts/settlement-chip.php';
+														?>
+														<?php
+														$progress = is_array($projectSettlement['progress'] ?? null) ? $projectSettlement['progress'] : [];
+														$progressVariant = 'compact';
+														$progressId = 'pc-cust-proj-stl-' . (int)$project->getId();
+														include __DIR__ . '/parts/settlement-progress.php';
+														?>
+														<?php if ((float)($projectSettlement['outstanding_hours'] ?? 0) > 0): ?>
+															<span class="pc-invoicing-cell__outstanding">
+																<?php p($l->t('Not yet paid: %1$s h · %2$s', [
+																	number_format((float)$projectSettlement['outstanding_hours'], 2),
+																	$fmt ? $fmt->currency((float)$projectSettlement['outstanding_amount']) : $currencyCode . ' ' . number_format((float)$projectSettlement['outstanding_amount'], 2),
+																])); ?>
+															</span>
+														<?php endif; ?>
+													</div>
+												<?php else: ?>
+													<span class="pc-muted">—</span>
+												<?php endif; ?>
+											</td>
+											<td class="col-actions" data-label="<?php p($colActions); ?>">
+												<div class="action-items" role="group" aria-label="<?php p($l->t('Project actions')); ?>">
+													<a href="<?php p($showUrl); ?>"
+														class="action-item action-item--view"
+														title="<?php p($l->t('View project')); ?>"
+														aria-label="<?php p($l->t('View project %s', [$project->getName()])); ?>">
+														<span data-lucide="eye" class="lucide-icon" aria-hidden="true"></span>
+													</a>
+													<?php if ($canEditRow): ?>
+													<a href="<?php p($editUrl); ?>"
+														class="action-item action-item--edit"
+														title="<?php p($l->t('Edit project')); ?>"
+														aria-label="<?php p($l->t('Edit project %s', [$project->getName()])); ?>">
+														<span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
+													</a>
+													<?php endif; ?>
 												</div>
-											<?php else: ?>
-												<div class="detail-row">
-													<span class="detail-label"><?php p($l->t('Budget:')); ?></span>
-													<span class="detail-value"><?php p($fmt ? $fmt->currency((float)($project->getTotalBudget() ?? 0)) : $currencyCode . ' ' . number_format((float)($project->getTotalBudget() ?? 0), 2)); ?></span>
-												</div>
-											<?php endif; ?>
-										</div>
-
-										<?php if ($budgetInfo): ?>
-											<div class="card-progress-section">
-												<div class="budget-progress-bar dashboard">
-													<div class="budget-progress-fill <?php p($budgetInfo['warning_level']); ?>"
-														style="width: <?php p(min(100, $budgetInfo['consumption_percentage'])); ?>%"></div>
-												</div>
-												<div class="progress-labels">
-													<span class="progress-label-left"><?php p($fmt ? $fmt->currency(0) : $currencyCode . ' 0'); ?></span>
-													<span class="progress-label-center <?php p($budgetInfo['warning_level']); ?>">
-														<?php p(round($budgetInfo['consumption_percentage'])); ?>%
-													</span>
-													<span class="progress-label-right"><?php p($fmt ? $fmt->currency((float)$budgetInfo['total_budget']) : $currencyCode . ' ' . number_format((float)$budgetInfo['total_budget'], 0)); ?></span>
-												</div>
-											</div>
-										<?php endif; ?>
-									</div>
-								</div>
-							<?php endforeach; ?>
+											</td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
 						</div>
 					<?php endif; ?>
 				</div>

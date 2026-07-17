@@ -16,6 +16,7 @@ Util::addStyle('projectcheck', 'budget-alerts');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/progress-bars');
 Util::addStyle('projectcheck', 'common/accessibility');
+Util::addStyle('projectcheck', 'common/list-table');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -728,10 +729,20 @@ include __DIR__ . '/common/page-start.php';
             <?php endif; ?>
             </div>
 
-            <!-- Recent Time Entries -->
-            <div class="section">
+            <!-- Recent Time Entries (same table chrome as /time-entries index) -->
+            <?php
+            $dashColDate = $l->t('Date');
+            $dashColProject = $l->t('Project');
+            $dashColUser = $l->t('User');
+            $dashColHours = $l->t('Hours');
+            $dashColSettlement = $l->t('Settlement');
+            $dashColDescription = $l->t('Description');
+            $dashColActions = $l->t('Actions');
+            $dashCurrentUserId = (string)($_['userId'] ?? '');
+            ?>
+            <div class="section pc-list-panel" aria-labelledby="pc-dash-time-entries-heading">
                 <div class="section-header">
-                    <h3><?php p($l->t('Recent Time Entries')); ?></h3>
+                    <h3 id="pc-dash-time-entries-heading"><?php p($l->t('Recent Time Entries')); ?></h3>
                     <p><?php p($l->t('Your latest time tracking activities')); ?></p>
                 </div>
 
@@ -748,37 +759,87 @@ include __DIR__ . '/common/page-start.php';
                     </a>
                 </div>
             <?php else: ?>
-                <div class="time-entries-grid">
-                    <?php foreach ($_['stats']['recentTimeEntries'] as $entryData): ?>
-                        <?php $entry = $entryData['timeEntry']; ?>
-                        <div class="time-entry-card">
-                            <div class="card-header">
-                                <div class="card-title">
-                                    <h4><?php p($entryData['projectName'] ?? $l->t('Unknown Project')); ?></h4>
-                                    <span class="duration"><?php p($fmt ? $fmt->hours($entry->getHours()) : ($entry->getHours() . 'h')); ?></span>
-                                </div>
-                            </div>
-                            <div class="card-content">
-                                <p class="card-description"><?php p($entry->getDescription() ?: $l->t('No description')); ?></p>
-                                <div class="card-meta">
-                                    <div class="meta-item">
-                                        <i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i>
-                                        <span><?php p($entry->getDate() ? ($fmt ? $fmt->date($entry->getDate()) : $entry->getDate()->format('d.m.Y')) : ''); ?></span>
-                                    </div>
-                                    <div class="meta-item">
-                                        <i data-lucide="user" class="lucide-icon primary" aria-hidden="true"></i>
-                                        <span><?php p($entryData['userDisplayName'] ?? $entry->getUserId() ?? ''); ?></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-actions">
-                                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => $entry->getId()])); ?>" class="button small">
-                                    <i data-lucide="eye" class="lucide-icon"></i>
-                                    <?php p($l->t('View')); ?>
-                                </a>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+                <div class="pc-list-table-wrap" tabindex="0" role="region" aria-label="<?php p($l->t('Recent Time Entries')); ?>">
+                    <table class="grid pc-data-table time-entries-table">
+                        <caption class="pc-sr-only"><?php p($l->t('Recent Time Entries')); ?></caption>
+                        <thead>
+                            <tr>
+                                <th scope="col"><?php p($dashColDate); ?></th>
+                                <th scope="col"><?php p($dashColProject); ?></th>
+                                <th scope="col"><?php p($dashColUser); ?></th>
+                                <th scope="col" class="col-hours"><?php p($dashColHours); ?></th>
+                                <th scope="col" class="col-settlement"><?php p($dashColSettlement); ?></th>
+                                <th scope="col"><?php p($dashColDescription); ?></th>
+                                <th scope="col" class="col-actions"><?php p($dashColActions); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($_['stats']['recentTimeEntries'] as $entryData): ?>
+                                <?php
+                                $entry = $entryData['timeEntry'] ?? null;
+                                if (!($entry instanceof \OCA\ProjectCheck\Db\TimeEntry)) {
+                                    continue;
+                                }
+                                $entryHours = (float)($entry->getHours() ?? 0);
+                                $entryBillingStatus = $entry->getBillingStatus();
+                                $entryDescription = (string)($entry->getDescription() ?? '');
+                                $entryLocked = $entry->isBillingLocked();
+                                $entryOwned = $entry->isOwnedBy($dashCurrentUserId);
+                                $projectIdForLink = (int)$entry->getProjectId();
+                                ?>
+                                <tr data-entry-id="<?php p($entry->getId()); ?>">
+                                    <td data-label="<?php p($dashColDate); ?>"><?php p($entry->getDate() ? $entry->getDate()->format('d.m.Y') : ''); ?></td>
+                                    <td data-label="<?php p($dashColProject); ?>">
+                                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $projectIdForLink])); ?>">
+                                            <?php p($entryData['projectName'] ?? $l->t('Unknown Project')); ?>
+                                        </a>
+                                    </td>
+                                    <td data-label="<?php p($dashColUser); ?>"><?php p($entryData['userDisplayName'] ?? $entry->getUserId() ?? ''); ?></td>
+                                    <td class="col-hours" data-label="<?php p($dashColHours); ?>">
+                                        <span class="time-entries-hours-value"><?php p($fmt ? $fmt->hours($entryHours) : number_format($entryHours, 2) . 'h'); ?></span>
+                                    </td>
+                                    <td class="col-settlement" data-label="<?php p($dashColSettlement); ?>">
+                                        <?php
+                                        $chipKind = 'status';
+                                        $chipValue = $entryBillingStatus;
+                                        include __DIR__ . '/parts/settlement-chip.php';
+                                        ?>
+                                    </td>
+                                    <td class="description-cell" data-label="<?php p($dashColDescription); ?>"<?php if ($entryDescription !== ''): ?> title="<?php p($entryDescription); ?>"<?php endif; ?>>
+                                        <span class="description-cell__text"><?php p($entryDescription); ?></span>
+                                    </td>
+                                    <td class="col-actions" data-label="<?php p($dashColActions); ?>">
+                                        <div class="action-items" role="group" aria-label="<?php p($l->t('Time entry actions')); ?>">
+                                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => $entry->getId()])); ?>"
+                                                class="action-item action-item--view" title="<?php p($l->t('View Details')); ?>"
+                                                aria-label="<?php p($l->t('View time entry details')); ?>">
+                                                <span data-lucide="eye" class="lucide-icon" aria-hidden="true"></span>
+                                            </a>
+                                            <?php if ($entryOwned && !$entryLocked): ?>
+                                                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $entry->getId()])); ?>"
+                                                    class="action-item action-item--edit" title="<?php p($l->t('Edit Time Entry')); ?>"
+                                                    aria-label="<?php p($l->t('Edit time entry')); ?>">
+                                                    <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
+                                                    <span class="action-item__label pc-sr-only"><?php p($l->t('Edit')); ?></span>
+                                                </a>
+                                            <?php elseif ($entryOwned && $entryLocked): ?>
+                                                <span class="action-item action-item--locked"
+                                                    title="<?php p($l->t('Invoiced or paid entries are locked. Ask a project manager to reopen this entry to change it.')); ?>">
+                                                    <span data-lucide="lock" class="lucide-icon" aria-hidden="true"></span>
+                                                    <span class="pc-sr-only"><?php p($l->t('Locked — invoiced or paid entries cannot be edited or deleted.')); ?></span>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pc-list-panel__footer">
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="button secondary">
+                        <?php p($l->t('View all time entries')); ?>
+                    </a>
                 </div>
             <?php endif; ?>
             </div>

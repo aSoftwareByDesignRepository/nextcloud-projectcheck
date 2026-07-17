@@ -130,32 +130,14 @@
 	-webkit-mask-size: contain;
 }
 
-/* --------------------------------------------------------------------------
- * Project files: section header, upload form, and dropzone.
- * One coherent surface for uploading — no duplicated affordances.
- * -------------------------------------------------------------------------- */
+/* Project files: upload form + dropzone (header chrome → common/detail-layout.css) */
 
-/* Two-row header layout for sections with a title + intro pair plus a
- * primary action. We scope to `.pc-files-section` so existing
- * pc-section__header layouts (e.g. team section) keep their flow.
- * Avoids `:has()` for broader browser compatibility. */
-.pc-files-section .section-header.pc-section__header {
-	flex-wrap: wrap;
-	align-items: flex-start;
-	gap: var(--pc-space-4, 1rem);
-}
-
-.pc-section__title-wrap {
+.pc-files-section .section-header-actions {
 	display: flex;
-	flex-direction: column;
-	gap: var(--pc-space-1, 0.25rem);
-	min-width: 0;
-	flex: 1 1 18rem;
-}
-
-.pc-section__title-wrap .pc-section-intro {
-	margin: 0;
-	max-width: 56ch;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+	justify-content: flex-end;
 }
 
 .pc-section__primary-action {
@@ -340,11 +322,7 @@
 	}
 }
 
-/* Mobile base (<601px): stack files section header and dropzone */
-.pc-files-section .section-header.pc-section__header {
-	flex-direction: column;
-}
-
+/* Mobile base (<601px): stack files section actions full-width */
 .pc-files-section .section-header-actions {
 	width: 100%;
 }
@@ -360,10 +338,6 @@
 }
 
 @media (min-width: 601px) {
-	.pc-files-section .section-header.pc-section__header {
-		flex-direction: row;
-	}
-
 	.pc-files-section .section-header-actions {
 		width: auto;
 	}
@@ -2761,7 +2735,9 @@ body {
 	font-weight: 500;
 }
 
-/* Content Grid — mobile base: single column (project detail, customer detail) */
+/* Content Grid — single column by default.
+ * Detail pages force a stacked column via common/detail-layout.css.
+ * Two-column only for non-detail shells that still use .content-grid. */
 .content-grid {
 	display: grid;
 	grid-template-columns: 1fr;
@@ -2774,6 +2750,13 @@ body {
 	.content-grid {
 		grid-template-columns: 1fr 1fr;
 		gap: 2rem;
+	}
+
+	.pc-app--project-detail .content-grid,
+	.pc-app--customer-detail .content-grid,
+	.pc-app--employee-detail .content-grid,
+	.pc-app--time-entry-detail .content-grid {
+		grid-template-columns: 1fr;
 	}
 }
 
@@ -3552,21 +3535,22 @@ body {
 	transform: translateY(-1px);
 }
 
-/* Project detail — mobile base layouts (scoped; list pages unchanged) */
+/* Project detail — mobile base layouts (scoped; list pages unchanged).
+ * Alignment is start-first for readability / WCAG; project-detail.css adds rhythm. */
 .pc-app--project-detail .header-text {
 	display: flex;
 	flex-direction: column;
-	text-align: center;
+	text-align: start;
 	gap: 1rem;
 }
 
 .pc-app--project-detail .project-meta {
-	justify-content: center;
+	justify-content: flex-start;
 	flex-wrap: wrap;
 }
 
 .pc-app--project-detail .header-actions {
-	justify-content: center;
+	justify-content: flex-start;
 	flex-wrap: wrap;
 }
 
@@ -3579,7 +3563,7 @@ body {
 .pc-app--project-detail .stat-card {
 	padding: 1rem;
 	flex-direction: column;
-	text-align: center;
+	text-align: start;
 	gap: 0.75rem;
 }
 
@@ -3614,18 +3598,18 @@ body {
 
 .pc-app--project-detail .team-member-item {
 	flex-direction: column;
-	text-align: center;
+	text-align: start;
 	gap: 0.75rem;
 }
 
 .pc-app--project-detail .member-hours {
-	justify-content: center;
+	justify-content: flex-start;
 }
 
 @media (min-width: 768px) {
 	.pc-app--project-detail .header-text {
 		flex-direction: row;
-		text-align: left;
+		text-align: start;
 	}
 
 	.pc-app--project-detail .project-meta {
@@ -3645,7 +3629,7 @@ body {
 	.pc-app--project-detail .stat-card {
 		padding: 1rem;
 		flex-direction: row;
-		text-align: left;
+		text-align: start;
 	}
 
 	.pc-app--project-detail .stat-icon {
@@ -3678,7 +3662,7 @@ body {
 
 	.pc-app--project-detail .team-member-item {
 		flex-direction: row;
-		text-align: left;
+		text-align: start;
 	}
 
 	.pc-app--project-detail .member-hours {
@@ -7733,124 +7717,33 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Unified panel: a single card holds the search toolbar, the ranked table and
-   the pagination footer. The .section class supplies the card chrome
-   (background / border / radius / shadow); we reset its padding and lay the
-   parts out as header → body → footer.
+   Employees list — shares pc-list-panel / filters-container / pc-data-table
+   with customers & projects (see common/list-table.css). Keep only table-
+   specific chrome here (rank badges, name cell, responsive card rows).
    -------------------------------------------------------------------------- */
-.pc-app--employees .employees-panel {
-	padding: 0;
+.pc-app--employees .pc-list-panel .emptycontent {
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	border-radius: 0;
+	padding: 2rem 1.25rem;
 }
 
-/* Toolbar header (native GET <form>, works without JS) */
-.pc-app--employees .employees-panel__toolbar {
-	padding: 1rem 1.25rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.pc-app--employees .employees-search-form {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 1rem;
-	width: 100%;
-}
-
-/* Search field: the icon lives in a full-height box, so it is always centred
-   on both axes regardless of the input height (no transform rounding). */
-.pc-app--employees .employees-search {
-	position: relative;
-	display: flex;
-	flex: 1 1 100%;
-	min-width: min(100%, 16rem);
-}
-
-/* Must override .lucide-icon-host { height: 1.125em } or the icon box shrinks to
-   the top of the field instead of stretching with the input. */
-.pc-app--employees .employees-search__icon,
-.pc-app--employees .employees-search__icon.lucide-icon-host {
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	width: 2.6rem;
-	height: auto;
-	min-height: 0;
-	margin: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--color-text-maxcontrast);
-	pointer-events: none;
-	z-index: 1;
-}
-
-.pc-app--employees .employees-search__icon > svg,
-.pc-app--employees .employees-search__icon > .lucide-icon {
-	display: block;
-	flex-shrink: 0;
-	width: 1.2rem;
-	height: 1.2rem;
-	margin: 0;
-}
-
-.pc-app--employees .employees-search__input {
-	width: 100%;
-	min-height: 44px;
-	/* left padding matches the icon box width so text starts right after it */
-	padding: 0.5rem 0.85rem 0.5rem 2.6rem;
-	border: 2px solid var(--color-border);
-	border-radius: 8px;
-	font-size: 1rem;
-	background: var(--color-main-background);
-	color: var(--color-main-text);
-	box-sizing: border-box;
-}
-
-.pc-app--employees .employees-search__input:focus-visible {
-	outline: 2px solid var(--color-primary-element);
-	outline-offset: 2px;
-	border-color: var(--color-primary-element);
-}
-
-.pc-app--employees .employees-search__actions {
-	display: flex;
-	gap: 0.75rem;
-	flex-wrap: wrap;
-	width: 100%;
-}
-
-.pc-app--employees .employees-search__actions .button {
-	flex: 1 1 auto;
-}
-
-.pc-app--employees .employees-search__actions .button {
-	min-height: 44px;
-	justify-content: center;
-}
-
-/* Button icons: .lucide-icon-host (set by icons.js on hydrate) centres the SVG
-   inside its box; see common/base.css and dashboard.css for the global rules. */
-.pc-app--employees .button .lucide-icon-host {
-	color: inherit;
-}
-
-/* Empty-state icon centring (drop the global -2px nudge inside the circle) */
 .pc-app--employees .emptycontent .emptycontent__icon .lucide-icon,
 .pc-app--employees .emptycontent .emptycontent__icon .lucide-icon svg {
 	margin: 0;
 }
 
-/* No-match state renders inside the panel below the toolbar: drop the card
-   chrome so it reads as part of the panel rather than a box inside a box. */
-.pc-app--employees .employees-panel .emptycontent {
-	border: 0;
-	background: transparent;
-	box-shadow: none;
-	border-radius: 0;
+.pc-app--employees .emptycontent .button {
+	margin-top: 0.5rem;
+}
+
+.pc-app--employees .button .lucide-icon-host {
+	color: inherit;
 }
 
 /* Employees table — desktop-first; card rows only on narrow viewports */
+.pc-app--employees .pc-list-table-wrap,
 .pc-app--employees .employees-table-wrap {
 	overflow-x: auto;
 	padding: 0;
@@ -7929,11 +7822,10 @@ body {
 	text-align: right;
 }
 
-.pc-app--employees .employees-table .col-actions .button {
-	width: auto;
-}
+/* actions use .action-item from list-table.css */
 
 @media (max-width: 720px) {
+	.pc-app--employees .pc-list-table-wrap,
 	.pc-app--employees .employees-table-wrap {
 		overflow-x: visible;
 		padding: 1rem;
@@ -8018,12 +7910,14 @@ body {
 		text-align: left;
 	}
 
-	.pc-app--employees .employees-table .col-actions .button {
+	.pc-app--employees .employees-table .col-actions .action-items {
 		width: 100%;
+		justify-content: flex-start;
 	}
 }
 
 /* Inset outline so it is not clipped by the panel's overflow:hidden corners */
+.pc-app--employees .pc-list-table-wrap:focus-visible,
 .pc-app--employees .employees-table-wrap:focus-visible {
 	outline: 2px solid var(--color-primary-element);
 	outline-offset: -2px;
@@ -8033,19 +7927,6 @@ body {
 	width: 100%;
 }
 
-@media (min-width: 721px) {
-	.pc-app--employees .employees-search {
-		flex: 1 1 18rem;
-	}
-
-	.pc-app--employees .employees-search__actions {
-		width: auto;
-	}
-
-	.pc-app--employees .employees-search__actions .button {
-		flex: 0 1 auto;
-	}
-}
 
 /* Numeric columns: right-aligned with tabular figures for easy comparison */
 .pc-app--employees .employees-table .col-num {
@@ -8114,32 +7995,11 @@ body {
 	text-decoration: underline;
 }
 
-/* Action button inside the table */
-.pc-app--employees .employees-table .col-actions .button {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.4rem;
-	min-height: 40px;
-}
+/* Action icons use shared .action-item styles from list-table.css */
 
-.pc-app--employees .employees-table .col-actions .button .lucide-icon-host {
-	color: inherit;
-}
+/* Empty-state action button spacing — see .pc-app--employees .emptycontent .button above */
 
-/* Empty-state action button spacing */
-.pc-app--employees .emptycontent .button {
-	margin-top: 0.5rem;
-}
-
-/* Pagination as the panel footer: sits flush at the card bottom */
-.pc-app--employees .employees-panel__footer {
-	margin: 0;
-	padding: 0.85rem 1.25rem;
-	border-top: 1px solid var(--color-border);
-}
-
-/* Disabled pagination controls (rendered as non-interactive spans) */
+/* Pagination footer — shared via .pc-list-panel__footer; keep disabled state */
 .pc-app--employees .pagination .button.disabled,
 .pc-app--employees .pagination .button[aria-disabled="true"] {
 	opacity: 0.5;
@@ -9218,11 +9078,15 @@ body {
 .pc-settle-modal__dialog {
 	position: relative;
 	max-width: 480px;
-	width: 100%;
+	width: min(100%, 480px);
+	margin: 0;
 	padding: 1.5rem;
 	border-radius: var(--border-radius-large, 10px);
 	background: var(--color-main-background);
 	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+	box-sizing: border-box;
+	max-height: min(90vh, 100%);
+	overflow-y: auto;
 }
 
 .pc-settle-modal__title {
@@ -9238,12 +9102,40 @@ body {
 
 .pc-settle-modal__actions {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: flex-end;
 	gap: 0.75rem;
 }
 
 .pc-settle-modal__actions .button {
 	min-height: 44px;
+	white-space: normal;
+	line-height: 1.3;
+}
+
+@media (max-width: 480px) {
+	.pc-settle-modal__dialog {
+		padding: 1.15rem 1rem;
+	}
+
+	.pc-settle-modal__actions {
+		flex-direction: column-reverse;
+		align-items: stretch;
+	}
+
+	.pc-settle-modal__actions .button {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.pc-settle-daterange__row {
+		flex-direction: column;
+	}
+
+	.pc-settle-daterange__row .form-group {
+		flex: 1 1 auto;
+		width: 100%;
+	}
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -11,11 +11,12 @@ use OCP\Util;
 
 Util::addScript('projectcheck', 'common/export-menu');
 Util::addScript('projectcheck', 'employees');
-Util::addStyle('projectcheck', 'projects');
 Util::addScript('projectcheck', 'common/icons');
+Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'navigation');
-Util::addStyle('projectcheck', 'time-entries');
+Util::addStyle('projectcheck', 'common/stats-panel');
 Util::addStyle('projectcheck', 'common/list-table');
+Util::addStyle('projectcheck', 'common/list-layout');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -64,29 +65,24 @@ $colActions = $l->t('Actions');
         </nav>
 
         <?php if (!$isGlobalViewer): ?>
-            <div class="section">
-                <div class="section-content">
-                    <div class="pc-scope-banner" role="status" aria-live="polite">
-                        <div class="pc-scope-banner__icon">
-                            <i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i>
-                        </div>
-                        <div class="pc-scope-banner__content">
-                            <h3><?php p($l->t('Only your data is shown')); ?></h3>
-                            <p><?php p($l->t('Employee analytics are restricted to your own time entries unless you are an administrator.')); ?></p>
-                        </div>
-                    </div>
+            <div class="section pc-section" aria-labelledby="pc-employees-scope-heading">
+                <div class="section-header">
+                    <h3 id="pc-employees-scope-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Only your data is shown')); ?></h3>
+                    <p><?php p($l->t('Employee analytics are restricted to your own time entries unless you are an administrator.')); ?></p>
                 </div>
             </div>
         <?php endif; ?>
 
         <!-- Team Overview Stats -->
         <section class="section pc-stats-panel pc-section team-overview" aria-labelledby="employees-stats-title">
-            <header class="pc-stats-panel__header section-header">
-                <h3 class="pc-section__title" id="employees-stats-title">
-                    <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
+            <div class="section-header">
+                <h3 id="employees-stats-title">
+                    <i data-lucide="users" class="lucide-icon primary" aria-hidden="true"></i>
                     <?php p($isGlobalViewer ? $l->t('Team Overview') : $l->t('Personal Overview')); ?>
                 </h3>
-            </header>
+                <p><?php p($l->t('Hours and costs for people you can see.')); ?></p>
+            </div>
+            <div class="section-content">
                 <?php
                 // Team totals are computed server-side across the full (search-filtered)
                 // result set so the cards stay correct across pagination.
@@ -121,85 +117,85 @@ $colActions = $l->t('Actions');
                         </div>
                     </li>
                 </ul>
+            </div>
         </section>
 
-        <!-- Employees: one panel holds the search toolbar, the table and pagination -->
-        <?php if (empty($_['employeeComparisonStats']) && !$hasSearch): ?>
-            <!-- Nothing recorded yet and nothing searched: a single clean empty card (no search box) -->
-            <div class="section employees-panel pc-list-panel pc-section">
-                <div class="emptycontent" role="status">
-                    <span class="emptycontent__icon"><i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i></span>
-                    <h2><?php p($l->t('No employees found')); ?></h2>
-                    <p><?php p($l->t('No employees have logged time entries yet.')); ?></p>
-                </div>
+        <!-- Filters + employees table (same list-panel pattern as customers / projects) -->
+        <div class="section pc-list-panel pc-section" aria-labelledby="pc-employees-list-heading">
+            <div class="section-header">
+                <h3 id="pc-employees-list-heading"><i data-lucide="users" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Employees')); ?></h3>
+                <p><?php p($l->t('Search and filter')); ?></p>
             </div>
-        <?php else: ?>
-            <section class="section employees-panel pc-list-panel pc-section" aria-label="<?php p($l->t('Employees')); ?>">
-                <!-- Toolbar header: native GET form, fully functional without JS -->
-                <div class="employees-panel__toolbar">
-                    <form class="employees-search-form" method="get" action="<?php p($baseUrl); ?>" role="search" aria-label="<?php p($l->t('Search employees...')); ?>">
-                        <div class="employees-search">
-                            <span class="employees-search__icon" data-lucide="search" aria-hidden="true"></span>
-                            <label class="u-visually-hidden" for="employee-search"><?php p($l->t('Search employees...')); ?></label>
-                            <input type="search" id="employee-search" name="search" class="employees-search__input" autocomplete="off"
-                                placeholder="<?php p($l->t('Search employees...')); ?>"
-                                value="<?php p($searchValue); ?>"
-                                aria-describedby="employee-search-hint">
-                        </div>
-                        <p class="u-visually-hidden" id="employee-search-hint"><?php p($l->t('Type a name and press Enter or Search to filter the list.')); ?></p>
+            <div class="pc-list-panel__toolbar">
+                <form class="filters-container employees-search-form" method="get" action="<?php p($baseUrl); ?>" role="search" aria-label="<?php p($l->t('Search employees')); ?>">
+                    <div class="search-input-wrapper">
+                        <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
+                        <label class="pc-sr-only" for="employee-search"><?php p($l->t('Search employees')); ?></label>
+                        <input type="search" id="employee-search" name="search" class="search-input"
+                            placeholder="<?php p($l->t('Search employees...')); ?>"
+                            value="<?php p($searchValue); ?>"
+                            aria-label="<?php p($l->t('Search employees')); ?>"
+                            aria-describedby="employee-search-hint"
+                            autocomplete="off">
+                    </div>
+                    <p class="pc-sr-only" id="employee-search-hint"><?php p($l->t('Type a name and press Enter or Apply to filter the list.')); ?></p>
 
-                        <div class="employees-search__actions">
-                            <button type="submit" class="button primary">
-                                <i data-lucide="search" class="lucide-icon" aria-hidden="true"></i>
-                                <span><?php p($l->t('Search')); ?></span>
-                            </button>
-                            <?php if ($hasSearch): ?>
-                                <a class="button secondary" href="<?php p($baseUrl); ?>">
-                                    <i data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></i>
-                                    <span><?php p($l->t('Reset Search')); ?></span>
-                                </a>
-                            <?php endif; ?>
-                            <?php
-                            $exportUrl = (string)($_['exportUrl'] ?? '');
-                            if ($exportUrl === '' && isset($urlGenerator) && is_object($urlGenerator)) {
-                            	$exportUrl = (string)$urlGenerator->linkToRoute('projectcheck.employee.export');
-                            }
-                            $exportEntityLabel = 'employees';
-                            $exportFilterKeys = 'search';
-                            $exportSuccessMsg = 'Exported {count} employees';
-                            $exportIncludeSort = false;
-                            $exportMenuId = 'pc-export-menu-employees';
-                            include __DIR__ . '/parts/export-menu.php';
-                            ?>
-                        </div>
-                    </form>
-                </div>
+                    <div class="filters-row">
+                        <button type="submit" id="apply-filters" class="button primary">
+                            <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Apply Filters')); ?>
+                        </button>
+                        <a class="button secondary" id="clear-filters" href="<?php p($baseUrl); ?>">
+                            <span data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Clear Filters')); ?>
+                        </a>
+                        <?php
+                        $exportUrl = (string)($_['exportUrl'] ?? '');
+                        if ($exportUrl === '' && isset($urlGenerator) && is_object($urlGenerator)) {
+                        	$exportUrl = (string)$urlGenerator->linkToRoute('projectcheck.employee.export');
+                        }
+                        $exportEntityLabel = 'employees';
+                        $exportFilterKeys = 'search';
+                        $exportSuccessMsg = 'Exported {count} employees';
+                        $exportIncludeSort = false;
+                        $exportMenuId = 'pc-export-menu-employees';
+                        include __DIR__ . '/parts/export-menu.php';
+                        ?>
+                    </div>
+                </form>
+            </div>
 
-                <?php if (empty($_['employeeComparisonStats'])): ?>
-                    <!-- Search returned nothing: contextual empty state inside the same panel -->
-                    <div class="emptycontent" role="status">
-                        <span class="emptycontent__icon"><i data-lucide="search-x" class="lucide-icon" aria-hidden="true"></i></span>
+            <?php if (empty($_['employeeComparisonStats'])): ?>
+                <div class="emptycontent" role="status">
+                    <?php if ($hasSearch): ?>
+                        <span class="emptycontent__icon" aria-hidden="true"><i data-lucide="search-x" class="lucide-icon"></i></span>
                         <h2><?php p($l->t('No employees match your search')); ?></h2>
                         <p><?php p($l->t('Try adjusting your search criteria.')); ?></p>
                         <a class="button secondary" href="<?php p($baseUrl); ?>">
-                            <i data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></i>
-                            <span><?php p($l->t('Reset Search')); ?></span>
+                            <span data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></span>
+                            <span><?php p($l->t('Clear Filters')); ?></span>
                         </a>
-                    </div>
-                <?php else: ?>
-                    <?php
-                        $pagination = $_['pagination'] ?? [];
-                        $currentPage = max(1, (int)($pagination['page'] ?? 1));
-                        $totalPages = max(1, (int)($pagination['totalPages'] ?? 1));
-                        $totalEntries = (int)($pagination['totalEntries'] ?? count($_['employeeComparisonStats']));
-                        $perPage = (int)($pagination['perPage'] ?? count($_['employeeComparisonStats']));
-                        $baseQuery = $_['filters'] ?? [];
-                        // Continuous rank across pages (rows are ordered by revenue).
-                        $rankBase = ($currentPage - 1) * $perPage;
-                    ?>
-                    <div class="grid-container employees-table-wrap" tabindex="0" role="region" aria-label="<?php p($l->t('Employees')); ?>">
-                    <table class="employees-table">
-                        <caption class="u-visually-hidden"><?php p($l->t('Employees ranked by total revenue')); ?></caption>
+                    <?php else: ?>
+                        <span class="emptycontent__icon" aria-hidden="true"><i data-lucide="clock" class="lucide-icon"></i></span>
+                        <h2><?php p($l->t('No employees found')); ?></h2>
+                        <p><?php p($l->t('No employees have logged time entries yet.')); ?></p>
+                    <?php endif; ?>
+                </div>
+            <?php else: ?>
+                <?php
+                    $pagination = $_['pagination'] ?? [];
+                    $currentPage = max(1, (int)($pagination['page'] ?? 1));
+                    $totalPages = max(1, (int)($pagination['totalPages'] ?? 1));
+                    $totalEntries = (int)($pagination['totalEntries'] ?? count($_['employeeComparisonStats']));
+                    $perPage = (int)($pagination['perPage'] ?? count($_['employeeComparisonStats']));
+                    $baseQuery = $_['filters'] ?? [];
+                    unset($baseQuery['limit'], $baseQuery['offset']);
+                    // Continuous rank across pages (rows are ordered by revenue).
+                    $rankBase = ($currentPage - 1) * $perPage;
+                ?>
+                <div class="pc-list-table-wrap" tabindex="0" role="region" aria-label="<?php p($l->t('Employees')); ?>">
+                    <table class="grid employees-table pc-data-table">
+                        <caption class="pc-sr-only"><?php p($l->t('Employees ranked by total revenue')); ?></caption>
                         <thead>
                             <tr>
                                 <th scope="col" class="col-rank"><?php p($colRank); ?></th>
@@ -225,29 +221,23 @@ $colActions = $l->t('Actions');
                                         <a href="<?php p($showUrl); ?>"><?php p($displayName); ?></a>
                                     </th>
                                     <td class="col-num" data-label="<?php p($colHours); ?>">
-                                        <span class="employees-metric">
-                                            <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
-                                            <span class="employees-metric__value"><?php p(number_format((float)($employee['total_hours'] ?? 0), 1)); ?>h</span>
-                                        </span>
+                                        <?php p(number_format((float)($employee['total_hours'] ?? 0), 1)); ?>h
                                     </td>
                                     <td class="col-num" data-label="<?php p($colRevenue); ?>">
-                                        <span class="employees-metric">
-                                            <i data-lucide="euro" class="lucide-icon" aria-hidden="true"></i>
-                                            <span class="employees-metric__value"><?php p($fmt ? $fmt->currency((float)($employee['total_cost'] ?? 0)) : $currencyCode . ' ' . number_format((float)($employee['total_cost'] ?? 0), 2)); ?></span>
-                                        </span>
+                                        <?php p($fmt ? $fmt->currency((float)($employee['total_cost'] ?? 0)) : $currencyCode . ' ' . number_format((float)($employee['total_cost'] ?? 0), 2)); ?>
                                     </td>
                                     <td class="col-num" data-label="<?php p($colRate); ?>">
-                                        <span class="employees-metric">
-                                            <i data-lucide="trending-up" class="lucide-icon" aria-hidden="true"></i>
-                                            <span class="employees-metric__value"><?php p($fmt ? $fmt->currency((float)($employee['avg_hourly_rate'] ?? 0)) : $currencyCode . ' ' . number_format((float)($employee['avg_hourly_rate'] ?? 0), 2)); ?>/h</span>
-                                        </span>
+                                        <?php p($fmt ? $fmt->currency((float)($employee['avg_hourly_rate'] ?? 0)) : $currencyCode . ' ' . number_format((float)($employee['avg_hourly_rate'] ?? 0), 2)); ?>/h
                                     </td>
                                     <td class="col-actions" data-label="<?php p($colActions); ?>">
-                                        <a href="<?php p($showUrl); ?>" class="button primary"
-                                           aria-label="<?php p($l->t('View details for employee %s', [$displayName])); ?>">
-                                            <i data-lucide="eye" class="lucide-icon" aria-hidden="true"></i>
-                                            <span><?php p($l->t('View Details')); ?></span>
-                                        </a>
+                                        <div class="action-items" role="group" aria-label="<?php p($l->t('Employee actions')); ?>">
+                                            <a href="<?php p($showUrl); ?>"
+                                                class="action-item action-item--view"
+                                                title="<?php p($l->t('View Details')); ?>"
+                                                aria-label="<?php p($l->t('View details for employee %s', [$displayName])); ?>">
+                                                <span data-lucide="eye" class="lucide-icon" aria-hidden="true"></span>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -258,31 +248,28 @@ $colActions = $l->t('Actions');
                     <?php
                         $prevQuery = array_merge($baseQuery, ['page' => max(1, $currentPage - 1)]);
                         $nextQuery = array_merge($baseQuery, ['page' => min($totalPages, $currentPage + 1)]);
-                        $isFirst = $currentPage <= 1;
-                        $isLast = $currentPage >= $totalPages;
                     ?>
-                    <nav class="pagination employees-panel__footer" aria-label="<?php p($l->t('Pagination')); ?>">
+                    <div class="pc-list-panel__footer pagination">
                         <div class="pagination-info">
                             <span><?php p($l->t('Page')); ?> <?php p($currentPage); ?> / <?php p($totalPages); ?></span>
                             <span aria-hidden="true">•</span>
                             <span><?php p($l->t('Total')); ?> <?php p($totalEntries); ?></span>
                         </div>
                         <div class="pagination-actions">
-                            <?php if ($isFirst): ?>
-                                <span class="button secondary disabled" aria-disabled="true">‹ <?php p($l->t('Previous')); ?></span>
-                            <?php else: ?>
+                            <?php if ($currentPage > 1): ?>
                                 <a class="button secondary" rel="prev" href="<?php p($baseUrl . '?' . http_build_query($prevQuery)); ?>">‹ <?php p($l->t('Previous')); ?></a>
-                            <?php endif; ?>
-                            <?php if ($isLast): ?>
-                                <span class="button secondary disabled" aria-disabled="true"><?php p($l->t('Next')); ?> ›</span>
                             <?php else: ?>
+                                <span class="button secondary disabled" aria-disabled="true">‹ <?php p($l->t('Previous')); ?></span>
+                            <?php endif; ?>
+                            <?php if ($currentPage < $totalPages): ?>
                                 <a class="button secondary" rel="next" href="<?php p($baseUrl . '?' . http_build_query($nextQuery)); ?>"><?php p($l->t('Next')); ?> ›</a>
+                            <?php else: ?>
+                                <span class="button secondary disabled" aria-disabled="true"><?php p($l->t('Next')); ?> ›</span>
                             <?php endif; ?>
                         </div>
-                    </nav>
+                    </div>
                 <?php endif; ?>
             <?php endif; ?>
-            </section>
-        <?php endif; ?>
+        </div>
 
 <?php include __DIR__ . '/common/page-end.php'; ?>

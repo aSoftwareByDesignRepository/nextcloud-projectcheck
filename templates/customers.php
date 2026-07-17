@@ -14,6 +14,7 @@ Util::addScript('projectcheck', 'customers');
 Util::addStyle('projectcheck', 'customers');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/list-table');
+Util::addStyle('projectcheck', 'common/list-layout');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -67,11 +68,11 @@ include __DIR__ . '/common/page-start.php';
 
         <!-- Customer Statistics Overview -->
         <section class="section pc-stats-panel pc-section" aria-labelledby="customers-stats-title">
-            <header class="pc-stats-panel__header section-header">
-                <h3 class="pc-section__title" id="customers-stats-title"><?php p($l->t('Customer Statistics')); ?></h3>
-                <p class="pc-section__intro"><?php p($l->t('Overview of your customer relationships and project data')); ?></p>
-            </header>
-
+            <div class="section-header">
+                <h3 id="customers-stats-title"><i data-lucide="bar-chart-3" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Customer Statistics')); ?></h3>
+                <p><?php p($l->t('Overview of your customer relationships and project data')); ?></p>
+            </div>
+            <div class="section-content">
             <ul class="pc-stats-grid" role="list">
                 <li class="pc-stat-card">
                     <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="users" class="lucide-icon"></i></span>
@@ -118,6 +119,7 @@ include __DIR__ . '/common/page-start.php';
                     </div>
                 </li>
             </ul>
+            </div>
         </section>
 
         <?php
@@ -133,7 +135,11 @@ include __DIR__ . '/common/page-start.php';
         ?>
 
         <!-- Filters + customers table (one panel) -->
-        <div class="section pc-list-panel pc-section">
+        <div class="section pc-list-panel pc-section" aria-labelledby="pc-customers-list-heading">
+            <div class="section-header">
+                <h3 id="pc-customers-list-heading"><i data-lucide="users" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('All customers')); ?></h3>
+                <p><?php p($l->t('Search and filter')); ?></p>
+            </div>
             <div class="pc-list-panel__toolbar">
             <div class="filters-container">
                 <div class="search-input-wrapper">
@@ -147,9 +153,8 @@ include __DIR__ . '/common/page-start.php';
 
                 <div class="filters-row">
                     <?php $settlementFilterValue = (string)($_['filters']['settlement'] ?? ''); ?>
-                    <label class="pc-filter-field" for="settlement-filter">
-                        <span class="pc-filter-field__label"><?php p($l->t('Settlement')); ?></span>
-                        <select id="settlement-filter" aria-label="<?php p($l->t('Filter by settlement')); ?>">
+                    <label class="pc-sr-only" for="settlement-filter"><?php p($l->t('Settlement')); ?></label>
+                    <select id="settlement-filter" aria-label="<?php p($l->t('Filter by settlement')); ?>">
                             <option value="all" <?php if ($settlementFilterValue === '' || $settlementFilterValue === 'all') echo 'selected'; ?>><?php p($l->t('Settlement: all')); ?></option>
                             <option value="outstanding" <?php if ($settlementFilterValue === 'outstanding') echo 'selected'; ?>><?php p($l->t('Not yet paid')); ?></option>
                             <option value="open" <?php if ($settlementFilterValue === 'open') echo 'selected'; ?>><?php p($l->t('Open')); ?></option>
@@ -157,8 +162,7 @@ include __DIR__ . '/common/page-start.php';
                             <option value="awaiting_payment" <?php if ($settlementFilterValue === 'awaiting_payment') echo 'selected'; ?>><?php p($l->t('Awaiting payment')); ?></option>
                             <option value="paid" <?php if ($settlementFilterValue === 'paid') echo 'selected'; ?>><?php p($l->t('Paid')); ?></option>
                             <option value="n_a" <?php if ($settlementFilterValue === 'n_a') echo 'selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
-                        </select>
-                    </label>
+                    </select>
                     <button id="apply-filters" class="button primary" type="button">
                         <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Apply Filters')); ?>

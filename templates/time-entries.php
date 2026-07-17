@@ -14,6 +14,7 @@ Util::addScript('projectcheck', 'time-entries');
 Util::addStyle('projectcheck', 'time-entries');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/list-table');
+Util::addStyle('projectcheck', 'common/list-layout');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -85,13 +86,17 @@ include __DIR__ . '/common/page-start.php';
         ?>
 
         <!-- Filters + table: one panel (no nested boxes) -->
-        <div class="section time-entries-panel pc-list-panel pc-section">
-            <div class="time-entries-panel__toolbar">
+        <div class="section time-entries-panel pc-list-panel pc-section" aria-labelledby="pc-time-entries-list-heading">
+            <div class="section-header">
+                <h3 id="pc-time-entries-list-heading"><i data-lucide="clock" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Time Entries')); ?></h3>
+                <p><?php p($l->t('Search and filter')); ?></p>
+            </div>
+            <div class="time-entries-panel__toolbar pc-list-panel__toolbar">
             <div class="filters-container">
                 <!-- Search Input -->
                 <div class="search-input-wrapper">
                     <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
-                    <input type="text" id="time-entry-search" class="search-input"
+                    <input type="search" id="time-entry-search" class="search-input"
                         placeholder="<?php p($l->t('Search descriptions, projects, or customers...')); ?>"
                         value="<?php p($filters['search'] ?? ''); ?>"
                         aria-label="<?php p($l->t('Search descriptions, projects, or customers')); ?>"
@@ -354,11 +359,11 @@ include __DIR__ . '/common/page-start.php';
                 $showPageHoursSubtotal = $summaryTotalPages > 1;
                 ?>
                 <div id="time-entries-summary-live" class="pc-sr-only" aria-live="polite" aria-atomic="true"></div>
-                <div class="time-entries-table-wrap"
+                <div class="pc-list-table-wrap time-entries-table-wrap"
                     tabindex="0"
                     role="region"
                     aria-label="<?php p($l->t('Time entries')); ?>">
-                    <table class="grid time-entries-table" id="time-entries-table"
+                    <table class="grid time-entries-table pc-data-table" id="time-entries-table"
                         data-selection-hours="<?php p(number_format($selectionHoursTotal, 4, '.', '')); ?>"
                         data-selection-count="<?php p((string)$selectionEntryCount); ?>"
                         data-page-hours="<?php p(number_format($pageHoursTotal, 4, '.', '')); ?>"

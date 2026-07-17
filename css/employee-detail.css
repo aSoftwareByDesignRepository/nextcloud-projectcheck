@@ -1,36 +1,40 @@
 /**
- * Employee detail page — layout, sections, and responsive UX.
+ * Employee detail page — layout aligned with customer / project detail
+ * (equal content-grid peers, full-width assignments, WCAG 2.1 AA).
+ *
+ * @copyright Copyright (c) 2026, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
  */
 
-.pc-app--employee-detail .breadcrumb-container {
-	margin-bottom: var(--pc-space-4, 1rem);
-}
+/* ── Page rhythm ─────────────────────────────────────────────────────────── */
 
-.pc-app--employee-detail .pc-employee-profile {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: var(--pc-space-4, 1rem);
-	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
-	margin-bottom: var(--pc-space-5, 1.25rem);
-	border: 1px solid var(--pc-border, var(--color-border));
-	border-radius: var(--pc-radius-md, 12px);
-	background: var(--color-background-hover, var(--color-main-background));
-}
-
-.pc-app--employee-detail .pc-employee-profile__meta {
+.pc-app--employee-detail .pc-main {
 	display: flex;
 	flex-direction: column;
-	gap: var(--pc-space-3, 0.75rem);
+	gap: var(--pc-space-4, 1rem);
 	min-width: 0;
-	flex: 1 1 16rem;
+}
+
+.pc-app--employee-detail .breadcrumb-container {
+	margin: 0;
+}
+
+.pc-app--employee-detail .pc-main > .section,
+.pc-app--employee-detail .pc-main > .content-grid,
+.pc-app--employee-detail .pc-main > .notice {
+	margin-bottom: 0;
+}
+
+.pc-app--employee-detail .pc-page-header__content,
+.pc-app--employee-detail .pc-page-header__actions {
+	text-align: start;
 }
 
 .pc-app--employee-detail .employee-meta {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--pc-space-3, 0.75rem) var(--pc-space-5, 1.25rem);
+	justify-content: flex-start;
 }
 
 .pc-app--employee-detail .meta-item {
@@ -42,35 +46,68 @@
 	min-height: var(--pc-touch-min, 44px);
 }
 
-.pc-app--employee-detail .header-actions {
-	flex: 0 0 auto;
-	display: flex;
-	align-items: flex-start;
-}
+/* ── Unified section chrome ──────────────────────────────────────────────── */
 
-.pc-app--employee-detail .content-grid {
-	display: grid;
-	/* Mobile base: single column */
-	grid-template-columns: 1fr;
-	gap: var(--pc-space-5, 1.25rem);
+.pc-app--employee-detail .section.pc-section,
+.pc-app--employee-detail .section {
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-md, 12px);
+	background: var(--color-main-background);
+	box-shadow: none;
+	overflow: visible;
 	width: 100%;
 	max-width: 100%;
+	box-sizing: border-box;
 }
 
-@media (min-width: 960px) {
-	/* ≥960px desktop: asymmetric two-column layout — unchanged from prior desktop */
-	.pc-app--employee-detail .content-grid {
-		grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-	}
+/* Section header chrome lives in common/detail-layout.css (Year-by-year grid). */
+
+/* Content stack is single-column via common/detail-layout.css */
+
+.pc-app--employee-detail .content-grid > .info-section,
+.pc-app--employee-detail .content-grid > .pc-section,
+.pc-app--employee-detail .content-grid > .projects-section,
+.pc-app--employee-detail .content-grid > .pc-ed-quick-actions {
+	min-width: 0;
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	overflow: visible;
+	box-sizing: border-box;
 }
 
-.pc-app--employee-detail #employee-project-assignments {
+.pc-app--employee-detail .info-item {
+	min-width: 0;
+}
+
+.pc-app--employee-detail .info-item.full-width {
 	grid-column: 1 / -1;
 }
 
+.pc-app--employee-detail .info-item label {
+	text-transform: none;
+	letter-spacing: normal;
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-app--employee-detail .info-item span {
+	overflow-wrap: anywhere;
+}
+
+/* ── Assignments ─────────────────────────────────────────────────────────── */
+
 .pc-app--employee-detail .employee-assignments-grid {
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+	display: grid;
+	grid-template-columns: 1fr;
 	gap: var(--pc-space-5, 1.25rem);
+}
+
+@media (min-width: 720px) {
+	.pc-app--employee-detail .employee-assignments-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }
 
 .pc-app--employee-detail .employee-assignments-panel {
@@ -78,48 +115,26 @@
 	border: 1px solid var(--pc-border, var(--color-border));
 	border-radius: var(--pc-radius-md, 12px);
 	background: var(--color-main-background);
+	min-width: 0;
 }
 
-.pc-app--employee-detail .yearly-stats-section .section-header,
-.pc-app--employee-detail .employee-project-type-stats-section .section-header,
-.pc-app--employee-detail .employee-productivity-analysis-section .section-header {
-	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
-	border-bottom: 1px solid var(--pc-border, var(--color-border));
+.pc-app--employee-detail .employee-assignments-panel__title {
+	margin: 0 0 0.75rem;
+	font-size: 1rem;
+	font-weight: 700;
 }
 
-.pc-app--employee-detail .yearly-stats-section .section-header p,
-.pc-app--employee-detail .employee-productivity-analysis-section .section-header p {
-	margin: 0.35rem 0 0;
-	color: var(--color-text-maxcontrast);
-	font-size: var(--pc-fs-sm, 0.875rem);
-	max-width: 65ch;
-}
-
-.pc-app--employee-detail .yearly-stats-container {
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-}
-
-.pc-app--employee-detail #employee-rate-history .section-header {
-	padding-bottom: var(--pc-space-3, 0.75rem);
-	border-bottom: 1px solid var(--pc-border, var(--color-border));
-	margin-bottom: var(--pc-space-4, 1rem);
-}
-
-.pc-app--employee-detail #employee-rate-history .pc-section-title {
-	display: flex;
+.pc-app--employee-detail .team-member-item {
+	text-align: start;
+	flex-direction: row;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.5rem;
-	margin: 0;
+	gap: 0.75rem 1rem;
 }
 
-.pc-app--employee-detail #employee-rate-history .pc-section-intro {
-	margin: 0.35rem 0 0;
-	color: var(--color-text-maxcontrast);
-	font-size: var(--pc-fs-sm, 0.875rem);
-	max-width: 65ch;
-}
+/* ── Rates ───────────────────────────────────────────────────────────────── */
 
-.pc-app--employee-detail .employee-rates-table-wrap {
+.pc-app--employee-detail #employee-rate-history .employee-rates-table-wrap {
 	overflow-x: auto;
 	margin-bottom: var(--pc-space-4, 1rem);
 }
@@ -132,6 +147,7 @@
 .pc-app--employee-detail #employee-rate-history .employee-rates-table th,
 .pc-app--employee-detail #employee-rate-history .employee-rates-table td {
 	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+	text-align: start;
 }
 
 .pc-app--employee-detail .employee-rate-add-form {
@@ -160,18 +176,86 @@
 	max-width: 65ch;
 }
 
-.pc-app--employee-detail #employee-rate-submit {
+.pc-app--employee-detail #employee-rate-submit,
+.pc-app--employee-detail #assign-project-submit {
 	min-height: var(--pc-touch-min, 44px);
 }
+
+/* ── Quick actions ───────────────────────────────────────────────────────── */
 
 .pc-app--employee-detail .actions-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+	grid-template-columns: 1fr;
 	gap: var(--pc-space-4, 1rem);
 }
 
+@media (min-width: 560px) {
+	.pc-app--employee-detail .actions-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (min-width: 900px) {
+	.pc-app--employee-detail .actions-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
 .pc-app--employee-detail .action-card {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.85rem;
 	min-height: var(--pc-touch-min, 44px);
+	padding: 0.9rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	background: var(--color-main-background);
+	text-decoration: none;
+	color: inherit;
+	box-sizing: border-box;
+}
+
+.pc-app--employee-detail .action-card:hover {
+	background: color-mix(in srgb, var(--color-background-hover) 70%, var(--color-main-background));
+}
+
+.pc-app--employee-detail .action-card:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+.pc-app--employee-detail .action-card h4 {
+	margin: 0 0 0.25rem;
+	font-size: 0.975rem;
+	font-weight: 700;
+}
+
+.pc-app--employee-detail .action-card p {
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--color-text-maxcontrast);
+	line-height: 1.4;
+}
+
+/* ── Yearly / analysis ───────────────────────────────────────────────────── */
+
+.pc-app--employee-detail .yearly-stats-container {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+}
+
+@media (min-width: 720px) {
+	.pc-app--employee-detail .yearly-stats-container {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+	}
+}
+
+.pc-app--employee-detail .stat-label {
+	text-transform: none;
+	letter-spacing: normal;
+	font-size: 0.8rem;
+	font-weight: 600;
 }
 
 .pc-app--employee-detail .project-type-display {
@@ -219,31 +303,52 @@
 	width: 100%;
 }
 
-/* Mobile base: stack employee profile card */
-.pc-app--employee-detail .pc-employee-profile {
-	flex-direction: column;
-	align-items: stretch;
+.pc-app--employee-detail .project-types-table {
+	overflow-x: auto;
 }
 
-.pc-app--employee-detail .header-actions .button {
-	width: 100%;
-	justify-content: center;
-}
-
-@media (min-width: 640px) {
-	.pc-app--employee-detail .pc-employee-profile {
-		flex-direction: row;
-		align-items: center;
-	}
-
-	.pc-app--employee-detail .header-actions .button {
-		width: auto;
-	}
+/* Focus visibility */
+.pc-app--employee-detail a:focus-visible,
+.pc-app--employee-detail button:focus-visible,
+.pc-app--employee-detail input:focus-visible,
+.pc-app--employee-detail select:focus-visible,
+.pc-app--employee-detail textarea:focus-visible,
+.pc-app--employee-detail [tabindex]:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.pc-app--employee-detail .action-card,
-	.pc-app--employee-detail .yearly-stat-card {
+	.pc-app--employee-detail .yearly-stat-card,
+	.pc-app--employee-detail .yearly-progress-fill {
 		transition: none;
+	}
+}
+
+/* ── Narrow screens: stack headers / actions for long translations ───────── */
+
+@media (max-width: 560px) {
+	.pc-app--employee-detail .section-header-actions .button {
+		flex: 1 1 100%;
+		width: 100%;
+		justify-content: center;
+		white-space: normal;
+		text-align: center;
+		line-height: 1.3;
+		min-height: var(--pc-touch-min, 44px);
+	}
+
+	.pc-app--employee-detail .actions-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 480px) {
+	.pc-app--employee-detail .section > .section-header,
+	.pc-app--employee-detail .section > .section-content,
+	.pc-app--employee-detail .pc-stats-panel {
+		padding-left: 1rem;
+		padding-right: 1rem;
 	}
 }

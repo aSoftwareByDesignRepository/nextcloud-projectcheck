@@ -1,0 +1,549 @@
+/**
+ * Shared detail-page layout — one full-width column, aligned sections.
+ * Applies to: project / customer / employee / time-entry detail.
+ *
+ * Spec: stack every section top-to-bottom at the same width. No side-by-side
+ * peers. Inner grids (info fields, cards) may still wrap responsively.
+ *
+ * @copyright Copyright (c) 2026, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+/* ── Shell: single stacked column ───────────────────────────────────────── */
+
+.pc-app--project-detail .pc-main,
+.pc-app--customer-detail .pc-main,
+.pc-app--employee-detail .pc-main,
+.pc-app--time-entry-detail .pc-main {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-4, 1rem);
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+.pc-app--project-detail .pc-main > .content-grid,
+.pc-app--customer-detail .pc-main > .content-grid,
+.pc-app--employee-detail .pc-main > .content-grid,
+.pc-app--time-entry-detail .pc-main > .content-grid,
+.pc-app--project-detail .content-grid,
+.pc-app--customer-detail .content-grid,
+.pc-app--employee-detail .content-grid,
+.pc-app--time-entry-detail .content-grid {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: var(--pc-space-4, 1rem) !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 0;
+	grid-template-columns: none !important;
+	box-sizing: border-box;
+}
+
+.pc-app--project-detail .content-grid > *,
+.pc-app--customer-detail .content-grid > *,
+.pc-app--employee-detail .content-grid > *,
+.pc-app--time-entry-detail .content-grid > *,
+.pc-app--project-detail .pc-main > .section,
+.pc-app--customer-detail .pc-main > .section,
+.pc-app--employee-detail .pc-main > .section,
+.pc-app--time-entry-detail .pc-main > .section,
+.pc-app--project-detail .pc-main > .pc-stats-panel,
+.pc-app--customer-detail .pc-main > .pc-stats-panel,
+.pc-app--employee-detail .pc-main > .pc-stats-panel,
+.pc-app--time-entry-detail .pc-main > .pc-stats-panel {
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 0;
+	grid-column: auto !important;
+	box-sizing: border-box;
+}
+
+/* ── Unified section chrome (Key figures look: flush header band on top) ─── */
+
+.pc-app--project-detail .section,
+.pc-app--customer-detail .section,
+.pc-app--employee-detail .section,
+.pc-app--time-entry-detail .section,
+.pc-app--project-detail .pc-section,
+.pc-app--customer-detail .pc-section,
+.pc-app--employee-detail .pc-section,
+.pc-app--time-entry-detail .pc-section,
+.pc-app--project-detail .pc-stats-panel,
+.pc-app--customer-detail .pc-stats-panel,
+.pc-app--employee-detail .pc-stats-panel,
+.pc-app--time-entry-detail .pc-stats-panel {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	margin: 0;
+	/* Critical: no shell/stats inset — header must sit flush on the card edge */
+	padding: 0 !important;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-md, 12px);
+	background: var(--color-main-background);
+	box-shadow: none !important;
+	/* Keep overflow visible for dropdowns / sticky UI inside sections */
+	overflow: visible;
+	box-sizing: border-box;
+}
+
+/* Kill legacy “first section = page hero” treatment on detail pages */
+.pc-app--project-detail .section:first-child,
+.pc-app--customer-detail .section:first-child,
+.pc-app--employee-detail .section:first-child,
+.pc-app--time-entry-detail .section:first-child {
+	background: var(--color-main-background) !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border-radius: var(--pc-radius-md, 12px) !important;
+	border: 1px solid var(--color-border) !important;
+	box-shadow: none !important;
+}
+
+/* ── Key figures: ONE surface, flat metrics (no box-in-box cards) ────────── */
+
+.pc-app--project-detail .pc-stats-panel .stats-container,
+.pc-app--customer-detail .pc-stats-panel .stats-container,
+.pc-app--employee-detail .pc-stats-panel .stats-container,
+.pc-app--time-entry-detail .pc-stats-panel .stats-container,
+.pc-app--project-detail .pc-stats-panel .overview-stats,
+.pc-app--customer-detail .pc-stats-panel .overview-stats,
+.pc-app--employee-detail .pc-stats-panel .overview-stats,
+.pc-app--time-entry-detail .pc-stats-panel .overview-stats {
+	display: grid !important;
+	grid-template-columns: 1fr !important;
+	gap: 0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	background: transparent;
+	border: 0;
+}
+
+/* Nested stats-row wrappers (customer detail) → flatten into the parent grid */
+.pc-app--project-detail .pc-stats-panel .stats-row,
+.pc-app--customer-detail .pc-stats-panel .stats-row,
+.pc-app--employee-detail .pc-stats-panel .stats-row,
+.pc-app--time-entry-detail .pc-stats-panel .stats-row {
+	display: contents;
+}
+
+@media (min-width: 560px) {
+	.pc-app--project-detail .pc-stats-panel .stats-container,
+	.pc-app--customer-detail .pc-stats-panel .stats-container,
+	.pc-app--employee-detail .pc-stats-panel .stats-container,
+	.pc-app--time-entry-detail .pc-stats-panel .stats-container,
+	.pc-app--project-detail .pc-stats-panel .overview-stats,
+	.pc-app--customer-detail .pc-stats-panel .overview-stats,
+	.pc-app--employee-detail .pc-stats-panel .overview-stats,
+	.pc-app--time-entry-detail .pc-stats-panel .overview-stats {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+}
+
+@media (min-width: 900px) {
+	.pc-app--project-detail .pc-stats-panel .stats-container,
+	.pc-app--customer-detail .pc-stats-panel .stats-container,
+	.pc-app--employee-detail .pc-stats-panel .stats-container,
+	.pc-app--time-entry-detail .pc-stats-panel .stats-container,
+	.pc-app--project-detail .pc-stats-panel .overview-stats,
+	.pc-app--customer-detail .pc-stats-panel .overview-stats,
+	.pc-app--employee-detail .pc-stats-panel .overview-stats,
+	.pc-app--time-entry-detail .pc-stats-panel .overview-stats {
+		grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+	}
+}
+
+/* Flatten nested “cards” into plain metric cells */
+.pc-app--project-detail .pc-stats-panel .stat-card,
+.pc-app--customer-detail .pc-stats-panel .stat-card,
+.pc-app--employee-detail .pc-stats-panel .stat-card,
+.pc-app--time-entry-detail .pc-stats-panel .stat-card,
+.pc-app--project-detail .pc-stats-panel .overview-stat,
+.pc-app--customer-detail .pc-stats-panel .overview-stat,
+.pc-app--employee-detail .pc-stats-panel .overview-stat,
+.pc-app--time-entry-detail .pc-stats-panel .overview-stat,
+.pc-app--project-detail .pc-stats-panel .overview-stat-compact,
+.pc-app--customer-detail .pc-stats-panel .overview-stat-compact,
+.pc-app--employee-detail .pc-stats-panel .overview-stat-compact,
+.pc-app--time-entry-detail .pc-stats-panel .overview-stat-compact,
+.pc-app--project-detail .pc-stats-panel .overview-card,
+.pc-app--customer-detail .pc-stats-panel .overview-card,
+.pc-app--employee-detail .pc-stats-panel .overview-card,
+.pc-app--time-entry-detail .pc-stats-panel .overview-card,
+.pc-app--project-detail .pc-stats-panel .pc-stat-card,
+.pc-app--customer-detail .pc-stats-panel .pc-stat-card,
+.pc-app--employee-detail .pc-stats-panel .pc-stat-card,
+.pc-app--time-entry-detail .pc-stats-panel .pc-stat-card {
+	display: flex !important;
+	align-items: flex-start;
+	gap: 0.75rem;
+	min-width: 0;
+	min-height: var(--pc-touch-min, 44px);
+	margin: 0;
+	padding: 0.85rem 0.65rem !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	transform: none !important;
+}
+
+.pc-app--project-detail .pc-stats-panel .stat-card:hover,
+.pc-app--customer-detail .pc-stats-panel .stat-card:hover,
+.pc-app--employee-detail .pc-stats-panel .stat-card:hover,
+.pc-app--time-entry-detail .pc-stats-panel .stat-card:hover,
+.pc-app--project-detail .pc-stats-panel .stat-card:focus-within,
+.pc-app--customer-detail .pc-stats-panel .stat-card:focus-within,
+.pc-app--employee-detail .pc-stats-panel .stat-card:focus-within,
+.pc-app--time-entry-detail .pc-stats-panel .stat-card:focus-within {
+	background: transparent !important;
+	border: 0 !important;
+	box-shadow: none !important;
+	transform: none !important;
+}
+
+/* Soft column separators on wide layouts (not a second box) */
+@media (min-width: 560px) {
+	.pc-app--project-detail .pc-stats-panel .stat-card + .stat-card,
+	.pc-app--customer-detail .pc-stats-panel .stat-card + .stat-card,
+	.pc-app--employee-detail .pc-stats-panel .stat-card + .stat-card,
+	.pc-app--time-entry-detail .pc-stats-panel .stat-card + .stat-card {
+		border-inline-start: 1px solid var(--color-border) !important;
+		padding-inline-start: 1rem !important;
+	}
+}
+
+/* In 2-col wrap, drop the left border on the first cell of each row */
+@media (min-width: 560px) and (max-width: 899px) {
+	.pc-app--project-detail .pc-stats-panel .stat-card:nth-child(2n + 1),
+	.pc-app--customer-detail .pc-stats-panel .stat-card:nth-child(2n + 1),
+	.pc-app--employee-detail .pc-stats-panel .stat-card:nth-child(2n + 1),
+	.pc-app--time-entry-detail .pc-stats-panel .stat-card:nth-child(2n + 1) {
+		border-inline-start: 0 !important;
+		padding-inline-start: 0.25rem !important;
+	}
+
+	.pc-app--project-detail .pc-stats-panel .stat-card:nth-child(n + 3),
+	.pc-app--customer-detail .pc-stats-panel .stat-card:nth-child(n + 3),
+	.pc-app--employee-detail .pc-stats-panel .stat-card:nth-child(n + 3),
+	.pc-app--time-entry-detail .pc-stats-panel .stat-card:nth-child(n + 3) {
+		border-top: 1px solid var(--color-border) !important;
+		padding-top: 0.85rem !important;
+		margin-top: 0.15rem;
+	}
+}
+
+@media (min-width: 900px) {
+	.pc-app--project-detail .pc-stats-panel .stat-card,
+	.pc-app--customer-detail .pc-stats-panel .stat-card,
+	.pc-app--employee-detail .pc-stats-panel .stat-card,
+	.pc-app--time-entry-detail .pc-stats-panel .stat-card {
+		border-top: 0 !important;
+		margin-top: 0;
+		padding-top: 0.85rem !important;
+	}
+
+	.pc-app--project-detail .pc-stats-panel .stat-card:first-child,
+	.pc-app--customer-detail .pc-stats-panel .stat-card:first-child,
+	.pc-app--employee-detail .pc-stats-panel .stat-card:first-child,
+	.pc-app--time-entry-detail .pc-stats-panel .stat-card:first-child {
+		border-inline-start: 0 !important;
+		padding-inline-start: 0.25rem !important;
+	}
+}
+
+.pc-app--project-detail .pc-stats-panel .stat-label,
+.pc-app--customer-detail .pc-stats-panel .stat-label,
+.pc-app--employee-detail .pc-stats-panel .stat-label,
+.pc-app--time-entry-detail .pc-stats-panel .stat-label {
+	text-transform: none;
+	letter-spacing: normal;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-app--project-detail .pc-stats-panel .stat-number,
+.pc-app--customer-detail .pc-stats-panel .stat-number,
+.pc-app--employee-detail .pc-stats-panel .stat-number,
+.pc-app--time-entry-detail .pc-stats-panel .stat-number {
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+}
+
+
+.pc-app--project-detail .section > .section-header,
+.pc-app--customer-detail .section > .section-header,
+.pc-app--employee-detail .section > .section-header,
+.pc-app--time-entry-detail .section > .section-header,
+.pc-app--project-detail .section > .pc-section__header,
+.pc-app--customer-detail .section > .pc-section__header,
+.pc-app--employee-detail .section > .pc-section__header,
+.pc-app--time-entry-detail .section > .pc-section__header,
+.pc-app--project-detail .pc-stats-panel > .section-header,
+.pc-app--customer-detail .pc-stats-panel > .section-header,
+.pc-app--employee-detail .pc-stats-panel > .section-header,
+.pc-app--time-entry-detail .pc-stats-panel > .section-header,
+.pc-app--project-detail .pc-section > .section-header,
+.pc-app--customer-detail .pc-section > .section-header,
+.pc-app--employee-detail .pc-section > .section-header,
+.pc-app--time-entry-detail .pc-section > .section-header {
+	/* Beat legacy .section-header { display:flex } from projects/customers.css */
+	display: grid !important;
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-areas:
+		"title actions"
+		"intro intro";
+	gap: 0.35rem 1rem;
+	align-items: start;
+	justify-content: stretch;
+	padding: 1rem 1.25rem !important;
+	margin: 0 !important;
+	border: 0;
+	border-bottom: 1px solid var(--color-border);
+	background: color-mix(in srgb, var(--color-primary-element) 4%, var(--color-main-background)) !important;
+	box-sizing: border-box;
+	width: 100%;
+	border-radius: var(--pc-radius-md, 12px) var(--pc-radius-md, 12px) 0 0;
+}
+
+.pc-app--project-detail .section > .section-header > h3,
+.pc-app--customer-detail .section > .section-header > h3,
+.pc-app--employee-detail .section > .section-header > h3,
+.pc-app--time-entry-detail .section > .section-header > h3,
+.pc-app--project-detail .section > .section-header .pc-section-title,
+.pc-app--customer-detail .section > .section-header .pc-section-title,
+.pc-app--employee-detail .section > .section-header .pc-section-title,
+.pc-app--time-entry-detail .section > .section-header .pc-section-title,
+.pc-app--project-detail .section > .section-header .pc-section__title,
+.pc-app--customer-detail .section > .section-header .pc-section__title,
+.pc-app--employee-detail .section > .section-header .pc-section__title,
+.pc-app--time-entry-detail .section > .section-header .pc-section__title,
+.pc-app--project-detail .pc-stats-panel > .section-header > h3,
+.pc-app--customer-detail .pc-stats-panel > .section-header > h3,
+.pc-app--employee-detail .pc-stats-panel > .section-header > h3,
+.pc-app--time-entry-detail .pc-stats-panel > .section-header > h3,
+.pc-app--project-detail .pc-stats-panel > .stats-section__title,
+.pc-app--customer-detail .pc-stats-panel > .stats-section__title,
+.pc-app--employee-detail .pc-stats-panel > .stats-section__title,
+.pc-app--time-entry-detail .pc-stats-panel > .stats-section__title {
+	grid-area: title;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 1.125rem;
+	font-weight: 700;
+	line-height: 1.3;
+	text-transform: none;
+	letter-spacing: normal;
+	color: var(--color-main-text);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.pc-app--project-detail .section > .section-header > p,
+.pc-app--customer-detail .section > .section-header > p,
+.pc-app--employee-detail .section > .section-header > p,
+.pc-app--time-entry-detail .section > .section-header > p,
+.pc-app--project-detail .section > .section-header .pc-section-intro,
+.pc-app--customer-detail .section > .section-header .pc-section-intro,
+.pc-app--employee-detail .section > .section-header .pc-section-intro,
+.pc-app--time-entry-detail .section > .section-header .pc-section-intro,
+.pc-app--project-detail .section > .section-header .pc-section__intro,
+.pc-app--customer-detail .section > .section-header .pc-section__intro,
+.pc-app--employee-detail .section > .section-header .pc-section__intro,
+.pc-app--time-entry-detail .section > .section-header .pc-section__intro,
+.pc-app--project-detail .pc-stats-panel > .section-header > p,
+.pc-app--customer-detail .pc-stats-panel > .section-header > p,
+.pc-app--employee-detail .pc-stats-panel > .section-header > p,
+.pc-app--time-entry-detail .pc-stats-panel > .section-header > p,
+/* Beat legacy .info-section p { color/margin } from projects.css */
+.pc-app--project-detail .info-section > .section-header > p,
+.pc-app--customer-detail .info-section > .section-header > p,
+.pc-app--employee-detail .info-section > .section-header > p,
+.pc-app--time-entry-detail .info-section > .section-header > p {
+	grid-area: intro;
+	margin: 0 !important;
+	padding: 0;
+	font-size: 0.9rem;
+	line-height: 1.45;
+	color: var(--color-text-maxcontrast) !important;
+	max-width: 65ch;
+}
+
+.pc-app--project-detail .section > .section-header > .section-header-actions,
+.pc-app--customer-detail .section > .section-header > .section-header-actions,
+.pc-app--employee-detail .section > .section-header > .section-header-actions,
+.pc-app--time-entry-detail .section > .section-header > .section-header-actions {
+	grid-area: actions;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+	justify-content: flex-end;
+	margin: 0;
+}
+
+/* Legacy nested title wrap → behave like flat header children */
+.pc-app--project-detail .section > .section-header > .pc-section__title-wrap,
+.pc-app--customer-detail .section > .section-header > .pc-section__title-wrap,
+.pc-app--employee-detail .section > .section-header > .pc-section__title-wrap,
+.pc-app--time-entry-detail .section > .section-header > .pc-section__title-wrap {
+	grid-area: title;
+	display: contents;
+}
+
+.pc-app--project-detail .section > .section-content,
+.pc-app--customer-detail .section > .section-content,
+.pc-app--employee-detail .section > .section-content,
+.pc-app--time-entry-detail .section > .section-content,
+.pc-app--project-detail .pc-stats-panel > .section-content,
+.pc-app--customer-detail .pc-stats-panel > .section-content,
+.pc-app--employee-detail .pc-stats-panel > .section-content,
+.pc-app--time-entry-detail .pc-stats-panel > .section-content {
+	padding: 1.15rem 1.25rem 1.35rem;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+/* Icon tint matches Year by year (primary accent on section titles) */
+.pc-app--project-detail .section > .section-header > h3 .lucide-icon.primary,
+.pc-app--customer-detail .section > .section-header > h3 .lucide-icon.primary,
+.pc-app--employee-detail .section > .section-header > h3 .lucide-icon.primary,
+.pc-app--time-entry-detail .section > .section-header > h3 .lucide-icon.primary,
+.pc-app--project-detail .pc-stats-panel > .section-header > h3 .lucide-icon.primary,
+.pc-app--customer-detail .pc-stats-panel > .section-header > h3 .lucide-icon.primary,
+.pc-app--employee-detail .pc-stats-panel > .section-header > h3 .lucide-icon.primary,
+.pc-app--time-entry-detail .pc-stats-panel > .section-header > h3 .lucide-icon.primary,
+.pc-app--project-detail .section > .section-header > h3 > i[class*="icon-"],
+.pc-app--customer-detail .section > .section-header > h3 > i[class*="icon-"],
+.pc-app--employee-detail .section > .section-header > h3 > i[class*="icon-"],
+.pc-app--time-entry-detail .section > .section-header > h3 > i[class*="icon-"] {
+	color: var(--color-primary-element);
+	flex-shrink: 0;
+}
+
+/* Info fields: readable 1→2 cols inside the full-width section only */
+.pc-app--project-detail .info-grid,
+.pc-app--customer-detail .info-grid,
+.pc-app--employee-detail .info-grid,
+.pc-app--time-entry-detail .info-grid {
+	display: grid !important;
+	grid-template-columns: 1fr !important;
+	gap: 1.25rem 1.5rem !important;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+	.pc-app--project-detail .info-grid,
+	.pc-app--customer-detail .info-grid,
+	.pc-app--employee-detail .info-grid,
+	.pc-app--time-entry-detail .info-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+}
+
+.pc-app--project-detail .info-item.full-width,
+.pc-app--customer-detail .info-item.full-width,
+.pc-app--employee-detail .info-item.full-width,
+.pc-app--time-entry-detail .info-item.full-width {
+	grid-column: 1 / -1;
+}
+
+.pc-app--project-detail .info-item label,
+.pc-app--customer-detail .info-item label,
+.pc-app--employee-detail .info-item label,
+.pc-app--time-entry-detail .info-item label {
+	text-transform: none;
+	letter-spacing: normal;
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--color-text-maxcontrast);
+}
+
+/* Narrow: stack title → intro → actions for long translations / touch targets */
+@media (max-width: 560px) {
+	.pc-app--project-detail .section > .section-header,
+	.pc-app--customer-detail .section > .section-header,
+	.pc-app--employee-detail .section > .section-header,
+	.pc-app--time-entry-detail .section > .section-header,
+	.pc-app--project-detail .section > .pc-section__header,
+	.pc-app--customer-detail .section > .pc-section__header,
+	.pc-app--employee-detail .section > .pc-section__header,
+	.pc-app--time-entry-detail .section > .pc-section__header,
+	.pc-app--project-detail .pc-stats-panel > .section-header,
+	.pc-app--customer-detail .pc-stats-panel > .section-header,
+	.pc-app--employee-detail .pc-stats-panel > .section-header,
+	.pc-app--time-entry-detail .pc-stats-panel > .section-header {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"title"
+			"intro"
+			"actions";
+		gap: 0.5rem;
+	}
+
+	.pc-app--project-detail .section-header-actions,
+	.pc-app--customer-detail .section-header-actions,
+	.pc-app--employee-detail .section-header-actions,
+	.pc-app--time-entry-detail .section-header-actions {
+		margin-inline-start: 0;
+		width: 100%;
+		justify-content: stretch;
+	}
+
+	.pc-app--project-detail .section-header-actions .button,
+	.pc-app--customer-detail .section-header-actions .button,
+	.pc-app--employee-detail .section-header-actions .button,
+	.pc-app--time-entry-detail .section-header-actions .button,
+	.pc-app--project-detail .pc-invoicing-actions .button,
+	.pc-app--customer-detail .pc-invoicing-actions .button {
+		flex: 1 1 100%;
+		width: 100%;
+		justify-content: center;
+		white-space: normal;
+		line-height: 1.3;
+		min-height: var(--pc-touch-min, 44px);
+	}
+
+	.pc-app--project-detail .section > .section-header,
+	.pc-app--customer-detail .section > .section-header,
+	.pc-app--employee-detail .section > .section-header,
+	.pc-app--time-entry-detail .section > .section-header,
+	.pc-app--project-detail .section > .section-content,
+	.pc-app--customer-detail .section > .section-content,
+	.pc-app--employee-detail .section > .section-content,
+	.pc-app--time-entry-detail .section > .section-content {
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+}
+
+/* Focus (WCAG 2.1 AA) */
+.pc-app--project-detail a:focus-visible,
+.pc-app--customer-detail a:focus-visible,
+.pc-app--employee-detail a:focus-visible,
+.pc-app--time-entry-detail a:focus-visible,
+.pc-app--project-detail button:focus-visible,
+.pc-app--customer-detail button:focus-visible,
+.pc-app--employee-detail button:focus-visible,
+.pc-app--time-entry-detail button:focus-visible,
+.pc-app--project-detail input:focus-visible,
+.pc-app--customer-detail input:focus-visible,
+.pc-app--employee-detail input:focus-visible,
+.pc-app--time-entry-detail input:focus-visible,
+.pc-app--project-detail select:focus-visible,
+.pc-app--customer-detail select:focus-visible,
+.pc-app--employee-detail select:focus-visible,
+.pc-app--time-entry-detail select:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}

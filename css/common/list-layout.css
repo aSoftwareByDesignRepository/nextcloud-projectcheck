@@ -1,0 +1,309 @@
+/**
+ * Shared index/list-page layout — same section chrome as detail pages.
+ * Applies to: projects / customers / employees / time-entries index.
+ *
+ * Spec: flush tinted header band (title + intro), then content. No inset
+ * padding on the card shell. Filters stay in the toolbar below the header.
+ *
+ * @copyright Copyright (c) 2026, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+/* ── Stacked main column ────────────────────────────────────────────────── */
+
+.pc-app--projects .pc-main,
+.pc-app--customers .pc-main,
+.pc-app--employees .pc-main,
+.pc-app--time-entries .pc-main {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-4, 1rem);
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+/* ── Section / panel shell (Key figures look) ───────────────────────────── */
+
+.pc-app--projects .section,
+.pc-app--customers .section,
+.pc-app--employees .section,
+.pc-app--time-entries .section,
+.pc-app--projects .pc-section,
+.pc-app--customers .pc-section,
+.pc-app--employees .pc-section,
+.pc-app--time-entries .pc-section,
+.pc-app--projects .pc-stats-panel,
+.pc-app--customers .pc-stats-panel,
+.pc-app--employees .pc-stats-panel,
+.pc-app--time-entries .pc-stats-panel,
+.pc-app--projects .pc-list-panel,
+.pc-app--customers .pc-list-panel,
+.pc-app--employees .pc-list-panel,
+.pc-app--time-entries .pc-list-panel,
+.pc-app--time-entries .time-entries-panel {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	margin: 0;
+	padding: 0 !important;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-md, 12px);
+	background: var(--color-main-background);
+	box-shadow: none !important;
+	overflow: visible;
+	box-sizing: border-box;
+}
+
+/* Kill legacy “first section = page hero” on list pages */
+.pc-app--projects .section:first-child,
+.pc-app--customers .section:first-child,
+.pc-app--employees .section:first-child,
+.pc-app--time-entries .section:first-child {
+	background: var(--color-main-background) !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border-radius: var(--pc-radius-md, 12px) !important;
+	border: 1px solid var(--color-border) !important;
+	box-shadow: none !important;
+}
+
+/* ── Flush header band (title + intro) ──────────────────────────────────── */
+
+.pc-app--projects .section > .section-header,
+.pc-app--customers .section > .section-header,
+.pc-app--employees .section > .section-header,
+.pc-app--time-entries .section > .section-header,
+.pc-app--projects .pc-stats-panel > .section-header,
+.pc-app--customers .pc-stats-panel > .section-header,
+.pc-app--employees .pc-stats-panel > .section-header,
+.pc-app--time-entries .pc-stats-panel > .section-header,
+.pc-app--projects .pc-stats-panel > .pc-stats-panel__header,
+.pc-app--customers .pc-stats-panel > .pc-stats-panel__header,
+.pc-app--employees .pc-stats-panel > .pc-stats-panel__header,
+.pc-app--projects .pc-list-panel > .section-header,
+.pc-app--customers .pc-list-panel > .section-header,
+.pc-app--employees .pc-list-panel > .section-header,
+.pc-app--time-entries .pc-list-panel > .section-header,
+.pc-app--time-entries .time-entries-panel > .section-header {
+	display: grid !important;
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-areas:
+		"title actions"
+		"intro intro";
+	gap: 0.35rem 1rem;
+	align-items: start;
+	justify-content: stretch;
+	padding: 1rem 1.25rem !important;
+	margin: 0 !important;
+	border: 0;
+	border-bottom: 1px solid var(--color-border);
+	background: color-mix(in srgb, var(--color-primary-element) 4%, var(--color-main-background)) !important;
+	box-sizing: border-box;
+	width: 100%;
+	border-radius: var(--pc-radius-md, 12px) var(--pc-radius-md, 12px) 0 0;
+}
+
+.pc-app--projects .section > .section-header > h3,
+.pc-app--customers .section > .section-header > h3,
+.pc-app--employees .section > .section-header > h3,
+.pc-app--time-entries .section > .section-header > h3,
+.pc-app--projects .section > .section-header .pc-section__title,
+.pc-app--customers .section > .section-header .pc-section__title,
+.pc-app--employees .section > .section-header .pc-section__title,
+.pc-app--time-entries .section > .section-header .pc-section__title,
+.pc-app--projects .pc-stats-panel > .section-header > h3,
+.pc-app--customers .pc-stats-panel > .section-header > h3,
+.pc-app--employees .pc-stats-panel > .section-header > h3,
+.pc-app--projects .pc-stats-panel > .pc-stats-panel__header > h3,
+.pc-app--customers .pc-stats-panel > .pc-stats-panel__header > h3,
+.pc-app--employees .pc-stats-panel > .pc-stats-panel__header > h3,
+.pc-app--projects .pc-list-panel > .section-header > h3,
+.pc-app--customers .pc-list-panel > .section-header > h3,
+.pc-app--employees .pc-list-panel > .section-header > h3,
+.pc-app--time-entries .pc-list-panel > .section-header > h3 {
+	grid-area: title;
+	margin: 0 !important;
+	padding: 0;
+	border: 0;
+	font-size: 1.125rem;
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--color-main-text);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.pc-app--projects .section > .section-header > p,
+.pc-app--customers .section > .section-header > p,
+.pc-app--employees .section > .section-header > p,
+.pc-app--time-entries .section > .section-header > p,
+.pc-app--projects .section > .section-header .pc-section__intro,
+.pc-app--customers .section > .section-header .pc-section__intro,
+.pc-app--employees .section > .section-header .pc-section__intro,
+.pc-app--time-entries .section > .section-header .pc-section__intro,
+.pc-app--projects .pc-stats-panel > .section-header > p,
+.pc-app--customers .pc-stats-panel > .section-header > p,
+.pc-app--employees .pc-stats-panel > .section-header > p,
+.pc-app--projects .pc-stats-panel > .pc-stats-panel__header > p,
+.pc-app--customers .pc-stats-panel > .pc-stats-panel__header > p,
+.pc-app--employees .pc-stats-panel > .pc-stats-panel__header > p,
+.pc-app--projects .pc-list-panel > .section-header > p,
+.pc-app--customers .pc-list-panel > .section-header > p,
+.pc-app--employees .pc-list-panel > .section-header > p,
+.pc-app--time-entries .pc-list-panel > .section-header > p {
+	grid-area: intro;
+	margin: 0 !important;
+	padding: 0;
+	font-size: 0.9rem;
+	line-height: 1.45;
+	color: var(--color-text-maxcontrast) !important;
+	max-width: 65ch;
+}
+
+.pc-app--projects .section > .section-header > h3 .lucide-icon.primary,
+.pc-app--customers .section > .section-header > h3 .lucide-icon.primary,
+.pc-app--employees .section > .section-header > h3 .lucide-icon.primary,
+.pc-app--time-entries .section > .section-header > h3 .lucide-icon.primary {
+	color: var(--color-primary-element);
+	flex-shrink: 0;
+}
+
+/* ── Section body / stats grid padding ──────────────────────────────────── */
+
+.pc-app--projects .section > .section-content,
+.pc-app--customers .section > .section-content,
+.pc-app--employees .section > .section-content,
+.pc-app--time-entries .section > .section-content,
+.pc-app--projects .pc-stats-panel > .section-content,
+.pc-app--customers .pc-stats-panel > .section-content,
+.pc-app--employees .pc-stats-panel > .section-content {
+	padding: 1.15rem 1.25rem 1.35rem;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+/* Stats without an explicit section-content wrapper still need inset metrics */
+.pc-app--projects .pc-stats-panel > .pc-stats-grid,
+.pc-app--customers .pc-stats-panel > .pc-stats-grid,
+.pc-app--employees .pc-stats-panel > .pc-stats-grid {
+	padding: 1.15rem 1.25rem 1.35rem;
+	box-sizing: border-box;
+}
+
+/* Toolbar sits under the list header (not a second tinted band) */
+.pc-app--projects .pc-list-panel > .pc-list-panel__toolbar,
+.pc-app--customers .pc-list-panel > .pc-list-panel__toolbar,
+.pc-app--employees .pc-list-panel > .pc-list-panel__toolbar,
+.pc-app--time-entries .pc-list-panel > .pc-list-panel__toolbar,
+.pc-app--time-entries .pc-list-panel > .time-entries-panel__toolbar,
+.pc-app--time-entries .time-entries-panel > .time-entries-panel__toolbar {
+	border-bottom: 1px solid var(--color-border);
+	background: var(--color-main-background);
+}
+
+/* Time entries: treat labeled filter groups like the shared filters-row */
+.pc-app--time-entries .pc-list-panel .filter-controls,
+.pc-app--time-entries .time-entries-panel .filter-controls {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 0.75rem;
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 0;
+	margin: 0;
+}
+
+.pc-app--time-entries .pc-list-panel .filter-group,
+.pc-app--time-entries .time-entries-panel .filter-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	min-width: min(100%, 10rem);
+	flex: 0 1 auto;
+}
+
+.pc-app--time-entries .pc-list-panel .filter-label,
+.pc-app--time-entries .time-entries-panel .filter-label {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+}
+
+.pc-app--time-entries .pc-list-panel .filter-actions,
+.pc-app--time-entries .time-entries-panel .filter-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	flex: 0 0 auto;
+}
+
+.pc-app--time-entries .pc-list-panel .filter-select,
+.pc-app--time-entries .pc-list-panel .filter-date,
+.pc-app--time-entries .time-entries-panel .filter-select,
+.pc-app--time-entries .time-entries-panel .filter-date {
+	min-height: var(--pc-touch-min, 44px);
+	box-sizing: border-box;
+}
+
+/* Narrow: full-width filter actions for touch / long translations */
+@media (max-width: 560px) {
+	.pc-app--projects .section > .section-header,
+	.pc-app--customers .section > .section-header,
+	.pc-app--employees .section > .section-header,
+	.pc-app--time-entries .section > .section-header,
+	.pc-app--projects .pc-stats-panel > .section-header,
+	.pc-app--customers .pc-stats-panel > .section-header,
+	.pc-app--employees .pc-stats-panel > .section-header,
+	.pc-app--projects .pc-list-panel > .section-header,
+	.pc-app--customers .pc-list-panel > .section-header,
+	.pc-app--employees .pc-list-panel > .section-header,
+	.pc-app--time-entries .pc-list-panel > .section-header {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"title"
+			"intro"
+			"actions";
+	}
+
+	.pc-app--projects .pc-list-panel .filters-row .button,
+	.pc-app--customers .pc-list-panel .filters-row .button,
+	.pc-app--employees .pc-list-panel .filters-row .button,
+	.pc-app--time-entries .pc-list-panel .filter-actions .button,
+	.pc-app--time-entries .time-entries-panel .filter-actions .button {
+		flex: 1 1 100%;
+		justify-content: center;
+		min-height: var(--pc-touch-min, 44px);
+		white-space: normal;
+		line-height: 1.3;
+	}
+}
+
+/* Focus (WCAG 2.1 AA) */
+.pc-app--projects a:focus-visible,
+.pc-app--customers a:focus-visible,
+.pc-app--employees a:focus-visible,
+.pc-app--time-entries a:focus-visible,
+.pc-app--projects button:focus-visible,
+.pc-app--customers button:focus-visible,
+.pc-app--employees button:focus-visible,
+.pc-app--time-entries button:focus-visible,
+.pc-app--projects input:focus-visible,
+.pc-app--customers input:focus-visible,
+.pc-app--employees input:focus-visible,
+.pc-app--time-entries input:focus-visible,
+.pc-app--projects select:focus-visible,
+.pc-app--customers select:focus-visible,
+.pc-app--employees select:focus-visible,
+.pc-app--time-entries select:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}

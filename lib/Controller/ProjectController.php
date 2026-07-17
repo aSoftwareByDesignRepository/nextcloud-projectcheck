@@ -604,8 +604,21 @@ class ProjectController extends Controller
 		// Get yearly statistics for the project
 		$yearlyStats = $this->timeEntryService->getYearlyStatsForProject($id);
 
-		// Get recent time entries (last 5)
+		// Get recent time entries (last 5) with display names for the shared table chrome
 		$recentTimeEntries = array_slice($timeEntries, 0, 5);
+		$timeEntryUserNames = [];
+		foreach ($recentTimeEntries as $recentEntry) {
+			if (!($recentEntry instanceof \OCA\ProjectCheck\Db\TimeEntry)) {
+				continue;
+			}
+			$uid = (string)$recentEntry->getUserId();
+			if ($uid === '' || isset($timeEntryUserNames[$uid])) {
+				continue;
+			}
+			$ncUser = $this->userManager->get($uid);
+			$display = $ncUser !== null ? trim((string)$ncUser->getDisplayName()) : '';
+			$timeEntryUserNames[$uid] = $display !== '' ? $display : $uid;
+		}
 
 		// Get customer name from the project data
 		$customerName = $project->getCustomerName() ?: 'Customer #' . $project->getCustomerId();
@@ -659,6 +672,7 @@ class ProjectController extends Controller
 			'teamMembersActive' => $teamMembersActive,
 			'teamMembersFormer' => $teamMembersFormer,
 			'timeEntries' => $recentTimeEntries,
+			'timeEntryUserNames' => $timeEntryUserNames,
 			'customerName' => $customerName,
 			'createdBy' => $createdBy,
 			'totalHours' => $totalHours,

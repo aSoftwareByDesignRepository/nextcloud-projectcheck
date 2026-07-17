@@ -435,7 +435,7 @@
 
 /* Sidebar stats styles removed - use shared navigation.css styles for consistency */
 
-/* Content Grid */
+/* Content Grid — single column; detail pages use common/detail-layout.css */
 .content-grid {
 	display: grid;
 	grid-template-columns: 1fr;
@@ -445,11 +445,6 @@
 }
 
 @media (min-width: 768px) {
-	.content-grid {
-		grid-template-columns: 1fr 1fr;
-		gap: 2rem;
-	}
-
 	.stats-container .stat-card {
 		flex-direction: row;
 		align-items: center;
@@ -962,12 +957,8 @@
 	z-index: 1;
 }
 
-/* Filters Container */
-.filters-container {
-	padding: 1.5rem 2rem;
-	background: var(--color-background-hover);
-	border-bottom: 1px solid var(--color-border);
-}
+/* Filters: list-panel toolbar is styled in common/list-table.css.
+ * Do not re-apply the old padded strip here — it broke inline alignment. */
 
 .searchbox {
 	margin-bottom: 1rem;
@@ -1830,26 +1821,25 @@
 	padding: 8px 14px;
 }
 
-/* Associated Projects — full-width responsive grid (customer detail) */
+/* Content stack is single-column via common/detail-layout.css */
+
+.pc-app--customer-detail .content-grid > .info-section,
+.pc-app--customer-detail .content-grid > .pc-invoicing-section,
+.pc-app--customer-detail .content-grid > .projects-section {
+	min-width: 0;
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	overflow: visible;
+	box-sizing: border-box;
+}
+
+/* Associated Projects — full-width responsive card grid */
 .pc-app--customer-detail .projects-section,
 .projects-section {
 	width: 100%;
 	max-width: 100%;
 	box-sizing: border-box;
-}
-
-.pc-app--customer-detail .projects-section .section-header,
-.projects-section .section-header {
-	flex-wrap: wrap;
-	gap: 0.75rem 1rem;
-	padding: 1rem 1.25rem;
-}
-
-@media (min-width: 768px) {
-	.pc-app--customer-detail .projects-section .section-header,
-	.projects-section .section-header {
-		padding: 1.25rem 1.5rem;
-	}
 }
 
 .pc-app--customer-detail .projects-section .section-header-actions .button,
@@ -1886,104 +1876,62 @@
 	box-shadow: none !important;
 }
 
-.pc-app--customer-detail .projects-section .section-content,
-.projects-section .section-content {
-	padding: 1rem 1.25rem 1.5rem;
-	width: 100%;
-	max-width: 100%;
-	box-sizing: border-box;
+.pc-app--customer-detail .projects-section .section-content {
+	padding: 0.85rem 1rem 1.15rem;
 }
 
 @media (min-width: 768px) {
-	.pc-app--customer-detail .projects-section .section-content,
-	.projects-section .section-content {
-		padding: 1.25rem 1.5rem 1.75rem;
+	.pc-app--customer-detail .projects-section .section-content {
+		padding: 1rem 1.25rem 1.35rem;
 	}
 }
 
-.pc-app--customer-detail .projects-section .projects-grid,
-.projects-section .projects-grid {
+/* Associated projects — table (same language as projects list) */
+.pc-app--customer-detail .pc-customer-projects-table-wrap {
 	width: 100%;
 	max-width: 100%;
-	padding: 0;
+	min-width: 0;
 	margin: 0;
-	grid-template-columns: minmax(0, 1fr);
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	overflow: auto;
+	box-sizing: border-box;
+	background: var(--color-main-background);
 }
 
-@media (min-width: 640px) {
-	.pc-app--customer-detail .projects-section .projects-grid,
-	.projects-section .projects-grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-}
-
-@media (min-width: 1024px) {
-	.pc-app--customer-detail .projects-section .projects-grid,
-	.projects-section .projects-grid {
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-	}
-}
-
-.pc-app--customer-detail .projects-section .project-card,
-.projects-section .project-card {
-	min-width: 0;
+.pc-app--customer-detail .pc-customer-projects-table {
 	width: 100%;
+	margin: 0;
 }
 
-.pc-app--customer-detail .projects-section .project-status-badges,
-.projects-section .project-status-badges {
-	display: flex;
+.pc-app--customer-detail .pc-customer-projects-table .project-name-cell {
+	font-weight: 600;
+	vertical-align: top;
+}
+
+.pc-app--customer-detail .pc-customer-projects-table .project-title {
+	color: var(--color-main-text);
+	text-decoration: none;
+}
+
+.pc-app--customer-detail .pc-customer-projects-table .project-title:hover,
+.pc-app--customer-detail .pc-customer-projects-table .project-title:focus-visible {
+	color: var(--color-primary-element);
+	text-decoration: underline;
+}
+
+.pc-app--customer-detail .pc-customer-projects-table .col-actions .action-items {
+	display: inline-flex;
 	flex-wrap: wrap;
 	gap: 0.35rem;
-	align-items: center;
+	justify-content: flex-end;
 }
 
-.pc-app--customer-detail .projects-section .card-header,
-.projects-section .card-header {
-	padding: 1rem 1.15rem 0.85rem;
+.pc-app--customer-detail .projects-section .emptycontent {
+	padding: 1.5rem 1rem;
+	text-align: center;
 }
 
-.pc-app--customer-detail .projects-section .card-content,
-.projects-section .card-content {
-	padding: 0.85rem 1.15rem 1.15rem;
-	flex: 1 1 auto;
-	min-width: 0;
-}
-
-.pc-app--customer-detail .projects-section .detail-row,
-.projects-section .detail-row {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.25rem 0.5rem;
-	align-items: baseline;
-	min-width: 0;
-}
-
-.pc-app--customer-detail .projects-section .detail-value,
-.projects-section .detail-value {
-	min-width: 0;
-	overflow-wrap: anywhere;
-}
-
-.pc-app--customer-detail .projects-section .budget-info,
-.projects-section .budget-info {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.25rem 0.35rem;
-	align-items: baseline;
-}
-
-.pc-app--customer-detail .projects-section .usage-stats,
-.projects-section .usage-stats {
-	overflow-wrap: anywhere;
-	white-space: normal;
-}
-
-.pc-app--customer-detail .projects-section .progress-labels,
-.projects-section .progress-labels {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: space-between;
-	gap: 0.35rem;
-	font-size: 0.75rem;
+.pc-app--customer-detail .projects-section .emptycontent .button {
+	margin-top: 0.75rem;
 }

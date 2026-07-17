@@ -13,6 +13,7 @@ Util::addScript('projectcheck', 'time-entry-detail');
 Util::addStyle('projectcheck', 'time-entries');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'navigation');
+Util::addStyle('projectcheck', 'common/detail-layout');
 
 if (!isset($timeEntry) || !($timeEntry instanceof \OCA\ProjectCheck\Db\TimeEntry)) {
     throw new Exception('Time entry not found');
@@ -106,7 +107,11 @@ include __DIR__ . '/common/page-start.php';
 
         <!-- Time Entry Statistics -->
         <section class="section stats-section pc-stats-panel pc-section" aria-labelledby="time-entry-stats-title">
-            <h3 id="time-entry-stats-title" class="stats-section__title u-visually-hidden"><?php p($l->t('Summary')); ?></h3>
+            <div class="section-header">
+                <h3 id="time-entry-stats-title"><i data-lucide="bar-chart-3" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Summary')); ?></h3>
+                <p><?php p($l->t('Hours, rate, and total for this entry.')); ?></p>
+            </div>
+            <div class="section-content">
             <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon">
@@ -145,14 +150,16 @@ include __DIR__ . '/common/page-start.php';
                     </div>
                 </div>
             </div>
+            </div>
         </section>
 
         <!-- Content Grid -->
         <div class="content-grid">
             <!-- Time Entry Information -->
-            <div class="info-section">
+            <div class="section info-section pc-section" aria-labelledby="pc-te-info-heading">
                 <div class="section-header">
-                    <h3><i class="icon-info-custom"></i> <?php p($l->t('Time Entry Information')); ?></h3>
+                    <h3 id="pc-te-info-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Time Entry Information')); ?></h3>
+                    <p><?php p($l->t('When, where, and how this entry was logged.')); ?></p>
                 </div>
                 <div class="section-content">
                     <div class="info-grid">
@@ -226,9 +233,10 @@ include __DIR__ . '/common/page-start.php';
             </div>
 
             <!-- Time Entry Details -->
-            <div class="projects-section">
+            <div class="section projects-section" aria-labelledby="pc-te-details-heading">
                 <div class="section-header">
-                    <h3><i class="icon-calendar-custom"></i> <?php p($l->t('Entry Details')); ?></h3>
+                    <h3 id="pc-te-details-heading"><i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Entry Details')); ?></h3>
+                    <p><?php p($l->t('A quick look at this entry and its project.')); ?></p>
                 </div>
                 <div class="section-content">
                     <!-- Time Entry Overview Card -->
@@ -357,10 +365,11 @@ include __DIR__ . '/common/page-start.php';
         ?>
         <?php if ($canSettleEntry || $entryBillingLocked): ?>
         <!-- Settlement section (feature spec §12) -->
-        <div class="section pc-section" id="pc-entry-settlement"
+        <div class="section pc-section" id="pc-entry-settlement" aria-labelledby="pc-te-settlement-heading"
             <?php if ($canSettleEntry): ?>data-billing-entry-url="<?php p($billingEntryUrl); ?>"<?php endif; ?>>
             <div class="section-header">
-                <h3><span data-lucide="wallet" class="lucide-icon" aria-hidden="true"></span> <?php p($l->t('Settlement')); ?></h3>
+                <h3 id="pc-te-settlement-heading"><span data-lucide="wallet" class="lucide-icon primary" aria-hidden="true"></span> <?php p($l->t('Settlement')); ?></h3>
+                <p><?php p($l->t('Mark this entry as invoiced, paid, or not billable.')); ?></p>
             </div>
             <div class="section-content">
                 <p class="pc-entry-settlement__state">
@@ -394,9 +403,10 @@ include __DIR__ . '/common/page-start.php';
         <?php endif; ?>
 
         <!-- Actions Section -->
-        <div class="section">
+        <div class="section" aria-labelledby="pc-te-actions-heading">
             <div class="section-header">
-                <h3><i class="icon-time-custom"></i> <?php p($l->t('Actions')); ?></h3>
+                <h3 id="pc-te-actions-heading"><i data-lucide="wrench" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Actions')); ?></h3>
+                <p><?php p($l->t('Edit, delete, or open related pages.')); ?></p>
             </div>
             <div class="section-content">
                 <div class="actions-grid">

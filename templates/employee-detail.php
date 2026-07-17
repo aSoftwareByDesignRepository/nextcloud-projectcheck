@@ -15,6 +15,7 @@ style('projectcheck', 'navigation');
 style('projectcheck', 'common/progress-bars');
 style('projectcheck', 'common/accessibility');
 style('projectcheck', 'employee-detail');
+style('projectcheck', 'common/detail-layout');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -106,21 +107,19 @@ include __DIR__ . '/common/page-start.php';
             </div>
         <?php endif; ?>
 
-        <section class="pc-employee-profile" aria-label="<?php p($l->t('Employee profile')); ?>">
-
-        <!-- Yearly Performance Dashboard -->
+        <!-- Yearly overview -->
         <?php if (!empty($yearlyStats)): ?>
-            <div class="section yearly-stats-section">
+            <section class="section yearly-stats-section pc-section" aria-labelledby="pc-emp-yearly-heading">
                 <div class="section-header">
-                    <h3><i data-lucide="calendar" class="lucide-icon primary"></i> <?php p($l->t('Yearly Performance Dashboard')); ?></h3>
-                    <p><?php p($l->t('Track hours and costs across all projects for this employee')); ?></p>
+                    <h3 id="pc-emp-yearly-heading"><i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Year by year')); ?></h3>
+                    <p><?php p($l->t('Hours and costs across all projects for this employee.')); ?></p>
                 </div>
                 <div class="section-content">
                     <div class="yearly-stats-container">
                         <?php
-                        // Calculate totals for progress bars
-                        $totalHours = array_sum(array_column($yearlyStats, 'total_hours'));
-                        $totalCost = array_sum(array_column($yearlyStats, 'total_cost'));
+                        // Local totals only — do not shadow other $totalHours uses later on this page.
+                        $yearlyHoursSum = array_sum(array_column($yearlyStats, 'total_hours'));
+                        $yearlyCostSum = array_sum(array_column($yearlyStats, 'total_cost'));
                         ?>
                         <?php foreach ($yearlyStats as $index => $yearData): ?>
                             <div class="yearly-stat-card">
@@ -153,8 +152,8 @@ include __DIR__ . '/common/page-start.php';
 
                                 <!-- Progress indicators -->
                                 <?php
-                                $hoursSharePct = $totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0;
-                                $costSharePct = $totalCost > 0 ? ($yearData['total_cost'] / $totalCost) * 100 : 0;
+                                $hoursSharePct = $yearlyHoursSum > 0 ? ($yearData['total_hours'] / $yearlyHoursSum) * 100 : 0;
+                                $costSharePct = $yearlyCostSum > 0 ? ($yearData['total_cost'] / $yearlyCostSum) * 100 : 0;
                                 ?>
                                 <div class="yearly-progress">
                                     <div class="yearly-progress-item">
@@ -176,92 +175,180 @@ include __DIR__ . '/common/page-start.php';
                         <?php endforeach; ?>
                     </div>
                 </div>
-            </div>
+            </section>
         <?php endif; ?>
 
         <?php
         $canViewEmployeeRates = !empty($_['canViewEmployeeRates']);
         $canManageEmployeeRates = !empty($_['canManageEmployeeRates']);
         $employeeHourlyRates = $_['employeeHourlyRates'] ?? [];
+        $assignedProjects = $_['employeeAssignedProjects'] ?? [];
+        $manageableProjects = $_['manageableProjects'] ?? [];
+        $canManageAssignments = !empty($_['canManageAssignments']);
         ?>
-        <?php if ($canViewEmployeeRates): ?>
-        <section class="section pc-section" id="employee-rate-history" aria-labelledby="employee-rates-heading">
-            <div class="section-header">
-                <h3 id="employee-rates-heading" class="pc-section-title">
-                    <i data-lucide="banknote" class="lucide-icon primary" aria-hidden="true"></i>
-                    <?php p($l->t('Hourly rate history')); ?>
-                </h3>
-                <p class="pc-section-intro"><?php p($l->t('Append-only rates used when projects price hours by employee. Time entries keep the rate that was effective on the work date.')); ?></p>
-            </div>
-            <div class="section-content">
-            <?php $rates = $employeeHourlyRates; ?>
-            <?php if ($rates === []): ?>
-                <p class="empty-state-hint" id="employee-rates-empty-hint">
-                    <?php if ($canManageEmployeeRates): ?>
-                        <?php p($l->t('No rates yet. Add the first rate with an effective-from date on or before the earliest work date you plan to log.')); ?>
-                    <?php elseif ($isFormer): ?>
-                        <?php p($l->t('No hourly rates on record for this former account.')); ?>
-                    <?php else: ?>
-                        <?php p($l->t('No hourly rates on record yet.')); ?>
-                    <?php endif; ?>
-                </p>
-            <?php else: ?>
-                <div class="employee-rates-table-wrap">
-                <table class="grid employee-rates-table">
-                    <caption class="pc-sr-only"><?php p($l->t('Hourly rate history')); ?></caption>
-                    <thead>
-                        <tr>
-                            <th scope="col"><?php p($l->t('Effective from')); ?></th>
-                            <th scope="col"><?php p($l->t('Hourly rate (%s)', [$currencyCode])); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($rates as $rateRow): ?>
-                            <tr>
-                                <td><?php p($fmt ? $fmt->date($rateRow->getEffectiveFrom()) : $rateRow->getEffectiveFrom()->format('Y-m-d')); ?></td>
-                                <td><?php p($fmt ? $fmt->currency((float) $rateRow->getHourlyRate()) : $currencyCode . ' ' . number_format((float) $rateRow->getHourlyRate(), 2)); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                </div>
-            <?php endif; ?>
-            <?php if ($canManageEmployeeRates): ?>
-            <form id="add-employee-rate-form" class="employee-rate-add-form" aria-describedby="employee-rate-form-hint">
-                <fieldset class="employee-rate-add-form__fieldset">
-                    <legend class="pc-sr-only"><?php p($l->t('Add hourly rate')); ?></legend>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="employeeRateAmount"><?php p($l->t('New hourly rate (%s)', [$currencyCode])); ?></label>
-                        <input type="number" id="employeeRateAmount" name="hourly_rate" class="form-input" min="0.01" step="0.01" inputmode="decimal" required aria-describedby="employee-rate-form-hint">
-                    </div>
-                    <div class="form-group">
-                        <label for="employeeRateEffective"><?php p($l->t('Effective from')); ?></label>
-                        <input type="date" id="employeeRateEffective" name="effective_from" class="form-input" required lang="<?php p($htmlLang); ?>" max="<?php p($todayYmd); ?>" value="<?php p($todayYmd); ?>" aria-describedby="employee-rate-form-hint">
-                    </div>
-                </div>
-                <p id="employee-rate-form-hint" class="form-hint"><?php p($l->t('Past time entries keep their previous rate. Effective-from cannot be in the future.')); ?></p>
-                <p id="employee-rate-error" class="form-error-text" role="alert" aria-live="assertive"></p>
-                <button type="submit" class="button primary" id="employee-rate-submit"><?php p($l->t('Add rate')); ?></button>
-                </fieldset>
-            </form>
-            <?php elseif ($isFormer && $rates !== []): ?>
-                <p class="form-hint"><?php p($l->t('Rates are read-only because this account was removed.')); ?></p>
-            <?php endif; ?>
-            </div>
-        </section>
-        <?php endif; ?>
 
-        <!-- Main Content Grid -->
+        <!-- Main content grid — same pattern as customer / project detail -->
         <div class="content-grid">
-            <?php
-            $assignedProjects = $_['employeeAssignedProjects'] ?? [];
-            $manageableProjects = $_['manageableProjects'] ?? [];
-            $canManageAssignments = !empty($_['canManageAssignments']);
-            ?>
-            <div class="section" id="employee-project-assignments">
+            <!-- Employee Information -->
+            <div class="section info-section pc-section" aria-labelledby="pc-emp-info-heading">
+                <div class="section-header">
+                    <h3 id="pc-emp-info-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Employee information')); ?></h3>
+                    <p><?php p($l->t('Name, contact, and account details.')); ?></p>
+                </div>
+                <div class="section-content">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label><?php p($l->t('Display name')); ?></label>
+                            <span><?php p($empDisplay); ?></span>
+                        </div>
+
+                        <div class="info-item">
+                            <label><?php p($l->t('User ID')); ?></label>
+                            <span><?php p($eid); ?></span>
+                        </div>
+
+                        <?php if (!$isFormer && $emp && $emp->getEMailAddress()): ?>
+                            <div class="info-item">
+                                <label><?php p($l->t('Email')); ?></label>
+                                <span><a href="mailto:<?php p($emp->getEMailAddress()); ?>"><?php p($emp->getEMailAddress()); ?></a></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="info-item">
+                            <label><?php p($l->t('Last login')); ?></label>
+                            <span><?php
+								if ($isFormer || !$emp) {
+									p($l->t('Not available (account removed)'));
+								} else {
+                                    $lastLogin = $emp->getLastLogin();
+                                    if ($lastLogin && $lastLogin > 0) {
+                                        if (is_int($lastLogin) || is_numeric($lastLogin)) {
+                                            echo date('d.m.Y H:i', (int)$lastLogin);
+                                        } elseif (is_object($lastLogin) && method_exists($lastLogin, 'format')) {
+                                            echo $lastLogin->format('d.m.Y H:i');
+                                        } else {
+                                            p($l->t('Unknown'));
+                                        }
+                                    } else {
+                                        p($l->t('Never'));
+                                    }
+								}
+                                    ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <?php if ($canViewEmployeeRates): ?>
+            <section class="section pc-section" id="employee-rate-history" aria-labelledby="employee-rates-heading">
+                <div class="section-header">
+                    <h3 id="employee-rates-heading">
+                        <i data-lucide="banknote" class="lucide-icon primary" aria-hidden="true"></i>
+                        <?php p($l->t('Hourly rate history')); ?>
+                    </h3>
+                    <p><?php p($l->t('Append-only rates used when projects price hours by employee. Time entries keep the rate that was effective on the work date.')); ?></p>
+                </div>
+                <div class="section-content">
+                <?php $rates = $employeeHourlyRates; ?>
+                <?php if ($rates === []): ?>
+                    <p class="empty-state-hint" id="employee-rates-empty-hint">
+                        <?php if ($canManageEmployeeRates): ?>
+                            <?php p($l->t('No rates yet. Add the first rate with an effective-from date on or before the earliest work date you plan to log.')); ?>
+                        <?php elseif ($isFormer): ?>
+                            <?php p($l->t('No hourly rates on record for this former account.')); ?>
+                        <?php else: ?>
+                            <?php p($l->t('No hourly rates on record yet.')); ?>
+                        <?php endif; ?>
+                    </p>
+                <?php else: ?>
+                    <div class="employee-rates-table-wrap">
+                    <table class="grid employee-rates-table">
+                        <caption class="pc-sr-only"><?php p($l->t('Hourly rate history')); ?></caption>
+                        <thead>
+                            <tr>
+                                <th scope="col"><?php p($l->t('Effective from')); ?></th>
+                                <th scope="col"><?php p($l->t('Hourly rate (%s)', [$currencyCode])); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($rates as $rateRow): ?>
+                                <tr>
+                                    <td><?php p($fmt ? $fmt->date($rateRow->getEffectiveFrom()) : $rateRow->getEffectiveFrom()->format('Y-m-d')); ?></td>
+                                    <td><?php p($fmt ? $fmt->currency((float) $rateRow->getHourlyRate()) : $currencyCode . ' ' . number_format((float) $rateRow->getHourlyRate(), 2)); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                    </div>
+                <?php endif; ?>
+                <?php if ($canManageEmployeeRates): ?>
+                <form id="add-employee-rate-form" class="employee-rate-add-form" aria-describedby="employee-rate-form-hint">
+                    <fieldset class="employee-rate-add-form__fieldset">
+                        <legend class="pc-sr-only"><?php p($l->t('Add hourly rate')); ?></legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="employeeRateAmount"><?php p($l->t('New hourly rate (%s)', [$currencyCode])); ?></label>
+                            <input type="number" id="employeeRateAmount" name="hourly_rate" class="form-input" min="0.01" step="0.01" inputmode="decimal" required aria-describedby="employee-rate-form-hint">
+                        </div>
+                        <div class="form-group">
+                            <label for="employeeRateEffective"><?php p($l->t('Effective from')); ?></label>
+                            <input type="date" id="employeeRateEffective" name="effective_from" class="form-input" required lang="<?php p($htmlLang); ?>" max="<?php p($todayYmd); ?>" value="<?php p($todayYmd); ?>" aria-describedby="employee-rate-form-hint">
+                        </div>
+                    </div>
+                    <p id="employee-rate-form-hint" class="form-hint"><?php p($l->t('Past time entries keep their previous rate. Effective-from cannot be in the future.')); ?></p>
+                    <p id="employee-rate-error" class="form-error-text" role="alert" aria-live="assertive"></p>
+                    <button type="submit" class="button primary" id="employee-rate-submit"><?php p($l->t('Add rate')); ?></button>
+                    </fieldset>
+                </form>
+                <?php elseif ($isFormer && $rates !== []): ?>
+                    <p class="form-hint"><?php p($l->t('Rates are read-only because this account was removed.')); ?></p>
+                <?php endif; ?>
+                </div>
+            </section>
+            <?php else: ?>
+            <div class="section pc-section pc-ed-quick-actions" aria-labelledby="pc-emp-actions-heading">
+                <div class="section-header">
+                    <h3 id="pc-emp-actions-heading"><i data-lucide="zap" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Quick actions')); ?></h3>
+                    <p><?php p($l->t('Common tasks and shortcuts')); ?></p>
+                </div>
+                <div class="section-content">
+                    <div class="actions-grid">
+                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="action-card">
+                            <div class="action-icon">
+                                <i data-lucide="plus" class="lucide-icon primary" aria-hidden="true"></i>
+                            </div>
+                            <div class="action-content">
+                                <h4><?php p($l->t('New time entry')); ?></h4>
+                                <p><?php p($l->t('Log time for this employee')); ?></p>
+                            </div>
+                        </a>
+                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="action-card">
+                            <div class="action-icon">
+                                <i data-lucide="clock" class="lucide-icon primary" aria-hidden="true"></i>
+                            </div>
+                            <div class="action-content">
+                                <h4><?php p($l->t('View time entries')); ?></h4>
+                                <p><?php p($l->t('See all time entries')); ?></p>
+                            </div>
+                        </a>
+                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.index')); ?>" class="action-card">
+                            <div class="action-icon">
+                                <i data-lucide="users" class="lucide-icon primary" aria-hidden="true"></i>
+                            </div>
+                            <div class="action-content">
+                                <h4><?php p($l->t('All employees')); ?></h4>
+                                <p><?php p($l->t('View all employees')); ?></p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+<div class="section projects-section pc-ed-span-full" id="employee-project-assignments" aria-labelledby="pc-emp-assign-heading">
                 <div class="section-header employee-assignments-header">
-                    <h3><i data-lucide="users" class="lucide-icon primary"></i> <?php p($l->t('Project assignments')); ?></h3>
+                    <h3 id="pc-emp-assign-heading"><i data-lucide="users" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project assignments')); ?></h3>
+                    <p><?php p($l->t('Projects this person can log time on.')); ?></p>
                 </div>
                 <div class="section-content">
                     <div class="employee-assignments-grid">
@@ -335,101 +422,54 @@ include __DIR__ . '/common/page-start.php';
                 </div>
             </div>
 
-            <!-- Employee Information -->
-            <div class="section info-section">
-                <div class="section-header">
-                    <h3><i data-lucide="info" class="lucide-icon primary"></i> <?php p($l->t('Employee Information')); ?></h3>
-                </div>
-                <div class="section-content">
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label><?php p($l->t('Display Name')); ?></label>
-                            <span><?php p($empDisplay); ?></span>
-                        </div>
+        </div>
 
-                        <div class="info-item">
-                            <label><?php p($l->t('User ID')); ?></label>
-                            <span><?php p($eid); ?></span>
-                        </div>
-
-                        <?php if (!$isFormer && $emp && $emp->getEMailAddress()): ?>
-                            <div class="info-item">
-                                <label><?php p($l->t('Email')); ?></label>
-                                <span><a href="mailto:<?php p($emp->getEMailAddress()); ?>"><?php p($emp->getEMailAddress()); ?></a></span>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="info-item">
-                            <label><?php p($l->t('Last Login')); ?></label>
-                            <span><?php
-								if ($isFormer || !$emp) {
-									p($l->t('Not available (account removed)'));
-								} else {
-                                    $lastLogin = $emp->getLastLogin();
-                                    if ($lastLogin && $lastLogin > 0) {
-                                        if (is_int($lastLogin) || is_numeric($lastLogin)) {
-                                            echo date('d.m.Y H:i', (int)$lastLogin);
-                                        } elseif (is_object($lastLogin) && method_exists($lastLogin, 'format')) {
-                                            echo $lastLogin->format('d.m.Y H:i');
-                                        } else {
-                                            p($l->t('Unknown'));
-                                        }
-                                    } else {
-                                        p($l->t('Never'));
-                                    }
-								}
-                                    ?></span>
-                        </div>
-                    </div>
-                </div>
+        <?php if ($canViewEmployeeRates): ?>
+        <div class="section pc-section pc-ed-quick-actions" aria-labelledby="pc-emp-actions-heading-rates">
+            <div class="section-header">
+                <h3 id="pc-emp-actions-heading-rates"><i data-lucide="zap" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Quick actions')); ?></h3>
+                <p><?php p($l->t('Common tasks and shortcuts')); ?></p>
             </div>
-
-            <!-- Quick Actions -->
-            <div class="section">
-                <div class="section-header">
-                    <h3><?php p($l->t('Quick Actions')); ?></h3>
-                    <p><?php p($l->t('Common tasks and shortcuts')); ?></p>
-                </div>
-
+            <div class="section-content">
                 <div class="actions-grid">
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="action-card">
                         <div class="action-icon">
-                            <i data-lucide="plus" class="lucide-icon primary"></i>
+                            <i data-lucide="plus" class="lucide-icon primary" aria-hidden="true"></i>
                         </div>
                         <div class="action-content">
-                            <h4><?php p($l->t('New Time Entry')); ?></h4>
+                            <h4><?php p($l->t('New time entry')); ?></h4>
                             <p><?php p($l->t('Log time for this employee')); ?></p>
                         </div>
                     </a>
-
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="action-card">
                         <div class="action-icon">
-                            <i data-lucide="clock" class="lucide-icon primary"></i>
+                            <i data-lucide="clock" class="lucide-icon primary" aria-hidden="true"></i>
                         </div>
                         <div class="action-content">
-                            <h4><?php p($l->t('View Time Entries')); ?></h4>
+                            <h4><?php p($l->t('View time entries')); ?></h4>
                             <p><?php p($l->t('See all time entries')); ?></p>
                         </div>
                     </a>
-
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.index')); ?>" class="action-card">
                         <div class="action-icon">
-                            <i data-lucide="users" class="lucide-icon primary"></i>
+                            <i data-lucide="users" class="lucide-icon primary" aria-hidden="true"></i>
                         </div>
                         <div class="action-content">
-                            <h4><?php p($l->t('All Employees')); ?></h4>
+                            <h4><?php p($l->t('All employees')); ?></h4>
                             <p><?php p($l->t('View all employees')); ?></p>
                         </div>
                     </a>
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
         <!-- Employee Project Type Analysis -->
         <?php if (!empty($_['employeeProjectTypeStats'])): ?>
-            <div class="section employee-project-type-stats-section compact">
+            <div class="section employee-project-type-stats-section compact pc-section" aria-labelledby="pc-emp-type-heading">
                 <div class="section-header">
-                    <h3><i data-lucide="pie-chart" class="lucide-icon"></i> <?php p($l->t('Project Type Analysis')); ?></h3>
+                    <h3 id="pc-emp-type-heading"><i data-lucide="pie-chart" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project type analysis')); ?></h3>
+                    <p><?php p($l->t('Analyze productivity by project type to identify billable vs overhead work')); ?></p>
                 </div>
                 <div class="section-content">
                     <div class="employee-project-type-stats-compact">
@@ -530,11 +570,11 @@ include __DIR__ . '/common/page-start.php';
 
         <!-- Employee Productivity Analysis -->
         <?php if (!empty($_['employeeProductivityAnalysis'])): ?>
-            <div class="section employee-productivity-analysis-section">
+            <div class="section employee-productivity-analysis-section pc-section" aria-labelledby="pc-emp-prod-heading">
                 <div class="section-header">
-                    <h3>
-                        <i data-lucide="trending-up" class="lucide-icon" aria-hidden="true"></i>
-                        <?php p($l->t('Productivity Analysis')); ?>
+                    <h3 id="pc-emp-prod-heading">
+                        <i data-lucide="trending-up" class="lucide-icon primary" aria-hidden="true"></i>
+                        <?php p($l->t('Productivity analysis')); ?>
                         <button type="button"
                             class="pc-help-trigger"
                             aria-label="<?php p($l->t('Billable Work: Client projects, sales, customer support, product development, research & development, and other revenue-generating activities. Overhead Work: Administrative tasks, meetings, internal projects, and training activities that do not directly generate revenue.')); ?>">

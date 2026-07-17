@@ -1,0 +1,397 @@
+/**
+ * Project detail page — scoped under .pc-app--project-detail.
+ * Flat NC surfaces, clear section rhythm, WCAG 2.1 AA (no colour-only meaning).
+ *
+ * @copyright Copyright (c) 2026, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+/* ── Page rhythm ─────────────────────────────────────────────────────────── */
+
+.pc-app--project-detail .pc-main {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-4, 1rem);
+	min-width: 0;
+}
+
+.pc-app--project-detail .pc-main > .breadcrumb-container {
+	margin: 0;
+}
+
+.pc-app--project-detail .pc-main > .section,
+.pc-app--project-detail .pc-main > .content-grid,
+.pc-app--project-detail .pc-main > .notice,
+.pc-app--project-detail .pc-main > .project-detail__notice {
+	margin-bottom: 0;
+}
+
+/* Override legacy centered mobile rules that fight the shell header */
+.pc-app--project-detail .pc-page-header__content,
+.pc-app--project-detail .pc-page-header__actions {
+	text-align: start;
+}
+
+.pc-app--project-detail .pc-page-header__meta .project-meta {
+	justify-content: flex-start;
+	flex-wrap: wrap;
+	gap: 0.75rem 1.25rem;
+}
+
+/* ── Unified section chrome ──────────────────────────────────────────────── */
+
+.pc-app--project-detail .section.pc-section,
+.pc-app--project-detail .section.pc-stats-panel,
+.pc-app--project-detail .section {
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-md, 12px);
+	background: var(--color-main-background);
+	box-shadow: none;
+	overflow: visible;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+/* Section header chrome lives in common/detail-layout.css (Year-by-year grid). */
+
+.pc-app--project-detail .section-header-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.pc-app--project-detail .section-header-actions .button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	min-height: var(--pc-touch-min, 44px);
+	padding: 0.5rem 1rem;
+	border-radius: var(--border-radius-element, 6px);
+	font-weight: 600;
+	box-shadow: none !important;
+	transform: none !important;
+	overflow: visible;
+}
+
+.pc-app--project-detail .section-header-actions .button::before {
+	content: none !important;
+	display: none !important;
+}
+
+.pc-app--project-detail .section-header-actions .button.primary {
+	background: var(--color-primary-element) !important;
+	color: var(--color-primary-element-text) !important;
+	border: 1px solid var(--color-primary-element) !important;
+}
+
+.pc-app--project-detail .section-header-actions .button.secondary {
+	background: var(--color-main-background) !important;
+	color: var(--color-main-text) !important;
+	border: 1px solid var(--color-border-dark, var(--color-border)) !important;
+}
+
+/* Content stack is single-column via common/detail-layout.css */
+
+.pc-app--project-detail .content-grid > .info-section,
+.pc-app--project-detail .content-grid > .projects-section,
+.pc-app--project-detail .content-grid > .pc-invoicing-section {
+	min-width: 0;
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	overflow: visible;
+	box-sizing: border-box;
+}
+
+.pc-app--project-detail .info-item {
+	min-width: 0;
+}
+
+.pc-app--project-detail .info-item.full-width {
+	grid-column: 1 / -1;
+}
+
+.pc-app--project-detail .info-item label {
+	text-transform: none;
+	letter-spacing: normal;
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-app--project-detail .info-item span,
+.pc-app--project-detail .info-item .project-type-display {
+	overflow-wrap: anywhere;
+}
+
+.pc-app--project-detail .pc-pd-budget-progress {
+	margin-top: 1.5rem;
+	padding-top: 1.25rem;
+	border-top: 1px solid var(--color-border);
+}
+
+.pc-app--project-detail .pc-pd-budget-progress .progress-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	margin-bottom: 0.65rem;
+}
+
+.pc-app--project-detail .pc-pd-budget-progress .progress-header h4 {
+	margin: 0;
+	font-size: 0.95rem;
+	font-weight: 700;
+}
+
+.pc-app--project-detail .pc-pd-budget-progress .budget-breakdown {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 0.5rem;
+	margin-top: 0.85rem;
+}
+
+@media (min-width: 480px) {
+	.pc-app--project-detail .pc-pd-budget-progress .budget-breakdown {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.pc-app--project-detail .pc-pd-budget-progress .breakdown-item {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	padding: 0.55rem 0.65rem;
+	border-radius: var(--pc-radius-sm, 8px);
+	background: color-mix(in srgb, var(--color-background-hover) 50%, var(--color-main-background));
+	border: 1px solid var(--color-border);
+	min-width: 0;
+}
+
+.pc-app--project-detail .pc-pd-budget-progress .breakdown-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-app--project-detail .pc-pd-budget-progress .breakdown-value {
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	overflow-wrap: anywhere;
+}
+
+/* Do not inherit customer-detail “Create project” primary styling on this page */
+.pc-app--project-detail .projects-section .section-header-actions .button.primary {
+	background: var(--color-primary-element) !important;
+	color: var(--color-primary-element-text) !important;
+}
+
+/* ── Key figures: readable labels (no shouty caps) ───────────────────────── */
+
+.pc-app--project-detail .stat-label {
+	text-transform: none;
+	letter-spacing: normal;
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.pc-app--project-detail .pc-stats-panel .stats-container {
+	padding: 0;
+}
+
+.pc-app--project-detail .pc-stats-panel .stat-card {
+	min-width: 0;
+	height: 100%;
+	box-sizing: border-box;
+}
+
+/* ── Yearly / time / team polish ─────────────────────────────────────────── */
+
+.pc-app--project-detail .yearly-stats-container {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+}
+
+@media (min-width: 720px) {
+	.pc-app--project-detail .yearly-stats-container {
+		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	}
+}
+
+.pc-app--project-detail .time-entries-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.65rem;
+}
+
+.pc-app--project-detail .time-entry-item {
+	padding: 0.85rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	background: var(--color-main-background);
+}
+
+.pc-app--project-detail .team-member-item {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	text-align: start;
+	gap: 0.75rem 1rem;
+	padding: 0.9rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+}
+
+@media (min-width: 768px) {
+	.pc-app--project-detail .team-member-item {
+		align-items: center;
+	}
+}
+
+.pc-app--project-detail .member-info {
+	flex: 1 1 10rem;
+	min-width: 0;
+}
+
+.pc-app--project-detail .invoicing-actions .button,
+.pc-app--project-detail .pc-invoicing-actions .button {
+	min-height: var(--pc-touch-min, 44px);
+	box-shadow: none !important;
+	transform: none !important;
+}
+
+.pc-app--project-detail .pc-invoicing-actions .button::before {
+	content: none !important;
+	display: none !important;
+}
+
+/* Hide legacy nested overview card chrome if still present */
+.pc-app--project-detail .project-overview-card {
+	border: 0;
+	box-shadow: none;
+	padding: 0;
+	background: transparent;
+}
+
+.pc-app--project-detail .project-overview-card .overview-header {
+	display: none;
+}
+
+/* ── Override legacy projects.css mobile centering ───────────────────────── */
+
+.pc-app--project-detail .pc-page-header__content,
+.pc-app--project-detail .header-text {
+	text-align: start !important;
+}
+
+.pc-app--project-detail .project-meta,
+.pc-app--project-detail .header-actions,
+.pc-app--project-detail .member-hours {
+	justify-content: flex-start !important;
+}
+
+.pc-app--project-detail .stat-card {
+	text-align: start;
+	align-items: flex-start;
+}
+
+.pc-app--project-detail .team-member-item {
+	text-align: start !important;
+}
+
+.pc-app--project-detail .pc-section__title-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	min-width: 0;
+	flex: 1 1 12rem;
+}
+
+/* Budget progress track — visible even before JS sets data-width */
+.pc-app--project-detail .budget-progress {
+	position: relative;
+	height: 0.65rem;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--color-border) 80%, var(--color-main-background));
+	overflow: hidden;
+}
+
+.pc-app--project-detail .budget-progress-fill {
+	height: 100%;
+	min-width: 0;
+	border-radius: inherit;
+	background: var(--color-primary-element);
+	transition: width 0.25s ease;
+}
+
+.pc-app--project-detail .budget-progress-fill.budget-warning,
+.pc-app--project-detail .budget-progress-fill.warning {
+	background: var(--color-warning, #a08b00);
+}
+
+.pc-app--project-detail .budget-progress-fill.budget-critical,
+.pc-app--project-detail .budget-progress-fill.critical,
+.pc-app--project-detail .budget-progress-fill.over-budget {
+	background: var(--color-error, #e9322d);
+}
+
+/* Focus visibility (WCAG 2.1 AA) */
+.pc-app--project-detail a:focus-visible,
+.pc-app--project-detail button:focus-visible,
+.pc-app--project-detail input:focus-visible,
+.pc-app--project-detail select:focus-visible,
+.pc-app--project-detail textarea:focus-visible,
+.pc-app--project-detail [tabindex]:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+.pc-app--project-detail .info-item a:focus-visible {
+	border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pc-app--project-detail .budget-progress-fill,
+	.pc-app--project-detail .yearly-progress-fill {
+		transition: none;
+	}
+}
+
+/* ── Narrow screens: stack long translated actions (WCAG reflow) ─────────── */
+
+@media (max-width: 560px) {
+	.pc-app--project-detail .section-header-actions .button,
+	.pc-app--project-detail .pc-invoicing-actions .button,
+	.pc-app--project-detail .invoicing-actions .button {
+		flex: 1 1 100%;
+		width: 100%;
+		justify-content: center;
+		white-space: normal;
+		text-align: center;
+		line-height: 1.3;
+	}
+
+	.pc-app--project-detail .pc-invoicing-actions,
+	.pc-app--project-detail .invoicing-actions {
+		flex-direction: column;
+		align-items: stretch;
+	}
+}
+
+@media (max-width: 480px) {
+	.pc-app--project-detail .section > .section-header,
+	.pc-app--project-detail .section > .section-content,
+	.pc-app--project-detail .pc-stats-panel {
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+
+	.pc-app--project-detail .section > .section-content {
+		padding-bottom: 1.15rem;
+	}
+}
