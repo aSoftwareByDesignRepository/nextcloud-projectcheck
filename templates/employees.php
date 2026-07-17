@@ -9,11 +9,13 @@
 
 use OCP\Util;
 
+Util::addScript('projectcheck', 'common/export-menu');
 Util::addScript('projectcheck', 'employees');
 Util::addStyle('projectcheck', 'projects');
 Util::addScript('projectcheck', 'common/icons');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'time-entries');
+Util::addStyle('projectcheck', 'common/list-table');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -157,6 +159,18 @@ $colActions = $l->t('Actions');
                                     <span><?php p($l->t('Reset Search')); ?></span>
                                 </a>
                             <?php endif; ?>
+                            <?php
+                            $exportUrl = (string)($_['exportUrl'] ?? '');
+                            if ($exportUrl === '' && isset($urlGenerator) && is_object($urlGenerator)) {
+                            	$exportUrl = (string)$urlGenerator->linkToRoute('projectcheck.employee.export');
+                            }
+                            $exportEntityLabel = 'employees';
+                            $exportFilterKeys = 'search';
+                            $exportSuccessMsg = 'Exported {count} employees';
+                            $exportIncludeSort = false;
+                            $exportMenuId = 'pc-export-menu-employees';
+                            include __DIR__ . '/parts/export-menu.php';
+                            ?>
                         </div>
                     </form>
                 </div>

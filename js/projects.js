@@ -18,6 +18,7 @@
 		priorityFilter: document.getElementById('priority-filter'),
 		projectTypeFilter: document.getElementById('project-type-filter'),
 		customerFilter: document.getElementById('customer-filter'),
+		settlementFilter: document.getElementById('settlement-filter'),
 		applyFiltersBtn: document.getElementById('apply-filters'),
 		clearFiltersBtn: document.getElementById('clear-filters'),
 		projectsTable: document.querySelector('.projects-table'),
@@ -145,6 +146,7 @@
 		const priority = elements.priorityFilter ? elements.priorityFilter.value : '';
 		const projectType = elements.projectTypeFilter ? elements.projectTypeFilter.value : '';
 		const customerId = elements.customerFilter ? elements.customerFilter.value : '';
+		const settlement = elements.settlementFilter ? elements.settlementFilter.value : '';
 
 		// Build URL with filters
 		const url = new URL(window.location);
@@ -163,6 +165,12 @@
 		if (projectType) url.searchParams.set('project_type', projectType); else url.searchParams.delete('project_type');
 
 		if (customerId) url.searchParams.set('customer_id', customerId); else url.searchParams.delete('customer_id');
+
+		if (settlement && settlement !== 'all') {
+			url.searchParams.set('settlement', settlement);
+		} else {
+			url.searchParams.delete('settlement');
+		}
 
 		url.searchParams.set('page', '1'); // reset to first page on filter apply
 
@@ -185,6 +193,7 @@
 		if (elements.priorityFilter) elements.priorityFilter.value = '';
 		if (elements.projectTypeFilter) elements.projectTypeFilter.value = '';
 		if (elements.customerFilter) elements.customerFilter.value = '';
+		if (elements.settlementFilter) elements.settlementFilter.value = 'all';
 
 		// Navigate to default state (Active status, default sort)
 		const url = new URL(window.location);
@@ -193,6 +202,7 @@
 		url.searchParams.delete('priority');
 		url.searchParams.delete('project_type');
 		url.searchParams.delete('customer_id');
+		url.searchParams.delete('settlement');
 		url.searchParams.delete('search');
 		url.searchParams.delete('sort');
 		url.searchParams.delete('direction');

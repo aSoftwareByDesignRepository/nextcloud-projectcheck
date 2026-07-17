@@ -15,9 +15,12 @@ use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\DateFormatService;
 use OCA\ProjectCheck\Service\DeletionService;
+use OCA\ProjectCheck\Service\ListExportService;
 use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\TimeEntryBillingService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
 use OCP\IL10N;
@@ -106,7 +109,9 @@ class TimeEntryControllerTest extends TestCase {
 			$activityService,
 			$cspService,
 			$l10n,
-			$logger
+			$logger,
+			new ListExportService($this->config, 'projectcheck'),
+			$this->createMock(TimeEntryBillingService::class)
 		);
 	}
 
@@ -331,10 +336,10 @@ class TimeEntryControllerTest extends TestCase {
 
 		$response = $this->controller->export();
 
-		$this->assertInstanceOf(DataResponse::class, $response);
-		$data = $response->getData();
-		$this->assertIsArray($data);
-		$this->assertArrayHasKey('csv_data', $data);
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertSame(200, $response->getStatus());
+		$this->assertStringStartsWith("\xEF\xBB\xBF", (string)$response->render());
+		$this->assertSame('0', $response->getHeaders()['X-ProjectCheck-Export-Row-Count'] ?? null);
 	}
 
 	/**
@@ -367,7 +372,7 @@ class TimeEntryControllerTest extends TestCase {
 			->willReturn([]);
 
 		$response = $this->controller->export();
-		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
 	}
 
 	public function testExportUsesConfiguredCurrencyInCsvHeader(): void {
@@ -385,10 +390,8 @@ class TimeEntryControllerTest extends TestCase {
 		$this->timeEntryService->method('getTimeEntriesWithProjectInfo')->willReturn([]);
 
 		$response = $this->controller->export();
-		$this->assertInstanceOf(DataResponse::class, $response);
-		$data = $response->getData();
-		$this->assertIsArray($data);
-		$this->assertStringContainsString('"Hourly Rate (USD)";"Total Amount (USD)"', (string)($data['csv_data'] ?? ''));
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertStringContainsString('"Hourly Rate (USD)";"Total Amount (USD)"', (string)$response->render());
 	}
 
 	/**
@@ -525,10 +528,8 @@ class TimeEntryControllerTest extends TestCase {
 		]);
 
 		$response = $this->controller->export();
-		$this->assertInstanceOf(DataResponse::class, $response);
-		$data = $response->getData();
-		$this->assertIsArray($data);
-		$csv = (string)($data['csv_data'] ?? '');
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$csv = (string)$response->render();
 		$this->assertStringContainsString("\"'=cmd\"", $csv);
 		$this->assertStringContainsString("\"'+sum(A1:A2)\"", $csv);
 		$this->assertStringContainsString("\"'@calc\"", $csv);
@@ -559,6 +560,49 @@ class TimeEntryControllerTest extends TestCase {
 
 		$this->assertInstanceOf(TemplateResponse::class, $response);
 		$this->assertFalse($response->getParams()['projectLinkable']);
+	}
+
+	/**
+	 * D5b / E20c: getForProject must not dump teammate entries to ordinary Members.
+	 */
+	public function testGetForProjectFiltersByCanUserViewTimeEntry(): void {
+		$own = new TimeEntry();
+		$own->setId(1);
+		$own->setProjectId(42);
+		$own->setUserId('member-user');
+		$own->setDate(new \DateTime('2026-07-01'));
+		$own->setHours(2.0);
+		$own->setDescription('mine');
+		$own->setHourlyRate(100.0);
+		$own->setCreatedAt(new \DateTime('2026-07-01 10:00:00'));
+		$own->setUpdatedAt(new \DateTime('2026-07-01 10:00:00'));
+
+		$teammate = new TimeEntry();
+		$teammate->setId(2);
+		$teammate->setProjectId(42);
+		$teammate->setUserId('other-user');
+		$teammate->setDate(new \DateTime('2026-07-01'));
+		$teammate->setHours(8.0);
+		$teammate->setDescription('secret teammate hours');
+		$teammate->setHourlyRate(150.0);
+		$teammate->setCreatedAt(new \DateTime('2026-07-01 10:00:00'));
+		$teammate->setUpdatedAt(new \DateTime('2026-07-01 10:00:00'));
+
+		$this->projectService->method('canUserAccessProject')->with('member-user', 42)->willReturn(true);
+		$this->timeEntryService->method('getTimeEntriesByProject')->with(42)->willReturn([$own, $teammate]);
+		$this->projectService->method('canUserViewTimeEntry')->willReturnCallback(
+			static function (string $uid, TimeEntry $entry) use ($own): bool {
+				return $uid === 'member-user' && (int) $entry->getId() === (int) $own->getId();
+			}
+		);
+
+		$response = $this->controller->getForProject(42);
+
+		$this->assertSame(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
+		$this->assertCount(1, $data['timeEntries']);
+		$this->assertSame(1, (int) $data['timeEntries'][0]['id']);
 	}
 }
 

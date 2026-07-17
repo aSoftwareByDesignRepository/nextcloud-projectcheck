@@ -24,10 +24,15 @@ use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\ProjectFileService;
 use OCA\ProjectCheck\Service\ProjectMemberHourlyRateService;
+use OCA\ProjectCheck\Service\ProjectSettlementService;
+use OCA\ProjectCheck\Service\ListExportService;
+use OCA\ProjectCheck\Db\ProjectSettlementFilter;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -104,6 +109,12 @@ class ProjectController extends Controller
 	/** @var ProjectMemberHourlyRateService */
 	private $projectMemberHourlyRateService;
 
+	/** @var ListExportService */
+	private $listExportService;
+
+	/** @var ProjectSettlementService */
+	private $projectSettlementService;
+
 	/**
 	 * ProjectController constructor
 	 *
@@ -126,6 +137,7 @@ class ProjectController extends Controller
 	 * @param IUserManager $userManager
 	 * @param UserAccountSnapshotMapper $userAccountSnapshotMapper
 	 * @param ProjectMemberHourlyRateService $projectMemberHourlyRateService
+	 * @param ListExportService $listExportService
 	 */
 	public function __construct(
 		string $appName,
@@ -146,7 +158,9 @@ class ProjectController extends Controller
 		IL10N $l,
 		IUserManager $userManager,
 		UserAccountSnapshotMapper $userAccountSnapshotMapper,
-		ProjectMemberHourlyRateService $projectMemberHourlyRateService
+		ProjectMemberHourlyRateService $projectMemberHourlyRateService,
+		ListExportService $listExportService,
+		ProjectSettlementService $projectSettlementService
 	) {
 		parent::__construct($appName, $request);
 		$this->projectService = $projectService;
@@ -165,6 +179,8 @@ class ProjectController extends Controller
 		$this->userManager = $userManager;
 		$this->userAccountSnapshotMapper = $userAccountSnapshotMapper;
 		$this->projectMemberHourlyRateService = $projectMemberHourlyRateService;
+		$this->listExportService = $listExportService;
+		$this->projectSettlementService = $projectSettlementService;
 		$this->setCspService($cspService);
 	}
 
@@ -282,6 +298,7 @@ class ProjectController extends Controller
 			'priority' => $this->request->getParam('priority', ''),
 			'project_type' => $this->request->getParam('project_type', ''),
 			'customer_id' => $this->request->getParam('customer_id', ''),
+			'settlement' => ProjectSettlementFilter::normalize((string)$this->request->getParam('settlement', '')),
 			'limit' => $defaultItemsPerPage ? intval($defaultItemsPerPage) : 20,
 			'offset' => ($page - 1) * ($defaultItemsPerPage ? intval($defaultItemsPerPage) : 20),
 			'sort' => $dbSort,
@@ -304,8 +321,16 @@ class ProjectController extends Controller
 		// Get customers for the filter dropdown
 		$customers = $this->customerService->getCustomersForSelectForUser($userId);
 
+		// Settlement chip + outstanding line per row (spec §12.5). Uses only
+		// the stl_* counters already loaded on the entities — no extra queries.
+		$settlementInfoByProject = $this->projectSettlementService->enrichProjectsWithSettlementInfo(
+			array_map(static fn (array $item) => $item['project'], $enrichedProjects),
+			$userId
+		);
+
 		$response = new TemplateResponse($this->appName, 'projects', [
 			'projects' => $enrichedProjects,
+			'settlementInfoByProject' => $settlementInfoByProject,
 			'filters' => array_merge($filters, ['sort' => $sort, 'direction' => $direction]),
 			'stats' => $stats,
 			'customers' => $customers,
@@ -325,9 +350,85 @@ class ProjectController extends Controller
 			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'dashboardUrl' => $this->urlGenerator->linkToRoute('projectcheck.dashboard.index'),
 			'canCreateProject' => $this->projectService->canUserCreateProject($userId),
+			'urlGenerator' => $this->urlGenerator,
+			'exportUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.export'),
 		]);
 
 		return $this->configureCSP($response);
+	}
+
+	/**
+	 * Export the project list as CSV or JSON.
+	 *
+	 * Accepts the same filters as {@see index()} (search, status, priority,
+	 * project_type, customer_id, sort, direction) but never paginates: the
+	 * export always covers every project the user may see that matches the
+	 * active filters, so the file agrees with the on-screen list across all
+	 * pages. Format is chosen via `?format=csv|json` (default csv).
+	 *
+	 * Rate-limited because the export materialises the user's whole
+	 * accessible project set (including per-project budget aggregation)
+	 * into a single response: it is the most expensive read endpoint on
+	 * this controller and the most attractive one for data scraping.
+	 *
+	 * @return Response DataDownloadResponse on success; DataResponse on auth/validation errors
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 10, period: 60)]
+	public function export(): Response
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+
+		try {
+			$userId = $user->getUID();
+			$format = $this->listExportService->normalizeFormat(
+				(string)$this->request->getParam('format', ListExportService::FORMAT_CSV)
+			);
+
+			// Same allowlist as index(); anything unknown falls back to the default.
+			$allowedSortColumns = ['name', 'customer', 'type', 'status', 'remaining_budget', 'progress'];
+			$requestedSort = (string)$this->request->getParam('sort', 'remaining_budget');
+			$sort = in_array($requestedSort, $allowedSortColumns, true) ? $requestedSort : 'remaining_budget';
+			$direction = strtolower((string)$this->request->getParam('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+			// Same filter semantics as index(): a missing status means "Active",
+			// an explicit "all" disables the status filter (handled by the service).
+			$statusParam = $this->request->getParam('status', null);
+			$filters = [
+				'search' => (string)$this->request->getParam('search', ''),
+				'status' => $statusParam === null ? 'Active' : (string)$statusParam,
+				'priority' => (string)$this->request->getParam('priority', ''),
+				'project_type' => (string)$this->request->getParam('project_type', ''),
+				'customer_id' => (string)$this->request->getParam('customer_id', ''),
+				'settlement' => ProjectSettlementFilter::normalize((string)$this->request->getParam('settlement', '')),
+			];
+
+			// Per-user visibility scoping happens inside getProjectsForListView
+			// (accessible-project id list), exactly as on the list page.
+			$enrichedProjects = $this->projectService->getProjectsForListView($filters, $sort, $direction, $userId);
+			if ($this->listExportService->exceedsMaxRows(count($enrichedProjects))) {
+				return new DataResponse([
+					'error' => $this->l->t(
+						'Too many rows to export (limit %s). Narrow your filters and try again.',
+						[number_format(ListExportService::MAX_EXPORT_ROWS)]
+					),
+				], 422);
+			}
+
+			$settlementInfoByProject = $this->projectSettlementService->enrichProjectsWithSettlementInfo(
+				array_map(static fn (array $item) => $item['project'], $enrichedProjects),
+				$userId
+			);
+
+			$packed = $this->listExportService->exportProjects($enrichedProjects, $format, $settlementInfoByProject);
+			return $this->listExportService->toDownloadResponse($packed);
+		} catch (\Throwable $e) {
+			return new DataResponse(['error' => $this->l->t('Export failed. Please try again.')], 500);
+		}
 	}
 
 	/**
@@ -541,6 +642,13 @@ class ProjectController extends Controller
 		$requestToken = $this->requestTokenProvider->getEncryptedRequestToken();
 		$pricingModeLabel = $this->pricingModeLabel($project->getCostRateMode());
 		$showCreatedBanner = (string) $this->request->getParam('message', '') === 'created';
+
+		// Settlement read model + full-settle endpoints (feature spec §12.3/§12.4).
+		$settlementInfo = $this->projectSettlementService->getSettlementInfo($project, $uid);
+		$settlementReviewUrl = $this->urlGenerator->linkToRoute('projectcheck.timeentry.index', [
+			'project_id' => $id,
+			'billing_status' => 'open',
+		]);
 		$response = new TemplateResponse($this->appName, 'project-detail', [
 			'project' => $project,
 			'pricingModeLabel' => $pricingModeLabel,
@@ -579,6 +687,11 @@ class ProjectController extends Controller
 			'statusTargetsJson' => $statusTargetsJson,
 			'canDelete' => $this->projectService->canUserDeleteProject($uid, $id),
 			'requesttoken' => $requestToken,
+			'settlementInfo' => $settlementInfo,
+			'settlementReviewUrl' => $settlementReviewUrl,
+			'settlementPreviewUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.projectPreview', ['id' => $id]),
+			'settlementApplyUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.projectApply', ['id' => $id]),
+			'memberRoleUrlTemplate' => $this->urlGenerator->linkToRoute('projectcheck.project.updateTeamMemberRole', ['id' => $id, 'userId' => '__USER__']),
 		]);
 
 		return $this->configureCSP($response);
@@ -1563,6 +1676,14 @@ class ProjectController extends Controller
 				]);
 			}
 
+			// Preserve the member's current role across the remove + re-add rate
+			// update — otherwise every rate edit would silently demote a
+			// project manager back to Member (settlement feature, spec D5a).
+			$existingMember = $this->projectService->getActiveProjectMember($id, $targetUserId);
+			if ($existingMember !== null) {
+				$role = \OCA\ProjectCheck\Util\ProjectMemberRole::normalize($existingMember->getRole());
+			}
+
 			$this->projectService->removeTeamMember($id, $targetUserId);
 			$member = $this->projectService->addTeamMember($id, $targetUserId, $role, $hourlyRate);
 
@@ -1573,6 +1694,66 @@ class ProjectController extends Controller
 			]);
 		} catch (\Exception $e) {
 			// Removed logger call
+			return new DataResponse(['error' => $this->l->t('Could not update team member.')], 400);
+		}
+	}
+
+	/**
+	 * Change a team member's project role (Member ↔ Manager, spec §7.4).
+	 *
+	 * Gated by canUserManageMembers (creator / global admin — D5c). Unlike
+	 * team composition changes this is allowed in any project state: finance
+	 * catch-up on completed projects may still need a manager.
+	 */
+	#[NoAdminRequired]
+	public function updateTeamMemberRole(int $id, string $userId): DataResponse
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		$project = $this->projectService->getProject($id);
+		if ($project === null) {
+			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
+		}
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+
+		// Reject anything that is not literally a known role (case-insensitive).
+		// normalize() alone would silently accept garbage as "Member" — the spec
+		// requires an explicit 400 for invalid roles (§7.4).
+		$rawRole = trim((string) $this->request->getParam('role', ''));
+		$role = \OCA\ProjectCheck\Util\ProjectMemberRole::normalize($rawRole);
+		if ($rawRole === '' || strcasecmp($rawRole, $role) !== 0) {
+			return new DataResponse(['error' => $this->l->t('Invalid parameters')], 400);
+		}
+
+		try {
+			$existing = $this->projectService->getActiveProjectMember($id, trim($userId));
+			if ($existing === null) {
+				return new DataResponse(['error' => $this->l->t('Team member not found')], 404);
+			}
+			$previousRole = \OCA\ProjectCheck\Util\ProjectMemberRole::normalize($existing->getRole());
+			if ($previousRole === $role) {
+				return new DataResponse([
+					'success' => true,
+					'member' => $existing,
+					'message' => $this->l->t('Team member updated successfully'),
+				]);
+			}
+
+			$member = $this->projectService->updateTeamMemberRole($id, trim($userId), $role);
+			$this->activityService->logMemberRoleChanged($user->getUID(), $member, $previousRole);
+
+			return new DataResponse([
+				'success' => true,
+				'member' => $member,
+				'message' => $role === \OCA\ProjectCheck\Util\ProjectMemberRole::MANAGER
+					? $this->l->t('%s is now a project manager and can mark hours as invoiced or paid for this project.', [$member->getUserId()])
+					: $this->l->t('%s is now a regular member and can no longer settle hours for this project.', [$member->getUserId()]),
+			]);
+		} catch (\Exception $e) {
 			return new DataResponse(['error' => $this->l->t('Could not update team member.')], 400);
 		}
 	}

@@ -159,6 +159,8 @@
 
 #app-content.pc-app .pc-main {
 	padding-bottom: var(--pc-space-6, 2rem);
+	min-width: 0;
+	max-width: 100%;
 }
 
 /* Inline page notices (AJAX feedback above list/form content) */

@@ -13,7 +13,9 @@ use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCA\ProjectCheck\Exception\TimeEntryNotFoundException;
 use OCA\ProjectCheck\Service\HourlyRateService;
 use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\ProjectSettlementCounterService;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCP\IDBConnection;
 use OCP\IL10N;
 use PHPUnit\Framework\TestCase;
 
@@ -26,6 +28,10 @@ class TimeEntryServiceTest extends TestCase {
 	private $projectService;
 	/** @var HourlyRateService|\PHPUnit\Framework\MockObject\MockObject */
 	private $hourlyRateService;
+	/** @var IDBConnection|\PHPUnit\Framework\MockObject\MockObject */
+	private $db;
+	/** @var ProjectSettlementCounterService|\PHPUnit\Framework\MockObject\MockObject */
+	private $counterService;
 	private TimeEntryService $service;
 
 	protected function setUp(): void {
@@ -36,13 +42,20 @@ class TimeEntryServiceTest extends TestCase {
 		$this->hourlyRateService = $this->createMock(HourlyRateService::class);
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn(string $text): string => $text);
+		$this->db = $this->createMock(IDBConnection::class);
+		$this->db->method('beginTransaction');
+		$this->db->method('commit');
+		$this->db->method('rollBack');
+		$this->counterService = $this->createMock(ProjectSettlementCounterService::class);
 
 		$this->service = new TimeEntryService(
 			$this->timeEntryMapper,
 			$this->projectMapper,
 			$this->projectService,
 			$this->hourlyRateService,
-			$l10n
+			$l10n,
+			$this->db,
+			$this->counterService
 		);
 	}
 
@@ -55,6 +68,7 @@ class TimeEntryServiceTest extends TestCase {
 		$entry->setHours(2.0);
 		$entry->setDescription('Existing');
 		$entry->setHourlyRate($rate);
+		$entry->setBillingStatus('open');
 		$entry->setCreatedAt(new \DateTime($date . ' 10:00:00'));
 		$entry->setUpdatedAt(new \DateTime($date . ' 10:00:00'));
 		return $entry;
@@ -108,6 +122,7 @@ class TimeEntryServiceTest extends TestCase {
 		$existing->setHours(2.0);
 		$existing->setDescription('Existing');
 		$existing->setHourlyRate(50.0);
+		$existing->setBillingStatus('open');
 		$existing->setCreatedAt(new \DateTime('2026-04-01 10:00:00'));
 		$existing->setUpdatedAt(new \DateTime('2026-04-01 10:00:00'));
 
@@ -117,8 +132,8 @@ class TimeEntryServiceTest extends TestCase {
 
 		$this->timeEntryMapper->method('find')->with(99)->willReturn($existing);
 		$this->projectMapper->method('find')->with(7)->willReturn($targetProject);
-		$this->projectService->method('canUserAccessProject')->with('member-user', 7)->willReturn(false);
-		$this->timeEntryMapper->expects($this->never())->method('update');
+		$this->projectService->method('canUserAddTimeEntryForProject')->with('member-user', 7)->willReturn(false);
+		$this->timeEntryMapper->expects($this->never())->method('updateContentGuarded');
 
 		$this->expectException(\Exception::class);
 		$this->expectExceptionMessage('Access denied');
@@ -143,8 +158,8 @@ class TimeEntryServiceTest extends TestCase {
 		// No rate-relevant change → the frozen stored rate must not be re-resolved.
 		$this->hourlyRateService->expects($this->never())->method('resolveForTimeEntry');
 		$this->timeEntryMapper->expects($this->once())
-			->method('update')
-			->willReturnArgument(0);
+			->method('updateContentGuarded')
+			->willReturn(1);
 
 		$updated = $this->service->updateTimeEntry(99, [
 			'project_id' => 3,
@@ -171,7 +186,7 @@ class TimeEntryServiceTest extends TestCase {
 			->method('resolveForTimeEntry')
 			->with(3, 'member-user', $this->isInstanceOf(\DateTimeInterface::class))
 			->willReturn(75.0);
-		$this->timeEntryMapper->method('update')->willReturnArgument(0);
+		$this->timeEntryMapper->method('updateContentGuarded')->willReturn(1);
 
 		$updated = $this->service->updateTimeEntry(99, [
 			'project_id' => 3,
@@ -193,7 +208,7 @@ class TimeEntryServiceTest extends TestCase {
 		$this->projectMapper->method('find')->with(3)->willReturn($activeProject);
 		$this->hourlyRateService->method('assertClientRateMatchesResolved')
 			->willThrowException(new RateResolutionException('The hourly rate does not match the server. Refresh the page and try again.', 'rate_tamper'));
-		$this->timeEntryMapper->expects($this->never())->method('update');
+		$this->timeEntryMapper->expects($this->never())->method('updateContentGuarded');
 
 		$this->expectException(\Exception::class);
 		$this->expectExceptionMessage('The hourly rate does not match the server.');
@@ -209,7 +224,7 @@ class TimeEntryServiceTest extends TestCase {
 	public function testUpdateDeniedForNonOwner(): void {
 		$existing = $this->makeOwnedEntry(99, 3, 'owner-user');
 		$this->timeEntryMapper->method('find')->with(99)->willReturn($existing);
-		$this->timeEntryMapper->expects($this->never())->method('update');
+		$this->timeEntryMapper->expects($this->never())->method('updateContentGuarded');
 
 		$this->expectException(PermissionDeniedException::class);
 
@@ -228,7 +243,7 @@ class TimeEntryServiceTest extends TestCase {
 	public function testDeleteOwnEntrySucceedsRegardlessOfProjectState(): void {
 		$existing = $this->makeOwnedEntry(55, 12, 'member-user');
 		$this->timeEntryMapper->method('find')->with(55)->willReturn($existing);
-		$this->timeEntryMapper->expects($this->once())->method('delete')->with($existing);
+		$this->timeEntryMapper->expects($this->once())->method('deleteGuardedUnlocked')->willReturn(1);
 
 		$this->service->deleteTimeEntry(55, 'member-user');
 	}
@@ -236,7 +251,7 @@ class TimeEntryServiceTest extends TestCase {
 	public function testDeleteDeniedForNonOwner(): void {
 		$existing = $this->makeOwnedEntry(55, 12, 'owner-user');
 		$this->timeEntryMapper->method('find')->with(55)->willReturn($existing);
-		$this->timeEntryMapper->expects($this->never())->method('delete');
+		$this->timeEntryMapper->expects($this->never())->method('deleteGuardedUnlocked');
 
 		$this->expectException(PermissionDeniedException::class);
 

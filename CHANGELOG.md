@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+## 2.0.76 - 2026-07-17
+
+### Added
+
+- **Filter-mode settle on time entries:** when Settlement is filtered to an exact status (Open / Invoiced / Paid / Not billable), settlers can preview and apply the change to every matching entry across all pages (preview token, 500 cap) — not only the current page selection.
+- **Project close-out wizard:** “Close out (invoice, then mark paid)…” runs the honest two-step path with a fresh preview after invoicing (no `open → paid` shortcut).
+- **Settlement progress %:** projects and customers show paid / invoiced-or-paid shares of chargeable hours (stacked bar + export columns), derived from existing counters.
+
+### Fixed
+
+- **Project settlement list filter:** unknown `settlement=` URL values now match **nothing** (fail closed), consistent with the customer settlement filter — typos no longer silently show every project.
+- **List tables / associated projects layout:** responsive full-width grids and scroll containment so project tables and customer project cards no longer clip or stretch oddly on desktop.
+- **Dialog and section action buttons:** flat Nextcloud-style footer/header actions without legacy gradient/lift chrome.
+
+## 2.0.75 - 2026-07-17
+
+### Added
+
+- **Settlement tracking:** time entries carry a billing status (`open` / `invoiced` / `paid` / `excluded`); projects and customers show derived invoicing posture and outstanding hours/amounts from transactional counters. Admins and project managers can settle entries (single + bulk) and run project-level “invoice all open” / “mark all invoiced paid” actions. Customer list/detail and the dashboard (settlers only) surface outstanding AR with filters and deep links. After upgrade, migration + repair recompute counters and promote project creators to the Manager role — operators can re-run with `occ projectcheck:settlement-recompute`.
+- **Richer list exports:** projects, time entries, customers, and employees can now be exported as **CSV** (Excel-friendly) or **JSON**. A clear Export menu next to the filters lets you pick the format; the download always respects the active filters (and project sort order), covers every page, stays scoped to what the user may see, and remains rate-limited.
+- **Customer and employee export:** new export endpoints and buttons on the customers and employees lists (parity with projects and time entries).
+- **Export settlement columns:** time-entry, project, and customer exports include settlement posture / billing status and outstanding figures.
+
+### Security
+
+- **Time entries by project:** `getForProject` now filters with `canUserViewTimeEntry` so ordinary Members no longer receive teammates’ hours, rates, or settlement fields (Managers / global viewers still see the full project set).
+- **Customer AR scope:** Managers’ customer outstanding rollups sum **settleable** projects only (not every project they merely Member on), matching the dashboard scope and blocking lateral AR enumeration.
+- **Preview tokens:** filter-mode settlement confirms claim the nonce atomically (`IMemcache::add`) after the recount, so concurrent double-submit cannot both apply.
+
+### Fixed
+
+- **Schema guard:** HTTP traffic no longer treats “core tables exist” as ready when settlement counters have not been bootstrapped (`settlement_counters_ready`); runtime repair now runs the settlement ensurer/recompute path.
+- **Overhead backfill:** open, never-billed entries on overhead project types are marked `excluded` during settlement bootstrap / `occ projectcheck:settlement-recompute`.
+- **AZC delete race:** concurrent content edits on unlocked rows are reported as a conflict (409), not misclassified as a billing lock.
+- **Content updates:** owner/AZC guarded updates no longer write `billing_status` (settlement remains on the billing service path only).
+- **Customer settlement filter:** unknown filter codes match nothing instead of everything.
+- **UX / a11y:** settlement checkbox hit targets are 44×44px; project list outstanding copy spacing fixed; EN/DE settlement action strings completed.
+
+### Changed
+
+- **Shared export builder:** `ListExportService` centralises CSV/JSON serialisation for all list exports (formula sanitisation, currency headers, English column names for CSV, numeric values for JSON).
+- **Export UX hardening:** list pages receive a dedicated `exportUrl`; templates fail closed if the URL is missing; the menu restores focus after choosing a format, sanitises download filenames, rejects cross-origin export URLs, and surfaces rate-limit (429) errors clearly.
+- **Streamed file downloads:** list exports return `DataDownloadResponse` (raw CSV/JSON with `Content-Disposition: attachment`) instead of wrapping the whole file in a JSON body. CSV gets a single server-side UTF-8 BOM; responses send `Cache-Control: no-store`, row-count/format headers for the toast, and refuse exports above 100 000 rows with a clear 422.
+
+## 2.0.74 - 2026-07-16
+
+### Added
+
+- **Project export:** the project list can be exported to CSV via a new Export button next to the filters (parity with the time-entry export). The export honours the active search, status, priority, project-type, and customer filters plus the current sort order, always covers every page, is scoped server-side to the projects the user may see, and is rate-limited like the time-entry export. Columns: name, customer, type, status, priority, category, tags, start/end date, total/used/remaining budget, budget-used %, hours logged, remaining hours, hourly rate, pricing mode, short description, created by/at.
+
+### Fixed
+
+- **Time-entry export:** the CSV no longer contains a double UTF-8 BOM (server and client each prepended one, leaving a stray zero-width character in the first header cell for some spreadsheet parsers); the success toast no longer counts the header line as an entry and uses a proper translatable message instead of concatenated fragments.
+- **Routing:** `/projects/search` and `/projects/filter` were unreachable because the `/projects/{id}` wildcard was registered first and swallowed them; static project routes are now registered before the wildcard.
+
+### Changed
+
+- **Shared CSV helper:** new `Util\Csv` centralises cell quoting and formula-injection sanitisation for all exports; sanitisation now also neutralises leading tab/CR characters that some spreadsheet parsers skip before formula detection.
+
 ## 2.0.73 - 2026-07-16
 
 ### Fixed

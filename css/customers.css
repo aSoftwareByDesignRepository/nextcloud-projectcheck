@@ -1829,3 +1829,161 @@
 .pagination-actions .btn {
 	padding: 8px 14px;
 }
+
+/* Associated Projects — full-width responsive grid (customer detail) */
+.pc-app--customer-detail .projects-section,
+.projects-section {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+.pc-app--customer-detail .projects-section .section-header,
+.projects-section .section-header {
+	flex-wrap: wrap;
+	gap: 0.75rem 1rem;
+	padding: 1rem 1.25rem;
+}
+
+@media (min-width: 768px) {
+	.pc-app--customer-detail .projects-section .section-header,
+	.projects-section .section-header {
+		padding: 1.25rem 1.5rem;
+	}
+}
+
+.pc-app--customer-detail .projects-section .section-header-actions .button,
+.projects-section .section-header-actions .button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	min-height: var(--pc-touch-min, 44px);
+	padding: 0.5rem 1rem;
+	border-radius: var(--border-radius-element, 6px);
+	box-shadow: none !important;
+	transform: none !important;
+	overflow: visible;
+	background: var(--color-primary-element) !important;
+	color: var(--color-primary-element-text) !important;
+	border: 1px solid var(--color-primary-element) !important;
+	font-weight: 600;
+}
+
+.pc-app--customer-detail .projects-section .section-header-actions .button::before,
+.projects-section .section-header-actions .button::before {
+	content: none !important;
+	display: none !important;
+}
+
+.pc-app--customer-detail .projects-section .section-header-actions .button:hover,
+.pc-app--customer-detail .projects-section .section-header-actions .button:focus-visible,
+.projects-section .section-header-actions .button:hover,
+.projects-section .section-header-actions .button:focus-visible {
+	background: var(--color-primary-element-hover) !important;
+	border-color: var(--color-primary-element-hover) !important;
+	transform: none !important;
+	box-shadow: none !important;
+}
+
+.pc-app--customer-detail .projects-section .section-content,
+.projects-section .section-content {
+	padding: 1rem 1.25rem 1.5rem;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+	.pc-app--customer-detail .projects-section .section-content,
+	.projects-section .section-content {
+		padding: 1.25rem 1.5rem 1.75rem;
+	}
+}
+
+.pc-app--customer-detail .projects-section .projects-grid,
+.projects-section .projects-grid {
+	width: 100%;
+	max-width: 100%;
+	padding: 0;
+	margin: 0;
+	grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 640px) {
+	.pc-app--customer-detail .projects-section .projects-grid,
+	.projects-section .projects-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (min-width: 1024px) {
+	.pc-app--customer-detail .projects-section .projects-grid,
+	.projects-section .projects-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+.pc-app--customer-detail .projects-section .project-card,
+.projects-section .project-card {
+	min-width: 0;
+	width: 100%;
+}
+
+.pc-app--customer-detail .projects-section .project-status-badges,
+.projects-section .project-status-badges {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	align-items: center;
+}
+
+.pc-app--customer-detail .projects-section .card-header,
+.projects-section .card-header {
+	padding: 1rem 1.15rem 0.85rem;
+}
+
+.pc-app--customer-detail .projects-section .card-content,
+.projects-section .card-content {
+	padding: 0.85rem 1.15rem 1.15rem;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.pc-app--customer-detail .projects-section .detail-row,
+.projects-section .detail-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 0.5rem;
+	align-items: baseline;
+	min-width: 0;
+}
+
+.pc-app--customer-detail .projects-section .detail-value,
+.projects-section .detail-value {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.pc-app--customer-detail .projects-section .budget-info,
+.projects-section .budget-info {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 0.35rem;
+	align-items: baseline;
+}
+
+.pc-app--customer-detail .projects-section .usage-stats,
+.projects-section .usage-stats {
+	overflow-wrap: anywhere;
+	white-space: normal;
+}
+
+.pc-app--customer-detail .projects-section .progress-labels,
+.projects-section .progress-labels {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.35rem;
+	font-size: 0.75rem;
+}

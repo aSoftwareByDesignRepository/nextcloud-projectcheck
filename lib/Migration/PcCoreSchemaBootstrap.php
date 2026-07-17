@@ -85,6 +85,110 @@ final class PcCoreSchemaBootstrap
 		return RateHistoryTables::apply($schema);
 	}
 
+	/**
+	 * Settlement columns (feature: time-entry billing status, migration 2012).
+	 *
+	 * `pc_time_entries` gains the mutable billing state; `pc_projects` gains
+	 * materialized counters that are always maintained in the same transaction
+	 * as the entry write (spec D10) and can be rebuilt from entries at any time
+	 * via {@see SettlementRecomputer}.
+	 */
+	public static function ensureSettlementColumns(ISchemaWrapper $schema): bool
+	{
+		$changed = false;
+
+		if ($schema->hasTable('pc_time_entries')) {
+			$table = $schema->getTable('pc_time_entries');
+
+			if (!$table->hasColumn('billing_status')) {
+				$table->addColumn('billing_status', Types::STRING, [
+					'notnull' => true,
+					'length' => 16,
+					'default' => 'open',
+				]);
+				$changed = true;
+			}
+			if (!$table->hasColumn('billed_at')) {
+				$table->addColumn('billed_at', Types::DATETIME, [
+					'notnull' => false,
+				]);
+				$changed = true;
+			}
+			if (!$table->hasColumn('paid_at')) {
+				$table->addColumn('paid_at', Types::DATETIME, [
+					'notnull' => false,
+				]);
+				$changed = true;
+			}
+			if (!$table->hasColumn('billing_changed_by')) {
+				$table->addColumn('billing_changed_by', Types::STRING, [
+					'notnull' => false,
+					'length' => 64,
+				]);
+				$changed = true;
+			}
+			if (!$table->hasColumn('billing_changed_at')) {
+				$table->addColumn('billing_changed_at', Types::DATETIME, [
+					'notnull' => false,
+				]);
+				$changed = true;
+			}
+			if (!$table->hasIndex('pc_te_bstatus_idx')) {
+				$table->addIndex(['billing_status'], 'pc_te_bstatus_idx');
+				$changed = true;
+			}
+			if (!$table->hasIndex('pc_te_proj_bstatus_idx')) {
+				$table->addIndex(['project_id', 'billing_status'], 'pc_te_proj_bstatus_idx');
+				$changed = true;
+			}
+		}
+
+		if ($schema->hasTable('pc_projects')) {
+			$table = $schema->getTable('pc_projects');
+
+			$hourColumns = ['stl_open_hours', 'stl_invoiced_hours', 'stl_paid_hours', 'stl_excluded_hours'];
+			foreach ($hourColumns as $column) {
+				if (!$table->hasColumn($column)) {
+					$table->addColumn($column, Types::DECIMAL, [
+						'notnull' => true,
+						'precision' => 12,
+						'scale' => 2,
+						'default' => 0,
+					]);
+					$changed = true;
+				}
+			}
+
+			$amountColumns = ['stl_open_amount', 'stl_invoiced_amount', 'stl_paid_amount', 'stl_excluded_amount'];
+			foreach ($amountColumns as $column) {
+				if (!$table->hasColumn($column)) {
+					$table->addColumn($column, Types::DECIMAL, [
+						'notnull' => true,
+						'precision' => 14,
+						'scale' => 2,
+						'default' => 0,
+					]);
+					$changed = true;
+				}
+			}
+
+			if (!$table->hasColumn('stl_updated_at')) {
+				$table->addColumn('stl_updated_at', Types::DATETIME, [
+					'notnull' => false,
+				]);
+				$changed = true;
+			}
+
+			// Filter helper for outstanding / posture predicates (spec §7.2).
+			if (!$table->hasIndex('pc_proj_stl_open_idx')) {
+				$table->addIndex(['stl_open_hours'], 'pc_proj_stl_open_idx');
+				$changed = true;
+			}
+		}
+
+		return $changed;
+	}
+
 	private static function ensureCustomers(ISchemaWrapper $schema): bool
 	{
 		if (!$schema->hasTable('pc_customers')) {

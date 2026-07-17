@@ -67,11 +67,19 @@ ob_start(); ?>
                                 <span data-lucide="user" class="lucide-icon" aria-hidden="true"></span>
                                 <span><?php p($timeEntry->isOwnedBy((string)($userId ?? '')) ? $l->t('Your time entry') : $l->t('Time entry by %s', [$timeEntry->getUserId()])); ?></span>
                             </div>
+                            <div class="meta-item">
+                                <?php
+                                $chipKind = 'status';
+                                $chipValue = $timeEntry->getBillingStatus();
+                                include __DIR__ . '/parts/settlement-chip.php';
+                                ?>
+                            </div>
                         </div>
 <?php
 $pageHeaderMetaHtml = ob_get_clean();
 ob_start(); ?>
-                    <?php if ($timeEntry->isOwnedBy((string)($userId ?? ''))): ?>
+                    <?php $entryBillingLocked = $timeEntry->isBillingLocked(); ?>
+                    <?php if ($timeEntry->isOwnedBy((string)($userId ?? '')) && !$entryBillingLocked): ?>
                         <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $timeEntryId])); ?>" class="button secondary">
                             <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
                             <?php p($l->t('Edit Time Entry')); ?>
@@ -178,6 +186,22 @@ include __DIR__ . '/common/page-start.php';
                         <div class="info-item">
                             <label><?php p($l->t('TOTAL COST')); ?></label>
                             <span class="total-cost"><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
+                        </div>
+                        <div class="info-item">
+                            <label><?php p($l->t('SETTLEMENT')); ?></label>
+                            <span>
+                                <?php
+                                $chipKind = 'status';
+                                $chipValue = $timeEntry->getBillingStatus();
+                                include __DIR__ . '/parts/settlement-chip.php';
+                                ?>
+                            </span>
+                            <?php if ($timeEntry->getBilledAt()): ?>
+                                <p class="form-hint"><?php p($l->t('Invoiced on %s', [$timeEntry->getBilledAt()->format('d.m.Y H:i')])); ?></p>
+                            <?php endif; ?>
+                            <?php if ($timeEntry->getPaidAt()): ?>
+                                <p class="form-hint"><?php p($l->t('Paid on %s', [$timeEntry->getPaidAt()->format('d.m.Y H:i')])); ?></p>
+                            <?php endif; ?>
                         </div>
                         <div class="info-item">
                             <label><?php p($l->t('CREATED BY')); ?></label>
@@ -320,6 +344,55 @@ include __DIR__ . '/common/page-start.php';
             </div>
         </div>
 
+        <?php
+        $canSettleEntry = !empty($_['canSettleEntry']);
+        $billingEntryUrl = (string)($_['billingEntryUrl'] ?? '');
+        $allowedBillingTargets = \OCA\ProjectCheck\Util\BillingStatus::allowedTargets($timeEntry->getBillingStatus());
+        $billingTargetButtons = [
+            'invoiced' => ['label' => $l->t('Mark invoiced'), 'icon' => 'file-text'],
+            'paid' => ['label' => $l->t('Mark paid'), 'icon' => 'circle-check'],
+            'open' => ['label' => $l->t('Reopen'), 'icon' => 'rotate-ccw'],
+            'excluded' => ['label' => $l->t('Mark not billable'), 'icon' => 'circle-slash'],
+        ];
+        ?>
+        <?php if ($canSettleEntry || $entryBillingLocked): ?>
+        <!-- Settlement section (feature spec §12) -->
+        <div class="section pc-section" id="pc-entry-settlement"
+            <?php if ($canSettleEntry): ?>data-billing-entry-url="<?php p($billingEntryUrl); ?>"<?php endif; ?>>
+            <div class="section-header">
+                <h3><span data-lucide="wallet" class="lucide-icon" aria-hidden="true"></span> <?php p($l->t('Settlement')); ?></h3>
+            </div>
+            <div class="section-content">
+                <p class="pc-entry-settlement__state">
+                    <?php
+                    $chipKind = 'status';
+                    $chipValue = $timeEntry->getBillingStatus();
+                    include __DIR__ . '/parts/settlement-chip.php';
+                    ?>
+                </p>
+                <?php if ($entryBillingLocked && !$canSettleEntry): ?>
+                    <p class="form-hint">
+                        <?php p($l->t('This entry has been invoiced or paid, so its content is locked. Ask a project manager to reopen it if something needs fixing.')); ?>
+                    </p>
+                <?php endif; ?>
+                <?php if ($canSettleEntry && $allowedBillingTargets !== []): ?>
+                    <div class="actions-grid pc-entry-settlement__actions" role="group" aria-label="<?php p($l->t('Change settlement status')); ?>">
+                        <?php foreach ($allowedBillingTargets as $billingTarget): ?>
+                            <?php $targetMeta = $billingTargetButtons[$billingTarget] ?? null; ?>
+                            <?php if ($targetMeta === null) continue; ?>
+                            <button type="button" class="button secondary pc-entry-billing-action"
+                                data-billing-target="<?php p($billingTarget); ?>">
+                                <span data-lucide="<?php p($targetMeta['icon']); ?>" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($targetMeta['label']); ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                    <p class="form-hint"><?php p($l->t('Payments always go through "Invoiced" first — there is no shortcut from Open to Paid.')); ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Actions Section -->
         <div class="section">
             <div class="section-header">
@@ -327,7 +400,7 @@ include __DIR__ . '/common/page-start.php';
             </div>
             <div class="section-content">
                 <div class="actions-grid">
-                    <?php if ($timeEntry->isOwnedBy((string)($_['userId'] ?? ''))): ?>
+                    <?php if ($timeEntry->isOwnedBy((string)($_['userId'] ?? '')) && !$entryBillingLocked): ?>
                         <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $timeEntryId])); ?>" class="button primary">
                             <i class="icon-edit-custom"></i>
                             <?php p($l->t('Edit Time Entry')); ?>
@@ -341,6 +414,11 @@ include __DIR__ . '/common/page-start.php';
                             <i class="icon-delete-custom" aria-hidden="true"></i>
                             <?php p($l->t('Delete Time Entry')); ?>
                         </button>
+                    <?php elseif ($timeEntry->isOwnedBy((string)($_['userId'] ?? '')) && $entryBillingLocked): ?>
+                        <p class="form-hint pc-entry-settlement__lock-note">
+                            <span data-lucide="lock" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Editing and deleting are disabled because this entry has been invoiced or paid.')); ?>
+                        </p>
                     <?php endif; ?>
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="button secondary">
                         <i class="icon-time-custom"></i>

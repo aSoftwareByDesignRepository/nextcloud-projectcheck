@@ -190,12 +190,23 @@ class DeletionService
             ->where($qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)));
         $membersCount = (int) $qb->executeQuery()->fetchOne();
 
-        // Get project details for context
+        // Get project details for context (includes settlement counters)
         $project = $this->projectMapper->find($projectId);
+
+        $outstandingHours = 0.0;
+        $outstandingAmount = 0.0;
+        if ($project !== null) {
+            $counters = $project->getSettlementCounters();
+            $outstandingHours = (float) ($counters['open_hours'] ?? 0) + (float) ($counters['invoiced_hours'] ?? 0);
+            $outstandingAmount = (float) ($counters['open_amount'] ?? 0) + (float) ($counters['invoiced_amount'] ?? 0);
+        }
 
         return [
             'time_entries' => $timeEntriesCount,
             'project_members' => $membersCount,
+            // Settlement AR still open on this project (spec TS4.06 / E31).
+            'outstanding_hours' => round($outstandingHours, 2),
+            'outstanding_amount' => round($outstandingAmount, 2),
             'project' => $project ? [
                 'id' => $project->getId(),
                 'name' => $project->getName(),

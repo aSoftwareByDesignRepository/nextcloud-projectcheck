@@ -25,6 +25,7 @@ use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCA\ProjectCheck\Service\ProjectSettlementService;
 use OCA\ProjectCheck\Traits\StatsTrait;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
@@ -62,6 +63,9 @@ class DashboardController extends Controller
 	/** @var LoggerInterface */
 	private $logger;
 
+	/** @var ProjectSettlementService */
+	private $projectSettlementService;
+
 	/**
 	 * DashboardController constructor
 	 *
@@ -87,7 +91,8 @@ class DashboardController extends Controller
 		IURLGenerator $urlGenerator,
 		CSPService $cspService,
 		IL10N $l,
-		LoggerInterface $logger
+		LoggerInterface $logger,
+		ProjectSettlementService $projectSettlementService
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
@@ -98,6 +103,7 @@ class DashboardController extends Controller
 		$this->urlGenerator = $urlGenerator;
 		$this->l = $l;
 		$this->logger = $logger;
+		$this->projectSettlementService = $projectSettlementService;
 		$this->setCspService($cspService);
 	}
 
@@ -153,9 +159,13 @@ class DashboardController extends Controller
 		});
 		$budgetAlerts = $this->budgetService->getBudgetAlertsForProjects($activeProjects, $userId);
 
+		// Settlement AR widget: settlers only (null for ordinary Members — E30)
+		$settlementOutstanding = $this->projectSettlementService->getOutstandingSummaryForSettler($userId);
+
 		$response = new TemplateResponse($this->appName, 'dashboard', [
 			'stats' => $stats,
 			'budgetAlerts' => $budgetAlerts,
+			'settlementOutstanding' => $settlementOutstanding,
 			'isGlobalViewer' => $isGlobalViewer,
 			'userId' => $userId,
 			'urlGenerator' => $this->urlGenerator,

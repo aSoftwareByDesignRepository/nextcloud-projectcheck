@@ -15,6 +15,86 @@
     function initializeTimeEntryDetail() {
         addEventListeners();
         addAccessibilityFeatures();
+        initSettlementActions();
+    }
+
+    /**
+     * Settlement transition buttons (feature spec §12). The server owns the
+     * transition matrix and permissions; buttons only exist for currently
+     * allowed targets and the page reloads so chip + lock state stay honest.
+     */
+    function initSettlementActions() {
+        const section = document.getElementById('pc-entry-settlement');
+        if (!section) {
+            return;
+        }
+        const url = section.getAttribute('data-billing-entry-url');
+        if (!url) {
+            return;
+        }
+
+        section.querySelectorAll('.pc-entry-billing-action').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const target = button.getAttribute('data-billing-target');
+                if (!target) {
+                    return;
+                }
+
+                const labels = {
+                    invoiced: t('projectcheck', 'Mark this entry as invoiced? It will be locked for editing until reopened.'),
+                    paid: t('projectcheck', 'Mark this entry as paid?'),
+                    open: t('projectcheck', 'Reopen this entry for editing?'),
+                    excluded: t('projectcheck', 'Mark this entry as not billable?')
+                };
+                const confirmText = labels[target] || t('projectcheck', 'Update settlement status for this entry?');
+                if (!window.confirm(confirmText)) {
+                    return;
+                }
+
+                section.querySelectorAll('.pc-entry-billing-action').forEach(function (b) {
+                    b.disabled = true;
+                });
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        requesttoken: getRequestTokenValue(),
+                    },
+                    body: JSON.stringify({ target: target }),
+                })
+                    .then(function (response) {
+                        return response.json().catch(function () { return {}; }).then(function (payload) {
+                            return { ok: response.ok, payload: payload };
+                        });
+                    })
+                    .then(function (result) {
+                        if (result.ok && result.payload && result.payload.success) {
+                            window.location.reload();
+                            return;
+                        }
+                        section.querySelectorAll('.pc-entry-billing-action').forEach(function (b) {
+                            b.disabled = false;
+                        });
+                        showError((result.payload && result.payload.error)
+                            || t('projectcheck', 'The settlement action failed. Please try again.'));
+                    })
+                    .catch(function () {
+                        section.querySelectorAll('.pc-entry-billing-action').forEach(function (b) {
+                            b.disabled = false;
+                        });
+                        showError(t('projectcheck', 'The settlement action failed. Please try again.'));
+                    });
+            });
+        });
+    }
+
+    function getRequestTokenValue() {
+        if (typeof OC !== 'undefined' && OC.requestToken) {
+            return OC.requestToken;
+        }
+        const tokenInput = document.querySelector('input[name="requesttoken"]');
+        return tokenInput ? tokenInput.value : '';
     }
 
     function addEventListeners() {

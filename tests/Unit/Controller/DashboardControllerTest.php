@@ -11,6 +11,7 @@ use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCA\ProjectCheck\Service\ProjectSettlementService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IL10N;
@@ -115,6 +116,9 @@ class DashboardControllerTest extends TestCase {
 	}
 
 	private function makeController(): DashboardController {
+		$settlementService = $this->createMock(ProjectSettlementService::class);
+		$settlementService->method('getOutstandingSummaryForSettler')->willReturn(null);
+
 		return new DashboardController(
 			'projectcheck',
 			$this->request,
@@ -126,7 +130,8 @@ class DashboardControllerTest extends TestCase {
 			$this->urlGenerator,
 			$this->cspService,
 			$this->l,
-			$this->logger
+			$this->logger,
+			$settlementService
 		);
 	}
 

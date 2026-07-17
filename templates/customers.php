@@ -9,9 +9,11 @@
 
 use OCP\Util;
 
+Util::addScript('projectcheck', 'common/export-menu');
 Util::addScript('projectcheck', 'customers');
 Util::addStyle('projectcheck', 'customers');
 Util::addStyle('projectcheck', 'navigation');
+Util::addStyle('projectcheck', 'common/list-table');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -124,7 +126,10 @@ include __DIR__ . '/common/page-start.php';
         $colPhone = $l->t('Phone');
         $colContact = $l->t('Contact Person');
         $colProjects = $l->t('Projects');
+        $colOutstanding = $l->t('Not yet paid');
+        $colInvoicing = $l->t('Invoicing');
         $colActions = $l->t('Actions');
+        $settlementByCustomer = $_['settlementByCustomer'] ?? [];
         ?>
 
         <!-- Filters + customers table (one panel) -->
@@ -141,6 +146,19 @@ include __DIR__ . '/common/page-start.php';
                 </div>
 
                 <div class="filters-row">
+                    <?php $settlementFilterValue = (string)($_['filters']['settlement'] ?? ''); ?>
+                    <label class="pc-filter-field" for="settlement-filter">
+                        <span class="pc-filter-field__label"><?php p($l->t('Settlement')); ?></span>
+                        <select id="settlement-filter" aria-label="<?php p($l->t('Filter by settlement')); ?>">
+                            <option value="all" <?php if ($settlementFilterValue === '' || $settlementFilterValue === 'all') echo 'selected'; ?>><?php p($l->t('Settlement: all')); ?></option>
+                            <option value="outstanding" <?php if ($settlementFilterValue === 'outstanding') echo 'selected'; ?>><?php p($l->t('Not yet paid')); ?></option>
+                            <option value="open" <?php if ($settlementFilterValue === 'open') echo 'selected'; ?>><?php p($l->t('Open')); ?></option>
+                            <option value="partial" <?php if ($settlementFilterValue === 'partial') echo 'selected'; ?>><?php p($l->t('Partially settled')); ?></option>
+                            <option value="awaiting_payment" <?php if ($settlementFilterValue === 'awaiting_payment') echo 'selected'; ?>><?php p($l->t('Awaiting payment')); ?></option>
+                            <option value="paid" <?php if ($settlementFilterValue === 'paid') echo 'selected'; ?>><?php p($l->t('Paid')); ?></option>
+                            <option value="n_a" <?php if ($settlementFilterValue === 'n_a') echo 'selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
+                        </select>
+                    </label>
                     <button id="apply-filters" class="button primary" type="button">
                         <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Apply Filters')); ?>
@@ -149,6 +167,18 @@ include __DIR__ . '/common/page-start.php';
                         <span data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Clear Filters')); ?>
                     </button>
+                    <?php
+                    $exportUrl = (string)($_['exportUrl'] ?? '');
+                    if ($exportUrl === '' && isset($_['urlGenerator']) && is_object($_['urlGenerator'])) {
+                    	$exportUrl = (string)$_['urlGenerator']->linkToRoute('projectcheck.customer.export');
+                    }
+                    $exportEntityLabel = 'customers';
+                    $exportFilterKeys = 'search,settlement';
+                    $exportSuccessMsg = 'Exported {count} customers';
+                    $exportIncludeSort = false;
+                    $exportMenuId = 'pc-export-menu-customers';
+                    include __DIR__ . '/parts/export-menu.php';
+                    ?>
                 </div>
             </div>
             </div>
@@ -169,11 +199,17 @@ include __DIR__ . '/common/page-start.php';
                             <th scope="col"><?php p($colPhone); ?></th>
                             <th scope="col"><?php p($colContact); ?></th>
                             <th scope="col"><?php p($colProjects); ?></th>
+                            <th scope="col" class="col-outstanding"><?php p($colOutstanding); ?></th>
+                            <th scope="col" class="col-invoicing"><?php p($colInvoicing); ?></th>
                             <th scope="col" class="col-actions"><?php p($colActions); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($_['customers'] as $customer): ?>
+                            <?php
+                            $cid = (int)$customer->getId();
+                            $rowSettlement = $settlementByCustomer[$cid] ?? null;
+                            ?>
                             <tr data-customer-id="<?php p($customer->getId()); ?>">
                                 <td data-label="<?php p($colName); ?>">
                                     <a href="<?php p(str_replace('CUSTOMER_ID', $customer->getId(), $_['showUrl'] ?? '')); ?>">
@@ -184,6 +220,37 @@ include __DIR__ . '/common/page-start.php';
                                 <td data-label="<?php p($colPhone); ?>"><?php p($customer->getPhone() ?? ''); ?></td>
                                 <td data-label="<?php p($colContact); ?>"><?php p($customer->getContactPerson() ?? ''); ?></td>
                                 <td data-label="<?php p($colProjects); ?>"><?php p($customer->getProjectCount() ?? 0); ?></td>
+                                <td class="col-outstanding" data-label="<?php p($colOutstanding); ?>">
+                                    <?php if ($rowSettlement && (float)($rowSettlement['outstanding_hours'] ?? 0) > 0): ?>
+                                        <span class="pc-invoicing-cell__outstanding">
+                                            <?php p($l->t('%1$s h · %2$s', [
+                                                number_format((float)$rowSettlement['outstanding_hours'], 2),
+                                                $fmt ? $fmt->currency((float)$rowSettlement['outstanding_amount']) : $currencyCode . ' ' . number_format((float)$rowSettlement['outstanding_amount'], 2),
+                                            ])); ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="pc-muted"><?php p($l->t('—')); ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="col-invoicing" data-label="<?php p($colInvoicing); ?>">
+                                    <?php if ($rowSettlement): ?>
+                                        <div class="pc-invoicing-cell">
+                                            <?php
+                                            $chipKind = 'posture';
+                                            $chipValue = (string)($rowSettlement['posture'] ?? 'n_a');
+                                            include __DIR__ . '/parts/settlement-chip.php';
+                                            ?>
+                                            <?php
+                                            $progress = is_array($rowSettlement['progress'] ?? null) ? $rowSettlement['progress'] : [];
+                                            $progressVariant = 'compact';
+                                            $progressId = 'pc-cust-stl-' . (int)$customer->getId();
+                                            include __DIR__ . '/parts/settlement-progress.php';
+                                            ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="pc-muted"><?php p($l->t('—')); ?></span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="col-actions" data-label="<?php p($colActions); ?>">
                                     <div class="action-items" role="group" aria-label="<?php p($l->t('Customer actions')); ?>">
                                         <a href="<?php p(str_replace('CUSTOMER_ID', $customer->getId(), $_['showUrl'] ?? '')); ?>"

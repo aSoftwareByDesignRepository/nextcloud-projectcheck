@@ -56,8 +56,11 @@ if (!class_exists(\Test\TestCase::class)) {
 	}
 }
 
-if (!class_exists(\Symfony\Component\Console\Command\Command::class, false)) {
-	eval('namespace Symfony\Component\Console\Command; class Command {}');
+/* Allow autoloading here: inside a full Nextcloud checkout the real Symfony Console
+ * is available via 3rdparty and must win, otherwise the eval'd stub (no constructor)
+ * shadows it and `parent::__construct()` in occ commands fatals. */
+if (!class_exists(\Symfony\Component\Console\Command\Command::class)) {
+	eval('namespace Symfony\Component\Console\Command; class Command { public function __construct() {} }');
 }
 
 /* Nextcloud’s OCP\Util::addStyle() delegates to \OC_Util, which is not present in this unit-test

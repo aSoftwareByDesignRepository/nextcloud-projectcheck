@@ -11,6 +11,9 @@ use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
+use OCA\ProjectCheck\Service\ListExportService;
+use OCA\ProjectCheck\Service\CustomerSettlementService;
+use OCA\ProjectCheck\Service\ProjectSettlementService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Db\Customer;
@@ -78,7 +81,10 @@ class CustomerControllerTest extends TestCase {
 			$cspService,
 			$l10n,
 			$logger,
-			$requestTokenProvider
+			$requestTokenProvider,
+			new ListExportService($config, 'projectcheck'),
+			$this->createMock(CustomerSettlementService::class),
+			$this->createMock(ProjectSettlementService::class)
 		);
 
 		$this->user = $this->createMock(IUser::class);

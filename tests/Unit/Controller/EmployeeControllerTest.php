@@ -14,6 +14,7 @@ use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCA\ProjectCheck\Service\EmployeeHourlyRateService;
+use OCA\ProjectCheck\Service\ListExportService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\AppFramework\Http\RedirectResponse;
@@ -97,7 +98,8 @@ class EmployeeControllerTest extends TestCase
 			$l10n,
 			$snapshots,
 			$this->accessControl,
-			$requestTokenProvider
+			$requestTokenProvider,
+			new ListExportService($config, 'projectcheck')
 		);
 
 		$this->user = $this->createMock(IUser::class);

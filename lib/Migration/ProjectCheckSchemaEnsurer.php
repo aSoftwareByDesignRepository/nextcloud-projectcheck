@@ -47,6 +47,8 @@ final class ProjectCheckSchemaEnsurer
 		$changed = PcCoreSchemaBootstrap::apply($schema);
 		$changed = PcCoreSchemaBootstrap::ensureProjectColumns($schema) || $changed;
 		$changed = PcCoreSchemaBootstrap::ensureRateTables($schema) || $changed;
+		$settlementChanged = PcCoreSchemaBootstrap::ensureSettlementColumns($schema);
+		$changed = $settlementChanged || $changed;
 
 		if ($changed) {
 			$this->db->migrateToSchema($schemaWrapper->getWrappedSchema());
@@ -54,6 +56,17 @@ final class ProjectCheckSchemaEnsurer
 		}
 
 		$this->assertReady($output);
+
+		// Fresh settlement columns (or a cleared ready flag) require a full
+		// counter recompute before list filters / posture chips are trustworthy.
+		if ($settlementChanged) {
+			$this->config->deleteAppValue(SettlementBootstrap::APP_ID, SettlementBootstrap::READY_FLAG);
+		}
+
+		// One-time settlement data bootstrap (counter recompute + creator →
+		// Manager role backfill + optional overhead excluded backfill).
+		// Flag-guarded, so this is a cheap no-op on every subsequent run.
+		(new SettlementBootstrap($this->db, $this->config))->runOnce($output);
 	}
 
 	public function isReady(): bool
@@ -71,6 +84,40 @@ final class ProjectCheckSchemaEnsurer
 		}
 
 		return true;
+	}
+
+	/**
+	 * True when settlement columns from migration 2012 are present.
+	 * Used by {@see \OCA\ProjectCheck\Service\SchemaGuardService} so HTTP
+	 * traffic never serves DEFAULT-0 counters before the schema lands.
+	 */
+	public function hasSettlementSchema(): bool
+	{
+		if (!$this->db->tableExists('pc_time_entries') || !$this->db->tableExists('pc_projects')) {
+			return false;
+		}
+
+		try {
+			$schema = $this->createSchemaWrapper();
+			if (!$schema->hasTable('pc_time_entries') || !$schema->hasTable('pc_projects')) {
+				return false;
+			}
+			$entries = $schema->getTable('pc_time_entries');
+			$projects = $schema->getTable('pc_projects');
+			return $entries->hasColumn('billing_status')
+				&& $entries->hasColumn('billed_at')
+				&& $entries->hasColumn('paid_at')
+				&& $projects->hasColumn('stl_open_hours')
+				&& $projects->hasColumn('stl_invoiced_hours')
+				&& $projects->hasColumn('stl_paid_hours')
+				&& $projects->hasColumn('stl_excluded_hours')
+				&& $projects->hasColumn('stl_open_amount')
+				&& $projects->hasColumn('stl_invoiced_amount')
+				&& $projects->hasColumn('stl_paid_amount')
+				&& $projects->hasColumn('stl_excluded_amount');
+		} catch (\Throwable $e) {
+			return false;
+		}
 	}
 
 	/**

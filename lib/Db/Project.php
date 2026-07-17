@@ -79,6 +79,16 @@ class Project extends Entity
 	protected $customerName;
 	protected $projectType;
 	protected $costRateMode;
+	/** Materialized settlement counters — maintained by ProjectSettlementCounterService only. */
+	protected $stlOpenHours;
+	protected $stlInvoicedHours;
+	protected $stlPaidHours;
+	protected $stlExcludedHours;
+	protected $stlOpenAmount;
+	protected $stlInvoicedAmount;
+	protected $stlPaidAmount;
+	protected $stlExcludedAmount;
+	protected $stlUpdatedAt;
 
 	/**
 	 * Project constructor
@@ -103,6 +113,45 @@ class Project extends Entity
 		$this->addType('updatedAt', 'datetime');
 		$this->addType('projectType', 'string');
 		$this->addType('costRateMode', 'string');
+		$this->addType('stlOpenHours', 'float');
+		$this->addType('stlInvoicedHours', 'float');
+		$this->addType('stlPaidHours', 'float');
+		$this->addType('stlExcludedHours', 'float');
+		$this->addType('stlOpenAmount', 'float');
+		$this->addType('stlInvoicedAmount', 'float');
+		$this->addType('stlPaidAmount', 'float');
+		$this->addType('stlExcludedAmount', 'float');
+		$this->addType('stlUpdatedAt', 'datetime');
+	}
+
+	/**
+	 * Settlement counters in the canonical shape consumed by
+	 * {@see \OCA\ProjectCheck\Util\SettlementPosture::fromCounters()} and the
+	 * settlement services. Values are read-only derivatives of time entries.
+	 *
+	 * @return array{open_hours: float, invoiced_hours: float, paid_hours: float, excluded_hours: float,
+	 *               open_amount: float, invoiced_amount: float, paid_amount: float, excluded_amount: float}
+	 */
+	public function getSettlementCounters(): array
+	{
+		return [
+			'open_hours' => (float) ($this->stlOpenHours ?? 0),
+			'invoiced_hours' => (float) ($this->stlInvoicedHours ?? 0),
+			'paid_hours' => (float) ($this->stlPaidHours ?? 0),
+			'excluded_hours' => (float) ($this->stlExcludedHours ?? 0),
+			'open_amount' => (float) ($this->stlOpenAmount ?? 0),
+			'invoiced_amount' => (float) ($this->stlInvoicedAmount ?? 0),
+			'paid_amount' => (float) ($this->stlPaidAmount ?? 0),
+			'excluded_amount' => (float) ($this->stlExcludedAmount ?? 0),
+		];
+	}
+
+	/**
+	 * Derived settlement posture (never stored — spec D2).
+	 */
+	public function getSettlementPosture(): string
+	{
+		return \OCA\ProjectCheck\Util\SettlementPosture::fromCounters($this->getSettlementCounters());
 	}
 
 	public function getCostRateMode(): string

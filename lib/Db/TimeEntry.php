@@ -34,6 +34,15 @@ use OCP\AppFramework\Db\Entity;
  * @method void setCreatedAt(\DateTime $createdAt)
  * @method \DateTime getUpdatedAt()
  * @method void setUpdatedAt(\DateTime $updatedAt)
+ * @method void setBillingStatus(string $billingStatus)
+ * @method \DateTime|null getBilledAt()
+ * @method void setBilledAt(\DateTime|null $billedAt)
+ * @method \DateTime|null getPaidAt()
+ * @method void setPaidAt(\DateTime|null $paidAt)
+ * @method string|null getBillingChangedBy()
+ * @method void setBillingChangedBy(string|null $billingChangedBy)
+ * @method \DateTime|null getBillingChangedAt()
+ * @method void setBillingChangedAt(\DateTime|null $billingChangedAt)
  */
 class TimeEntry extends Entity
 {
@@ -61,6 +70,21 @@ class TimeEntry extends Entity
 	/** @var \DateTime */
 	protected $updatedAt;
 
+	/** @var string */
+	protected $billingStatus;
+
+	/** @var \DateTime|null */
+	protected $billedAt;
+
+	/** @var \DateTime|null */
+	protected $paidAt;
+
+	/** @var string|null */
+	protected $billingChangedBy;
+
+	/** @var \DateTime|null */
+	protected $billingChangedAt;
+
 	/**
 	 * TimeEntry constructor
 	 */
@@ -74,6 +98,28 @@ class TimeEntry extends Entity
 		$this->addType('hourlyRate', 'float');
 		$this->addType('createdAt', 'datetime');
 		$this->addType('updatedAt', 'datetime');
+		$this->addType('billingStatus', 'string');
+		$this->addType('billedAt', 'datetime');
+		$this->addType('paidAt', 'datetime');
+		$this->addType('billingChangedBy', 'string');
+		$this->addType('billingChangedAt', 'datetime');
+	}
+
+	/**
+	 * Normalized billing status; legacy rows without a value count as open.
+	 */
+	public function getBillingStatus(): string
+	{
+		return \OCA\ProjectCheck\Util\BillingStatus::normalize($this->billingStatus);
+	}
+
+	/**
+	 * Whether the entry content (hours, description, project, date) is locked
+	 * against owner edits / deletes because it is invoiced or paid (spec D12).
+	 */
+	public function isBillingLocked(): bool
+	{
+		return \OCA\ProjectCheck\Util\BillingStatus::locksContent($this->getBillingStatus());
 	}
 
 	/**
@@ -143,6 +189,10 @@ class TimeEntry extends Entity
 			'description' => $this->getDescription(),
 			'hourlyRate' => $this->getHourlyRate(),
 			'cost' => $this->getCost(),
+			'billingStatus' => $this->getBillingStatus(),
+			'billedAt' => $this->getBilledAt() ? $this->getBilledAt()->format('Y-m-d H:i:s') : null,
+			'paidAt' => $this->getPaidAt() ? $this->getPaidAt()->format('Y-m-d H:i:s') : null,
+			'billingLocked' => $this->isBillingLocked(),
 			'createdAt' => $this->getCreatedAt()->format('Y-m-d H:i:s'),
 			'updatedAt' => $this->getUpdatedAt()->format('Y-m-d H:i:s')
 		];

@@ -14,12 +14,17 @@ namespace OCA\ProjectCheck\Service;
 use OCA\ProjectCheck\Db\TimeEntry;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
 use OCA\ProjectCheck\Db\ProjectMapper;
+use OCA\ProjectCheck\Exception\BillingLockedException;
 use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Exception\RateResolutionException;
+use OCA\ProjectCheck\Exception\SettlementConflictException;
 use OCA\ProjectCheck\Exception\TimeEntryNotFoundException;
 use OCA\ProjectCheck\Exception\ValidationException;
+use OCA\ProjectCheck\Util\BillingStatus;
+use OCA\ProjectCheck\Util\Money;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
+use OCP\IDBConnection;
 use OCP\IL10N;
 
 /**
@@ -42,18 +47,28 @@ class TimeEntryService
 	/** @var IL10N */
 	private $l;
 
+	/** @var IDBConnection */
+	private $db;
+
+	/** @var ProjectSettlementCounterService */
+	private $counterService;
+
 	public function __construct(
 		TimeEntryMapper $timeEntryMapper,
 		ProjectMapper $projectMapper,
 		ProjectService $projectService,
 		HourlyRateService $hourlyRateService,
-		IL10N $l
+		IL10N $l,
+		IDBConnection $db,
+		ProjectSettlementCounterService $counterService
 	) {
 		$this->timeEntryMapper = $timeEntryMapper;
 		$this->projectMapper = $projectMapper;
 		$this->projectService = $projectService;
 		$this->hourlyRateService = $hourlyRateService;
 		$this->l = $l;
+		$this->db = $db;
+		$this->counterService = $counterService;
 	}
 
 	/**
@@ -99,8 +114,28 @@ class TimeEntryService
 		$timeEntry->setHourlyRate($resolvedRate);
 		$timeEntry->setCreatedAt(new \DateTime());
 		$timeEntry->setUpdatedAt(new \DateTime());
+		// Settlement (spec D7): overhead projects never bill — entries start
+		// excluded; everything else starts open. Client input is ignored.
+		$timeEntry->setBillingStatus(BillingStatus::initialForProjectType((string) $project->getProjectType()));
 
-		return $this->timeEntryMapper->insert($timeEntry);
+		// Entry insert + project counter increment in one transaction (D10).
+		$this->db->beginTransaction();
+		try {
+			$inserted = $this->timeEntryMapper->insert($timeEntry);
+			$this->counterService->applyEntryDelta(
+				$pid,
+				$inserted->getBillingStatus(),
+				(float) $inserted->getHours(),
+				(float) $inserted->getHourlyRate(),
+				+1
+			);
+			$this->db->commit();
+		} catch (\Throwable $e) {
+			$this->db->rollBack();
+			throw $e;
+		}
+
+		return $inserted;
 	}
 
 	/**
@@ -227,7 +262,22 @@ class TimeEntryService
 			throw new PermissionDeniedException('update', 'time entry', $this->l->t('Access denied'));
 		}
 
+		// Settled entries are frozen (spec 9.3): invoiced/paid rows cannot be
+		// edited until a settler reopens them. Client billing_status is ignored.
+		if ($timeEntry->isBillingLocked()) {
+			throw new BillingLockedException(
+				$timeEntry->getBillingStatus(),
+				$this->l->t('This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.')
+			);
+		}
+
 		$originalProjectId = (int) $timeEntry->getProjectId();
+		$originalStatus = $timeEntry->getBillingStatus();
+		$originalHours = (float) $timeEntry->getHours();
+		$originalRate = (float) $timeEntry->getHourlyRate();
+		$expectedUpdatedAt = $timeEntry->getUpdatedAt() instanceof \DateTimeInterface
+			? $timeEntry->getUpdatedAt()->format('Y-m-d H:i:s')
+			: '';
 		$originalDateKey = $timeEntry->getDate() instanceof \DateTimeInterface
 			? $timeEntry->getDate()->format('Y-m-d')
 			: null;
@@ -303,7 +353,54 @@ class TimeEntryService
 
 		$timeEntry->setUpdatedAt(new \DateTime());
 
-		return $this->timeEntryMapper->update($timeEntry);
+		$newHours = (float) $timeEntry->getHours();
+		$newRate = (float) $timeEntry->getHourlyRate();
+		$countersAffected = $projectChanged
+			|| Money::compare($newHours, $originalHours) !== 0
+			|| Money::compare($newRate, $originalRate) !== 0;
+
+		// Guarded write (spec 9.3 / §10.4): the WHERE clause re-checks the
+		// status and updated_at we read above, so a settlement transition that
+		// races this edit makes the UPDATE match zero rows instead of
+		// clobbering a freshly locked entry. Counter deltas ride in the same
+		// transaction (D10), entry row first, then projects ascending (§10.7).
+		$this->db->beginTransaction();
+		try {
+			$affected = $this->timeEntryMapper->updateContentGuarded($timeEntry, $originalStatus, $expectedUpdatedAt);
+			if ($affected === 0) {
+				$this->db->rollBack();
+				$current = $this->getTimeEntry($id);
+				if ($current !== null && $current->isBillingLocked()) {
+					throw new BillingLockedException(
+						$current->getBillingStatus(),
+						$this->l->t('This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.')
+					);
+				}
+				throw new SettlementConflictException(
+					SettlementConflictException::CODE_UPDATED_AT,
+					$this->l->t('This time entry was changed by someone else in the meantime. Please reload and try again.')
+				);
+			}
+			if ($countersAffected) {
+				$this->counterService->applyContentChangeDelta(
+					$originalProjectId,
+					$targetProjectId,
+					$originalStatus,
+					$originalHours,
+					$originalRate,
+					$newHours,
+					$newRate
+				);
+			}
+			$this->db->commit();
+		} catch (BillingLockedException | SettlementConflictException $e) {
+			throw $e;
+		} catch (\Throwable $e) {
+			$this->db->rollBack();
+			throw $e;
+		}
+
+		return $timeEntry;
 	}
 
 	/**
@@ -354,20 +451,104 @@ class TimeEntryService
 			throw new PermissionDeniedException('delete', 'time entry', $this->l->t('Access denied'));
 		}
 
-		$this->timeEntryMapper->delete($timeEntry);
+		if ($timeEntry->isBillingLocked()) {
+			throw new BillingLockedException(
+				$timeEntry->getBillingStatus(),
+				$this->l->t('This time entry has already been invoiced or paid and can no longer be deleted. Ask a project manager to reopen it first.')
+			);
+		}
+
+		// Guarded delete + counter decrement in one transaction (D10, E13).
+		// The status/updated_at predicates close the read-check-act race with
+		// a concurrent settlement transition (spec §10.4).
+		$expectedUpdatedAt = $timeEntry->getUpdatedAt() instanceof \DateTimeInterface
+			? $timeEntry->getUpdatedAt()->format('Y-m-d H:i:s')
+			: '';
+		$this->db->beginTransaction();
+		try {
+			$affected = $this->timeEntryMapper->deleteGuardedUnlocked(
+				(int) $timeEntry->getId(),
+				$timeEntry->getBillingStatus(),
+				$expectedUpdatedAt
+			);
+			if ($affected === 0) {
+				$this->db->rollBack();
+				$current = $this->getTimeEntry($id);
+				if ($current !== null && $current->isBillingLocked()) {
+					throw new BillingLockedException(
+						$current->getBillingStatus(),
+						$this->l->t('This time entry has already been invoiced or paid and can no longer be deleted. Ask a project manager to reopen it first.')
+					);
+				}
+				if ($current === null) {
+					// Deleted concurrently — desired outcome, nothing to do.
+					return;
+				}
+				throw new SettlementConflictException(
+					SettlementConflictException::CODE_UPDATED_AT,
+					$this->l->t('This time entry was changed by someone else in the meantime. Please reload and try again.')
+				);
+			}
+			$this->counterService->applyEntryDelta(
+				(int) $timeEntry->getProjectId(),
+				$timeEntry->getBillingStatus(),
+				(float) $timeEntry->getHours(),
+				(float) $timeEntry->getHourlyRate(),
+				-1
+			);
+			$this->db->commit();
+		} catch (BillingLockedException | SettlementConflictException $e) {
+			throw $e;
+		} catch (\Throwable $e) {
+			$this->db->rollBack();
+			throw $e;
+		}
 	}
 
 	/**
 	 * Remove a time entry as part of system maintenance (cron/CLI). No per-user ownership check.
 	 * Do not call from user HTTP controllers.
+	 *
+	 * Maintenance may remove rows in any settlement state; the counter for the
+	 * row's current bucket is decremented in the same transaction.
 	 */
 	public function deleteTimeEntryForMaintenance(int $id): void
 	{
-		$timeEntry = $this->getTimeEntry($id);
-		if (!$timeEntry) {
-			return;
+		// Retry once: if the row's state moves between read and guarded delete
+		// (concurrent settle/edit), re-read and try again with fresh values.
+		for ($attempt = 0; $attempt < 2; $attempt++) {
+			$timeEntry = $this->getTimeEntry($id);
+			if (!$timeEntry) {
+				return;
+			}
+			$expectedUpdatedAt = $timeEntry->getUpdatedAt() instanceof \DateTimeInterface
+				? $timeEntry->getUpdatedAt()->format('Y-m-d H:i:s')
+				: '';
+			$this->db->beginTransaction();
+			try {
+				$affected = $this->timeEntryMapper->deleteGuardedExact(
+					(int) $timeEntry->getId(),
+					$timeEntry->getBillingStatus(),
+					$expectedUpdatedAt
+				);
+				if ($affected === 0) {
+					$this->db->rollBack();
+					continue;
+				}
+				$this->counterService->applyEntryDelta(
+					(int) $timeEntry->getProjectId(),
+					$timeEntry->getBillingStatus(),
+					(float) $timeEntry->getHours(),
+					(float) $timeEntry->getHourlyRate(),
+					-1
+				);
+				$this->db->commit();
+				return;
+			} catch (\Throwable $e) {
+				$this->db->rollBack();
+				throw $e;
+			}
 		}
-		$this->timeEntryMapper->delete($timeEntry);
 	}
 
 	/**
@@ -878,6 +1059,22 @@ class TimeEntryService
 				throw new \Exception($this->l->t('Time entry not found'));
 			}
 
+			// Spec 6.2 / E23: settled rows are frozen for AZC upserts too.
+			if ($existing->isBillingLocked()) {
+				throw new BillingLockedException(
+					$existing->getBillingStatus(),
+					$this->l->t('This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.')
+				);
+			}
+
+			$originalProjectId = (int) $existing->getProjectId();
+			$originalStatus = $existing->getBillingStatus();
+			$originalHours = (float) $existing->getHours();
+			$originalRate = (float) $existing->getHourlyRate();
+			$expectedUpdatedAt = $existing->getUpdatedAt() instanceof \DateTimeInterface
+				? $existing->getUpdatedAt()->format('Y-m-d H:i:s')
+				: '';
+
 			$existing->setProjectId($projectId);
 			$existing->setDate($parsedDate);
 			$existing->setHours($hours);
@@ -885,9 +1082,51 @@ class TimeEntryService
 			$existing->setHourlyRate($resolvedRate);
 			$existing->setUpdatedAt(new \DateTime());
 
-			$updated = $this->timeEntryMapper->update($existing);
-			return (int)$updated->getId();
+			$countersAffected = $projectId !== $originalProjectId
+				|| Money::compare($hours, $originalHours) !== 0
+				|| Money::compare($resolvedRate, $originalRate) !== 0;
+
+			$this->db->beginTransaction();
+			try {
+				$affected = $this->timeEntryMapper->updateContentGuarded($existing, $originalStatus, $expectedUpdatedAt);
+				if ($affected === 0) {
+					$this->db->rollBack();
+					$current = $this->getTimeEntry($existingPcEntryId);
+					if ($current !== null && $current->isBillingLocked()) {
+						throw new BillingLockedException(
+							$current->getBillingStatus(),
+							$this->l->t('This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.')
+						);
+					}
+					throw new SettlementConflictException(
+						SettlementConflictException::CODE_UPDATED_AT,
+						$this->l->t('This time entry was changed by someone else in the meantime. Please reload and try again.')
+					);
+				}
+				if ($countersAffected) {
+					$this->counterService->applyContentChangeDelta(
+						$originalProjectId,
+						$projectId,
+						$originalStatus,
+						$originalHours,
+						$originalRate,
+						$hours,
+						$resolvedRate
+					);
+				}
+				$this->db->commit();
+			} catch (BillingLockedException | SettlementConflictException $e) {
+				throw $e;
+			} catch (\Throwable $e) {
+				$this->db->rollBack();
+				throw $e;
+			}
+
+			return (int) $existing->getId();
 		}
+
+		$project = $this->projectMapper->find($projectId);
+		$projectType = $project !== null ? (string) $project->getProjectType() : '';
 
 		$timeEntry = new TimeEntry();
 		$timeEntry->setProjectId($projectId);
@@ -898,8 +1137,23 @@ class TimeEntryService
 		$timeEntry->setHourlyRate($resolvedRate);
 		$timeEntry->setCreatedAt(new \DateTime());
 		$timeEntry->setUpdatedAt(new \DateTime());
+		$timeEntry->setBillingStatus(BillingStatus::initialForProjectType($projectType));
 
-		$inserted = $this->timeEntryMapper->insert($timeEntry);
+		$this->db->beginTransaction();
+		try {
+			$inserted = $this->timeEntryMapper->insert($timeEntry);
+			$this->counterService->applyEntryDelta(
+				$projectId,
+				$inserted->getBillingStatus(),
+				(float) $inserted->getHours(),
+				(float) $inserted->getHourlyRate(),
+				+1
+			);
+			$this->db->commit();
+		} catch (\Throwable $e) {
+			$this->db->rollBack();
+			throw $e;
+		}
 		return (int)$inserted->getId();
 	}
 
@@ -920,6 +1174,49 @@ class TimeEntryService
 			throw new \Exception($this->l->t('Access denied'));
 		}
 
-		$this->timeEntryMapper->delete($row);
+		if ($row->isBillingLocked()) {
+			throw new BillingLockedException(
+				$row->getBillingStatus(),
+				$this->l->t('This time entry has already been invoiced or paid and can no longer be deleted. Ask a project manager to reopen it first.')
+			);
+		}
+
+		$expectedUpdatedAt = $row->getUpdatedAt() instanceof \DateTimeInterface
+			? $row->getUpdatedAt()->format('Y-m-d H:i:s')
+			: '';
+		$this->db->beginTransaction();
+		try {
+			$affected = $this->timeEntryMapper->deleteGuardedUnlocked((int) $row->getId(), $row->getBillingStatus(), $expectedUpdatedAt);
+			if ($affected === 0) {
+				$this->db->rollBack();
+				$current = $this->getTimeEntry($pcEntryId);
+				if ($current === null) {
+					return;
+				}
+				if ($current->isBillingLocked()) {
+					throw new BillingLockedException(
+						$current->getBillingStatus(),
+						$this->l->t('This time entry has already been invoiced or paid and can no longer be deleted. Ask a project manager to reopen it first.')
+					);
+				}
+				throw new SettlementConflictException(
+					SettlementConflictException::CODE_UPDATED_AT,
+					$this->l->t('This time entry was changed by someone else in the meantime. Please reload and try again.')
+				);
+			}
+			$this->counterService->applyEntryDelta(
+				$pid,
+				$row->getBillingStatus(),
+				(float) $row->getHours(),
+				(float) $row->getHourlyRate(),
+				-1
+			);
+			$this->db->commit();
+		} catch (BillingLockedException | SettlementConflictException $e) {
+			throw $e;
+		} catch (\Throwable $e) {
+			$this->db->rollBack();
+			throw $e;
+		}
 	}
 }

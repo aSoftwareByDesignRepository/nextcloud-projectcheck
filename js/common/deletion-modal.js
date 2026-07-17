@@ -205,6 +205,13 @@
 				if (impact.project_members > 0) {
 					items.push(impact.project_members + ' ' + t('projectcheck', 'team members will be removed'));
 				}
+				if (typeof impact.outstanding_hours === 'number' && impact.outstanding_hours > 0) {
+					var oh = impact.outstanding_hours.toFixed(2);
+					var oa = (typeof impact.outstanding_amount === 'number')
+						? impact.outstanding_amount.toFixed(2)
+						: '0.00';
+					items.push(t('projectcheck', '{hours} h still not yet paid ({amount})').replace('{hours}', oh).replace('{amount}', oa));
+				}
 				break;
 			case 'customer':
 				if (impact.projects > 0) {

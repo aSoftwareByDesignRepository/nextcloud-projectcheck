@@ -9,10 +9,12 @@
 
 style('projectcheck', 'dashboard');
 style('projectcheck', 'projects');
+style('projectcheck', 'customers');
 style('projectcheck', 'budget-alerts');
 style('projectcheck', 'navigation');
 style('projectcheck', 'common/progress-bars');
 style('projectcheck', 'customer-statistics');
+style('projectcheck', 'common/list-table');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -425,6 +427,52 @@ include __DIR__ . '/common/page-start.php';
 				</div>
 			</div>
 
+			<?php
+			$customerSettlement = $_['customerSettlement'] ?? null;
+			$settlementInfoByProject = $_['settlementInfoByProject'] ?? [];
+			?>
+			<!-- Invoicing overview (derived from project counters — never hand-edited) -->
+			<section class="section pc-section pc-invoicing-section" aria-labelledby="customer-invoicing-title">
+				<div class="section-header">
+					<h3 class="pc-section__title" id="customer-invoicing-title">
+						<span data-lucide="receipt" class="lucide-icon primary" aria-hidden="true"></span>
+						<?php p($l->t('Invoicing overview')); ?>
+					</h3>
+					<p class="pc-section__intro"><?php p($l->t('How much work for this customer is still open or waiting to be paid.')); ?></p>
+				</div>
+				<div class="section-content">
+					<?php if ($customerSettlement): ?>
+						<div class="pc-invoicing-summary">
+							<div class="pc-invoicing-summary__chip">
+								<?php
+								$chipKind = 'posture';
+								$chipValue = (string)($customerSettlement['posture'] ?? 'n_a');
+								include __DIR__ . '/parts/settlement-chip.php';
+								?>
+							</div>
+							<?php
+							$progress = is_array($customerSettlement['progress'] ?? null) ? $customerSettlement['progress'] : [];
+							$progressVariant = 'full';
+							$progressId = 'pc-customer-stl-progress';
+							include __DIR__ . '/parts/settlement-progress.php';
+							?>
+							<?php if ((float)($customerSettlement['outstanding_hours'] ?? 0) > 0): ?>
+								<p class="pc-invoicing-summary__outstanding">
+									<?php p($l->t('Not yet paid: %1$s h · %2$s', [
+										number_format((float)$customerSettlement['outstanding_hours'], 2),
+										$fmt ? $fmt->currency((float)$customerSettlement['outstanding_amount']) : $currencyCode . ' ' . number_format((float)$customerSettlement['outstanding_amount'], 2),
+									])); ?>
+								</p>
+							<?php else: ?>
+								<p class="pc-invoicing-summary__empty">
+									<?php p($l->t('Nothing outstanding — all chargeable hours on this customer’s projects are paid, or there are no chargeable hours yet.')); ?>
+								</p>
+							<?php endif; ?>
+						</div>
+					<?php endif; ?>
+				</div>
+			</section>
+
 			<!-- Associated Projects -->
 			<div class="section projects-section">
 				<div class="section-header">
@@ -460,6 +508,7 @@ include __DIR__ . '/common/page-start.php';
 								<?php
 								$project = $projectData['project'] ?? $projectData;
 								$budgetInfo = $projectData['budgetInfo'] ?? null;
+								$projectSettlement = $settlementInfoByProject[(int)$project->getId()] ?? null;
 								?>
 								<div class="project-card dashboard-card <?php if ($budgetInfo): ?>budget-status-<?php p($budgetInfo['warning_level']); ?><?php endif; ?>">
 									<div class="card-header">
@@ -496,6 +545,13 @@ include __DIR__ . '/common/page-start.php';
 												<span class="status-badge status-<?php p(strtolower(str_replace(' ', '-', $project->getStatus()))); ?>">
 													<?php p($project->getStatus()); ?>
 												</span>
+												<?php if ($projectSettlement): ?>
+													<?php
+													$chipKind = 'posture';
+													$chipValue = (string)($projectSettlement['posture'] ?? 'n_a');
+													include __DIR__ . '/parts/settlement-chip.php';
+													?>
+												<?php endif; ?>
 												<?php if ($budgetInfo): ?>
 													<?php if ($budgetInfo['consumption_percentage'] >= 100): ?>
 														<span class="budget-status-badge critical">⚠️ <?php p($l->t('Over Budget')); ?></span>
@@ -513,11 +569,26 @@ include __DIR__ . '/common/page-start.php';
 										</div>
 									</div>
 									<div class="card-content">
+										<?php if ($projectSettlement): ?>
+											<?php
+											$progress = is_array($projectSettlement['progress'] ?? null) ? $projectSettlement['progress'] : [];
+											$progressVariant = 'compact';
+											$progressId = 'pc-cust-proj-stl-' . (int)$project->getId();
+											include __DIR__ . '/parts/settlement-progress.php';
+											?>
+										<?php endif; ?>
 										<div class="project-details">
-											<div class="detail-row">
-												<span class="detail-label"><?php p($l->t('Customer:')); ?></span>
-												<span class="detail-value"><?php p($customer->getName()); ?></span>
-											</div>
+											<?php if ($projectSettlement && (float)($projectSettlement['outstanding_hours'] ?? 0) > 0): ?>
+												<div class="detail-row">
+													<span class="detail-label"><?php p($l->t('Not yet paid:')); ?></span>
+													<span class="detail-value">
+														<?php p($l->t('%1$s h · %2$s', [
+															number_format((float)$projectSettlement['outstanding_hours'], 2),
+															$fmt ? $fmt->currency((float)$projectSettlement['outstanding_amount']) : $currencyCode . ' ' . number_format((float)$projectSettlement['outstanding_amount'], 2),
+														])); ?>
+													</span>
+												</div>
+											<?php endif; ?>
 											<?php if ($budgetInfo): ?>
 												<div class="detail-row budget-detail">
 													<span class="detail-label"><?php p($l->t('Budget:')); ?></span>

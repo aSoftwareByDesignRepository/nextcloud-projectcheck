@@ -12,6 +12,10 @@
 	padding: 0;
 	margin-bottom: var(--pc-space-5, 1.5rem);
 	overflow: visible;
+	min-width: 0;
+	max-width: 100%;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .pc-list-panel__toolbar,
@@ -98,8 +102,11 @@
 .pc-list-table-wrap,
 .pc-app--time-entries .time-entries-table-wrap {
 	overflow-x: auto;
+	overflow-y: visible;
 	width: 100%;
 	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
 	-webkit-overflow-scrolling: touch;
 	padding: 0;
 }
@@ -397,15 +404,27 @@
 	}
 }
 
-.pc-list-panel .pc-data-table.projects-table {
-	min-width: 960px;
-}
-
+/* Fit the panel on desktop; allow horizontal scroll only when content needs it */
+.pc-list-panel .pc-data-table.projects-table,
 .pc-list-panel .pc-data-table.customers-table {
-	min-width: 640px;
+	width: 100%;
+	min-width: 0;
+	table-layout: auto;
 }
 
-@media (min-width: 1024px) {
+/* Medium widths: keep a usable table floor so columns don't crush before the
+ * card layout kicks in at ≤720px. Scroll stays inside .pc-list-table-wrap. */
+@media (min-width: 721px) and (max-width: 1199px) {
+	.pc-list-panel .pc-data-table.projects-table {
+		min-width: 52rem;
+	}
+
+	.pc-list-panel .pc-data-table.customers-table {
+		min-width: 36rem;
+	}
+}
+
+@media (min-width: 1200px) {
 	.pc-list-panel .pc-data-table.projects-table,
 	.pc-list-panel .pc-data-table.customers-table {
 		min-width: 0;
@@ -413,10 +432,165 @@
 	}
 }
 
+/* Soften dense cells so the table can shrink into the content column */
+.pc-list-panel .pc-data-table .budget-cell,
+.pc-list-panel .pc-data-table .progress-cell,
+.pc-list-panel .pc-data-table .col-invoicing,
+.pc-list-panel .pc-data-table .project-name-cell {
+	min-width: 0;
+	width: auto;
+	max-width: none;
+}
+
+.pc-list-panel .pc-data-table .budget-info-compact,
+.pc-list-panel .pc-data-table .progress-info,
+.pc-list-panel .pc-data-table .pc-invoicing-cell {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.pc-list-panel .pc-data-table .budget-line {
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.pc-list-panel .pc-data-table .pc-invoicing-cell__outstanding,
+.pc-list-panel .pc-data-table .hours-logged,
+.pc-list-panel .pc-data-table .hours-capacity-estimate {
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.pc-list-panel .pc-data-table .project-name-content {
+	flex-wrap: wrap;
+	min-width: 0;
+}
+
+.pc-list-panel .pc-data-table .project-badges {
+	flex-wrap: wrap;
+}
+
+/* List rows: no hover lift (avoids overflow from transform/box-shadow) */
+.pc-list-panel .pc-data-table.grid tbody tr:hover,
+.pc-list-panel .pc-data-table.grid tbody tr:focus-within {
+	transform: none;
+	box-shadow: none;
+}
+
 .pc-list-panel .pc-data-table tbody tr:hover,
 .pc-list-panel .pc-data-table tbody tr:focus-within {
 	background: var(--color-background-dark);
 }
+
+/* ── Export disclosure (CSV / JSON) ─────────────────────────────────────── */
+
+.pc-export {
+	position: relative;
+	display: inline-flex;
+	vertical-align: middle;
+}
+
+.pc-export__toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--pc-space-2, 0.5rem);
+	min-height: var(--pc-touch-min, 44px);
+}
+
+.pc-export__chevron {
+	width: 1rem;
+	height: 1rem;
+	transition: transform 0.15s ease;
+}
+
+.pc-export--open .pc-export__chevron {
+	transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pc-export__chevron {
+		transition: none;
+	}
+}
+
+.pc-export__menu {
+	position: absolute;
+	inset-block-start: calc(100% + var(--pc-space-1, 0.25rem));
+	inset-inline-end: 0;
+	z-index: var(--z-dropdown, 1000);
+	min-width: min(100vw - 2rem, 18rem);
+	padding: var(--pc-space-2, 0.5rem);
+	margin: 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	background: var(--color-main-background);
+	box-shadow: var(--color-box-shadow);
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-1, 0.25rem);
+}
+
+.pc-export__menu[hidden] {
+	display: none !important;
+}
+
+.pc-export__item {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.15rem;
+	width: 100%;
+	min-height: var(--pc-touch-min, 44px);
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-3, 0.75rem);
+	border: 0;
+	border-radius: var(--pc-radius-sm, 8px);
+	background: transparent;
+	color: var(--color-main-text);
+	text-align: start;
+	cursor: pointer;
+	font: inherit;
+}
+
+.pc-export__item:hover,
+.pc-export__item:focus-visible {
+	background: var(--color-background-hover);
+}
+
+.pc-export__item:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+.pc-export__item-title {
+	font-weight: 600;
+	font-size: var(--pc-fs-md, 1rem);
+	line-height: 1.3;
+}
+
+.pc-export__item-hint {
+	font-size: var(--pc-fs-sm, 0.875rem);
+	color: var(--color-text-maxcontrast);
+	line-height: 1.35;
+}
+
+@media (max-width: 480px) {
+	.pc-export {
+		width: 100%;
+	}
+
+	.pc-export__toggle {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.pc-export__menu {
+		inset-inline-start: 0;
+		inset-inline-end: 0;
+		min-width: 0;
+		width: 100%;
+	}
+}
+
 
 .pc-list-panel .emptycontent {
 	border: 0;

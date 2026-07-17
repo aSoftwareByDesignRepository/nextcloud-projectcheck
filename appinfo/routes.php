@@ -18,8 +18,13 @@ return [
 		['name' => 'service_worker#script', 'url' => '/service-worker.js', 'verb' => 'GET'],
 
 		// Project management routes
+		// Static /projects/* paths MUST be registered before the /projects/{id}
+		// wildcard below, otherwise the wildcard swallows them (first match wins).
 		['name' => 'project#index', 'url' => '/projects', 'verb' => 'GET'],
 		['name' => 'project#create', 'url' => '/projects/create', 'verb' => 'GET'],
+		['name' => 'project#export', 'url' => '/projects/export', 'verb' => 'GET'],
+		['name' => 'project#search', 'url' => '/projects/search', 'verb' => 'GET'],
+		['name' => 'project#filter', 'url' => '/projects/filter', 'verb' => 'GET'],
 		['name' => 'project#store', 'url' => '/projects', 'verb' => 'POST'],
 		['name' => 'project#show', 'url' => '/projects/{id}', 'verb' => 'GET'],
 		['name' => 'project#edit', 'url' => '/projects/{id}/edit', 'verb' => 'GET'],
@@ -40,13 +45,10 @@ return [
 		['name' => 'project#addTeamMember', 'url' => '/projects/{id}/members', 'verb' => 'POST'],
 		['name' => 'project#addAllTeamMembers', 'url' => '/projects/{id}/members/add-all', 'verb' => 'POST'],
 		['name' => 'project#updateTeamMember', 'url' => '/projects/{id}/members/{userId}', 'verb' => 'PUT'],
+		['name' => 'project#updateTeamMemberRole', 'url' => '/projects/{id}/members/{userId}/role', 'verb' => 'POST'],
 		['name' => 'project#removeTeamMember', 'url' => '/projects/{id}/members/{userId}', 'verb' => 'DELETE'],
 		['name' => 'project#removeTeamMemberPost', 'url' => '/projects/{id}/members/{userId}/remove', 'verb' => 'POST'],
 		['name' => 'project#searchAssignableUsers', 'url' => '/projects/{id}/members/search-users', 'verb' => 'GET'],
-
-		// Search and filtering routes
-		['name' => 'project#search', 'url' => '/projects/search', 'verb' => 'GET'],
-		['name' => 'project#filter', 'url' => '/projects/filter', 'verb' => 'GET'],
 
 		// API routes for AJAX calls
 		['name' => 'project#apiIndex', 'url' => '/api/projects', 'verb' => 'GET'],
@@ -72,8 +74,10 @@ return [
 		['name' => 'app_config#searchGroups', 'url' => '/api/config/search/groups', 'verb' => 'GET'],
 
 		// Customer management routes
+		// Static /customers/* paths MUST be registered before /customers/{id}.
 		['name' => 'customer#index', 'url' => '/customers', 'verb' => 'GET'],
 		['name' => 'customer#create', 'url' => '/customers/create', 'verb' => 'GET'],
+		['name' => 'customer#export', 'url' => '/customers/export', 'verb' => 'GET'],
 		['name' => 'customer#store', 'url' => '/customers', 'verb' => 'POST'],
 		['name' => 'customer#show', 'url' => '/customers/{id}', 'verb' => 'GET'],
 		['name' => 'customer#edit', 'url' => '/customers/{id}/edit', 'verb' => 'GET'],
@@ -87,6 +91,14 @@ return [
 		['name' => 'customer#getStats', 'url' => '/api/customers/stats', 'verb' => 'GET'],
 		['name' => 'customer#getAnalytics', 'url' => '/api/customers/analytics', 'verb' => 'GET'],
 
+		// Settlement routes (feature spec §9.2). Mutating POSTs, CSRF enforced.
+		// Static /time-entries/billing/* paths MUST precede /time-entries/{id}.
+		['name' => 'settlement#preview', 'url' => '/time-entries/billing/preview', 'verb' => 'POST'],
+		['name' => 'settlement#bulk', 'url' => '/time-entries/billing/bulk', 'verb' => 'POST'],
+		['name' => 'settlement#changeEntryStatus', 'url' => '/time-entries/{id}/billing', 'verb' => 'POST'],
+		['name' => 'settlement#projectPreview', 'url' => '/projects/{id}/settlement/preview', 'verb' => 'POST'],
+		['name' => 'settlement#projectApply', 'url' => '/projects/{id}/settlement/apply', 'verb' => 'POST'],
+
 		// Time entry management routes
 		['name' => 'timeentry#index', 'url' => '/time-entries', 'verb' => 'GET'],
 		['name' => 'timeentry#create', 'url' => '/time-entries/create', 'verb' => 'GET'],
@@ -96,7 +108,9 @@ return [
 		['name' => 'timeentry#getForProject', 'url' => '/time-entries/project/{projectId}', 'verb' => 'GET'],
 
 		// Employee management routes
+		// Static /employees/* paths MUST be registered before /employees/{userId}.
 		['name' => 'employee#index', 'url' => '/employees', 'verb' => 'GET'],
+		['name' => 'employee#export', 'url' => '/employees/export', 'verb' => 'GET'],
 		['name' => 'employee#show', 'url' => '/employees/{userId}', 'verb' => 'GET'],
 		['name' => 'employee#getStats', 'url' => '/api/employees/stats', 'verb' => 'GET'],
 		['name' => 'employee#assignProject', 'url' => '/employees/{userId}/projects', 'verb' => 'POST'],

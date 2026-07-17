@@ -181,6 +181,72 @@ class ActivityService
     }
 
     /**
+     * Log a single time-entry settlement transition (spec §8.3).
+     */
+    public function logBillingStatusChanged(string $userId, TimeEntry $timeEntry, string $fromStatus, string $toStatus): void
+    {
+        $event = $this->activityManager->generateEvent();
+        $event->setApp('projectcheck')
+            ->setType('projectcheck')
+            ->setAuthor($userId)
+            ->setAffectedUser($userId)
+            ->setObject('time_entry', $timeEntry->getId(), $timeEntry->getDescription() ?: 'Time entry')
+            ->setSubject('billing_status_changed', [
+                'actor' => $userId,
+                'project_id' => $timeEntry->getProjectId(),
+                'hours' => $timeEntry->getHours(),
+                'date' => $timeEntry->getFormattedDate(),
+                'from_status' => $fromStatus,
+                'status' => $toStatus,
+            ]);
+
+        $this->publishSafely($event, 'billing_status_changed');
+    }
+
+    /**
+     * Log a bulk settlement operation as one aggregate event.
+     */
+    public function logBillingBulkChanged(string $userId, string $toStatus, int $appliedCount, int $failedCount): void
+    {
+        $event = $this->activityManager->generateEvent();
+        $event->setApp('projectcheck')
+            ->setType('projectcheck')
+            ->setAuthor($userId)
+            ->setAffectedUser($userId)
+            ->setObject('time_entry_bulk', 0, 'Bulk settlement')
+            ->setSubject('billing_bulk_changed', [
+                'actor' => $userId,
+                'status' => $toStatus,
+                'applied' => $appliedCount,
+                'failed' => $failedCount,
+            ]);
+
+        $this->publishSafely($event, 'billing_bulk_changed');
+    }
+
+    /**
+     * Log a team member role change (Member ↔ Manager).
+     */
+    public function logMemberRoleChanged(string $userId, ProjectMember $member, string $previousRole): void
+    {
+        $event = $this->activityManager->generateEvent();
+        $event->setApp('projectcheck')
+            ->setType('projectcheck')
+            ->setAuthor($userId)
+            ->setAffectedUser($member->getUserId() ?: $userId)
+            ->setObject('project_member', $member->getId(), $member->getUserId())
+            ->setSubject('member_role_changed', [
+                'actor' => $userId,
+                'member' => $member->getUserId(),
+                'project_id' => $member->getProjectId(),
+                'status' => $member->getRole(),
+                'previous_role' => $previousRole,
+            ]);
+
+        $this->publishSafely($event, 'member_role_changed');
+    }
+
+    /**
      * Publish without ever propagating stream errors to the caller.
      */
     private function publishSafely(IEvent $event, string $context): void

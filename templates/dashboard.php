@@ -102,6 +102,84 @@ include __DIR__ . '/common/page-start.php';
             </a>
         </nav>
 
+        <?php
+        $settlementOutstanding = $_['settlementOutstanding'] ?? null;
+        if (is_array($settlementOutstanding)):
+            $outstandingHours = (float)($settlementOutstanding['outstanding_hours'] ?? 0);
+            $outstandingAmount = (float)($settlementOutstanding['outstanding_amount'] ?? 0);
+            $openHours = (float)($settlementOutstanding['open_hours'] ?? 0);
+            $invoicedHours = (float)($settlementOutstanding['invoiced_hours'] ?? 0);
+            $projectCount = (int)($settlementOutstanding['project_count'] ?? 0);
+            $scope = (string)($settlementOutstanding['scope'] ?? 'managed');
+            $openEntriesUrl = $urlGenerator->linkToRoute('projectcheck.timeentry.index', ['billing_status' => 'open']);
+            $outstandingProjectsUrl = $urlGenerator->linkToRoute('projectcheck.project.index', ['settlement' => 'outstanding']);
+            $outstandingCustomersUrl = $urlGenerator->linkToRoute('projectcheck.customer.index', ['settlement' => 'outstanding']);
+        ?>
+        <section class="section pc-section pc-settle-dashboard" aria-labelledby="dash-settlement-title">
+            <div class="section-header">
+                <h3 class="pc-section__title" id="dash-settlement-title"><?php p($l->t('Not yet paid')); ?></h3>
+                <p class="pc-section__intro">
+                    <?php if ($scope === 'global'): ?>
+                        <?php p($l->t('Open and invoiced hours across all projects.')); ?>
+                    <?php else: ?>
+                        <?php p($l->t('Open and invoiced hours on projects you manage.')); ?>
+                    <?php endif; ?>
+                </p>
+            </div>
+            <div class="section-content">
+                <div class="pc-settle-strip" role="region" aria-label="<?php p($l->t('Settlement summary')); ?>">
+                    <ul class="pc-settle-strip__list">
+                        <li class="pc-settle-strip__item">
+                            <span class="pc-settle-strip__chip">
+                                <span data-lucide="alert-circle" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($l->t('Not yet paid')); ?>
+                            </span>
+                            <span class="pc-settle-strip__hours">
+                                <?php p(number_format($outstandingHours, 2)); ?> h
+                                · <?php p($fmt ? $fmt->currency($outstandingAmount) : $currencyCode . ' ' . number_format($outstandingAmount, 2)); ?>
+                            </span>
+                        </li>
+                        <li class="pc-settle-strip__item">
+                            <span class="pc-settle-strip__chip">
+                                <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($l->t('Open')); ?>
+                            </span>
+                            <span class="pc-settle-strip__hours"><?php p(number_format($openHours, 2)); ?> h</span>
+                        </li>
+                        <li class="pc-settle-strip__item">
+                            <span class="pc-settle-strip__chip">
+                                <span data-lucide="file-text" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($l->t('Invoiced')); ?>
+                            </span>
+                            <span class="pc-settle-strip__hours"><?php p(number_format($invoicedHours, 2)); ?> h</span>
+                        </li>
+                        <li class="pc-settle-strip__item">
+                            <span class="pc-settle-strip__chip">
+                                <span data-lucide="folder" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($l->t('Projects')); ?>
+                            </span>
+                            <span class="pc-settle-strip__hours"><?php p($projectCount); ?></span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="pc-settle-dashboard__actions">
+                    <a class="button secondary" href="<?php p($openEntriesUrl); ?>">
+                        <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
+                        <?php p($l->t('Review open hours')); ?>
+                    </a>
+                    <a class="button secondary" href="<?php p($outstandingProjectsUrl); ?>">
+                        <span data-lucide="folder" class="lucide-icon" aria-hidden="true"></span>
+                        <?php p($l->t('Projects not yet paid')); ?>
+                    </a>
+                    <a class="button secondary" href="<?php p($outstandingCustomersUrl); ?>">
+                        <span data-lucide="users" class="lucide-icon" aria-hidden="true"></span>
+                        <?php p($l->t('Customers not yet paid')); ?>
+                    </a>
+                </div>
+            </div>
+        </section>
+        <?php endif; ?>
+
         <!-- Budget Alerts -->
         <?php if (isset($budgetAlerts) && !empty($budgetAlerts)): ?>
             <div class="section budget-alerts-section pc-section" aria-labelledby="dash-budget-alerts-title">

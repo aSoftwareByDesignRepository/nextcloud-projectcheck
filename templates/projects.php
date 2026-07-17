@@ -9,9 +9,11 @@
 
 use OCP\Util;
 
+Util::addScript('projectcheck', 'common/export-menu');
 Util::addScript('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'navigation');
+Util::addStyle('projectcheck', 'common/list-table');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -125,7 +127,9 @@ include __DIR__ . '/common/page-start.php';
         $colStatus = $l->t('Status');
         $colBudget = $l->t('Budget');
         $colProgress = $l->t('Progress');
+        $colInvoicing = $l->t('Invoicing');
         $colActions = $l->t('Actions');
+        $settlementInfoByProject = $_['settlementInfoByProject'] ?? [];
         ?>
         <div class="section pc-list-panel pc-section" aria-label="<?php p($l->t('Project list')); ?>">
             <div class="pc-list-panel__toolbar">
@@ -182,6 +186,17 @@ include __DIR__ . '/common/page-start.php';
                         <?php endif; ?>
                     </select>
 
+                    <?php $settlementFilterValue = (string)($_['filters']['settlement'] ?? ''); ?>
+                    <select id="settlement-filter" aria-label="<?php p($l->t('Filter by settlement')); ?>">
+                        <option value="all" <?php if ($settlementFilterValue === '' || $settlementFilterValue === 'all') echo 'selected'; ?>><?php p($l->t('Settlement: all')); ?></option>
+                        <option value="outstanding" <?php if ($settlementFilterValue === 'outstanding') echo 'selected'; ?>><?php p($l->t('Not yet paid')); ?></option>
+                        <option value="open" <?php if ($settlementFilterValue === 'open') echo 'selected'; ?>><?php p($l->t('Open')); ?></option>
+                        <option value="partial" <?php if ($settlementFilterValue === 'partial') echo 'selected'; ?>><?php p($l->t('Partially settled')); ?></option>
+                        <option value="awaiting_payment" <?php if ($settlementFilterValue === 'awaiting_payment') echo 'selected'; ?>><?php p($l->t('Awaiting payment')); ?></option>
+                        <option value="paid" <?php if ($settlementFilterValue === 'paid') echo 'selected'; ?>><?php p($l->t('Paid')); ?></option>
+                        <option value="n_a" <?php if ($settlementFilterValue === 'n_a') echo 'selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
+                    </select>
+
                     <button id="apply-filters" class="button primary" type="button">
                         <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Apply Filters')); ?>
@@ -190,6 +205,18 @@ include __DIR__ . '/common/page-start.php';
                         <span data-lucide="rotate-ccw" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Clear Filters')); ?>
                     </button>
+                    <?php
+                    $exportUrl = (string)($_['exportUrl'] ?? '');
+                    if ($exportUrl === '' && isset($_['urlGenerator']) && is_object($_['urlGenerator'])) {
+                    	$exportUrl = (string)$_['urlGenerator']->linkToRoute('projectcheck.project.export');
+                    }
+                    $exportEntityLabel = 'projects';
+                    $exportFilterKeys = 'search,status,priority,project_type,customer_id,settlement';
+                    $exportSuccessMsg = 'Exported {count} projects';
+                    $exportIncludeSort = true;
+                    $exportMenuId = 'pc-export-menu-projects';
+                    include __DIR__ . '/parts/export-menu.php';
+                    ?>
                 </div>
             </div>
             </div>
@@ -227,6 +254,7 @@ include __DIR__ . '/common/page-start.php';
                                 <?php endif; ?>
                             </th>
                             <?php endforeach; ?>
+                            <th scope="col" class="col-invoicing"><?php p($colInvoicing); ?></th>
                             <th scope="col" class="col-actions"><?php p($colActions); ?></th>
                         </tr>
                     </thead>
@@ -366,6 +394,32 @@ include __DIR__ . '/common/page-start.php';
                                                 <div class="budget-progress-fill" style="width: 0%"></div>
                                             </div>
                                             <span class="hours-logged">0h <?php p($l->t('logged')); ?></span>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="col-invoicing" data-label="<?php p($colInvoicing); ?>">
+                                    <?php $rowSettlement = $settlementInfoByProject[(int)$project->getId()] ?? null; ?>
+                                    <?php if ($rowSettlement !== null): ?>
+                                        <div class="pc-invoicing-cell">
+                                            <?php
+                                            $chipKind = 'posture';
+                                            $chipValue = (string)($rowSettlement['posture'] ?? 'n_a');
+                                            include __DIR__ . '/parts/settlement-chip.php';
+                                            ?>
+                                            <?php
+                                            $progress = is_array($rowSettlement['progress'] ?? null) ? $rowSettlement['progress'] : [];
+                                            $progressVariant = 'compact';
+                                            $progressId = 'pc-proj-stl-' . (int)$project->getId();
+                                            include __DIR__ . '/parts/settlement-progress.php';
+                                            ?>
+                                            <?php if ((float)($rowSettlement['outstanding_hours'] ?? 0) > 0): ?>
+                                                <span class="pc-invoicing-cell__outstanding">
+                                                    <?php p($l->t('Not yet paid: %1$s h · %2$s', [
+                                                        number_format((float)$rowSettlement['outstanding_hours'], 2),
+                                                        $fmt ? $fmt->currency((float)$rowSettlement['outstanding_amount']) : $currencyCode . ' ' . number_format((float)$rowSettlement['outstanding_amount'], 2),
+                                                    ])); ?>
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
                                     <?php endif; ?>
                                 </td>

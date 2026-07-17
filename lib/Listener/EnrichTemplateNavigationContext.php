@@ -56,8 +56,9 @@ class EnrichTemplateNavigationContext implements IEventListener
 		Util::addStyle(Application::APP_ID, 'common/app-layout', true);
 		Util::addStyle(Application::APP_ID, 'common/mobile-nav', true);
 		Util::addStyle(Application::APP_ID, 'common/accessibility', true);
-		Util::addStyle(Application::APP_ID, 'common/list-table', true);
 		Util::addStyle(Application::APP_ID, 'common/stats-panel', true);
+		// list-table.css is loaded from list page templates AFTER page CSS so its
+		// overflow/reflow rules win over legacy .grid / cell width styles.
 		if (!$event->isLoggedIn()) {
 			return;
 		}
@@ -96,6 +97,9 @@ class EnrichTemplateNavigationContext implements IEventListener
 		$params['fmt'] = $this->localeFormat;
 		$params['orgCurrency'] = $this->localeFormat->getCurrency();
 		$params['htmlLang'] = str_replace('_', '-', $this->localeFormat->getLocale());
+		if (!isset($params['urlGenerator'])) {
+			$params['urlGenerator'] = $this->urlGenerator;
+		}
 		$response->setParams($params);
 	}
 }

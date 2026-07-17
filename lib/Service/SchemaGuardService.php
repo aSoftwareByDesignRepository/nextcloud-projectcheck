@@ -55,7 +55,12 @@ class SchemaGuardService
 		}
 
 		$ensurer = new ProjectCheckSchemaEnsurer($this->db, $this->config);
-		if ($ensurer->isReady()) {
+		$bootstrap = new \OCA\ProjectCheck\Migration\SettlementBootstrap($this->db, $this->config);
+		// Tables alone are not enough: the settlement counter recompute flag
+		// must be set, or list filters / posture chips silently lie with
+		// DEFAULT 0 counters (spec §10.6). ensure() clears the flag whenever
+		// it adds settlement columns, so a set flag implies columns exist.
+		if ($ensurer->isReady() && $bootstrap->isDone()) {
 			self::$requestState = true;
 			return;
 		}
@@ -66,6 +71,7 @@ class SchemaGuardService
 			'app' => ProjectCheckTableCatalog::APP_ID,
 			'missing' => $missing,
 			'legacyTables' => $legacy,
+			'settlementReady' => $bootstrap->isDone(),
 		]);
 
 		try {
@@ -84,7 +90,7 @@ class SchemaGuardService
 			);
 		}
 
-		if (!$ensurer->isReady()) {
+		if (!$ensurer->isReady() || !$bootstrap->isDone()) {
 			self::$requestState = false;
 			throw new SchemaRepairFailedException(
 				'ProjectCheck schema is still incomplete after runtime repair.'
@@ -143,8 +149,13 @@ class SchemaGuardService
 		}
 
 		try {
+			// Always run ensure() under the lock when we reach here — tables may
+			// exist while settlement columns / counter bootstrap are still missing.
 			if ($ensurer->isReady()) {
-				return;
+				$bootstrap = new \OCA\ProjectCheck\Migration\SettlementBootstrap($this->db, $this->config);
+				if ($bootstrap->isDone()) {
+					return;
+				}
 			}
 			$ensurer->ensure(new SilentOutput());
 		} finally {
@@ -156,9 +167,10 @@ class SchemaGuardService
 
 	private function waitForConcurrentRepair(ProjectCheckSchemaEnsurer $ensurer): void
 	{
+		$bootstrap = new \OCA\ProjectCheck\Migration\SettlementBootstrap($this->db, $this->config);
 		for ($attempt = 0; $attempt < 30; $attempt++) {
 			usleep(200_000);
-			if ($ensurer->isReady()) {
+			if ($ensurer->isReady() && $bootstrap->isDone()) {
 				return;
 			}
 		}

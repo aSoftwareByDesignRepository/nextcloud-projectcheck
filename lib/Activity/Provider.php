@@ -132,6 +132,15 @@ class Provider implements IProvider
 			case 'member_removed':
 				$subject = $this->l10n->t('{actor} removed {member} from project {project}');
 				break;
+			case 'billing_status_changed':
+				$subject = $this->l10n->t('{actor} changed the settlement status of a time entry to {status}');
+				break;
+			case 'billing_bulk_changed':
+				$subject = $this->l10n->t('{actor} changed the settlement status of multiple time entries to {status}');
+				break;
+			case 'member_role_changed':
+				$subject = $this->l10n->t('{actor} changed the project role of {member} to {status}');
+				break;
 			case 'budget_warning':
 				$subject = $this->l10n->t('Project {project} has reached {percentage}% of its budget');
 				break;

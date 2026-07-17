@@ -32,6 +32,9 @@
 	align-items: stretch !important;
 	width: 100% !important;
 	max-width: min(1400px, 100%) !important;
+	/* Allow nested overflow-x:auto tables to shrink inside the flex shell
+	 * instead of expanding the page and getting clipped by overflow-x:hidden. */
+	min-width: 0;
 	margin-inline: auto;
 	box-sizing: border-box;
 }

@@ -11,7 +11,9 @@ use OCA\ProjectCheck\Db\TimeEntryMapper;
 use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCA\ProjectCheck\Service\HourlyRateService;
 use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\ProjectSettlementCounterService;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCP\IDBConnection;
 use OCP\IL10N;
 use PHPUnit\Framework\TestCase;
 
@@ -20,11 +22,39 @@ use PHPUnit\Framework\TestCase;
  */
 class TimeEntryServiceRateResolutionTest extends TestCase
 {
+	private function makeService(
+		TimeEntryMapper $timeEntryMapper,
+		ProjectMapper $projectMapper,
+		ProjectService $projectService,
+		HourlyRateService $hourlyRateService,
+	): TimeEntryService {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('beginTransaction');
+		$db->method('commit');
+		$db->method('rollBack');
+
+		$counter = $this->createMock(ProjectSettlementCounterService::class);
+
+		return new TimeEntryService(
+			$timeEntryMapper,
+			$projectMapper,
+			$projectService,
+			$hourlyRateService,
+			$l10n,
+			$db,
+			$counter
+		);
+	}
+
 	public function testCreatePersistsResolvedRateWhenClientSendsMatchingValue(): void
 	{
 		$project = new Project();
 		$project->setId(5);
 		$project->setStatus('Active');
+		$project->setProjectType('client');
 
 		$projectMapper = $this->createMock(ProjectMapper::class);
 		$projectMapper->method('find')->with(5)->willReturn($project);
@@ -46,16 +76,7 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 			return $entry;
 		});
 
-		$l10n = $this->createMock(IL10N::class);
-		$l10n->method('t')->willReturnArgument(0);
-
-		$service = new TimeEntryService(
-			$timeEntryMapper,
-			$projectMapper,
-			$projectService,
-			$hourlyRateService,
-			$l10n
-		);
+		$service = $this->makeService($timeEntryMapper, $projectMapper, $projectService, $hourlyRateService);
 
 		$service->createTimeEntry([
 			'project_id' => 5,
@@ -67,6 +88,7 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 
 		$this->assertNotNull($captured);
 		$this->assertEqualsWithDelta(62.5, (float) $captured->getHourlyRate(), 0.001);
+		$this->assertSame('open', $captured->getBillingStatus());
 	}
 
 	public function testCreateRejectsTamperedClientRate(): void
@@ -74,6 +96,7 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 		$project = new Project();
 		$project->setId(5);
 		$project->setStatus('Active');
+		$project->setProjectType('client');
 
 		$projectMapper = $this->createMock(ProjectMapper::class);
 		$projectMapper->method('find')->willReturn($project);
@@ -87,15 +110,11 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 			new RateResolutionException('tamper', 'rate_mismatch')
 		);
 
-		$l10n = $this->createMock(IL10N::class);
-		$l10n->method('t')->willReturnArgument(0);
-
-		$service = new TimeEntryService(
+		$service = $this->makeService(
 			$this->createMock(TimeEntryMapper::class),
 			$projectMapper,
 			$projectService,
-			$hourlyRateService,
-			$l10n
+			$hourlyRateService
 		);
 
 		$this->expectException(\Exception::class);
@@ -121,12 +140,14 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 		$existing->setHours(2.0);
 		$existing->setHourlyRate(40.0);
 		$existing->setDescription('Work');
+		$existing->setBillingStatus('open');
 		$existing->setCreatedAt(new \DateTime('2026-01-01'));
 		$existing->setUpdatedAt(new \DateTime('2026-01-01'));
 
 		$project = new Project();
 		$project->setId(5);
 		$project->setStatus('Active');
+		$project->setProjectType('client');
 
 		$projectMapper = $this->createMock(ProjectMapper::class);
 		$projectMapper->method('find')->with(5)->willReturn($project);
@@ -144,20 +165,9 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 
 		$timeEntryMapper = $this->createMock(TimeEntryMapper::class);
 		$timeEntryMapper->method('find')->with(10)->willReturn($existing);
-		$timeEntryMapper->method('update')->willReturnCallback(static function (TimeEntry $entry) {
-			return $entry;
-		});
+		$timeEntryMapper->method('updateContentGuarded')->willReturn(1);
 
-		$l10n = $this->createMock(IL10N::class);
-		$l10n->method('t')->willReturnArgument(0);
-
-		$service = new TimeEntryService(
-			$timeEntryMapper,
-			$projectMapper,
-			$projectService,
-			$hourlyRateService,
-			$l10n
-		);
+		$service = $this->makeService($timeEntryMapper, $projectMapper, $projectService, $hourlyRateService);
 
 		$updated = $service->updateTimeEntry(10, ['date' => '15.06.2026'], 'alice');
 
@@ -177,16 +187,19 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 		$existing->setHours(1.0);
 		$existing->setHourlyRate(40.0);
 		$existing->setDescription('Work');
+		$existing->setBillingStatus('open');
 		$existing->setCreatedAt(new \DateTime('2026-03-01'));
 		$existing->setUpdatedAt(new \DateTime('2026-03-01'));
 
 		$oldProject = new Project();
 		$oldProject->setId(5);
 		$oldProject->setStatus('Active');
+		$oldProject->setProjectType('client');
 
 		$newProject = new Project();
 		$newProject->setId(9);
 		$newProject->setStatus('Active');
+		$newProject->setProjectType('client');
 
 		$projectMapper = $this->createMock(ProjectMapper::class);
 		$projectMapper->method('find')->willReturnCallback(static function (int $id) use ($oldProject, $newProject) {
@@ -205,20 +218,9 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 
 		$timeEntryMapper = $this->createMock(TimeEntryMapper::class);
 		$timeEntryMapper->method('find')->with(11)->willReturn($existing);
-		$timeEntryMapper->method('update')->willReturnCallback(static function (TimeEntry $entry) {
-			return $entry;
-		});
+		$timeEntryMapper->method('updateContentGuarded')->willReturn(1);
 
-		$l10n = $this->createMock(IL10N::class);
-		$l10n->method('t')->willReturnArgument(0);
-
-		$service = new TimeEntryService(
-			$timeEntryMapper,
-			$projectMapper,
-			$projectService,
-			$hourlyRateService,
-			$l10n
-		);
+		$service = $this->makeService($timeEntryMapper, $projectMapper, $projectService, $hourlyRateService);
 
 		$updated = $service->updateTimeEntry(11, ['project_id' => 9], 'alice');
 

@@ -155,7 +155,45 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Db\ProjectMapper::class),
 				$c->query('ProjectService'),
 				$c->query(\OCA\ProjectCheck\Service\HourlyRateService::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\OCP\IDBConnection::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectSettlementCounterService::class)
+			);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Service\ProjectSettlementCounterService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\ProjectSettlementCounterService(
+				$c->query(\OCP\IDBConnection::class)
+			);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Service\ProjectSettlementService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\ProjectSettlementService(
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Service\TimeEntryBillingService::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectSettlementCounterService::class),
 				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID)
+			);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Service\CustomerSettlementService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\CustomerSettlementService(
+				$c->query(\OCP\IDBConnection::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class)
+			);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Service\TimeEntryBillingService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\TimeEntryBillingService(
+				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectSettlementCounterService::class),
+				$c->query(\OCP\IDBConnection::class),
+				$c->query(\OCA\ProjectCheck\Service\ActivityService::class),
+				$c->query(\OCP\IConfig::class),
+				$c->query(\OCP\ICacheFactory::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\Psr\Log\LoggerInterface::class)
 			);
 		});
 
@@ -303,6 +341,13 @@ class Application extends App implements IBootstrap
 		});
 
 		// Register TimeEntryController explicitly (ensures DI build)
+		$context->registerService(\OCA\ProjectCheck\Service\ListExportService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\ListExportService(
+				$c->query(\OCP\IConfig::class),
+				self::APP_ID
+			);
+		});
+
 		$context->registerService(\OCA\ProjectCheck\Controller\TimeEntryController::class, function ($c) {
 			return new \OCA\ProjectCheck\Controller\TimeEntryController(
 				$c->query('appName'),
@@ -319,13 +364,27 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Service\ActivityService::class),
 				$c->query(\OCA\ProjectCheck\Service\CSPService::class),
 				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
-				$c->query(\Psr\Log\LoggerInterface::class)
+				$c->query(\Psr\Log\LoggerInterface::class),
+				$c->query(\OCA\ProjectCheck\Service\ListExportService::class),
+				$c->query(\OCA\ProjectCheck\Service\TimeEntryBillingService::class)
 			);
 		});
 
 		// Alias for legacy mis-cased controller resolution
 		$context->registerService(\OCA\ProjectCheck\Controller\TimeentryController::class, function ($c) {
 			return $c->query(\OCA\ProjectCheck\Controller\TimeEntryController::class);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Controller\SettlementController::class, function ($c) {
+			return new \OCA\ProjectCheck\Controller\SettlementController(
+				$c->query('appName'),
+				$c->query(\OCP\IRequest::class),
+				$c->query(\OCP\IUserSession::class),
+				$c->query(\OCA\ProjectCheck\Service\TimeEntryBillingService::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectSettlementService::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\Psr\Log\LoggerInterface::class)
+			);
 		});
 
 		// Register mappers
@@ -408,6 +467,13 @@ class Application extends App implements IBootstrap
 
 		$context->registerService(EnsureProjectCheckSchema::class, function ($c): EnsureProjectCheckSchema {
 			return new EnsureProjectCheckSchema(
+				$c->query(IDBConnection::class),
+				$c->query(IConfig::class),
+			);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Command\SettlementRecomputeCommand::class, function ($c): \OCA\ProjectCheck\Command\SettlementRecomputeCommand {
+			return new \OCA\ProjectCheck\Command\SettlementRecomputeCommand(
 				$c->query(IDBConnection::class),
 				$c->query(IConfig::class),
 			);

@@ -14,9 +14,13 @@ namespace OCA\ProjectCheck\Controller;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
@@ -28,6 +32,7 @@ use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\AccessControlService;
+use OCA\ProjectCheck\Service\ListExportService;
 use OCA\ProjectCheck\Db\UserAccountSnapshotMapper;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCP\IConfig;
@@ -84,6 +89,9 @@ class EmployeeController extends Controller
 	/** @var IRequestTokenProvider */
 	private $requestTokenProvider;
 
+	/** @var ListExportService */
+	private $listExportService;
+
     /**
      * EmployeeController constructor
      *
@@ -102,6 +110,7 @@ class EmployeeController extends Controller
 	 * @param AccessControlService $accessControlService
 	 * @param EmployeeHourlyRateService $employeeHourlyRateService
 	 * @param IRequestTokenProvider $requestTokenProvider
+	 * @param ListExportService $listExportService
      */
     public function __construct(
         $appName,
@@ -118,7 +127,8 @@ class EmployeeController extends Controller
         IL10N $l,
 		UserAccountSnapshotMapper $userAccountSnapshotMapper,
 		AccessControlService $accessControlService,
-		IRequestTokenProvider $requestTokenProvider
+		IRequestTokenProvider $requestTokenProvider,
+		ListExportService $listExportService
     ) {
         parent::__construct($appName, $request);
         $this->userSession = $userSession;
@@ -133,6 +143,7 @@ class EmployeeController extends Controller
 		$this->accessControlService = $accessControlService;
 		$this->employeeHourlyRateService = $employeeHourlyRateService;
 		$this->requestTokenProvider = $requestTokenProvider;
+		$this->listExportService = $listExportService;
         $this->setCspService($cspService);
     }
 
@@ -237,11 +248,75 @@ class EmployeeController extends Controller
             ],
             'stats' => $stats,
             'urlGenerator' => $this->urlGenerator,
-            'userManager' => $this->userManager
+            'userManager' => $this->userManager,
+			'exportUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.export'),
         ]);
 
         return $this->configureCSP($response);
     }
+
+	/**
+	 * Export employee comparison stats as CSV or JSON.
+	 *
+	 * Same visibility + search scope as {@see index()}, without pagination.
+	 * Non-admin users only ever export their own row (same as the list).
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 10, period: 60)]
+	public function export(): Response
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+
+		try {
+			$userId = $user->getUID();
+			$format = $this->listExportService->normalizeFormat(
+				(string)$this->request->getParam('format', ListExportService::FORMAT_CSV)
+			);
+
+			$isGlobalViewer = $this->accessControlService->isSystemAdministrator($userId)
+				|| $this->accessControlService->canManageOrganization($userId);
+			$accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($userId);
+			$visibleUserIds = $isGlobalViewer ? null : [$userId];
+
+			$searchRaw = $this->request->getParam('search', '');
+			$search = is_string($searchRaw) ? trim($searchRaw) : '';
+
+			$employeeComparisonStatsAll = $this->timeEntryService->getEmployeeComparisonStats(
+				$accessibleProjectIds,
+				$visibleUserIds
+			);
+
+			if ($search !== '') {
+				$needle = mb_strtolower($search);
+				$employeeComparisonStatsAll = array_values(array_filter(
+					$employeeComparisonStatsAll,
+					static function ($item) use ($needle) {
+						$name = mb_strtolower((string)($item['user_display_name'] ?? ''));
+						$id = mb_strtolower((string)($item['user_id'] ?? ''));
+						return str_contains($name, $needle) || str_contains($id, $needle);
+					}
+				));
+			}
+
+			if ($this->listExportService->exceedsMaxRows(count($employeeComparisonStatsAll))) {
+				return new DataResponse([
+					'error' => $this->l->t(
+						'Too many rows to export (limit %s). Narrow your filters and try again.',
+						[number_format(ListExportService::MAX_EXPORT_ROWS)]
+					),
+				], 422);
+			}
+
+			$packed = $this->listExportService->exportEmployees($employeeComparisonStatsAll, $format);
+			return $this->listExportService->toDownloadResponse($packed);
+		} catch (\Throwable $e) {
+			return new DataResponse(['error' => $this->l->t('Export failed. Please try again.')], 500);
+		}
+	}
 
     /**
      * Show employee detail page

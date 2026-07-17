@@ -12,6 +12,7 @@
     // DOM elements
     const elements = {
         searchInput: document.getElementById('customer-search'),
+        settlementFilter: document.getElementById('settlement-filter'),
         clearFiltersBtn: document.getElementById('clear-filters'),
         customersTable: document.querySelector('.customers-table'),
         customersTbody: document.querySelector('.customers-table tbody')
@@ -75,8 +76,14 @@
      */
     function applyFilters() {
         const searchTerm = elements.searchInput ? elements.searchInput.value : '';
+        const settlement = elements.settlementFilter ? elements.settlementFilter.value : '';
         const url = new URL(window.location.href);
         searchTerm ? url.searchParams.set('search', searchTerm) : url.searchParams.delete('search');
+        if (settlement && settlement !== 'all') {
+            url.searchParams.set('settlement', settlement);
+        } else {
+            url.searchParams.delete('settlement');
+        }
         url.searchParams.set('page', '1');
         window.location.href = url.toString();
     }
@@ -87,6 +94,10 @@
     function clearFilters() {
         const url = new URL(window.location.href);
         url.searchParams.delete('search');
+        url.searchParams.delete('settlement');
+        if (elements.settlementFilter) {
+            elements.settlementFilter.value = 'all';
+        }
         url.searchParams.set('page', '1');
         window.location.href = url.toString();
     }

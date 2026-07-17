@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Repair;
 
-use OCA\ProjectCheck\Migration\LegacyTableRenamer;
 use OCA\ProjectCheck\Migration\ProjectCheckSchemaEnsurer;
 use OCP\IConfig;
 use OCP\IDBConnection;
@@ -40,25 +39,11 @@ class EnsureProjectCheckSchema implements IRepairStep
 		// Re-enable after auto-disable during a server upgrade must not inherit a pending uninstall pass.
 		$this->config->deleteAppValue(UninstallDropTables::APP_ID, UninstallDropTables::REPAIR_PASS_KEY);
 
+		// Always run ensure(): it is idempotent for tables/columns/indexes and
+		// the settlement bootstrap is flag-guarded (cheap no-op when ready).
+		// Skipping when "tables exist" previously left settlement columns /
+		// counter recompute / new indexes unapplied on restored snapshots.
 		$ensurer = new ProjectCheckSchemaEnsurer($this->db, $this->config);
-		if ($ensurer->isReady()) {
-			// Fast path: still run renamer (no-op) only when legacy tables linger.
-			if ($this->hasLegacyTables()) {
-				$ensurer->ensure($output);
-			}
-			return;
-		}
-
 		$ensurer->ensure($output);
-	}
-
-	private function hasLegacyTables(): bool
-	{
-		foreach (LegacyTableRenamer::RENAMES as $legacy => $_new) {
-			if ($this->db->tableExists($legacy)) {
-				return true;
-			}
-		}
-		return false;
 	}
 }

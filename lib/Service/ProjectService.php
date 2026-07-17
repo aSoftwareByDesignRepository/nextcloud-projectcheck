@@ -18,6 +18,7 @@ use OCA\ProjectCheck\Db\ProjectQueryColumns;
 use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Util\ProjectCalculator;
 use OCA\ProjectCheck\Util\ProjectCapacity;
+use OCA\ProjectCheck\Util\ProjectMemberRole;
 use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
@@ -35,7 +36,7 @@ class ProjectService
 {
 	/** @var list<string> All stored project status values */
 	public const PROJECT_STATUSES = ['Active', 'On Hold', 'Completed', 'Cancelled', 'Archived'];
-	public const DEFAULT_MEMBER_ROLE = 'Member';
+	public const DEFAULT_MEMBER_ROLE = ProjectMemberRole::MEMBER;
 
 	/** @var IDBConnection */
 	private $db;
@@ -397,7 +398,9 @@ class ProjectService
 			// Use the public API so all invariants (editable state, account checks)
 			// are applied consistently. Swallow failures so a project can still be
 			// created even if the membership insert hits a legacy edge case.
-			$this->addTeamMember((int) $project->getId(), $userId, self::DEFAULT_MEMBER_ROLE, null);
+			// The creator is a project Manager (settlement rights) by default
+			// (feature spec D5a); the created_by check remains a fallback.
+			$this->addTeamMember((int) $project->getId(), $userId, ProjectMemberRole::MANAGER, null);
 		} catch (\Throwable $e) {
 			// Intentionally ignore; access control still treats the creator as
 			// having project access via created_by even if the membership row is
@@ -476,6 +479,11 @@ class ProjectService
 
 		if (!empty($filters['project_type'])) {
 			$qb->andWhere($qb->expr()->eq('p.project_type', $qb->createNamedParameter($filters['project_type'])));
+		}
+
+		// Settlement posture filter — pure counter predicates (spec §13).
+		if (!empty($filters['settlement'])) {
+			\OCA\ProjectCheck\Db\ProjectSettlementFilter::apply($qb, (string)$filters['settlement'], 'p');
 		}
 
 		// Optional hard project-id scope (used for per-user visibility scoping).
@@ -1171,6 +1179,99 @@ class ProjectService
 	}
 
 	/**
+	 * Org-wide settler (feature spec §8.1): NC admin or ProjectCheck app admin.
+	 */
+	public function canUserSettleAnywhere(string $userId): bool
+	{
+		return $this->hasGlobalProjectAccess($userId);
+	}
+
+	/**
+	 * Whether the actor may settle (invoice / mark paid / exclude) entries on
+	 * THIS project: global settler, project creator, or active member with the
+	 * Manager role (spec D5/D5a).
+	 */
+	public function canUserSettleProject(string $userId, int $projectId): bool
+	{
+		if ($this->canUserSettleAnywhere($userId)) {
+			return true;
+		}
+
+		$project = $this->getProject($projectId);
+		if (!$project) {
+			return false;
+		}
+		if ($project->getCreatedBy() === $userId) {
+			return true;
+		}
+
+		$member = $this->getProjectMemberActive($projectId, $userId);
+		return $member !== null && ProjectMemberRole::isManager($member->getRole());
+	}
+
+	/**
+	 * Project ids the user may settle. null = all projects (global settler).
+	 *
+	 * @return list<int>|null
+	 */
+	public function getSettleableProjectIdListForUser(string $userId): ?array
+	{
+		if ($this->canUserSettleAnywhere($userId)) {
+			return null;
+		}
+
+		$ids = [];
+
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('p.id')
+			->from('pc_projects', 'p')
+			->where($qb->expr()->eq('p.created_by', $qb->createNamedParameter($userId)));
+		$rs = $qb->executeQuery();
+		while ($r = $rs->fetch()) {
+			$ids[] = (int) $r['id'];
+		}
+		$rs->closeCursor();
+
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('m.project_id')
+			->from('pc_project_members', 'm')
+			->where($qb->expr()->eq('m.user_id', $qb->createNamedParameter($userId)))
+			->andWhere($qb->expr()->eq('m.role', $qb->createNamedParameter(ProjectMemberRole::MANAGER)))
+			->andWhere($this->buildActiveMemberExpression($qb, 'm'));
+		$rs = $qb->executeQuery();
+		while ($r = $rs->fetch()) {
+			$ids[] = (int) $r['project_id'];
+		}
+		$rs->closeCursor();
+
+		return array_values(array_unique($ids));
+	}
+
+	/**
+	 * UI chrome check: does the user get settlement controls anywhere at all?
+	 */
+	public function canUserSettleAnything(string $userId): bool
+	{
+		$ids = $this->getSettleableProjectIdListForUser($userId);
+		return $ids === null || $ids !== [];
+	}
+
+	/**
+	 * Whether the user may see this time entry (list inclusion / detail):
+	 * owner, global viewer, or scoped settler on the entry's project (D5b).
+	 */
+	public function canUserViewTimeEntry(string $userId, \OCA\ProjectCheck\Db\TimeEntry $entry): bool
+	{
+		if ($entry->isOwnedBy($userId)) {
+			return true;
+		}
+		if ($this->canUserViewAllTimeEntries($userId)) {
+			return true;
+		}
+		return $this->canUserSettleProject($userId, (int) $entry->getProjectId());
+	}
+
+	/**
 	 * Map of allowed status transitions (single source of truth for workflow)
 	 *
 	 * @return array<string, list<string>>
@@ -1366,7 +1467,14 @@ class ProjectService
 	public function addTeamMember(int $projectId, string $userId, string $role = self::DEFAULT_MEMBER_ROLE, ?float $hourlyRate = null): ProjectMember
 	{
 		$userId = trim($userId);
-		$role = self::DEFAULT_MEMBER_ROLE;
+		// Only known roles are stored; anything unexpected demotes to Member so
+		// no request payload can ever mint elevated roles (spec D5c). The caller
+		// permission check below (canUserManageMembers) gates who may pass
+		// Manager at all.
+		if (!ProjectMemberRole::isValid($role)) {
+			throw new \Exception('Invalid team member role');
+		}
+		$role = ProjectMemberRole::normalize($role);
 		if ($userId === '') {
 			throw new \Exception('User ID is required');
 		}
@@ -1414,7 +1522,7 @@ class ProjectService
 			$qb->update('pc_project_members')
 				->set('member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
 				->set('archived_at', $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL))
-				->set('role', $qb->createNamedParameter(self::DEFAULT_MEMBER_ROLE))
+				->set('role', $qb->createNamedParameter($role))
 				->set('hourly_rate', $qb->createNamedParameter($hourlyRate))
 				->set('assigned_at', $qb->createNamedParameter($now, IQueryBuilder::PARAM_DATETIME_MUTABLE))
 				->set('assigned_by', $qb->createNamedParameter($sessionUser->getUID()))
@@ -1431,7 +1539,7 @@ class ProjectService
 		$member = new ProjectMember();
 		$member->setProjectId($projectId);
 		$member->setUserId($userId);
-		$member->setRole(self::DEFAULT_MEMBER_ROLE);
+		$member->setRole($role);
 		$member->setHourlyRate($hourlyRate);
 		$member->setAssignedAt(new \DateTime());
 		$member->setAssignedBy($sessionUser->getUID());
@@ -1775,6 +1883,22 @@ class ProjectService
 	 */
 	public function updateTeamMemberRole(int $projectId, string $userId, string $newRole): ProjectMember
 	{
+		$sessionUser = $this->userSession->getUser();
+		if (!$sessionUser) {
+			throw new \Exception('User not authenticated');
+		}
+		// Role assignment uses the member-management privilege (creator /
+		// global admin). Managers do not inherit it, and members can never
+		// promote themselves (feature spec D5c).
+		if (!$this->canUserManageMembers($sessionUser->getUID(), $projectId)) {
+			throw new \Exception('Access denied');
+		}
+
+		if (!ProjectMemberRole::isValid($newRole)) {
+			throw new \Exception('Invalid team member role');
+		}
+		$newRole = ProjectMemberRole::normalize($newRole);
+
 		$member = $this->getProjectMemberActive($projectId, $userId);
 		if (!$member) {
 			throw new \Exception('Team member not found');
@@ -1783,21 +1907,16 @@ class ProjectService
 			throw new \Exception('Cannot change the role of a former team member');
 		}
 
-		$newRole = self::DEFAULT_MEMBER_ROLE;
-
+		// Target the exact active membership row by primary key so historical
+		// (former-member) rows for the same user/project are never touched.
 		$qb = $this->db->getQueryBuilder();
 		$qb->update('pc_project_members')
 			->set('role', $qb->createNamedParameter($newRole))
-			->where($qb->expr()->andX(
-				$qb->expr()->eq('project_id', $qb->createNamedParameter($projectId, IQueryBuilder::PARAM_INT)),
-				$qb->expr()->eq('user_id', $qb->createNamedParameter($userId))
-			));
+			->where($qb->expr()->eq('id', $qb->createNamedParameter((int) $member->getId(), IQueryBuilder::PARAM_INT)));
 
 		$qb->executeStatement();
 
 		$member->setRole($newRole);
-
-
 
 		return $member;
 	}
@@ -2030,6 +2149,15 @@ class ProjectService
 		$project->setCreatedBy($row['created_by']);
 		$project->setCreatedAt(SafeDateTime::fromRequired($row['created_at'] ?? null, 'projects.created_at'));
 		$project->setUpdatedAt(SafeDateTime::fromRequired($row['updated_at'] ?? null, 'projects.updated_at'));
+		$project->setStlOpenHours((float) ($row['stl_open_hours'] ?? 0));
+		$project->setStlInvoicedHours((float) ($row['stl_invoiced_hours'] ?? 0));
+		$project->setStlPaidHours((float) ($row['stl_paid_hours'] ?? 0));
+		$project->setStlExcludedHours((float) ($row['stl_excluded_hours'] ?? 0));
+		$project->setStlOpenAmount((float) ($row['stl_open_amount'] ?? 0));
+		$project->setStlInvoicedAmount((float) ($row['stl_invoiced_amount'] ?? 0));
+		$project->setStlPaidAmount((float) ($row['stl_paid_amount'] ?? 0));
+		$project->setStlExcludedAmount((float) ($row['stl_excluded_amount'] ?? 0));
+		$project->setStlUpdatedAt(SafeDateTime::fromOptional($row['stl_updated_at'] ?? null));
 
 		return $project;
 	}

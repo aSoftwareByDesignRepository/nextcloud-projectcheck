@@ -115,6 +115,10 @@ const projectcheckToken = cfg.requestToken || '';
             if (isModalOpen(statusModal)) {
                 return statusModal;
             }
+            const settleModal = document.getElementById('projectSettleModal');
+            if (isModalOpen(settleModal)) {
+                return settleModal;
+            }
             return null;
         }
 
@@ -736,10 +740,416 @@ const projectcheckToken = cfg.requestToken || '';
                 }
                 if (modal.id === 'statusChangeModal') {
                     closeStatusChangeModal();
+                    return;
+                }
+                if (modal.id === 'projectSettleModal') {
+                    closeProjectSettleModal();
                 }
             }
         });
+
+        initProjectSettle();
+        initRoleToggles();
     });
+
+    // ------------------------------------------------------------------
+    // Project-level settlement: "Invoice all open…" / "Mark all invoiced
+    // as paid…" (feature spec §12.3). Preview-then-apply with a single-use
+    // server token; changing the date range re-runs the preview.
+    // ------------------------------------------------------------------
+
+    const settleCfg = (cfg.settlement && cfg.settlement.messages) ? cfg.settlement.messages : {};
+    const settleState = {
+        action: '',
+        token: null,
+        count: 0,
+        submitting: false,
+        previewSeq: 0,
+        /** Guided close-out: null | 'invoice' | 'paid' */
+        wizardStep: null,
+        /** Dates frozen for the whole wizard so step 2 matches step 1 scope. */
+        wizardDates: null,
+    };
+
+    function settleMsg(key, replacements) {
+        let text = settleCfg[key] || '';
+        if (replacements) {
+            Object.keys(replacements).forEach(function (k) {
+                text = text.replace('{' + k + '}', String(replacements[k]));
+            });
+        }
+        return text;
+    }
+
+    function settleDates() {
+        if (settleState.wizardDates) {
+            return {
+                date_from: settleState.wizardDates.date_from || '',
+                date_to: settleState.wizardDates.date_to || '',
+            };
+        }
+        const from = document.getElementById('settleDateFrom');
+        const to = document.getElementById('settleDateTo');
+        return {
+            date_from: from instanceof HTMLInputElement ? from.value : '',
+            date_to: to instanceof HTMLInputElement ? to.value : '',
+        };
+    }
+
+    function setSettleConfirmEnabled(enabled) {
+        const btn = document.getElementById('confirm-project-settle');
+        if (btn instanceof HTMLButtonElement) {
+            btn.disabled = !enabled || settleState.submitting;
+        }
+    }
+
+    function setSettleDateInputsEnabled(enabled) {
+        ['settleDateFrom', 'settleDateTo'].forEach(function (id) {
+            const input = document.getElementById(id);
+            if (input instanceof HTMLInputElement) {
+                input.disabled = !enabled;
+            }
+        });
+    }
+
+    function openProjectSettleModal(action, openBtn) {
+        const modal = document.getElementById('projectSettleModal');
+        if (!modal) {
+            return;
+        }
+
+        settleState.wizardStep = null;
+        settleState.wizardDates = null;
+        setSettleDateInputsEnabled(true);
+
+        if (action === 'close_out') {
+            settleState.wizardStep = 'invoice';
+            settleState.action = 'invoice_open';
+        } else {
+            settleState.action = action;
+        }
+        settleState.token = null;
+        settleState.count = 0;
+
+        updateSettleModalCopy();
+        const from = document.getElementById('settleDateFrom');
+        const to = document.getElementById('settleDateTo');
+        if (from instanceof HTMLInputElement) {
+            from.value = '';
+        }
+        if (to instanceof HTMLInputElement) {
+            to.value = '';
+        }
+        setSettleConfirmEnabled(false);
+        setModalOpen(modal, true, openBtn || null);
+        const cancelBtn = document.getElementById('cancel-project-settle');
+        if (cancelBtn instanceof HTMLElement) {
+            cancelBtn.focus();
+        }
+        runSettlePreview();
+    }
+
+    function updateSettleModalCopy() {
+        const title = document.getElementById('projectSettleTitle');
+        const help = document.getElementById('projectSettleHelp');
+        if (settleState.wizardStep === 'invoice') {
+            if (title) {
+                title.textContent = settleMsg('closeOutTitle') + ' — ' + settleMsg('closeOutStepLabel', { step: '1' });
+            }
+            if (help) {
+                help.textContent = settleMsg('closeOutHelpStep1');
+            }
+            return;
+        }
+        if (settleState.wizardStep === 'paid') {
+            if (title) {
+                title.textContent = settleMsg('closeOutTitle') + ' — ' + settleMsg('closeOutStepLabel', { step: '2' });
+            }
+            if (help) {
+                help.textContent = settleMsg('closeOutHelpStep2');
+            }
+            return;
+        }
+        if (title) {
+            title.textContent = settleState.action === 'mark_paid' ? settleMsg('markPaidTitle') : settleMsg('invoiceOpenTitle');
+        }
+        if (help) {
+            help.textContent = settleState.action === 'mark_paid' ? settleMsg('markPaidHelp') : settleMsg('invoiceOpenHelp');
+        }
+    }
+
+    function closeProjectSettleModal() {
+        const modal = document.getElementById('projectSettleModal');
+        setModalOpen(modal, false, null);
+        settleState.action = '';
+        settleState.token = null;
+        settleState.wizardStep = null;
+        settleState.wizardDates = null;
+        setSettleDateInputsEnabled(true);
+    }
+
+    function runSettlePreview() {
+        const previewSlot = document.getElementById('projectSettlePreview');
+        if (!previewSlot || !settleState.action) {
+            return;
+        }
+        const seq = ++settleState.previewSeq;
+        settleState.token = null;
+        setSettleConfirmEnabled(false);
+        previewSlot.textContent = settleMsg('previewLoading');
+
+        const body = Object.assign({ action: settleState.action }, settleDates());
+        fetch(cfg.urls.settlePreview, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'requesttoken': projectcheckToken,
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(body),
+        })
+            .then((r) => r.json().then((d) => ({ ok: r.ok, d })).catch(() => ({ ok: r.ok, d: {} })))
+            .then((res) => {
+                if (seq !== settleState.previewSeq) {
+                    return; // A newer preview superseded this one.
+                }
+                if (!res.ok || !res.d || res.d.success !== true) {
+                    previewSlot.textContent = (res.d && res.d.error) || settleMsg('previewFailed');
+                    return;
+                }
+                if (res.d.capExceeded) {
+                    previewSlot.textContent = settleMsg('previewCapExceeded', { cap: res.d.cap });
+                    return;
+                }
+                const count = Number(res.d.count || 0);
+                // Guided close-out step 1 with nothing open → skip to paid step
+                // (still two confirms when there is something to pay; E34 requires
+                // a fresh preview for step 2).
+                if (count <= 0 && settleState.wizardStep === 'invoice') {
+                    previewSlot.textContent = settleMsg('closeOutSkipToPaid');
+                    advanceCloseOutToPaidStep();
+                    return;
+                }
+                if (count <= 0) {
+                    previewSlot.textContent = settleMsg('previewNone');
+                    // Wizard step 2 with nothing left: close successfully.
+                    if (settleState.wizardStep === 'paid') {
+                        try {
+                            window.sessionStorage.setItem('pcSettlementMessage', settleMsg('previewNone'));
+                        } catch (e) { /* storage unavailable */ }
+                        window.location.reload();
+                    }
+                    return;
+                }
+                settleState.token = res.d.token || null;
+                settleState.count = count;
+                const amount = Number(res.d.amount || 0);
+                previewSlot.textContent = settleMsg('previewSummary', {
+                    count: count,
+                    hours: Number(res.d.hours || 0).toFixed(2),
+                    amount: amount.toFixed(2),
+                });
+                setSettleConfirmEnabled(settleState.token !== null);
+            })
+            .catch(() => {
+                if (seq === settleState.previewSeq) {
+                    previewSlot.textContent = settleMsg('previewFailed');
+                }
+            });
+    }
+
+    /**
+     * After invoice step of close-out: freeze dates, switch to mark_paid,
+     * re-preview (never reuse the step-1 token — E34).
+     */
+    function advanceCloseOutToPaidStep() {
+        settleState.wizardDates = settleDates();
+        settleState.wizardStep = 'paid';
+        settleState.action = 'mark_paid';
+        settleState.token = null;
+        settleState.count = 0;
+        settleState.submitting = false;
+        setSettleDateInputsEnabled(false);
+        updateSettleModalCopy();
+        const btn = document.getElementById('confirm-project-settle');
+        if (btn instanceof HTMLButtonElement) {
+            btn.removeAttribute('aria-busy');
+            btn.textContent = btn.dataset.defaultLabel || btn.textContent;
+        }
+        runSettlePreview();
+    }
+
+    function confirmProjectSettle() {
+        if (settleState.submitting || !settleState.token || !settleState.action) {
+            return;
+        }
+        settleState.submitting = true;
+        const btn = document.getElementById('confirm-project-settle');
+        if (btn instanceof HTMLButtonElement) {
+            btn.disabled = true;
+            btn.setAttribute('aria-busy', 'true');
+            btn.textContent = btn.dataset.busyLabel || btn.textContent;
+        }
+
+        // Freeze wizard dates on first confirm so step 2 uses the same range.
+        if (settleState.wizardStep === 'invoice' && !settleState.wizardDates) {
+            settleState.wizardDates = settleDates();
+        }
+
+        const body = Object.assign(
+            { action: settleState.action, token: settleState.token },
+            settleDates()
+        );
+        fetch(cfg.urls.settleApply, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'requesttoken': projectcheckToken,
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(body),
+        })
+            .then((r) => r.json().then((d) => ({ ok: r.ok, d, status: r.status })).catch(() => ({ ok: r.ok, d: {}, status: r.status })))
+            .then((res) => {
+                if (res.ok && res.d && res.d.success === true) {
+                    // Guided close-out: after invoice step, continue to paid
+                    // without reload so the operator still confirms step 2.
+                    if (settleState.wizardStep === 'invoice') {
+                        advanceCloseOutToPaidStep();
+                        return;
+                    }
+
+                    const failed = Array.isArray(res.d.failed) ? res.d.failed.length : 0;
+                    if (failed > 0) {
+                        try {
+                            window.sessionStorage.setItem('pcSettlementMessage', settleMsg('partialResult', {
+                                applied: res.d.applied,
+                                failed: failed,
+                            }));
+                        } catch (e) { /* storage unavailable — reload silently */ }
+                    } else if (res.d.message) {
+                        try {
+                            window.sessionStorage.setItem('pcSettlementMessage', String(res.d.message));
+                        } catch (e) { /* storage unavailable — reload silently */ }
+                    }
+                    window.location.reload();
+                    return;
+                }
+                settleState.submitting = false;
+                if (btn instanceof HTMLButtonElement) {
+                    btn.removeAttribute('aria-busy');
+                    btn.textContent = btn.dataset.defaultLabel || btn.textContent;
+                }
+                if (res.status === 409) {
+                    notify(settleMsg('applyConflict'), 'error');
+                    runSettlePreview();
+                    return;
+                }
+                notify((res.d && res.d.error) || settleMsg('applyFailed'), 'error');
+                runSettlePreview();
+            })
+            .catch(() => {
+                settleState.submitting = false;
+                if (btn instanceof HTMLButtonElement) {
+                    btn.removeAttribute('aria-busy');
+                    btn.textContent = btn.dataset.defaultLabel || btn.textContent;
+                }
+                notify(settleMsg('applyFailed'), 'error');
+            });
+    }
+
+    function initProjectSettle() {
+        document.querySelectorAll('.pc-project-settle-btn').forEach(function (button) {
+            button.addEventListener('click', function () {
+                openProjectSettleModal(button.getAttribute('data-settle-action') || 'invoice_open', button);
+            });
+        });
+        const closeBtn = document.getElementById('close-project-settle-modal');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeProjectSettleModal);
+        }
+        const cancelBtn = document.getElementById('cancel-project-settle');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeProjectSettleModal);
+        }
+        const confirmBtn = document.getElementById('confirm-project-settle');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', confirmProjectSettle);
+        }
+        ['settleDateFrom', 'settleDateTo'].forEach(function (id) {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('change', runSettlePreview);
+            }
+        });
+        const modal = document.getElementById('projectSettleModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => closeOnBackdropClick(e, closeProjectSettleModal, 'projectSettleModal'));
+        }
+
+        // Success message from a settle-and-reload round trip.
+        try {
+            const stored = window.sessionStorage.getItem('pcSettlementMessage');
+            if (stored) {
+                window.sessionStorage.removeItem('pcSettlementMessage');
+                notify(stored);
+            }
+        } catch (e) { /* storage unavailable */ }
+    }
+
+    // ------------------------------------------------------------------
+    // Team role toggle: Member <-> Project manager (feature spec §12.4).
+    // ------------------------------------------------------------------
+
+    function initRoleToggles() {
+        const template = cfg.urls && cfg.urls.memberRoleTemplate ? String(cfg.urls.memberRoleTemplate) : '';
+        if (!template) {
+            return;
+        }
+        document.querySelectorAll('.pc-role-toggle-btn').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const userId = button.getAttribute('data-user-id') || '';
+                const name = button.getAttribute('data-member-name') || userId;
+                const currentRole = button.getAttribute('data-current-role') || 'Member';
+                if (!userId) {
+                    return;
+                }
+                const targetRole = currentRole === 'Manager' ? 'Member' : 'Manager';
+                const confirmText = targetRole === 'Manager'
+                    ? settleMsg('roleConfirmManager', { name: name })
+                    : settleMsg('roleConfirmMember', { name: name });
+                if (!window.confirm(confirmText)) {
+                    return;
+                }
+                button.disabled = true;
+                fetch(template.replace('__USER__', encodeURIComponent(userId)), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'requesttoken': projectcheckToken,
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ role: targetRole }),
+                })
+                    .then((r) => r.json().then((d) => ({ ok: r.ok, d })).catch(() => ({ ok: r.ok, d: {} })))
+                    .then((res) => {
+                        if (res.ok && res.d && res.d.success) {
+                            window.location.reload();
+                            return;
+                        }
+                        button.disabled = false;
+                        notify((res.d && res.d.error) || settleMsg('roleFailed'), 'error');
+                    })
+                    .catch(() => {
+                        button.disabled = false;
+                        notify(settleMsg('roleFailed'), 'error');
+                    });
+            });
+        });
+    }
     
 // Member removal functionality
     document.addEventListener('click', function(e) {

@@ -576,6 +576,97 @@ include __DIR__ . '/common/page-start.php';
             </div>
         </div>
 
+        <!-- Invoicing (settlement read model — feature spec §12.3) -->
+        <?php
+        $settlementInfo = is_array($_['settlementInfo'] ?? null) ? $_['settlementInfo'] : null;
+        ?>
+        <?php if ($settlementInfo !== null): ?>
+        <?php
+        $stlCounters = is_array($settlementInfo['counters'] ?? null) ? $settlementInfo['counters'] : [];
+        $stlCanSettle = !empty($settlementInfo['can_settle']);
+        $stlOutstandingHours = (float)($settlementInfo['outstanding_hours'] ?? 0);
+        $stlOutstandingAmount = (float)($settlementInfo['outstanding_amount'] ?? 0);
+        $stlPosture = (string)($settlementInfo['posture'] ?? 'n_a');
+        $stlFmtHours = static fn (float $h): string => rtrim(rtrim(number_format($h, 2, '.', ''), '0'), '.') . 'h';
+        $stlBuckets = [
+            ['key' => 'open', 'label' => $l->t('Open'), 'hours' => (float)($stlCounters['open_hours'] ?? 0), 'amount' => (float)($stlCounters['open_amount'] ?? 0)],
+            ['key' => 'invoiced', 'label' => $l->t('Invoiced'), 'hours' => (float)($stlCounters['invoiced_hours'] ?? 0), 'amount' => (float)($stlCounters['invoiced_amount'] ?? 0)],
+            ['key' => 'paid', 'label' => $l->t('Paid'), 'hours' => (float)($stlCounters['paid_hours'] ?? 0), 'amount' => (float)($stlCounters['paid_amount'] ?? 0)],
+            ['key' => 'excluded', 'label' => $l->t('Not billable'), 'hours' => (float)($stlCounters['excluded_hours'] ?? 0), 'amount' => null],
+        ];
+        ?>
+        <div class="section pc-section pc-invoicing-section" id="invoicing-section" aria-labelledby="pc-invoicing-heading">
+            <div class="section-header pc-section__header">
+                <div class="pc-section__title-wrap">
+                    <h3 id="pc-invoicing-heading" class="pc-section-title">
+                        <span data-lucide="wallet" class="lucide-icon" aria-hidden="true"></span>
+                        <?php p($l->t('Invoicing')); ?>
+                    </h3>
+                    <p class="pc-section-intro">
+                        <?php p($l->t('How the logged hours on this project stand: open, invoiced, or paid.')); ?>
+                    </p>
+                </div>
+            </div>
+            <div class="section-content">
+                <div class="pc-invoicing-summary">
+                    <?php
+                    $chipKind = 'posture';
+                    $chipValue = $stlPosture;
+                    include __DIR__ . '/parts/settlement-chip.php';
+                    ?>
+                    <?php
+                    $progress = is_array($settlementInfo['progress'] ?? null) ? $settlementInfo['progress'] : [];
+                    $progressVariant = 'full';
+                    $progressId = 'pc-project-stl-progress';
+                    include __DIR__ . '/parts/settlement-progress.php';
+                    ?>
+                    <ul class="pc-settle-strip__list pc-invoicing-buckets" role="list">
+                        <?php foreach ($stlBuckets as $bucket): ?>
+                            <li class="pc-settle-strip__item">
+                                <span class="pc-settle-strip__chip"><?php p($bucket['label']); ?></span>
+                                <span class="pc-settle-strip__hours"><?php p($stlFmtHours($bucket['hours'])); ?></span>
+                                <?php if ($bucket['amount'] !== null): ?>
+                                    <span class="pc-settle-strip__amount"><?php p($fmt ? $fmt->currency($bucket['amount']) : $currencyCode . ' ' . number_format($bucket['amount'], 2)); ?></span>
+                                <?php endif; ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <p class="pc-invoicing-outstanding">
+                        <strong><?php p($l->t('Not yet paid:')); ?></strong>
+                        <?php p($stlFmtHours($stlOutstandingHours)); ?> ·
+                        <?php p($fmt ? $fmt->currency($stlOutstandingAmount) : $currencyCode . ' ' . number_format($stlOutstandingAmount, 2)); ?>
+                    </p>
+                </div>
+                <div class="pc-invoicing-actions">
+                    <a class="button secondary" href="<?php p((string)($_['settlementReviewUrl'] ?? '')); ?>">
+                        <span data-lucide="list" class="lucide-icon" aria-hidden="true"></span>
+                        <?php p($l->t('Review open hours')); ?>
+                    </a>
+                    <?php if ($stlCanSettle): ?>
+                        <button type="button" class="button primary pc-project-settle-btn" data-settle-action="invoice_open"
+                            aria-haspopup="dialog" aria-controls="projectSettleModal">
+                            <span data-lucide="file-text" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Invoice all open…')); ?>
+                        </button>
+                        <button type="button" class="button primary pc-project-settle-btn" data-settle-action="mark_paid"
+                            aria-haspopup="dialog" aria-controls="projectSettleModal">
+                            <span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Mark all invoiced as paid…')); ?>
+                        </button>
+                        <button type="button" class="button secondary pc-project-settle-btn" data-settle-action="close_out"
+                            aria-haspopup="dialog" aria-controls="projectSettleModal">
+                            <span data-lucide="wallet" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Close out (invoice, then mark paid)…')); ?>
+                        </button>
+                    <?php endif; ?>
+                </div>
+                <?php if ($stlCanSettle): ?>
+                    <p class="form-hint"><?php p($l->t('Each action shows how many hours are affected before anything changes. Close-out is two confirmations — open hours become invoiced, then invoiced hours become paid. There is no shortcut that skips invoiced.')); ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Project Files -->
         <?php
         $hasProjectFiles = !empty($projectFiles);
@@ -814,15 +905,23 @@ include __DIR__ . '/common/page-start.php';
                     </div>
                 </div>
                 <div class="section-content">
+                    <?php if (!empty($canManageMembers)): ?>
+                        <p class="form-hint pc-team-role-help"><?php p($l->t('Project managers can mark hours as invoiced or paid for this project.')); ?></p>
+                    <?php endif; ?>
                     <?php if (!empty($teamMembersActive)): ?>
                     <div class="team-members-list" role="list" aria-label="<?php p($l->t('Current team')); ?>">
                         <?php foreach ($teamMembersActive as $member): ?>
+                            <?php $memberIsManager = \OCA\ProjectCheck\Util\ProjectMemberRole::isManager((string)($member['role'] ?? '')); ?>
                             <div class="team-member-item" role="listitem">
                                 <div class="member-avatar">
                                     <div class="avatar-initial" aria-hidden="true"><?php p(strtoupper(substr($member['name'] ?? 'U', 0, 1))); ?></div>
                                 </div>
                                 <div class="member-info">
-                                    <span class="member-name"><?php p($member['name'] ?? $l->t('Unknown')); ?></span>
+                                    <span class="member-name"><?php p($member['name'] ?? $l->t('Unknown')); ?>
+                                        <span class="pc-badge <?php echo $memberIsManager ? 'pc-badge--manager' : 'pc-badge--neutral'; ?> pc-role-badge">
+                                            <?php p($memberIsManager ? $l->t('Project manager') : $l->t('Member')); ?>
+                                        </span>
+                                    </span>
                                 </div>
                                 <div class="member-hours">
                                     <span class="hours-label"><?php p($l->t('Hours:')); ?></span>
@@ -865,6 +964,16 @@ include __DIR__ . '/common/page-start.php';
                                         </a>
                                     <?php endif; ?>
                                     <?php if (!empty($canManageMembers) && $canManageMembers && empty($member['is_former'])): ?>
+                                        <button type="button" class="action-btn pc-role-toggle-btn"
+                                            data-user-id="<?php p((string)($member['user_id'] ?? '')); ?>"
+                                            data-member-name="<?php p($member['name'] ?? $l->t('Unknown')); ?>"
+                                            data-current-role="<?php p($memberIsManager ? 'Manager' : 'Member'); ?>"
+                                            title="<?php p($memberIsManager ? $l->t('Make member') : $l->t('Make project manager')); ?>"
+                                            aria-label="<?php p($memberIsManager
+                                                ? $l->t('Remove project manager role from %s', [$member['name'] ?? $l->t('Unknown')])
+                                                : $l->t('Make %s a project manager', [$member['name'] ?? $l->t('Unknown')])); ?>">
+                                            <span data-lucide="<?php p($memberIsManager ? 'user-minus' : 'user-cog'); ?>" class="lucide-icon" aria-hidden="true"></span>
+                                        </button>
                                         <button type="button" class="action-btn remove-member-btn"
                                             data-member-id="<?php p($member['id'] ?? ''); ?>"
                                             data-user-id="<?php p($member['user_id'] ?? ''); ?>"
@@ -958,6 +1067,44 @@ include __DIR__ . '/common/page-start.php';
         <div class="modal-footer projectcheck-dialog__footer">
             <button type="button" class="button secondary" id="cancel-status-change"><?php p($l->t('Cancel')); ?></button>
             <button type="button" class="button primary" id="submit-status-change" data-default-label="<?php p($l->t('Update status')); ?>" data-busy-label="<?php p($l->t('Updating status…')); ?>"><?php p($l->t('Update status')); ?></button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php if (!empty($settlementInfo['can_settle'])): ?>
+<!-- Project-level settle confirm modal (feature spec §12.3): preview numbers + optional date range, then apply with token. -->
+<div id="projectSettleModal" class="modal projectcheck-dialog" style="display: none;" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="projectSettleTitle" aria-describedby="projectSettleHelp">
+    <div class="modal-content projectcheck-dialog__panel" onclick="event.stopPropagation();">
+        <div class="modal-header projectcheck-dialog__header">
+            <h3 id="projectSettleTitle"><?php p($l->t('Invoice all open hours')); ?></h3>
+            <button type="button" class="close" id="close-project-settle-modal" aria-label="<?php p($l->t('Close')); ?>"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body projectcheck-dialog__body">
+            <p class="projectcheck-dialog__help" id="projectSettleHelp"></p>
+            <form id="projectSettleForm">
+                <fieldset class="pc-settle-daterange">
+                    <legend><?php p($l->t('Only include a date range (optional)')); ?></legend>
+                    <div class="pc-settle-daterange__row">
+                        <div class="form-group">
+                            <label for="settleDateFrom"><?php p($l->t('From')); ?></label>
+                            <input type="date" id="settleDateFrom" name="date_from" class="form-input" lang="<?php p($htmlLang); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="settleDateTo"><?php p($l->t('To')); ?></label>
+                            <input type="date" id="settleDateTo" name="date_to" class="form-input" lang="<?php p($htmlLang); ?>">
+                        </div>
+                    </div>
+                    <p class="form-hint"><?php p($l->t('Leave empty to include all dates.')); ?></p>
+                </fieldset>
+            </form>
+            <div class="pc-settle-preview" id="projectSettlePreview" role="status" aria-live="polite"></div>
+        </div>
+        <div class="modal-footer projectcheck-dialog__footer">
+            <button type="button" class="button secondary" id="cancel-project-settle"><?php p($l->t('Cancel')); ?></button>
+            <button type="button" class="button primary" id="confirm-project-settle" disabled
+                data-default-label="<?php p($l->t('Confirm')); ?>"
+                data-busy-label="<?php p($l->t('Working…')); ?>"><?php p($l->t('Confirm')); ?></button>
         </div>
     </div>
 </div>
@@ -1064,6 +1211,34 @@ include __DIR__ . '/common/page-start.php';
             'addTeam' => $addTeamUrl,
             'addAllTeam' => $addAllTeamUrl,
             'searchUsers' => $urlGenerator->linkToRoute('projectcheck.project.searchAssignableUsers', ['id' => $projectId]),
+            'settlePreview' => (string)($_['settlementPreviewUrl'] ?? ''),
+            'settleApply' => (string)($_['settlementApplyUrl'] ?? ''),
+            'memberRoleTemplate' => (string)($_['memberRoleUrlTemplate'] ?? ''),
+        ],
+        'settlement' => [
+            'canSettle' => !empty($settlementInfo['can_settle']),
+            'messages' => [
+                'invoiceOpenTitle' => $l->t('Invoice all open hours'),
+                'invoiceOpenHelp' => $l->t('All open hours on this project will be marked as invoiced. Nothing is sent anywhere — this only updates the status in ProjectCheck.'),
+                'markPaidTitle' => $l->t('Mark all invoiced hours as paid'),
+                'markPaidHelp' => $l->t('All invoiced hours on this project will be marked as paid.'),
+                'closeOutTitle' => $l->t('Close out project hours'),
+                'closeOutHelpStep1' => $l->t('Step 1 of 2: invoice all open hours. After you confirm, you will review invoiced hours before marking them paid. Nothing skips the invoiced step.'),
+                'closeOutHelpStep2' => $l->t('Step 2 of 2: mark all invoiced hours as paid. Numbers are counted again now so they stay accurate after step 1.'),
+                'closeOutStepLabel' => $l->t('Step {step} of 2'),
+                'previewLoading' => $l->t('Counting affected hours…'),
+                'previewNone' => $l->t('No matching hours found — there is nothing to change.'),
+                'previewSummary' => $l->t('{count} entries · {hours} h · {amount}'),
+                'previewCapExceeded' => $l->t('Too many entries at once (more than {cap}). Narrow the date range and repeat the action for the rest.'),
+                'previewFailed' => $l->t('Could not load the preview. Please try again.'),
+                'applyFailed' => $l->t('The settlement action failed. Please try again.'),
+                'applyConflict' => $l->t('The numbers changed while you were looking at them. The preview has been refreshed — please check again.'),
+                'partialResult' => $l->t('{applied} entries updated, {failed} skipped (changed meanwhile).'),
+                'closeOutSkipToPaid' => $l->t('No open hours left to invoice. Continuing with invoiced → paid.'),
+                'roleConfirmManager' => $l->t('Make {name} a project manager? They can then mark hours as invoiced or paid for this project.'),
+                'roleConfirmMember' => $l->t('Remove the project manager role from {name}?'),
+                'roleFailed' => $l->t('Could not change the role. Please try again.'),
+            ],
         ],
         'messages' => [
             'errorStatus' => $l->t('Error updating status'),

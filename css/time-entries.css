@@ -1113,3 +1113,56 @@
 		margin-top: var(--pc-space-3, 0.75rem);
 	}
 }
+/* ================================================================
+   Settlement columns on the time entries table
+   ================================================================ */
+
+.time-entries-table col.col-select {
+	width: 44px;
+}
+
+.time-entries-table col.col-settlement {
+	width: 130px;
+}
+
+.time-entries-table td.col-select,
+.time-entries-table th.col-select {
+	text-align: center;
+}
+
+.time-entries-table .pc-billing-select-hit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 44px;
+	min-height: 44px;
+	margin: 0;
+	cursor: pointer;
+}
+
+.time-entries-table .pc-billing-select,
+#pc-billing-select-all {
+	width: 1.25rem;
+	height: 1.25rem;
+	margin: 0;
+	cursor: pointer;
+}
+
+.action-item--locked {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-text-maxcontrast);
+	cursor: help;
+}
+
+/* Mobile card layout: keep chip + checkbox usable when the table stacks */
+@media (max-width: 767px) {
+	.time-entries-table td.col-select {
+		text-align: start;
+	}
+
+	.time-entries-table td.col-settlement .pc-settlement-chip {
+		margin-inline-start: auto;
+	}
+}

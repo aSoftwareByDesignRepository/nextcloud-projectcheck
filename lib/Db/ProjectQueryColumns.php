@@ -39,6 +39,15 @@ final class ProjectQueryColumns
 		'updated_at',
 		'project_type',
 		'cost_rate_mode',
+		'stl_open_hours',
+		'stl_invoiced_hours',
+		'stl_paid_hours',
+		'stl_excluded_hours',
+		'stl_open_amount',
+		'stl_invoiced_amount',
+		'stl_paid_amount',
+		'stl_excluded_amount',
+		'stl_updated_at',
 	];
 
 	/**

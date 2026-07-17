@@ -249,6 +249,12 @@ class ProjectMapper extends QBMapper
 			));
 		}
 
+		// Settlement posture filter — must mirror ProjectService::getProjects()
+		// so list page and pagination count agree (spec §13).
+		if (!empty($filters['settlement'])) {
+			ProjectSettlementFilter::apply($qb, (string)$filters['settlement'], 'p');
+		}
+
 		// Optional hard project-id scope (used for per-user visibility scoping).
 		if (array_key_exists('id_in', $filters) && is_array($filters['id_in'])) {
 			if ($filters['id_in'] === []) {
@@ -344,6 +350,15 @@ class ProjectMapper extends QBMapper
 		$project->setCreatedBy($row['created_by']);
 		$project->setCreatedAt(SafeDateTime::fromRequired($row['created_at'] ?? null, 'projects.created_at'));
 		$project->setUpdatedAt(SafeDateTime::fromRequired($row['updated_at'] ?? null, 'projects.updated_at'));
+		$project->setStlOpenHours((float) ($row['stl_open_hours'] ?? 0));
+		$project->setStlInvoicedHours((float) ($row['stl_invoiced_hours'] ?? 0));
+		$project->setStlPaidHours((float) ($row['stl_paid_hours'] ?? 0));
+		$project->setStlExcludedHours((float) ($row['stl_excluded_hours'] ?? 0));
+		$project->setStlOpenAmount((float) ($row['stl_open_amount'] ?? 0));
+		$project->setStlInvoicedAmount((float) ($row['stl_invoiced_amount'] ?? 0));
+		$project->setStlPaidAmount((float) ($row['stl_paid_amount'] ?? 0));
+		$project->setStlExcludedAmount((float) ($row['stl_excluded_amount'] ?? 0));
+		$project->setStlUpdatedAt(SafeDateTime::fromOptional($row['stl_updated_at'] ?? null));
 
 		return $project;
 	}

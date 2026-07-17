@@ -13,7 +13,9 @@ use OCA\ProjectCheck\Db\ProjectMapper;
 use OCA\ProjectCheck\Db\TimeEntryMapper;
 use OCA\ProjectCheck\Service\HourlyRateService;
 use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\ProjectSettlementCounterService;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCP\IDBConnection;
 use OCP\IL10N;
 use PHPUnit\Framework\TestCase;
 
@@ -31,7 +33,9 @@ class TimeEntryServiceValidationTest extends TestCase {
 			$projectMapper,
 			$projectService,
 			$hourlyRateService,
-			$l
+			$l,
+			$this->createMock(IDBConnection::class),
+			$this->createMock(ProjectSettlementCounterService::class)
 		);
 	}
 

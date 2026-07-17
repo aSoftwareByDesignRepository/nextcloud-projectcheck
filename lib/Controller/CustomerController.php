@@ -17,6 +17,9 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\IURLGenerator;
@@ -27,6 +30,10 @@ use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCA\ProjectCheck\Service\ListExportService;
+use OCA\ProjectCheck\Service\CustomerSettlementService;
+use OCA\ProjectCheck\Service\ProjectSettlementService;
+use OCA\ProjectCheck\Util\SettlementPosture;
 use OCP\IConfig;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
@@ -76,6 +83,15 @@ class CustomerController extends Controller
 
 	/** @var \OCA\ProjectCheck\Service\IRequestTokenProvider */
 	private $requestTokenProvider;
+
+	/** @var ListExportService */
+	private $listExportService;
+
+	/** @var CustomerSettlementService */
+	private $customerSettlementService;
+
+	/** @var ProjectSettlementService */
+	private $projectSettlementService;
 
 	/**
 	 * Deletion impact preview
@@ -139,7 +155,10 @@ class CustomerController extends Controller
 		CSPService $cspService,
 		IL10N $l,
 		LoggerInterface $logger,
-		\OCA\ProjectCheck\Service\IRequestTokenProvider $requestTokenProvider
+		\OCA\ProjectCheck\Service\IRequestTokenProvider $requestTokenProvider,
+		ListExportService $listExportService,
+		CustomerSettlementService $customerSettlementService,
+		ProjectSettlementService $projectSettlementService
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
@@ -154,6 +173,9 @@ class CustomerController extends Controller
 		$this->l = $l;
 		$this->logger = $logger;
 		$this->requestTokenProvider = $requestTokenProvider;
+		$this->listExportService = $listExportService;
+		$this->customerSettlementService = $customerSettlementService;
+		$this->projectSettlementService = $projectSettlementService;
 		$this->setCspService($cspService);
 	}
 
@@ -182,23 +204,73 @@ class CustomerController extends Controller
 		$defaultItemsPerPage = (int)$this->config->getUserValue($userId, $this->appName, 'items_per_page', $appItemsPerPage);
 		$perPage = $defaultItemsPerPage > 0 ? $defaultItemsPerPage : 20;
 
-		// Get customers with optional search
+		// Get customers with optional search + settlement filter (spec §13)
 		$search = $this->request->getParam('search', '');
-		$filters = [
+		$settlementFilter = strtolower(trim((string)$this->request->getParam('settlement', '')));
+		if ($settlementFilter !== '' && $settlementFilter !== 'all' && $settlementFilter !== 'outstanding' && !SettlementPosture::isValid($settlementFilter)) {
+			$settlementFilter = '';
+		}
+
+		$baseFilters = [
 			'search' => $search,
+		];
+		$baseFilters = $this->customerService->getCustomerListFiltersForUser($userId, $baseFilters);
+
+		// Settlement is derived from project counters — filter in PHP after
+		// enrich (spec §13 allows this for v1). When a settlement filter is
+		// active we must load the full searchable set before paginating.
+		$needsFullScan = $settlementFilter !== '' && $settlementFilter !== 'all';
+		if ($needsFullScan) {
+			$scanFilters = $baseFilters;
+			unset($scanFilters['limit'], $scanFilters['offset']);
+			$customers = $this->customerService->getCustomers($scanFilters);
+		} else {
+			$filters = $baseFilters + [
+				'limit' => $perPage,
+				'offset' => ($page - 1) * $perPage,
+			];
+			$customers = $this->customerService->getCustomers($filters);
+		}
+
+		$customerIds = array_map(static fn ($c) => (int)$c->getId(), $customers);
+		$settlementByCustomer = $this->customerSettlementService->getSettlementForCustomers($customerIds, $userId);
+
+		if ($needsFullScan) {
+			$customers = array_values(array_filter(
+				$customers,
+				fn ($c) => $this->customerSettlementService->matchesSettlementFilter(
+					$settlementByCustomer[(int)$c->getId()] ?? [],
+					$settlementFilter
+				)
+			));
+			$totalCustomers = count($customers);
+			$totalPages = (int)max(1, ceil($totalCustomers / $perPage));
+			if ($page > $totalPages) {
+				$page = $totalPages;
+			}
+			$customers = array_slice($customers, ($page - 1) * $perPage, $perPage);
+			// Re-key settlement map is already complete; page rows keep same ids.
+		} else {
+			$totalCustomers = $this->customerService->countCustomers($baseFilters);
+			$totalPages = (int)max(1, ceil($totalCustomers / $perPage));
+			if ($page > $totalPages) {
+				$page = $totalPages;
+				$filters = $baseFilters + [
+					'limit' => $perPage,
+					'offset' => ($page - 1) * $perPage,
+				];
+				$customers = $this->customerService->getCustomers($filters);
+				$customerIds = array_map(static fn ($c) => (int)$c->getId(), $customers);
+				$settlementByCustomer = $this->customerSettlementService->getSettlementForCustomers($customerIds, $userId);
+			}
+		}
+
+		$filters = $baseFilters + [
+			'search' => $search,
+			'settlement' => $settlementFilter,
 			'limit' => $perPage,
 			'offset' => ($page - 1) * $perPage,
 		];
-		$filters = $this->customerService->getCustomerListFiltersForUser($userId, $filters);
-		$customers = $this->customerService->getCustomers($filters);
-
-		$totalCustomers = $this->customerService->countCustomers($filters);
-		$totalPages = (int)max(1, ceil($totalCustomers / $perPage));
-		if ($page > $totalPages) {
-			$page = $totalPages;
-			$filters['offset'] = ($page - 1) * $perPage;
-			$customers = $this->customerService->getCustomers($filters);
-		}
 
 		// Add deletion permission: no projects blocking *and* user may delete
 		$editableCustomerIds = [];
@@ -225,6 +297,7 @@ class CustomerController extends Controller
 			'customers' => $customers,
 			'search' => $search,
 			'filters' => $filters,
+			'settlementByCustomer' => $settlementByCustomer,
 			'pagination' => [
 				'page' => $page,
 				'perPage' => $perPage,
@@ -239,9 +312,76 @@ class CustomerController extends Controller
 			'deleteUrl' => $deleteUrl,
 			'canCreateCustomer' => $this->projectService->canUserCreateCustomer($userId),
 			'editableCustomerIds' => $editableCustomerIds,
+			'exportUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.export'),
 		]);
 
 		return $this->configureCSP($response);
+	}
+
+	/**
+	 * Export the customer list as CSV or JSON.
+	 *
+	 * Uses the same search + visibility scope as {@see index()}, but never
+	 * paginates. Format via `?format=csv|json` (default csv).
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 10, period: 60)]
+	public function export(): Response
+	{
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+
+		try {
+			$userId = $user->getUID();
+			$format = $this->listExportService->normalizeFormat(
+				(string)$this->request->getParam('format', ListExportService::FORMAT_CSV)
+			);
+
+			$searchRaw = $this->request->getParam('search', '');
+			$search = is_string($searchRaw) ? trim($searchRaw) : '';
+			$settlementFilter = strtolower(trim((string)$this->request->getParam('settlement', '')));
+			if ($settlementFilter !== '' && $settlementFilter !== 'all' && $settlementFilter !== 'outstanding' && !SettlementPosture::isValid($settlementFilter)) {
+				$settlementFilter = '';
+			}
+			$filters = [
+				'search' => $search,
+			];
+			$filters = $this->customerService->getCustomerListFiltersForUser($userId, $filters);
+			// No limit/offset: export must mirror the full filtered list, not one page.
+			unset($filters['limit'], $filters['offset']);
+
+			$customers = $this->customerService->getCustomers($filters);
+			$customerIds = array_map(static fn ($c) => (int)$c->getId(), $customers);
+			$settlementByCustomer = $this->customerSettlementService->getSettlementForCustomers($customerIds, $userId);
+
+			if ($settlementFilter !== '' && $settlementFilter !== 'all') {
+				$customers = array_values(array_filter(
+					$customers,
+					fn ($c) => $this->customerSettlementService->matchesSettlementFilter(
+						$settlementByCustomer[(int)$c->getId()] ?? [],
+						$settlementFilter
+					)
+				));
+			}
+
+			if ($this->listExportService->exceedsMaxRows(count($customers))) {
+				return new DataResponse([
+					'error' => $this->l->t(
+						'Too many rows to export (limit %s). Narrow your filters and try again.',
+						[number_format(ListExportService::MAX_EXPORT_ROWS)]
+					),
+				], 422);
+			}
+
+			$packed = $this->listExportService->exportCustomers($customers, $format, $settlementByCustomer);
+			return $this->listExportService->toDownloadResponse($packed);
+		} catch (\Throwable $e) {
+			$this->logger->error('Customer export failed', ['exception' => $e]);
+			return new DataResponse(['error' => $this->l->t('Export failed. Please try again.')], 500);
+		}
 	}
 
 	/**
@@ -371,6 +511,8 @@ class CustomerController extends Controller
 			? $this->projectService->getProjectsByCustomer((int) $id)
 			: $this->projectService->getProjectsByIdList($scopedProjectIds);
 		$projectsWithBudgetInfo = $this->enrichProjectsWithBudgetInfo($projects, $user->getUID());
+		$settlementInfoByProject = $this->projectSettlementService->enrichProjectsWithSettlementInfo($projects, $userId);
+		$customerSettlement = $this->customerSettlementService->getSettlementForCustomer((int) $id, $userId);
 
 		// Get yearly statistics for the customer
 		$yearlyStats = $this->timeEntryService->getYearlyStatsForCustomer((int) $id, $scopedProjectIds);
@@ -396,7 +538,9 @@ class CustomerController extends Controller
 			'canCreateProject' => $canCreateProject,
 			'requesttoken' => $this->requestTokenProvider->getEncryptedRequestToken(),
 			'stats' => $stats,
-			'urlGenerator' => $this->urlGenerator
+			'urlGenerator' => $this->urlGenerator,
+			'customerSettlement' => $customerSettlement,
+			'settlementInfoByProject' => $settlementInfoByProject,
 		]);
 
 		return $this->configureCSP($response);
@@ -760,6 +904,13 @@ class CustomerController extends Controller
 				$cid,
 				$this->projectService->getUserScopedProjectIdsForCustomer($uid, $cid)
 			);
+			$settlement = $this->customerSettlementService->getSettlementForCustomer($cid, $uid);
+			$stats['settlement_posture'] = $settlement['posture'];
+			$stats['outstanding_hours'] = $settlement['outstanding_hours'];
+			$stats['outstanding_amount'] = $settlement['outstanding_amount'];
+			$stats['open_hours'] = $settlement['open_hours'];
+			$stats['invoiced_hours'] = $settlement['invoiced_hours'];
+			$stats['paid_hours'] = $settlement['paid_hours'];
 		} else {
 			// Get general customer statistics
 			$stats = $this->customerService->getCustomerStatsForUser($uid);

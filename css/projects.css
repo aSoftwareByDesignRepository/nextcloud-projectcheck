@@ -1121,15 +1121,23 @@ body {
 .projectcheck-table-wrap {
 	width: 100%;
 	max-width: 100%;
+	min-width: 0;
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
 }
 
 .projectcheck-table-wrap .projects-table {
-	min-width: 700px;
+	min-width: 0;
+	width: 100%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 721px) and (max-width: 1199px) {
+	.projectcheck-table-wrap .projects-table {
+		min-width: 52rem;
+	}
+}
+
+@media (min-width: 1200px) {
 	.projectcheck-table-wrap .projects-table {
 		min-width: 0;
 		width: 100%;
@@ -1426,6 +1434,8 @@ body {
 .projectcheck-dialog__footer {
 	display: flex;
 	justify-content: flex-end;
+	align-items: stretch;
+	flex-wrap: wrap;
 	gap: 0.75rem;
 	padding-top: 1rem;
 	padding-bottom: 1.1rem;
@@ -1433,52 +1443,77 @@ body {
 	background: color-mix(in srgb, var(--color-main-background) 92%, var(--color-background-hover));
 }
 
+/* Flat NC-style actions — override legacy .button gradients / lift / ::before */
 .projectcheck-dialog__footer .button {
-	min-width: 9.5rem;
-	min-height: 2.4rem;
-	border-radius: var(--border-radius-element, 6px);
-	box-shadow: none;
-	transform: none;
-	transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	width: auto;
+	min-width: 0;
+	min-height: var(--pc-touch-min, 44px);
+	padding: 0.55rem 1.1rem;
+	margin: 0;
+	border-radius: var(--border-radius-element, var(--border-radius, 6px));
+	font-size: var(--pc-fs-md, 0.9375rem);
+	font-weight: 600;
+	line-height: 1.25;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	box-shadow: none !important;
+	transform: none !important;
+	overflow: visible;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.projectcheck-dialog__footer .button::before {
+	content: none !important;
+	display: none !important;
 }
 
 .projectcheck-dialog__footer .button.primary {
-	background: var(--color-primary-element);
-	color: var(--color-primary-element-text);
-	border: 1px solid var(--color-primary-element);
-	box-shadow: none;
+	background: var(--color-primary-element) !important;
+	color: var(--color-primary-element-text) !important;
+	border: 1px solid var(--color-primary-element) !important;
 }
 
 .projectcheck-dialog__footer .button.primary:hover,
 .projectcheck-dialog__footer .button.primary:focus-visible {
-	background: var(--color-primary-element-hover);
-	border-color: var(--color-primary-element-hover);
-	box-shadow: none;
-	transform: none;
+	background: var(--color-primary-element-hover) !important;
+	border-color: var(--color-primary-element-hover) !important;
+	color: var(--color-primary-element-text) !important;
 }
 
-.projectcheck-dialog__footer .button.secondary {
-	background: var(--color-main-background);
-	color: var(--color-main-text);
-	border: 1px solid var(--color-border);
-	box-shadow: none;
+.projectcheck-dialog__footer .button.secondary,
+.projectcheck-dialog__footer .button:not(.primary) {
+	background: var(--color-main-background) !important;
+	color: var(--color-main-text) !important;
+	border: 1px solid var(--color-border-dark, var(--color-border)) !important;
 }
 
 .projectcheck-dialog__footer .button.secondary:hover,
-.projectcheck-dialog__footer .button.secondary:focus-visible {
-	background: var(--color-background-hover);
-	border-color: var(--color-text-maxcontrast);
-	color: var(--color-main-text);
-	box-shadow: none;
-	transform: none;
+.projectcheck-dialog__footer .button.secondary:focus-visible,
+.projectcheck-dialog__footer .button:not(.primary):hover,
+.projectcheck-dialog__footer .button:not(.primary):focus-visible {
+	background: var(--color-background-hover) !important;
+	border-color: var(--color-primary-element) !important;
+	color: var(--color-main-text) !important;
+}
+
+.projectcheck-dialog__footer .button:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .projectcheck-dialog__footer .button[disabled],
 .projectcheck-dialog__footer .button[aria-busy="true"] {
-	opacity: 0.7;
+	opacity: 0.65;
 	cursor: not-allowed;
-	box-shadow: none;
-	transform: none;
+	pointer-events: none;
+	box-shadow: none !important;
+	transform: none !important;
 }
 
 .projectcheck-dialog__help {
@@ -1818,14 +1853,14 @@ body {
 
 .projectcheck-dialog__footer .button {
 	width: 100%;
-	min-width: 0;
-	min-height: var(--pc-touch-min, 44px);
+	flex: 1 1 auto;
 }
 
 @media (min-width: 641px) {
 	.projectcheck-dialog__footer {
 		flex-direction: row;
 		justify-content: flex-end;
+		align-items: center;
 	}
 
 	.projectcheck-dialog__steps {
@@ -1835,7 +1870,7 @@ body {
 
 	.projectcheck-dialog__footer .button {
 		width: auto;
-		min-width: 9.5rem;
+		flex: 0 0 auto;
 	}
 }
 
@@ -4553,10 +4588,10 @@ body {
 	color: var(--pc-emphasis-text-error);
 }
 
-/* Budget Cell — mobile base: slightly narrower for scroll tables */
+/* Budget Cell — preferred width for dense tables; list panels override to flex */
 .budget-cell {
-	min-width: 180px;
-	width: 180px;
+	min-width: 10rem;
+	width: auto;
 }
 
 .budget-label {
@@ -4569,8 +4604,7 @@ body {
 
 @media (min-width: 768px) {
 	.budget-cell {
-		min-width: 200px;
-		width: 200px;
+		min-width: 11rem;
 	}
 
 	.budget-label {
@@ -8991,4 +9025,623 @@ body {
 .budget-stat-note--muted {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.8125rem;
+}
+/* ================================================================
+   Settlement (time entry billing status) — shared components
+   Feature: time-entry-billing-status. Text + icon chips (never colour
+   alone, WCAG 1.4.1); all colours derive from NC theme variables so
+   dark mode and custom theming keep AA contrast.
+   ================================================================ */
+
+.pc-settlement-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.125rem 0.625rem;
+	border-radius: var(--border-radius-pill, 999px);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	background: var(--color-background-hover);
+	color: var(--color-main-text);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	line-height: 1.6;
+	white-space: nowrap;
+	vertical-align: middle;
+}
+
+.pc-settlement-chip__icon,
+.pc-settlement-chip .lucide-icon {
+	width: 14px;
+	height: 14px;
+	flex: 0 0 auto;
+}
+
+.pc-settlement-chip--open {
+	border-color: color-mix(in srgb, var(--color-warning, #eca700) 55%, var(--color-border));
+	background: color-mix(in srgb, var(--color-warning, #eca700) 12%, var(--color-main-background));
+}
+
+.pc-settlement-chip--invoiced,
+.pc-settlement-chip--awaiting {
+	border-color: color-mix(in srgb, var(--color-primary-element, #0082c9) 55%, var(--color-border));
+	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 10%, var(--color-main-background));
+}
+
+.pc-settlement-chip--paid {
+	border-color: color-mix(in srgb, var(--color-success, #46ba61) 55%, var(--color-border));
+	background: color-mix(in srgb, var(--color-success, #46ba61) 12%, var(--color-main-background));
+}
+
+.pc-settlement-chip--excluded,
+.pc-settlement-chip--na {
+	color: var(--color-text-maxcontrast);
+	background: var(--color-background-dark, var(--color-background-hover));
+}
+
+.pc-settlement-chip--partial {
+	border-color: color-mix(in srgb, var(--color-warning, #eca700) 45%, var(--color-primary-element, #0082c9) 45%);
+	background: color-mix(in srgb, var(--color-warning, #eca700) 8%, var(--color-main-background));
+}
+
+/* Settlement summary strip (list pages + detail sections) */
+.pc-settle-strip {
+	margin: 0.75rem 0 0;
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-background-hover);
+}
+
+.pc-settle-strip__list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1.75rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.pc-settle-strip__item {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.pc-settle-strip__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	font-weight: 600;
+	font-size: 0.8125rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-settle-strip__chip .lucide-icon {
+	width: 14px;
+	height: 14px;
+}
+
+.pc-settle-strip__hours {
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.pc-settle-strip__amount {
+	color: var(--color-text-maxcontrast);
+	font-variant-numeric: tabular-nums;
+	font-size: 0.875rem;
+}
+
+.pc-settle-strip__item--outstanding {
+	padding-inline-start: 1rem;
+	border-inline-start: 2px solid var(--color-border-dark, var(--color-border));
+}
+
+.pc-settle-strip__item--outstanding .pc-settle-strip__chip,
+.pc-settle-strip__item--outstanding .pc-settle-strip__hours {
+	color: var(--color-main-text);
+}
+
+/* Settlement bulk action bar */
+.pc-billing-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1rem;
+	margin: 0.75rem 0 0;
+	padding: 0.625rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-main-background);
+}
+
+.pc-billing-bar__count {
+	font-weight: 600;
+	min-width: 10ch;
+}
+
+.pc-billing-bar__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.pc-billing-bar__actions .button {
+	min-height: 44px;
+}
+
+.pc-billing-bar__hint {
+	flex-basis: 100%;
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.8125rem;
+}
+
+.pc-billing-bar__filter-mode {
+	flex-basis: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-top: 0.25rem;
+	padding-top: 0.625rem;
+	border-top: 1px solid var(--color-border);
+}
+
+.pc-billing-bar__filter-mode-label {
+	margin: 0;
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+
+.pc-billing-bar__filter-mode .pc-billing-bar__actions .button {
+	min-height: 44px;
+}
+
+/* Settlement confirm modal */
+.pc-settle-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 10000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+
+.pc-settle-modal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+.pc-settle-modal__dialog {
+	position: relative;
+	max-width: 480px;
+	width: 100%;
+	padding: 1.5rem;
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-main-background);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.pc-settle-modal__title {
+	margin: 0 0 0.75rem;
+	font-size: 1.125rem;
+	font-weight: 700;
+}
+
+.pc-settle-modal__message {
+	margin: 0 0 1.25rem;
+	line-height: 1.5;
+}
+
+.pc-settle-modal__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+}
+
+.pc-settle-modal__actions .button {
+	min-height: 44px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.pc-settle-modal__dialog {
+		animation: pc-settle-modal-in 120ms ease-out;
+	}
+
+	@keyframes pc-settle-modal-in {
+		from { transform: translateY(6px); opacity: 0.6; }
+		to { transform: translateY(0); opacity: 1; }
+	}
+}
+
+@media (max-width: 480px) {
+	.pc-settle-strip__list {
+		flex-direction: column;
+		gap: 0.375rem;
+	}
+
+	.pc-settle-strip__item--outstanding {
+		padding-inline-start: 0;
+		border-inline-start: 0;
+		padding-top: 0.375rem;
+		border-top: 2px solid var(--color-border-dark, var(--color-border));
+	}
+
+	.pc-billing-bar__actions {
+		width: 100%;
+	}
+
+	.pc-billing-bar__actions .button {
+		flex: 1 1 auto;
+	}
+}
+
+/* ------------------------------------------------------------------
+ * Settlement: project detail "Invoicing" section + project list column
+ * (feature spec §12.3 / §12.5)
+ * ------------------------------------------------------------------ */
+
+.pc-invoicing-summary {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+}
+
+.pc-invoicing-summary > .pc-settlement-chip {
+	align-self: flex-start;
+}
+
+.pc-invoicing-buckets {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1.75rem;
+	margin: 0;
+	padding: 0.75rem 1rem;
+	list-style: none;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-background-hover);
+}
+
+.pc-invoicing-outstanding {
+	margin: 0;
+	font-size: 1rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.pc-invoicing-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.pc-invoicing-actions .button {
+	min-height: 44px;
+}
+
+/* Project list "Invoicing" cell */
+.pc-invoicing-cell {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	align-items: flex-start;
+}
+
+.pc-invoicing-cell__outstanding {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.8125rem;
+	font-variant-numeric: tabular-nums;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+/* Project settle modal: date range + preview */
+.pc-settle-daterange {
+	margin: 0 0 1rem;
+	padding: 0;
+	border: 0;
+}
+
+.pc-settle-daterange legend {
+	font-weight: 600;
+	margin-bottom: 0.5rem;
+}
+
+.pc-settle-daterange__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+
+.pc-settle-daterange__row .form-group {
+	flex: 1 1 10rem;
+	margin: 0;
+}
+
+.pc-settle-preview {
+	min-height: 1.5rem;
+	padding: 0.625rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 10px);
+	background: var(--color-background-hover);
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Team roles (feature spec §12.4) */
+.pc-team-role-help {
+	margin: 0 0 0.75rem;
+}
+
+.pc-role-badge {
+	margin-inline-start: 0.5rem;
+	vertical-align: middle;
+}
+
+.pc-badge--manager {
+	color: var(--color-primary-element-text, #fff);
+	background: var(--color-primary-element, #0082c9);
+}
+
+@media (max-width: 480px) {
+	.pc-invoicing-buckets {
+		flex-direction: column;
+		gap: 0.375rem;
+	}
+
+	.pc-invoicing-actions .button {
+		flex: 1 1 auto;
+	}
+}
+
+/* Settlement progress — chargeable-hour share (paid / invoiced / open) */
+.pc-stl-progress {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	margin: 0.75rem 0 0;
+	box-sizing: border-box;
+}
+
+.pc-stl-progress__title {
+	margin: 0;
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--color-main-text);
+	line-height: 1.3;
+}
+
+.pc-stl-progress__stats {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.5rem 0.75rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.pc-stl-progress--full .pc-stl-progress__stats {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 520px) {
+	.pc-stl-progress--full .pc-stl-progress__stats {
+		grid-template-columns: 1fr;
+	}
+}
+
+.pc-stl-progress__stat {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	min-width: 0;
+	padding: 0.55rem 0.65rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-element, 6px);
+	background: var(--color-main-background);
+}
+
+.pc-stl-progress--compact .pc-stl-progress__stat {
+	padding: 0.35rem 0.5rem;
+}
+
+.pc-stl-progress__stat-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+	line-height: 1.25;
+}
+
+.pc-stl-progress__stat-value {
+	font-size: 1.25rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-main-text);
+	line-height: 1.2;
+}
+
+.pc-stl-progress--compact .pc-stl-progress__stat-value {
+	font-size: 1.05rem;
+}
+
+.pc-stl-progress__bar {
+	display: flex;
+	width: 100%;
+	height: 0.75rem;
+	overflow: hidden;
+	border-radius: 999px;
+	background: var(--color-background-dark, var(--color-border));
+	border: 1px solid var(--color-border);
+	box-sizing: border-box;
+}
+
+.pc-stl-progress--compact .pc-stl-progress__bar {
+	height: 0.55rem;
+}
+
+.pc-stl-progress__seg {
+	display: block;
+	height: 100%;
+	min-width: 0;
+	flex: 0 0 auto;
+}
+
+.pc-stl-progress__seg--paid {
+	background: var(--color-success);
+}
+
+.pc-stl-progress__seg--invoiced {
+	background: var(--color-warning);
+}
+
+.pc-stl-progress__seg--open {
+	background: color-mix(in srgb, var(--color-primary-element) 55%, var(--color-border));
+}
+
+.pc-stl-progress__legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: 0.8125rem;
+	color: var(--color-main-text);
+	line-height: 1.35;
+}
+
+.pc-stl-progress__legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	min-width: 0;
+}
+
+.pc-stl-progress__swatch {
+	width: 0.75rem;
+	height: 0.75rem;
+	border-radius: 2px;
+	flex-shrink: 0;
+	border: 1px solid var(--color-border);
+}
+
+.pc-stl-progress__swatch--paid {
+	background: var(--color-success);
+}
+
+.pc-stl-progress__swatch--invoiced {
+	background: var(--color-warning);
+}
+
+.pc-stl-progress__swatch--open {
+	background: color-mix(in srgb, var(--color-primary-element) 55%, var(--color-border));
+}
+
+.pc-stl-progress__empty {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--color-text-maxcontrast);
+	line-height: 1.45;
+}
+
+.pc-invoicing-cell .pc-stl-progress {
+	margin-top: 0.5rem;
+}
+
+.pc-invoicing-summary > .pc-stl-progress {
+	margin-top: 1rem;
+}
+
+.project-status-badges .pc-stl-progress {
+	flex: 1 1 100%;
+	margin-top: 0.35rem;
+}
+
+@media (forced-colors: active) {
+	.pc-stl-progress__seg--paid,
+	.pc-stl-progress__swatch--paid {
+		background: CanvasText;
+	}
+
+	.pc-stl-progress__seg--invoiced,
+	.pc-stl-progress__swatch--invoiced {
+		background: Highlight;
+	}
+
+	.pc-stl-progress__seg--open,
+	.pc-stl-progress__swatch--open {
+		background: GrayText;
+	}
+
+	.pc-stl-progress__bar {
+		border: 1px solid CanvasText;
+	}
+}
+
+
+/* Customer detail + dashboard settlement surfaces */
+.pc-invoicing-summary__chip {
+	align-self: flex-start;
+}
+
+.pc-invoicing-summary__outstanding,
+.pc-invoicing-summary__empty {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.pc-invoicing-summary__empty {
+	font-weight: 500;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-settle-dashboard__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+.pc-settle-dashboard__actions .button {
+	min-height: 44px;
+}
+
+.pc-muted {
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-filter-field {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	min-width: 10rem;
+}
+
+.pc-filter-field__label {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
+@media (max-width: 320px) {
+	.pc-settle-strip__list,
+	.pc-invoicing-buckets,
+	.pc-settle-dashboard__actions,
+	.pc-invoicing-actions {
+		flex-direction: column;
+	}
+
+	.pc-settle-dashboard__actions .button,
+	.pc-invoicing-actions .button {
+		width: 100%;
+	}
 }

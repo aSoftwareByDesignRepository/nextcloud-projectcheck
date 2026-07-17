@@ -36,6 +36,14 @@ class SchemaGuardServiceTest extends TestCase
 		);
 
 		$config = $this->createMock(IConfig::class);
+		$config->method('getAppValue')->willReturnCallback(
+			static function (string $app, string $key, string $default = ''): string {
+				if ($app === 'projectcheck' && $key === 'settlement_counters_ready') {
+					return '1';
+				}
+				return $default;
+			}
+		);
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects(self::never())->method('warning');
 

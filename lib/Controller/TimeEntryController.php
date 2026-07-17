@@ -15,8 +15,9 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
-use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\UserRateLimit;
@@ -25,10 +26,14 @@ use OCP\IUserSession;
 use OCP\IURLGenerator;
 use OCP\IConfig;
 use OCA\ProjectCheck\Db\TimeEntry;
+use OCA\ProjectCheck\Exception\BillingLockedException;
 use OCA\ProjectCheck\Exception\PermissionDeniedException;
+use OCA\ProjectCheck\Exception\SettlementConflictException;
 use OCA\ProjectCheck\Exception\TimeEntryNotFoundException;
 use OCA\ProjectCheck\Exception\ValidationException;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCA\ProjectCheck\Service\TimeEntryBillingService;
+use OCA\ProjectCheck\Util\BillingStatus;
 use OCA\ProjectCheck\Util\Money;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
@@ -37,6 +42,7 @@ use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\DateFormatService;
+use OCA\ProjectCheck\Service\ListExportService;
 use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Traits\StatsTrait;
 use OCA\ProjectCheck\Controller\CSPTrait;
@@ -85,6 +91,12 @@ class TimeEntryController extends Controller
 	/** @var LoggerInterface */
 	private $logger;
 
+	/** @var ListExportService */
+	private $listExportService;
+
+	/** @var TimeEntryBillingService */
+	private $billingService;
+
 	/**
 	 * TimeEntryController constructor
 	 *
@@ -119,7 +131,9 @@ class TimeEntryController extends Controller
 		ActivityService $activityService,
 		CSPService $cspService,
 		IL10N $l,
-		LoggerInterface $logger
+		LoggerInterface $logger,
+		ListExportService $listExportService,
+		TimeEntryBillingService $billingService
 	) {
 		parent::__construct($appName, $request);
 		$this->userSession = $userSession;
@@ -133,6 +147,8 @@ class TimeEntryController extends Controller
 		$this->activityService = $activityService;
 		$this->l = $l;
 		$this->logger = $logger;
+		$this->listExportService = $listExportService;
+		$this->billingService = $billingService;
 		$this->setCspService($cspService);
 	}
 
@@ -163,10 +179,19 @@ class TimeEntryController extends Controller
 		$search = $this->request->getParam('search', '');
 		$filterUserId = trim((string)$this->request->getParam('user_id', ''));
 		$projectType = $this->request->getParam('project_type', '');
+		$billingStatus = strtolower(trim((string)$this->request->getParam('billing_status', '')));
+		if (!in_array($billingStatus, array_merge(BillingStatus::ALL, ['outstanding']), true)) {
+			$billingStatus = '';
+		}
 		$page = max(1, (int)$this->request->getParam('page', 1));
 
 		// Determine pagination settings (fixed 20 per page)
 		$perPage = 20;
+
+		// Settlement scope (spec D5b/§8.1): a Manager/creator sees the whole
+		// team's entries on the projects they can settle. null = every project.
+		$settleableProjectIds = $this->projectService->getSettleableProjectIdListForUser($userId);
+		$canSettleAnything = $settleableProjectIds === null || $settleableProjectIds !== [];
 
 		$filters = [];
 		if ($projectId) $filters['project_id'] = $projectId;
@@ -177,11 +202,30 @@ class TimeEntryController extends Controller
 			$filters['date_to'] = $dateTo;
 		}
 		if ($search) $filters['search'] = $search;
+		if ($billingStatus !== '') $filters['billing_status'] = $billingStatus;
 		$canViewAllEntries = $this->projectService->canUserViewAllTimeEntries($userId);
+		$hasScopedTeamView = !$canViewAllEntries && $settleableProjectIds !== null && $settleableProjectIds !== [];
 		if ($filterUserId) {
-			$filters['user_id'] = $canViewAllEntries ? $filterUserId : $userId;
+			if ($canViewAllEntries) {
+				$filters['user_id'] = $filterUserId;
+			} elseif ($hasScopedTeamView && $filterUserId !== $userId) {
+				// A scoped settler may inspect a teammate — but only on the
+				// projects they manage (D5b), never org-wide.
+				$filters['user_id'] = $filterUserId;
+				$filters['project_ids'] = $settleableProjectIds;
+			} else {
+				$filters['user_id'] = $userId;
+			}
 		} elseif (!$canViewAllEntries) {
-			$filters['user_id'] = $userId;
+			if ($hasScopedTeamView) {
+				// Own entries everywhere OR any entry on settleable projects.
+				$filters['visible_to'] = [
+					'user_id' => $userId,
+					'project_ids' => $settleableProjectIds,
+				];
+			} else {
+				$filters['user_id'] = $userId;
+			}
 		}
 		if ($projectType) $filters['project_type'] = $projectType;
 		// Project-access scoping protects *other people's* entries. When the result
@@ -189,7 +233,12 @@ class TimeEntryController extends Controller
 		// is sufficient visibility: applying the scope here would only hide the
 		// user's own historical entries on projects they have since left — making
 		// them unreachable for editing/deleting even though both are permitted.
-		if ($accessibleProjectIds !== null && ($filters['user_id'] ?? '') !== $userId) {
+		if (
+			$accessibleProjectIds !== null
+			&& ($filters['user_id'] ?? '') !== $userId
+			&& !isset($filters['visible_to'])
+			&& !isset($filters['project_ids'])
+		) {
 			$filters['project_ids'] = $accessibleProjectIds;
 		}
 
@@ -213,8 +262,9 @@ class TimeEntryController extends Controller
 			'date_from' => $dateFrom,
 			'date_to' => $dateTo,
 			'search' => $search,
-			'user_id' => $canViewAllEntries ? $filterUserId : $userId,
-			'project_type' => $projectType
+			'user_id' => ($canViewAllEntries || $hasScopedTeamView) ? $filterUserId : $userId,
+			'project_type' => $projectType,
+			'billing_status' => $billingStatus,
 		];
 
 		// Get time entries
@@ -224,6 +274,13 @@ class TimeEntryController extends Controller
 		unset($sumFilters['limit'], $sumFilters['offset']);
 		$selectionHoursTotal = $this->timeEntryService->sumTimeEntriesHours($sumFilters);
 		$pageHoursTotal = $this->sumHoursOnCurrentPage($timeEntries);
+
+		// Settlement summary strip: per-status sums over the *visible* result
+		// set (ignores the billing_status filter itself so all four buckets
+		// stay comparable while the user flips through them).
+		$bucketFilters = $sumFilters;
+		unset($bucketFilters['billing_status']);
+		$billingBuckets = $this->billingService->getBillingBuckets($bucketFilters);
 
 		// Get all projects for filter dropdown (incl. archived for viewing historical entries)
 		$userProjects = $this->projectService->getProjectsForUserTimeEntry($user->getUID(), ['status' => ['Active', 'On Hold', 'Completed', 'Archived']]);
@@ -271,6 +328,14 @@ class TimeEntryController extends Controller
 			// instead of a link that would lead to an "Access denied" page.
 			'accessibleProjectIds' => $accessibleProjectIds,
 			'canViewAllEntries' => $canViewAllEntries,
+			// Settlement (spec §12.2): buckets for the summary strip, scope for
+			// the bulk bar + per-row checkboxes. null = may settle everywhere.
+			'billingBuckets' => $billingBuckets,
+			'canSettleAnything' => $canSettleAnything,
+			'settleableProjectIds' => $settleableProjectIds,
+			'billingBulkUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.bulk'),
+			'billingPreviewUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.preview'),
+			'billingEntryUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.changeEntryStatus', ['id' => 'ENTRY_ID']),
 			'stats' => $stats,
 			'projectTypeStats' => $projectTypeStats,
 			'detailedProjectTypeStats' => $detailedProjectTypeStats,
@@ -495,7 +560,8 @@ class TimeEntryController extends Controller
 
 		$uid = $user->getUID();
 		$isOwner = $timeEntry->isOwnedBy($uid);
-		if (!$isOwner && !$this->projectService->canUserViewAllTimeEntries($uid)) {
+		// Owner, global viewer, or scoped settler (Manager/creator — spec D5b).
+		if (!$isOwner && !$this->projectService->canUserViewTimeEntry($uid, $timeEntry)) {
 			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
 				$this->l->t('Access denied')
 			), 'guest');
@@ -519,7 +585,11 @@ class TimeEntryController extends Controller
 			'pricingRateSourceLabel' => $pricingRateSourceLabel,
 			'stats' => $stats,
 			'urlGenerator' => $this->urlGenerator,
-			'userId' => $user->getUID()
+			'userId' => $user->getUID(),
+			// Settlement: settlers get the transition buttons; owners get the
+			// lock explanation when the entry is invoiced/paid (spec §12).
+			'canSettleEntry' => $this->projectService->canUserSettleProject($uid, (int) $timeEntry->getProjectId()),
+			'billingEntryUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.changeEntryStatus', ['id' => (string) $timeEntry->getId()]),
 		]);
 
 		return $this->configureCSP($response);
@@ -657,6 +727,19 @@ class TimeEntryController extends Controller
 				'success' => false,
 				'error' => $this->l->t('Access denied')
 			], 403);
+		} catch (BillingLockedException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $e->getMessage(),
+				'code' => 'billing_locked',
+				'billingStatus' => $e->getBillingStatus(),
+			], 409);
+		} catch (SettlementConflictException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $e->getMessage(),
+				'code' => $e->getConflictCode(),
+			], 409);
 		} catch (ValidationException $e) {
 			// Business-rule rejection with an intentional, localized message.
 			$this->logger->info('Time entry update rejected', ['exception' => $e]);
@@ -762,6 +845,19 @@ class TimeEntryController extends Controller
 				'success' => false,
 				'error' => $this->l->t('Access denied')
 			], 403);
+		} catch (BillingLockedException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $e->getMessage(),
+				'code' => 'billing_locked',
+				'billingStatus' => $e->getBillingStatus(),
+			], 409);
+		} catch (SettlementConflictException $e) {
+			return new JSONResponse([
+				'success' => false,
+				'error' => $e->getMessage(),
+				'code' => $e->getConflictCode(),
+			], 409);
 		} catch (\Throwable $e) {
 			$this->logger->error('Time entry delete failed', ['exception' => $e]);
 			$status = $e instanceof \Exception ? 400 : 500;
@@ -814,10 +910,16 @@ class TimeEntryController extends Controller
 			return new JSONResponse(['success' => false, 'error' => $this->l->t('Access denied')], 403);
 		}
 
+		$uid = $user->getUID();
 		$timeEntries = $this->timeEntryService->getTimeEntriesByProject($projectId);
 
+		// D5b / E20c: Members only see their own entries; Managers / global
+		// viewers see the full project set. Never dump teammate hours to Members.
 		$results = [];
 		foreach ($timeEntries as $timeEntry) {
+			if (!$this->projectService->canUserViewTimeEntry($uid, $timeEntry)) {
+				continue;
+			}
 			$results[] = $timeEntry->getSummary();
 		}
 
@@ -880,18 +982,21 @@ class TimeEntryController extends Controller
 	}
 
 	/**
-	 * Export time entries to CSV.
+	 * Export time entries as CSV or JSON.
 	 *
 	 * Rate-limited because export materialises the user's accessible
 	 * time-entry rows into a single response: it is the most expensive
 	 * read endpoint and the most attractive for data scraping.
+	 * Format is chosen via `?format=csv|json` (default csv).
+	 * Success returns a direct file download ({@see DataDownloadResponse});
+	 * auth/validation failures return JSON {@see DataResponse}.
 	 *
-	 * @return DataResponse
+	 * @return Response
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	#[UserRateLimit(limit: 10, period: 60)]
-	public function export()
+	public function export(): Response
 	{
 		try {
 			$user = $this->userSession->getUser();
@@ -901,6 +1006,9 @@ class TimeEntryController extends Controller
 
 			$currentUserId = $user->getUID();
 			$accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($currentUserId);
+			$format = $this->listExportService->normalizeFormat(
+				(string)$this->request->getParam('format', ListExportService::FORMAT_CSV)
+			);
 
 			// Get filters from request
 			$projectId = $this->request->getParam('project_id', '');
@@ -910,37 +1018,64 @@ class TimeEntryController extends Controller
 			$dateTo = $this->request->getParam('date_to', '');
 			$search = $this->request->getParam('search', '');
 
+			$billingStatus = strtolower(trim((string)$this->request->getParam('billing_status', '')));
+			if (!in_array($billingStatus, array_merge(BillingStatus::ALL, ['outstanding']), true)) {
+				$billingStatus = '';
+			}
+
 			$filters = [];
 			if ($projectId) $filters['project_id'] = $projectId;
 			$canViewAllEntries = $this->projectService->canUserViewAllTimeEntries($currentUserId);
+			// Mirror index(): scoped settlers export what they can see (D5b).
+			$settleableProjectIds = $this->projectService->getSettleableProjectIdListForUser($currentUserId);
+			$hasScopedTeamView = !$canViewAllEntries && $settleableProjectIds !== null && $settleableProjectIds !== [];
 			if ($filterUserId) {
-				$filters['user_id'] = $canViewAllEntries ? $filterUserId : $currentUserId;
+				if ($canViewAllEntries) {
+					$filters['user_id'] = $filterUserId;
+				} elseif ($hasScopedTeamView && $filterUserId !== $currentUserId) {
+					$filters['user_id'] = $filterUserId;
+					$filters['project_ids'] = $settleableProjectIds;
+				} else {
+					$filters['user_id'] = $currentUserId;
+				}
 			} elseif (!$canViewAllEntries) {
-				$filters['user_id'] = $currentUserId;
+				if ($hasScopedTeamView) {
+					$filters['visible_to'] = [
+						'user_id' => $currentUserId,
+						'project_ids' => $settleableProjectIds,
+					];
+				} else {
+					$filters['user_id'] = $currentUserId;
+				}
 			}
 			if ($projectType) $filters['project_type'] = $projectType;
 			if ($dateFrom) $filters['date_from'] = $dateFrom;
 			if ($dateTo) $filters['date_to'] = $dateTo;
 			if ($search) $filters['search'] = $search;
+			if ($billingStatus !== '') $filters['billing_status'] = $billingStatus;
 			// Same rule as index(): only scope by project access when the rows may
 			// belong to someone else. A user's own entries are always exportable.
-			if ($accessibleProjectIds !== null && ($filters['user_id'] ?? '') !== $currentUserId) {
+			if (
+				$accessibleProjectIds !== null
+				&& ($filters['user_id'] ?? '') !== $currentUserId
+				&& !isset($filters['visible_to'])
+				&& !isset($filters['project_ids'])
+			) {
 				$filters['project_ids'] = $accessibleProjectIds;
 			}
 
-			// Get time entries with project and user information
 			$timeEntries = $this->timeEntryService->getTimeEntriesWithProjectInfo($filters);
+			if ($this->listExportService->exceedsMaxRows(count($timeEntries))) {
+				return new DataResponse([
+					'error' => $this->l->t(
+						'Too many rows to export (limit %s). Narrow your filters and try again.',
+						[number_format(ListExportService::MAX_EXPORT_ROWS)]
+					),
+				], 422);
+			}
 
-			// Generate CSV content
-			$csv = $this->generateTimeEntriesCSV($timeEntries, $currentUserId);
-
-			// Generate filename with current date
-			$filename = 'time_entries_' . date('Y-m-d_H-i-s') . '.csv';
-
-			return new DataResponse([
-				'csv_data' => $csv,
-				'filename' => $filename
-			]);
+			$packed = $this->listExportService->exportTimeEntries($timeEntries, $format);
+			return $this->listExportService->toDownloadResponse($packed);
 		} catch (\Throwable $e) {
 			$this->logger->error('Time entry export failed', ['exception' => $e]);
 			return new DataResponse(['error' => $this->l->t('Export failed. Please try again.')], 500);
@@ -1038,116 +1173,6 @@ class TimeEntryController extends Controller
 		});
 
 		return $normalizedUsers;
-	}
-
-	/**
-	 * Generate CSV content from time entries
-	 *
-	 * @param array $timeEntries
-	 * @param string $userId
-	 * @return string
-	 */
-	private function generateTimeEntriesCSV(array $timeEntries, string $userId): string
-	{
-		try {
-			$currencyCode = strtoupper(trim((string)$this->config->getAppValue($this->appName, 'currency', 'EUR')));
-			if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
-				$currencyCode = 'EUR';
-			}
-			// CSV headers
-			$headers = [
-				'Date',
-				'Project',
-				'Customer',
-				'Project Type',
-				'Description',
-				'Hours',
-				'Hourly Rate (' . $currencyCode . ')',
-				'Total Amount (' . $currencyCode . ')',
-				'User',
-				'Created At'
-			];
-
-			$output = fopen('php://temp', 'r+');
-			if (!$output) {
-				throw new \Exception('Failed to create temporary file for CSV generation');
-			}
-
-			// Write BOM for UTF-8
-			fputs($output, "\xEF\xBB\xBF");
-
-			// Write headers manually to ensure proper formatting
-			fputs($output, implode(';', array_map(function ($header) {
-				return '"' . str_replace('"', '""', $header) . '"';
-			}, $headers)) . "\n");
-
-			// Write data rows
-			foreach ($timeEntries as $entry) {
-				$timeEntry = $entry['timeEntry'];
-				if (!$timeEntry || !is_object($timeEntry)) {
-					$this->logger->warning('Skipping invalid time entry in CSV export', ['entry' => $entry]);
-					continue;
-				}
-
-				$totalAmount = \OCA\ProjectCheck\Util\Money::asFloat(
-					\OCA\ProjectCheck\Util\Money::mul(
-						$timeEntry->getHours(),
-						$timeEntry->getHourlyRate(),
-						\OCA\ProjectCheck\Util\Money::MONEY_SCALE
-					),
-					\OCA\ProjectCheck\Util\Money::MONEY_SCALE
-				);
-
-				// Get project type display name
-				$projectTypeDisplayName = $entry['project_type_display_name'] ?? $entry['project_type'] ?? 'Client Project';
-
-				$row = [
-					$timeEntry->getDate() ? $timeEntry->getDate()->format('Y-m-d') : '',
-					$entry['projectName'] ?? 'Unknown Project',
-					$entry['customerName'] ?? '',
-					$projectTypeDisplayName,
-					$timeEntry->getDescription() ?? '',
-					number_format($timeEntry->getHours(), 2, ',', ''),
-					number_format($timeEntry->getHourlyRate(), 2, ',', ''),
-					number_format($totalAmount, 2, ',', ''),
-					$entry['userDisplayName'] ?? $timeEntry->getUserId() ?? '',
-					$timeEntry->getCreatedAt() ? $timeEntry->getCreatedAt()->format('Y-m-d H:i') : ''
-				];
-
-
-				// Write row manually to ensure proper formatting
-				fputs($output, implode(';', array_map(function ($field) {
-					return '"' . str_replace('"', '""', $this->sanitizeCsvField((string)$field)) . '"';
-				}, $row)) . "\n");
-			}
-
-			rewind($output);
-			$csv = stream_get_contents($output);
-			fclose($output);
-
-			return $csv;
-		} catch (\Throwable $e) {
-			$this->logger->error('CSV generation failed', ['exception' => $e]);
-			throw $e;
-		}
-	}
-
-	/**
-	 * Neutralize spreadsheet formulas in exported text fields.
-	 *
-	 * Without this, values starting with =,+,-,@ can execute formulas when
-	 * opened in spreadsheet tools (CSV injection).
-	 */
-	private function sanitizeCsvField(string $value): string
-	{
-		if ($value === '') {
-			return $value;
-		}
-		$first = $value[0];
-		if ($first === '=' || $first === '+' || $first === '-' || $first === '@') {
-			return "'" . $value;
-		}
-		return $value;
 	}
 
 	private function pricingModeLabel(string $mode): string

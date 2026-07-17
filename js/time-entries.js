@@ -28,14 +28,13 @@
 		projectFilter: document.getElementById('project-filter'),
 		userFilter: document.getElementById('user-filter'),
 		projectTypeFilter: document.getElementById('time-entry-project-type-filter'),
+		billingStatusFilter: document.getElementById('billing-status-filter'),
 		applyFiltersBtn: document.getElementById('apply-filters'),
 		clearFiltersBtn: document.getElementById('clear-filters'),
-		exportCsvBtn: document.getElementById('export-csv'),
 		timeEntriesTable: document.getElementById('time-entries-table'),
 	};
 
 	/** @type {boolean} */
-	let exportInFlight = false;
 
 	/** @type {boolean} */
 	let deletionModalOpen = false;
@@ -76,6 +75,541 @@
 		bindEvents();
 		initMessageAutoHide();
 		hydrateRowActionIcons();
+		initSettlement();
+	}
+
+	// ---------------------------------------------------------------
+	// Settlement bulk actions (feature spec §12.2)
+	// ---------------------------------------------------------------
+
+	/** Mirror of BillingStatus::TRANSITIONS — display logic only; the server
+	 *  re-validates every transition. */
+	const BILLING_TRANSITIONS = {
+		open: ['invoiced', 'excluded'],
+		invoiced: ['paid', 'open'],
+		paid: ['invoiced'],
+		excluded: ['open'],
+	};
+
+	const BILLING_TARGET_LABELS = {
+		open: t('projectcheck', 'Reopen'),
+		invoiced: t('projectcheck', 'Mark invoiced'),
+		paid: t('projectcheck', 'Mark paid'),
+		excluded: t('projectcheck', 'Mark not billable'),
+	};
+
+	let settlementModalOpen = false;
+
+	function initSettlement() {
+		const bar = document.getElementById('pc-billing-bar');
+		const table = getTimeEntriesTable();
+		if (!bar || !table) {
+			return;
+		}
+
+		const selectAll = document.getElementById('pc-billing-select-all');
+		if (selectAll) {
+			selectAll.addEventListener('change', function () {
+				getSelectableCheckboxes().forEach(function (box) {
+					box.checked = selectAll.checked;
+				});
+				updateBillingBar();
+			});
+		}
+
+		table.addEventListener('change', function (e) {
+			if (e.target && e.target.classList.contains('pc-billing-select')) {
+				updateBillingBar();
+			}
+		});
+
+		bar.querySelectorAll('.pc-billing-action').forEach(function (button) {
+			button.addEventListener('click', function () {
+				const target = button.getAttribute('data-billing-target');
+				openSettlementConfirm(target, button);
+			});
+		});
+
+		bar.querySelectorAll('.pc-billing-filter-action').forEach(function (button) {
+			button.addEventListener('click', function () {
+				const target = button.getAttribute('data-billing-target');
+				const source = button.getAttribute('data-billing-source');
+				openFilterModeConfirm(source, target, button);
+			});
+		});
+
+		updateBillingBar();
+	}
+
+	function getSelectableCheckboxes() {
+		const table = getTimeEntriesTable();
+		return table ? Array.prototype.slice.call(table.querySelectorAll('.pc-billing-select')) : [];
+	}
+
+	function getSelectedEntries() {
+		return getSelectableCheckboxes()
+			.filter(function (box) { return box.checked; })
+			.map(function (box) {
+				const row = box.closest('tr[data-entry-id]');
+				return {
+					id: parseInt(box.value, 10),
+					status: row ? String(row.getAttribute('data-billing-status') || 'open') : 'open',
+					hours: row ? parseHoursValue(row.getAttribute('data-entry-hours')) : 0,
+				};
+			})
+			.filter(function (item) { return Number.isFinite(item.id) && item.id > 0; });
+	}
+
+	function countEligible(selected, target) {
+		return selected.filter(function (item) {
+			return (BILLING_TRANSITIONS[item.status] || []).indexOf(target) !== -1;
+		}).length;
+	}
+
+	function updateBillingBar() {
+		const bar = document.getElementById('pc-billing-bar');
+		if (!bar) {
+			return;
+		}
+		const selected = getSelectedEntries();
+		const countEl = document.getElementById('pc-billing-bar-count');
+		if (countEl) {
+			countEl.textContent = selected.length === 0
+				? t('projectcheck', 'No entries selected')
+				: n('projectcheck', '%n entry selected', '%n entries selected', selected.length);
+		}
+
+		bar.querySelectorAll('.pc-billing-action').forEach(function (button) {
+			const target = button.getAttribute('data-billing-target');
+			button.disabled = selected.length === 0 || countEligible(selected, target) === 0;
+		});
+
+		const selectAll = document.getElementById('pc-billing-select-all');
+		if (selectAll) {
+			const boxes = getSelectableCheckboxes();
+			selectAll.checked = boxes.length > 0 && selected.length === boxes.length;
+			selectAll.indeterminate = selected.length > 0 && selected.length < boxes.length;
+		}
+	}
+
+	function openSettlementConfirm(target, triggerButton) {
+		if (settlementModalOpen || !BILLING_TARGET_LABELS[target]) {
+			return;
+		}
+		const selected = getSelectedEntries();
+		if (selected.length === 0) {
+			return;
+		}
+		const eligible = countEligible(selected, target);
+		if (eligible === 0) {
+			showMessage(t('projectcheck', 'None of the selected entries can change to this status.'), 'error');
+			return;
+		}
+
+		const skipped = selected.length - eligible;
+		const totalHours = selected
+			.filter(function (item) { return (BILLING_TRANSITIONS[item.status] || []).indexOf(target) !== -1; })
+			.reduce(function (sum, item) { return sum + item.hours; }, 0);
+
+		let message = n(
+			'projectcheck',
+			'Change %n entry to "{target}"?',
+			'Change %n entries to "{target}"?',
+			eligible,
+			{ target: BILLING_TARGET_LABELS[target] }
+		);
+		message += ' ' + t('projectcheck', 'Total: {hours}', { hours: formatHoursDisplay(roundHoursValue(totalHours)) });
+		if (skipped > 0) {
+			message += ' ' + n(
+				'projectcheck',
+				'%n selected entry will be skipped because this change is not allowed from its current status.',
+				'%n selected entries will be skipped because this change is not allowed from their current status.',
+				skipped
+			);
+		}
+
+		showSettlementModal({
+			title: BILLING_TARGET_LABELS[target],
+			message: message,
+			confirmLabel: BILLING_TARGET_LABELS[target],
+			onConfirm: function (done) {
+				submitBulkBilling(selected.map(function (item) { return item.id; }), target, done);
+			},
+			trigger: triggerButton,
+		});
+	}
+
+	function submitBulkBilling(ids, target, done) {
+		const table = getTimeEntriesTable();
+		const bar = document.getElementById('pc-billing-bar');
+		const url = (table && table.getAttribute('data-billing-bulk-url'))
+			|| (bar && bar.getAttribute('data-billing-bulk-url'))
+			|| '';
+		if (!url) {
+			done();
+			showMessage(t('projectcheck', 'The settlement action failed. Please try again.'), 'error');
+			return;
+		}
+
+		fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				requesttoken: getRequestTokenValue(),
+			},
+			body: JSON.stringify({ ids: ids, target: target }),
+		})
+			.then(function (response) {
+				return response.json().catch(function () { return {}; }).then(function (payload) {
+					return { ok: response.ok, payload: payload };
+				});
+			})
+			.then(function (result) {
+				done();
+				if (result.ok && result.payload && result.payload.success) {
+					// Server-rendered strips/chips must refresh: reload keeps every
+					// number (buckets, counters, chips) consistent in one step.
+					sessionStorage.setItem('pcSettlementMessage', result.payload.message || '');
+					window.location.reload();
+					return;
+				}
+				const errorMessage = (result.payload && result.payload.error)
+					|| t('projectcheck', 'The settlement action failed. Please try again.');
+				showMessage(errorMessage, 'error');
+			})
+			.catch(function () {
+				done();
+				showMessage(t('projectcheck', 'The settlement action failed. Please try again.'), 'error');
+			});
+	}
+
+	/**
+	 * Collect the same filters the list page uses so filter-mode settle
+	 * applies to exactly what the settler sees (all pages, capped at 500).
+	 */
+	function collectListFilters(sourceStatus) {
+		const filters = { billing_status: sourceStatus };
+		const projectFilter = elements.projectFilter ? elements.projectFilter.value : '';
+		const userFilter = elements.userFilter ? elements.userFilter.value : '';
+		const projectTypeFilter = elements.projectTypeFilter ? elements.projectTypeFilter.value : '';
+		const searchTerm = elements.searchInput ? elements.searchInput.value.trim() : '';
+		const dateFromInput = document.getElementById('date-from-filter');
+		const dateToInput = document.getElementById('date-to-filter');
+		let dateFrom = dateFromInput ? dateFromInput.value.trim() : '';
+		let dateTo = dateToInput ? dateToInput.value.trim() : '';
+		if (dateFrom) {
+			dateFrom = normalizeDateToIso(dateFrom);
+		}
+		if (dateTo) {
+			dateTo = normalizeDateToIso(dateTo);
+		}
+		if (projectFilter) {
+			filters.project_id = parseInt(projectFilter, 10) || projectFilter;
+		}
+		if (userFilter) {
+			filters.user_id = userFilter;
+		}
+		if (projectTypeFilter) {
+			filters.project_type = projectTypeFilter;
+		}
+		if (dateFrom) {
+			filters.date_from = dateFrom;
+		}
+		if (dateTo) {
+			filters.date_to = dateTo;
+		}
+		if (searchTerm) {
+			filters.search = searchTerm;
+		}
+		return filters;
+	}
+
+	function getBillingEndpoints() {
+		const table = getTimeEntriesTable();
+		const bar = document.getElementById('pc-billing-bar');
+		return {
+			preview: (table && table.getAttribute('data-billing-preview-url'))
+				|| (bar && bar.getAttribute('data-billing-preview-url'))
+				|| '',
+			bulk: (table && table.getAttribute('data-billing-bulk-url'))
+				|| (bar && bar.getAttribute('data-billing-bulk-url'))
+				|| '',
+		};
+	}
+
+	/**
+	 * Filter-mode settle (spec D11 / §12.2): preview token → confirm → apply.
+	 * Only offered when Settlement filter is an exact status (server requires that).
+	 */
+	function openFilterModeConfirm(source, target, triggerButton) {
+		if (settlementModalOpen || !BILLING_TARGET_LABELS[target] || !source) {
+			return;
+		}
+		if ((BILLING_TRANSITIONS[source] || []).indexOf(target) === -1) {
+			showMessage(t('projectcheck', 'This status change is not allowed.'), 'error');
+			return;
+		}
+
+		const endpoints = getBillingEndpoints();
+		if (!endpoints.preview || !endpoints.bulk) {
+			showMessage(t('projectcheck', 'The settlement action failed. Please try again.'), 'error');
+			return;
+		}
+
+		const filters = collectListFilters(source);
+		if (triggerButton) {
+			triggerButton.disabled = true;
+		}
+
+		fetch(endpoints.preview, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				requesttoken: getRequestTokenValue(),
+			},
+			body: JSON.stringify({ filters: filters, target: target }),
+		})
+			.then(function (response) {
+				return response.json().catch(function () { return {}; }).then(function (payload) {
+					return { ok: response.ok, payload: payload };
+				});
+			})
+			.then(function (result) {
+				if (triggerButton) {
+					triggerButton.disabled = false;
+				}
+				if (!result.ok || !result.payload || result.payload.success !== true) {
+					showMessage(
+						(result.payload && result.payload.error)
+							|| t('projectcheck', 'Could not load the preview. Please try again.'),
+						'error'
+					);
+					return;
+				}
+				if (result.payload.capExceeded) {
+					showMessage(
+						t('projectcheck', 'Too many entries at once (more than {cap}). Narrow the date range and repeat the action for the rest.', {
+							cap: String(result.payload.cap || 500),
+						}),
+						'error'
+					);
+					return;
+				}
+				const count = Number(result.payload.count || 0);
+				if (count <= 0) {
+					showMessage(t('projectcheck', 'No matching hours found — there is nothing to change.'), 'error');
+					return;
+				}
+				const token = result.payload.token;
+				if (!token) {
+					showMessage(t('projectcheck', 'Could not load the preview. Please try again.'), 'error');
+					return;
+				}
+
+				const hours = formatHoursDisplay(roundHoursValue(Number(result.payload.hours || 0)));
+				const amount = Number(result.payload.amount || 0).toFixed(2);
+				let message = n(
+					'projectcheck',
+					'Change %n matching entry to "{target}"?',
+					'Change %n matching entries to "{target}"?',
+					count,
+					{ target: BILLING_TARGET_LABELS[target] }
+				);
+				message += ' ' + t('projectcheck', 'Total: {hours} · {amount}', {
+					hours: hours,
+					amount: amount,
+				});
+				message += ' ' + t('projectcheck', 'This applies to every entry matching the current filters (all pages), not only this page.');
+
+				showSettlementModal({
+					title: BILLING_TARGET_LABELS[target],
+					message: message,
+					confirmLabel: BILLING_TARGET_LABELS[target],
+					onConfirm: function (done) {
+						submitFilterModeBilling(filters, target, token, done);
+					},
+					trigger: triggerButton,
+				});
+			})
+			.catch(function () {
+				if (triggerButton) {
+					triggerButton.disabled = false;
+				}
+				showMessage(t('projectcheck', 'Could not load the preview. Please try again.'), 'error');
+			});
+	}
+
+	function submitFilterModeBilling(filters, target, token, done) {
+		const endpoints = getBillingEndpoints();
+		if (!endpoints.bulk) {
+			done();
+			showMessage(t('projectcheck', 'The settlement action failed. Please try again.'), 'error');
+			return;
+		}
+
+		fetch(endpoints.bulk, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				requesttoken: getRequestTokenValue(),
+			},
+			body: JSON.stringify({ filters: filters, target: target, token: token }),
+		})
+			.then(function (response) {
+				return response.json().catch(function () { return {}; }).then(function (payload) {
+					return { ok: response.ok, status: response.status, payload: payload };
+				});
+			})
+			.then(function (result) {
+				done();
+				if (result.ok && result.payload && result.payload.success) {
+					sessionStorage.setItem('pcSettlementMessage', result.payload.message || '');
+					window.location.reload();
+					return;
+				}
+				if (result.status === 409) {
+					showMessage(
+						(result.payload && result.payload.error)
+							|| t('projectcheck', 'The entries changed since the preview. Review the numbers and confirm again.'),
+						'error'
+					);
+					return;
+				}
+				showMessage(
+					(result.payload && result.payload.error)
+						|| t('projectcheck', 'The settlement action failed. Please try again.'),
+					'error'
+				);
+			})
+			.catch(function () {
+				done();
+				showMessage(t('projectcheck', 'The settlement action failed. Please try again.'), 'error');
+			});
+	}
+
+	function getRequestTokenValue() {
+		if (typeof OC !== 'undefined' && OC.requestToken) {
+			return OC.requestToken;
+		}
+		const tokenInput = document.querySelector('input[name="requesttoken"]');
+		return tokenInput ? tokenInput.value : '';
+	}
+
+	/**
+	 * Minimal accessible confirm dialog for settlement actions: role=dialog,
+	 * focus handled by ProjectCheckModalA11y when available, Escape closes.
+	 */
+	function showSettlementModal(options) {
+		settlementModalOpen = true;
+		if (options.trigger) {
+			options.trigger.disabled = true;
+		}
+
+		const root = document.createElement('div');
+		root.className = 'pc-settle-modal';
+		root.style.display = 'flex';
+
+		const backdrop = document.createElement('div');
+		backdrop.className = 'pc-settle-modal__backdrop';
+
+		const dialog = document.createElement('div');
+		dialog.className = 'pc-settle-modal__dialog';
+		dialog.setAttribute('role', 'dialog');
+		dialog.setAttribute('aria-modal', 'true');
+		dialog.setAttribute('aria-labelledby', 'pc-settle-modal-title');
+		dialog.setAttribute('aria-describedby', 'pc-settle-modal-message');
+
+		const title = document.createElement('h2');
+		title.id = 'pc-settle-modal-title';
+		title.className = 'pc-settle-modal__title';
+		title.textContent = options.title;
+
+		const message = document.createElement('p');
+		message.id = 'pc-settle-modal-message';
+		message.className = 'pc-settle-modal__message';
+		message.textContent = options.message;
+
+		const actions = document.createElement('div');
+		actions.className = 'pc-settle-modal__actions';
+
+		const cancelBtn = document.createElement('button');
+		cancelBtn.type = 'button';
+		cancelBtn.className = 'button secondary';
+		cancelBtn.textContent = t('projectcheck', 'Cancel');
+
+		const confirmBtn = document.createElement('button');
+		confirmBtn.type = 'button';
+		confirmBtn.className = 'button primary';
+		confirmBtn.textContent = options.confirmLabel;
+
+		actions.appendChild(cancelBtn);
+		actions.appendChild(confirmBtn);
+		dialog.appendChild(title);
+		dialog.appendChild(message);
+		dialog.appendChild(actions);
+		root.appendChild(backdrop);
+		root.appendChild(dialog);
+		document.body.appendChild(root);
+		document.body.style.overflow = 'hidden';
+
+		let a11yAttached = false;
+		let closed = false;
+
+		function closeModal() {
+			if (closed) {
+				return;
+			}
+			closed = true;
+			settlementModalOpen = false;
+			if (a11yAttached && window.ProjectCheckModalA11y && typeof window.ProjectCheckModalA11y.detach === 'function') {
+				window.ProjectCheckModalA11y.detach(dialog);
+			}
+			root.remove();
+			document.body.style.overflow = '';
+			if (options.trigger) {
+				options.trigger.disabled = false;
+				options.trigger.focus();
+			}
+		}
+
+		if (window.ProjectCheckModalA11y && typeof window.ProjectCheckModalA11y.attach === 'function') {
+			a11yAttached = window.ProjectCheckModalA11y.attach(dialog, {
+				dismissOnEscape: true,
+				dismissOnBackdrop: false,
+				initialFocus: cancelBtn,
+				onDismiss: closeModal,
+			}) !== null;
+		} else {
+			cancelBtn.focus();
+			dialog.addEventListener('keydown', function (e) {
+				if (e.key === 'Escape') {
+					closeModal();
+				}
+			});
+		}
+
+		backdrop.addEventListener('click', closeModal);
+		cancelBtn.addEventListener('click', closeModal);
+		confirmBtn.addEventListener('click', function () {
+			confirmBtn.disabled = true;
+			cancelBtn.disabled = true;
+			options.onConfirm(function () {
+				closeModal();
+			});
+		});
+	}
+
+	function showStoredSettlementMessage() {
+		let stored = '';
+		try {
+			stored = sessionStorage.getItem('pcSettlementMessage') || '';
+			sessionStorage.removeItem('pcSettlementMessage');
+		} catch (e) {
+			stored = '';
+		}
+		if (stored) {
+			showMessage(stored, 'success');
+		}
 	}
 
 	function hydrateRowActionIcons() {
@@ -105,9 +639,6 @@
 			elements.clearFiltersBtn.addEventListener('click', clearFilters);
 		}
 
-		if (elements.exportCsvBtn) {
-			elements.exportCsvBtn.addEventListener('click', exportToCsv);
-		}
 
 		document.addEventListener('click', function (e) {
 			if (!e.target.closest('.delete-entry-btn')) {
@@ -149,6 +680,8 @@
 			return;
 		}
 
+		const billingStatusFilter = elements.billingStatusFilter ? elements.billingStatusFilter.value : '';
+
 		const url = new URL(window.location.href);
 		searchTerm ? url.searchParams.set('search', searchTerm) : url.searchParams.delete('search');
 		projectFilter ? url.searchParams.set('project_id', projectFilter) : url.searchParams.delete('project_id');
@@ -156,6 +689,7 @@
 		projectTypeFilter ? url.searchParams.set('project_type', projectTypeFilter) : url.searchParams.delete('project_type');
 		dateFrom ? url.searchParams.set('date_from', dateFrom) : url.searchParams.delete('date_from');
 		dateTo ? url.searchParams.set('date_to', dateTo) : url.searchParams.delete('date_to');
+		billingStatusFilter ? url.searchParams.set('billing_status', billingStatusFilter) : url.searchParams.delete('billing_status');
 		url.searchParams.set('page', '1');
 		window.location.href = url.toString();
 	}
@@ -168,6 +702,7 @@
 		url.searchParams.delete('project_type');
 		url.searchParams.delete('date_from');
 		url.searchParams.delete('date_to');
+		url.searchParams.delete('billing_status');
 		url.searchParams.set('page', '1');
 		window.location.href = url.toString();
 	}
@@ -347,111 +882,6 @@
 		}, hideDelay);
 	}
 
-	function setExportButtonBusy(exportBtn, busy) {
-		if (!exportBtn) {
-			return;
-		}
-		exportBtn.disabled = busy;
-		exportBtn.setAttribute('aria-busy', busy ? 'true' : 'false');
-		const label = exportBtn.querySelector('.export-csv__label');
-		if (label) {
-			label.textContent = busy
-				? t('projectcheck', 'Exporting…')
-				: t('projectcheck', 'Export');
-		}
-	}
-
-	function exportToCsv() {
-		if (exportInFlight) {
-			return;
-		}
-		exportInFlight = true;
-
-		const searchTerm = elements.searchInput ? elements.searchInput.value.trim() : '';
-		const projectFilter = elements.projectFilter ? elements.projectFilter.value : '';
-		const userFilter = elements.userFilter ? elements.userFilter.value : '';
-		const projectTypeFilter = elements.projectTypeFilter ? elements.projectTypeFilter.value : '';
-		const dateFromInput = document.getElementById('date-from-filter');
-		const dateToInput = document.getElementById('date-to-filter');
-		let dateFrom = dateFromInput ? dateFromInput.value.trim() : '';
-		let dateTo = dateToInput ? dateToInput.value.trim() : '';
-
-		if (dateFrom) {
-			dateFrom = normalizeDateToIso(dateFrom);
-		}
-		if (dateTo) {
-			dateTo = normalizeDateToIso(dateTo);
-		}
-
-		if (dateFrom && dateTo && dateFrom > dateTo) {
-			showMessage(t('projectcheck', 'The start date must be on or before the end date.'), 'error');
-			exportInFlight = false;
-			return;
-		}
-
-		const exportUrl = OC.generateUrl('/apps/projectcheck/time-entries/export');
-		const url = new URL(exportUrl, window.location.origin);
-
-		if (searchTerm) url.searchParams.set('search', searchTerm);
-		if (projectFilter) url.searchParams.set('project_id', projectFilter);
-		if (userFilter) url.searchParams.set('user_id', userFilter);
-		if (projectTypeFilter) url.searchParams.set('project_type', projectTypeFilter);
-		if (dateFrom) url.searchParams.set('date_from', dateFrom);
-		if (dateTo) url.searchParams.set('date_to', dateTo);
-
-		const exportBtn = elements.exportCsvBtn;
-		setExportButtonBusy(exportBtn, true);
-
-		fetch(url.toString(), {
-			method: 'GET',
-			headers: {
-				'requesttoken': OC.requestToken
-			}
-		})
-			.then(response => {
-				if (!response.ok) {
-					return response.json().then(data => {
-						throw new Error(data.error != null && data.error !== ''
-							? data.error
-							: t('projectcheck', 'Export failed'));
-					});
-				}
-				return response.json();
-			})
-			.then(data => {
-				if (data.error) {
-					throw new Error(data.error);
-				}
-
-				const bom = '\uFEFF';
-				const blob = new Blob([bom + data.csv_data], { type: 'text/csv;charset=utf-8;' });
-
-				const link = document.createElement('a');
-				const downloadUrl = URL.createObjectURL(blob);
-				const filename = data.filename || 'time_entries_' + new Date().toISOString().slice(0, 10) + '.csv';
-
-				link.setAttribute('href', downloadUrl);
-				link.setAttribute('download', filename);
-				link.style.visibility = 'hidden';
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-
-				URL.revokeObjectURL(downloadUrl);
-
-				const entryCount = (data.csv_data.match(/\n/g) || []).length;
-				showMessage(t('projectcheck', 'Exported') + ' ' + entryCount + ' ' + t('projectcheck', 'entries'), 'success');
-			})
-			.catch(error => {
-				console.error('Export error:', error);
-				showMessage(t('projectcheck', 'Export failed:') + ' ' + error.message, 'error');
-			})
-			.finally(() => {
-				exportInFlight = false;
-				setExportButtonBusy(exportBtn, false);
-			});
-	}
-
 	function initMessageAutoHide() {
 		const messages = document.querySelectorAll('.notice');
 		messages.forEach(message => {
@@ -464,9 +894,13 @@
 	}
 
 	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', init);
+		document.addEventListener('DOMContentLoaded', function () {
+			init();
+			showStoredSettlementMessage();
+		});
 	} else {
 		init();
+		showStoredSettlementMessage();
 	}
 
 })();

@@ -22,10 +22,14 @@ use OCA\ProjectCheck\Service\ActivityService;
 use OCA\ProjectCheck\Service\ProjectFileService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
+use OCA\ProjectCheck\Service\ProjectMemberHourlyRateService;
+use OCA\ProjectCheck\Service\ListExportService;
+use OCA\ProjectCheck\Service\ProjectSettlementService;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
@@ -67,6 +71,9 @@ class ProjectControllerTest extends TestCase {
 	/** @var \OCP\IUserManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $userManager;
 
+	/** @var IConfig|\PHPUnit\Framework\MockObject\MockObject */
+	private $config;
+
 	protected function setUp(): void {
 		parent::setUp();
 
@@ -88,7 +95,8 @@ class ProjectControllerTest extends TestCase {
 		$activityService = $this->createMock(ActivityService::class);
 		$projectFileService = $this->createMock(ProjectFileService::class);
 		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$config = $this->createMock(IConfig::class);
+		$this->config = $this->createMock(IConfig::class);
+		$config = $this->config;
 		$cspService = $this->createMock(CSPService::class);
 		$cspService->method('applyPolicyWithNonce')->willReturnArgument(0);
 		$requestToken = $this->createMock(IRequestTokenProvider::class);
@@ -96,6 +104,7 @@ class ProjectControllerTest extends TestCase {
 		$this->userManager = $this->createMock(\OCP\IUserManager::class);
 		$userAccountSnapshot = $this->createMock(\OCA\ProjectCheck\Db\UserAccountSnapshotMapper::class);
 		$projectMemberHourlyRateService = $this->createMock(\OCA\ProjectCheck\Service\ProjectMemberHourlyRateService::class);
+		$listExportService = new ListExportService($this->config, 'projectcheck');
 
 		$this->controller = new ProjectController(
 			'projectcheck',
@@ -116,7 +125,9 @@ class ProjectControllerTest extends TestCase {
 			$this->l10n,
 			$this->userManager,
 			$userAccountSnapshot,
-			$projectMemberHourlyRateService
+			$projectMemberHourlyRateService,
+			$listExportService,
+			$this->createMock(ProjectSettlementService::class)
 		);
 		$this->projectService->method('canUserCreateProject')->willReturn(true);
 	}
@@ -1039,5 +1050,254 @@ class ProjectControllerTest extends TestCase {
 		$this->assertSame('rate_tamper', $data['code']);
 		$this->assertStringNotContainsString($leaked, (string) ($data['error'] ?? ''));
 		$this->assertStringContainsString('hourly rate', (string) $data['error']);
+	}
+
+	/**
+	 * Build an enriched list-view item as returned by ProjectService::getProjectsForListView().
+	 *
+	 * @param array<string, mixed> $budgetInfo
+	 * @return array{project: Project, budgetInfo: array, canEdit: bool}
+	 */
+	private function enrichedProjectFixture(Project $project, array $budgetInfo = []): array {
+		return [
+			'project' => $project,
+			'budgetInfo' => array_merge([
+				'total_budget' => 1000.0,
+				'used_budget' => 250.0,
+				'remaining_budget' => 750.0,
+				'consumption_percentage' => 25.0,
+				'warning_level' => 'none',
+				'used_hours' => 5.0,
+				'remaining_hours' => 15.0,
+				'available_hours' => 20.0,
+				'hours_estimated' => false,
+			], $budgetInfo),
+			'canEdit' => true,
+		];
+	}
+
+	public function testExportRequiresAuthentication(): void {
+		// No user stubbed on the session: getUser() returns null.
+		$response = $this->controller->export();
+
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertSame(401, $response->getStatus());
+	}
+
+	public function testExportGeneratesCsvWithConfiguredCurrencyAndRowData(): void {
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => $default
+		);
+		$this->config->method('getAppValue')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string =>
+				($app === 'projectcheck' && $key === 'currency') ? 'usd' : $default
+		);
+
+		$project = new Project();
+		$project->setId(7);
+		$project->setName('Website Relaunch');
+		$project->setCustomerName('ACME GmbH');
+		$project->setStatus('Active');
+		$project->setPriority('High');
+		$project->setProjectType('client');
+		$project->setHourlyRate(120.0);
+		$project->setTotalBudget(1000.0);
+		$project->setStartDate(new \DateTime('2026-01-15'));
+		$project->setEndDate(new \DateTime('2026-06-30'));
+		$project->setTags('web, relaunch');
+		$project->setCreatedBy('alice');
+		$project->setCreatedAt(new \DateTime('2026-01-10 09:30:00'));
+
+		$this->projectService->expects($this->once())
+			->method('getProjectsForListView')
+			->with(
+				$this->callback(static function (array $filters): bool {
+					// Missing status parameter must default to Active — the same
+					// view the list page shows — and pagination must be absent so
+					// the export covers all pages.
+					return ($filters['status'] ?? null) === 'Active'
+						&& !array_key_exists('limit', $filters)
+						&& !array_key_exists('offset', $filters);
+				}),
+				'remaining_budget',
+				'asc',
+				'alice'
+			)
+			->willReturn([$this->enrichedProjectFixture($project)]);
+
+		$response = $this->controller->export();
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertSame(200, $response->getStatus());
+		$csv = (string)$response->render();
+		$this->assertStringStartsWith("\xEF\xBB\xBF", $csv, 'CSV DataDownloadResponse must include a single UTF-8 BOM');
+		$this->assertStringContainsString('"Total Budget (USD)";"Used Budget (USD)"', $csv);
+		$this->assertStringContainsString('"Website Relaunch";"ACME GmbH";"Client Project";"Active";"High"', $csv);
+		$this->assertStringContainsString('"2026-01-15";"2026-06-30"', $csv);
+		$this->assertStringContainsString('"1000,00";"250,00";"750,00";"25,0";"5,00";"15,00";"120,00"', $csv);
+		$this->assertStringContainsString('"One rate for the whole project"', $csv);
+		$headers = $response->getHeaders();
+		$this->assertSame('1', $headers['X-ProjectCheck-Export-Row-Count'] ?? null);
+		$this->assertSame('csv', $headers['X-ProjectCheck-Export-Format'] ?? null);
+		$this->assertMatchesRegularExpression(
+			'/attachment;\s*filename="?projects_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.csv"?/i',
+			(string)($headers['Content-Disposition'] ?? '')
+		);
+	}
+
+	public function testExportJsonFormatReturnsMachineReadableRecords(): void {
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $key, $default = null) {
+				return $key === 'format' ? 'json' : $default;
+			}
+		);
+		$this->config->method('getAppValue')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string =>
+				($app === 'projectcheck' && $key === 'currency') ? 'EUR' : $default
+		);
+
+		$project = new Project();
+		$project->setId(7);
+		$project->setName('Website Relaunch');
+		$project->setCustomerName('ACME GmbH');
+		$project->setStatus('Active');
+		$project->setPriority('High');
+		$project->setProjectType('client');
+		$project->setHourlyRate(120.0);
+		$project->setTotalBudget(1000.0);
+		$project->setCreatedBy('alice');
+
+		$this->projectService->method('getProjectsForListView')
+			->willReturn([$this->enrichedProjectFixture($project)]);
+
+		$response = $this->controller->export();
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertSame(200, $response->getStatus());
+		$headers = $response->getHeaders();
+		$this->assertSame('json', $headers['X-ProjectCheck-Export-Format'] ?? null);
+		$this->assertSame('1', $headers['X-ProjectCheck-Export-Row-Count'] ?? null);
+		$this->assertMatchesRegularExpression(
+			'/attachment;\s*filename="?projects_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json"?/i',
+			(string)($headers['Content-Disposition'] ?? '')
+		);
+		$decoded = json_decode((string)$response->render(), true);
+		$this->assertIsArray($decoded);
+		$this->assertSame(1, $decoded['record_count']);
+		$this->assertSame('EUR', $decoded['currency']);
+		$this->assertSame('Website Relaunch', $decoded['records'][0]['name']);
+		$this->assertEqualsWithDelta(1000.0, (float)$decoded['records'][0]['total_budget'], 0.0001);
+	}
+
+	public function testExportNeutralizesCsvFormulaInjectionInTextFields(): void {
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => $default
+		);
+
+		$project = new Project();
+		$project->setId(8);
+		$project->setName('=cmd|/c calc');
+		$project->setCustomerName('+SUM(A1:A2)');
+		$project->setStatus('Active');
+		$project->setPriority('Low');
+		$project->setTags('@import');
+		$project->setShortDescription('-2+3');
+		$project->setCreatedBy('alice');
+
+		$this->projectService->method('getProjectsForListView')
+			->willReturn([$this->enrichedProjectFixture($project)]);
+
+		$response = $this->controller->export();
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertSame(200, $response->getStatus());
+		$csv = (string)$response->render();
+		$this->assertStringContainsString("\"'=cmd|/c calc\"", $csv);
+		$this->assertStringContainsString("\"'+SUM(A1:A2)\"", $csv);
+		$this->assertStringContainsString("\"'@import\"", $csv);
+		$this->assertStringContainsString("\"'-2+3\"", $csv);
+	}
+
+	public function testExportHonoursStatusAllAndRejectsUnknownSortColumns(): void {
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $key, $default = null) {
+				return match ($key) {
+					'status' => 'all',
+					'sort' => 'evil;drop table',
+					'direction' => 'DESC',
+					'search' => 'relaunch',
+					'customer_id' => '3',
+					default => $default,
+				};
+			}
+		);
+
+		$this->projectService->expects($this->once())
+			->method('getProjectsForListView')
+			->with(
+				$this->callback(static function (array $filters): bool {
+					return ($filters['status'] ?? null) === 'all'
+						&& ($filters['search'] ?? null) === 'relaunch'
+						&& ($filters['customer_id'] ?? null) === '3';
+				}),
+				'remaining_budget',
+				'desc',
+				'alice'
+			)
+			->willReturn([]);
+
+		$response = $this->controller->export();
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame('0', $response->getHeaders()['X-ProjectCheck-Export-Row-Count'] ?? null);
+		// Header-only CSV after BOM: exactly one data line terminator from the header row.
+		$csv = (string)$response->render();
+		$this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
+		$this->assertSame(1, substr_count(substr($csv, 3), "\n"));
+	}
+
+	public function testExportRejectsWhenOverRowCeiling(): void {
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => $default
+		);
+
+		// Build a sparse list larger than the ceiling without materialising real projects.
+		$overLimit = array_fill(0, ListExportService::MAX_EXPORT_ROWS + 1, ['skip' => true]);
+		$this->projectService->method('getProjectsForListView')->willReturn($overLimit);
+
+		$response = $this->controller->export();
+
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertSame(422, $response->getStatus());
+		$this->assertArrayHasKey('error', $response->getData());
+		$this->assertStringContainsString('100,000', (string)$response->getData()['error']);
+		$this->assertStringContainsString('Too many rows', (string)$response->getData()['error']);
+	}
+
+	public function testExportFailureDoesNotLeakInternals(): void {
+		$leaked = 'SQLSTATE_secret_detail_42';
+		$this->user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => $default
+		);
+		$this->projectService->method('getProjectsForListView')
+			->willThrowException(new \RuntimeException($leaked));
+
+		$response = $this->controller->export();
+
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertSame(500, $response->getStatus());
+		$this->assertStringNotContainsString($leaked, (string) ($response->getData()['error'] ?? ''));
 	}
 }
