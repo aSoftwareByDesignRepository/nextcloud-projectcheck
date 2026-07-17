@@ -17,6 +17,7 @@ Util::addStyle('projectcheck', 'common/progress-bars');
 Util::addStyle('projectcheck', 'common/accessibility');
 Util::addStyle('projectcheck', 'common/stats-panel');
 Util::addStyle('projectcheck', 'common/list-table');
+Util::addStyle('projectcheck', 'common/productivity');
 // Last: single-column detail stack (overrides legacy 2-col content-grid).
 Util::addStyle('projectcheck', 'common/detail-layout');
 ?>
@@ -113,7 +114,7 @@ include __DIR__ . '/common/page-start.php';
 				<div class="stats-container">
 					<div class="stat-card">
 						<div class="stat-icon">
-							<i class="icon-folder-custom icon-large" aria-hidden="true"></i>
+							<span data-lucide="folder" class="lucide-icon" aria-hidden="true"></span>
 						</div>
 						<div class="stat-content">
 							<div class="stat-number"><?php p($keyTotalProjects); ?></div>
@@ -123,7 +124,7 @@ include __DIR__ . '/common/page-start.php';
 					</div>
 					<div class="stat-card">
 						<div class="stat-icon">
-							<i class="icon-time-custom icon-large" aria-hidden="true"></i>
+							<span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
 						</div>
 						<div class="stat-content">
 							<div class="stat-number"><?php p($fmt ? $fmt->hours($keyTotalHours) : number_format($keyTotalHours, 1) . 'h'); ?></div>
@@ -132,7 +133,7 @@ include __DIR__ . '/common/page-start.php';
 					</div>
 					<div class="stat-card">
 						<div class="stat-icon">
-							<i class="icon-money-custom icon-large" aria-hidden="true"></i>
+							<span data-lucide="euro" class="lucide-icon" aria-hidden="true"></span>
 						</div>
 						<div class="stat-content">
 							<div class="stat-number"><?php p($fmt ? $fmt->currency($keyBudgetUsed) : $currencyCode . ' ' . number_format($keyBudgetUsed, 2)); ?></div>
@@ -146,7 +147,7 @@ include __DIR__ . '/common/page-start.php';
 					</div>
 					<div class="stat-card">
 						<div class="stat-icon">
-							<i class="icon-calendar-custom icon-large" aria-hidden="true"></i>
+							<span data-lucide="calendar" class="lucide-icon" aria-hidden="true"></span>
 						</div>
 						<div class="stat-content">
 							<div class="stat-number"><?php p($keyEntryCount); ?></div>
@@ -182,7 +183,7 @@ include __DIR__ . '/common/page-start.php';
 								<div class="yearly-stat-content">
 									<div class="yearly-stat-item">
 										<div class="stat-icon">
-											<i class="icon-time-custom" aria-hidden="true"></i>
+											<span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
 										</div>
 										<div class="stat-details">
 											<div class="stat-value"><?php p(number_format($yearData['total_hours'], 1)); ?>h</div>
@@ -191,7 +192,7 @@ include __DIR__ . '/common/page-start.php';
 									</div>
 									<div class="yearly-stat-item">
 										<div class="stat-icon">
-											<i class="icon-money-custom" aria-hidden="true"></i>
+											<span data-lucide="euro" class="lucide-icon" aria-hidden="true"></span>
 										</div>
 										<div class="stat-details">
 											<div class="stat-value"><?php p($fmt ? $fmt->currency((float)$yearData['total_cost']) : $currencyCode . ' ' . number_format((float)$yearData['total_cost'], 2)); ?></div>
@@ -227,76 +228,20 @@ include __DIR__ . '/common/page-start.php';
 			</section>
 		<?php endif; ?>
 
-		<!-- Project Type Analysis Dashboard -->
+		<!-- Project Type Analysis -->
 		<?php if (!empty($_['projectTypeStats'])): ?>
 			<section class="section project-type-stats-section pc-section" aria-labelledby="pc-customer-type-heading">
 				<div class="section-header">
-					<h3 id="pc-customer-type-heading"><i data-lucide="pie-chart" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project Type Analysis')); ?></h3>
+					<h3 id="pc-customer-type-heading"><i data-lucide="pie-chart" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project type analysis')); ?></h3>
 					<p><?php p($l->t('Analyze productivity by project type to identify billable vs overhead work')); ?></p>
 				</div>
 				<div class="section-content">
-					<div class="project-type-stats-container">
-						<?php foreach ($_['projectTypeStats'] as $year => $yearData): ?>
-							<div class="year-section">
-								<div class="year-header">
-									<h4><?php p($year); ?></h4>
-									<?php
-									$yearTotalHours = array_sum(array_column($yearData, 'total_hours'));
-									$yearTotalCost = array_sum(array_column($yearData, 'total_cost'));
-									?>
-									<div class="year-summary">
-										<span class="summary-item">
-											<i data-lucide="clock" class="lucide-icon"></i>
-											<?php p(number_format($yearTotalHours, 1)); ?>h
-										</span>
-										<span class="summary-item">
-											<i data-lucide="euro" class="lucide-icon"></i>
-											<?php p($fmt ? $fmt->currency((float)$yearTotalCost) : $currencyCode . ' ' . number_format((float)$yearTotalCost, 2)); ?>
-										</span>
-									</div>
-								</div>
-								<div class="project-types-container">
-									<?php foreach ($yearData as $projectType => $typeData): ?>
-										<div class="project-type-card">
-											<div class="type-header">
-												<h5 class="type-name"><?php p($typeData['project_type']); ?></h5>
-												<div class="type-stats">
-													<div class="stat-item">
-														<span class="stat-value"><?php p(number_format($typeData['total_hours'], 1)); ?>h</span>
-														<span class="stat-label"><?php p($l->t('Hours')); ?></span>
-													</div>
-													<div class="stat-item">
-														<span class="stat-value"><?php p($fmt ? $fmt->currency((float)$typeData['total_cost']) : $currencyCode . ' ' . number_format((float)$typeData['total_cost'], 2)); ?></span>
-														<span class="stat-label"><?php p($l->t('Cost')); ?></span>
-													</div>
-													<div class="stat-item">
-														<span class="stat-value"><?php p($typeData['entry_count']); ?></span>
-														<span class="stat-label"><?php p($l->t('Entries')); ?></span>
-													</div>
-												</div>
-											</div>
-											<div class="type-progress">
-												<div class="progress-item">
-													<div class="progress-label"><?php p($l->t('Hours Share')); ?></div>
-													<div class="progress-bar">
-														<div class="progress-fill" style="width: <?php p($yearTotalHours > 0 ? ($typeData['total_hours'] / $yearTotalHours) * 100 : 0); ?>%"></div>
-													</div>
-													<div class="progress-percentage"><?php p($yearTotalHours > 0 ? round(($typeData['total_hours'] / $yearTotalHours) * 100, 1) : 0); ?>%</div>
-												</div>
-												<div class="progress-item">
-													<div class="progress-label"><?php p($l->t('Cost Share')); ?></div>
-													<div class="progress-bar">
-														<div class="progress-fill" style="width: <?php p($yearTotalCost > 0 ? ($typeData['total_cost'] / $yearTotalCost) * 100 : 0); ?>%"></div>
-													</div>
-													<div class="progress-percentage"><?php p($yearTotalCost > 0 ? round(($typeData['total_cost'] / $yearTotalCost) * 100, 1) : 0); ?>%</div>
-												</div>
-											</div>
-										</div>
-									<?php endforeach; ?>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
+					<?php
+					$projectTypeStats = $_['projectTypeStats'];
+					$typeAnalysisIdPrefix = 'pc-customer-type';
+					include __DIR__ . '/parts/pc-project-type-years.php';
+					unset($projectTypeStats, $typeAnalysisIdPrefix);
+					?>
 				</div>
 			</section>
 		<?php endif; ?>
@@ -306,53 +251,49 @@ include __DIR__ . '/common/page-start.php';
 			<!-- Customer Information -->
 			<div class="section info-section pc-section" aria-labelledby="pc-customer-info-heading">
 				<div class="section-header">
-					<h3 id="pc-customer-info-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Customer Information')); ?></h3>
-					<p><?php p($l->t('Name, contact, and other details for this customer.')); ?></p>
+					<h3 id="pc-customer-info-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('About this customer')); ?></h3>
+					<p><?php p($l->t('Contact details and when this record was last changed.')); ?></p>
 				</div>
 				<div class="section-content">
-					<div class="info-grid">
-						<div class="info-item">
-							<label><?php p($l->t('Customer Name')); ?></label>
-							<span><?php p($customer->getName()); ?></span>
-						</div>
-
-						<?php if ($customer->getContactPerson()): ?>
-							<div class="info-item">
-								<label><?php p($l->t('Contact Person')); ?></label>
-								<span><?php p($customer->getContactPerson()); ?></span>
+					<div class="pc-entity-facts">
+						<dl class="pc-entity-facts__list">
+							<div class="pc-entity-facts__row">
+								<dt><?php p($l->t('Customer name')); ?></dt>
+								<dd><?php p($customer->getName()); ?></dd>
 							</div>
-						<?php endif; ?>
-
-						<?php if ($customer->getEmail()): ?>
-							<div class="info-item">
-								<label><?php p($l->t('Email')); ?></label>
-								<span><a href="mailto:<?php p($customer->getEmail()); ?>"><?php p($customer->getEmail()); ?></a></span>
+							<?php if ($customer->getContactPerson()): ?>
+							<div class="pc-entity-facts__row">
+								<dt><?php p($l->t('Contact person')); ?></dt>
+								<dd><?php p($customer->getContactPerson()); ?></dd>
 							</div>
-						<?php endif; ?>
-
-						<?php if ($customer->getPhone()): ?>
-							<div class="info-item">
-								<label><?php p($l->t('Phone')); ?></label>
-								<span><a href="tel:<?php p($customer->getPhone()); ?>"><?php p($customer->getPhone()); ?></a></span>
+							<?php endif; ?>
+							<?php if ($customer->getEmail()): ?>
+							<div class="pc-entity-facts__row">
+								<dt><?php p($l->t('Email')); ?></dt>
+								<dd><a href="mailto:<?php p($customer->getEmail()); ?>"><?php p($customer->getEmail()); ?></a></dd>
 							</div>
-						<?php endif; ?>
-
-						<?php if ($customer->getAddress()): ?>
-							<div class="info-item full-width">
-								<label><?php p($l->t('Address')); ?></label>
-								<span><?php p($customer->getAddress()); ?></span>
+							<?php endif; ?>
+							<?php if ($customer->getPhone()): ?>
+							<div class="pc-entity-facts__row">
+								<dt><?php p($l->t('Phone')); ?></dt>
+								<dd><a href="tel:<?php p($customer->getPhone()); ?>"><?php p($customer->getPhone()); ?></a></dd>
 							</div>
-						<?php endif; ?>
-
-						<div class="info-item">
-							<label><?php p($l->t('Created')); ?></label>
-							<span><?php p($customer->getCreatedAt()->format('d.m.Y H:i')); ?></span>
-						</div>
-
-						<div class="info-item">
-							<label><?php p($l->t('Last Updated')); ?></label>
-							<span><?php p($customer->getUpdatedAt()->format('d.m.Y H:i')); ?></span>
-						</div>
+							<?php endif; ?>
+							<div class="pc-entity-facts__row">
+								<dt><?php p($l->t('Created')); ?></dt>
+								<dd><?php p($customer->getCreatedAt()->format('d.m.Y H:i')); ?></dd>
+							</div>
+							<div class="pc-entity-facts__row">
+								<dt><?php p($l->t('Last updated')); ?></dt>
+								<dd><?php p($customer->getUpdatedAt()->format('d.m.Y H:i')); ?></dd>
+							</div>
+							<?php if ($customer->getAddress()): ?>
+							<div class="pc-entity-facts__row pc-entity-facts__row--span">
+								<dt><?php p($l->t('Address')); ?></dt>
+								<dd><?php p($customer->getAddress()); ?></dd>
+							</div>
+							<?php endif; ?>
+						</dl>
 					</div>
 				</div>
 			</div>

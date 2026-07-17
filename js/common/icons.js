@@ -57,6 +57,7 @@
         home: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>',
         info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
         list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+        'layout-grid': '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
         'loader-2': '<path d="M21 12a9 9 0 1 1-6.219-8.56"/>',
         mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
         menu: '<line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/>',
@@ -79,11 +80,35 @@
         user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
         users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
         wallet: '<path d="M19 7H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/>',
+        banknote: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01"/><path d="M18 12h.01"/>',
+        receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6"/><path d="M16 12h-6"/><path d="M16 16h-6"/>',
+        lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+        'refresh-cw': '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+        'building-2': '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>',
+        hourglass: '<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+        'circle-slash': '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+        'circle-check': '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>',
+        minus: '<path d="M5 12h14"/>',
+        wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+        'alert-triangle': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+        'user-check': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16,11 18,13 22,9"/>',
+        'user-cog': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><circle cx="19" cy="16" r="2"/><path d="M19 13v1"/><path d="M19 18v1"/><path d="M21.4 14.6l-.7.7"/><path d="M16.6 19.4l-.7.7"/><path d="M22 16h-1"/><path d="M16 16h-1"/><path d="M21.4 17.4l-.7-.7"/><path d="M16.6 12.6l-.7-.7"/>',
+        'user-minus': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="22" x2="16" y1="11" y2="11"/>',
         x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
         'trash-2': '<polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
         'upload-cloud': '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><polyline points="16,16 12,12 8,16"/><line x1="12" y1="12" x2="12" y2="21"/>',
         download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>',
         'file-plus': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>',
+        pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+    };
+
+    /** Status / notice type → catalog key (theme-safe, never colour-only). */
+    const STATUS_ICONS = {
+        success: 'circle-check',
+        error: 'alert-circle',
+        warning: 'alert-triangle',
+        info: 'info',
+        critical: 'alert-circle',
     };
 
     /** Legacy template class names → catalog keys (M6 icon migration). */
@@ -100,6 +125,18 @@
         'icon-delete-custom': 'trash-2',
         'icon-folder-custom': 'folder',
         'icon-file-custom': 'file-text',
+        // Nextcloud core icon class leftovers (mask icons break across themes /
+        // when .icon-white is forced on light surfaces).
+        'icon-error': 'alert-circle',
+        'icon-checkmark': 'circle-check',
+        'icon-check': 'circle-check',
+        'icon-info': 'info',
+        'icon-pause': 'pause',
+        'icon-delete': 'trash-2',
+        'icon-download': 'download',
+        'icon-close': 'x',
+        'icon-folder': 'folder',
+        'icon-user': 'user',
     };
 
     Object.keys(LEGACY_CLASS_ICONS).forEach(function (legacyClass) {
@@ -109,12 +146,40 @@
         }
     });
 
+    // Synonyms used across templates / settlement chips — never leave an empty host.
+    const ALIASES = {
+        'chart-pie': 'pie-chart',
+        'check-circle': 'circle-check',
+        error: 'alert-circle',
+        success: 'circle-check',
+        warning: 'alert-triangle',
+        critical: 'alert-circle',
+    };
+    Object.keys(ALIASES).forEach(function (alias) {
+        const target = ALIASES[alias];
+        if (PATHS[target] && !PATHS[alias]) {
+            PATHS[alias] = PATHS[target];
+        }
+    });
+
+    const FALLBACK_ICON = 'info';
+
     function svg(name) {
-        const body = PATHS[name];
+        const body = PATHS[name] || PATHS[FALLBACK_ICON];
         if (!body) {
             return '';
         }
         return SVG_OPEN + body + SVG_CLOSE;
+    }
+
+    function resolveIconName(name) {
+        if (name && PATHS[name]) {
+            return name;
+        }
+        if (name && ALIASES[name] && PATHS[ALIASES[name]]) {
+            return ALIASES[name];
+        }
+        return FALLBACK_ICON;
     }
 
     function hydrateLegacyClassIcons(scope) {
@@ -123,15 +188,52 @@
                 if (el.getAttribute('data-lucide-hydrated') === '1') {
                     return;
                 }
-                const markup = svg(legacyClass);
+                // Prefer an explicit data-lucide attribute when present.
+                if (el.hasAttribute('data-lucide')) {
+                    return;
+                }
+                const catalogKey = LEGACY_CLASS_ICONS[legacyClass];
+                const markup = svg(catalogKey);
                 if (markup === '') {
                     return;
                 }
                 el.innerHTML = markup;
                 el.classList.add('lucide-icon-host');
+                el.classList.remove('icon-white');
+                el.setAttribute('data-lucide', catalogKey);
                 el.setAttribute('data-lucide-hydrated', '1');
+                if (!el.hasAttribute('aria-hidden') && !el.getAttribute('aria-label')) {
+                    el.setAttribute('aria-hidden', 'true');
+                }
             });
         });
+    }
+
+    /**
+     * Mount a catalog icon into a host element (AJAX notices, alerts, toasts).
+     * @param {Element} host
+     * @param {string} name
+     */
+    function mount(host, name) {
+        if (!host || !host.setAttribute) {
+            return;
+        }
+        const resolved = resolveIconName(name);
+        host.setAttribute('data-lucide', resolved);
+        host.classList.add('lucide-icon');
+        if (!host.hasAttribute('aria-hidden') && !host.getAttribute('aria-label')) {
+            host.setAttribute('aria-hidden', 'true');
+        }
+        host.removeAttribute('data-lucide-hydrated');
+        hydrate(host.parentNode || host);
+    }
+
+    /**
+     * @param {string} type success|error|warning|info|critical
+     * @returns {string}
+     */
+    function forStatus(type) {
+        return STATUS_ICONS[type] || STATUS_ICONS.info;
     }
 
     function nodeHasLegacyIconClass(node) {
@@ -160,13 +262,17 @@
                 return;
             }
             const name = el.getAttribute('data-lucide');
-            const markup = svg(name);
+            const resolved = resolveIconName(name);
+            const markup = svg(resolved);
             if (markup === '') {
                 return;
             }
             el.innerHTML = markup;
             el.classList.add('lucide-icon-host');
             el.setAttribute('data-lucide-hydrated', '1');
+            if (resolved !== name) {
+                el.setAttribute('data-lucide-resolved', resolved);
+            }
         });
     }
 
@@ -177,8 +283,20 @@
     global.ProjectCheckIcons = {
         svg: svg,
         hydrate: hydrate,
+        mount: mount,
+        forStatus: forStatus,
         list: list,
+        resolve: resolveIconName,
     };
+
+    // Back-compat for pages that still call LucideIcons.initialize().
+    if (!global.LucideIcons || typeof global.LucideIcons.initialize !== 'function') {
+        global.LucideIcons = {
+            initialize: function () {
+                hydrate(document);
+            },
+        };
+    }
 
     function init() {
         hydrate(document);

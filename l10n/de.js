@@ -1520,6 +1520,27 @@ OC.L10N.register(
 	"Total projects" : "Projekte gesamt",
 	"{actor} changed the project role of {member} to {status}" : "{actor} changed the project role of {member} to {status}",
 	"{actor} changed the settlement status of a time entry to {status}" : "{actor} changed the settlement status of a time entry to {status}",
-	"{actor} changed the settlement status of multiple time entries to {status}" : "{actor} changed the settlement status of multiple time entries to {status}"
+	"{actor} changed the settlement status of multiple time entries to {status}" : "{actor} changed the settlement status of multiple time entries to {status}",
+	"About this customer" : "Über diesen Kunden",
+	"About this employee" : "Über diesen Mitarbeiter",
+	"About this time entry" : "Über diesen Zeiteintrag",
+	"Contact details and when this record was last changed." : "Kontaktdaten und wann dieser Datensatz zuletzt geändert wurde.",
+	"Contact person" : "Ansprechpartner",
+	"Customer name" : "Kundenname",
+	"Project status" : "Projektstatus",
+	"Settlement dates" : "Abrechnungsdaten",
+	"Status, customer, and who created it — at a glance." : "Status, Kunde und wer es angelegt hat — auf einen Blick.",
+	"Billable work" : "Abrechenbare Arbeit",
+	"Billable work earns money. Overhead keeps the business running. Compare both by year." : "Abrechenbare Arbeit bringt Geld. Overhead hält den Betrieb am Laufen. Vergleichen Sie beides Jahr für Jahr.",
+	"No hours logged in this year." : "In diesem Jahr wurden keine Stunden erfasst.",
+	"Overhead work" : "Overhead-Arbeit",
+	"Total: %s" : "Gesamt: %s",
+	"%1$s · %2$s" : "%1$s · %2$s",
+	"Cost share: %s" : "Kostenanteil: %s",
+	"Hours share: %s" : "Stundenanteil: %s",
+	"Project types for %s" : "Projekttypen für %s",
+	"Search and filter customers" : "Kunden suchen und filtern",
+	"Search and filter projects" : "Projekte suchen und filtern",
+	"Search and filter time entries" : "Zeiteinträge suchen und filtern"
 	}
 );

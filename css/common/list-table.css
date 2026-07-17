@@ -76,6 +76,17 @@
 	max-width: 22rem;
 }
 
+/* .pc-filters puts search in the field grid — never cap width like the old flex toolbar */
+.pc-list-panel .pc-filters .search-input-wrapper,
+.pc-list-panel .pc-filters__field--search .search-input-wrapper,
+.pc-app--time-entries .pc-filters .search-input-wrapper,
+.pc-app--time-entries .pc-filters__field--search .search-input-wrapper {
+	flex: none;
+	max-width: none;
+	min-width: 0;
+	width: 100%;
+}
+
 .pc-list-panel .filters-row select,
 .pc-list-panel .filters-row input[type="date"],
 .pc-app--time-entries .filters-row select,
@@ -720,6 +731,6 @@
 }
 
 .pc-app--employees .pc-list-panel form.filters-container {
-	/* form element is the flex toolbar */
+	/* form element is the pc-filters grid toolbar */
 	margin: 0;
 }

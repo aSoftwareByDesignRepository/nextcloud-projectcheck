@@ -269,15 +269,18 @@
         messageDiv.setAttribute('role', level === 'error' ? 'alert' : 'status');
         messageDiv.setAttribute('aria-live', level === 'error' ? 'assertive' : 'polite');
         messageDiv.setAttribute('aria-atomic', 'true');
-        const icon = document.createElement('i');
-        let iconName = 'info';
-        if (level === 'success') {
-            iconName = 'checkmark';
-        } else if (level === 'error') {
-            iconName = 'error';
-        }
-        icon.className = 'icon icon-' + iconName;
+        const icon = document.createElement('span');
+        icon.className = 'lucide-icon';
         icon.setAttribute('aria-hidden', 'true');
+        const Icons = window.ProjectCheckIcons;
+        const iconName = Icons && typeof Icons.forStatus === 'function'
+            ? Icons.forStatus(level)
+            : (level === 'success' ? 'circle-check' : (level === 'error' ? 'alert-circle' : 'info'));
+        if (Icons && typeof Icons.mount === 'function') {
+            Icons.mount(icon, iconName);
+        } else {
+            icon.setAttribute('data-lucide', iconName);
+        }
         const span = document.createElement('span');
         span.textContent = message;
         messageDiv.appendChild(icon);

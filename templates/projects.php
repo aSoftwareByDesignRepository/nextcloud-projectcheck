@@ -16,6 +16,7 @@ Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/list-table');
 // Last: shared index section chrome (matches detail Key figures headers).
 Util::addStyle('projectcheck', 'common/list-layout');
+Util::addStyle('projectcheck', 'common/filters');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -45,7 +46,7 @@ include __DIR__ . '/common/page-start.php';
         <!-- Success/Error Messages -->
         <?php if (isset($_GET['message']) && $_GET['message'] === 'success'): ?>
             <div class="notice notice-success">
-                <i class="icon icon-checkmark"></i>
+                <span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span>
                 <span>
                     <?php if (isset($_GET['project_name'])): ?>
                         <?php p($l->t('Project "%s" was created successfully!', [$_GET['project_name']])); ?>
@@ -62,7 +63,7 @@ include __DIR__ . '/common/page-start.php';
 
         <?php if (isset($_GET['message']) && $_GET['message'] === 'error' && isset($_GET['error_text'])): ?>
             <div class="notice notice-error">
-                <i class="icon icon-error"></i>
+                <span data-lucide="alert-circle" class="lucide-icon" aria-hidden="true"></span>
                 <span><?php p($l->t('Error: %s', [$_GET['error_text']])); ?></span>
             </div>
         <?php endif; ?>
@@ -140,70 +141,87 @@ include __DIR__ . '/common/page-start.php';
                 <p><?php p($l->t('Search and filter')); ?></p>
             </div>
             <div class="pc-list-panel__toolbar">
-            <div class="filters-container">
-                <div class="search-input-wrapper">
-                    <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
-                    <input type="search" id="project-search" class="search-input"
-                        placeholder="<?php p($l->t('Search projects…')); ?>"
-                        value="<?php p($_['filters']['search'] ?? ''); ?>"
-                        aria-label="<?php p($l->t('Search projects')); ?>"
-                        autocomplete="off">
-                </div>
+            <div class="filters-container pc-filters" role="search" aria-label="<?php p($l->t('Search and filter projects')); ?>">
+                <div class="pc-filters__grid">
+                    <div class="pc-filters__field pc-filters__field--search">
+                        <label for="project-search" class="pc-filters__label"><?php p($l->t('Search')); ?></label>
+                        <div class="pc-filters__search search-input-wrapper">
+                            <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
+                            <input type="search" id="project-search" class="search-input"
+                                placeholder="<?php p($l->t('Search projects…')); ?>"
+                                value="<?php p($_['filters']['search'] ?? ''); ?>"
+                                autocomplete="off">
+                        </div>
+                    </div>
 
-                <div class="filters-row">
-                    <select id="status-filter" aria-label="<?php p($l->t('Filter by status')); ?>">
-                        <option value="all" <?php if (($_['filters']['status'] ?? '') === 'all') echo 'selected'; ?>><?php p($l->t('All statuses')); ?></option>
-                        <option value="Active" <?php if (($_['filters']['status'] ?? 'Active') === 'Active') echo 'selected'; ?>><?php p($l->t('Active')); ?></option>
-                        <option value="On Hold" <?php if (($_['filters']['status'] ?? '') === 'On Hold') echo 'selected'; ?>><?php p($l->t('On Hold')); ?></option>
-                        <option value="Completed" <?php if (($_['filters']['status'] ?? '') === 'Completed') echo 'selected'; ?>><?php p($l->t('Completed')); ?></option>
-                        <option value="Cancelled" <?php if (($_['filters']['status'] ?? '') === 'Cancelled') echo 'selected'; ?>><?php p($l->t('Cancelled')); ?></option>
-                        <option value="Archived" <?php if (($_['filters']['status'] ?? '') === 'Archived') echo 'selected'; ?>><?php p($l->t('Archived')); ?></option>
-                    </select>
+                    <div class="pc-filters__field">
+                        <label for="status-filter" class="pc-filters__label"><?php p($l->t('Status')); ?></label>
+                        <select id="status-filter" class="filter-select">
+                            <option value="all"<?php if (($_['filters']['status'] ?? '') === 'all') echo ' selected'; ?>><?php p($l->t('All statuses')); ?></option>
+                            <option value="Active"<?php if (($_['filters']['status'] ?? 'Active') === 'Active') echo ' selected'; ?>><?php p($l->t('Active')); ?></option>
+                            <option value="On Hold"<?php if (($_['filters']['status'] ?? '') === 'On Hold') echo ' selected'; ?>><?php p($l->t('On Hold')); ?></option>
+                            <option value="Completed"<?php if (($_['filters']['status'] ?? '') === 'Completed') echo ' selected'; ?>><?php p($l->t('Completed')); ?></option>
+                            <option value="Cancelled"<?php if (($_['filters']['status'] ?? '') === 'Cancelled') echo ' selected'; ?>><?php p($l->t('Cancelled')); ?></option>
+                            <option value="Archived"<?php if (($_['filters']['status'] ?? '') === 'Archived') echo ' selected'; ?>><?php p($l->t('Archived')); ?></option>
+                        </select>
+                    </div>
 
-                    <select id="priority-filter" aria-label="<?php p($l->t('Filter by priority')); ?>">
-                        <option value=""><?php p($l->t('All Priorities')); ?></option>
-                        <option value="Low" <?php if (($_['filters']['priority'] ?? '') === 'Low') echo 'selected'; ?>><?php p($l->t('Low')); ?></option>
-                        <option value="Medium" <?php if (($_['filters']['priority'] ?? '') === 'Medium') echo 'selected'; ?>><?php p($l->t('Medium')); ?></option>
-                        <option value="High" <?php if (($_['filters']['priority'] ?? '') === 'High') echo 'selected'; ?>><?php p($l->t('High')); ?></option>
-                        <option value="Critical" <?php if (($_['filters']['priority'] ?? '') === 'Critical') echo 'selected'; ?>><?php p($l->t('Critical')); ?></option>
-                    </select>
+                    <div class="pc-filters__field">
+                        <label for="priority-filter" class="pc-filters__label"><?php p($l->t('Priority')); ?></label>
+                        <select id="priority-filter" class="filter-select">
+                            <option value=""><?php p($l->t('All Priorities')); ?></option>
+                            <option value="Low"<?php if (($_['filters']['priority'] ?? '') === 'Low') echo ' selected'; ?>><?php p($l->t('Low')); ?></option>
+                            <option value="Medium"<?php if (($_['filters']['priority'] ?? '') === 'Medium') echo ' selected'; ?>><?php p($l->t('Medium')); ?></option>
+                            <option value="High"<?php if (($_['filters']['priority'] ?? '') === 'High') echo ' selected'; ?>><?php p($l->t('High')); ?></option>
+                            <option value="Critical"<?php if (($_['filters']['priority'] ?? '') === 'Critical') echo ' selected'; ?>><?php p($l->t('Critical')); ?></option>
+                        </select>
+                    </div>
 
-                    <select id="project-type-filter" aria-label="<?php p($l->t('Filter by project type')); ?>">
-                        <option value=""><?php p($l->t('All Project Types')); ?></option>
-                        <option value="client" <?php if (($_['filters']['project_type'] ?? '') === 'client') echo 'selected'; ?>><?php p($l->t('Client Project')); ?></option>
-                        <option value="admin" <?php if (($_['filters']['project_type'] ?? '') === 'admin') echo 'selected'; ?>><?php p($l->t('Administrative')); ?></option>
-                        <option value="sales" <?php if (($_['filters']['project_type'] ?? '') === 'sales') echo 'selected'; ?>><?php p($l->t('Sales & Marketing')); ?></option>
-                        <option value="customer" <?php if (($_['filters']['project_type'] ?? '') === 'customer') echo 'selected'; ?>><?php p($l->t('Customer Support')); ?></option>
-                        <option value="product" <?php if (($_['filters']['project_type'] ?? '') === 'product') echo 'selected'; ?>><?php p($l->t('Product Development')); ?></option>
-                        <option value="meeting" <?php if (($_['filters']['project_type'] ?? '') === 'meeting') echo 'selected'; ?>><?php p($l->t('Meetings & Overhead')); ?></option>
-                        <option value="internal" <?php if (($_['filters']['project_type'] ?? '') === 'internal') echo 'selected'; ?>><?php p($l->t('Internal Project')); ?></option>
-                        <option value="research" <?php if (($_['filters']['project_type'] ?? '') === 'research') echo 'selected'; ?>><?php p($l->t('Research & Development')); ?></option>
-                        <option value="training" <?php if (($_['filters']['project_type'] ?? '') === 'training') echo 'selected'; ?>><?php p($l->t('Training & Education')); ?></option>
-                        <option value="other" <?php if (($_['filters']['project_type'] ?? '') === 'other') echo 'selected'; ?>><?php p($l->t('Other')); ?></option>
-                    </select>
+                    <div class="pc-filters__field">
+                        <label for="project-type-filter" class="pc-filters__label"><?php p($l->t('Project type')); ?></label>
+                        <select id="project-type-filter" class="filter-select">
+                            <option value=""><?php p($l->t('All Project Types')); ?></option>
+                            <option value="client"<?php if (($_['filters']['project_type'] ?? '') === 'client') echo ' selected'; ?>><?php p($l->t('Client Project')); ?></option>
+                            <option value="admin"<?php if (($_['filters']['project_type'] ?? '') === 'admin') echo ' selected'; ?>><?php p($l->t('Administrative')); ?></option>
+                            <option value="sales"<?php if (($_['filters']['project_type'] ?? '') === 'sales') echo ' selected'; ?>><?php p($l->t('Sales & Marketing')); ?></option>
+                            <option value="customer"<?php if (($_['filters']['project_type'] ?? '') === 'customer') echo ' selected'; ?>><?php p($l->t('Customer Support')); ?></option>
+                            <option value="product"<?php if (($_['filters']['project_type'] ?? '') === 'product') echo ' selected'; ?>><?php p($l->t('Product Development')); ?></option>
+                            <option value="meeting"<?php if (($_['filters']['project_type'] ?? '') === 'meeting') echo ' selected'; ?>><?php p($l->t('Meetings & Overhead')); ?></option>
+                            <option value="internal"<?php if (($_['filters']['project_type'] ?? '') === 'internal') echo ' selected'; ?>><?php p($l->t('Internal Project')); ?></option>
+                            <option value="research"<?php if (($_['filters']['project_type'] ?? '') === 'research') echo ' selected'; ?>><?php p($l->t('Research & Development')); ?></option>
+                            <option value="training"<?php if (($_['filters']['project_type'] ?? '') === 'training') echo ' selected'; ?>><?php p($l->t('Training & Education')); ?></option>
+                            <option value="other"<?php if (($_['filters']['project_type'] ?? '') === 'other') echo ' selected'; ?>><?php p($l->t('Other')); ?></option>
+                        </select>
+                    </div>
 
-                    <select id="customer-filter" aria-label="<?php p($l->t('Filter by customer')); ?>">
-                        <option value=""><?php p($l->t('All Customers')); ?></option>
-                        <?php if (!empty($_['customers'])): ?>
-                            <?php foreach ($_['customers'] as $customer): ?>
-                                <option value="<?php p($customer['id']); ?>" <?php if (($_['filters']['customer_id'] ?? '') == $customer['id']) echo 'selected'; ?>>
-                                    <?php p($customer['name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
+                    <div class="pc-filters__field">
+                        <label for="customer-filter" class="pc-filters__label"><?php p($l->t('Customer')); ?></label>
+                        <select id="customer-filter" class="filter-select">
+                            <option value=""><?php p($l->t('All Customers')); ?></option>
+                            <?php if (!empty($_['customers'])): ?>
+                                <?php foreach ($_['customers'] as $customer): ?>
+                                    <option value="<?php p($customer['id']); ?>"<?php if (($_['filters']['customer_id'] ?? '') == $customer['id']) echo ' selected'; ?>><?php p($customer['name']); ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
 
                     <?php $settlementFilterValue = (string)($_['filters']['settlement'] ?? ''); ?>
-                    <select id="settlement-filter" aria-label="<?php p($l->t('Filter by settlement')); ?>">
-                        <option value="all" <?php if ($settlementFilterValue === '' || $settlementFilterValue === 'all') echo 'selected'; ?>><?php p($l->t('Settlement: all')); ?></option>
-                        <option value="outstanding" <?php if ($settlementFilterValue === 'outstanding') echo 'selected'; ?>><?php p($l->t('Not yet paid')); ?></option>
-                        <option value="open" <?php if ($settlementFilterValue === 'open') echo 'selected'; ?>><?php p($l->t('Open')); ?></option>
-                        <option value="partial" <?php if ($settlementFilterValue === 'partial') echo 'selected'; ?>><?php p($l->t('Partially settled')); ?></option>
-                        <option value="awaiting_payment" <?php if ($settlementFilterValue === 'awaiting_payment') echo 'selected'; ?>><?php p($l->t('Awaiting payment')); ?></option>
-                        <option value="paid" <?php if ($settlementFilterValue === 'paid') echo 'selected'; ?>><?php p($l->t('Paid')); ?></option>
-                        <option value="n_a" <?php if ($settlementFilterValue === 'n_a') echo 'selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
-                    </select>
+                    <div class="pc-filters__field">
+                        <label for="settlement-filter" class="pc-filters__label"><?php p($l->t('Settlement')); ?></label>
+                        <select id="settlement-filter" class="filter-select">
+                            <option value="all"<?php if ($settlementFilterValue === '' || $settlementFilterValue === 'all') echo ' selected'; ?>><?php p($l->t('Settlement: all')); ?></option>
+                            <option value="outstanding"<?php if ($settlementFilterValue === 'outstanding') echo ' selected'; ?>><?php p($l->t('Not yet paid')); ?></option>
+                            <option value="open"<?php if ($settlementFilterValue === 'open') echo ' selected'; ?>><?php p($l->t('Open')); ?></option>
+                            <option value="partial"<?php if ($settlementFilterValue === 'partial') echo ' selected'; ?>><?php p($l->t('Partially settled')); ?></option>
+                            <option value="awaiting_payment"<?php if ($settlementFilterValue === 'awaiting_payment') echo ' selected'; ?>><?php p($l->t('Awaiting payment')); ?></option>
+                            <option value="paid"<?php if ($settlementFilterValue === 'paid') echo ' selected'; ?>><?php p($l->t('Paid')); ?></option>
+                            <option value="n_a"<?php if ($settlementFilterValue === 'n_a') echo ' selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
+                        </select>
+                    </div>
+                </div>
 
+                <div class="pc-filters__actions">
                     <button id="apply-filters" class="button primary" type="button">
                         <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Apply Filters')); ?>
@@ -230,7 +248,7 @@ include __DIR__ . '/common/page-start.php';
 
             <?php if (empty($_['projects'])): ?>
                 <div class="emptycontent">
-                    <div class="icon-folder"></div>
+                    <div class="emptycontent__icon" aria-hidden="true"><span data-lucide="folder" class="lucide-icon"></span></div>
                     <h2><?php p($l->t('No projects found')); ?></h2>
                     <p><?php p($l->t('Create your first project to get started!')); ?></p>
                 </div>

@@ -392,9 +392,9 @@ body {
 .overview-stat .stat-icon {
 	width: 48px;
 	height: 48px;
-	background: linear-gradient(135deg,
-			var(--color-primary) 0%,
-			var(--color-primary-hover) 100%);
+	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
+	color: var(--color-primary-element);
 	border-radius: 12px;
 	display: flex;
 	align-items: center;
@@ -404,9 +404,9 @@ body {
 	position: relative;
 }
 
-.overview-stat .stat-icon i,
-.overview-stat .stat-icon .lucide-icon {
-	color: var(--color-primary-text);
+.overview-stat .stat-icon .lucide-icon,
+.overview-stat .stat-icon i {
+	color: currentColor;
 	font-size: 1.4rem;
 	width: 1.4rem;
 	height: 1.4rem;

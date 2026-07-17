@@ -29,12 +29,43 @@
 	}
 
 	/**
-	 * @param {Record<string, string>} icons
+	 * @param {Record<string, string>|undefined} icons
 	 * @param {string} type
-	 * @returns {string}
+	 * @returns {string} Lucide catalog key (or legacy emoji fallback)
 	 */
 	function iconFor(icons, type) {
-		return icons[type] || icons.info || '';
+		if (icons && icons[type]) {
+			return icons[type];
+		}
+		if (window.ProjectCheckIcons && typeof window.ProjectCheckIcons.forStatus === 'function') {
+			return window.ProjectCheckIcons.forStatus(type);
+		}
+		return (icons && icons.info) || 'info';
+	}
+
+	/**
+	 * @param {HTMLElement} host
+	 * @param {string} nameOrGlyph
+	 */
+	function appendStatusIcon(host, nameOrGlyph) {
+		const Icons = window.ProjectCheckIcons;
+		// Catalog keys are short kebab / snake tokens; emoji glyphs are not.
+		const looksLikeCatalogKey = typeof nameOrGlyph === 'string'
+			&& /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(nameOrGlyph);
+		if (looksLikeCatalogKey && Icons && typeof Icons.mount === 'function') {
+			const icon = createEl('span', 'lucide-icon');
+			Icons.mount(icon, nameOrGlyph);
+			host.appendChild(icon);
+			return;
+		}
+		if (looksLikeCatalogKey && Icons && typeof Icons.svg === 'function') {
+			const icon = createEl('span', 'lucide-icon-host');
+			icon.setAttribute('aria-hidden', 'true');
+			icon.innerHTML = Icons.svg(nameOrGlyph);
+			host.appendChild(icon);
+			return;
+		}
+		host.appendChild(textNode(nameOrGlyph || ''));
 	}
 
 	/**
@@ -44,7 +75,7 @@
 	function populateInlineAlert(alert, opts) {
 		const iconWrap = createEl('div', 'alert-icon');
 		iconWrap.setAttribute('aria-hidden', 'true');
-		iconWrap.appendChild(textNode(iconFor(opts.icons, opts.type)));
+		appendStatusIcon(iconWrap, iconFor(opts.icons, opts.type));
 
 		const content = createEl('div', 'alert-content');
 		if (opts.title) {
@@ -63,9 +94,13 @@
 			const closeBtn = createEl('button', 'alert-close');
 			closeBtn.type = 'button';
 			closeBtn.setAttribute('aria-label', opts.dismissLabel);
-			const x = createEl('span');
+			const x = createEl('span', 'lucide-icon');
 			x.setAttribute('aria-hidden', 'true');
-			x.appendChild(textNode('\u00D7'));
+			if (window.ProjectCheckIcons && typeof window.ProjectCheckIcons.mount === 'function') {
+				window.ProjectCheckIcons.mount(x, 'x');
+			} else {
+				x.appendChild(textNode('\u00D7'));
+			}
 			closeBtn.appendChild(x);
 			alert.appendChild(closeBtn);
 		}
@@ -93,7 +128,7 @@
 	function populateToast(toast, opts, onActions) {
 		const iconSpan = createEl('span', 'toast-icon');
 		iconSpan.setAttribute('aria-hidden', 'true');
-		iconSpan.appendChild(textNode(iconFor(opts.icons, opts.type)));
+		appendStatusIcon(iconSpan, iconFor(opts.icons, opts.type));
 
 		const content = createEl('div', 'toast-content');
 		if (opts.title) {

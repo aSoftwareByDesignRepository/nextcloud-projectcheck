@@ -15,6 +15,7 @@ Util::addStyle('projectcheck', 'customers');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/list-table');
 Util::addStyle('projectcheck', 'common/list-layout');
+Util::addStyle('projectcheck', 'common/filters');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -44,7 +45,7 @@ include __DIR__ . '/common/page-start.php';
         <!-- Success/Error Messages -->
         <?php if (isset($_GET['message']) && $_GET['message'] === 'success'): ?>
             <div class="notice notice-success">
-                <i class="icon icon-checkmark"></i>
+                <span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span>
                 <span>
                     <?php if (isset($_GET['customer_name'])): ?>
                         <?php p($l->t('Customer "%s" was created successfully!', [$_GET['customer_name']])); ?>
@@ -61,7 +62,7 @@ include __DIR__ . '/common/page-start.php';
 
         <?php if (isset($_GET['message']) && $_GET['message'] === 'error' && isset($_GET['error_text'])): ?>
             <div class="notice notice-error">
-                <i class="icon icon-error"></i>
+                <span data-lucide="alert-circle" class="lucide-icon" aria-hidden="true"></span>
                 <span><?php p($l->t('Error: %s', [$_GET['error_text']])); ?></span>
             </div>
         <?php endif; ?>
@@ -141,28 +142,35 @@ include __DIR__ . '/common/page-start.php';
                 <p><?php p($l->t('Search and filter')); ?></p>
             </div>
             <div class="pc-list-panel__toolbar">
-            <div class="filters-container">
-                <div class="search-input-wrapper">
-                    <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
-                    <input type="search" id="customer-search" class="search-input"
-                        placeholder="<?php p($l->t('Search customers...')); ?>"
-                        value="<?php p($_['filters']['search'] ?? ''); ?>"
-                        aria-label="<?php p($l->t('Search customers')); ?>"
-                        autocomplete="off">
+            <div class="filters-container pc-filters" role="search" aria-label="<?php p($l->t('Search and filter customers')); ?>">
+                <div class="pc-filters__grid">
+                    <div class="pc-filters__field pc-filters__field--search">
+                        <label for="customer-search" class="pc-filters__label"><?php p($l->t('Search')); ?></label>
+                        <div class="pc-filters__search search-input-wrapper">
+                            <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
+                            <input type="search" id="customer-search" class="search-input"
+                                placeholder="<?php p($l->t('Search customers...')); ?>"
+                                value="<?php p($_['filters']['search'] ?? ''); ?>"
+                                autocomplete="off">
+                        </div>
+                    </div>
+
+                    <?php $settlementFilterValue = (string)($_['filters']['settlement'] ?? ''); ?>
+                    <div class="pc-filters__field">
+                        <label for="settlement-filter" class="pc-filters__label"><?php p($l->t('Settlement')); ?></label>
+                        <select id="settlement-filter" class="filter-select">
+                            <option value="all"<?php if ($settlementFilterValue === '' || $settlementFilterValue === 'all') echo ' selected'; ?>><?php p($l->t('Settlement: all')); ?></option>
+                            <option value="outstanding"<?php if ($settlementFilterValue === 'outstanding') echo ' selected'; ?>><?php p($l->t('Not yet paid')); ?></option>
+                            <option value="open"<?php if ($settlementFilterValue === 'open') echo ' selected'; ?>><?php p($l->t('Open')); ?></option>
+                            <option value="partial"<?php if ($settlementFilterValue === 'partial') echo ' selected'; ?>><?php p($l->t('Partially settled')); ?></option>
+                            <option value="awaiting_payment"<?php if ($settlementFilterValue === 'awaiting_payment') echo ' selected'; ?>><?php p($l->t('Awaiting payment')); ?></option>
+                            <option value="paid"<?php if ($settlementFilterValue === 'paid') echo ' selected'; ?>><?php p($l->t('Paid')); ?></option>
+                            <option value="n_a"<?php if ($settlementFilterValue === 'n_a') echo ' selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="filters-row">
-                    <?php $settlementFilterValue = (string)($_['filters']['settlement'] ?? ''); ?>
-                    <label class="pc-sr-only" for="settlement-filter"><?php p($l->t('Settlement')); ?></label>
-                    <select id="settlement-filter" aria-label="<?php p($l->t('Filter by settlement')); ?>">
-                            <option value="all" <?php if ($settlementFilterValue === '' || $settlementFilterValue === 'all') echo 'selected'; ?>><?php p($l->t('Settlement: all')); ?></option>
-                            <option value="outstanding" <?php if ($settlementFilterValue === 'outstanding') echo 'selected'; ?>><?php p($l->t('Not yet paid')); ?></option>
-                            <option value="open" <?php if ($settlementFilterValue === 'open') echo 'selected'; ?>><?php p($l->t('Open')); ?></option>
-                            <option value="partial" <?php if ($settlementFilterValue === 'partial') echo 'selected'; ?>><?php p($l->t('Partially settled')); ?></option>
-                            <option value="awaiting_payment" <?php if ($settlementFilterValue === 'awaiting_payment') echo 'selected'; ?>><?php p($l->t('Awaiting payment')); ?></option>
-                            <option value="paid" <?php if ($settlementFilterValue === 'paid') echo 'selected'; ?>><?php p($l->t('Paid')); ?></option>
-                            <option value="n_a" <?php if ($settlementFilterValue === 'n_a') echo 'selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
-                    </select>
+                <div class="pc-filters__actions">
                     <button id="apply-filters" class="button primary" type="button">
                         <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Apply Filters')); ?>
@@ -189,7 +197,7 @@ include __DIR__ . '/common/page-start.php';
 
             <?php if (empty($_['customers'])): ?>
                 <div class="emptycontent">
-                    <div class="icon-user"></div>
+                    <div class="emptycontent__icon" aria-hidden="true"><span data-lucide="user" class="lucide-icon"></span></div>
                     <h2><?php p($l->t('No customers found')); ?></h2>
                     <p><?php p($l->t('Add your first customer to get started!')); ?></p>
                 </div>

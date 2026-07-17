@@ -17,6 +17,7 @@ Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/stats-panel');
 Util::addStyle('projectcheck', 'common/list-table');
 Util::addStyle('projectcheck', 'common/list-layout');
+Util::addStyle('projectcheck', 'common/filters');
 $fmt = $_['fmt'] ?? null;
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
@@ -127,20 +128,23 @@ $colActions = $l->t('Actions');
                 <p><?php p($l->t('Search and filter')); ?></p>
             </div>
             <div class="pc-list-panel__toolbar">
-                <form class="filters-container employees-search-form" method="get" action="<?php p($baseUrl); ?>" role="search" aria-label="<?php p($l->t('Search employees')); ?>">
-                    <div class="search-input-wrapper">
-                        <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
-                        <label class="pc-sr-only" for="employee-search"><?php p($l->t('Search employees')); ?></label>
-                        <input type="search" id="employee-search" name="search" class="search-input"
-                            placeholder="<?php p($l->t('Search employees...')); ?>"
-                            value="<?php p($searchValue); ?>"
-                            aria-label="<?php p($l->t('Search employees')); ?>"
-                            aria-describedby="employee-search-hint"
-                            autocomplete="off">
+                <form class="filters-container pc-filters pc-filters--simple employees-search-form" method="get" action="<?php p($baseUrl); ?>" role="search" aria-label="<?php p($l->t('Search employees')); ?>">
+                    <div class="pc-filters__grid">
+                        <div class="pc-filters__field pc-filters__field--search">
+                            <label for="employee-search" class="pc-filters__label"><?php p($l->t('Search')); ?></label>
+                            <div class="pc-filters__search search-input-wrapper">
+                                <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
+                                <input type="search" id="employee-search" name="search" class="search-input"
+                                    placeholder="<?php p($l->t('Search employees...')); ?>"
+                                    value="<?php p($searchValue); ?>"
+                                    aria-describedby="employee-search-hint"
+                                    autocomplete="off">
+                            </div>
+                        </div>
                     </div>
                     <p class="pc-sr-only" id="employee-search-hint"><?php p($l->t('Type a name and press Enter or Apply to filter the list.')); ?></p>
 
-                    <div class="filters-row">
+                    <div class="pc-filters__actions">
                         <button type="submit" id="apply-filters" class="button primary">
                             <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
                             <?php p($l->t('Apply Filters')); ?>

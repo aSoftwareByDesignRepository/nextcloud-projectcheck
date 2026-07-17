@@ -9,6 +9,15 @@ const ProjectControlComponents = {
   },
 
   toastIcons() {
+    const Icons = window.ProjectCheckIcons;
+    if (Icons && typeof Icons.forStatus === 'function') {
+      return {
+        success: Icons.forStatus('success'),
+        error: Icons.forStatus('error'),
+        warning: Icons.forStatus('warning'),
+        info: Icons.forStatus('info'),
+      };
+    }
     return { success: '\u2713', error: '\u2717', warning: '\u26A0', info: '\u2139' };
   },
 

@@ -346,12 +346,36 @@ section.projectcheck-panel,
     max-width: 100%;
     box-sizing: border-box;
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    background: var(--color-main-background);
+    border-radius: 8px;
+    background-color: var(--color-main-background);
     color: var(--color-main-text);
-    padding: 0.5rem 0.65rem;
+    padding: 0.75rem 1rem;
     font: inherit;
-    min-height: 2.5rem;
+    min-height: var(--pc-touch-min, 44px);
+}
+
+.projectcheck-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-inline-end: 2.5rem;
+    cursor: pointer;
+    background-image: var(
+        --icon-triangle-s-dark,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    );
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 12px 12px;
+}
+
+html[dir="rtl"] .projectcheck-select,
+body[dir="rtl"] .projectcheck-select {
+    background-position: left 0.75rem center;
+}
+
+.projectcheck-select::-ms-expand {
+    display: none;
 }
 
 .projectcheck-textarea {

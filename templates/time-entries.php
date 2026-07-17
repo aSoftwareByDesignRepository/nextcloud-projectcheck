@@ -15,6 +15,7 @@ Util::addStyle('projectcheck', 'time-entries');
 Util::addStyle('projectcheck', 'navigation');
 Util::addStyle('projectcheck', 'common/list-table');
 Util::addStyle('projectcheck', 'common/list-layout');
+Util::addStyle('projectcheck', 'common/filters');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -37,7 +38,7 @@ include __DIR__ . '/common/page-start.php';
         <!-- Success/Error Messages -->
         <?php if (isset($_GET['message']) && $_GET['message'] === 'success'): ?>
             <div class="notice notice-success">
-                <i class="icon icon-checkmark"></i>
+                <span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span>
                 <span>
                     <?php if (isset($_GET['time_entry_id'])): ?>
                         <?php p($l->t('Time entry was created successfully!')); ?>
@@ -54,7 +55,7 @@ include __DIR__ . '/common/page-start.php';
 
         <?php if (isset($_GET['message']) && $_GET['message'] === 'error' && isset($_GET['error_text'])): ?>
             <div class="notice notice-error">
-                <i class="icon icon-error"></i>
+                <span data-lucide="alert-circle" class="lucide-icon" aria-hidden="true"></span>
                 <span><?php p($l->t('Error: %s', [$_GET['error_text']])); ?></span>
             </div>
         <?php endif; ?>
@@ -92,63 +93,59 @@ include __DIR__ . '/common/page-start.php';
                 <p><?php p($l->t('Search and filter')); ?></p>
             </div>
             <div class="time-entries-panel__toolbar pc-list-panel__toolbar">
-            <div class="filters-container">
-                <!-- Search Input -->
-                <div class="search-input-wrapper">
-                    <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
-                    <input type="search" id="time-entry-search" class="search-input"
-                        placeholder="<?php p($l->t('Search descriptions, projects, or customers...')); ?>"
-                        value="<?php p($filters['search'] ?? ''); ?>"
-                        aria-label="<?php p($l->t('Search descriptions, projects, or customers')); ?>"
-                        autocomplete="off">
-                </div>
+            <div class="filters-container pc-filters" role="search" aria-label="<?php p($l->t('Search and filter time entries')); ?>">
+                <div class="pc-filters__grid">
+                    <div class="pc-filters__field pc-filters__field--search filter-group">
+                        <label for="time-entry-search" class="pc-filters__label filter-label"><?php p($l->t('Search')); ?></label>
+                        <div class="pc-filters__search search-input-wrapper">
+                            <span class="pc-list-search-icon" aria-hidden="true"><i data-lucide="search" class="lucide-icon"></i></span>
+                            <input type="search" id="time-entry-search" class="search-input"
+                                placeholder="<?php p($l->t('Search descriptions, projects, or customers...')); ?>"
+                                value="<?php p($filters['search'] ?? ''); ?>"
+                                autocomplete="off">
+                        </div>
+                    </div>
 
-                <!-- Filter Controls -->
-                <div class="filter-controls">
-                    <div class="filter-group">
-                        <label for="project-filter" class="filter-label"><?php p($l->t('Project')); ?></label>
+                    <div class="pc-filters__field filter-group">
+                        <label for="project-filter" class="pc-filters__label filter-label"><?php p($l->t('Project')); ?></label>
                         <select id="project-filter" class="filter-select">
                             <option value=""><?php p($l->t('All Projects')); ?></option>
                             <?php if (isset($projects) && is_array($projects)): ?>
                                 <?php foreach ($projects as $project): ?>
-                                    <option value="<?php p($project->getId()); ?>" <?php if (isset($filters['project_id']) && $filters['project_id'] == $project->getId()) echo 'selected'; ?>>
-                                        <?php p($project->getName()); ?>
-                                    </option>
+                                    <option value="<?php p($project->getId()); ?>"<?php if (isset($filters['project_id']) && (string)$filters['project_id'] === (string)$project->getId()) echo ' selected'; ?>><?php p($project->getName()); ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
                     </div>
 
                     <?php if (!empty($_['canViewAllEntries'])): ?>
-                    <div class="filter-group">
-                        <label for="user-filter" class="filter-label"><?php p($l->t('User')); ?></label>
+                    <div class="pc-filters__field filter-group">
+                        <label for="user-filter" class="pc-filters__label filter-label"><?php p($l->t('User')); ?></label>
                         <select id="user-filter" class="filter-select">
                             <option value=""><?php p($l->t('All Users')); ?></option>
                             <?php if (isset($users) && is_array($users)): ?>
                                 <?php foreach ($users as $user): ?>
-                                    <option value="<?php p($user['user_id']); ?>" <?php if (isset($filters['user_id']) && $filters['user_id'] == $user['user_id']) echo 'selected'; ?>>
-                                        <?php p($user['displayname']); ?>
-                                    </option>
+                                    <option value="<?php p($user['user_id']); ?>"<?php if (isset($filters['user_id']) && (string)$filters['user_id'] === (string)$user['user_id']) echo ' selected'; ?>><?php p($user['displayname']); ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
                     </div>
                     <?php endif; ?>
 
-                    <div class="filter-group">
-                        <label for="time-entry-project-type-filter" class="filter-label"><?php p($l->t('Project Type')); ?></label>
+                    <div class="pc-filters__field filter-group">
+                        <label for="time-entry-project-type-filter" class="pc-filters__label filter-label"><?php p($l->t('Project Type')); ?></label>
                         <select id="time-entry-project-type-filter" class="filter-select">
                             <option value=""><?php p($l->t('All Types')); ?></option>
-                            <option value="client" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'client') echo 'selected'; ?>><?php p($l->t('Client Project')); ?></option>
-                            <option value="admin" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'admin') echo 'selected'; ?>><?php p($l->t('Administrative')); ?></option>
-                            <option value="sales" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'sales') echo 'selected'; ?>><?php p($l->t('Sales & Marketing')); ?></option>
-                            <option value="customer" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'customer') echo 'selected'; ?>><?php p($l->t('Customer Support')); ?></option>
-                            <option value="product" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'product') echo 'selected'; ?>><?php p($l->t('Product Development')); ?></option>
-                            <option value="meeting" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'meeting') echo 'selected'; ?>><?php p($l->t('Meetings & Overhead')); ?></option>
-                            <option value="internal" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'internal') echo 'selected'; ?>><?php p($l->t('Internal Project')); ?></option>
-                            <option value="research" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'research') echo 'selected'; ?>><?php p($l->t('Research & Development')); ?></option>
-                            <option value="training" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'training') echo 'selected'; ?>><?php p($l->t('Training & Education')); ?></option>
-                            <option value="other" <?php if (isset($filters['project_type']) && $filters['project_type'] == 'other') echo 'selected'; ?>><?php p($l->t('Other')); ?></option>
+                            <option value="client"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'client') echo ' selected'; ?>><?php p($l->t('Client Project')); ?></option>
+                            <option value="admin"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'admin') echo ' selected'; ?>><?php p($l->t('Administrative')); ?></option>
+                            <option value="sales"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'sales') echo ' selected'; ?>><?php p($l->t('Sales & Marketing')); ?></option>
+                            <option value="customer"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'customer') echo ' selected'; ?>><?php p($l->t('Customer Support')); ?></option>
+                            <option value="product"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'product') echo ' selected'; ?>><?php p($l->t('Product Development')); ?></option>
+                            <option value="meeting"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'meeting') echo ' selected'; ?>><?php p($l->t('Meetings & Overhead')); ?></option>
+                            <option value="internal"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'internal') echo ' selected'; ?>><?php p($l->t('Internal Project')); ?></option>
+                            <option value="research"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'research') echo ' selected'; ?>><?php p($l->t('Research & Development')); ?></option>
+                            <option value="training"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'training') echo ' selected'; ?>><?php p($l->t('Training & Education')); ?></option>
+                            <option value="other"<?php if (isset($filters['project_type']) && $filters['project_type'] == 'other') echo ' selected'; ?>><?php p($l->t('Other')); ?></option>
                         </select>
                     </div>
 
@@ -165,28 +162,28 @@ include __DIR__ . '/common/page-start.php';
                         $filterDateTo = $dateObj ? $dateObj->format('Y-m-d') : '';
                     }
                     ?>
-                    <div class="filter-group">
-                        <label for="billing-status-filter" class="filter-label"><?php p($l->t('Settlement')); ?></label>
+                    <div class="pc-filters__field filter-group">
+                        <label for="billing-status-filter" class="pc-filters__label filter-label"><?php p($l->t('Settlement')); ?></label>
                         <select id="billing-status-filter" class="filter-select">
                             <option value=""><?php p($l->t('All statuses')); ?></option>
-                            <option value="outstanding" <?php if ($billingStatusFilter === 'outstanding') echo 'selected'; ?>><?php p($l->t('Outstanding (open + invoiced)')); ?></option>
-                            <option value="open" <?php if ($billingStatusFilter === 'open') echo 'selected'; ?>><?php p($l->t('Open')); ?></option>
-                            <option value="invoiced" <?php if ($billingStatusFilter === 'invoiced') echo 'selected'; ?>><?php p($l->t('Invoiced')); ?></option>
-                            <option value="paid" <?php if ($billingStatusFilter === 'paid') echo 'selected'; ?>><?php p($l->t('Paid')); ?></option>
-                            <option value="excluded" <?php if ($billingStatusFilter === 'excluded') echo 'selected'; ?>><?php p($l->t('Not billable')); ?></option>
+                            <option value="outstanding"<?php if ($billingStatusFilter === 'outstanding') echo ' selected'; ?>><?php p($l->t('Outstanding (open + invoiced)')); ?></option>
+                            <option value="open"<?php if ($billingStatusFilter === 'open') echo ' selected'; ?>><?php p($l->t('Open')); ?></option>
+                            <option value="invoiced"<?php if ($billingStatusFilter === 'invoiced') echo ' selected'; ?>><?php p($l->t('Invoiced')); ?></option>
+                            <option value="paid"<?php if ($billingStatusFilter === 'paid') echo ' selected'; ?>><?php p($l->t('Paid')); ?></option>
+                            <option value="excluded"<?php if ($billingStatusFilter === 'excluded') echo ' selected'; ?>><?php p($l->t('Not billable')); ?></option>
                         </select>
                     </div>
 
-                    <div class="filter-group">
-                        <label for="date-from-filter" class="filter-label"><?php p($l->t('From')); ?></label>
+                    <div class="pc-filters__field filter-group">
+                        <label for="date-from-filter" class="pc-filters__label filter-label"><?php p($l->t('From')); ?></label>
                         <input type="date" id="date-from-filter" name="date_from" class="filter-date form-input"
                             lang="<?php p($htmlLang); ?>"
                             value="<?php p($filterDateFrom); ?>"
                             autocomplete="off">
                     </div>
 
-                    <div class="filter-group">
-                        <label for="date-to-filter" class="filter-label"><?php p($l->t('To')); ?></label>
+                    <div class="pc-filters__field filter-group">
+                        <label for="date-to-filter" class="pc-filters__label filter-label"><?php p($l->t('To')); ?></label>
                         <input type="date" id="date-to-filter" name="date_to" class="filter-date form-input"
                             lang="<?php p($htmlLang); ?>"
                             value="<?php p($filterDateTo); ?>"
@@ -194,8 +191,7 @@ include __DIR__ . '/common/page-start.php';
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="filter-actions">
+                <div class="pc-filters__actions filter-actions">
                     <button type="button" id="apply-filters" class="button primary">
                         <span data-lucide="search" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Apply Filters')); ?>

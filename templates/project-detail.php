@@ -137,7 +137,7 @@ include __DIR__ . '/common/page-start.php';
 
         <?php if ($project->isArchived()): ?>
             <div class="project-detail__notice project-detail__notice--archived" role="status" aria-live="polite">
-                <i class="icon-pause" aria-hidden="true"></i>
+                <span data-lucide="pause" class="lucide-icon" aria-hidden="true"></span>
                 <p><?php p($l->t('This project is archived. It is read-only. To log time or edit details, reactivate it to Active or On Hold using "Change status".')); ?></p>
             </div>
         <?php endif; ?>
@@ -151,14 +151,14 @@ include __DIR__ . '/common/page-start.php';
 
         <?php if ($bulkAddSuccess): ?>
             <div class="notice notice-success" role="status" aria-live="polite" aria-atomic="true">
-                <i class="icon icon-checkmark" aria-hidden="true"></i>
+                <span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span>
                 <span><?php p($l->t('Added %d users to the project', [$bulkAddAddedCount])); ?></span>
             </div>
         <?php endif; ?>
 
         <?php if ($uploadSuccess): ?>
             <div class="notice notice-success" role="status" aria-live="polite" aria-atomic="true">
-                <i class="icon icon-checkmark" aria-hidden="true"></i>
+                <span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span>
                 <span><?php p($l->n('Uploaded %n file.', 'Uploaded %n files.', $uploadSuccessCount)); ?></span>
             </div>
         <?php endif; ?>
@@ -167,12 +167,12 @@ include __DIR__ . '/common/page-start.php';
         <?php if (isset($budgetInfo['alerts']) && !empty($budgetInfo['alerts'])): ?>
             <div class="section budget-alerts-section">
                 <?php foreach ($budgetInfo['alerts'] as $alert): ?>
-                    <div class="alert alert-<?php p($alert['level']); ?>">
-                        <div class="alert-icon">
+                    <div class="alert alert-<?php p($alert['level']); ?>" role="<?php p($alert['level'] === 'critical' ? 'alert' : 'status'); ?>">
+                        <div class="alert-icon" aria-hidden="true">
                             <?php if ($alert['level'] === 'critical'): ?>
-                                <i class="icon-error icon-white"></i>
+                                <span data-lucide="alert-circle" class="lucide-icon"></span>
                             <?php else: ?>
-                                <i class="icon-info icon-white"></i>
+                                <span data-lucide="alert-triangle" class="lucide-icon"></span>
                             <?php endif; ?>
                         </div>
                         <div class="alert-content">
@@ -194,7 +194,7 @@ include __DIR__ . '/common/page-start.php';
             <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="icon-time-custom icon-large"></i>
+                        <span data-lucide="clock" class="lucide-icon"></span>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($totalHours ?? 0); ?>h</div>
@@ -206,7 +206,7 @@ include __DIR__ . '/common/page-start.php';
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="icon-money-custom icon-large"></i>
+                        <span data-lucide="euro" class="lucide-icon"></span>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($fmt ? $fmt->currency((float)($budgetInfo['used_budget'] ?? $budgetConsumption)) : $currencyCode . ' ' . number_format((float)($budgetInfo['used_budget'] ?? $budgetConsumption), 2)); ?></div>
@@ -220,7 +220,7 @@ include __DIR__ . '/common/page-start.php';
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="icon-calendar-custom icon-large"></i>
+                        <span data-lucide="calendar" class="lucide-icon"></span>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($timeEntriesCount ?? 0); ?></div>
@@ -229,7 +229,7 @@ include __DIR__ . '/common/page-start.php';
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="icon-user-custom icon-large"></i>
+                        <span data-lucide="user" class="lucide-icon"></span>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($teamMembersCount ?? 1); ?></div>
@@ -265,7 +265,7 @@ include __DIR__ . '/common/page-start.php';
                                 <div class="yearly-stat-content">
                                     <div class="yearly-stat-item">
                                         <div class="stat-icon">
-                                            <i class="icon-time-custom" aria-hidden="true"></i>
+                                            <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
                                         </div>
                                         <div class="stat-details">
                                             <div class="stat-value"><?php p(number_format($yearData['total_hours'], 1)); ?>h</div>
@@ -274,7 +274,7 @@ include __DIR__ . '/common/page-start.php';
                                     </div>
                                     <div class="yearly-stat-item">
                                         <div class="stat-icon">
-                                            <i class="icon-money-custom" aria-hidden="true"></i>
+                                            <span data-lucide="euro" class="lucide-icon" aria-hidden="true"></span>
                                         </div>
                                         <div class="stat-details">
                                             <div class="stat-value"><?php p($fmt ? $fmt->currency((float)$yearData['total_cost']) : $currencyCode . ' ' . number_format((float)$yearData['total_cost'], 2)); ?></div>
@@ -314,54 +314,68 @@ include __DIR__ . '/common/page-start.php';
         <div class="content-grid">
             <div class="section info-section pc-section" aria-labelledby="pc-about-heading">
                 <div class="section-header">
-                    <h3 id="pc-about-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project Information')); ?></h3>
-                    <p><?php p($l->t('Status, customer, and time tracking in one place.')); ?></p>
+                    <h3 id="pc-about-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('About this project')); ?></h3>
+                    <p><?php p($l->t('Status, customer, and who created it — at a glance.')); ?></p>
                 </div>
                 <div class="section-content">
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label><?php p($l->t('Status')); ?></label>
-                            <span class="status-badge <?php p($statusClass); ?>"><?php p($l->t((string)$project->getStatus())); ?></span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('Priority')); ?></label>
-                            <span class="priority-badge <?php p($priorityClass); ?>"><?php p($l->t((string)$project->getPriority())); ?></span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('Project type')); ?></label>
-                            <div class="project-type-display">
-                                <span class="project-type-icon" data-project-type="<?php p($projectTypeKey); ?>" aria-hidden="true"><?php p($projectTypeIcon); ?></span>
-                                <span class="project-type-label"><?php p($l->t((string)$projectTypeDisplayName)); ?></span>
+                    <?php
+                    $shortDescription = trim((string)($project->getShortDescription() ?? ''));
+                    $detailedDescription = trim((string)($project->getDetailedDescription() ?? ''));
+                    ?>
+                    <div class="pc-entity-facts">
+                        <div class="pc-entity-facts__chips" role="list" aria-label="<?php p($l->t('Project status')); ?>">
+                            <div class="pc-entity-facts__chip" role="listitem">
+                                <span class="pc-entity-facts__chip-label"><?php p($l->t('Status')); ?></span>
+                                <span class="status-badge <?php p($statusClass); ?>"><?php p($l->t((string)$project->getStatus())); ?></span>
+                            </div>
+                            <div class="pc-entity-facts__chip" role="listitem">
+                                <span class="pc-entity-facts__chip-label"><?php p($l->t('Priority')); ?></span>
+                                <span class="priority-badge <?php p($priorityClass); ?>"><?php p($l->t((string)$project->getPriority())); ?></span>
+                            </div>
+                            <div class="pc-entity-facts__chip" role="listitem">
+                                <span class="pc-entity-facts__chip-label"><?php p($l->t('Project type')); ?></span>
+                                <span class="pc-entity-facts__type">
+                                    <span class="project-type-icon" data-project-type="<?php p($projectTypeKey); ?>" aria-hidden="true"><?php p($projectTypeIcon); ?></span>
+                                    <span class="project-type-label"><?php p($l->t((string)$projectTypeDisplayName)); ?></span>
+                                </span>
                             </div>
                         </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('Customer')); ?></label>
-                            <?php if ($customerName && $project->getCustomerId()): ?>
-                                <span><a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => $project->getCustomerId()])); ?>" class="customer-link"><?php p($customerName); ?></a></span>
-                            <?php else: ?>
-                                <span><?php p($l->t('Customer #%s', [$project->getCustomerId()])); ?></span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('Created by')); ?></label>
-                            <span><?php p($createdBy ?? $l->t('Unknown')); ?></span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('Created')); ?></label>
-                            <span><?php p($project->getCreatedAt() ? $project->getCreatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('Last updated')); ?></label>
-                            <span><?php p($project->getUpdatedAt() ? $project->getUpdatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></span>
-                        </div>
-                        <div class="info-item full-width">
-                            <label><?php p($l->t('Short description')); ?></label>
-                            <span><?php p($project->getShortDescription() ?: $l->t('No description provided')); ?></span>
-                        </div>
-                        <?php if ($project->getDetailedDescription()): ?>
-                            <div class="info-item full-width">
-                                <label><?php p($l->t('Detailed description')); ?></label>
-                                <span><?php p($project->getDetailedDescription()); ?></span>
+
+                        <dl class="pc-entity-facts__list">
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Customer')); ?></dt>
+                                <dd>
+                                    <?php if ($customerName && $project->getCustomerId()): ?>
+                                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => $project->getCustomerId()])); ?>" class="customer-link"><?php p($customerName); ?></a>
+                                    <?php else: ?>
+                                        <?php p($l->t('Customer #%s', [$project->getCustomerId()])); ?>
+                                    <?php endif; ?>
+                                </dd>
+                            </div>
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Created by')); ?></dt>
+                                <dd><?php p($createdBy ?? $l->t('Unknown')); ?></dd>
+                            </div>
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Created')); ?></dt>
+                                <dd><?php p($project->getCreatedAt() ? $project->getCreatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></dd>
+                            </div>
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Last updated')); ?></dt>
+                                <dd><?php p($project->getUpdatedAt() ? $project->getUpdatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></dd>
+                            </div>
+                        </dl>
+
+                        <?php if ($shortDescription !== ''): ?>
+                            <div class="pc-entity-facts__prose">
+                                <h4><?php p($l->t('Short description')); ?></h4>
+                                <p><?php p($shortDescription); ?></p>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($detailedDescription !== ''): ?>
+                            <div class="pc-entity-facts__prose">
+                                <h4><?php p($l->t('Detailed description')); ?></h4>
+                                <p><?php p($detailedDescription); ?></p>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -649,7 +663,7 @@ include __DIR__ . '/common/page-start.php';
                         <?php foreach ($projectFiles as $file): ?>
                             <li class="project-file-row" data-file-id="<?php p($file->getId()); ?>">
                                 <div class="file-info">
-                                    <i class="icon-file-custom" aria-hidden="true"></i>
+                                    <span data-lucide="file-text" class="lucide-icon" aria-hidden="true"></span>
                                     <div class="file-meta">
                                         <a class="file-name"
                                             href="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
@@ -670,7 +684,7 @@ include __DIR__ . '/common/page-start.php';
                                         href="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
                                         target="_blank" rel="noreferrer noopener"
                                         aria-label="<?php p($l->t('Download %s', [$file->getDisplayName()])); ?>">
-                                        <i class="icon icon-download" aria-hidden="true"></i>
+                                        <span data-lucide="download" class="lucide-icon" aria-hidden="true"></span>
                                         <span><?php p($l->t('Download')); ?></span>
                                     </a>
                                     <?php if ($canManageFiles): ?>
@@ -679,7 +693,7 @@ include __DIR__ . '/common/page-start.php';
                                             data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.deletePost', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
                                             data-file-name="<?php p($file->getDisplayName()); ?>"
                                             aria-label="<?php p($l->t('Delete %s', [$file->getDisplayName()])); ?>">
-                                            <i class="icon icon-delete" aria-hidden="true"></i>
+                                            <span data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></span>
                                             <span><?php p($l->t('Delete')); ?></span>
                                         </button>
                                     <?php endif; ?>
@@ -920,7 +934,7 @@ include __DIR__ . '/common/page-start.php';
                                             href="<?php p((string)$member['profile_url']); ?>"
                                             title="<?php p($l->t('Open profile of %s', [$member['name'] ?? $l->t('Unknown')])); ?>"
                                             aria-label="<?php p($l->t('Open profile of %s', [$member['name'] ?? $l->t('Unknown')])); ?>">
-                                            <i class="icon-user-custom" aria-hidden="true"></i>
+                                            <span data-lucide="user" class="lucide-icon" aria-hidden="true"></span>
                                         </a>
                                     <?php endif; ?>
                                     <?php if (!empty($canViewMemberTimeEntries) && !empty($member['user_id'])): ?>
@@ -928,7 +942,7 @@ include __DIR__ . '/common/page-start.php';
                                             href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index', ['project_id' => $projectId, 'user_id' => (string)($member['user_id'] ?? '')])); ?>"
                                             title="<?php p($l->t('View time entries for %s', [$member['name'] ?? $l->t('Unknown')])); ?>"
                                             aria-label="<?php p($l->t('View time entries for %s', [$member['name'] ?? $l->t('Unknown')])); ?>">
-                                            <i class="icon-time-custom" aria-hidden="true"></i>
+                                            <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
                                         </a>
                                     <?php endif; ?>
                                     <?php if (!empty($canManageMembers) && $canManageMembers && empty($member['is_former'])): ?>
@@ -950,7 +964,7 @@ include __DIR__ . '/common/page-start.php';
                                             data-member-name="<?php p($member['name'] ?? $l->t('Unknown')); ?>"
                                             title="<?php p($l->t('Remove from project')); ?>"
                                             aria-label="<?php p($l->t('Remove %s from project', [$member['name'] ?? $l->t('Unknown')])); ?>">
-                                            <i class="icon-delete-custom" aria-hidden="true"></i>
+                                            <span data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></span>
                                         </button>
                                     <?php endif; ?>
                                 </div>

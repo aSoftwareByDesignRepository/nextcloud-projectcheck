@@ -25,6 +25,16 @@ const ProjectControlMessaging = {
   },
 
   toastIcons() {
+    const Icons = window.ProjectCheckIcons;
+    if (Icons && typeof Icons.forStatus === 'function') {
+      return {
+        success: Icons.forStatus('success'),
+        error: Icons.forStatus('error'),
+        warning: Icons.forStatus('warning'),
+        info: Icons.forStatus('info'),
+      };
+    }
+    // Glyph fallback only if the icon catalog is unavailable.
     return { success: '\u2713', error: '\u2717', warning: '\u26A0', info: '\u2139' };
   },
 
@@ -293,6 +303,10 @@ const ProjectControlMessaging = {
    * Get alert icon
    */
   getAlertIcon(type) {
+    const Icons = window.ProjectCheckIcons;
+    if (Icons && typeof Icons.forStatus === 'function') {
+      return Icons.forStatus(type);
+    }
     const icons = {
       success: '✓',
       error: '✗',

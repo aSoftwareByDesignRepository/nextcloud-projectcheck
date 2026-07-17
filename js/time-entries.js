@@ -837,16 +837,18 @@
 		messageDiv.setAttribute('aria-live', level === 'error' ? 'assertive' : 'polite');
 		messageDiv.setAttribute('aria-atomic', 'true');
 
-		let iconClass = 'icon-info';
-		if (level === 'success') {
-			iconClass = 'icon-checkmark';
-		} else if (level === 'error') {
-			iconClass = 'icon-error';
-		}
-
-		const icon = document.createElement('i');
-		icon.className = 'icon ' + iconClass;
+		const icon = document.createElement('span');
+		icon.className = 'lucide-icon';
 		icon.setAttribute('aria-hidden', 'true');
+		const Icons = window.ProjectCheckIcons;
+		const iconName = Icons && typeof Icons.forStatus === 'function'
+			? Icons.forStatus(level)
+			: (level === 'success' ? 'circle-check' : (level === 'error' ? 'alert-circle' : 'info'));
+		if (Icons && typeof Icons.mount === 'function') {
+			Icons.mount(icon, iconName);
+		} else {
+			icon.setAttribute('data-lucide', iconName);
+		}
 		messageDiv.appendChild(icon);
 
 		const messageSpan = document.createElement('span');

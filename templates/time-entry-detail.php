@@ -115,7 +115,7 @@ include __DIR__ . '/common/page-start.php';
             <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="icon-time-custom icon-large"></i>
+                        <span data-lucide="clock" class="lucide-icon"></span>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($timeEntry->getHours()); ?>h</div>
@@ -124,7 +124,7 @@ include __DIR__ . '/common/page-start.php';
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="icon-money-custom icon-large"></i>
+                        <span data-lucide="euro" class="lucide-icon"></span>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($fmt ? $fmt->currency((float)$timeEntry->getHourlyRate()) : $currencyCode . ' ' . number_format((float)$timeEntry->getHourlyRate(), 2)); ?></div>
@@ -133,7 +133,7 @@ include __DIR__ . '/common/page-start.php';
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="icon-money-custom icon-large"></i>
+                        <span data-lucide="euro" class="lucide-icon"></span>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></div>
@@ -142,7 +142,7 @@ include __DIR__ . '/common/page-start.php';
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="icon-calendar-custom icon-large"></i>
+                        <span data-lucide="calendar" class="lucide-icon"></span>
                     </div>
                     <div class="stat-content">
                         <div class="stat-number"><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : 'N/A'); ?></div>
@@ -158,74 +158,86 @@ include __DIR__ . '/common/page-start.php';
             <!-- Time Entry Information -->
             <div class="section info-section pc-section" aria-labelledby="pc-te-info-heading">
                 <div class="section-header">
-                    <h3 id="pc-te-info-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Time Entry Information')); ?></h3>
+                    <h3 id="pc-te-info-heading"><i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('About this time entry')); ?></h3>
                     <p><?php p($l->t('When, where, and how this entry was logged.')); ?></p>
                 </div>
                 <div class="section-content">
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label><?php p($l->t('PROJECT')); ?></label>
-                            <span>
-                                <a href="<?php p($projectLinkHref); ?>" class="project-link">
-                                    <?php p($projectName); ?>
-                                </a>
-                            </span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('DATE')); ?></label>
-                            <span><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : 'Not set'); ?></span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('HOURS')); ?></label>
-                            <span><?php p($timeEntry->getHours()); ?> <?php p($l->t('hours')); ?></span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('HOURLY RATE')); ?></label>
-                            <span><?php p($fmt ? $fmt->currency((float)$timeEntry->getHourlyRate()) : $currencyCode . ' ' . number_format((float)$timeEntry->getHourlyRate(), 2)); ?><?php p($l->t('/hour')); ?></span>
-                            <p class="form-hint" id="time-entry-rate-frozen-hint"><?php p($l->t('This hourly rate was stored when the entry was saved and is not recalculated.')); ?></p>
-                        </div>
-                        <?php if (!empty($pricingRateSourceLabel)): ?>
-                        <div class="info-item">
-                            <label><?php p($l->t('How hours are priced')); ?></label>
-                            <span><?php p($pricingRateSourceLabel); ?></span>
-                        </div>
-                        <?php endif; ?>
-                        <div class="info-item">
-                            <label><?php p($l->t('TOTAL COST')); ?></label>
-                            <span class="total-cost"><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('SETTLEMENT')); ?></label>
-                            <span>
+                    <?php $entryDescription = trim((string)($timeEntry->getDescription() ?? '')); ?>
+                    <div class="pc-entity-facts">
+                        <div class="pc-entity-facts__chips" role="list" aria-label="<?php p($l->t('Settlement')); ?>">
+                            <div class="pc-entity-facts__chip" role="listitem">
+                                <span class="pc-entity-facts__chip-label"><?php p($l->t('Settlement')); ?></span>
                                 <?php
                                 $chipKind = 'status';
                                 $chipValue = $timeEntry->getBillingStatus();
                                 include __DIR__ . '/parts/settlement-chip.php';
                                 ?>
-                            </span>
-                            <?php if ($timeEntry->getBilledAt()): ?>
-                                <p class="form-hint"><?php p($l->t('Invoiced on %s', [$timeEntry->getBilledAt()->format('d.m.Y H:i')])); ?></p>
+                            </div>
+                            <div class="pc-entity-facts__chip" role="listitem">
+                                <span class="pc-entity-facts__chip-label"><?php p($l->t('Hours')); ?></span>
+                                <span class="pc-entity-facts__emphasis"><?php p($fmt ? $fmt->hours((float)$timeEntry->getHours()) : number_format((float)$timeEntry->getHours(), 2) . 'h'); ?></span>
+                            </div>
+                            <div class="pc-entity-facts__chip" role="listitem">
+                                <span class="pc-entity-facts__chip-label"><?php p($l->t('Total cost')); ?></span>
+                                <span class="pc-entity-facts__emphasis total-cost"><?php p($fmt ? $fmt->currency((float)$totalCost) : $currencyCode . ' ' . number_format((float)$totalCost, 2)); ?></span>
+                            </div>
+                        </div>
+
+                        <dl class="pc-entity-facts__list">
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Project')); ?></dt>
+                                <dd>
+                                    <a href="<?php p($projectLinkHref); ?>" class="project-link"><?php p($projectName); ?></a>
+                                </dd>
+                            </div>
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Date')); ?></dt>
+                                <dd><?php p($timeEntry->getDate() ? $timeEntry->getDate()->format('d.m.Y') : $l->t('Not set')); ?></dd>
+                            </div>
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Hourly rate')); ?></dt>
+                                <dd>
+                                    <?php p($fmt ? $fmt->currency((float)$timeEntry->getHourlyRate()) : $currencyCode . ' ' . number_format((float)$timeEntry->getHourlyRate(), 2)); ?><?php p($l->t('/hour')); ?>
+                                    <p class="pc-entity-facts__hint" id="time-entry-rate-frozen-hint"><?php p($l->t('This hourly rate was stored when the entry was saved and is not recalculated.')); ?></p>
+                                </dd>
+                            </div>
+                            <?php if (!empty($pricingRateSourceLabel)): ?>
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('How hours are priced')); ?></dt>
+                                <dd><?php p($pricingRateSourceLabel); ?></dd>
+                            </div>
                             <?php endif; ?>
-                            <?php if ($timeEntry->getPaidAt()): ?>
-                                <p class="form-hint"><?php p($l->t('Paid on %s', [$timeEntry->getPaidAt()->format('d.m.Y H:i')])); ?></p>
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Created by')); ?></dt>
+                                <dd><?php p($timeEntry->getUserId()); ?></dd>
+                            </div>
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Created')); ?></dt>
+                                <dd><?php p($timeEntry->getCreatedAt() ? $timeEntry->getCreatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></dd>
+                            </div>
+                            <div class="pc-entity-facts__row">
+                                <dt><?php p($l->t('Last updated')); ?></dt>
+                                <dd><?php p($timeEntry->getUpdatedAt() ? $timeEntry->getUpdatedAt()->format('d.m.Y H:i') : $l->t('Unknown')); ?></dd>
+                            </div>
+                            <?php if ($timeEntry->getBilledAt() || $timeEntry->getPaidAt()): ?>
+                            <div class="pc-entity-facts__row pc-entity-facts__row--span">
+                                <dt><?php p($l->t('Settlement dates')); ?></dt>
+                                <dd>
+                                    <?php if ($timeEntry->getBilledAt()): ?>
+                                        <p class="pc-entity-facts__hint"><?php p($l->t('Invoiced on %s', [$timeEntry->getBilledAt()->format('d.m.Y H:i')])); ?></p>
+                                    <?php endif; ?>
+                                    <?php if ($timeEntry->getPaidAt()): ?>
+                                        <p class="pc-entity-facts__hint"><?php p($l->t('Paid on %s', [$timeEntry->getPaidAt()->format('d.m.Y H:i')])); ?></p>
+                                    <?php endif; ?>
+                                </dd>
+                            </div>
                             <?php endif; ?>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('CREATED BY')); ?></label>
-                            <span><?php p($timeEntry->getUserId()); ?></span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('CREATED')); ?></label>
-                            <span><?php p($timeEntry->getCreatedAt() ? $timeEntry->getCreatedAt()->format('d.m.Y H:i') : 'Unknown'); ?></span>
-                        </div>
-                        <div class="info-item">
-                            <label><?php p($l->t('LAST UPDATED')); ?></label>
-                            <span><?php p($timeEntry->getUpdatedAt() ? $timeEntry->getUpdatedAt()->format('d.m.Y H:i') : 'Unknown'); ?></span>
-                        </div>
-                        <?php if ($timeEntry->getDescription()): ?>
-                            <div class="info-item full-width">
-                                <label><?php p($l->t('DESCRIPTION')); ?></label>
-                                <span><?php p($timeEntry->getDescription()); ?></span>
+                        </dl>
+
+                        <?php if ($entryDescription !== ''): ?>
+                            <div class="pc-entity-facts__prose">
+                                <h4><?php p($l->t('Description')); ?></h4>
+                                <p><?php p($entryDescription); ?></p>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -254,7 +266,7 @@ include __DIR__ . '/common/page-start.php';
                         <div class="overview-stats">
                             <div class="overview-stat">
                                 <div class="stat-icon">
-                                    <i class="icon-calendar-custom"></i>
+                                    <span data-lucide="calendar" class="lucide-icon"></span>
                                 </div>
                                 <div class="stat-content">
                                     <span class="stat-label"><?php p($l->t('Date')); ?></span>
@@ -263,7 +275,7 @@ include __DIR__ . '/common/page-start.php';
                             </div>
                             <div class="overview-stat">
                                 <div class="stat-icon">
-                                    <i class="icon-time-custom"></i>
+                                    <span data-lucide="clock" class="lucide-icon"></span>
                                 </div>
                                 <div class="stat-content">
                                     <span class="stat-label"><?php p($l->t('Hours')); ?></span>
@@ -272,7 +284,7 @@ include __DIR__ . '/common/page-start.php';
                             </div>
                             <div class="overview-stat">
                                 <div class="stat-icon">
-                                    <i class="icon-money-custom"></i>
+                                    <span data-lucide="euro" class="lucide-icon"></span>
                                 </div>
                                 <div class="stat-content">
                                     <span class="stat-label"><?php p($l->t('Rate')); ?></span>
@@ -281,7 +293,7 @@ include __DIR__ . '/common/page-start.php';
                             </div>
                             <div class="overview-stat">
                                 <div class="stat-icon">
-                                    <i class="icon-money-custom"></i>
+                                    <span data-lucide="euro" class="lucide-icon"></span>
                                 </div>
                                 <div class="stat-content">
                                     <span class="stat-label"><?php p($l->t('Total')); ?></span>
@@ -295,7 +307,7 @@ include __DIR__ . '/common/page-start.php';
                     <div class="timeline-grid">
                         <div class="timeline-item">
                             <div class="timeline-icon">
-                                <i class="icon-calendar-custom"></i>
+                                <span data-lucide="calendar" class="lucide-icon"></span>
                             </div>
                             <div class="timeline-content">
                                 <label><?php p($l->t('Entry Date')); ?></label>
@@ -304,7 +316,7 @@ include __DIR__ . '/common/page-start.php';
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-icon">
-                                <i class="icon-time-custom"></i>
+                                <span data-lucide="clock" class="lucide-icon"></span>
                             </div>
                             <div class="timeline-content">
                                 <label><?php p($l->t('Hours Worked')); ?></label>
@@ -313,7 +325,7 @@ include __DIR__ . '/common/page-start.php';
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-icon">
-                                <i class="icon-money-custom"></i>
+                                <span data-lucide="euro" class="lucide-icon"></span>
                             </div>
                             <div class="timeline-content">
                                 <label><?php p($l->t('Hourly Rate')); ?></label>
@@ -322,7 +334,7 @@ include __DIR__ . '/common/page-start.php';
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-icon">
-                                <i class="icon-money-custom"></i>
+                                <span data-lucide="euro" class="lucide-icon"></span>
                             </div>
                             <div class="timeline-content">
                                 <label><?php p($l->t('Total Cost')); ?></label>
@@ -331,7 +343,7 @@ include __DIR__ . '/common/page-start.php';
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-icon">
-                                <i class="icon-user-custom"></i>
+                                <span data-lucide="user" class="lucide-icon"></span>
                             </div>
                             <div class="timeline-content">
                                 <label><?php p($l->t('Created By')); ?></label>
@@ -340,7 +352,7 @@ include __DIR__ . '/common/page-start.php';
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-icon">
-                                <i class="icon-calendar-custom"></i>
+                                <span data-lucide="calendar" class="lucide-icon"></span>
                             </div>
                             <div class="timeline-content">
                                 <label><?php p($l->t('Created At')); ?></label>
@@ -412,7 +424,7 @@ include __DIR__ . '/common/page-start.php';
                 <div class="actions-grid">
                     <?php if ($timeEntry->isOwnedBy((string)($_['userId'] ?? '')) && !$entryBillingLocked): ?>
                         <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $timeEntryId])); ?>" class="button primary">
-                            <i class="icon-edit-custom"></i>
+                            <span data-lucide="edit" class="lucide-icon"></span>
                             <?php p($l->t('Edit Time Entry')); ?>
                         </a>
                         <button type="button" class="button danger delete-time-entry" id="delete-time-entry-btn"
@@ -421,7 +433,7 @@ include __DIR__ . '/common/page-start.php';
                             data-index-url="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>"
                             data-confirm="<?php p($l->t('Are you sure you want to delete this time entry? This action cannot be undone.')); ?>"
                             aria-label="<?php p($l->t('Delete time entry')); ?>">
-                            <i class="icon-delete-custom" aria-hidden="true"></i>
+                            <span data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></span>
                             <?php p($l->t('Delete Time Entry')); ?>
                         </button>
                     <?php elseif ($timeEntry->isOwnedBy((string)($_['userId'] ?? '')) && $entryBillingLocked): ?>
@@ -431,12 +443,12 @@ include __DIR__ . '/common/page-start.php';
                         </p>
                     <?php endif; ?>
                     <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="button secondary">
-                        <i class="icon-time-custom"></i>
+                        <span data-lucide="clock" class="lucide-icon"></span>
                         <?php p($l->t('View All Time Entries')); ?>
                     </a>
                     <?php if ($projectLinkable): ?>
                         <a href="<?php p($projectLinkHref); ?>" class="button secondary">
-                            <i class="icon-user-custom"></i>
+                            <span data-lucide="user" class="lucide-icon"></span>
                             <?php p($l->t('View Project')); ?>
                         </a>
                     <?php endif; ?>

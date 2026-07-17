@@ -411,9 +411,9 @@
 .stat-icon {
 	width: 50px;
 	height: 50px;
-	background: linear-gradient(135deg,
-			var(--color-primary) 0%,
-			var(--color-primary-hover) 100%);
+	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
+	color: var(--color-primary-element);
 	border-radius: 8px;
 	display: flex;
 	align-items: center;
@@ -422,9 +422,10 @@
 	z-index: 1;
 }
 
+.stat-icon .lucide-icon,
 .stat-icon i {
 	font-size: 1.25rem;
-	color: var(--color-primary-text);
+	color: currentColor;
 }
 
 .stat-content {
@@ -988,23 +989,51 @@
 	align-items: stretch;
 }
 
+/*
+ * Legacy .filters-row chrome (lists use .pc-filters in common/filters.css).
+ * Kept aligned with the shared customers look for any leftover markup.
+ */
 .filters-row select,
 .filters-row input[type="date"] {
 	padding: 0.75rem 1rem;
 	border: 1px solid var(--color-border);
 	border-radius: 8px;
-	background: var(--color-main-background);
-	color: var(--color-text);
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
 	font-size: 0.875rem;
 	min-width: auto;
-	transition: all 0.2s ease;
+	min-height: var(--pc-touch-min, 44px);
+	box-sizing: border-box;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.filters-row select {
+	background-image: var(
+		--icon-triangle-s-dark,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+	);
+	background-repeat: no-repeat;
+	background-position: right 0.75rem center;
+	background-size: 12px 12px;
+	padding-inline-end: 2.5rem;
+	cursor: pointer;
+}
+
+html[dir="rtl"] .filters-row select,
+body[dir="rtl"] .filters-row select {
+	background-position: left 0.75rem center;
 }
 
 .filters-row select:focus,
-.filters-row input[type="date"]:focus {
+.filters-row select:focus-visible,
+.filters-row input[type="date"]:focus,
+.filters-row input[type="date"]:focus-visible {
 	outline: none;
-	border-color: var(--color-primary);
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
+	border-color: var(--color-primary-element);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-element) 18%, transparent);
 }
 
 @media (min-width: 768px) {
@@ -1294,7 +1323,7 @@
 .stat-icon .lucide-icon {
 	width: 1.5rem;
 	height: 1.5rem;
-	color: var(--color-primary-text);
+	color: currentColor;
 	margin: 0;
 	position: absolute;
 	top: 50%;

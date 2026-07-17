@@ -153,7 +153,9 @@
 .pc-stats-panel .overview-card .card-icon .lucide-icon,
 .pc-stats-panel .overview-stat .stat-icon .lucide-icon,
 .pc-stats-panel .stat-card .stat-icon .lucide-icon,
-.pc-stats-panel .stat-card .stat-icon i {
+.pc-stats-panel .stat-card .stat-icon .lucide-icon-host,
+.pc-stats-panel .stat-card .stat-icon i,
+.pc-stats-panel .stat-card .stat-icon svg {
 	position: static;
 	transform: none;
 	width: 1.25rem;
@@ -161,6 +163,7 @@
 	margin: 0;
 	font-size: 1.25rem;
 	color: inherit;
+	display: block;
 }
 
 /* Body / typography */
@@ -245,15 +248,6 @@
 /* Employees team overview: drop nested section-content padding */
 .pc-stats-panel.team-overview .section-content {
 	padding: 0;
-}
-
-.pc-stats-panel .stat-card .stat-icon i.icon-time-custom,
-.pc-stats-panel .stat-card .stat-icon i.icon-money-custom,
-.pc-stats-panel .stat-card .stat-icon i.icon-calendar-custom,
-.pc-stats-panel .stat-card .stat-icon i.icon-user-custom {
-	position: static;
-	transform: none;
-	color: inherit;
 }
 
 /* Customer detail: multi-row stat layout inside unified panel */

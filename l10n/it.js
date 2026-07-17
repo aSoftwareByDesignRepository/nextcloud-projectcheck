@@ -1520,6 +1520,27 @@ OC.L10N.register(
 	"Total projects" : "Total projects",
 	"{actor} changed the project role of {member} to {status}" : "{actor} changed the project role of {member} to {status}",
 	"{actor} changed the settlement status of a time entry to {status}" : "{actor} changed the settlement status of a time entry to {status}",
-	"{actor} changed the settlement status of multiple time entries to {status}" : "{actor} changed the settlement status of multiple time entries to {status}"
+	"{actor} changed the settlement status of multiple time entries to {status}" : "{actor} changed the settlement status of multiple time entries to {status}",
+	"About this customer" : "About this customer",
+	"About this employee" : "About this employee",
+	"About this time entry" : "About this time entry",
+	"Contact details and when this record was last changed." : "Contact details and when this record was last changed.",
+	"Contact person" : "Contact person",
+	"Customer name" : "Customer name",
+	"Project status" : "Project status",
+	"Settlement dates" : "Settlement dates",
+	"Status, customer, and who created it — at a glance." : "Status, customer, and who created it — at a glance.",
+	"Billable work" : "Billable work",
+	"Billable work earns money. Overhead keeps the business running. Compare both by year." : "Billable work earns money. Overhead keeps the business running. Compare both by year.",
+	"No hours logged in this year." : "No hours logged in this year.",
+	"Overhead work" : "Overhead work",
+	"Total: %s" : "Total: %s",
+	"%1$s · %2$s" : "%1$s · %2$s",
+	"Cost share: %s" : "Cost share: %s",
+	"Hours share: %s" : "Hours share: %s",
+	"Project types for %s" : "Project types for %s",
+	"Search and filter customers" : "Search and filter customers",
+	"Search and filter projects" : "Search and filter projects",
+	"Search and filter time entries" : "Search and filter time entries"
 	}
 );

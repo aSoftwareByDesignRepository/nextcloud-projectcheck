@@ -1,0 +1,299 @@
+/**
+ * Shared list-filter toolbar (projects, customers, employees, time entries).
+ *
+ * Layout: one field grid (search + filters) → action row.
+ * Theme tokens only; 44px touch targets; visible labels (WCAG 2.1 AA).
+ *
+ * @copyright Copyright (c) 2026, Nextcloud GmbH
+ * @license AGPL-3.0-or-later
+ */
+
+.pc-filters,
+.pc-list-panel .filters-container.pc-filters,
+.pc-app--time-entries .filters-container.pc-filters {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 1rem;
+	align-items: start;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
+	margin: 0;
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+/*
+ * Single responsive field grid — search is a cell like every other filter
+ * (not a dedicated full-width row).
+ */
+.pc-filters__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+	gap: 0.75rem 1rem;
+	align-items: end;
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+.pc-filters__field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	min-width: 0;
+	margin: 0;
+}
+
+/* Search shares the grid as an equal-width cell */
+.pc-filters__field--search {
+	min-width: 0;
+}
+
+.pc-filters__field--search .pc-filters__search,
+.pc-filters__field--search .search-input-wrapper {
+	position: relative;
+	display: block;
+	width: 100%;
+	max-width: none;
+	min-width: 0;
+	flex: none;
+	box-sizing: border-box;
+}
+
+.pc-filters__label {
+	display: block;
+	margin: 0;
+	padding: 0;
+	font-size: 0.8125rem;
+	font-weight: 700;
+	line-height: 1.3;
+	color: var(--color-text-maxcontrast);
+}
+
+/*
+ * Native selects / dates / search — customers-list chrome, shared everywhere:
+ * 1px border, 8px radius, theme surface/text, chevron on the trailing edge.
+ * Nextcloud server.css sets `background: var(--icon-triangle-s-dark) no-repeat`
+ * on all selects; without an explicit position that lands top-left in some
+ * themes — we always pin position + size here (higher specificity than body select).
+ */
+.pc-filters__field .filter-select,
+.pc-filters__field .filter-date,
+.pc-filters__field select,
+.pc-filters__field input[type="date"],
+.pc-filters__field input[type="search"],
+.pc-filters__field .form-input,
+.pc-filters .filter-select,
+.pc-filters .search-input {
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+	min-height: var(--pc-touch-min, 44px);
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
+	font-size: 0.875rem;
+	line-height: 1.4;
+	font-family: inherit;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pc-filters__field select,
+.pc-filters__field .filter-select,
+.pc-filters .filter-select {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	/* NC uses padding-inline-end: 28px !important — stay compatible */
+	padding-inline-end: 2.5rem;
+	cursor: pointer;
+	background-image: var(
+		--icon-triangle-s-dark,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+	);
+	background-repeat: no-repeat;
+	background-position: right 0.75rem center;
+	background-size: 12px 12px;
+	text-overflow: ellipsis;
+	color-scheme: light dark;
+}
+
+html[dir="ltr"] .pc-filters__field select,
+html[dir="ltr"] .pc-filters__field .filter-select,
+html[dir="ltr"] .pc-filters .filter-select,
+body[dir="ltr"] .pc-filters__field select,
+body[dir="ltr"] .pc-filters__field .filter-select,
+body[dir="ltr"] .pc-filters .filter-select {
+	background-position: right 0.75rem center;
+}
+
+html[dir="rtl"] .pc-filters__field select,
+html[dir="rtl"] .pc-filters__field .filter-select,
+html[dir="rtl"] .pc-filters .filter-select,
+body[dir="rtl"] .pc-filters__field select,
+body[dir="rtl"] .pc-filters__field .filter-select,
+body[dir="rtl"] .pc-filters .filter-select {
+	background-position: left 0.75rem center;
+}
+
+/* Dark / high-contrast: lighter chevron (NC icon token when present) */
+body.dark .pc-filters__field select,
+body.dark .pc-filters__field .filter-select,
+body.dark .pc-filters .filter-select,
+.theme--dark .pc-filters__field select,
+.theme--dark .pc-filters__field .filter-select,
+.theme--dark .pc-filters .filter-select,
+[data-theme-dark] .pc-filters__field select,
+[data-theme-dark] .pc-filters__field .filter-select,
+[data-theme-dark] .pc-filters .filter-select {
+	background-image: var(
+		--icon-triangle-s,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%23c4c4c4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+	);
+}
+
+.pc-filters__field select::-ms-expand,
+.pc-filters__field .filter-select::-ms-expand,
+.pc-filters .filter-select::-ms-expand {
+	display: none;
+}
+
+.pc-filters__field input[type="date"],
+.pc-filters__field .filter-date {
+	/* Keep native calendar affordance; match select padding */
+	padding-inline-end: 0.75rem;
+	color-scheme: light dark;
+}
+
+.pc-filters__field select:hover,
+.pc-filters__field .filter-select:hover,
+.pc-filters .filter-select:hover,
+.pc-filters__field input[type="date"]:hover,
+.pc-filters .search-input:hover {
+	border-color: color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
+}
+
+.pc-filters__field select:focus,
+.pc-filters__field select:focus-visible,
+.pc-filters__field .filter-select:focus,
+.pc-filters__field .filter-select:focus-visible,
+.pc-filters .filter-select:focus,
+.pc-filters .filter-select:focus-visible,
+.pc-filters__field input[type="date"]:focus,
+.pc-filters__field input[type="date"]:focus-visible,
+.pc-filters .search-input:focus,
+.pc-filters .search-input:focus-visible {
+	outline: none;
+	border-color: var(--color-primary-element);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-element) 18%, transparent);
+}
+
+.pc-filters__field select:disabled,
+.pc-filters__field .filter-select:disabled,
+.pc-filters .filter-select:disabled,
+.pc-filters__field input:disabled {
+	opacity: 0.65;
+	cursor: not-allowed;
+}
+
+/* Search field keeps leading icon inset (list-table positions the icon) */
+.pc-filters .search-input-wrapper .search-input,
+.pc-filters__search .search-input,
+.pc-filters__field--search .search-input {
+	padding-inline-start: 2.75rem;
+}
+
+.pc-filters__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+	padding: 0.15rem 0 0;
+	box-sizing: border-box;
+}
+
+.pc-filters__actions .button,
+.pc-filters__actions .pc-export,
+.pc-filters__actions .pc-export__toggle {
+	flex: 0 0 auto;
+	min-height: var(--pc-touch-min, 44px);
+}
+
+.pc-filters__actions .pc-export {
+	position: relative;
+}
+
+/* Employees: search-only grid still aligns with actions */
+.pc-filters--simple .pc-filters__actions {
+	padding-top: 0;
+}
+
+@media (min-width: 720px) {
+	.pc-filters__grid {
+		grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+	}
+}
+
+@media (min-width: 1100px) {
+	.pc-filters__grid {
+		grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+	}
+}
+
+@media (max-width: 559px) {
+	.pc-filters__actions {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.pc-filters__actions .button,
+	.pc-filters__actions .pc-export,
+	.pc-filters__actions .pc-export__toggle {
+		width: 100%;
+	}
+
+	.pc-filters__actions .pc-export {
+		display: flex;
+		flex-direction: column;
+	}
+}
+
+@media (forced-colors: active) {
+	.pc-filters__label {
+		color: CanvasText;
+	}
+
+	.pc-filters__field select,
+	.pc-filters__field .filter-select,
+	.pc-filters .filter-select,
+	.pc-filters__field input,
+	.pc-filters .search-input {
+		border: 1px solid CanvasText;
+		background-color: Field;
+		color: FieldText;
+		forced-color-adjust: auto;
+	}
+
+	.pc-filters__field select,
+	.pc-filters__field .filter-select,
+	.pc-filters .filter-select {
+		/* System arrow is fine under forced colours */
+		background-image: none;
+		padding-inline-end: 1rem;
+		appearance: auto;
+	}
+}

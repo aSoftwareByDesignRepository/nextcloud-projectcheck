@@ -568,6 +568,204 @@
 	line-height: 1.5;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Entity facts — About / Information blocks on detail pages                  */
+/* Semantic dl/dt/dd + optional status chips. WCAG 2.1 AA, responsive.        */
+/* -------------------------------------------------------------------------- */
+
+.pc-entity-facts {
+	display: flex;
+	flex-direction: column;
+	gap: 1.15rem;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+.pc-entity-facts__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.85rem 1.25rem;
+	align-items: stretch;
+	margin: 0;
+	padding: 0.95rem 1.1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	background: color-mix(in srgb, var(--color-primary-element) 5%, var(--color-main-background));
+	box-sizing: border-box;
+}
+
+.pc-entity-facts__chip {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	min-width: min(100%, 7.5rem);
+	flex: 1 1 7.5rem;
+}
+
+.pc-entity-facts__chip-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-entity-facts__type,
+.pc-entity-facts__emphasis {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	min-width: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--color-main-text);
+}
+
+.pc-entity-facts__chips .status-badge,
+.pc-entity-facts__chips .priority-badge {
+	width: fit-content;
+	max-width: 100%;
+	text-transform: none;
+	letter-spacing: normal;
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
+.pc-entity-facts__chips .project-type-icon {
+	width: 1.75rem;
+	height: 1.75rem;
+	font-size: 1rem;
+	cursor: default;
+}
+
+.pc-entity-facts__list {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1px;
+	margin: 0;
+	padding: 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	overflow: hidden;
+	background: var(--color-border);
+	box-sizing: border-box;
+}
+
+@media (min-width: 720px) {
+	.pc-entity-facts__list {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.pc-entity-facts__row {
+	display: grid;
+	grid-template-columns: minmax(6.5rem, 9rem) minmax(0, 1fr);
+	gap: 0.5rem 1rem;
+	align-items: baseline;
+	margin: 0;
+	padding: 0.9rem 1.1rem;
+	background: var(--color-main-background);
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+@media (min-width: 720px) {
+	.pc-entity-facts__row--span {
+		grid-column: 1 / -1;
+	}
+}
+
+.pc-entity-facts__row dt {
+	margin: 0;
+	padding: 0;
+	font-size: 0.8rem;
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-entity-facts__row dd {
+	margin: 0;
+	padding: 0;
+	min-width: 0;
+	font-size: 1rem;
+	font-weight: 500;
+	line-height: 1.45;
+	color: var(--color-main-text);
+	overflow-wrap: anywhere;
+}
+
+.pc-entity-facts__row a {
+	color: var(--color-primary-element);
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+	font-weight: 600;
+}
+
+.pc-entity-facts__row a:hover,
+.pc-entity-facts__row a:focus-visible {
+	color: var(--color-primary-element-hover, var(--color-primary-element));
+}
+
+.pc-entity-facts__code {
+	display: inline-block;
+	padding: 0.1rem 0.4rem;
+	border-radius: 4px;
+	border: 1px solid var(--color-border);
+	background: color-mix(in srgb, var(--color-background-dark, var(--color-background-hover)) 65%, var(--color-main-background));
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 0.9em;
+	font-weight: 500;
+}
+
+.pc-entity-facts__hint {
+	margin: 0.35rem 0 0;
+	font-size: 0.8125rem;
+	font-weight: 400;
+	line-height: 1.45;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-entity-facts__prose {
+	margin: 0;
+	padding: 1rem 1.1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	background: var(--color-main-background);
+	box-sizing: border-box;
+}
+
+.pc-entity-facts__prose h4 {
+	margin: 0 0 0.4rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-entity-facts__prose p {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.55;
+	color: var(--color-main-text);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+	.pc-entity-facts__row {
+		grid-template-columns: 1fr;
+		gap: 0.25rem;
+	}
+
+	.pc-entity-facts__chip {
+		flex: 1 1 100%;
+	}
+}
+
 /* Focus (WCAG 2.1 AA) */
 .pc-app--project-detail a:focus-visible,
 .pc-app--customer-detail a:focus-visible,

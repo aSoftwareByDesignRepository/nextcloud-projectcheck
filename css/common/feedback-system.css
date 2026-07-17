@@ -425,7 +425,12 @@
   padding-inline-start: calc(1.25rem - 1px);
 }
 
-#app-content .notice .icon {
+#app-content .notice .icon,
+#app-content .notice .lucide-icon,
+#app-content .notice .lucide-icon-host,
+.app-content .notice .icon,
+.app-content .notice .lucide-icon,
+.app-content .notice .lucide-icon-host {
   position: static;
   margin-top: 0.1rem;
   flex-shrink: 0;
@@ -434,17 +439,34 @@
   z-index: 1;
 }
 
+#app-content .notice .lucide-icon,
+#app-content .notice .lucide-icon-host .lucide-icon,
+.app-content .notice .lucide-icon,
+.app-content .notice .lucide-icon-host .lucide-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: block;
+}
+
 #app-content .notice-success .icon,
-#app-content .notice-info .icon {
+#app-content .notice-info .icon,
+#app-content .notice-success .lucide-icon,
+#app-content .notice-info .lucide-icon,
+#app-content .notice-success .lucide-icon-host,
+#app-content .notice-info .lucide-icon-host {
   color: inherit;
 }
 
-#app-content .notice-success .icon {
+#app-content .notice-success .icon,
+#app-content .notice-success .lucide-icon,
+#app-content .notice-success .lucide-icon-host {
   color: var(--pc-emphasis-text-success);
 }
 
 #app-content .notice-error .icon,
-#app-content .notice .icon.icon-error {
+#app-content .notice .icon.icon-error,
+#app-content .notice-error .lucide-icon,
+#app-content .notice-error .lucide-icon-host {
   color: var(--pc-emphasis-text-error);
 }
 

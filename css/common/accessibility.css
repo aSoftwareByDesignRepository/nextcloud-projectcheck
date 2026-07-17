@@ -296,26 +296,40 @@
 
 /* Alert / status surface baseline (live regions handled by JS). */
 
-/* Alert Icons for Screen Readers */
+/* Alert Icons — Lucide hosts; do not inject emoji (::before) that
+   duplicates icons and fails in forced-colours / some fonts. */
 .alert-icon {
   flex-shrink: 0;
-  font-size: var(--font-size-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
 }
 
-.alert--success .alert-icon::before {
-  content: '✓ ';
+.alert-icon .lucide-icon,
+.alert-icon .lucide-icon-host,
+.alert-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: inherit;
+  display: block;
 }
 
-.alert--error .alert-icon::before {
-  content: '✗ ';
+.toast-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
 }
 
-.alert--warning .alert-icon::before {
-  content: '⚠ ';
-}
-
-.alert--info .alert-icon::before {
-  content: 'ℹ ';
+.toast-icon .lucide-icon,
+.toast-icon .lucide-icon-host,
+.toast-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: inherit;
+  display: block;
 }
 
 /* ===== BUTTON ACCESSIBILITY ===== */
@@ -670,10 +684,14 @@ th {
   color: var(--color-primary-element, #0082c9);
 }
 
-.pc-empty-state__icon .lucide-icon {
+.pc-empty-state__icon .lucide-icon,
+.pc-empty-state__icon .lucide-icon svg,
+.pc-empty-state__icon svg {
   width: 1.75rem;
   height: 1.75rem;
   margin: 0;
+  display: block;
+  flex-shrink: 0;
 }
 
 .pc-empty-state__title {

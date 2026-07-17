@@ -196,18 +196,159 @@
 	border-inline-start: 4px solid var(--color-error);
 }
 
-#app-content .notice .icon {
+#app-content .notice .icon,
+#app-content .notice .lucide-icon,
+#app-content .notice .lucide-icon-host,
+#app-content-wrapper > .notice .icon,
+#app-content-wrapper > .notice .lucide-icon,
+#app-content-wrapper > .notice .lucide-icon-host {
 	flex-shrink: 0;
 	margin-top: 0.1rem;
 	color: var(--color-text-maxcontrast);
 }
 
-#app-content .notice-success .icon {
+#app-content .notice .lucide-icon,
+#app-content .notice .lucide-icon-host .lucide-icon,
+#app-content-wrapper > .notice .lucide-icon,
+#app-content-wrapper > .notice .lucide-icon-host .lucide-icon {
+	width: 1.25rem;
+	height: 1.25rem;
+	display: block;
+}
+
+#app-content .notice-success .icon,
+#app-content .notice-success .lucide-icon,
+#app-content .notice-success .lucide-icon-host,
+#app-content-wrapper > .notice-success .icon,
+#app-content-wrapper > .notice-success .lucide-icon,
+#app-content-wrapper > .notice-success .lucide-icon-host {
 	color: var(--pc-emphasis-text-success, var(--color-success));
 }
 
-#app-content .notice-error .icon {
+#app-content .notice-error .icon,
+#app-content .notice-error .lucide-icon,
+#app-content .notice-error .lucide-icon-host,
+#app-content-wrapper > .notice-error .icon,
+#app-content-wrapper > .notice-error .lucide-icon,
+#app-content-wrapper > .notice-error .lucide-icon-host {
 	color: var(--pc-emphasis-text-error, var(--color-error));
+}
+
+/* Nextcloud core .icon-* hosts: after Lucide hydration, kill mask/bg so
+   currentColor SVG is visible in every theme (incl. light + high-contrast). */
+#app-content .lucide-icon-host[data-lucide-hydrated="1"],
+#app-content .icon[data-lucide-hydrated="1"],
+#app-content [class^="icon-"][data-lucide-hydrated="1"],
+#app-content [class*=" icon-"][data-lucide-hydrated="1"] {
+	background: none !important;
+	background-color: transparent !important;
+	background-image: none !important;
+	-webkit-mask-image: none !important;
+	mask-image: none !important;
+	filter: none !important;
+	color: inherit;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#app-content .lucide-icon-host[data-lucide-hydrated="1"] .lucide-icon,
+#app-content .icon[data-lucide-hydrated="1"] .lucide-icon,
+#app-content [class^="icon-"][data-lucide-hydrated="1"] .lucide-icon,
+#app-content [class*=" icon-"][data-lucide-hydrated="1"] .lucide-icon {
+	width: 1.125rem;
+	height: 1.125rem;
+	color: inherit;
+}
+
+@media (forced-colors: active) {
+	#app-content .notice,
+	#app-content-wrapper > .notice {
+		border: 1px solid CanvasText;
+		background: Canvas;
+		color: CanvasText;
+	}
+
+	#app-content .notice .lucide-icon,
+	#app-content .notice .lucide-icon-host {
+		color: CanvasText;
+	}
+}
+
+/*
+ * Theme-safe icon tiles — page CSS historically forced
+ * --color-primary-text (often white) onto soft-tinted chips, which made
+ * Lucide / custom icons disappear in light themes. Soft tint + primary
+ * element colour works in light, dark, and high-contrast.
+ */
+#app-content .stat-icon,
+#app-content .yearly-stat-item .stat-icon,
+#app-content .overview-stat .stat-icon,
+#app-content .project-stat .stat-icon,
+#app-content .comparison-stat-item .stat-icon,
+#app-content .action-icon {
+	color: var(--color-primary-element);
+	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
+	box-shadow: none;
+}
+
+#app-content .stat-icon i,
+#app-content .stat-icon .lucide-icon,
+#app-content .stat-icon .lucide-icon-host,
+#app-content .stat-icon svg,
+#app-content .yearly-stat-item .stat-icon i,
+#app-content .yearly-stat-item .stat-icon .lucide-icon,
+#app-content .yearly-stat-item .stat-icon svg,
+#app-content .overview-stat .stat-icon i,
+#app-content .overview-stat .stat-icon .lucide-icon,
+#app-content .overview-stat .stat-icon svg,
+#app-content .project-stat .stat-icon i,
+#app-content .project-stat .stat-icon .lucide-icon,
+#app-content .project-stat .stat-icon svg,
+#app-content .comparison-stat-item .stat-icon i,
+#app-content .comparison-stat-item .stat-icon .lucide-icon,
+#app-content .comparison-stat-item .stat-icon svg,
+#app-content .action-icon i,
+#app-content .action-icon .lucide-icon,
+#app-content .action-icon .lucide-icon-host,
+#app-content .action-icon svg {
+	color: inherit !important;
+	fill: none;
+	stroke: currentColor;
+}
+
+#app-content .emptycontent__icon,
+#app-content .emptycontent .emptycontent__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 3.2rem;
+	height: 3.2rem;
+	margin-inline: auto;
+	margin-bottom: 0.5rem;
+	border-radius: 999px;
+	color: var(--color-primary-element);
+	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
+}
+
+#app-content .emptycontent__icon .lucide-icon,
+#app-content .emptycontent__icon svg {
+	width: 1.6rem;
+	height: 1.6rem;
+	color: inherit;
+	display: block;
+}
+
+@media (forced-colors: active) {
+	#app-content .stat-icon,
+	#app-content .action-icon,
+	#app-content .emptycontent__icon {
+		border: 1px solid CanvasText;
+		background: Canvas;
+		color: CanvasText;
+	}
 }
 
 .pc-main > .notice:first-child,

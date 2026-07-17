@@ -206,52 +206,10 @@
 	background: var(--color-main-background);
 }
 
-/* Time entries: treat labeled filter groups like the shared filters-row */
-.pc-app--time-entries .pc-list-panel .filter-controls,
-.pc-app--time-entries .time-entries-panel .filter-controls {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	align-items: flex-end;
-	gap: 0.75rem;
-	flex: 1 1 auto;
-	min-width: 0;
-	padding: 0;
-	margin: 0;
-}
-
-.pc-app--time-entries .pc-list-panel .filter-group,
-.pc-app--time-entries .time-entries-panel .filter-group {
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-	min-width: min(100%, 10rem);
-	flex: 0 1 auto;
-}
-
-.pc-app--time-entries .pc-list-panel .filter-label,
-.pc-app--time-entries .time-entries-panel .filter-label {
-	font-size: 0.8rem;
-	font-weight: 700;
-	color: var(--color-text-maxcontrast);
-	margin: 0;
-}
-
-.pc-app--time-entries .pc-list-panel .filter-actions,
-.pc-app--time-entries .time-entries-panel .filter-actions {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.75rem;
-	flex: 0 0 auto;
-}
-
-.pc-app--time-entries .pc-list-panel .filter-select,
-.pc-app--time-entries .pc-list-panel .filter-date,
-.pc-app--time-entries .time-entries-panel .filter-select,
-.pc-app--time-entries .time-entries-panel .filter-date {
-	min-height: var(--pc-touch-min, 44px);
-	box-sizing: border-box;
+/* Time entries legacy filter-controls — superseded by .pc-filters grid */
+.pc-app--time-entries .pc-list-panel .filter-controls:not(.pc-filters__grid),
+.pc-app--time-entries .time-entries-panel .filter-controls:not(.pc-filters__grid) {
+	display: contents;
 }
 
 /* Narrow: full-width filter actions for touch / long translations */

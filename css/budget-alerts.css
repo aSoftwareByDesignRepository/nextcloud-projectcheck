@@ -39,11 +39,22 @@
 .budget-alerts-section .alert-icon {
     margin-inline-end: 0.75rem;
     flex-shrink: 0;
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: inherit;
+}
+
+.budget-alerts-section .alert-icon .lucide-icon,
+.budget-alerts-section .alert-icon .lucide-icon-host,
+.budget-alerts-section .alert-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: inherit;
+    display: block;
+    flex-shrink: 0;
 }
 
 .budget-alerts-section .alert-content {
@@ -73,7 +84,7 @@
 }
 
 .budget-alerts-section .alert.alert-warning .alert-icon {
-    color: var(--pc-emphasis-text-warning);
+    color: var(--pc-emphasis-text-warning, var(--color-warning));
 }
 
 .budget-alerts-section .alert.alert-critical {
@@ -83,7 +94,7 @@
 }
 
 .budget-alerts-section .alert.alert-critical .alert-icon {
-    color: var(--pc-emphasis-text-error);
+    color: var(--pc-emphasis-text-error, var(--color-error));
 }
 
 .budget-alerts-section .alert.alert-none {
@@ -93,7 +104,7 @@
 }
 
 .budget-alerts-section .alert.alert-none .alert-icon {
-    color: var(--pc-emphasis-text-info);
+    color: var(--pc-emphasis-text-info, var(--color-info));
 }
 
 /* Budget percentage styling based on warning levels */
@@ -216,7 +227,13 @@
         padding: 0.75rem 1rem;
     }
 
-    .budget-alerts-section .alert-icon {
+.budget-alerts-section .alert-icon {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+
+    .budget-alerts-section .alert-icon .lucide-icon,
+    .budget-alerts-section .alert-icon svg {
         width: 1.5rem;
         height: 1.5rem;
     }
@@ -235,6 +252,21 @@
     .alert,
     .budget-alerts-section .alert {
         animation: none;
+    }
+}
+
+@media (forced-colors: active) {
+    .budget-alerts-section .alert {
+        border: 1px solid CanvasText;
+        background: Canvas;
+        color: CanvasText;
+    }
+
+    .budget-alerts-section .alert-icon,
+    .budget-alerts-section .alert-icon .lucide-icon,
+    .budget-alerts-section .alert-icon svg {
+        color: CanvasText;
+        forced-color-adjust: auto;
     }
 }
 

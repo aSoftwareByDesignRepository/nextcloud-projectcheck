@@ -1,144 +1,125 @@
 /**
  * Custom SVG Icons for projectcheck app
  *
+ * Theme-safe: use CSS masks + currentColor so icons follow text colour
+ * in light, dark, and high-contrast themes. Lucide hydration still
+ * replaces these hosts when js/common/icons.js runs.
+ *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
  */
 
-/* Custom Icon Classes */
+/* Custom Icon Classes — mask so stroke colour = currentColor */
+.icon-calendar-custom,
+.icon-time-custom,
+.icon-money-custom,
+.icon-user-custom,
+.icon-chart-custom,
+.icon-add-custom,
+.icon-info-custom,
+.icon-tag-custom,
+.icon-edit-custom,
+.icon-delete-custom,
+.icon-folder-custom,
+.icon-file-custom {
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	flex-shrink: 0;
+	color: inherit;
+	background-color: currentColor;
+	background-image: none;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-size: contain;
+	mask-size: contain;
+}
+
 .icon-calendar-custom {
-    background-image: url('../img/icons/calendar.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/calendar.svg');
+	mask-image: url('../img/icons/calendar.svg');
 }
 
 .icon-time-custom {
-    background-image: url('../img/icons/time.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/time.svg');
+	mask-image: url('../img/icons/time.svg');
 }
 
 .icon-money-custom {
-    background-image: url('../img/icons/money.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/money.svg');
+	mask-image: url('../img/icons/money.svg');
 }
 
 .icon-user-custom {
-    background-image: url('../img/icons/user.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/user.svg');
+	mask-image: url('../img/icons/user.svg');
 }
 
 .icon-chart-custom {
-    background-image: url('../img/icons/chart.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/chart.svg');
+	mask-image: url('../img/icons/chart.svg');
 }
 
 .icon-add-custom {
-    background-image: url('../img/icons/add.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/add.svg');
+	mask-image: url('../img/icons/add.svg');
 }
 
 .icon-info-custom {
-    background-image: url('../img/icons/info.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/info.svg');
+	mask-image: url('../img/icons/info.svg');
 }
 
 .icon-tag-custom {
-    background-image: url('../img/icons/tag.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/tag.svg');
+	mask-image: url('../img/icons/tag.svg');
 }
 
 .icon-edit-custom {
-    background-image: url('../img/icons/edit.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/edit.svg');
+	mask-image: url('../img/icons/edit.svg');
 }
 
 .icon-delete-custom {
-    background-image: url('../img/icons/delete.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/delete.svg');
+	mask-image: url('../img/icons/delete.svg');
 }
 
 .icon-folder-custom {
-    background-image: url('../img/icons/folder.svg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+	-webkit-mask-image: url('../img/icons/folder.svg');
+	mask-image: url('../img/icons/folder.svg');
+}
+
+.icon-file-custom {
+	-webkit-mask-image: url('../img/icons/project-files.svg');
+	mask-image: url('../img/icons/project-files.svg');
 }
 
 /* Icon sizing for different contexts */
 .icon-small {
-    width: 16px;
-    height: 16px;
+	width: 16px;
+	height: 16px;
 }
 
 .icon-medium {
-    width: 20px;
-    height: 20px;
+	width: 20px;
+	height: 20px;
 }
 
 .icon-large {
-    width: 32px;
-    height: 32px;
+	width: 32px;
+	height: 32px;
 }
 
 .icon-xl {
-    width: 48px;
-    height: 48px;
+	width: 48px;
+	height: 48px;
 }
 
 /* When icon placeholders are hydrated with inline Lucide SVG, suppress
- * the legacy background-image icon to avoid double-rendered stacked icons. */
+ * the legacy mask icon to avoid double-rendered stacked icons. */
 .icon-calendar-custom[data-lucide-hydrated="1"],
 .icon-time-custom[data-lucide-hydrated="1"],
 .icon-money-custom[data-lucide-hydrated="1"],
@@ -149,14 +130,37 @@
 .icon-tag-custom[data-lucide-hydrated="1"],
 .icon-edit-custom[data-lucide-hydrated="1"],
 .icon-delete-custom[data-lucide-hydrated="1"],
-.icon-folder-custom[data-lucide-hydrated="1"] {
-    background-image: none;
-    width: auto;
-    height: auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    vertical-align: middle;
+.icon-folder-custom[data-lucide-hydrated="1"],
+.icon-file-custom[data-lucide-hydrated="1"],
+.icon.icon-error[data-lucide-hydrated="1"],
+.icon.icon-checkmark[data-lucide-hydrated="1"],
+.icon.icon-info[data-lucide-hydrated="1"],
+.icon.icon-pause[data-lucide-hydrated="1"],
+.icon.icon-delete[data-lucide-hydrated="1"],
+.icon.icon-download[data-lucide-hydrated="1"],
+.icon-error[data-lucide-hydrated="1"],
+.icon-checkmark[data-lucide-hydrated="1"],
+.icon-info[data-lucide-hydrated="1"],
+.icon-pause[data-lucide-hydrated="1"],
+.icon-delete[data-lucide-hydrated="1"],
+.icon-download[data-lucide-hydrated="1"],
+.icon-close[data-lucide-hydrated="1"],
+.icon-folder[data-lucide-hydrated="1"],
+.icon-user[data-lucide-hydrated="1"] {
+	background: none !important;
+	background-color: transparent !important;
+	-webkit-mask-image: none !important;
+	mask-image: none !important;
+	width: auto;
+	height: auto;
+	min-width: 1.125rem;
+	min-height: 1.125rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
+	filter: none !important;
+	color: inherit;
 }
 
 .icon-calendar-custom[data-lucide-hydrated="1"] .lucide-icon,
@@ -169,7 +173,20 @@
 .icon-tag-custom[data-lucide-hydrated="1"] .lucide-icon,
 .icon-edit-custom[data-lucide-hydrated="1"] .lucide-icon,
 .icon-delete-custom[data-lucide-hydrated="1"] .lucide-icon,
-.icon-folder-custom[data-lucide-hydrated="1"] .lucide-icon {
-    width: 1.125rem;
-    height: 1.125rem;
+.icon-folder-custom[data-lucide-hydrated="1"] .lucide-icon,
+.icon-file-custom[data-lucide-hydrated="1"] .lucide-icon,
+.lucide-icon-host .lucide-icon {
+	width: 1.125rem;
+	height: 1.125rem;
+	color: inherit;
+}
+
+.icon-large[data-lucide-hydrated="1"] .lucide-icon {
+	width: 2rem;
+	height: 2rem;
+}
+
+.icon-xl[data-lucide-hydrated="1"] .lucide-icon {
+	width: 3rem;
+	height: 3rem;
 }

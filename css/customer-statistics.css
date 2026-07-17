@@ -764,9 +764,9 @@
 .section .overview-stat .stat-icon {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg,
-            var(--color-primary) 0%,
-            var(--color-primary-hover) 100%);
+    background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
+	color: var(--color-primary-element);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -775,9 +775,9 @@
     position: relative;
 }
 
-.section .overview-stat .stat-icon i,
-.section .overview-stat .stat-icon .lucide-icon {
-    color: var(--color-primary-text);
+.section .overview-stat .stat-icon .lucide-icon,
+.section .overview-stat .stat-icon i {
+    color: currentColor;
     font-size: 1.4rem;
     width: 1.4rem;
     height: 1.4rem;
