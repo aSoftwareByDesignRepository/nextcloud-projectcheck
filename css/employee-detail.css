@@ -111,10 +111,10 @@
 }
 
 .pc-app--employee-detail .employee-assignments-panel {
-	padding: var(--pc-space-4, 1rem);
-	border: 1px solid var(--pc-border, var(--color-border));
-	border-radius: var(--pc-radius-md, 12px);
-	background: var(--color-main-background);
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
 	min-width: 0;
 }
 

@@ -522,6 +522,28 @@ class CustomerController extends Controller
 		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType($scopedProjectIds);
 		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis($scopedProjectIds);
 
+		$keyTotalProjects = count($projectsWithBudgetInfo);
+		$keyActiveProjects = 0;
+		$keyBudgetUsed = 0.0;
+		foreach ($projectsWithBudgetInfo as $projectRow) {
+			$projectEntity = $projectRow['project'] ?? null;
+			if ($projectEntity instanceof \OCA\ProjectCheck\Db\Project
+				&& strcasecmp((string)$projectEntity->getStatus(), 'Active') === 0) {
+				$keyActiveProjects++;
+			}
+			$budgetInfo = is_array($projectRow['budgetInfo'] ?? null) ? $projectRow['budgetInfo'] : [];
+			$keyBudgetUsed += (float)($budgetInfo['used_budget'] ?? 0);
+		}
+		$keyTotalHours = 0.0;
+		$keyEntryCount = 0;
+		foreach ($yearlyStats as $yearRow) {
+			if (!is_array($yearRow)) {
+				continue;
+			}
+			$keyTotalHours += (float)($yearRow['total_hours'] ?? 0);
+			$keyEntryCount += (int)($yearRow['entry_count'] ?? 0);
+		}
+
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $user->getUID());
 		$canEditCustomer = $this->customerService->canUserEditCustomer($userId, (int) $id);
@@ -536,6 +558,11 @@ class CustomerController extends Controller
 			'productivityAnalysis' => $productivityAnalysis,
 			'canEditCustomer' => $canEditCustomer,
 			'canCreateProject' => $canCreateProject,
+			'keyTotalProjects' => $keyTotalProjects,
+			'keyActiveProjects' => $keyActiveProjects,
+			'keyTotalHours' => $keyTotalHours,
+			'keyBudgetUsed' => $keyBudgetUsed,
+			'keyEntryCount' => $keyEntryCount,
 			'requesttoken' => $this->requestTokenProvider->getEncryptedRequestToken(),
 			'stats' => $stats,
 			'urlGenerator' => $this->urlGenerator,

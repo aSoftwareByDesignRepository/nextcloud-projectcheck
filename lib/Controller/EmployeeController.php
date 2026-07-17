@@ -361,13 +361,13 @@ class EmployeeController extends Controller
 			}
 		}
 
-        // Get yearly statistics for this employee
-        $yearlyStats = $this->timeEntryService->getYearlyStatsForEmployee($userId);
+		// Get yearly statistics for this employee
+		$yearlyStats = $this->timeEntryService->getYearlyStatsForEmployee($userId);
 
-        // Get project type statistics for this employee
-        $accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($viewerId);
-        $employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId, $accessibleProjectIds);
-        $employeeProductivityAnalysis = $this->timeEntryService->getProductivityAnalysisForEmployee($userId, $accessibleProjectIds);
+		// Get project type statistics for this employee
+		$accessibleProjectIds = $this->projectService->getAccessibleProjectIdListForUser($viewerId);
+		$employeeProjectTypeStats = $this->timeEntryService->getYearlyStatsByProjectTypeForEmployee($userId, $accessibleProjectIds);
+		$employeeProductivityAnalysis = $this->timeEntryService->getProductivityAnalysisForEmployee($userId, $accessibleProjectIds);
 		$employeeAssignedProjects = $this->projectService->getUserProjects((string)$userId);
 		$assignedProjectIds = [];
 		foreach ($employeeAssignedProjects as $assignedProject) {
@@ -384,28 +384,44 @@ class EmployeeController extends Controller
 			}
 		}
 
-        // Get common stats for the sidebar
-        $stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
+		$keyTotalHours = 0.0;
+		$keyTotalCost = 0.0;
+		$keyEntryCount = 0;
+		foreach ($yearlyStats as $yearRow) {
+			if (!is_array($yearRow)) {
+				continue;
+			}
+			$keyTotalHours += (float)($yearRow['total_hours'] ?? 0);
+			$keyTotalCost += (float)($yearRow['total_cost'] ?? 0);
+			$keyEntryCount += (int)($yearRow['entry_count'] ?? 0);
+		}
+
+		// Get common stats for the sidebar
+		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
 
 		$formerDisplay = null;
 		if ($employeeUser === null) {
 			$formerDisplay = $snapshot !== null ? $snapshot->getDisplayName() : $userId;
 		}
 		$requestToken = $this->requestTokenProvider->getEncryptedRequestToken();
-        $response = new TemplateResponse($this->appName, 'employee-detail', [
-            'employee' => $employeeUser,
+		$response = new TemplateResponse($this->appName, 'employee-detail', [
+			'employee' => $employeeUser,
 			'employeeId' => $userId,
 			'formerAccountDisplayName' => $formerDisplay,
 			'isFormerAccount' => $employeeUser === null,
 			'isGlobalViewer' => $isGlobalViewer,
-            'yearlyStats' => $yearlyStats,
-            'employeeProjectTypeStats' => $employeeProjectTypeStats,
-            'employeeProductivityAnalysis' => $employeeProductivityAnalysis,
+			'yearlyStats' => $yearlyStats,
+			'employeeProjectTypeStats' => $employeeProjectTypeStats,
+			'employeeProductivityAnalysis' => $employeeProductivityAnalysis,
 			'employeeAssignedProjects' => $employeeAssignedProjects,
 			'manageableProjects' => $manageableProjects,
 			'canManageAssignments' => $employeeUser !== null,
-            'stats' => $stats,
-            'urlGenerator' => $this->urlGenerator,
+			'keyTotalHours' => $keyTotalHours,
+			'keyTotalCost' => $keyTotalCost,
+			'keyEntryCount' => $keyEntryCount,
+			'keyAssignedProjects' => count($employeeAssignedProjects),
+			'stats' => $stats,
+			'urlGenerator' => $this->urlGenerator,
 			'requesttoken' => $requestToken,
 			'assignProjectUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.assignProject', ['userId' => (string)$userId]),
 			'employeeHourlyRates' => $this->employeeHourlyRateService->listRatesForUser((string) $userId),
@@ -413,10 +429,10 @@ class EmployeeController extends Controller
 			'canManageEmployeeRates' => $employeeUser !== null
 				&& $this->accessControlService->canManageAppConfiguration($viewerId),
 			'addEmployeeRateUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.addHourlyRate', ['userId' => (string) $userId]),
-        ]);
+		]);
 
-        return $this->configureCSP($response);
-    }
+		return $this->configureCSP($response);
+	}
 
 	private function isReservedEmployeeSlug(string $userId): bool
 	{
