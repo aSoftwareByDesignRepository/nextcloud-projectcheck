@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.77 - 2026-07-17
+
+### Added
+
+- **Shared list filter toolbar:** projects, customers, employees, and time entries use one equal-width filter grid (search beside the selects) with consistent select chrome, visible labels, and theme-safe focus styles (WCAG 2.1 AA).
+- **Theme-safe productivity / project-type year panels:** reusable partials and CSS tokens so analysis blocks stay readable in light, dark, and high-contrast themes.
+
+### Changed
+
+- **Settlement summary strip:** borderless single-line metrics row under the time-entry filters; bulk settlement bar matches the same chrome.
+- **Icons:** Lucide / `currentColor` masks replace fragile Nextcloud `icon-*` + white-stroke tiles so budget alerts and list chrome render correctly across themes.
+- **Nextcloud compatibility:** `max-version` kept aligned with current stable server major **34**.
+
+### Fixed
+
+- **Settlement bucket math:** outstanding (not yet paid) is computed with decimal-safe `Money` addition in the billing service; mapper/recompute accumulate when legacy status labels normalize to the same bucket so totals cannot be silently overwritten.
+- **Broken CSS selectors** from earlier icon migration (orphan braces / truncated rules in list and dashboard stylesheets).
+
 ## Unreleased
 
 ## 2.0.76 - 2026-07-17
