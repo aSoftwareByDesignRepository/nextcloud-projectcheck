@@ -1512,6 +1512,14 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 Fakturerbart arbeid",
 	"💻 Product Development" : "💻 Produktutvikling",
 	"📊 Why This Matters" : "📊 Hvorfor dette betyr noe",
-	"🔬 Research & Development" : "🔬 Forskning og utvikling"
+	"🔬 Research & Development" : "🔬 Forskning og utvikling",
+	"%s active" : "%s active",
+	"%s total budget" : "%s total budget",
+	"Employee status at a glance" : "Employee status at a glance",
+	"No hourly rates yet" : "No hourly rates yet",
+	"Total projects" : "Total projects",
+	"{actor} changed the project role of {member} to {status}" : "{actor} changed the project role of {member} to {status}",
+	"{actor} changed the settlement status of a time entry to {status}" : "{actor} changed the settlement status of a time entry to {status}",
+	"{actor} changed the settlement status of multiple time entries to {status}" : "{actor} changed the settlement status of multiple time entries to {status}"
 	}
 );

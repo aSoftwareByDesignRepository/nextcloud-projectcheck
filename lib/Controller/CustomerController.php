@@ -517,14 +517,13 @@ class CustomerController extends Controller
 		// Get yearly statistics for the customer
 		$yearlyStats = $this->timeEntryService->getYearlyStatsForCustomer((int) $id, $scopedProjectIds);
 
-		// Get project type statistics for the customer
+		// Get project type statistics for the customer (scoped to visible projects)
 		$projectTypeStats = $this->timeEntryService->getYearlyStatsByProjectType($scopedProjectIds);
-		$detailedProjectTypeStats = $this->timeEntryService->getDetailedYearlyStatsByProjectType($scopedProjectIds);
-		$productivityAnalysis = $this->timeEntryService->getProductivityAnalysis($scopedProjectIds);
 
 		$keyTotalProjects = count($projectsWithBudgetInfo);
 		$keyActiveProjects = 0;
 		$keyBudgetUsed = 0.0;
+		$keyTotalBudget = 0.0;
 		foreach ($projectsWithBudgetInfo as $projectRow) {
 			$projectEntity = $projectRow['project'] ?? null;
 			if ($projectEntity instanceof \OCA\ProjectCheck\Db\Project
@@ -533,6 +532,7 @@ class CustomerController extends Controller
 			}
 			$budgetInfo = is_array($projectRow['budgetInfo'] ?? null) ? $projectRow['budgetInfo'] : [];
 			$keyBudgetUsed += (float)($budgetInfo['used_budget'] ?? 0);
+			$keyTotalBudget += (float)($budgetInfo['total_budget'] ?? 0);
 		}
 		$keyTotalHours = 0.0;
 		$keyEntryCount = 0;
@@ -554,14 +554,13 @@ class CustomerController extends Controller
 			'projects' => $projectsWithBudgetInfo,
 			'yearlyStats' => $yearlyStats,
 			'projectTypeStats' => $projectTypeStats,
-			'detailedProjectTypeStats' => $detailedProjectTypeStats,
-			'productivityAnalysis' => $productivityAnalysis,
 			'canEditCustomer' => $canEditCustomer,
 			'canCreateProject' => $canCreateProject,
 			'keyTotalProjects' => $keyTotalProjects,
 			'keyActiveProjects' => $keyActiveProjects,
 			'keyTotalHours' => $keyTotalHours,
 			'keyBudgetUsed' => $keyBudgetUsed,
+			'keyTotalBudget' => $keyTotalBudget,
 			'keyEntryCount' => $keyEntryCount,
 			'requesttoken' => $this->requestTokenProvider->getEncryptedRequestToken(),
 			'stats' => $stats,
@@ -932,13 +931,15 @@ class CustomerController extends Controller
 				$this->projectService->getUserScopedProjectIdsForCustomer($uid, $cid)
 			);
 			$settlement = $this->customerSettlementService->getSettlementForCustomer($cid, $uid);
-			$stats['settlement_posture'] = $settlement['posture'];
-			$stats['outstanding_hours'] = $settlement['outstanding_hours'];
-			$stats['outstanding_amount'] = $settlement['outstanding_amount'];
-			$stats['open_hours'] = $settlement['open_hours'];
-			$stats['invoiced_hours'] = $settlement['invoiced_hours'];
-			$stats['paid_hours'] = $settlement['paid_hours'];
-		} else {
+			if (!is_array($settlement)) {
+				$settlement = [];
+			}
+			$stats['settlement_posture'] = (string)($settlement['posture'] ?? 'n_a');
+			$stats['outstanding_hours'] = (float)($settlement['outstanding_hours'] ?? 0);
+			$stats['outstanding_amount'] = (float)($settlement['outstanding_amount'] ?? 0);
+			$stats['open_hours'] = (float)($settlement['open_hours'] ?? 0);
+			$stats['invoiced_hours'] = (float)($settlement['invoiced_hours'] ?? 0);
+			$stats['paid_hours'] = (float)($settlement['paid_hours'] ?? 0);		} else {
 			// Get general customer statistics
 			$stats = $this->customerService->getCustomerStatsForUser($uid);
 		}

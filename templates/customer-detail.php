@@ -7,15 +7,18 @@
  * @license AGPL-3.0-or-later
  */
 
-style('projectcheck', 'dashboard');
-style('projectcheck', 'projects');
-style('projectcheck', 'customers');
-style('projectcheck', 'budget-alerts');
-style('projectcheck', 'navigation');
-style('projectcheck', 'common/progress-bars');
-style('projectcheck', 'customer-statistics');
-style('projectcheck', 'common/list-table');
-style('projectcheck', 'common/detail-layout');
+use OCP\Util;
+
+Util::addStyle('projectcheck', 'projects');
+Util::addStyle('projectcheck', 'customers');
+Util::addStyle('projectcheck', 'budget-alerts');
+Util::addStyle('projectcheck', 'navigation');
+Util::addStyle('projectcheck', 'common/progress-bars');
+Util::addStyle('projectcheck', 'common/accessibility');
+Util::addStyle('projectcheck', 'common/stats-panel');
+Util::addStyle('projectcheck', 'common/list-table');
+// Last: single-column detail stack (overrides legacy 2-col content-grid).
+Util::addStyle('projectcheck', 'common/detail-layout');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -25,52 +28,50 @@ $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strto
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 	$currencyCode = 'EUR';
 }
-?>
-
-<script nonce="<?php p($_['cspNonce']) ?>">
-	// Pass PHP variables to JavaScript
-	window.projectControlData = {
-		requestToken: '<?php p($_['requesttoken']) ?>',
-		customerId: <?php p($customer->getId()); ?>
-	};
-</script>
-
-<?php
 $canEditCustomer = !empty($_['canEditCustomer']);
 $canCreateProject = !empty($_['canCreateProject']);
+$keyTotalProjects = (int)($_['keyTotalProjects'] ?? 0);
+$keyActiveProjects = (int)($_['keyActiveProjects'] ?? 0);
+$keyTotalHours = (float)($_['keyTotalHours'] ?? 0);
+$keyBudgetUsed = (float)($_['keyBudgetUsed'] ?? 0);
+$keyTotalBudget = (float)($_['keyTotalBudget'] ?? 0);
+$keyEntryCount = (int)($_['keyEntryCount'] ?? 0);
+?>
+
+<?php
 $pageId = 'customer-detail';
 $pageTitle = $customer->getName();
 $pageHelp = $l->t('Customer details and associated projects');
 ob_start(); ?>
 						<div class="customer-meta">
 							<?php if ($customer->getEmail()): ?>
-								<span class="meta-item">
+								<div class="meta-item">
 									<span data-lucide="mail" class="lucide-icon" aria-hidden="true"></span>
 									<a href="mailto:<?php p($customer->getEmail()); ?>"><?php p($customer->getEmail()); ?></a>
-								</span>
+								</div>
 							<?php endif; ?>
 							<?php if ($customer->getPhone()): ?>
-								<span class="meta-item">
+								<div class="meta-item">
 									<span data-lucide="phone" class="lucide-icon" aria-hidden="true"></span>
 									<a href="tel:<?php p($customer->getPhone()); ?>"><?php p($customer->getPhone()); ?></a>
-								</span>
+								</div>
 							<?php endif; ?>
 						</div>
 <?php
 $pageHeaderMetaHtml = ob_get_clean();
 ob_start(); ?>
-					<?php if ($canEditCustomer): ?>
-					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.edit', ['id' => $customer->getId()])); ?>"
-						class="button secondary">
-						<span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
-						<?php p($l->t('Edit Customer')); ?>
-					</a>
-					<?php endif; ?>
 					<?php if ($canCreateProject): ?>
 					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>"
 						class="button primary">
 						<span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
 						<?php p($l->t('New Project')); ?>
+					</a>
+					<?php endif; ?>
+					<?php if ($canEditCustomer): ?>
+					<a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.edit', ['id' => $customer->getId()])); ?>"
+						class="button secondary">
+						<span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
+						<?php p($l->t('Edit Customer')); ?>
 					</a>
 					<?php endif; ?>
 <?php
@@ -88,9 +89,9 @@ include __DIR__ . '/common/page-start.php';
 			</nav>
 		</div>
 
-		<div class="section">
+		<div class="section pc-section" role="status" aria-live="polite">
 			<div class="section-content">
-				<div class="pc-scope-banner" role="status" aria-live="polite">
+				<div class="pc-scope-banner">
 					<div class="pc-scope-banner__icon">
 						<i data-lucide="info" class="lucide-icon primary" aria-hidden="true"></i>
 					</div>
@@ -102,134 +103,57 @@ include __DIR__ . '/common/page-start.php';
 			</div>
 		</div>
 
-		<!-- Customer Statistics -->
+		<!-- Key figures (SSR — same strip as project detail) -->
 		<section class="section stats-section pc-stats-panel pc-section" aria-labelledby="customer-detail-stats-title">
 			<div class="section-header">
 				<h3 id="customer-detail-stats-title"><i data-lucide="bar-chart-3" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Key figures')); ?></h3>
 				<p><?php p($l->t('Customer status at a glance')); ?></p>
 			</div>
 			<div class="section-content">
-			<div class="stats-container">
-				<!-- Primary Statistics Row -->
-				<div class="stats-row primary">
+				<div class="stats-container">
 					<div class="stat-card">
 						<div class="stat-icon">
-							<i data-lucide="folder" class="lucide-icon white"></i>
+							<i class="icon-folder-custom icon-large" aria-hidden="true"></i>
 						</div>
 						<div class="stat-content">
-							<div class="stat-number" id="total-projects">-</div>
-							<div class="stat-label"><?php p($l->t('Total Projects')); ?></div>
+							<div class="stat-number"><?php p($keyTotalProjects); ?></div>
+							<div class="stat-label"><?php p($l->t('Total projects')); ?></div>
+							<div class="stat-sub"><?php p($l->t('%s active', [(string)$keyActiveProjects])); ?></div>
 						</div>
 					</div>
 					<div class="stat-card">
 						<div class="stat-icon">
-							<i data-lucide="play" class="lucide-icon white"></i>
+							<i class="icon-time-custom icon-large" aria-hidden="true"></i>
 						</div>
 						<div class="stat-content">
-							<div class="stat-number" id="active-projects">-</div>
-							<div class="stat-label"><?php p($l->t('Active Projects')); ?></div>
+							<div class="stat-number"><?php p($fmt ? $fmt->hours($keyTotalHours) : number_format($keyTotalHours, 1) . 'h'); ?></div>
+							<div class="stat-label"><?php p($l->t('Total hours')); ?></div>
 						</div>
 					</div>
 					<div class="stat-card">
 						<div class="stat-icon">
-							<i data-lucide="check-circle" class="lucide-icon white"></i>
+							<i class="icon-money-custom icon-large" aria-hidden="true"></i>
 						</div>
 						<div class="stat-content">
-							<div class="stat-number" id="completed-projects">-</div>
-							<div class="stat-label"><?php p($l->t('Completed Projects')); ?></div>
+							<div class="stat-number"><?php p($fmt ? $fmt->currency($keyBudgetUsed) : $currencyCode . ' ' . number_format($keyBudgetUsed, 2)); ?></div>
+							<div class="stat-label"><?php p($l->t('Budget used')); ?></div>
+							<?php if ($keyTotalBudget > 0): ?>
+								<div class="stat-sub">
+									<?php p($l->t('%s total budget', [$fmt ? $fmt->currency($keyTotalBudget) : $currencyCode . ' ' . number_format($keyTotalBudget, 2)])); ?>
+								</div>
+							<?php endif; ?>
 						</div>
 					</div>
 					<div class="stat-card">
 						<div class="stat-icon">
-							<i data-lucide="clock" class="lucide-icon white"></i>
+							<i class="icon-calendar-custom icon-large" aria-hidden="true"></i>
 						</div>
 						<div class="stat-content">
-							<div class="stat-number" id="total-hours">-</div>
-							<div class="stat-label"><?php p($l->t('Total Hours')); ?></div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Financial Statistics Row -->
-				<div class="stats-row financial">
-					<div class="stat-card">
-						<div class="stat-icon">
-							<i data-lucide="euro" class="lucide-icon white"></i>
-						</div>
-						<div class="stat-content">
-							<div class="stat-number" id="total-budget">-</div>
-							<div class="stat-label"><?php p($l->t('Total Budget')); ?></div>
-						</div>
-					</div>
-					<div class="stat-card">
-						<div class="stat-icon">
-							<i data-lucide="trending-up" class="lucide-icon white"></i>
-						</div>
-						<div class="stat-content">
-							<div class="stat-number" id="budget-earned">-</div>
-							<div class="stat-label"><?php p($l->t('Budget Earned')); ?></div>
-						</div>
-					</div>
-					<div class="stat-card">
-						<div class="stat-icon">
-							<i data-lucide="wallet" class="lucide-icon white"></i>
-						</div>
-						<div class="stat-content">
-							<div class="stat-number" id="budget-remaining">-</div>
-							<div class="stat-label"><?php p($l->t('Budget Remaining')); ?></div>
-						</div>
-					</div>
-					<div class="stat-card">
-						<div class="stat-icon">
-							<i data-lucide="percent" class="lucide-icon white"></i>
-						</div>
-						<div class="stat-content">
-							<div class="stat-number" id="budget-utilization">-</div>
-							<div class="stat-label"><?php p($l->t('Budget Utilization')); ?></div>
+							<div class="stat-number"><?php p($keyEntryCount); ?></div>
+							<div class="stat-label"><?php p($l->t('Time entries')); ?></div>
 						</div>
 					</div>
 				</div>
-
-				<!-- Performance Statistics Row -->
-				<div class="stats-row performance">
-					<div class="stat-card">
-						<div class="stat-icon">
-							<i data-lucide="bar-chart-3" class="lucide-icon white"></i>
-						</div>
-						<div class="stat-content">
-							<div class="stat-number" id="average-hours-per-project">-</div>
-							<div class="stat-label"><?php p($l->t('Avg Hours/Project')); ?></div>
-						</div>
-					</div>
-					<div class="stat-card">
-						<div class="stat-icon">
-							<i data-lucide="dollar-sign" class="lucide-icon white"></i>
-						</div>
-						<div class="stat-content">
-							<div class="stat-number" id="average-revenue-per-project">-</div>
-							<div class="stat-label"><?php p($l->t('Avg Revenue/Project')); ?></div>
-						</div>
-					</div>
-					<div class="stat-card">
-						<div class="stat-icon">
-							<i data-lucide="target" class="lucide-icon white"></i>
-						</div>
-						<div class="stat-content">
-							<div class="stat-number" id="project-completion-rate">-</div>
-							<div class="stat-label"><?php p($l->t('Completion Rate')); ?></div>
-						</div>
-					</div>
-					<div class="stat-card">
-						<div class="stat-icon">
-							<i data-lucide="activity" class="lucide-icon white"></i>
-						</div>
-						<div class="stat-content">
-							<div class="stat-number" id="total-time-entries">-</div>
-							<div class="stat-label"><?php p($l->t('Time Entries')); ?></div>
-						</div>
-					</div>
-				</div>
-			</div>
 			</div>
 		</section>
 
@@ -238,16 +162,16 @@ include __DIR__ . '/common/page-start.php';
 			<section class="section yearly-stats-section pc-section" aria-labelledby="pc-customer-yearly-heading">
 				<div class="section-header">
 					<h3 id="pc-customer-yearly-heading"><i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Year by year')); ?></h3>
-					<p><?php p($l->t('Track hours and costs across all projects for this customer')); ?></p>
+					<p><?php p($l->t('Hours and costs grouped by calendar year.')); ?></p>
 				</div>
 				<div class="section-content">
 					<div class="yearly-stats-container">
 						<?php
-						// Calculate totals for progress bars
-						$totalHours = array_sum(array_column($yearlyStats, 'total_hours'));
-						$totalCost = array_sum(array_column($yearlyStats, 'total_cost'));
+						// Local totals only — do not shadow page-level key-figure hours.
+						$yearlyHoursSum = array_sum(array_column($yearlyStats, 'total_hours'));
+						$yearlyCostSum = array_sum(array_column($yearlyStats, 'total_cost'));
 						?>
-						<?php foreach ($yearlyStats as $index => $yearData): ?>
+						<?php foreach ($yearlyStats as $yearData): ?>
 							<div class="yearly-stat-card">
 								<div class="yearly-stat-header">
 									<h4><?php p($yearData['year']); ?></h4>
@@ -258,40 +182,39 @@ include __DIR__ . '/common/page-start.php';
 								<div class="yearly-stat-content">
 									<div class="yearly-stat-item">
 										<div class="stat-icon">
-											<i class="icon-time-custom"></i>
+											<i class="icon-time-custom" aria-hidden="true"></i>
 										</div>
 										<div class="stat-details">
 											<div class="stat-value"><?php p(number_format($yearData['total_hours'], 1)); ?>h</div>
-											<div class="stat-label"><?php p($l->t('Total Hours')); ?></div>
+											<div class="stat-label"><?php p($l->t('Total hours')); ?></div>
 										</div>
 									</div>
 									<div class="yearly-stat-item">
 										<div class="stat-icon">
-											<i class="icon-money-custom"></i>
+											<i class="icon-money-custom" aria-hidden="true"></i>
 										</div>
 										<div class="stat-details">
 											<div class="stat-value"><?php p($fmt ? $fmt->currency((float)$yearData['total_cost']) : $currencyCode . ' ' . number_format((float)$yearData['total_cost'], 2)); ?></div>
-											<div class="stat-label"><?php p($l->t('Total Cost')); ?></div>
+											<div class="stat-label"><?php p($l->t('Total cost')); ?></div>
 										</div>
 									</div>
 								</div>
 
-								<!-- Progress indicators -->
 								<?php
-								$hoursSharePct = $totalHours > 0 ? ($yearData['total_hours'] / $totalHours) * 100 : 0;
-								$costSharePct = $totalCost > 0 ? ($yearData['total_cost'] / $totalCost) * 100 : 0;
+								$hoursSharePct = $yearlyHoursSum > 0 ? ($yearData['total_hours'] / $yearlyHoursSum) * 100 : 0;
+								$costSharePct = $yearlyCostSum > 0 ? ($yearData['total_cost'] / $yearlyCostSum) * 100 : 0;
 								?>
 								<div class="yearly-progress">
 									<div class="yearly-progress-item">
-										<div class="yearly-progress-label"><?php p($l->t('Hours Share')); ?></div>
-										<div class="yearly-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php p(round($hoursSharePct, 1)); ?>" aria-label="<?php p($l->t('Hours Share')); ?>">
+										<div class="yearly-progress-label"><?php p($l->t('Hours share')); ?></div>
+										<div class="yearly-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php p(round($hoursSharePct, 1)); ?>" aria-label="<?php p($l->t('Hours share')); ?>">
 											<div class="yearly-progress-fill" style="width: <?php p($hoursSharePct); ?>%"></div>
 										</div>
 										<div class="yearly-progress-percentage"><?php p(round($hoursSharePct, 1)); ?>%</div>
 									</div>
 									<div class="yearly-progress-item">
-										<div class="yearly-progress-label"><?php p($l->t('Cost Share')); ?></div>
-										<div class="yearly-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php p(round($costSharePct, 1)); ?>" aria-label="<?php p($l->t('Cost Share')); ?>">
+										<div class="yearly-progress-label"><?php p($l->t('Cost share')); ?></div>
+										<div class="yearly-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?php p(round($costSharePct, 1)); ?>" aria-label="<?php p($l->t('Cost share')); ?>">
 											<div class="yearly-progress-fill" style="width: <?php p($costSharePct); ?>%"></div>
 										</div>
 										<div class="yearly-progress-percentage"><?php p(round($costSharePct, 1)); ?>%</div>
@@ -435,9 +358,10 @@ include __DIR__ . '/common/page-start.php';
 			</div>
 
 			<?php
-			$customerSettlement = $_['customerSettlement'] ?? null;
-			$settlementInfoByProject = $_['settlementInfoByProject'] ?? [];
+			$customerSettlement = is_array($_['customerSettlement'] ?? null) ? $_['customerSettlement'] : null;
+			$settlementInfoByProject = is_array($_['settlementInfoByProject'] ?? null) ? $_['settlementInfoByProject'] : [];
 			?>
+			<?php if ($customerSettlement !== null): ?>
 			<!-- Invoicing overview (derived from project counters — never hand-edited) -->
 			<section class="section pc-section pc-invoicing-section" aria-labelledby="customer-invoicing-title">
 				<div class="section-header">
@@ -448,40 +372,39 @@ include __DIR__ . '/common/page-start.php';
 					<p><?php p($l->t('How much work for this customer is still open or waiting to be paid.')); ?></p>
 				</div>
 				<div class="section-content">
-					<?php if ($customerSettlement): ?>
-						<div class="pc-invoicing-summary">
-							<div class="pc-invoicing-summary__chip">
-								<?php
-								$chipKind = 'posture';
-								$chipValue = (string)($customerSettlement['posture'] ?? 'n_a');
-								include __DIR__ . '/parts/settlement-chip.php';
-								?>
-							</div>
+					<div class="pc-invoicing-summary">
+						<div class="pc-invoicing-summary__chip">
 							<?php
-							$progress = is_array($customerSettlement['progress'] ?? null) ? $customerSettlement['progress'] : [];
-							$progressVariant = 'full';
-							$progressId = 'pc-customer-stl-progress';
-							include __DIR__ . '/parts/settlement-progress.php';
+							$chipKind = 'posture';
+							$chipValue = (string)($customerSettlement['posture'] ?? 'n_a');
+							include __DIR__ . '/parts/settlement-chip.php';
 							?>
-							<?php if ((float)($customerSettlement['outstanding_hours'] ?? 0) > 0): ?>
-								<p class="pc-invoicing-summary__outstanding">
-									<?php p($l->t('Not yet paid: %1$s h · %2$s', [
-										number_format((float)$customerSettlement['outstanding_hours'], 2),
-										$fmt ? $fmt->currency((float)$customerSettlement['outstanding_amount']) : $currencyCode . ' ' . number_format((float)$customerSettlement['outstanding_amount'], 2),
-									])); ?>
-								</p>
-							<?php else: ?>
-								<p class="pc-invoicing-summary__empty">
-									<?php p($l->t('Nothing outstanding — all chargeable hours on this customer’s projects are paid, or there are no chargeable hours yet.')); ?>
-								</p>
-							<?php endif; ?>
 						</div>
-					<?php endif; ?>
+						<?php
+						$progress = is_array($customerSettlement['progress'] ?? null) ? $customerSettlement['progress'] : [];
+						$progressVariant = 'full';
+						$progressId = 'pc-customer-stl-progress';
+						include __DIR__ . '/parts/settlement-progress.php';
+						?>
+						<?php if ((float)($customerSettlement['outstanding_hours'] ?? 0) > 0): ?>
+							<p class="pc-invoicing-summary__outstanding">
+								<?php p($l->t('Not yet paid: %1$s h · %2$s', [
+									number_format((float)$customerSettlement['outstanding_hours'], 2),
+									$fmt ? $fmt->currency((float)($customerSettlement['outstanding_amount'] ?? 0)) : $currencyCode . ' ' . number_format((float)($customerSettlement['outstanding_amount'] ?? 0), 2),
+								])); ?>
+							</p>
+						<?php else: ?>
+							<p class="pc-invoicing-summary__empty">
+								<?php p($l->t('Nothing outstanding — all chargeable hours on this customer’s projects are paid, or there are no chargeable hours yet.')); ?>
+							</p>
+						<?php endif; ?>
+					</div>
 				</div>
 			</section>
+			<?php endif; ?>
 
 			<!-- Associated Projects -->
-			<div class="section projects-section pc-cd-span-full" aria-labelledby="pc-customer-projects-heading">
+			<div class="section projects-section pc-section pc-list-panel" aria-labelledby="pc-customer-projects-heading">
 				<div class="section-header">
 					<h3 id="pc-customer-projects-heading"><i data-lucide="folder" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Associated Projects')); ?></h3>
 					<p><?php p($l->t('Projects for this customer')); ?></p>
@@ -489,26 +412,27 @@ include __DIR__ . '/common/page-start.php';
 					<div class="section-header-actions">
 						<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>"
 							class="button primary">
-							<i data-lucide="plus" class="lucide-icon" aria-hidden="true"></i>
+							<span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
 							<?php p($l->t('Create New Project')); ?>
 						</a>
 					</div>
 					<?php endif; ?>
 				</div>
-				<div class="section-content">
-					<?php if (empty($_['projects'])): ?>
-						<div class="emptycontent" role="status">
-							<span class="emptycontent__icon" aria-hidden="true"><i data-lucide="folder" class="lucide-icon"></i></span>
-							<h2><?php p($l->t('No projects found')); ?></h2>
-							<p><?php p($l->t('This customer doesn\'t have any projects yet.')); ?></p>
-							<?php if ($canCreateProject): ?>
-							<a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()])); ?>" class="button primary">
-								<i data-lucide="plus" class="lucide-icon"></i>
-								<?php p($l->t('Create First Project')); ?>
-							</a>
-							<?php endif; ?>
-						</div>
-					<?php else: ?>
+				<?php if (empty($_['projects'])): ?>
+					<div class="section-content">
+						<?php
+						$iconLucide = 'folder';
+						$title = $l->t('No projects found');
+						$description = $l->t('This customer doesn\'t have any projects yet.');
+						if ($canCreateProject) {
+							$ctaHref = $urlGenerator->linkToRoute('projectcheck.project.create', ['customer_id' => $customer->getId()]);
+							$ctaLabel = $l->t('Create First Project');
+						}
+						include __DIR__ . '/parts/pc-empty-state.php';
+						unset($iconLucide, $title, $description, $ctaHref, $ctaLabel, $hint, $ctaTag, $ctaFor, $ctaIconLucide);
+						?>
+					</div>
+				<?php else: ?>
 						<?php
 						$colName = $l->t('Name');
 						$colType = $l->t('Type');
@@ -708,62 +632,8 @@ include __DIR__ . '/common/page-start.php';
 								</tbody>
 							</table>
 						</div>
-					<?php endif; ?>
-				</div>
+				<?php endif; ?>
 			</div>
 		</div>
 
 <?php include __DIR__ . '/common/page-end.php'; ?>
-
-<script nonce="<?php p($_['cspNonce']) ?>">
-	// Load customer statistics only (projects are now rendered server-side)
-	document.addEventListener('DOMContentLoaded', function() {
-		// Set widths for progress bars using data attributes
-		document.querySelectorAll('[data-width]').forEach(function(el) {
-			el.style.width = el.getAttribute('data-width') + '%';
-		});
-		
-		loadCustomerStats();
-	});
-
-	function loadCustomerStats() {
-		fetch(`/index.php/apps/projectcheck/api/customers/stats?customer_id=${window.projectControlData.customerId}`, {
-				headers: {
-					'X-Requested-With': 'XMLHttpRequest',
-					'requesttoken': window.projectControlData.requestToken
-				}
-			})
-			.then(response => response.json())
-			.then(data => {
-				if (data.success && data.stats) {
-					displayStats(data.stats);
-				}
-			})
-			.catch(error => {
-				console.error('Error loading stats:', error);
-			});
-	}
-
-	function displayStats(stats) {
-		// Primary statistics
-		document.getElementById('total-projects').textContent = stats.total_projects || 0;
-		document.getElementById('active-projects').textContent = stats.active_projects || 0;
-		document.getElementById('completed-projects').textContent = stats.completed_projects || 0;
-		document.getElementById('total-hours').textContent = parseFloat(stats.used_hours || 0).toFixed(1) + 'h';
-
-		// Financial statistics
-		const code = (window.ProjectCheckConfig && typeof window.ProjectCheckConfig.currency === 'string' && /^[A-Z]{3}$/i.test(window.ProjectCheckConfig.currency))
-			? window.ProjectCheckConfig.currency.toUpperCase()
-			: 'EUR';
-		document.getElementById('total-budget').textContent = window.ProjectCheckFormat ? window.ProjectCheckFormat.currencyFmt(stats.total_budget || 0) : (code + ' ' + parseFloat(stats.total_budget || 0).toFixed(2));
-		document.getElementById('budget-earned').textContent = window.ProjectCheckFormat ? window.ProjectCheckFormat.currencyFmt(stats.budget_earned || 0) : (code + ' ' + parseFloat(stats.budget_earned || 0).toFixed(2));
-		document.getElementById('budget-remaining').textContent = window.ProjectCheckFormat ? window.ProjectCheckFormat.currencyFmt(stats.budget_remaining || 0) : (code + ' ' + parseFloat(stats.budget_remaining || 0).toFixed(2));
-		document.getElementById('budget-utilization').textContent = parseFloat(stats.budget_utilization_percentage || 0).toFixed(1) + '%';
-
-		// Performance statistics
-		document.getElementById('average-hours-per-project').textContent = parseFloat(stats.average_hours_per_project || 0).toFixed(1) + 'h';
-		document.getElementById('average-revenue-per-project').textContent = window.ProjectCheckFormat ? window.ProjectCheckFormat.currencyFmt(stats.average_revenue_per_project || 0) : (code + ' ' + parseFloat(stats.average_revenue_per_project || 0).toFixed(2));
-		document.getElementById('project-completion-rate').textContent = parseFloat(stats.project_completion_rate || 0).toFixed(1) + '%';
-		document.getElementById('total-time-entries').textContent = stats.total_time_entries || 0;
-	}
-</script>

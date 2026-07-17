@@ -85,11 +85,6 @@ ob_start(); ?>
                     <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
                     <?php p($l->t('View time entries')); ?>
                 </a>
-                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.employee.index')); ?>"
-                    class="button secondary">
-                    <span data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></span>
-                    <?php p($l->t('Back to Employees')); ?>
-                </a>
 <?php
 $pageHeaderActionsHtml = ob_get_clean();
 $pageHeaderActionsLabel = $l->t('Page actions');
@@ -288,27 +283,27 @@ include __DIR__ . '/common/page-start.php';
 								if ($isFormer || !$emp) {
 									p($l->t('Not available (account removed)'));
 								} else {
-                                    $lastLogin = $emp->getLastLogin();
-                                    if ($lastLogin && $lastLogin > 0) {
-                                        if (is_int($lastLogin) || is_numeric($lastLogin)) {
-                                            echo date('d.m.Y H:i', (int)$lastLogin);
-                                        } elseif (is_object($lastLogin) && method_exists($lastLogin, 'format')) {
-                                            echo $lastLogin->format('d.m.Y H:i');
-                                        } else {
-                                            p($l->t('Unknown'));
-                                        }
-                                    } else {
-                                        p($l->t('Never'));
-                                    }
+									$lastLogin = $emp->getLastLogin();
+									if ($lastLogin && $lastLogin > 0) {
+										if (is_int($lastLogin) || is_numeric($lastLogin)) {
+											p(date('d.m.Y H:i', (int)$lastLogin));
+										} elseif (is_object($lastLogin) && method_exists($lastLogin, 'format')) {
+											p($lastLogin->format('d.m.Y H:i'));
+										} else {
+											p($l->t('Unknown'));
+										}
+									} else {
+										p($l->t('Never'));
+									}
 								}
-                                    ?></span>
+							?></span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <?php if ($canViewEmployeeRates): ?>
-            <section class="section pc-section" id="employee-rate-history" aria-labelledby="employee-rates-heading">
+            <section class="section pc-section pc-list-panel" id="employee-rate-history" aria-labelledby="employee-rates-heading">
                 <div class="section-header">
                     <h3 id="employee-rates-heading">
                         <i data-lucide="banknote" class="lucide-icon primary" aria-hidden="true"></i>
@@ -379,7 +374,7 @@ include __DIR__ . '/common/page-start.php';
             </section>
             <?php endif; ?>
 
-<div class="section projects-section pc-section pc-ed-span-full" id="employee-project-assignments" aria-labelledby="pc-emp-assign-heading">
+<div class="section projects-section pc-section" id="employee-project-assignments" aria-labelledby="pc-emp-assign-heading">
                 <div class="section-header employee-assignments-header">
                     <h3 id="pc-emp-assign-heading"><i data-lucide="users" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project assignments')); ?></h3>
                     <p><?php p($l->t('Projects this person can log time on.')); ?></p>

@@ -527,6 +527,47 @@
 	}
 }
 
+/* Scope / visibility banners (shared — do not require dashboard.css) */
+.pc-scope-banner {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+	align-items: start;
+	padding: 1rem 1.25rem;
+	border-radius: var(--pc-radius-md, 12px);
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 24%, var(--color-border));
+	background: color-mix(in srgb, var(--color-primary-element) 8%, var(--color-main-background));
+}
+
+@media (min-width: 768px) {
+	.pc-scope-banner {
+		grid-template-columns: auto 1fr;
+	}
+}
+
+.pc-scope-banner__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--color-primary-element) 14%, transparent);
+}
+
+.pc-scope-banner__content h3 {
+	margin: 0 0 0.25rem;
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--color-main-text);
+}
+
+.pc-scope-banner__content p {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	line-height: 1.5;
+}
+
 /* Focus (WCAG 2.1 AA) */
 .pc-app--project-detail a:focus-visible,
 .pc-app--customer-detail a:focus-visible,
