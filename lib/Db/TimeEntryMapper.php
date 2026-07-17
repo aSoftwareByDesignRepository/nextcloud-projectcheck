@@ -279,11 +279,16 @@ class TimeEntryMapper extends QBMapper
 
 		$result = $qb->executeQuery();
 		while ($row = $result->fetch()) {
+			// Normalize unknown/legacy status labels into open. Accumulate so two
+			// raw groups that normalize to the same status cannot overwrite each other.
 			$status = BillingStatus::normalize($row['billing_status'] ?? null);
+			$hours = Money::normalize($row['sum_hours'] ?? 0, Money::HOUR_SCALE);
+			$amount = Money::normalize($row['sum_amount'] ?? 0, Money::MONEY_SCALE);
+			$count = (int) ($row['entry_count'] ?? 0);
 			$buckets[$status] = [
-				'hours' => Money::asFloat(Money::normalize($row['sum_hours'] ?? 0, Money::HOUR_SCALE)),
-				'amount' => Money::asFloat(Money::normalize($row['sum_amount'] ?? 0, Money::MONEY_SCALE)),
-				'count' => (int) ($row['entry_count'] ?? 0),
+				'hours' => Money::asFloat(Money::add($buckets[$status]['hours'], $hours, Money::HOUR_SCALE), Money::HOUR_SCALE),
+				'amount' => Money::asFloat(Money::add($buckets[$status]['amount'], $amount, Money::MONEY_SCALE)),
+				'count' => (int) $buckets[$status]['count'] + $count,
 			];
 		}
 		$result->closeCursor();

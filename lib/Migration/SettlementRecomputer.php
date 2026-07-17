@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Migration;
 
 use OCA\ProjectCheck\Util\BillingStatus;
+use OCA\ProjectCheck\Util\Money;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
@@ -78,10 +79,12 @@ final class SettlementRecomputer
 
 			$result = $qb->executeQuery();
 			while ($row = $result->fetch()) {
+				// Accumulate: unknown status labels normalize to open and must not
+				// overwrite a real open aggregate from the same project.
 				$status = BillingStatus::normalize($row['billing_status'] ?? null);
 				$buckets[$status] = [
-					'hours' => (string) ($row['sum_hours'] ?? '0'),
-					'amount' => (string) ($row['sum_amount'] ?? '0'),
+					'hours' => Money::add($buckets[$status]['hours'], $row['sum_hours'] ?? '0', Money::HOUR_SCALE),
+					'amount' => Money::add($buckets[$status]['amount'], $row['sum_amount'] ?? '0', Money::MONEY_SCALE),
 				];
 			}
 			$result->closeCursor();

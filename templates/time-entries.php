@@ -226,8 +226,10 @@ include __DIR__ . '/common/page-start.php';
                 'paid' => ['label' => $l->t('Paid'), 'icon' => 'circle-check'],
                 'excluded' => ['label' => $l->t('Not billable'), 'icon' => 'circle-slash'],
             ];
-            $stripOutstandingHours = (float)($billingBuckets['open']['hours'] ?? 0) + (float)($billingBuckets['invoiced']['hours'] ?? 0);
-            $stripOutstandingAmount = (float)($billingBuckets['open']['amount'] ?? 0) + (float)($billingBuckets['invoiced']['amount'] ?? 0);
+            // outstanding = open + invoiced (spec D9); computed in BillingService.
+            $stripOutstanding = is_array($billingBuckets['outstanding'] ?? null)
+                ? $billingBuckets['outstanding']
+                : ['hours' => 0.0, 'amount' => 0.0, 'count' => 0];
             $stripFmt = $_['fmt'] ?? null;
             ?>
             <?php if (!empty($billingBuckets)): ?>
@@ -253,8 +255,8 @@ include __DIR__ . '/common/page-start.php';
                             <span data-lucide="wallet" class="lucide-icon" aria-hidden="true"></span>
                             <span class="pc-settle-strip__label"><?php p($l->t('Not yet paid')); ?></span>
                         </span>
-                        <span class="pc-settle-strip__hours"><?php p($stripFmt ? $stripFmt->hours($stripOutstandingHours) : number_format($stripOutstandingHours, 2) . ' h'); ?></span>
-                        <span class="pc-settle-strip__amount"><?php p($stripFmt ? $stripFmt->currency($stripOutstandingAmount) : number_format($stripOutstandingAmount, 2)); ?></span>
+                        <span class="pc-settle-strip__hours"><?php p($stripFmt ? $stripFmt->hours((float)($stripOutstanding['hours'] ?? 0)) : number_format((float)($stripOutstanding['hours'] ?? 0), 2) . ' h'); ?></span>
+                        <span class="pc-settle-strip__amount"><?php p($stripFmt ? $stripFmt->currency((float)($stripOutstanding['amount'] ?? 0)) : number_format((float)($stripOutstanding['amount'] ?? 0), 2)); ?></span>
                     </li>
                 </ul>
             </div>

@@ -254,14 +254,44 @@ class TimeEntryBillingService
 
 	/**
 	 * Per-billing-status sums for the summary strip, already scope-checked by
-	 * the caller (controller passes the same filters as the visible list).
+	 * the caller (controller passes the same filters as the visible list,
+	 * except billing_status itself — so all four buckets stay comparable while
+	 * the user flips the settlement filter).
+	 *
+	 * Also returns a derived `outstanding` bucket (open + invoiced, spec D9)
+	 * so templates never re-add floats themselves.
 	 *
 	 * @param array<string,mixed> $filters
 	 * @return array<string, array{hours: float, amount: float, count: int}>
 	 */
 	public function getBillingBuckets(array $filters): array
 	{
-		return $this->timeEntryMapper->sumBillingBuckets($filters);
+		$buckets = $this->timeEntryMapper->sumBillingBuckets($filters);
+		$buckets['outstanding'] = self::outstandingFromBuckets($buckets);
+		return $buckets;
+	}
+
+	/**
+	 * Spec D9: not-yet-paid = open + invoiced (hours, amount, and entry count).
+	 *
+	 * @param array<string, array{hours?: float|int|string, amount?: float|int|string, count?: int}> $buckets
+	 * @return array{hours: float, amount: float, count: int}
+	 */
+	public static function outstandingFromBuckets(array $buckets): array
+	{
+		$open = $buckets[BillingStatus::OPEN] ?? [];
+		$invoiced = $buckets[BillingStatus::INVOICED] ?? [];
+
+		return [
+			'hours' => Money::asFloat(
+				Money::add($open['hours'] ?? 0, $invoiced['hours'] ?? 0, Money::HOUR_SCALE),
+				Money::HOUR_SCALE
+			),
+			'amount' => Money::asFloat(
+				Money::add($open['amount'] ?? 0, $invoiced['amount'] ?? 0, Money::MONEY_SCALE)
+			),
+			'count' => (int) ($open['count'] ?? 0) + (int) ($invoiced['count'] ?? 0),
+		];
 	}
 
 	// ---------------------------------------------------------------
