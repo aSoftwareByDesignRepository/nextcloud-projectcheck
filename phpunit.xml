@@ -15,6 +15,7 @@
             <directory suffix="Test.php">tests/Unit/Migration</directory>
             <directory suffix="Test.php">tests/Unit/Service</directory>
             <directory suffix="Test.php">tests/Unit/Repair</directory>
+            <directory suffix="Test.php">tests/Unit/Support</directory>
             <file>tests/Unit/Controller/TimeEntryControllerTest.php</file>
             <file>tests/Unit/Controller/ProjectFileControllerTest.php</file>
         </testsuite>

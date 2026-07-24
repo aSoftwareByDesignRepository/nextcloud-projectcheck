@@ -376,3 +376,12 @@ try {
 		</div>
 		<p class="projectcheck-form-status" id="<?php p($statusId); ?>" role="status" aria-live="polite" tabindex="-1" hidden></p>
 	</form>
+	<?php
+	// Support & Us — informational CTAs only; never gates AGPL use.
+	$supportUsLanguageCode = method_exists($l, 'getLanguageCode') ? (string)$l->getLanguageCode() : 'en';
+	$supportUsCssPrefix = 'projectcheck';
+	$supportUsBtnPrimaryClass = 'button primary';
+	$supportUsBtnSecondaryClass = 'button';
+	$supportUsLinks = new \OCA\ProjectCheck\Support\SupportUsLinks('ProjectCheck', false, null);
+	include __DIR__ . '/support-us-section.php';
+	?>
