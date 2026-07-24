@@ -72,6 +72,9 @@ try {
 				<li>
 					<a class="projectcheck-section-nav__link" href="#pc-defaults-heading"><?php p($l->t('App defaults')); ?></a>
 				</li>
+				<li>
+					<a class="projectcheck-section-nav__link" href="#projectcheck-support-us"><?php p($l->t('Support & us')); ?></a>
+				</li>
 			</ol>
 		</nav>
 		<?php } ?>
