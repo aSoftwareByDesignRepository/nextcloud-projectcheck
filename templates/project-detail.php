@@ -444,6 +444,12 @@ include __DIR__ . '/common/page-start.php';
                             <span data-lucide="list" class="lucide-icon" aria-hidden="true"></span>
                             <?php p($l->t('Review open hours')); ?>
                         </a>
+                        <?php if (!empty($_['invoicingCheckCreateUrl'])): ?>
+                            <a class="button secondary" href="<?php p((string)$_['invoicingCheckCreateUrl']); ?>">
+                                <span data-lucide="receipt" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($l->t('Create invoice (InvoicingCheck)')); ?>
+                            </a>
+                        <?php endif; ?>
                         <?php if ($stlCanSettle): ?>
                             <button type="button" class="button primary pc-project-settle-btn" data-settle-action="invoice_open"
                                 aria-haspopup="dialog" aria-controls="projectSettleModal">

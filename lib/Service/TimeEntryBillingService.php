@@ -138,7 +138,7 @@ class TimeEntryBillingService
 	 * @return array{applied: int, failed: list<array{id: int, reason: string}>}
 	 * @throws ValidationException on invalid target / oversize selection
 	 */
-	public function bulkChangeStatusByIds(array $entryIds, string $target, string $actorUid): array
+	public function bulkChangeStatusByIds(array $entryIds, string $target, string $actorUid, bool $skipSettleAcl = false): array
 	{
 		if (!BillingStatus::isValid($target)) {
 			throw new ValidationException([], $this->l->t('Invalid settlement status'));
@@ -160,7 +160,7 @@ class TimeEntryBillingService
 		$failed = [];
 
 		foreach (array_chunk($entryIds, self::CHUNK_SIZE) as $chunk) {
-			$result = $this->applyChunk($chunk, $target, $actorUid);
+			$result = $this->applyChunk($chunk, $target, $actorUid, $skipSettleAcl);
 			$applied += $result['applied'];
 			foreach ($result['failed'] as $failure) {
 				$failed[] = $failure;
@@ -305,7 +305,7 @@ class TimeEntryBillingService
 	 * @param list<int> $chunk ascending entry ids
 	 * @return array{applied: int, failed: list<array{id: int, reason: string}>}
 	 */
-	private function applyChunk(array $chunk, string $target, string $actorUid): array
+	private function applyChunk(array $chunk, string $target, string $actorUid, bool $skipSettleAcl = false): array
 	{
 		$applied = 0;
 		$failed = [];
@@ -327,7 +327,7 @@ class TimeEntryBillingService
 					$failed[] = ['id' => $entryId, 'reason' => 'not_found'];
 					continue;
 				}
-				if (!$this->actorMaySettle($actorUid, (int) $entry->getProjectId())) {
+				if (!$skipSettleAcl && !$this->actorMaySettle($actorUid, (int) $entry->getProjectId())) {
 					$failed[] = ['id' => $entryId, 'reason' => 'forbidden'];
 					continue;
 				}

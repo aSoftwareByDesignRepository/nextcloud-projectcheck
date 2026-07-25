@@ -662,6 +662,18 @@ class ProjectController extends Controller
 			'project_id' => $id,
 			'billing_status' => 'open',
 		]);
+		$invoicingCheckCreateUrl = null;
+		try {
+			$appManager = \OCP\Server::get(\OCP\App\IAppManager::class);
+			if ($appManager->isEnabledForUser('invoicecheck')) {
+				$invoicingCheckCreateUrl = $this->urlGenerator->linkToRoute('invoicecheck.page.createForm', [
+					'customerId' => (int) $project->getCustomerId(),
+					'projectId' => $id,
+				]);
+			}
+		} catch (\Throwable) {
+			$invoicingCheckCreateUrl = null;
+		}
 		$response = new TemplateResponse($this->appName, 'project-detail', [
 			'project' => $project,
 			'pricingModeLabel' => $pricingModeLabel,
@@ -703,6 +715,7 @@ class ProjectController extends Controller
 			'requesttoken' => $requestToken,
 			'settlementInfo' => $settlementInfo,
 			'settlementReviewUrl' => $settlementReviewUrl,
+			'invoicingCheckCreateUrl' => $invoicingCheckCreateUrl,
 			'settlementPreviewUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.projectPreview', ['id' => $id]),
 			'settlementApplyUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.projectApply', ['id' => $id]),
 			'memberRoleUrlTemplate' => $this->urlGenerator->linkToRoute('projectcheck.project.updateTeamMemberRole', ['id' => $id, 'userId' => '__USER__']),
