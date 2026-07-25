@@ -208,6 +208,12 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\App\IAppManager::class),
 			);
 		});
+		$context->registerService(\OCA\ProjectCheck\Facade\CrmCustomerReadFacade::class, function ($c) {
+			return new \OCA\ProjectCheck\Facade\CrmCustomerReadFacade(
+				$c->query(\OCA\ProjectCheck\Service\CustomerService::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+			);
+		});
 		$context->registerService(\OCA\ProjectCheck\Public\SettlementWriteFacade::class, function ($c) {
 			return new \OCA\ProjectCheck\Public\SettlementWriteFacade(
 				$c->query(\OCA\ProjectCheck\Service\TimeEntryBillingService::class),
