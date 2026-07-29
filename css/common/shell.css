@@ -10,22 +10,37 @@
 	height: 1px;
 	overflow: hidden;
 	z-index: 10000;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch-min, 44px);
 	padding: var(--pc-space-3) var(--pc-space-4);
-	background: var(--color-main-background);
-	color: var(--color-main-text);
+	background: var(--color-primary-element);
+	color: var(--color-primary-element-text);
 	border: 2px solid var(--color-primary-element);
 	border-radius: var(--pc-radius-sm);
 	font-weight: 600;
 	text-decoration: none;
+	box-sizing: border-box;
 }
 
-.pc-skip-link:focus {
+.pc-skip-link:focus,
+.pc-skip-link:focus-visible {
 	left: var(--pc-space-4);
 	top: var(--pc-space-4);
 	width: auto;
 	height: auto;
 	overflow: visible;
+	outline: 3px solid var(--color-primary-element);
+	outline-offset: 2px;
 	box-shadow: var(--pc-shadow-focus);
+}
+
+/* Second skip target (navigation) sits beside the first when focused */
+.pc-skip-link--nav:focus,
+.pc-skip-link--nav:focus-visible {
+	left: calc(var(--pc-space-4) + 12rem);
 }
 
 .pc-sr-only {
@@ -54,26 +69,39 @@
 	margin-bottom: var(--pc-space-4, 1rem);
 }
 
-/* Mobile base: full-width shell with compact padding */
+/* Default shell: full width of #app-content (DS §2.1) */
 .pc-shell {
-	max-width: 100%;
-	margin: 0 auto;
-	padding: var(--pc-space-3) var(--pc-space-3) var(--pc-space-6);
+	max-width: none;
+	width: 100%;
+	margin: 0;
+	padding: var(--pc-space-3) var(--pc-space-3) var(--pc-space-7);
 	box-sizing: border-box;
+	min-width: 0;
+	overflow-x: clip;
 }
 
 /* ≥768px tablet: slightly wider padding */
 @media (min-width: 768px) {
 	.pc-shell {
-		padding: var(--pc-space-4) var(--pc-space-4) var(--pc-space-6);
+		padding: var(--pc-space-5) var(--pc-space-5) var(--pc-space-7);
 	}
 }
 
-/* ≥1024px desktop: centered content column — matches pre-change desktop layout */
-@media (min-width: 1024px) {
-	.pc-shell {
-		max-width: 1200px;
-	}
+/* Shell width modifiers (opt-in; never clamp the default page root) */
+#app-content.pc-app #app-content-wrapper.pc-shell--wide {
+	max-width: none;
+	margin-inline: 0;
+}
+
+#app-content.pc-app #app-content-wrapper.pc-shell--constrained {
+	max-width: 72rem;
+	margin-inline: auto;
+}
+
+#app-content.pc-app #app-content-wrapper.pc-shell--minimal {
+	max-width: 40rem;
+	margin-inline: auto;
+	padding: var(--pc-space-6) var(--pc-space-5);
 }
 
 .pc-page-header__kicker {
@@ -105,10 +133,62 @@
 	}
 }
 
+.pc-page-header__main {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	align-items: start;
+	gap: var(--pc-space-4);
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.pc-page-header__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	flex-shrink: 0;
+	border-radius: var(--pc-radius-md);
+	background: var(--pc-tint-info);
+	color: var(--color-primary-element);
+	border: 1px solid var(--pc-border);
+}
+
+.pc-page-header__icon .lucide-icon,
+.pc-page-header__icon svg {
+	width: 28px;
+	height: 28px;
+	stroke-width: var(--pc-icon-stroke, 2);
+}
+
 .pc-page-header h1 {
 	margin: 0 0 var(--pc-space-2);
-	font-size: var(--pc-fs-xl);
+	font-size: var(--pc-fs-2xl);
+	font-weight: 600;
 	line-height: var(--pc-line-tight);
+	color: var(--pc-text, var(--color-main-text));
+}
+
+@media (max-width: 767px) {
+	.pc-page-header__main {
+		grid-template-columns: 1fr;
+	}
+
+	.pc-page-header__icon {
+		width: 48px;
+		height: 48px;
+	}
+
+	.pc-page-header__icon .lucide-icon,
+	.pc-page-header__icon svg {
+		width: 24px;
+		height: 24px;
+	}
+
+	.pc-page-header h1 {
+		font-size: var(--pc-fs-xl);
+	}
 }
 
 .pc-page-header__lead {
@@ -161,6 +241,7 @@
 	padding-bottom: var(--pc-space-6, 2rem);
 	min-width: 0;
 	max-width: 100%;
+	overflow-x: clip;
 }
 
 /* Inline page notices (AJAX feedback above list/form content) */
@@ -184,16 +265,16 @@
 
 #app-content .notice-success,
 #app-content-wrapper > .notice-success {
-	background: color-mix(in srgb, var(--color-success) 10%, var(--color-main-background));
+	background: var(--pc-tint-success);
 	border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-border));
-	border-inline-start: 4px solid var(--color-success);
+	border-inline-start: 4px solid var(--color-success-text, var(--color-success));
 }
 
 #app-content .notice-error,
 #app-content-wrapper > .notice-error {
-	background: color-mix(in srgb, var(--color-error) 10%, var(--color-main-background));
+	background: var(--pc-tint-danger);
 	border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-border));
-	border-inline-start: 4px solid var(--color-error);
+	border-inline-start: 4px solid var(--color-error-text, var(--color-error));
 }
 
 #app-content .notice .icon,

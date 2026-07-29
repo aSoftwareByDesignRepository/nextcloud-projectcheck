@@ -8,6 +8,7 @@ use OCA\ProjectCheck\Controller\AppConfigController;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\CustomerService;
+use OCA\ProjectCheck\Service\LicenseService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\AppFramework\Http\JSONResponse;
@@ -64,6 +65,8 @@ class AppConfigControllerTest extends TestCase {
 	private $groupManager;
 	/** @var CSPService|\PHPUnit\Framework\MockObject\MockObject */
 	private $cspService;
+	/** @var LicenseService|\PHPUnit\Framework\MockObject\MockObject */
+	private $licenseService;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -87,6 +90,7 @@ class AppConfigControllerTest extends TestCase {
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->cspService = $this->createMock(CSPService::class);
+		$this->licenseService = $this->createMock(LicenseService::class);
 	}
 
 	private function makeController(): AppConfigController {
@@ -105,7 +109,8 @@ class AppConfigControllerTest extends TestCase {
 			$this->timeEntryService,
 			$this->userManager,
 			$this->groupManager,
-			$this->cspService
+			$this->cspService,
+			$this->licenseService
 		);
 	}
 

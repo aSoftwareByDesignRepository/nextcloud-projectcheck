@@ -142,15 +142,15 @@ body {
   --color-modal-header-background: var(--color-background-dark);
   --color-modal-footer-background: var(--color-background-dark);
 
-  /* Notifications */
+  /* Notifications — tinted fills mixed into main-background */
   --color-notification-success: var(--color-success);
-  --color-notification-success-background: var(--color-background-dark);
+  --color-notification-success-background: var(--pc-tint-success);
   --color-notification-error: var(--color-error);
-  --color-notification-error-background: var(--color-background-dark);
+  --color-notification-error-background: var(--pc-tint-danger);
   --color-notification-warning: var(--color-warning);
-  --color-notification-warning-background: var(--color-background-dark);
+  --color-notification-warning-background: var(--pc-tint-warning);
   --color-notification-info: var(--color-info);
-  --color-notification-info-background: var(--color-background-dark);
+  --color-notification-info-background: var(--pc-tint-info);
 
   /* Buttons */
   --color-button-primary: var(--color-primary-element);
@@ -184,19 +184,19 @@ body {
 .bg-secondary-hover:hover { background-color: var(--color-background-hover); }
 .bg-accent { background-color: var(--color-primary-element); }
 .bg-accent-hover:hover { background-color: var(--color-primary-element-hover); }
-.bg-accent-light { background-color: var(--color-background-dark); }
 .bg-success { background-color: var(--color-success); }
 .bg-success-hover:hover { background-color: var(--color-success); }
-.bg-success-light { background-color: var(--color-background-dark); }
+.bg-success-light { background-color: var(--pc-tint-success, var(--color-success-light)); }
 .bg-warning { background-color: var(--color-warning); }
 .bg-warning-hover:hover { background-color: var(--color-warning); }
-.bg-warning-light { background-color: var(--color-background-dark); }
+.bg-warning-light { background-color: var(--pc-tint-warning, var(--color-warning-light)); }
 .bg-error { background-color: var(--color-error); }
 .bg-error-hover:hover { background-color: var(--color-error); }
-.bg-error-light { background-color: var(--color-background-dark); }
+.bg-error-light { background-color: var(--pc-tint-danger, var(--color-error-light)); }
 .bg-info { background-color: var(--color-info); }
 .bg-info-hover:hover { background-color: var(--color-info); }
-.bg-info-light { background-color: var(--color-background-dark); }
+.bg-info-light { background-color: var(--pc-tint-info, var(--color-info-light)); }
+.bg-accent-light { background-color: var(--pc-tint-info, var(--color-background-dark)); }
 .bg-background { background-color: var(--color-main-background); }
 .bg-background-secondary { background-color: var(--color-background-dark); }
 .bg-background-tertiary { background-color: var(--color-background-darker, var(--color-background-dark)); }

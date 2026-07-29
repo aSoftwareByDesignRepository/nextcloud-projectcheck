@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Listener;
 
+use OCA\ProjectCheck\Db\MobileIdempotencyMapper;
+use OCA\ProjectCheck\Db\MobileSeatMapper;
 use OCA\ProjectCheck\Db\UserAccountSnapshotMapper;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -20,7 +22,8 @@ use OCA\ProjectCheck\Service\ProjectService;
 use Psr\Log\LoggerInterface;
 
 /**
- * On account removal: keep time entries and project member history; snapshot display name; reassign ownership.
+ * On account removal: keep time entries and project member history; snapshot display name; reassign ownership;
+ * free mobile seats so license accounting stays accurate.
  *
  * @template-implements IEventListener<UserDeletedEvent>
  */
@@ -30,6 +33,8 @@ class UserDeletedListener implements IEventListener
 		private readonly ProjectService $projectService,
 		private readonly UserAccountSnapshotMapper $userAccountSnapshotMapper,
 		private readonly AccessControlService $accessControlService,
+		private readonly MobileSeatMapper $mobileSeatMapper,
+		private readonly MobileIdempotencyMapper $mobileIdempotencyMapper,
 		private readonly LoggerInterface $logger,
 	) {
 	}
@@ -93,6 +98,26 @@ class UserDeletedListener implements IEventListener
 			$this->accessControlService->removeUserIdFromAllLists($userId);
 		} catch (\Exception $e) {
 			$this->logger->error('ProjectCheck: access list cleanup on user delete failed', [
+				'userId' => $userId,
+				'exception' => $e,
+			]);
+		}
+
+		try {
+			$this->mobileSeatMapper->deleteByUserId($userId);
+		} catch (\Exception $e) {
+			$this->logger->error('ProjectCheck: mobile seat cleanup on user delete failed', [
+				'app' => 'projectcheck',
+				'userId' => $userId,
+				'exception' => $e,
+			]);
+		}
+
+		try {
+			$this->mobileIdempotencyMapper->deleteByUserId($userId);
+		} catch (\Exception $e) {
+			$this->logger->error('ProjectCheck: mobile idempotency cleanup on user delete failed', [
+				'app' => 'projectcheck',
 				'userId' => $userId,
 				'exception' => $e,
 			]);

@@ -271,7 +271,13 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 				<div class="form-group">
 					<label for="description"><?php p($l->t('Description')); ?></label>
 					<textarea name="description" id="description" class="form-input form-textarea" rows="4" maxlength="1000"
-						placeholder="<?php p($l->t('Describe the work performed...')); ?>"><?php p($isEdit ? $timeEntry->getDescription() : ''); ?></textarea>
+						placeholder="<?php p($l->t('Describe the work performed...')); ?>"><?php
+						if ($isEdit) {
+							p($timeEntry->getDescription());
+						} else {
+							p((string)($_['prefillDescription'] ?? ''));
+						}
+					?></textarea>
 					<div class="char-count">
 						<span id="char-count">0</span>/1000
 					</div>

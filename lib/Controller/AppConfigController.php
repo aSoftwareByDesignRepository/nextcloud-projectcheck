@@ -34,6 +34,8 @@ use OCP\Log\Audit\CriticalActionPerformedEvent;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Util\ErrorPageParams;
+use OCA\ProjectCheck\Service\LicenseService;
+use OCA\ProjectCheck\Service\LicenseUiStrings;
 use OCA\ProjectCheck\Service\SavePolicyUiStrings;
 use OCA\ProjectCheck\Service\OrgPolicySaveAudit;
 use OCA\ProjectCheck\Service\ProjectService;
@@ -61,7 +63,8 @@ class AppConfigController extends Controller
 		private TimeEntryService $timeEntryService,
 		private IUserManager $userManager,
 		private IGroupManager $groupManager,
-		CSPService $cspService
+		CSPService $cspService,
+		private LicenseService $licenseService,
 	) {
 		parent::__construct($appName, $request);
 		$this->setCspService($cspService);
@@ -477,6 +480,20 @@ class AppConfigController extends Controller
 			'total_time_entries' => 0,
 		];
 
+		$settingsIndexUrl = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
+		$removeSeatTemplate = $this->urlGenerator->linkToRoute('projectcheck.license.removeSeat', ['uid' => '__UID__']);
+		$licenseRemoveSeatBase = str_replace('__UID__', '', $removeSeatTemplate);
+
+		// SSR is best-effort: a missing/mid-migration license schema must never fatal the settings page.
+		$licenseStatus = null;
+		$licenseSeatsList = ['data' => [], 'total' => 0, 'limit' => 200, 'offset' => 0];
+		try {
+			$licenseStatus = $this->licenseService->status();
+			$licenseSeatsList = $this->licenseService->listSeats(200, 0);
+		} catch (\Throwable $e) {
+			$this->logger->error('projectcheck license SSR status failed', ['exception' => $e]);
+		}
+
 		return [
 			'l' => $l,
 			'formUiStrings' => SavePolicyUiStrings::forForm($l),
@@ -507,6 +524,17 @@ class AppConfigController extends Controller
 			'orgAppSettingsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex'),
 			'orgSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
 			'orgSearchGroupsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchGroups'),
+			'supportUsLicenseUrl' => $settingsIndexUrl . '#projectcheck-license',
+			'licenseApiUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.show'),
+			'licenseClearUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.remove'),
+			'licenseSeatsUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.seats'),
+			'licenseAssignSeatUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.assignSeat'),
+			'licenseRemoveSeatBase' => $licenseRemoveSeatBase,
+			'licenseSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
+			'licenseStatus' => $licenseStatus,
+			'licenseSeatsList' => $licenseSeatsList,
+			'licenseI18n' => LicenseUiStrings::forPanel($l),
+			'requesttoken' => \OCP\Util::callRegister(),
 		];
 	}
 

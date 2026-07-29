@@ -49,18 +49,25 @@
   position: absolute;
   top: -40px;
   left: 6px;
-  background: var(--color-primary);
-  color: var(--color-text-inverse);
-  padding: 8px 16px;
+  background: var(--color-primary-element);
+  color: var(--color-primary-element-text);
+  padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+  min-height: var(--pc-touch-min, 44px);
+  min-width: var(--pc-touch-min, 44px);
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
-  border-radius: var(--radius-base);
+  border-radius: var(--pc-radius-sm, var(--radius-base));
   z-index: var(--z-fixed);
   transition: top 0.3s ease;
   font-weight: var(--font-weight-medium);
+  box-sizing: border-box;
 }
 
 .skip-link:focus {
   top: 6px;
+  outline: 3px solid var(--color-primary-element);
+  outline-offset: 2px;
 }
 
 /* Keyboard Navigation for Dropdowns */
@@ -632,7 +639,9 @@ th {
   margin: 0 0 1rem 0;
   font-size: 0.95rem;
   line-height: 1.5;
-  color: var(--color-text-maxcontrast, #3d3d3d);
+  /* Prefer main-text on soft/tinted headers; maxcontrast alone can fail AA on tint fills */
+  color: var(--color-main-text);
+  max-width: 65ch;
 }
 
 /* Generic "section header" pattern reused by older templates. We harmonise

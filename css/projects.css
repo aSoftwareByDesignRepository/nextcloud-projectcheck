@@ -8,12 +8,13 @@
 
 .project-name-cell .project-title {
 	flex: 1 1 auto;
-	min-width: 120px;
+	min-width: 0;
+	max-width: 100%;
 	white-space: normal;
-	overflow: visible;
-	text-overflow: clip;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	word-wrap: break-word;
-	overflow-wrap: break-word;
+	overflow-wrap: anywhere;
 }
 
 .project-badges {
@@ -597,9 +598,9 @@ body {
 }
 
 #app-content.pc-app #app-content-wrapper:not(.pc-shell) {
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 1rem;
+	max-width: none;
+	margin: 0;
+	padding: var(--pc-space-4);
 	width: 100%;
 	box-sizing: border-box;
 	display: flex;
@@ -1010,21 +1011,23 @@ body[dir="rtl"] .filters-row select {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
-	border-radius: var(--border-radius);
+	width: var(--pc-touch-min, 44px);
+	height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+	border-radius: var(--pc-radius-sm, var(--border-radius));
 	background-color: var(--color-background-hover);
 	color: var(--color-text-maxcontrast);
 	text-decoration: none;
-	transition: all 0.3s ease;
+	transition: background 150ms ease, color 150ms ease;
 	border: none;
 	cursor: pointer;
+	box-sizing: border-box;
 }
 
 .action-item:hover {
-	background-color: var(--color-primary);
-	color: var(--color-primary-text);
-	transform: scale(1.1);
+	background-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
 }
 
 .action-item .icon {
@@ -1032,7 +1035,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 .action-item.delete-project-btn:hover {
-	background-color: var(--color-error-light);
+	background-color: var(--pc-tint-danger, var(--color-error-light));
 	color: var(--pc-emphasis-text-error);
 }
 
@@ -1388,13 +1391,16 @@ body[dir="rtl"] .filters-row select {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 2rem;
-	height: 2rem;
-	border-radius: 999px;
+	width: var(--pc-touch-min, 44px);
+	height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+	border-radius: var(--pc-radius-pill, 999px);
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--color-text-maxcontrast);
 	cursor: pointer;
+	box-sizing: border-box;
 }
 
 .projectcheck-dialog__header .close:hover {
@@ -1982,20 +1988,22 @@ body[dir="rtl"] .filters-row select {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
-	border-radius: var(--border-radius);
+	width: var(--pc-touch-min, 44px);
+	height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+	border-radius: var(--pc-radius-sm, var(--border-radius));
 	background-color: var(--color-background-hover);
 	color: var(--color-text-maxcontrast);
 	text-decoration: none;
-	transition: all 0.3s ease;
+	transition: background 150ms ease, color 150ms ease;
 	margin: 0 0.25rem;
+	box-sizing: border-box;
 }
 
 .action-item:hover {
-	background-color: var(--color-primary);
-	color: var(--color-primary-text);
-	transform: scale(1.1);
+	background-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
 }
 
 .action-item .icon {
@@ -2787,23 +2795,51 @@ body[dir="rtl"] .filters-row select {
 /* Section Header */
 .section-header {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
-	align-items: center;
-	padding: 1.5rem 2rem;
-	background: linear-gradient(135deg,
-			color-mix(in srgb, var(--color-primary) 3%, transparent) 0%,
-			color-mix(in srgb, var(--color-primary) 1%, transparent) 100%);
-	border-bottom: 1px solid var(--color-border);
+	align-items: flex-start;
+	gap: var(--pc-space-3, 0.75rem);
+	padding: var(--pc-space-4, 1rem) var(--pc-space-4, 1rem);
+	/* Soft surface only — muted intros must keep AA contrast (maxcontrast fails on tint-info) */
+	background: var(--pc-bg-soft, var(--color-main-background));
+	border-bottom: 1px solid var(--pc-border, var(--color-border));
+	min-width: 0;
+	max-width: 100%;
+	box-sizing: border-box;
 }
 
 .section-header h3 {
 	margin: 0;
-	font-size: 1.25rem;
+	font-size: var(--pc-fs-lg, 1.25rem);
 	font-weight: 600;
 	color: var(--color-main-text);
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
+	min-width: 0;
+	flex: 1 1 12rem;
+}
+
+.section-header p {
+	margin: 0;
+	min-width: 0;
+	flex: 1 1 100%;
+	max-width: 65ch;
+	overflow-wrap: anywhere;
+	color: var(--color-main-text);
+	font-size: var(--pc-fs-sm, 0.95rem);
+	line-height: var(--pc-line-base, 1.45);
+}
+
+@media (min-width: 768px) {
+	.section-header {
+		padding: var(--pc-space-5, 1.5rem) var(--pc-space-6, 2rem);
+		align-items: center;
+	}
+
+	.section-header p {
+		flex: 1 1 16rem;
+	}
 }
 
 .section-header h3 i {
@@ -3460,23 +3496,51 @@ body[dir="rtl"] .filters-row select {
 /* Enhanced Section Headers */
 .section-header {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
-	align-items: center;
-	padding: 1.5rem 2rem;
-	background: linear-gradient(135deg,
-			color-mix(in srgb, var(--color-primary) 3%, transparent) 0%,
-			color-mix(in srgb, var(--color-primary) 1%, transparent) 100%);
-	border-bottom: 1px solid var(--color-border);
+	align-items: flex-start;
+	gap: var(--pc-space-3, 0.75rem);
+	padding: var(--pc-space-4, 1rem) var(--pc-space-4, 1rem);
+	/* Soft surface only — muted intros must keep AA contrast (maxcontrast fails on tint-info) */
+	background: var(--pc-bg-soft, var(--color-main-background));
+	border-bottom: 1px solid var(--pc-border, var(--color-border));
+	min-width: 0;
+	max-width: 100%;
+	box-sizing: border-box;
 }
 
 .section-header h3 {
 	margin: 0;
-	font-size: 1.25rem;
+	font-size: var(--pc-fs-lg, 1.25rem);
 	font-weight: 600;
 	color: var(--color-main-text);
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
+	min-width: 0;
+	flex: 1 1 12rem;
+}
+
+.section-header p {
+	margin: 0;
+	min-width: 0;
+	flex: 1 1 100%;
+	max-width: 65ch;
+	overflow-wrap: anywhere;
+	color: var(--color-main-text);
+	font-size: var(--pc-fs-sm, 0.95rem);
+	line-height: var(--pc-line-base, 1.45);
+}
+
+@media (min-width: 768px) {
+	.section-header {
+		padding: var(--pc-space-5, 1.5rem) var(--pc-space-6, 2rem);
+		align-items: center;
+	}
+
+	.section-header p {
+		flex: 1 1 16rem;
+	}
 }
 
 .section-header h3 i {
@@ -4552,7 +4616,7 @@ body[dir="rtl"] .filters-row select {
 
 .budget-used {
 	font-weight: 600;
-	color: var(--color-primary);
+	color: var(--color-main-text);
 }
 
 .budget-remaining {
@@ -4628,7 +4692,10 @@ body[dir="rtl"] .filters-row select {
 
 /* Detailed Yearly Statistics */
 .detailed-yearly-stats-section {
-	margin-bottom: 2rem;
+	margin-bottom: var(--pc-space-6, 2rem);
+	min-width: 0;
+	max-width: 100%;
+	overflow-x: clip;
 }
 
 .detailed-yearly-stats-container {
@@ -4739,23 +4806,31 @@ body[dir="rtl"] .filters-row select {
 
 .customer-title {
 	margin: 0;
-	font-size: 1.125rem;
+	font-size: var(--pc-fs-lg, 1.125rem);
 	font-weight: 600;
-	color: var(--color-text);
+	color: var(--color-main-text, var(--color-text));
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--pc-space-2, 0.5rem);
+	min-width: 0;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	word-break: break-word;
 }
 
 .customer-title i {
-	color: var(--color-primary);
+	color: var(--color-primary-element, var(--color-primary));
+	flex-shrink: 0;
 }
 
 .customer-summary {
 	display: flex;
-	gap: 1rem;
+	flex-wrap: wrap;
+	gap: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
 	width: 100%;
-	justify-content: space-between;
+	max-width: 100%;
+	min-width: 0;
+	justify-content: flex-start;
 }
 
 @media (min-width: 768px) {
@@ -4768,20 +4843,25 @@ body[dir="rtl"] .filters-row select {
 .customer-summary-item {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--pc-space-2, 0.5rem);
+	min-width: 0;
+	max-width: 100%;
 }
 
 .customer-summary-item .summary-label {
-	font-size: 0.75rem;
-	color: var(--color-text-light);
+	font-size: var(--pc-fs-xs, 0.75rem);
+	color: var(--color-text-maxcontrast, var(--color-text-light));
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+	flex-shrink: 0;
 }
 
 .customer-summary-item .summary-value {
-	font-size: 0.875rem;
+	font-size: var(--pc-fs-sm, 0.875rem);
 	font-weight: 600;
-	color: var(--color-text);
+	color: var(--color-main-text, var(--color-text));
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .projects-container {
@@ -4820,24 +4900,38 @@ body[dir="rtl"] .filters-row select {
 	border-bottom: 1px solid var(--color-border);
 }
 
-.project-title {
+.project-title,
+a.project-title,
+#app-content.pc-app a.project-title {
 	margin: 0;
 	font-size: 1rem;
 	font-weight: 600;
-	color: var(--color-text);
+	color: var(--color-main-text);
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
+	min-width: 0;
+	max-width: 100%;
+	text-decoration: underline;
+	text-underline-offset: 0.12em;
 }
 
-.project-title a {
-	color: var(--color-text);
-	text-decoration: none;
-	transition: color 0.3s ease;
+.project-title a,
+#app-content.pc-app .project-title a {
+	color: var(--color-main-text);
+	text-decoration: underline;
+	text-underline-offset: 0.12em;
+	transition: color 0.15s ease;
+	min-width: 0;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	word-break: break-word;
 }
 
-.project-title a:hover {
-	color: var(--color-primary);
+.project-title a:hover,
+a.project-title:hover,
+#app-content.pc-app a.project-title:hover {
+	color: var(--color-primary-element);
 }
 
 .project-title i {
@@ -8090,27 +8184,28 @@ body[dir="rtl"] .filters-row select {
 }
 
 /*
- * Visually hide the native radio — do NOT use a full-card opacity overlay.
- * Disabled radios ignore opacity:0 in several engines and paint the default
- * control on top of the card copy (audit / production bug on locked projects).
- * The wrapping <label> keeps click targets; :has(:focus-visible) styles the surface.
+ * Invisible native radio stretched over the whole card: the input itself is
+ * the hit target (real 44px+ target for touch/AT and strict hit-testing tools),
+ * instead of relying on <label> click forwarding from decorative children.
+ * appearance:none + border:0 + transparent background guarantee nothing paints
+ * even in engines that ignore opacity:0 on disabled radios (historical audit /
+ * production bug on locked projects). :has(:focus-visible) styles the surface.
  */
 .pc-pricing-card__input {
 	position: absolute;
-	width: 1px;
-	height: 1px;
+	inset: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
 	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	clip-path: inset(50%);
-	white-space: nowrap;
+	margin: 0;
 	border: 0;
+	background: transparent;
 	appearance: none;
 	-webkit-appearance: none;
 	-moz-appearance: none;
 	opacity: 0;
-	pointer-events: none;
+	cursor: inherit;
 }
 
 .pc-pricing-card__surface {
@@ -8984,6 +9079,13 @@ body[dir="rtl"] .filters-row select {
 	-webkit-overflow-scrolling: touch;
 }
 
+.pc-settle-strip__list:focus-visible,
+.pc-type-analysis__table-wrap:focus-visible,
+.pc-list-table-wrap:focus-visible {
+	outline: 3px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
 .pc-settle-strip__item {
 	display: inline-flex;
 	flex: 0 0 auto;
@@ -9132,20 +9234,21 @@ body[dir="rtl"] .filters-row select {
 .pc-settle-modal__backdrop {
 	position: absolute;
 	inset: 0;
-	background: rgba(0, 0, 0, 0.5);
+	background: var(--pc-scrim, color-mix(in srgb, var(--color-main-text) 45%, transparent));
 }
 
 .pc-settle-modal__dialog {
 	position: relative;
-	max-width: 480px;
-	width: min(100%, 480px);
+	max-width: min(30rem, calc(100vw - 2rem));
+	width: min(100%, 30rem);
 	margin: 0;
-	padding: 1.5rem;
-	border-radius: var(--border-radius-large, 10px);
-	background: var(--color-main-background);
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+	padding: var(--pc-space-5);
+	border-radius: var(--pc-radius-md, var(--border-radius-large, 12px));
+	background: var(--pc-bg-card, var(--color-main-background));
+	border: 1px solid var(--pc-border, var(--color-border));
+	box-shadow: var(--pc-shadow-md);
 	box-sizing: border-box;
-	max-height: min(90vh, 100%);
+	max-height: min(90dvh, calc(100vh - 2rem));
 	overflow-y: auto;
 }
 
@@ -9210,14 +9313,23 @@ body[dir="rtl"] .filters-row select {
 }
 
 @media (max-width: 720px) {
+	.pc-settle-strip {
+		padding-inline: var(--pc-space-3, 0.75rem);
+		max-width: 100%;
+		min-width: 0;
+		overflow-x: clip;
+	}
+
 	.pc-settle-strip__list {
 		flex-wrap: wrap;
-		overflow-x: visible;
-		row-gap: 0.35rem;
+		overflow-x: clip;
+		row-gap: var(--pc-space-2, 0.35rem);
+		max-width: 100%;
 	}
 
 	.pc-settle-strip__item {
 		flex: 1 1 auto;
+		max-width: 100%;
 		border-inline-end: 0;
 		padding: 0.35rem 0.75rem 0.35rem 0;
 	}
@@ -9234,12 +9346,20 @@ body[dir="rtl"] .filters-row select {
 
 @media (max-width: 480px) {
 	.pc-settle-strip__item {
-		flex: 1 1 calc(50% - 0.5rem);
-		min-width: 9.5rem;
+		flex: 1 1 100%;
+		min-width: 0;
 	}
 
 	.pc-settle-strip__item--outstanding {
 		flex-basis: 100%;
+	}
+
+	.pc-settle-strip__chip,
+	.pc-settle-strip__label,
+	.pc-settle-strip__hours,
+	.pc-settle-strip__amount {
+		white-space: normal;
+		overflow-wrap: anywhere;
 	}
 
 	.pc-billing-bar__actions {

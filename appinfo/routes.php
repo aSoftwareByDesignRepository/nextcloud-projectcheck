@@ -137,5 +137,27 @@ return [
 		['name' => 'projectmember#getDeletionImpact', 'url' => '/api/project-members/{id}/deletion-impact', 'verb' => 'GET'],
 		['name' => 'projectmember#remove', 'url' => '/api/project-members/{id}/remove', 'verb' => 'DELETE'],
 		['name' => 'projectmember#removePost', 'url' => '/api/project-members/{id}/remove', 'verb' => 'POST'],
+
+		// PC2 commercial license (settings / mobile prep)
+		['name' => 'license#show', 'url' => '/api/license', 'verb' => 'GET'],
+		['name' => 'license#apply', 'url' => '/api/license', 'verb' => 'POST'],
+		['name' => 'license#remove', 'url' => '/api/license', 'verb' => 'DELETE'],
+		['name' => 'license#seats', 'url' => '/api/license/seats', 'verb' => 'GET'],
+		['name' => 'license#assignSeat', 'url' => '/api/license/seats', 'verb' => 'POST'],
+		['name' => 'license#removeSeat', 'url' => '/api/license/seats/{uid}', 'verb' => 'DELETE'],
+
+		// Mobile companion API v1 (PC2 gated; web stays free)
+		['name' => 'mobile#bootstrap', 'url' => '/mobile/v1/bootstrap', 'verb' => 'GET'],
+		['name' => 'mobile#projects', 'url' => '/mobile/v1/projects', 'verb' => 'GET'],
+		['name' => 'mobile#resolveHourlyRate', 'url' => '/mobile/v1/projects/{id}/resolve-hourly-rate', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
+		['name' => 'mobile#timeEntries', 'url' => '/mobile/v1/time-entries', 'verb' => 'GET'],
+		['name' => 'mobile#createTimeEntry', 'url' => '/mobile/v1/time-entries', 'verb' => 'POST'],
+		['name' => 'mobile#updateTimeEntry', 'url' => '/mobile/v1/time-entries/{id}', 'verb' => 'PUT', 'requirements' => ['id' => '\\d+']],
+		['name' => 'mobile#deleteTimeEntry', 'url' => '/mobile/v1/time-entries/{id}', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
+		// v1.1 settlement (gated + seat + canUserSettleProject)
+		['name' => 'mobile#settlementEntries', 'url' => '/mobile/v1/settlement/entries', 'verb' => 'GET'],
+		['name' => 'mobile#changeEntryBilling', 'url' => '/mobile/v1/time-entries/{id}/billing', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+		['name' => 'mobile#projectSettlementPreview', 'url' => '/mobile/v1/projects/{id}/settlement/preview', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
+		['name' => 'mobile#projectSettlementApply', 'url' => '/mobile/v1/projects/{id}/settlement/apply', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 	],
 ];

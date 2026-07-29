@@ -27,31 +27,33 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 	});
 
 	test('project mode detail: pricing summary and add-all visible in team modal', async ({ page }) => {
-		await gotoApp(page, PROJECTS_URL);
+		// Deterministic project-mode project — never rely on list order or body text.
+		// OC.L10N registers all pricing strings on every page, so body heuristics false-positive.
+		await gotoApp(page, PROJECT_CREATE_URL);
 
-		const viewLink = page.locator('table tbody tr a.action-item').first();
-		const hasProject = await viewLink.isVisible({ timeout: 5000 }).catch(() => false);
-		test.skip(!hasProject, 'No projects in database to open');
+		const customerSelect = page.locator('#customer_id');
+		test.skip((await customerSelect.locator('option').count()) < 2, 'Need at least one customer to create a project');
 
-		await viewLink.click();
-		await page.waitForURL(/\/projects\/\d+(?!\/)/, { timeout: 15000 });
+		const unique = `E2E project add-all ${Date.now()}`;
+		await page.locator('#name').fill(unique);
+		await page.locator('#short_description').fill('Playwright — project mode add-all visible.');
+		await customerSelect.selectOption({ index: 1 });
+		await page.locator('input[name="cost_rate_mode"][value="project"]').check({ force: true });
+		await page.locator('#hourly_rate').fill('95');
+		await page.locator('form#project-form button[type="submit"]').click();
+		await page.waitForURL(/\/projects\/\d+/, { timeout: 30000 });
 
+		const modeBadge = page.locator('[data-testid="pc-pricing-mode"]');
+		await expect(modeBadge).toBeVisible();
+		await expect(modeBadge).toHaveAttribute('data-cost-rate-mode', 'project');
 		await expect(page.locator('.pc-pricing-badge-label')).toBeVisible();
 
 		const addMemberBtn = page.locator('#add-team-member-btn');
-		if (await addMemberBtn.isVisible().catch(() => false)) {
-			await addMemberBtn.click();
-			const modal = page.locator('#addTeamMemberModal');
-			await expect(modal).toBeVisible();
-			const addAll = page.locator('#submit-add-all-team-members');
-			const mode = await page.locator('body').textContent();
-			if (/per person on this project|je person in diesem projekt/i.test(mode || '')) {
-				await expect(addAll).toHaveCount(0);
-			} else {
-				await expect(addAll).toBeVisible();
-			}
-			await page.locator('#close-add-member-modal').click();
-		}
+		test.skip(!(await addMemberBtn.isVisible().catch(() => false)), 'No team button (ACL)');
+		await addMemberBtn.click();
+		await expect(page.locator('#addTeamMemberModal')).toBeVisible();
+		await expect(page.locator('#submit-add-all-team-members')).toBeVisible();
+		await page.locator('#close-add-member-modal').click();
 	});
 
 	test('create project_member project: banner, team section, add-all hidden', async ({ page }) => {
@@ -66,13 +68,17 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 		await page.locator('#short_description').fill('Playwright smoke — per-person project rates.');
 		await customerSelect.selectOption({ index: 1 });
 
-		await page.getByRole('radio', { name: /rate per person on this project|satz je person in diesem projekt/i }).check();
+		await page.locator('input[name="cost_rate_mode"][value="project_member"]').check({ force: true });
 
 		await page.locator('form#project-form button[type="submit"]').click();
 		await page.waitForURL(/\/projects\/\d+.*message=created|\/projects\/\d+(?!\/)/, { timeout: 30000 });
 
 		await expect(page.locator('.pc-created-banner')).toBeVisible({ timeout: 10000 });
 		await expect(page.locator('#team-section')).toBeVisible();
+		await expect(page.locator('[data-testid="pc-pricing-mode"]')).toHaveAttribute(
+			'data-cost-rate-mode',
+			'project_member',
+		);
 
 		const addMemberBtn = page.locator('#add-team-member-btn');
 		if (await addMemberBtn.isVisible().catch(() => false)) {

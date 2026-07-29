@@ -15,11 +15,12 @@ MISS=0
 	fi
 done
 # Fail on unknown data-lucide in templates
+# --no-filename: otherwise ripgrep prefixes path: and every icon looks "unknown".
 while IFS= read -r unknown; do
 	[[ -z "$unknown" ]] && continue
 	echo "ERROR: unknown data-lucide '${unknown}'" >&2
 	MISS=$((MISS + 1))
-done < <(rg -oP 'data-lucide="\K[a-z0-9-]+' "$ROOT/templates" 2>/dev/null | sort -u | while read -r n; do
+done < <(rg -oP --no-filename 'data-lucide="\K[a-z0-9-]+' "$ROOT/templates" 2>/dev/null | sort -u | while read -r n; do
 	grep -q "'${n}'" "$CATALOG" || echo "$n"
 done)
 if [[ "$MISS" -gt 0 ]]; then

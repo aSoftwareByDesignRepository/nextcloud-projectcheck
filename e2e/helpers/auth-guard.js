@@ -4,11 +4,21 @@
 async function assertNcReady(page) {
 	const { test } = require('@playwright/test');
 
-	const upgradeHeading = page.getByRole('heading', { name: /app update required|app-aktualisierung erforderlich/i });
+	const upgradeHeading = page.getByRole('heading', {
+		name: /app update required|app-aktualisierung erforderlich|update needed|aktualisierung (erforderlich|benötigt)/i,
+	});
 	if (await upgradeHeading.isVisible({ timeout: 2000 }).catch(() => false)) {
 		test.skip(
 			true,
 			'Nextcloud requires occ upgrade. Run: docker compose exec -u www-data nextcloud php occ upgrade',
+		);
+	}
+
+	const webUpgradeRisk = page.getByRole('button', { name: /upgrade via web|über die weboberfläche aktualisieren/i });
+	if (await webUpgradeRisk.isVisible({ timeout: 1000 }).catch(() => false)) {
+		test.skip(
+			true,
+			'Nextcloud shows web-upgrade interstitial. Run: docker compose exec -u www-data nextcloud php occ upgrade',
 		);
 	}
 
@@ -70,7 +80,11 @@ async function dismissOpenAppNavigation(page) {
 		return;
 	}
 	const appContent = page.locator('#app-content.pc-app, #app-content.projectcheck-app-content').first();
-	const appBox = await appContent.boundingBox();
+	const present = await appContent.count().catch(() => 0);
+	if (!present) {
+		return;
+	}
+	const appBox = await appContent.boundingBox({ timeout: 3000 }).catch(() => null);
 	if (appBox && appBox.width > 200) {
 		return;
 	}

@@ -84,7 +84,11 @@ $pageHelp = $l->t('Status, customer, and time tracking in one place.');
 $includeScopeStrip = true;
 ob_start(); ?>
                         <?php if (!empty($pricingModeLabel)): ?>
-                            <p class="pc-scope-strip__badge" role="status">
+                            <p
+                                class="pc-scope-strip__badge"
+                                role="status"
+                                data-cost-rate-mode="<?php p((string)($costRateMode ?? '')); ?>"
+                                data-testid="pc-pricing-mode">
                                 <span class="pc-pricing-badge-label"><?php p($l->t('How hours are priced:')); ?></span>
                                 <strong><?php p($pricingModeLabel); ?></strong>
                             </p>
@@ -448,6 +452,12 @@ include __DIR__ . '/common/page-start.php';
                             <a class="button secondary" href="<?php p((string)$_['invoicingCheckCreateUrl']); ?>">
                                 <span data-lucide="receipt" class="lucide-icon" aria-hidden="true"></span>
                                 <?php p($l->t('Create invoice (InvoicingCheck)')); ?>
+                            </a>
+                        <?php endif; ?>
+                        <?php if (!empty($_['invoicingCheckReceivablesUrl'])): ?>
+                            <a class="button secondary" href="<?php p((string)$_['invoicingCheckReceivablesUrl']); ?>">
+                                <span data-lucide="wallet" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($l->t('Open unpaid invoices (InvoicingCheck)')); ?>
                             </a>
                         <?php endif; ?>
                         <?php if ($stlCanSettle): ?>

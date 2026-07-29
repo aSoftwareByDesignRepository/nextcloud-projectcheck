@@ -47,9 +47,9 @@
 }
 
 #app-content-wrapper {
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 1rem;
+	max-width: none;
+	margin: 0;
+	padding: var(--pc-space-4);
 	width: 100%;
 	display: flex;
 	flex-direction: column;

@@ -30,6 +30,7 @@ $pageHeaderActionsLabel = (string)($pageHeaderActionsLabel ?? $_['pageHeaderActi
 ?>
 <div id="app-content" class="pc-app pc-app--<?php p($pageId); ?>">
 	<a class="pc-skip-link" href="#<?php p($mainContentId); ?>"><?php p($l->t('Skip to main content')); ?></a>
+	<a class="pc-skip-link pc-skip-link--nav" href="#app-navigation"><?php p($l->t('Skip to navigation')); ?></a>
 	<div id="pc-live-region" class="pc-sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 	<div id="pc-alert-region" class="pc-sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
 	<div id="app-content-wrapper" class="<?php p($wrapperClass); ?> pc-app-shell-stack">

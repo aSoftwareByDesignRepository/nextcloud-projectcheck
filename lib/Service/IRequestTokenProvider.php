@@ -16,4 +16,9 @@ interface IRequestTokenProvider
 	 * @return string Encrypted value suitable for the requesttoken / CSRF form field
 	 */
 	public function getEncryptedRequestToken(): string;
+
+	/**
+	 * Validate a requesttoken from a header or form field (mobile mutation channel).
+	 */
+	public function isRequestTokenValid(string $token): bool;
 }

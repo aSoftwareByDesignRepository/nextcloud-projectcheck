@@ -50,6 +50,8 @@ class Application extends App implements IBootstrap
 	 */
 	public function register(IRegistrationContext $context): void
 	{
+		$context->registerNotifierService(\OCA\ProjectCheck\Notification\Notifier::class);
+
 		$context->registerService(
 			\OCA\ProjectCheck\Service\AccessControlService::class,
 			function ($c) {
@@ -183,6 +185,14 @@ class Application extends App implements IBootstrap
 			);
 		});
 
+		$context->registerService(\OCA\ProjectCheck\Service\NotificationService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\NotificationService(
+				$c->query(\OCP\Notification\IManager::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\Psr\Log\LoggerInterface::class),
+			);
+		});
+
 		$context->registerService(\OCA\ProjectCheck\Service\TimeEntryBillingService::class, function ($c) {
 			return new \OCA\ProjectCheck\Service\TimeEntryBillingService(
 				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class),
@@ -193,7 +203,8 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IConfig::class),
 				$c->query(\OCP\ICacheFactory::class),
 				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
-				$c->query(\Psr\Log\LoggerInterface::class)
+				$c->query(\Psr\Log\LoggerInterface::class),
+				$c->query(\OCA\ProjectCheck\Service\NotificationService::class),
 			);
 		});
 
@@ -212,6 +223,14 @@ class Application extends App implements IBootstrap
 			return new \OCA\ProjectCheck\Facade\CrmCustomerReadFacade(
 				$c->query(\OCA\ProjectCheck\Service\CustomerService::class),
 				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+			);
+		});
+		// CustomerCheck write-link (CHECK-SUITE FC-PC-WRITE) — server-side only.
+		$context->registerService(\OCA\ProjectCheck\Public\CrmCustomerWriteFacade::class, function ($c) {
+			return new \OCA\ProjectCheck\Public\CrmCustomerWriteFacade(
+				$c->query(\OCA\ProjectCheck\Service\CustomerService::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Db\CustomerMapper::class),
 			);
 		});
 		$context->registerService(\OCA\ProjectCheck\Public\SettlementWriteFacade::class, function ($c) {
@@ -430,6 +449,12 @@ class Application extends App implements IBootstrap
 			);
 		});
 
+		$context->registerService(\OCA\ProjectCheck\Db\UserAccountSnapshotMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\UserAccountSnapshotMapper(
+				$c->query(\OCP\IDBConnection::class)
+			);
+		});
+
 		$context->registerService(\OCA\ProjectCheck\Controller\AppConfigController::class, function ($c) {
 			return new \OCA\ProjectCheck\Controller\AppConfigController(
 				$c->query('appName'),
@@ -446,7 +471,8 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Service\TimeEntryService::class),
 				$c->query(\OCP\IUserManager::class),
 				$c->query(\OCP\IGroupManager::class),
-				$c->query(\OCA\ProjectCheck\Service\CSPService::class)
+				$c->query(\OCA\ProjectCheck\Service\CSPService::class),
+				$c->query(\OCA\ProjectCheck\Service\LicenseService::class)
 			);
 		});
 
@@ -479,6 +505,81 @@ class Application extends App implements IBootstrap
 				$c->query(IRootFolder::class),
 				$c->query(IAppManager::class),
 				$c->query(ILockingProvider::class),
+				$c->query(\Psr\Log\LoggerInterface::class),
+			);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Db\LicenseStateMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\LicenseStateMapper($c->query(IDBConnection::class));
+		});
+		$context->registerService(\OCA\ProjectCheck\Db\MobileSeatMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\MobileSeatMapper($c->query(IDBConnection::class));
+		});
+		$context->registerService(\OCA\ProjectCheck\Service\LicenseService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\LicenseService(
+				$c->query(IDBConnection::class),
+				$c->query(\OCA\ProjectCheck\Db\LicenseStateMapper::class),
+				$c->query(\OCA\ProjectCheck\Db\MobileSeatMapper::class),
+				$c->query(\OCP\AppFramework\Utility\ITimeFactory::class),
+				$c->query(\OCP\IUserManager::class),
+				$c->query(ILockingProvider::class),
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Controller\LicenseController::class, function ($c) {
+			return new \OCA\ProjectCheck\Controller\LicenseController(
+				$c->query('appName'),
+				$c->query(\OCP\IRequest::class),
+				$c->query(\OCA\ProjectCheck\Service\AccessControlService::class),
+				$c->query(\OCA\ProjectCheck\Service\LicenseService::class),
+				$c->query(\OCP\IUserSession::class),
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Service\MobileGateService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\MobileGateService(
+				$c->query(\OCA\ProjectCheck\Service\LicenseService::class),
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Db\MobileIdempotencyMapper::class, function ($c) {
+			return new \OCA\ProjectCheck\Db\MobileIdempotencyMapper($c->query(IDBConnection::class));
+		});
+		$context->registerService(\OCA\ProjectCheck\Service\MobileBookingService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\MobileBookingService(
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Service\TimeEntryService::class),
+				$c->query(\OCA\ProjectCheck\Service\HourlyRateService::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\OCA\ProjectCheck\Db\MobileIdempotencyMapper::class),
+				$c->query(\OCP\AppFramework\Utility\ITimeFactory::class),
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Service\MobileSettlementService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\MobileSettlementService(
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Service\TimeEntryService::class),
+				$c->query(\OCA\ProjectCheck\Service\TimeEntryBillingService::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectSettlementService::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Controller\MobileController::class, function ($c) {
+			return new \OCA\ProjectCheck\Controller\MobileController(
+				$c->query(\OCP\IRequest::class),
+				$c->query(\OCP\IUserSession::class),
+				$c->query(\OCA\ProjectCheck\Service\MobileGateService::class),
+				$c->query(\OCA\ProjectCheck\Service\MobileBookingService::class),
+				$c->query(\OCA\ProjectCheck\Service\MobileSettlementService::class),
+				$c->query(IAppManager::class),
+				$c->query(\OCA\ProjectCheck\Service\IRequestTokenProvider::class),
+			);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Listener\UserDeletedListener::class, function ($c) {
+			return new \OCA\ProjectCheck\Listener\UserDeletedListener(
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Db\UserAccountSnapshotMapper::class),
+				$c->query(\OCA\ProjectCheck\Service\AccessControlService::class),
+				$c->query(\OCA\ProjectCheck\Db\MobileSeatMapper::class),
+				$c->query(\OCA\ProjectCheck\Db\MobileIdempotencyMapper::class),
 				$c->query(\Psr\Log\LoggerInterface::class),
 			);
 		});

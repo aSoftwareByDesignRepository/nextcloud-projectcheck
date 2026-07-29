@@ -24,7 +24,9 @@ Util::addStyle('projectcheck', 'common/feedback-system');
 Util::addScript('projectcheck', 'admin-settings');
 Util::addScript('projectcheck', 'pc-l10n', 'core', true);
 Util::addScript('projectcheck', 'org-policy-pickers');
+Util::addScript('projectcheck', 'license-settings');
 Util::addStyle('projectcheck', 'admin-settings');
+Util::addStyle('projectcheck', 'license-settings');
 $restrictOn = !empty($policy['restrictionEnabled']);
 $formId = 'projectcheck-admin-form';
 

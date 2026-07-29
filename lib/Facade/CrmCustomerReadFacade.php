@@ -11,10 +11,12 @@ use OCA\ProjectCheck\Service\ProjectService;
 
 /**
  * Read-only ProjectCheck customer/project surface for CustomerCheck (PSD §5.2).
+ *
+ * openHours comes from settlement counters (stl_open_hours) — never a hardcoded stub 0.
  */
 class CrmCustomerReadFacade
 {
-	public const FACADE_VERSION = 1;
+	public const FACADE_VERSION = 2;
 
 	public function __construct(
 		private readonly CustomerService $customerService,
@@ -54,7 +56,29 @@ class CrmCustomerReadFacade
 	}
 
 	/**
-	 * @return list<array{id: int, name: string, status: string, openHours: float}>
+	 * Open billable minutes across projects for a PC customer (Command Center §7.3).
+	 * Uses settlement open hours. Returns 0 when none; never negative.
+	 * Caller must pass a real pcCustomerId — never call without an id.
+	 */
+	public function sumOpenBillableMinutes(int $pcCustomerId): int
+	{
+		if ($pcCustomerId <= 0) {
+			return 0;
+		}
+		$sum = 0;
+		foreach ($this->listProjects($pcCustomerId, 500) as $project) {
+			$status = mb_strtolower((string)($project['status'] ?? 'active'));
+			if (in_array($status, ['done', 'closed', 'cancelled', 'archived'], true)) {
+				continue;
+			}
+			$sum += (int)round(max(0.0, (float)($project['openHours'] ?? 0)) * 60);
+		}
+
+		return max(0, $sum);
+	}
+
+	/**
+	 * @return list<array{id: int, name: string, status: string, openHours: float, open: bool, uninvoiced?: bool}>
 	 */
 	public function listProjects(int $customerId, int $limit = 200): array
 	{
@@ -67,11 +91,19 @@ class CrmCustomerReadFacade
 			if (!$project instanceof Project) {
 				continue;
 			}
+			$status = method_exists($project, 'getStatus') ? (string)$project->getStatus() : 'active';
+			$statusLower = mb_strtolower($status);
+			$open = !in_array($statusLower, ['done', 'closed', 'cancelled', 'archived'], true);
+			$openHours = 0.0;
+			if (method_exists($project, 'getStlOpenHours')) {
+				$openHours = max(0.0, (float)$project->getStlOpenHours());
+			}
 			$out[] = [
 				'id' => (int)$project->getId(),
 				'name' => (string)$project->getName(),
-				'status' => method_exists($project, 'getStatus') ? (string)$project->getStatus() : 'active',
-				'openHours' => 0.0,
+				'status' => $status,
+				'openHours' => $openHours,
+				'open' => $open,
 			];
 		}
 		return $out;

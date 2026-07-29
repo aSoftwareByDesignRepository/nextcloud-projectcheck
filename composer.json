@@ -30,8 +30,11 @@
 		}
 	},
 	"scripts": {
-		"test": "phpunit --testsuite unit",
-		"test:unit": "phpunit --testsuite unit"
+    "test": "phpunit --testsuite unit",
+    "test:unit": "phpunit --testsuite unit",
+    "test:integration": "phpunit --testsuite integration",
+    "mutate:pc2": "php tests/Mutation/run-pc2-license-mutations.php",
+    "mutate:booking": "php tests/Mutation/run-mobile-booking-mutations.php"
 	},
 	"config": {
 		"optimize-autoloader": true,

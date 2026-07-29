@@ -325,8 +325,8 @@
 }
 
 .item-rank {
-    background-color: var(--color-primary);
-    color: var(--color-white);
+    background-color: var(--color-primary-element);
+    color: var(--color-primary-element-text);
     border-radius: 50%;
     width: 24px;
     height: 24px;
@@ -592,8 +592,8 @@
 }
 
 .compact-rank {
-    background-color: var(--color-primary);
-    color: var(--color-white);
+    background-color: var(--color-primary-element);
+    color: var(--color-primary-element-text);
     border-radius: 50%;
     width: 16px;
     height: 16px;

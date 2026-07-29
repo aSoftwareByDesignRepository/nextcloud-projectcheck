@@ -27,10 +27,12 @@
 use OCP\Util;
 Util::addScript('projectcheck', 'admin-settings');
 Util::addScript('projectcheck', 'org-policy-pickers');
+Util::addScript('projectcheck', 'license-settings');
 Util::addStyle('projectcheck', 'admin-settings');
 Util::addStyle('projectcheck', 'dashboard');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'navigation');
+Util::addStyle('projectcheck', 'license-settings');
 $formId = 'projectcheck-org-form';
 $nav = [
 	'stats' => $stats,

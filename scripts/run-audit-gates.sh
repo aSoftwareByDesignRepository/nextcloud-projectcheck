@@ -12,8 +12,18 @@ echo "Root: $ROOT"
 echo "Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo
 
-echo "--- PHPUnit (host) ---"
-./vendor/bin/phpunit
+echo "--- PHPUnit ---"
+# Prefer Docker (this workspace binds apps into nextcloud; host PHPUnit cannot reach MariaDB socket).
+REPO_ROOT="$(cd "$ROOT/../.." && pwd)"
+if command -v docker >/dev/null 2>&1 && [ -f "$REPO_ROOT/docker-compose.yml" ] \
+	&& docker compose -f "$REPO_ROOT/docker-compose.yml" ps nextcloud 2>/dev/null | grep -q 'Up'; then
+	"$REPO_ROOT/docker/run-app-phpunit.sh" projectcheck
+elif [ -x ./vendor/bin/phpunit ]; then
+	./vendor/bin/phpunit
+else
+	echo "ERROR: neither Docker nextcloud nor vendor/bin/phpunit available" >&2
+	exit 1
+fi
 echo
 
 echo "--- l10n parity ---"

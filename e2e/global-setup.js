@@ -64,17 +64,22 @@ module.exports = async function globalSetup() {
 		);
 	}
 
-	const accountField = page.getByRole('textbox', { name: /account name|email|kontoname|e-mail/i }).first();
-	const passwordField = page.getByRole('textbox', { name: /password|passwort/i });
+	const accountField = page.locator('#user, input[name="user"]').first();
+	const passwordField = page.locator('#password, input[name="password"]').first();
+	await accountField.waitFor({ state: 'visible', timeout: 15_000 });
 	await accountField.fill(user);
 	await passwordField.fill(pass);
-	await page.getByRole('button', { name: /^log in$|^anmelden$/i }).click();
+	const submit = page.locator('button[type="submit"], input[type="submit"]').first();
+	await submit.click();
 
 	try {
 		await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 30_000 });
 	} catch {
+		const body = (await page.locator('body').innerText().catch(() => '')).slice(0, 500);
 		await browser.close();
-		throw new Error('[projectcheck:e2e] Login failed — check E2E_USER / E2E_PASS in e2e/.env');
+		throw new Error(
+			`[projectcheck:e2e] Login failed — check E2E_USER / E2E_PASS in e2e/.env. Page said: ${body}`,
+		);
 	}
 
 	// Verify ProjectCheck is reachable while authenticated.

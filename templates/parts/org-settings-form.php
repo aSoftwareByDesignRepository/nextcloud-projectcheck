@@ -73,6 +73,9 @@ try {
 					<a class="projectcheck-section-nav__link" href="#pc-defaults-heading"><?php p($l->t('App defaults')); ?></a>
 				</li>
 				<li>
+					<a class="projectcheck-section-nav__link" href="#projectcheck-license"><?php p($l->t('Mobile license')); ?></a>
+				</li>
+				<li>
 					<a class="projectcheck-section-nav__link" href="#projectcheck-support-us"><?php p($l->t('Support & us')); ?></a>
 				</li>
 			</ol>
@@ -113,6 +116,7 @@ try {
 								type="search"
 								id="pc_allowed_users_q"
 								class="projectcheck-entity-picker__q"
+								role="combobox"
 								autocomplete="off"
 								spellcheck="false"
 								aria-autocomplete="list"
@@ -168,6 +172,7 @@ try {
 								type="search"
 								id="pc_allowed_groups_q"
 								class="projectcheck-entity-picker__q"
+								role="combobox"
 								autocomplete="off"
 								spellcheck="false"
 								aria-autocomplete="list"
@@ -227,6 +232,7 @@ try {
 								type="search"
 								id="pc_app_admins_q"
 								class="projectcheck-entity-picker__q"
+								role="combobox"
 								autocomplete="off"
 								spellcheck="false"
 								aria-autocomplete="list"
@@ -380,11 +386,17 @@ try {
 		<p class="projectcheck-form-status" id="<?php p($statusId); ?>" role="status" aria-live="polite" tabindex="-1" hidden></p>
 	</form>
 	<?php
+	// PC2 mobile license panel (seats-only). SSR data comes from the controller/settings
+	// class and is wrapped in try/catch there, so a missing/mid-migration license schema
+	// never fatals this page — the panel just renders a "not configured" state.
+	include __DIR__ . '/license-panel.php';
 	// Support & Us — informational CTAs only; never gates AGPL use.
 	$supportUsLanguageCode = method_exists($l, 'getLanguageCode') ? (string)$l->getLanguageCode() : 'en';
 	$supportUsCssPrefix = 'projectcheck';
 	$supportUsBtnPrimaryClass = 'button primary';
 	$supportUsBtnSecondaryClass = 'button';
-	$supportUsLinks = new \OCA\ProjectCheck\Support\SupportUsLinks('ProjectCheck', false, null);
+	$supportUsLicenseUrl = $_['supportUsLicenseUrl']
+		?? (isset($urlGenerator) ? $urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex') . '#projectcheck-license' : '/index.php/apps/projectcheck/settings#projectcheck-license');
+	$supportUsLinks = new \OCA\ProjectCheck\Support\SupportUsLinks('ProjectCheck', true, $supportUsLicenseUrl);
 	include __DIR__ . '/support-us-section.php';
 	?>

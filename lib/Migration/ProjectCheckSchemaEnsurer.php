@@ -49,6 +49,10 @@ final class ProjectCheckSchemaEnsurer
 		$changed = PcCoreSchemaBootstrap::ensureRateTables($schema) || $changed;
 		$settlementChanged = PcCoreSchemaBootstrap::ensureSettlementColumns($schema);
 		$changed = $settlementChanged || $changed;
+		// Defence in depth: apply() already calls these, but repair must still
+		// create REQUIRED_TABLES when only later migrations were skipped.
+		$changed = PcCoreSchemaBootstrap::ensureLicenseTables($schema) || $changed;
+		$changed = PcCoreSchemaBootstrap::ensureMobileIdempotencyTable($schema) || $changed;
 
 		if ($changed) {
 			$this->db->migrateToSchema($schemaWrapper->getWrappedSchema());

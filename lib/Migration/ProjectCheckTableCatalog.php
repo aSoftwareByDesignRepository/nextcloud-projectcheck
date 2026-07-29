@@ -29,5 +29,8 @@ final class ProjectCheckTableCatalog
 		RateHistoryTables::EMPLOYEE,
 		RateHistoryTables::PROJECT_MEMBER,
 		'pc_user_account_snapshots',
+		'pc_license_state',
+		'pc_mobile_seats',
+		'pc_mob_idem',
 	];
 }

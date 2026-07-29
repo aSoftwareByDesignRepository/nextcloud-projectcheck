@@ -56,4 +56,5 @@ npx playwright test \
 	e2e/cost-pricing-uat.spec.js \
 	e2e/mutations.spec.ts \
 	e2e/organization.spec.ts \
+	e2e/settlement-smoke.spec.ts \
 	"$@"

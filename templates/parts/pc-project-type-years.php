@@ -113,7 +113,7 @@ if ($projectTypeStats === []) {
 				</p>
 			</header>
 
-			<div class="pc-type-analysis__table-wrap">
+			<div class="pc-type-analysis__table-wrap" tabindex="0" role="region" aria-label="<?php p($l->t('Project type table for %s', [$yearLabel])); ?>">
 				<table class="pc-type-analysis__table" id="<?php p($tableId); ?>">
 					<caption class="pc-sr-only">
 						<?php p($l->t('Project types for %s', [$yearLabel])); ?>

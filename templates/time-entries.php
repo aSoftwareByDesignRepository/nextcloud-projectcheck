@@ -234,7 +234,7 @@ include __DIR__ . '/common/page-start.php';
             ?>
             <?php if (!empty($billingBuckets)): ?>
             <div class="pc-settle-strip" role="region" aria-live="polite" aria-atomic="true" aria-label="<?php p($l->t('Settlement overview for the filtered entries')); ?>">
-                <ul class="pc-settle-strip__list">
+                <ul class="pc-settle-strip__list" tabindex="0" aria-label="<?php p($l->t('Settlement overview for the filtered entries')); ?>">
                     <?php foreach ($stripBuckets as $bucketKey => $bucketMeta): ?>
                         <?php
                         $bucket = $billingBuckets[$bucketKey] ?? ['hours' => 0.0, 'amount' => 0.0, 'count' => 0];

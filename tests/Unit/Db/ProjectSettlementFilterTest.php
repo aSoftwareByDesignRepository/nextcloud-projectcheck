@@ -47,11 +47,27 @@ class ProjectSettlementFilterTest extends TestCase
 		$this->assertSame(['1=0'], $andWhereArgs);
 	}
 
-	public function testCodesMatchPostureVocabularyPlusOutstanding(): void
+	public function testApplyOutstandingAcceptsParameterObjects(): void
 	{
-		foreach (SettlementPosture::ALL as $posture) {
-			$this->assertContains($posture, ProjectSettlementFilter::CODES);
-		}
-		$this->assertContains('outstanding', ProjectSettlementFilter::CODES);
+		$param = new class {
+			public function __toString(): string
+			{
+				return ':param';
+			}
+		};
+
+		$composite = $this->createMock(\OCP\DB\QueryBuilder\ICompositeExpression::class);
+		$expr = $this->createMock(\OCP\DB\QueryBuilder\IExpressionBuilder::class);
+		$expr->method('gt')->willReturn('gt');
+		$expr->method('orX')->willReturn($composite);
+
+		$qb = $this->createMock(\OCP\DB\QueryBuilder\IQueryBuilder::class);
+		$qb->method('expr')->willReturn($expr);
+		$qb->expects($this->once())->method('createNamedParameter')
+			->with('0.00')
+			->willReturn($param);
+		$qb->expects($this->once())->method('andWhere')->with($composite)->willReturnSelf();
+
+		ProjectSettlementFilter::apply($qb, 'outstanding');
 	}
 }

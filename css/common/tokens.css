@@ -1,12 +1,11 @@
 /*
  * ProjectCheck design tokens (--pc-*).
- * Colors inherit from Nextcloud; spacing, radii, type, and tints only.
+ * Spacing/typography/icons on :root; theme colours on body
+ * (Nextcloud sets --color-* on body[data-theme-*], not :root).
  * WCAG 2.1 AA: 44px touch targets, visible focus, prefers-reduced-motion.
+ * Source of truth: planning/design-system/DESIGN-SYSTEM.md (+ AZC tokens.css).
  */
-/* Also scoped to body so Nextcloud-variable-based tokens follow the active
-   theme (theming sets its variables on body[data-theme-*], not :root). */
-:root,
-body {
+:root {
 	--pc-breakpoint-sm: 480px;
 	--pc-breakpoint-md: 768px;
 	--pc-breakpoint-lg: 1024px;
@@ -18,6 +17,7 @@ body {
 	--pc-space-5: 24px;
 	--pc-space-6: 32px;
 	--pc-space-7: 48px;
+	--pc-space-8: 64px;
 
 	--pc-radius-sm: 6px;
 	--pc-radius-md: 12px;
@@ -29,17 +29,60 @@ body {
 	--pc-fs-md: 1rem;
 	--pc-fs-lg: 1.125rem;
 	--pc-fs-xl: 1.5rem;
-	--pc-line-tight: 1.25;
+	--pc-fs-2xl: 1.875rem;
+
+	--pc-line-tight: 1.2;
 	--pc-line-base: 1.45;
+	--pc-tab-num: tabular-nums;
 
-	--pc-shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-primary-element, #0082c9) 45%, transparent);
-	--pc-muted: var(--color-text-maxcontrast, #6b6b6b);
-	--pc-text: var(--color-main-text, #1d1d1d);
-	--pc-border: color-mix(in srgb, var(--color-main-text, #1d1d1d) 14%, transparent);
+	--pc-icon-sm: 1rem;
+	--pc-icon-md: 1.125rem;
+	--pc-icon-lg: 1.375rem;
+	--pc-icon-well: 2.25rem;
+	--pc-icon-stroke: 2;
+
 	--pc-touch-min: 44px;
+	--pc-nav-width: 280px;
+	--pc-nav-width-compact: 240px;
+}
 
-	/* Nextcloud global header (core header.scss); used for mobile nav toggle placement */
-	--pc-nc-header-height: var(--header-height, 50px);
+/* Theme-bound tokens — must follow body [data-theme-*] where NC defines --color-* */
+body {
+	--pc-overlay-top: var(--header-height, 50px);
+	--pc-overlay-height: calc(100dvh - var(--header-height, 50px));
+	/* Alias for mobile-nav placement (legacy name) */
+	--pc-nc-header-height: var(--pc-overlay-top);
+
+	--pc-bg-soft: color-mix(in srgb, var(--color-main-background) 96%, var(--color-main-text) 4%);
+	--pc-bg-card: var(--color-main-background);
+	--pc-text: var(--color-main-text);
+	--pc-muted: var(--color-text-maxcontrast);
+	--pc-border: color-mix(in srgb, var(--color-main-text) 12%, transparent);
+	--pc-border-strong: color-mix(in srgb, var(--color-main-text) 24%, transparent);
+
+	/* Mix INTO main-background (not transparent) so tints stay visible on every theme */
+	--pc-tint-success: color-mix(in srgb, var(--color-success-text, var(--color-success)) 18%, var(--color-main-background));
+	--pc-tint-warning: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 22%, var(--color-main-background));
+	--pc-tint-danger: color-mix(in srgb, var(--color-error-text, var(--color-error)) 18%, var(--color-main-background));
+	--pc-tint-info: color-mix(in srgb, var(--color-primary-element) 16%, var(--color-main-background));
+
+	--pc-notif-fg-info: var(--color-primary-element);
+	--pc-notif-fg-warning: var(--color-warning-text, var(--color-warning));
+	--pc-notif-fg-success: var(--color-success-text, var(--color-success));
+	--pc-notif-fg-danger: var(--color-error-text, var(--color-error));
+
+	--pc-shadow-sm: 0 1px 2px color-mix(in srgb, var(--color-main-text) 8%, transparent);
+	--pc-shadow-md: 0 8px 24px color-mix(in srgb, var(--color-main-text) 12%, transparent);
+	--pc-shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-primary-element) 45%, transparent);
+
+	/* Scrim / modal overlay — theme-aware, never raw rgba(0,0,0,…) */
+	--pc-scrim: color-mix(in srgb, var(--color-main-text) 45%, transparent);
+}
+
+@media (prefers-contrast: more) {
+	:root {
+		--pc-icon-stroke: 2.25;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

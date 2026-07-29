@@ -40,10 +40,11 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Critical layout containers */
+/* Critical layout containers — fill #app-content; never lock to 1200px */
 .app-content {
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: none;
+    width: 100%;
+    margin: 0;
     padding: 0 var(--spacing-base);
 }
 

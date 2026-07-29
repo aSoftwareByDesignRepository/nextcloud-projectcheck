@@ -16,7 +16,10 @@ use OCP\Settings\ISettings;
 use OCP\IConfig;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
+use Psr\Log\LoggerInterface;
 use OCA\ProjectCheck\Service\AccessControlService;
+use OCA\ProjectCheck\Service\LicenseService;
+use OCA\ProjectCheck\Service\LicenseUiStrings;
 use OCA\ProjectCheck\Service\SavePolicyUiStrings;
 
 /**
@@ -36,12 +39,26 @@ class AdminSettings implements ISettings
     /** @var IURLGenerator */
     private $urlGenerator;
 
-    public function __construct(IConfig $config, IFactory $l10nFactory, IURLGenerator $urlGenerator, AccessControlService $accessControl)
-    {
+    /** @var LicenseService */
+    private $licenseService;
+
+    /** @var LoggerInterface */
+    private $logger;
+
+    public function __construct(
+        IConfig $config,
+        IFactory $l10nFactory,
+        IURLGenerator $urlGenerator,
+        AccessControlService $accessControl,
+        LicenseService $licenseService,
+        LoggerInterface $logger
+    ) {
         $this->config = $config;
         $this->l10nFactory = $l10nFactory;
         $this->urlGenerator = $urlGenerator;
         $this->accessControl = $accessControl;
+        $this->licenseService = $licenseService;
+        $this->logger = $logger;
     }
 
     /**
@@ -66,6 +83,20 @@ class AdminSettings implements ISettings
         $enableCustomerManagement = $this->config->getAppValue('projectcheck', 'enable_customer_management', 'yes');
         $enableBudgetTracking = $this->config->getAppValue('projectcheck', 'enable_budget_tracking', 'yes');
 
+        $removeSeatTemplate = $this->urlGenerator->linkToRoute('projectcheck.license.removeSeat', ['uid' => '__UID__']);
+        $licenseRemoveSeatBase = str_replace('__UID__', '', $removeSeatTemplate);
+        $settingsIndexUrl = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
+
+        // SSR is best-effort: a missing/mid-migration license schema must never fatal the settings page.
+        $licenseStatus = null;
+        $licenseSeatsList = ['data' => [], 'total' => 0, 'limit' => 200, 'offset' => 0];
+        try {
+            $licenseStatus = $this->licenseService->status();
+            $licenseSeatsList = $this->licenseService->listSeats(200, 0);
+        } catch (\Throwable $e) {
+            $this->logger->error('projectcheck license SSR status failed', ['exception' => $e]);
+        }
+
         $parameters = [
             'l' => $l,
             'formUiStrings' => SavePolicyUiStrings::forForm($l),
@@ -87,6 +118,17 @@ class AdminSettings implements ISettings
             'saveUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.savePolicy'),
             'orgSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
             'orgSearchGroupsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchGroups'),
+            'supportUsLicenseUrl' => $settingsIndexUrl . '#projectcheck-license',
+            'licenseApiUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.show'),
+            'licenseClearUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.remove'),
+            'licenseSeatsUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.seats'),
+            'licenseAssignSeatUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.assignSeat'),
+            'licenseRemoveSeatBase' => $licenseRemoveSeatBase,
+            'licenseSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
+            'licenseStatus' => $licenseStatus,
+            'licenseSeatsList' => $licenseSeatsList,
+            'licenseI18n' => LicenseUiStrings::forPanel($l),
+            'requesttoken' => \OCP\Util::callRegister(),
         ];
 
         return new TemplateResponse('projectcheck', 'admin-settings', $parameters);

@@ -47,9 +47,9 @@
 
 /* Mobile base: compact wrapper padding; desktop padding set at ≥768px */
 #app-content.pc-app--time-entries #app-content-wrapper:not(.pc-shell) {
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 1rem;
+	max-width: none;
+	margin: 0;
+	padding: var(--pc-space-4);
 	box-sizing: border-box;
 }
 
@@ -948,13 +948,13 @@ body[dir="rtl"] .filters-row select {
 	text-decoration: none;
 }
 
+/* Keep action buttons ≥44×44 at all breakpoints (WCAG 2.5.5 / DS §1) */
 @media (min-width: 1024px) {
-	/* ≥1024px desktop: compact 32px action buttons — unchanged from prior desktop */
 	.action-item {
-		width: 32px;
-		height: 32px;
-		min-width: 32px;
-		min-height: 32px;
+		width: var(--pc-touch-min, 44px);
+		height: var(--pc-touch-min, 44px);
+		min-width: var(--pc-touch-min, 44px);
+		min-height: var(--pc-touch-min, 44px);
 	}
 }
 

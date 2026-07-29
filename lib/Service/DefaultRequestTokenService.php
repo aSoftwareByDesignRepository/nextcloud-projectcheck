@@ -22,4 +22,17 @@ class DefaultRequestTokenService implements IRequestTokenProvider
 	{
 		return $this->csrfTokenManager->getToken()->getEncryptedValue();
 	}
+
+	public function isRequestTokenValid(string $token): bool
+	{
+		$token = trim($token);
+		if ($token === '') {
+			return false;
+		}
+		try {
+			return $this->csrfTokenManager->isTokenValid(new \OC\Security\CSRF\CsrfToken($token));
+		} catch (\Throwable) {
+			return false;
+		}
+	}
 }

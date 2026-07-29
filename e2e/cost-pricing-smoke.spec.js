@@ -22,8 +22,9 @@ const viewports = [
 async function assertAppShell(page) {
 	const appContent = page.locator('#app-content.pc-app, #app-content.projectcheck-app-content').first();
 	await expect(appContent).toBeVisible();
-	const skip = appContent.locator('a.pc-skip-link');
-	await expect(skip).toBeVisible();
+	const skipMain = appContent.locator('a.pc-skip-link').first();
+	await expect(skipMain).toBeAttached();
+	await expect(appContent.locator('a.pc-skip-link[href="#app-navigation"]')).toBeAttached();
 	// On narrow viewports Nextcloud may keep the main landmark in DOM but not "visible" until nav is dismissed.
 	const main = appContent.locator('#pc-main-content, #projectcheck-org-main, main.pc-main').first();
 	await expect(main).toBeAttached();
@@ -109,10 +110,8 @@ for (const vp of viewports) {
 			await gotoApp(page, URLS.settings);
 			await expect(page).toHaveURL(/\/apps\/projectcheck\/settings/, { timeout: 20000 });
 			await assertAppShell(page);
-			await expect(page.locator('#app-content.pc-app a.pc-skip-link')).toHaveAttribute(
-				'href',
-				'#projectcheck-org-main',
-			);
+			await expect(page.locator('#app-content.pc-app a.pc-skip-link[href="#projectcheck-org-main"]')).toBeAttached();
+			await expect(page.locator('#app-content.pc-app a.pc-skip-link[href="#app-navigation"]')).toBeAttached();
 			const trustHeading = page.locator('#projectcheck-org-trust-h');
 			await trustHeading.scrollIntoViewIfNeeded();
 			await expect(trustHeading).toBeVisible();

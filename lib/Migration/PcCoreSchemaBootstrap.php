@@ -36,7 +36,83 @@ final class PcCoreSchemaBootstrap
 		$changed = self::ensureProjectMembers($schema) || $changed;
 		$changed = self::ensureTimeEntries($schema) || $changed;
 		$changed = self::ensureProjectFiles($schema) || $changed;
+		$changed = self::ensureLicenseTables($schema) || $changed;
+		$changed = self::ensureMobileIdempotencyTable($schema) || $changed;
 		return $changed;
+	}
+
+	/**
+	 * PC2 license state + mobile seats (Version2013) — required by REQUIRED_TABLES.
+	 * Idempotent repair when migration was marked complete without creating tables.
+	 */
+	public static function ensureLicenseTables(ISchemaWrapper $schema): bool
+	{
+		$changed = false;
+
+		if (!$schema->hasTable('pc_license_state')) {
+			$t = $schema->createTable('pc_license_state');
+			$t->addColumn('id', Types::BIGINT, ['autoincrement' => true, 'notnull' => true]);
+			$t->addColumn('customer_id', Types::STRING, ['length' => 64, 'notnull' => true]);
+			$t->addColumn('issued_at', Types::STRING, ['length' => 10, 'notnull' => true]);
+			$t->addColumn('valid_until', Types::STRING, ['length' => 10, 'notnull' => true]);
+			$t->addColumn('mobile_seats', Types::INTEGER, ['notnull' => true, 'default' => 0]);
+			$t->addColumn('payload_b64', Types::TEXT, ['notnull' => true]);
+			$t->addColumn('signature_b64', Types::STRING, ['length' => 255, 'notnull' => true]);
+			$t->addColumn('applied_at', Types::INTEGER, ['notnull' => true, 'unsigned' => true, 'default' => 0]);
+			$t->addColumn('applied_by', Types::STRING, ['length' => 64, 'notnull' => true]);
+			$t->setPrimaryKey(['id'], 'pc_lic_pk');
+			$changed = true;
+		}
+
+		if (!$schema->hasTable('pc_mobile_seats')) {
+			$t = $schema->createTable('pc_mobile_seats');
+			$t->addColumn('id', Types::BIGINT, ['autoincrement' => true, 'notnull' => true]);
+			$t->addColumn('uid', Types::STRING, ['length' => 64, 'notnull' => true]);
+			$t->addColumn('assigned_at', Types::INTEGER, ['notnull' => true, 'unsigned' => true, 'default' => 0]);
+			$t->addColumn('assigned_by', Types::STRING, ['length' => 64, 'notnull' => true]);
+			$t->setPrimaryKey(['id'], 'pc_seat_pk');
+			$t->addUniqueIndex(['uid'], 'pc_seat_uid_uq');
+			$changed = true;
+		}
+
+		return $changed;
+	}
+
+	/**
+	 * Mobile offline-create idempotency (Version2015) — required by REQUIRED_TABLES.
+	 * Same repair path as license tables when migration was marked complete without effect.
+	 */
+	public static function ensureMobileIdempotencyTable(ISchemaWrapper $schema): bool
+	{
+		if ($schema->hasTable('pc_mob_idem')) {
+			return false;
+		}
+
+		$t = $schema->createTable('pc_mob_idem');
+		$t->addColumn('id', Types::BIGINT, [
+			'autoincrement' => true,
+			'notnull' => true,
+		]);
+		$t->addColumn('user_id', Types::STRING, [
+			'notnull' => true,
+			'length' => 64,
+		]);
+		$t->addColumn('client_request_id', Types::STRING, [
+			'notnull' => true,
+			'length' => 64,
+		]);
+		$t->addColumn('time_entry_id', Types::BIGINT, [
+			'notnull' => true,
+		]);
+		$t->addColumn('created_at', Types::INTEGER, [
+			'notnull' => true,
+			'unsigned' => true,
+		]);
+		$t->setPrimaryKey(['id'], 'pc_mob_idem_pk');
+		$t->addUniqueIndex(['user_id', 'client_request_id'], 'pc_mob_idem_uid_req');
+		$t->addIndex(['time_entry_id'], 'pc_mob_idem_te');
+
+		return true;
 	}
 
 	/**
@@ -228,7 +304,7 @@ final class PcCoreSchemaBootstrap
 			]);
 			
 			$table->setPrimaryKey(['id'], 'pc_customers_pk');
-			$table->addIndex(['name'], 'pc_customers_name_idx');
+			$table->addUniqueIndex(['name'], 'pc_cus_name_uq');
 			$table->addIndex(['email'], 'pc_customers_email_idx');
 			$table->addIndex(['created_by'], 'pc_customers_creator_idx');
 			return true;

@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 /**
- * Enforces ProjectCheck app access for all app controllers.
+ * Enforces ProjectCheck app access for all app controllers and maps domain
+ * exceptions on mobile JSON routes to the SERVER-MOBILE-API error envelope.
  *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
@@ -12,6 +13,10 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Middleware;
 
 use OCA\ProjectCheck\Exception\AppAccessDeniedException;
+use OCA\ProjectCheck\Exception\MobileApiException;
+use OCA\ProjectCheck\Exception\MobileGateException;
+use OCA\ProjectCheck\Exception\PaymentRequiredException;
+use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -25,6 +30,8 @@ use Psr\Log\LoggerInterface;
 
 class AppAccessMiddleware extends Middleware
 {
+	private const HTTP_PAYMENT_REQUIRED = 402;
+
 	public function __construct(
 		private IUserSession $userSession,
 		private AccessControlService $accessControl,
@@ -71,6 +78,45 @@ class AppAccessMiddleware extends Middleware
 	 */
 	public function afterException($controller, $methodName, \Exception $exception)
 	{
+		// Registered non-globally (app container only), so every call here
+		// originates from a ProjectCheck controller. Dispatch strictly on our
+		// own domain exception types; anything unknown is rethrown below.
+		$l = $this->l10nFactory->get(AccessControlService::APP_ID);
+
+		if ($exception instanceof MobileGateException) {
+			return $this->mobileEnvelope(
+				$exception->getErrorCode(),
+				$this->gateMessage($exception->getErrorCode(), $l),
+				self::HTTP_PAYMENT_REQUIRED,
+			);
+		}
+		if ($exception instanceof PaymentRequiredException) {
+			return $this->mobileEnvelope(
+				$this->mapPaymentCode($exception->getErrorCode()),
+				$exception->getMessage(),
+				self::HTTP_PAYMENT_REQUIRED,
+			);
+		}
+		if ($exception instanceof MobileApiException) {
+			$body = [
+				'error' => [
+					'code' => $exception->getErrorCode(),
+					'message' => $exception->getMessage(),
+				],
+			];
+			if ($exception->getDetails() !== []) {
+				$body['error']['details'] = $exception->getDetails();
+			}
+			return new JSONResponse($body, $exception->getHttpStatus());
+		}
+		if ($exception instanceof PermissionDeniedException && $this->isMobilePath()) {
+			return $this->mobileEnvelope(
+				'forbidden',
+				$l->t('You do not have permission for this action.'),
+				Http::STATUS_FORBIDDEN,
+			);
+		}
+
 		if (!$exception instanceof AppAccessDeniedException) {
 			throw $exception;
 		}
@@ -81,7 +127,9 @@ class AppAccessMiddleware extends Middleware
 		}
 
 		$path = (string) ($this->request->getPathInfo() ?? '');
-		$isApi = str_contains($path, '/api/') || str_starts_with($path, '/ocs/');
+		$isApi = str_contains($path, '/api/')
+			|| str_contains($path, '/mobile/')
+			|| str_starts_with($path, '/ocs/');
 		$accept = strtolower((string) $this->request->getHeader('Accept'));
 		$contentType = strtolower((string) $this->request->getHeader('Content-Type'));
 		$xRequestedWith = strtolower((string) $this->request->getHeader('X-Requested-With'));
@@ -89,12 +137,14 @@ class AppAccessMiddleware extends Middleware
 			|| str_contains($contentType, 'application/json')
 			|| $xRequestedWith === 'xmlhttprequest';
 
-		$l = $this->l10nFactory->get(AccessControlService::APP_ID);
-
 		if ($isApi || $wantsJson || $this->request->getMethod() !== 'GET') {
-			// `error` is surfaced verbatim in UI toasts (deletion modal, forms),
-			// so it must be a human-readable, localized sentence. `code` stays
-			// machine-readable for API consumers.
+			if ($this->isMobilePath()) {
+				return $this->mobileEnvelope(
+					'forbidden',
+					$l->t('You do not have access to ProjectCheck.'),
+					Http::STATUS_FORBIDDEN,
+				);
+			}
 			return new JSONResponse([
 				'error' => $l->t('You do not have access to ProjectCheck.'),
 				'message' => $l->t('You do not have access to ProjectCheck.'),
@@ -113,5 +163,38 @@ class AppAccessMiddleware extends Middleware
 		$response->setStatus(Http::STATUS_FORBIDDEN);
 		$response->renderAs(TemplateResponse::RENDER_AS_USER);
 		return $response;
+	}
+
+	private function isMobilePath(): bool
+	{
+		$path = (string)($this->request->getPathInfo() ?? '');
+		return str_contains($path, '/mobile/');
+	}
+
+	private function mobileEnvelope(string $code, string $message, int $status): JSONResponse
+	{
+		return new JSONResponse(['error' => ['code' => $code, 'message' => $message]], $status);
+	}
+
+	private function mapPaymentCode(string $code): string
+	{
+		return match ($code) {
+			'LICENSE_REQUIRED' => 'license_missing',
+			'LICENSE_EXPIRED' => 'license_expired',
+			'NO_MOBILE_SEAT' => 'seat_required',
+			'SEAT_LIMIT_EXCEEDED' => 'seat_limit_exceeded',
+			default => strtolower($code),
+		};
+	}
+
+	private function gateMessage(string $code, \OCP\IL10N $l): string
+	{
+		return match ($code) {
+			'license_missing' => $l->t('No mobile license is stored on this server.'),
+			'license_expired' => $l->t('The mobile license has expired.'),
+			'seat_required' => $l->t('You do not have a mobile seat assigned.'),
+			'seat_limit_exceeded' => $l->t('Your mobile seat is above the licensed limit.'),
+			default => $l->t('ProjectCheck Mobile is not licensed for this user.'),
+		};
 	}
 }

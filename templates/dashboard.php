@@ -130,7 +130,7 @@ include __DIR__ . '/common/page-start.php';
             </div>
             <div class="section-content">
                 <div class="pc-settle-strip" role="region" aria-label="<?php p($l->t('Settlement summary')); ?>">
-                    <ul class="pc-settle-strip__list">
+                    <ul class="pc-settle-strip__list" tabindex="0" aria-label="<?php p($l->t('Settlement metrics')); ?>">
                         <li class="pc-settle-strip__item">
                             <span class="pc-settle-strip__chip">
                                 <span data-lucide="alert-circle" class="lucide-icon" aria-hidden="true"></span>

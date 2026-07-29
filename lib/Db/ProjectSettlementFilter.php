@@ -63,7 +63,9 @@ final class ProjectSettlementFilter
 			return;
 		}
 
-		$zero = static fn (): string => $qb->createNamedParameter('0.00');
+		// createNamedParameter returns an IParameter (not a string) on modern NC —
+		// never annotate the binding as string or PHP 8.4 TypeErrors the list.
+		$zero = $qb->createNamedParameter('0.00');
 		$open = $alias . '.stl_open_hours';
 		$invoiced = $alias . '.stl_invoiced_hours';
 		$paid = $alias . '.stl_paid_hours';
@@ -71,35 +73,35 @@ final class ProjectSettlementFilter
 		switch ($settlement) {
 			case 'outstanding':
 				$qb->andWhere($qb->expr()->orX(
-					$qb->expr()->gt($open, $zero()),
-					$qb->expr()->gt($invoiced, $zero())
+					$qb->expr()->gt($open, $zero),
+					$qb->expr()->gt($invoiced, $zero)
 				));
 				break;
 			case SettlementPosture::OPEN:
-				$qb->andWhere($qb->expr()->gt($open, $zero()))
-					->andWhere($qb->expr()->lte($invoiced, $zero()))
-					->andWhere($qb->expr()->lte($paid, $zero()));
+				$qb->andWhere($qb->expr()->gt($open, $zero))
+					->andWhere($qb->expr()->lte($invoiced, $zero))
+					->andWhere($qb->expr()->lte($paid, $zero));
 				break;
 			case SettlementPosture::PARTIAL:
-				$qb->andWhere($qb->expr()->gt($open, $zero()))
+				$qb->andWhere($qb->expr()->gt($open, $zero))
 					->andWhere($qb->expr()->orX(
-						$qb->expr()->gt($invoiced, $zero()),
-						$qb->expr()->gt($paid, $zero())
+						$qb->expr()->gt($invoiced, $zero),
+						$qb->expr()->gt($paid, $zero)
 					));
 				break;
 			case SettlementPosture::AWAITING_PAYMENT:
-				$qb->andWhere($qb->expr()->lte($open, $zero()))
-					->andWhere($qb->expr()->gt($invoiced, $zero()));
+				$qb->andWhere($qb->expr()->lte($open, $zero))
+					->andWhere($qb->expr()->gt($invoiced, $zero));
 				break;
 			case SettlementPosture::PAID:
-				$qb->andWhere($qb->expr()->lte($open, $zero()))
-					->andWhere($qb->expr()->lte($invoiced, $zero()))
-					->andWhere($qb->expr()->gt($paid, $zero()));
+				$qb->andWhere($qb->expr()->lte($open, $zero))
+					->andWhere($qb->expr()->lte($invoiced, $zero))
+					->andWhere($qb->expr()->gt($paid, $zero));
 				break;
 			case SettlementPosture::NA:
-				$qb->andWhere($qb->expr()->lte($open, $zero()))
-					->andWhere($qb->expr()->lte($invoiced, $zero()))
-					->andWhere($qb->expr()->lte($paid, $zero()));
+				$qb->andWhere($qb->expr()->lte($open, $zero))
+					->andWhere($qb->expr()->lte($invoiced, $zero))
+					->andWhere($qb->expr()->lte($paid, $zero));
 				break;
 		}
 	}

@@ -166,6 +166,22 @@
 
 .checkbox-group input[type="checkbox"] {
     margin: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    min-width: 1.25rem;
+    min-height: 1.25rem;
+    max-width: 1.25rem;
+    max-height: 1.25rem;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: pointer;
+    accent-color: var(--color-primary-element);
+    background-color: var(--color-main-background);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    color-scheme: inherit;
+    appearance: auto;
+    -webkit-appearance: auto;
 }
 
 .checkbox-group label {
@@ -230,8 +246,10 @@
 
 .permission-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: var(--pc-space-4, 15px);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .permission-item {
@@ -327,16 +345,29 @@ section.projectcheck-panel,
     height: 1.25rem;
     min-width: 1.25rem;
     min-height: 1.25rem;
+    max-width: 1.25rem;
+    max-height: 1.25rem;
     flex-shrink: 0;
+    margin: 0;
+    padding: 0;
     cursor: pointer;
+    box-sizing: border-box;
     accent-color: var(--color-primary-element);
+    background-color: var(--color-main-background);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    color-scheme: inherit;
+    appearance: auto;
+    -webkit-appearance: auto;
 }
 
 .projectcheck-hint {
     margin: 0.25rem 0 0 0;
     font-size: 0.9em;
-    color: var(--color-text-maxcontrast);
+    /* main-text keeps AA on tinted/darker form surfaces; maxcontrast can fail on background-dark */
+    color: var(--color-main-text);
     line-height: 1.45;
+    max-width: 65ch;
 }
 
 .projectcheck-textarea,
@@ -415,20 +446,21 @@ body[dir="rtl"] .projectcheck-select {
 
 /* In-form section navigation (org page): skip to sections, WCAG 2.4.1 / clear structure */
 .projectcheck-section-nav {
-    margin: 0 0 1.25rem 0;
-    padding: 0.9rem 1rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius, 6px);
-    background: var(--color-background-darker, var(--color-background-dark));
+    margin: 0 0 var(--pc-space-5, 1.25rem) 0;
+    padding: var(--pc-space-4, 1rem);
+    border: 1px solid var(--pc-border, var(--color-border));
+    border-radius: var(--pc-radius-sm, var(--border-radius, 6px));
+    /* Prefer main-background so muted/primary links keep AA contrast in dark themes */
+    background: var(--pc-bg-soft, var(--color-main-background));
 }
 
 .projectcheck-section-nav__kicker {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.8rem;
+    margin: 0 0 var(--pc-space-2, 0.5rem) 0;
+    font-size: var(--pc-fs-xs, 0.75rem);
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    font-weight: 600;
-    color: var(--color-text-maxcontrast);
+    font-weight: 700;
+    color: var(--color-main-text);
 }
 
 .projectcheck-section-nav__list {
@@ -437,29 +469,33 @@ body[dir="rtl"] .projectcheck-select {
     padding: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1rem;
+    gap: var(--pc-space-2, 0.5rem) var(--pc-space-4, 1rem);
 }
 
 .projectcheck-section-nav__link {
-    color: var(--color-primary-element, var(--color-primary));
-    text-decoration: none;
+    /* Body text + underline — primary fill colour often fails AA on dark surfaces */
+    color: var(--color-main-text);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: var(--pc-fs-sm, 0.95rem);
     line-height: 1.4;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-primary-element) 45%, transparent);
-    padding: 0.1rem 0;
+    border-bottom: none;
+    padding: var(--pc-space-1, 0.25rem) 0;
+    min-height: var(--pc-touch-min, 44px);
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
 }
 
 .projectcheck-section-nav__link:hover {
-    color: var(--color-main-text);
-    border-bottom-color: var(--color-primary-element);
+    color: var(--color-primary-element);
 }
 
 .projectcheck-section-nav__link:focus-visible {
-    outline: 2px solid var(--color-primary-element);
-    outline-offset: 3px;
-    border-radius: 2px;
-    border-bottom-color: transparent;
+    outline: 3px solid var(--color-primary-element);
+    outline-offset: 2px;
+    border-radius: var(--pc-radius-sm, 2px);
 }
 
 /* —— In-app organization page: layout, spacing, responsive —— */
@@ -608,12 +644,16 @@ body[dir="rtl"] .projectcheck-select {
     justify-content: flex-start;
 }
 
-.projectcheck-save-button {
-    min-height: 44px;
-    min-width: 8.5rem;
-    padding: 0.5rem 1.25rem;
+.projectcheck-save-button,
+#app-content.pc-app .projectcheck-save-button.button,
+#app-content.pc-app button.projectcheck-save-button {
+    min-height: var(--pc-touch-min, 44px) !important;
+    min-width: min(100%, 8.5rem);
+    max-width: 100%;
+    padding: 0.625rem 1.25rem;
     font-size: 1rem;
     font-weight: 600;
+    box-sizing: border-box;
 }
 
 /* Statusline after save */
@@ -631,7 +671,7 @@ body[dir="rtl"] .projectcheck-select {
 
 /* Org page: clear separation between sections (WCAG 2.4.7 / focus visible) */
 .projectcheck-org .projectcheck-panel {
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--pc-shadow-sm);
 }
 
 .projectcheck-org .projectcheck-panel a:focus-visible {
@@ -644,9 +684,9 @@ body[dir="rtl"] .projectcheck-select {
 .projectcheck-form-group--with-picker {
     margin-top: 1.25rem;
     padding: 0.9rem 1rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius, 6px);
-    background: var(--color-background-darker, var(--color-background-dark, rgba(0, 0, 0, 0.02)));
+    border: 1px solid var(--pc-border, var(--color-border));
+    border-radius: var(--pc-radius-sm, var(--border-radius, 6px));
+    background: var(--pc-bg-soft, var(--color-main-background));
 }
 
 .projectcheck-entity-legend {
@@ -1006,8 +1046,10 @@ body[dir="rtl"] .projectcheck-select {
 
 .projectcheck-support-us__secondary {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 	gap: 0.85rem;
+	min-width: 0;
+	max-width: 100%;
 }
 
 .projectcheck-support-us__option {

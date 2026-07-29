@@ -420,12 +420,18 @@ class TimeEntryController extends Controller
 
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $user->getUID());
 
+		$prefillDescription = trim((string)$this->request->getParam('description', ''));
+		if (mb_strlen($prefillDescription) > 1000) {
+			$prefillDescription = mb_substr($prefillDescription, 0, 1000);
+		}
+
 		$response = new TemplateResponse($this->appName, 'time-entry-form', [
 			'timeEntry' => null,
 			'projects' => $userProjects,
 			'projectMembershipFlags' => $projectMembershipFlags,
 			'isEdit' => false,
 			'stats' => $stats,
+			'prefillDescription' => $prefillDescription,
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'storeUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.store'),
 			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.update', ['id' => 'TIME_ENTRY_ID']),

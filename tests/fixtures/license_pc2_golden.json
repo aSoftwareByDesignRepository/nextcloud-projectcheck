@@ -1,0 +1,15 @@
+{
+    "seedLabel": "projectcheck-pc2-test-signing-v1",
+    "publicKeyB64": "QLPCkorywY7kyNFmR961Euz2vwLMndfllF-3hmG6hnM",
+    "payload": {
+        "v": 2,
+        "product": "projectcheck",
+        "customerId": "test",
+        "issuedAt": "2026-07-24",
+        "validUntil": "2027-07-24",
+        "mobileSeats": 25
+    },
+    "payloadB64": "eyJ2IjoyLCJwcm9kdWN0IjoicHJvamVjdGNoZWNrIiwiY3VzdG9tZXJJZCI6InRlc3QiLCJpc3N1ZWRBdCI6IjIwMjYtMDctMjQiLCJ2YWxpZFVudGlsIjoiMjAyNy0wNy0yNCIsIm1vYmlsZVNlYXRzIjoyNX0",
+    "signatureB64": "nWPSjoATltS_qNNSMjAkWlUIMkzJiT9amr7x4yqDsJOofGNv7Y4qh0Yf1rjN0HyWmklRXVfPHrdlFyuNDDRrDA",
+    "wireKey": "PC2.eyJ2IjoyLCJwcm9kdWN0IjoicHJvamVjdGNoZWNrIiwiY3VzdG9tZXJJZCI6InRlc3QiLCJpc3N1ZWRBdCI6IjIwMjYtMDctMjQiLCJ2YWxpZFVudGlsIjoiMjAyNy0wNy0yNCIsIm1vYmlsZVNlYXRzIjoyNX0.nWPSjoATltS_qNNSMjAkWlUIMkzJiT9amr7x4yqDsJOofGNv7Y4qh0Yf1rjN0HyWmklRXVfPHrdlFyuNDDRrDA"
+}

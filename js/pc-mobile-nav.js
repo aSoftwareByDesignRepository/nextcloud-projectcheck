@@ -158,9 +158,45 @@
 		onViewportChange();
 	}
 
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', init);
-	} else {
+	/**
+	 * Scrollable regions (overflow-x: auto/scroll) must be keyboard-reachable (WCAG 2.1.1).
+	 * Never override native list roles on <ul>/<ol>.
+	 */
+	function ensureScrollRegionsFocusable() {
+		var nodes = document.querySelectorAll(
+			'.pc-list-table-wrap, .pc-settle-strip__list, .pc-type-analysis__table-wrap, .pc-license-seat-table-wrap, [class*="table-wrap"]'
+		);
+		for (var i = 0; i < nodes.length; i++) {
+			var el = nodes[i];
+			var ox = window.getComputedStyle(el).overflowX;
+			if (ox !== 'auto' && ox !== 'scroll') {
+				continue;
+			}
+			if (!el.hasAttribute('tabindex')) {
+				el.setAttribute('tabindex', '0');
+			}
+			var tag = el.tagName;
+			if (tag !== 'UL' && tag !== 'OL' && tag !== 'MENU') {
+				if (!el.getAttribute('role')) {
+					el.setAttribute('role', 'region');
+				}
+				if (!el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby')) {
+					el.setAttribute('aria-label', translate('Scrollable table', 'Scrollable table'));
+				}
+			} else if (!el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby')) {
+				el.setAttribute('aria-label', translate('Settlement metrics', 'Settlement metrics'));
+			}
+		}
+	}
+
+	function boot() {
 		init();
+		ensureScrollRegionsFocusable();
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', boot);
+	} else {
+		boot();
 	}
 })();

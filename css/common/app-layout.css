@@ -31,12 +31,23 @@
 	flex-wrap: nowrap !important;
 	align-items: stretch !important;
 	width: 100% !important;
-	max-width: min(1400px, 100%) !important;
+	max-width: none !important;
 	/* Allow nested overflow-x:auto tables to shrink inside the flex shell
 	 * instead of expanding the page and getting clipped by overflow-x:hidden. */
 	min-width: 0;
-	margin-inline: auto;
+	margin-inline: 0;
 	box-sizing: border-box;
+}
+
+/* Opt-in constrained / minimal shells keep their max-width */
+#content[class*='app-'] > #app-content.pc-app > #app-content-wrapper.pc-shell--constrained {
+	max-width: 72rem !important;
+	margin-inline: auto;
+}
+
+#content[class*='app-'] > #app-content.pc-app > #app-content-wrapper.pc-shell--minimal {
+	max-width: 40rem !important;
+	margin-inline: auto;
 }
 
 #content > #app-content > #app-content-wrapper > .pc-page-header,
@@ -81,15 +92,15 @@
 	}
 }
 
-/* ≥1024px desktop: sticky sidebar + restore side-by-side flex row with core */
+/* ≥1024px desktop: sticky sidebar (DS: 280px; 240px on 1024–1280) */
 @media (min-width: 1024px) {
 	#content > #app-navigation:not(.vue) {
 		position: sticky;
 		top: 0;
-		flex: 0 0 300px;
-		width: 300px;
-		min-width: 300px;
-		max-width: 300px;
+		flex: 0 0 var(--pc-nav-width-compact, 240px);
+		width: var(--pc-nav-width-compact, 240px);
+		min-width: var(--pc-nav-width-compact, 240px);
+		max-width: var(--pc-nav-width-compact, 240px);
 		height: 100%;
 		overflow-x: hidden;
 		overflow-y: auto;
@@ -97,7 +108,16 @@
 	}
 
 	#content > #app-content > #app-content-wrapper.pc-shell {
-		padding: var(--pc-space-4, 1rem) var(--pc-space-4, 1rem) var(--pc-space-6, 2rem);
+		padding: var(--pc-space-5, 1.5rem) var(--pc-space-5, 1.5rem) var(--pc-space-7, 3rem);
+	}
+}
+
+@media (min-width: 1280px) {
+	#content > #app-navigation:not(.vue) {
+		flex: 0 0 var(--pc-nav-width, 280px);
+		width: var(--pc-nav-width, 280px);
+		min-width: var(--pc-nav-width, 280px);
+		max-width: var(--pc-nav-width, 280px);
 	}
 }
 

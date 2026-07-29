@@ -67,6 +67,7 @@ class TimeEntryBillingService
 		private ICacheFactory $cacheFactory,
 		private IL10N $l,
 		private LoggerInterface $logger,
+		private ?NotificationService $notificationService = null,
 	) {
 	}
 
@@ -125,6 +126,7 @@ class TimeEntryBillingService
 		}
 
 		$this->activityService->logBillingStatusChanged($actorUid, $entry, $from, $target);
+		$this->notificationService?->notifyBillingStatusChanged($actorUid, $entry, $from, $target);
 
 		$updated = $this->findEntry($entryId);
 		return $updated ?? $entry;
@@ -309,6 +311,8 @@ class TimeEntryBillingService
 	{
 		$applied = 0;
 		$failed = [];
+		/** @var list<array{entry: TimeEntry, from: string}> $succeeded */
+		$succeeded = [];
 
 		$this->db->beginTransaction();
 		try {
@@ -352,6 +356,7 @@ class TimeEntryBillingService
 				$deltas[$projectId][$target]['hours'] = Money::add($deltas[$projectId][$target]['hours'] ?? '0', $hours, Money::HOUR_SCALE);
 				$deltas[$projectId][$target]['amount'] = Money::add($deltas[$projectId][$target]['amount'] ?? '0', $amount, Money::MONEY_SCALE);
 				$applied++;
+				$succeeded[] = ['entry' => $entry, 'from' => $from];
 			}
 
 			$this->counterService->applyDeltas($deltas);
@@ -359,6 +364,15 @@ class TimeEntryBillingService
 		} catch (\Throwable $e) {
 			$this->db->rollBack();
 			throw $e;
+		}
+
+		// Activity + push after commit (never hold row locks during I/O).
+		foreach ($succeeded as $row) {
+			$entry = $row['entry'];
+			$from = $row['from'];
+			$entry->setBillingStatus($target);
+			$this->activityService->logBillingStatusChanged($actorUid, $entry, $from, $target);
+			$this->notificationService?->notifyBillingStatusChanged($actorUid, $entry, $from, $target);
 		}
 
 		return ['applied' => $applied, 'failed' => $failed];

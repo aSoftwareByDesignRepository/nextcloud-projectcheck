@@ -20,11 +20,23 @@
 
 .projectcheck-datepicker__nav {
 	background: none;
-	border: none;
-	font-size: 20px;
+	border: 1px solid transparent;
+	font-size: var(--pc-fs-lg, 1.125rem);
 	cursor: pointer;
-	padding: 4px 8px;
+	padding: 0;
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	color: var(--color-main-text);
+	border-radius: var(--pc-radius-sm, 6px);
+	box-sizing: border-box;
+}
+
+.projectcheck-datepicker__nav:focus-visible {
+	outline: 3px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .projectcheck-datepicker__month {

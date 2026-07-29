@@ -689,15 +689,19 @@ class TimeEntryMapper extends QBMapper
 	public function getTotalCostForUser(string $userId): float
 	{
 		$qb = $this->db->getQueryBuilder();
-		$qb->select($qb->createFunction('SUM(hours * hourly_rate)'))
+		$qb->select('hours', 'hourly_rate')
 			->from($this->getTableName())
 			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)));
 
 		$result = $qb->executeQuery();
-		$total = $result->fetchColumn();
+		$total = '0';
+		while ($row = $result->fetch()) {
+			$line = Money::mul($row['hours'] ?? 0, $row['hourly_rate'] ?? 0);
+			$total = Money::add($total, $line);
+		}
 		$result->closeCursor();
 
-		return (float) ($total ?? 0);
+		return Money::asFloat($total);
 	}
 
 	/**
@@ -858,7 +862,7 @@ class TimeEntryMapper extends QBMapper
 		$qb->select(
 			$qb->createFunction($yearExpr . ' as year'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -893,7 +897,7 @@ class TimeEntryMapper extends QBMapper
 		$qb->select(
 			$qb->createFunction($yearExpr . ' as year'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -929,7 +933,7 @@ class TimeEntryMapper extends QBMapper
 		$qb->select(
 			$qb->createFunction($yearExpr . ' as year'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't');
@@ -966,7 +970,7 @@ class TimeEntryMapper extends QBMapper
 		$qb->select(
 			$qb->createFunction($yearExpr . ' as year'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1008,7 +1012,7 @@ class TimeEntryMapper extends QBMapper
 			'p.id as project_id',
 			'p.name as project_name',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1051,8 +1055,13 @@ class TimeEntryMapper extends QBMapper
 			];
 
 			$detailedStats[$year][$customerId]['projects'][$projectId] = $projectData;
-			$detailedStats[$year][$customerId]['total_hours'] += $projectData['total_hours'];
-			$detailedStats[$year][$customerId]['total_cost'] += $projectData['total_cost'];
+			$detailedStats[$year][$customerId]['total_hours'] = Money::asFloat(
+				Money::add($detailedStats[$year][$customerId]['total_hours'], $projectData['total_hours'], Money::HOUR_SCALE),
+				Money::HOUR_SCALE
+			);
+			$detailedStats[$year][$customerId]['total_cost'] = Money::asFloat(
+				Money::add($detailedStats[$year][$customerId]['total_cost'], $projectData['total_cost'])
+			);
 			$detailedStats[$year][$customerId]['total_entries'] += $projectData['entry_count'];
 		}
 		$result->closeCursor();
@@ -1073,7 +1082,7 @@ class TimeEntryMapper extends QBMapper
 		$qb->select(
 			$qb->createFunction($yearExpr . ' as year'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1111,7 +1120,7 @@ class TimeEntryMapper extends QBMapper
 			't.user_id',
 			$qb->createFunction($maxDisplay . ' as user_display_name'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1159,7 +1168,7 @@ class TimeEntryMapper extends QBMapper
 			't.user_id',
 			$qb->createFunction($maxDisplay . ' as user_display_name'),
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count'),
 			$qb->createFunction('AVG(t.hourly_rate) as avg_hourly_rate'),
 			$qb->createFunction('MIN(t.date) as first_entry'),
@@ -1205,7 +1214,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->createFunction($yearExpr . ' as year'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1253,7 +1262,7 @@ class TimeEntryMapper extends QBMapper
 			'c.id as customer_id',
 			'c.name as customer_name',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1304,8 +1313,13 @@ class TimeEntryMapper extends QBMapper
 			];
 
 			$detailedStats[$year][$projectType]['customers'][$customerId] = $customerData;
-			$detailedStats[$year][$projectType]['total_hours'] += $customerData['total_hours'];
-			$detailedStats[$year][$projectType]['total_cost'] += $customerData['total_cost'];
+			$detailedStats[$year][$projectType]['total_hours'] = Money::asFloat(
+				Money::add($detailedStats[$year][$projectType]['total_hours'], $customerData['total_hours'], Money::HOUR_SCALE),
+				Money::HOUR_SCALE
+			);
+			$detailedStats[$year][$projectType]['total_cost'] = Money::asFloat(
+				Money::add($detailedStats[$year][$projectType]['total_cost'], $customerData['total_cost'])
+			);
 			$detailedStats[$year][$projectType]['total_entries'] += $customerData['entry_count'];
 		}
 		$result->closeCursor();
@@ -1350,7 +1364,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->createFunction($yearExpr . ' as year'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1390,13 +1404,23 @@ class TimeEntryMapper extends QBMapper
 
 			// Categorize as billable or overhead
 			$overheadTypes = ['admin', 'meeting', 'internal', 'training'];
-			if (in_array($projectType, $overheadTypes)) {
-				$productivityStats[$year]['overhead']['total_hours'] += $hours;
-				$productivityStats[$year]['overhead']['total_cost'] += $cost;
+			if (in_array($projectType, $overheadTypes, true)) {
+				$productivityStats[$year]['overhead']['total_hours'] = Money::asFloat(
+					Money::add($productivityStats[$year]['overhead']['total_hours'], $hours, Money::HOUR_SCALE),
+					Money::HOUR_SCALE
+				);
+				$productivityStats[$year]['overhead']['total_cost'] = Money::asFloat(
+					Money::add($productivityStats[$year]['overhead']['total_cost'], $cost)
+				);
 				$productivityStats[$year]['overhead']['entry_count'] += $entries;
 			} else {
-				$productivityStats[$year]['billable']['total_hours'] += $hours;
-				$productivityStats[$year]['billable']['total_cost'] += $cost;
+				$productivityStats[$year]['billable']['total_hours'] = Money::asFloat(
+					Money::add($productivityStats[$year]['billable']['total_hours'], $hours, Money::HOUR_SCALE),
+					Money::HOUR_SCALE
+				);
+				$productivityStats[$year]['billable']['total_cost'] = Money::asFloat(
+					Money::add($productivityStats[$year]['billable']['total_cost'], $cost)
+				);
 				$productivityStats[$year]['billable']['entry_count'] += $entries;
 			}
 
@@ -1479,7 +1503,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->createFunction($yearExpr . ' as year'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1529,7 +1553,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->createFunction($maxDisplay . ' as user_display_name'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1588,7 +1612,7 @@ class TimeEntryMapper extends QBMapper
 			$qb->createFunction($yearExpr . ' as year'),
 			'p.project_type',
 			$qb->createFunction('SUM(t.hours) as total_hours'),
-			$qb->createFunction('SUM(t.hours * t.hourly_rate) as total_cost'),
+			$qb->createFunction('SUM(ROUND(t.hours * t.hourly_rate, 2)) as total_cost'),
 			$qb->createFunction('COUNT(*) as entry_count')
 		)
 			->from($this->getTableName(), 't')
@@ -1620,13 +1644,23 @@ class TimeEntryMapper extends QBMapper
 
 			// Categorize as billable or overhead
 			$overheadTypes = ['admin', 'meeting', 'internal', 'training'];
-			if (in_array($projectType, $overheadTypes)) {
-				$productivityStats[$year]['overhead']['total_hours'] += $hours;
-				$productivityStats[$year]['overhead']['total_cost'] += $cost;
+			if (in_array($projectType, $overheadTypes, true)) {
+				$productivityStats[$year]['overhead']['total_hours'] = Money::asFloat(
+					Money::add($productivityStats[$year]['overhead']['total_hours'], $hours, Money::HOUR_SCALE),
+					Money::HOUR_SCALE
+				);
+				$productivityStats[$year]['overhead']['total_cost'] = Money::asFloat(
+					Money::add($productivityStats[$year]['overhead']['total_cost'], $cost)
+				);
 				$productivityStats[$year]['overhead']['entry_count'] += $entries;
 			} else {
-				$productivityStats[$year]['billable']['total_hours'] += $hours;
-				$productivityStats[$year]['billable']['total_cost'] += $cost;
+				$productivityStats[$year]['billable']['total_hours'] = Money::asFloat(
+					Money::add($productivityStats[$year]['billable']['total_hours'], $hours, Money::HOUR_SCALE),
+					Money::HOUR_SCALE
+				);
+				$productivityStats[$year]['billable']['total_cost'] = Money::asFloat(
+					Money::add($productivityStats[$year]['billable']['total_cost'], $cost)
+				);
 				$productivityStats[$year]['billable']['entry_count'] += $entries;
 			}
 

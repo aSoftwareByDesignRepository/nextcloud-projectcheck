@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.86 - 2026-07-27
+
+### Fixed
+
+- **Schema repair:** runtime/post-migration ensurer now creates `pc_mob_idem` (same path as license tables) so a marked-complete migration without the table cannot brick SchemaGuard / all ProjectCheck HTTP.
+- **Mobile settlement list:** returns `hasMore` + `limit` when the outstanding list is truncated at 200 entries (no silent incomplete AR view).
+- **Mobile settlement apply:** response no longer invents `totalHours`/`totalAmount` zeros after apply (counts only; money stays on preview).
+- **Project list settlement filter:** stop TypeError on PHP 8.4 when filtering `?settlement=outstanding` (named parameters are IParameter objects, not strings).
+- **License panel:** stop claiming the mobile app is “coming soon” — seats copy matches `MOBILE_APP_STATUS = available`.
+- **Settings page crash:** `LicenseUiStrings::forPanel()` no longer calls `$l->t()` with `%1$s` placeholders and zero arguments (PHP 8 / Nextcloud LazyL10N vsprintf fatal).
+- **User delete DI:** `UserDeletedListenerTest` mocks `MobileIdempotencyMapper` so seat + idempotency cleanup stay covered after mobile v1.1.
+- **Icon gate:** `IconCatalog` includes every template `data-lucide` name; Lucide validator uses `rg --no-filename` so path prefixes cannot false-fail.
+- **Audit gates:** PHPUnit prefers Docker `nextcloud` service when the host has no MariaDB socket.
+- **A5 analytics:** yearly/productivity cost aggregates use `SUM(ROUND(hours * rate, 2))`; user totals use `Money::mul`; rollups no longer float-add costs.
+- **A6 mobile:** resolve-hourly-rate is self-only (parity with web), blocking teammate rate preview leakage.
+
+## 2.0.85 - 2026-07-27
+
+### Added
+
+- **Mobile v1.1 settlement API** (PC2 seat-gated): list settleable outstanding entries, per-entry billing transitions, project settle preview/apply — ACL via `canUserSettleProject` (managers / creators / admins).
+- **Offline create idempotency:** `clientRequestId` on `POST /mobile/v1/time-entries` backed by `pc_mob_idem` (unique per user) so queue retries never double-book.
+- Bootstrap advertises `capabilities.{settlement,offlineCreate,push}`, `pushAvailable` (notifications app), and `canSettle`.
+- **Push / bell notifications** when a settler changes someone else’s entry billing status (`Notifier` + `NotificationService`).
+
+### Security
+
+- Settlement list filters by settleable project scope then re-checks `canUserSettleProject` per row (defence in depth against IDOR).
+- Mobile settlement mutations require the same Basic/Bearer or CSRF channel as other mobile writes.
+
+## 2.0.83 - 2026-07-26
+
+### Added
+
+- **ProjectCheck Mobile JSON API** under `/mobile/v1/*`: bootstrap (PC2 envelope + seat state), bookable projects, hourly-rate preview, and CRUD for the caller’s own **open** time entries.
+- **License gate** for mobile routes only (`license_missing` / `license_expired` / `seat_required` / `seat_limit_exceeded` → HTTP 402). Web UI remains ungated.
+- Bootstrap `licensing.mobile.{enabledForUser,expiresAt}` for official companion LicenseGate / Settings copy.
+- Admin docs: `docs/Admin-License.en.md`, `docs/Admin-License.de.md`.
+
+### Changed
+
+- `LicenseService::MOBILE_APP_STATUS` is now `available` (companion API shipped).
+- `LicenseService::gateState()` exposes seat-within-limit ranking for the mobile gate.
+- `LicenseService::assertMobileAccess()` uses the same gate codes as `MobileGateService` (no divergent `NO_MOBILE_SEAT` mapping for over-limit seats).
+- Removing a license clears all mobile seats in the same transaction (no orphan seat rows).
+- Deleting a Nextcloud user frees that user’s mobile seat (seat accounting / GDPR).
+
+### Fixed
+
+- Seat-limit exceeded now returns `seat_limit_exceeded` consistently on the assert path.
+
+## 2.0.82 - 2026-07-26
+
+### Added
+
+- **Polished license admin panel** at `#projectcheck-license` (server admin form and in-app settings): status badge, valid-until, an accessible seats meter (`role="meter"`), a 30-day expiry callout, and a PC2 key paste/save/remove flow with a focus-trapped confirm dialog before removing a license.
+- **Mobile seat management UI:** an accessible combobox to search Nextcloud users and assign named seats, plus a seat table with per-row removal — all rendered with `textContent` (never `innerHTML`) to keep display names XSS-safe.
+
+### Changed
+
+- License panel now renders from shared SSR data (`LicenseService::status()` / `listSeats()`) wrapped in `try`/`catch` so the settings page never fatals if the license schema is missing mid-migration.
+
 ## 2.0.77 - 2026-07-17
 
 ### Added
