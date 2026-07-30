@@ -14,6 +14,9 @@ return [
 		// Main page route
 		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 
+		// Public probe (mobile login reachability + ops) — no auth, no version fingerprint
+		['name' => 'health#check', 'url' => '/health', 'verb' => 'GET'],
+
 		// Service worker (CSP-safe; do not load sw.js as a static script asset)
 		['name' => 'service_worker#script', 'url' => '/service-worker.js', 'verb' => 'GET'],
 
@@ -145,6 +148,10 @@ return [
 		['name' => 'license#seats', 'url' => '/api/license/seats', 'verb' => 'GET'],
 		['name' => 'license#assignSeat', 'url' => '/api/license/seats', 'verb' => 'POST'],
 		['name' => 'license#removeSeat', 'url' => '/api/license/seats/{uid}', 'verb' => 'DELETE'],
+
+		// Public probe (mobile login reachability + ops) — no auth, no version fingerprint
+		// Public probe (mobile login reachability + ops) — no auth, no version fingerprint
+		['name' => 'health#check', 'url' => '/health', 'verb' => 'GET'],
 
 		// Mobile companion API v1 (PC2 gated; web stays free)
 		['name' => 'mobile#bootstrap', 'url' => '/mobile/v1/bootstrap', 'verb' => 'GET'],

@@ -46,6 +46,11 @@ class SchemaGuardMiddleware extends Middleware
 			return;
 		}
 
+		// Public reachability probes must not depend on schema repair.
+		if ($controller instanceof \OCA\ProjectCheck\Controller\HealthController) {
+			return;
+		}
+
 		$this->schemaGuard->ensureReady();
 	}
 

@@ -71,6 +71,20 @@ class AppAccessMiddlewareTest extends TestCase {
 		$this->middleware->beforeController($controller, 'index');
 	}
 
+	public function testBeforeControllerAllowsHealthEvenWhenUserCannotUseApp(): void
+	{
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('blocked-user');
+		$this->userSession->method('getUser')->willReturn($user);
+		$this->accessControl->expects($this->never())->method('canUseApp');
+
+		$controller = new \OCA\ProjectCheck\Controller\HealthController(
+			$this->createMock(\OCP\IRequest::class)
+		);
+		$this->middleware->beforeController($controller, 'check');
+		$this->addToAssertionCount(1);
+	}
+
 	public function testAfterExceptionReturnsJsonForApiRequests(): void {
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('member-user');

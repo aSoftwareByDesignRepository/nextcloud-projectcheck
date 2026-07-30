@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Middleware;
 
+use OCA\ProjectCheck\Controller\HealthController;
 use OCA\ProjectCheck\Exception\AppAccessDeniedException;
 use OCA\ProjectCheck\Exception\MobileApiException;
 use OCA\ProjectCheck\Exception\MobileGateException;
@@ -50,6 +51,11 @@ class AppAccessMiddleware extends Middleware
 	{
 		$class = is_object($controller) ? get_class($controller) : '';
 		if (!str_starts_with($class, 'OCA\\ProjectCheck\\Controller\\')) {
+			return;
+		}
+
+		// Public health must stay reachable even with a logged-in user who lacks app ACL.
+		if ($class === HealthController::class) {
 			return;
 		}
 
