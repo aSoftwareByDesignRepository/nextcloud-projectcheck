@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.88 - 2026-07-31
+
+### Changed
+
+- Packaging release: bumped version for App Store / GitHub republish; confirmed Nextcloud `max-version` **34** against latest stable **34.0.2**.
+
 ## 2.0.87 - 2026-07-30
 
 ### Added
