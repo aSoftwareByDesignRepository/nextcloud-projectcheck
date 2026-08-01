@@ -1134,3 +1134,103 @@ body[dir="rtl"] .projectcheck-select {
 	}
 }
 /* === support-us:projectcheck end === */
+
+/* Settings multipage: chip bar + sidebar sub-nav */
+.pc-settings-nav,
+.projectcheck-settings-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--pc-space-2, 0.5rem);
+	margin: 0 0 var(--pc-space-5, 1.25rem);
+	padding: 0 0 var(--pc-space-3, 0.75rem);
+	border-bottom: 1px solid var(--pc-border, var(--color-border));
+}
+.pc-app .pc-settings-nav__link,
+.projectcheck-settings-nav .pc-settings-nav__link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: var(--pc-space-2, 0.5rem) var(--pc-space-3, 0.75rem);
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-radius: var(--pc-radius-sm, 6px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	text-decoration: none;
+	font-weight: 600;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: 1.2;
+	box-sizing: border-box;
+}
+.pc-app .pc-settings-nav__link:hover {
+	border-color: var(--color-primary-element);
+	background: var(--color-background-hover);
+	color: var(--color-main-text);
+}
+.pc-app .pc-settings-nav__link:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 60%, transparent);
+	outline-offset: 2px;
+}
+.pc-app .pc-settings-nav__link.is-active,
+.pc-app .pc-settings-nav__link[aria-current="page"] {
+	border-color: var(--color-primary-element);
+	background: var(--color-primary-element-light);
+	color: var(--color-main-text);
+	font-weight: 700;
+}
+@media (max-width: 640px) {
+	.pc-settings-nav,
+	.projectcheck-settings-nav {
+		flex-direction: column;
+	}
+	.pc-app .pc-settings-nav__link {
+		width: 100%;
+		justify-content: flex-start;
+	}
+}
+.projectcheck-nav__sublist {
+	list-style: none;
+	margin: 2px 0 var(--pc-space-2, 0.5rem) var(--pc-space-3, 0.75rem);
+	padding: 0 0 0 calc(24px + var(--pc-space-2, 0.5rem) - 2px);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	border-left: 2px solid var(--pc-border, var(--color-border));
+}
+.projectcheck-nav__subitem { margin: 0; }
+.projectcheck-nav__sublink {
+	display: flex;
+	align-items: center;
+	min-height: 44px;
+	padding: var(--pc-space-1, 0.25rem) var(--pc-space-3, 0.75rem);
+	border-radius: var(--pc-radius-sm, 6px);
+	color: var(--color-main-text);
+	text-decoration: none;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: 1.3;
+	overflow-wrap: anywhere;
+}
+.projectcheck-nav__sublink:hover {
+	background: var(--color-background-hover);
+}
+.projectcheck-nav__sublink:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 60%, transparent);
+	outline-offset: 2px;
+}
+.projectcheck-nav__subitem.is-active .projectcheck-nav__sublink {
+	background: var(--color-primary-element-light);
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+/* Settings breadcrumb: AA contrast (main-text, not primary-on-dark) */
+.pc-app--org-settings .breadcrumb a,
+.pc-app--org-settings .breadcrumb--inline a {
+	color: var(--color-main-text);
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+}
+.pc-app--org-settings .breadcrumb a:hover,
+.pc-app--org-settings .breadcrumb--inline a:hover {
+	color: var(--color-main-text);
+}

@@ -7,13 +7,21 @@ const AUTH_OK_STATUSES = [200, 301, 302, 303, 307, 401, 403];
 test.describe('ProjectCheck settings routes (optional E2E)', () => {
 	test.skip(!base, 'Set BASE_URL to run E2E');
 
-	test('settings page is canonical and organization remains compatible', async ({ playwright }) => {
+	test('settings index redirects toward access; organization remains compatible', async ({ playwright }) => {
 		const baseUrl = base!.replace(/\/$/, '');
 		const request = await playwright.request.newContext();
 
 		const settingsRes = await request.get(`${baseUrl}/index.php/apps/projectcheck/settings`, { maxRedirects: 0 });
 		expect(settingsRes.status(), 'settings route should not 500').not.toBe(500);
-		expect(AUTH_OK_STATUSES.includes(settingsRes.status())).toBeTruthy();
+		expect([200, 301, 302, 303, 307, 401, 403].includes(settingsRes.status())).toBeTruthy();
+		if ([301, 302, 303, 307].includes(settingsRes.status())) {
+			const loc = settingsRes.headers()['location'] || '';
+			expect(loc).toMatch(/\/settings\/access/);
+		}
+
+		const accessRes = await request.get(`${baseUrl}/index.php/apps/projectcheck/settings/access`, { maxRedirects: 0 });
+		expect(accessRes.status(), 'settings/access should not 500').not.toBe(500);
+		expect(AUTH_OK_STATUSES.includes(accessRes.status())).toBeTruthy();
 
 		const orgRes = await request.get(`${baseUrl}/index.php/apps/projectcheck/organization`, { maxRedirects: 0 });
 		expect(orgRes.status(), 'organization route should not 500').not.toBe(500);

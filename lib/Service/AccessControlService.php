@@ -163,6 +163,15 @@ class AccessControlService
 		return false;
 	}
 
+	/**
+	 * Dedicated App Admin (BudgetCheck OR-semantics).
+	 * Alias for {@see canManageAppConfiguration()}.
+	 */
+	public function isAppAdmin(string $userId): bool
+	{
+		return $this->canManageAppConfiguration($userId);
+	}
+
 	public function canManageAppConfigurationByUser(IUser $user): bool
 	{
 		return $this->canManageAppConfiguration($user->getUID());

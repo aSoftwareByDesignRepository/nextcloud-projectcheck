@@ -66,9 +66,15 @@ return [
 		['name' => 'dashboard#index', 'url' => '/dashboard', 'verb' => 'GET'],
 		['name' => 'dashboard#getStats', 'url' => '/api/dashboard/stats', 'verb' => 'GET'],
 
-		// In-app admin settings (canonical page)
+		// In-app admin settings (canonical index redirects to default section)
 		// Must be app_config# (underscore) so routing maps to AppConfigController, not AppconfigController.
 		['name' => 'app_config#settingsIndex', 'url' => '/settings', 'verb' => 'GET'],
+		[
+			'name' => 'app_config#settingsSection',
+			'url' => '/settings/{section}',
+			'verb' => 'GET',
+			'requirements' => ['section' => \OCA\ProjectCheck\Service\SettingsSectionCatalog::routeRequirement()],
+		],
 		// Backward-compatible route for old in-app URL; redirects to /settings.
 		['name' => 'app_config#orgIndex', 'url' => '/organization', 'verb' => 'GET'],
 		['name' => 'app_config#savePolicy', 'url' => '/api/config/save', 'verb' => 'POST'],

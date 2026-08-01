@@ -17,7 +17,9 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\NotFoundResponse;
 use OCP\AppFramework\Http\RedirectResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
 use OCP\IGroupManager;
@@ -40,6 +42,7 @@ use OCA\ProjectCheck\Service\SavePolicyUiStrings;
 use OCA\ProjectCheck\Service\OrgPolicySaveAudit;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\CustomerService;
+use OCA\ProjectCheck\Service\SettingsSectionCatalog;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Traits\StatsTrait;
 
@@ -65,6 +68,7 @@ class AppConfigController extends Controller
 		private IGroupManager $groupManager,
 		CSPService $cspService,
 		private LicenseService $licenseService,
+		private SettingsSectionCatalog $settingsSections,
 	) {
 		parent::__construct($appName, $request);
 		$this->setCspService($cspService);
@@ -184,11 +188,11 @@ class AppConfigController extends Controller
 	}
 
 	/**
-	 * In-app org administration (app admins; Nextcloud system admins can use this or the server form).
+	 * In-app settings index — redirects to the default section when allowed.
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function settingsIndex(): TemplateResponse
+	public function settingsIndex(): Response
 	{
 		$user = $this->userSession->getUser();
 		$l = $this->l10nFactory->get('projectcheck');
@@ -208,7 +212,57 @@ class AppConfigController extends Controller
 			));
 			return $this->configureCSP($response, 'main');
 		}
-		$resp = $this->buildFormParameters($l);
+		return new RedirectResponse($this->urlGenerator->linkToRoute(
+			'projectcheck.app_config.settingsSection',
+			['section' => SettingsSectionCatalog::DEFAULT_SECTION],
+		));
+	}
+
+	/**
+	 * One settings sub-page per former mega-page section (DeskCheck pattern).
+	 *
+	 * The route requirement already restricts {section} to the allowlist; the
+	 * catalog check below is defense in depth so a route change can never open
+	 * an unvalidated template dispatch.
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function settingsSection(string $section): Response
+	{
+		$user = $this->userSession->getUser();
+		$l = $this->l10nFactory->get('projectcheck');
+		if ($user === null) {
+			$response = new TemplateResponse('projectcheck', 'error', ErrorPageParams::forGuest(
+				$l,
+				$this->urlGenerator,
+				$l->t('User not authenticated'),
+			), 'guest');
+			return $this->configureCSP($response, 'guest');
+		}
+		if (!$this->accessControl->canManageOrganization($user->getUID())) {
+			$response = new TemplateResponse('projectcheck', 'error', ErrorPageParams::build(
+				$l,
+				$this->urlGenerator,
+				$l->t('You do not have permission to change organization settings for ProjectCheck.'),
+			));
+			return $this->configureCSP($response, 'main');
+		}
+
+		$section = strtolower(trim($section));
+		if (!$this->settingsSections->isSection($section)) {
+			return new NotFoundResponse();
+		}
+
+		$resp = $this->buildFormParameters($l, $section);
+		$resp['settingsSection'] = $section;
+		$resp['pageTitle'] = $this->settingsSections->label($l, $section);
+		$resp['pageHelp'] = $this->settingsSections->help($l, $section);
+		$resp['pageKicker'] = $l->t('Settings');
+		$resp['breadcrumbParent'] = [
+			'label' => $l->t('Settings'),
+			'url' => $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex'),
+		];
+
 		$response = new TemplateResponse('projectcheck', 'org-app-settings', $resp);
 		return $this->configureCSP($response, 'main');
 	}
@@ -286,18 +340,47 @@ class AppConfigController extends Controller
 		$allowedGroups = $parseLines($payload['access_allowed_group_ids'] ?? $payload['allowedGroupLines'] ?? '');
 		$appAdmins = $parseLines($payload['app_admin_user_ids'] ?? $payload['appAdminLines'] ?? '');
 
+		// Missing key = legacy NC mega-form / older clients → full write ("all").
+		// Present-but-invalid must NEVER coerce to "all" (that path can wipe lists).
+		$allowedSaveSections = ['access', 'admins', 'defaults', 'all'];
+		if (!array_key_exists('settings_section', $payload)) {
+			$settingsSection = 'all';
+		} else {
+			$rawSection = strtolower(trim((string) $payload['settings_section']));
+			if (!in_array($rawSection, $allowedSaveSections, true)) {
+				return new JSONResponse([
+					'error' => 'validation',
+					'message' => $apiMsg['invalidSettingsSection']
+						?? $l->t('Invalid settings section. Reload the page and try again.'),
+				], 400);
+			}
+			$settingsSection = $rawSection;
+		}
+
 		$policyBefore = $this->accessControl->getPolicyState();
 		$defaultsBefore = $this->readAppDefaultSnapshot();
 		$uid = $user->getUID();
 
 		try {
-			$this->accessControl->applyFullAccessPolicy(
-				$restrictionEnabled,
-				$allowedUsers,
-				$allowedGroups,
-				$appAdmins
-			);
-			$this->saveAppDefaults($payload);
+			if ($settingsSection === 'access') {
+				$this->accessControl->saveAccessPolicy(
+					$restrictionEnabled,
+					$allowedUsers,
+					$allowedGroups
+				);
+			} elseif ($settingsSection === 'admins') {
+				$this->accessControl->saveAppAdmins($appAdmins);
+			} elseif ($settingsSection === 'defaults') {
+				$this->saveAppDefaults($payload);
+			} else {
+				$this->accessControl->applyFullAccessPolicy(
+					$restrictionEnabled,
+					$allowedUsers,
+					$allowedGroups,
+					$appAdmins
+				);
+				$this->saveAppDefaults($payload);
+			}
 		} catch (\InvalidArgumentException $e) {
 			return new JSONResponse([
 				'error' => 'validation',
@@ -314,6 +397,7 @@ class AppConfigController extends Controller
 		$policyAfter = $this->accessControl->getPolicyState();
 		$defaultsAfter = $this->readAppDefaultSnapshot();
 		$auditContext = OrgPolicySaveAudit::build($policyBefore, $policyAfter, $defaultsBefore, $defaultsAfter, $uid);
+		$auditContext['settings_section'] = $settingsSection;
 		$this->logger->info('projectcheck org policy saved', $auditContext);
 		$flags = $auditContext['flags'] ?? [];
 		$anyPolicyChange = ($flags['restriction_toggled'] ?? false)
@@ -452,9 +536,10 @@ class AppConfigController extends Controller
 	}
 
 	/**
+	 * @param string|null $activeSection When set, only load license SSR for the license page (optional optimization).
 	 * @return array<string, mixed>
 	 */
-	private function buildFormParameters(IL10N $l): array
+	private function buildFormParameters(IL10N $l, ?string $activeSection = null): array
 	{
 		$orgCurrency = strtoupper(trim($this->config->getAppValue('projectcheck', 'currency', 'EUR')));
 		if (preg_match('/^[A-Z]{3}$/', $orgCurrency) !== 1) {
@@ -481,17 +566,31 @@ class AppConfigController extends Controller
 		];
 
 		$settingsIndexUrl = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
+		$settingsSectionLabels = [];
+		$settingsSectionsUrls = [];
+		foreach (SettingsSectionCatalog::SECTIONS as $sectionId) {
+			$settingsSectionLabels[$sectionId] = $this->settingsSections->navLabel($l, $sectionId);
+			$settingsSectionsUrls[$sectionId] = $this->urlGenerator->linkToRoute(
+				'projectcheck.app_config.settingsSection',
+				['section' => $sectionId],
+			);
+		}
+		$licenseSectionUrl = $settingsSectionsUrls['license'] ?? ($settingsIndexUrl . '/license');
 		$removeSeatTemplate = $this->urlGenerator->linkToRoute('projectcheck.license.removeSeat', ['uid' => '__UID__']);
 		$licenseRemoveSeatBase = str_replace('__UID__', '', $removeSeatTemplate);
 
 		// SSR is best-effort: a missing/mid-migration license schema must never fatal the settings page.
+		// Optional optimization: only load when rendering the license section (or admin mega-form with null section).
 		$licenseStatus = null;
 		$licenseSeatsList = ['data' => [], 'total' => 0, 'limit' => 200, 'offset' => 0];
-		try {
-			$licenseStatus = $this->licenseService->status();
-			$licenseSeatsList = $this->licenseService->listSeats(200, 0);
-		} catch (\Throwable $e) {
-			$this->logger->error('projectcheck license SSR status failed', ['exception' => $e]);
+		$loadLicense = $activeSection === null || $activeSection === 'license';
+		if ($loadLicense) {
+			try {
+				$licenseStatus = $this->licenseService->status();
+				$licenseSeatsList = $this->licenseService->listSeats(200, 0);
+			} catch (\Throwable $e) {
+				$this->logger->error('projectcheck license SSR status failed', ['exception' => $e]);
+			}
 		}
 
 		return [
@@ -520,11 +619,16 @@ class AppConfigController extends Controller
 			'customersUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.index'),
 			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
 			'employeesUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.index'),
-			'settingsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex'),
-			'orgAppSettingsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex'),
+			'settingsUrl' => $settingsIndexUrl,
+			'orgAppSettingsUrl' => $settingsIndexUrl,
 			'orgSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
 			'orgSearchGroupsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchGroups'),
-			'supportUsLicenseUrl' => $settingsIndexUrl . '#projectcheck-license',
+			'supportUsLicenseUrl' => $licenseSectionUrl . '#projectcheck-license',
+			'settingsSectionLabels' => $settingsSectionLabels,
+			'settingsSections' => $settingsSectionsUrls,
+			'urls' => [
+				'settingsSections' => $settingsSectionsUrls,
+			],
 			'licenseApiUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.show'),
 			'licenseClearUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.remove'),
 			'licenseSeatsUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.seats'),

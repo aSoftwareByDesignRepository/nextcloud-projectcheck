@@ -16,6 +16,7 @@
             <directory suffix="Test.php">tests/Unit/Service</directory>
             <directory suffix="Test.php">tests/Unit/Repair</directory>
             <directory suffix="Test.php">tests/Unit/Support</directory>
+            <directory suffix="Test.php">tests/Unit/Templates</directory>
             <directory suffix="Test.php">tests/Unit/Css</directory>
             <directory suffix="Test.php">tests/Unit/Public</directory>
             <directory suffix="Test.php">tests/Unit/License</directory>

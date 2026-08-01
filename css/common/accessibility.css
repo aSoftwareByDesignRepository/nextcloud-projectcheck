@@ -457,11 +457,14 @@
 }
 
 .breadcrumb[role="navigation"] a {
-  color: var(--color-primary);
-  text-decoration: none;
+  /* Main-text ink — primary on dark themes fails axe WCAG 1.4.3 (~3.4:1). */
+  color: var(--color-main-text);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .breadcrumb[role="navigation"] a:hover {
+  color: var(--color-main-text);
   text-decoration: underline;
 }
 

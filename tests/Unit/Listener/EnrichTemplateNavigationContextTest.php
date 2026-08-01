@@ -14,6 +14,9 @@ use OCA\ProjectCheck\Listener\EnrichTemplateNavigationContext;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\JsL10nCatalogBuilder;
 use OCA\ProjectCheck\Service\LocaleFormatService;
+use OCA\ProjectCheck\Service\SettingsSectionCatalog;
+use OCP\IL10N;
+use OCP\L10N\IFactory;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IURLGenerator;
@@ -31,6 +34,29 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$mock->method('getLocale')->willReturn($locale);
 		return $mock;
 	}
+
+	private function makeListener(
+		IUserSession $userSession,
+		AccessControlService $accessControl,
+		IURLGenerator $urlGenerator,
+		JsL10nCatalogBuilder $jsL10nCatalog,
+		LocaleFormatService $localeFormat,
+	): EnrichTemplateNavigationContext {
+		$l = $this->createMock(IL10N::class);
+		$l->method('t')->willReturnCallback(static fn (string $s, $p = []) => $s);
+		$l10nFactory = $this->createMock(IFactory::class);
+		$l10nFactory->method('get')->willReturn($l);
+		return new EnrichTemplateNavigationContext(
+			$userSession,
+			$accessControl,
+			$urlGenerator,
+			$jsL10nCatalog,
+			$localeFormat,
+			$l10nFactory,
+			new SettingsSectionCatalog(),
+		);
+	}
+
 
 	public function testEnrichesParamsWhenProjectCheckTemplateAndLoggedIn(): void
 	{
@@ -58,7 +84,10 @@ class EnrichTemplateNavigationContextTest extends TestCase
 			->with('u1')
 			->willReturn(true);
 		$urlGenerator->method('linkToRoute')->willReturnCallback(
-			static function (string $route): string {
+			static function (string $route, array $params = []): string {
+				if ($route === 'projectcheck.app_config.settingsSection') {
+					return '/index.php/apps/projectcheck/settings/' . ($params['section'] ?? '');
+				}
 				return match ($route) {
 					'projectcheck.app_config.settingsIndex' => '/index.php/apps/projectcheck/organization',
 					'projectcheck.dashboard.index' => '/index.php/apps/projectcheck/dashboard',
@@ -68,7 +97,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 			},
 		);
 
-		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
+		$listener = $this->makeListener($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
 		$listener->handle($event);
 
 		$params = $response->getParams();
@@ -106,7 +135,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$accessControl->expects($this->never())->method('canManageOrganization');
 		$urlGenerator->expects($this->never())->method('linkToRoute');
 
-		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
+		$listener = $this->makeListener($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
 		$listener->handle($event);
 		$this->assertSame('old', $response->getParams()['canManageOrg']);
 	}
@@ -126,7 +155,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 
 		$userSession->expects($this->never())->method('getUser');
 
-		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
+		$listener = $this->makeListener($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
 		$listener->handle($event);
 	}
 
@@ -146,7 +175,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$accessControl->expects($this->never())->method('canManageSettings');
 		$accessControl->expects($this->never())->method('canManageOrganization');
 
-		$listener = new EnrichTemplateNavigationContext($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
+		$listener = $this->makeListener($userSession, $accessControl, $urlGenerator, $jsL10nCatalog, $localeFormat);
 		$listener->handle($event);
 		$this->assertSame([], $response->getParams());
 	}

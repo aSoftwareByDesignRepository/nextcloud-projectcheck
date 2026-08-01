@@ -40,6 +40,10 @@ $canManageSettings = $canManageSettings ?? ($_['canManageSettings'] ?? $_['canMa
 $canManageOrganization = $canManageOrganization ?? ($_['canManageOrganization'] ?? $_['canManageOrg'] ?? false);
 $canAccessSettings = $canManageSettings || $canManageOrganization;
 $orgAppSettingsUrl = $orgAppSettingsUrl ?? ($_['orgAppSettingsUrl'] ?? '/index.php/apps/projectcheck/organization');
+$settingsSection = (string)($settingsSection ?? $_['settingsSection'] ?? '');
+$settingsSectionLabels = (array)($settingsSectionLabels ?? $_['settingsSectionLabels'] ?? []);
+$settingsSectionUrls = (array)(($_['urls']['settingsSections'] ?? []) ?: ($_['settingsSections'] ?? []));
+$isOnSettings = $isSettings || $isOrganization || $settingsSection !== '';
 // Dashboard is active if URL contains /dashboard OR if it's the base app URL without any specific section
 $isDashboard = strpos($currentPage, '/dashboard') !== false || 
                (!$isProjects && !$isCustomers && !$isEmployees && !$isTimeEntries && !$isSettings && !$isOrganization && 
@@ -111,12 +115,34 @@ include __DIR__ . '/pc-l10n-bootstrap.php';
                 <span><?php p($l->t('Employees')); ?></span>
             </a>
         </li>
-        <?php if ($canAccessSettings) { ?>
-        <li class="<?php echo $isSettings ? 'active' : ''; ?>">
-            <a href="<?php p($_['settingsUrl'] ?? $orgAppSettingsUrl); ?>" <?php echo $isSettings ? 'aria-current="page"' : ''; ?>>
+        <?php if ($canAccessSettings) {
+			$settingsChildren = ($isOnSettings && $settingsSectionLabels !== []) ? $settingsSectionLabels : [];
+			$parentAriaCurrent = $isOnSettings && $settingsChildren === [];
+			?>
+        <li class="<?php echo $isOnSettings ? 'active' : ''; ?>">
+            <a href="<?php p($_['settingsUrl'] ?? $orgAppSettingsUrl); ?>" <?php echo $parentAriaCurrent ? 'aria-current="page"' : ''; ?>>
                 <i data-lucide="settings" class="lucide-icon" aria-hidden="true"></i>
                 <span><?php p($l->t('Settings')); ?></span>
             </a>
+			<?php if ($settingsChildren !== []): ?>
+				<ul class="projectcheck-nav__sublist">
+					<?php foreach ($settingsChildren as $childId => $childLabel):
+						$childId = (string) $childId;
+						$childHref = (string) ($settingsSectionUrls[$childId] ?? '');
+						if ($childHref === '' || $childHref === '#') {
+							continue;
+						}
+						$childActive = $settingsSection === $childId;
+						?>
+						<li class="projectcheck-nav__subitem<?php p($childActive ? ' is-active' : ''); ?>">
+							<a class="projectcheck-nav__sublink" href="<?php p($childHref); ?>"
+								<?php if ($childActive): ?>aria-current="page"<?php endif; ?>>
+								<?php p((string) $childLabel); ?>
+							</a>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			<?php endif; ?>
         </li>
         <?php } ?>
     </ul>

@@ -124,10 +124,9 @@ final class LicensePanelContractTest extends TestCase
 		);
 	}
 
-	public function testOrgSettingsFormWiresNavLinkAndIncludesPanelAfterFormCloses(): void
+	public function testOrgSettingsFormIncludesPanelAfterFormCloses(): void
 	{
 		$form = $this->read('templates/parts/org-settings-form.php');
-		self::assertStringContainsString('href="#projectcheck-license"', $form);
 
 		$formCloseAt = strpos($form, '</form>');
 		$panelIncludeAt = strpos($form, "include __DIR__ . '/license-panel.php';");
@@ -138,15 +137,41 @@ final class LicensePanelContractTest extends TestCase
 		self::assertIsInt($supportUsIncludeAt, 'org-settings-form.php must include support-us-section.php');
 		self::assertGreaterThan($formCloseAt, $panelIncludeAt, 'License panel must render after </form> so Save settings never wraps it.');
 		self::assertLessThan($supportUsIncludeAt, $panelIncludeAt, 'License panel must render before Support & us.');
+		self::assertStringContainsString("settings_section", $form);
 	}
 
 	public function testOrgAppSettingsAndAdminSettingsWireScriptAndStyle(): void
 	{
-		foreach (['templates/org-app-settings.php', 'templates/admin-settings.php'] as $file) {
-			$tpl = $this->read($file);
-			self::assertStringContainsString("Util::addScript('projectcheck', 'license-settings')", $tpl, "{$file} must load license-settings.js");
-			self::assertStringContainsString("Util::addStyle('projectcheck', 'license-settings')", $tpl, "{$file} must load license-settings.css");
-		}
+		$admin = $this->read('templates/admin-settings.php');
+		self::assertStringContainsString("Util::addScript('projectcheck', 'license-settings')", $admin, 'admin-settings.php must load license-settings.js');
+		self::assertStringContainsString("Util::addStyle('projectcheck', 'license-settings')", $admin, 'admin-settings.php must load license-settings.css');
+
+		$org = $this->read('templates/org-app-settings.php');
+		self::assertStringContainsString("Util::addScript('projectcheck', 'settings-legacy-redirect')", $org);
+		self::assertStringContainsString("if (\$pcRequestedSection === 'license')", $org, 'In-app settings must gate license assets by section');
+		self::assertMatchesRegularExpression(
+			"/if \(\\\$pcRequestedSection === 'license'\) \{\s*Util::addScript\('projectcheck', 'license-settings'\);/s",
+			$org,
+		);
+		self::assertMatchesRegularExpression(
+			"/if \(in_array\(\\\$pcRequestedSection, \\\$policySections, true\)\) \{\s*Util::addScript\('projectcheck', 'admin-settings'\);/s",
+			$org,
+			'Policy JS must load only on access/admins/defaults',
+		);
+		$legacyPos = strpos($org, "'settings-legacy-redirect'");
+		$licenseGatePos = strpos($org, "if (\$pcRequestedSection === 'license')");
+		self::assertNotFalse($legacyPos);
+		self::assertNotFalse($licenseGatePos);
+		self::assertLessThan($licenseGatePos, $legacyPos, 'Legacy redirect must register before section-gated page scripts');
+	}
+
+	public function testAdminSettingsSupportUsLicenseUrlTargetsLicenseSection(): void
+	{
+		$admin = $this->read('lib/Settings/AdminSettings.php');
+		self::assertStringContainsString("settingsSection", $admin);
+		self::assertStringContainsString("['section' => 'license']", $admin);
+		self::assertStringContainsString("'supportUsLicenseUrl' => \$licenseSectionUrl . '#projectcheck-license'", $admin);
+		self::assertStringNotContainsString("settingsIndexUrl . '#projectcheck-license'", $admin);
 	}
 
 	public function testOrgAppSettingsDoesNotDoubleIncludeLicensePanel(): void
@@ -170,6 +195,7 @@ final class LicensePanelContractTest extends TestCase
 		self::assertStringContainsString("'licenseI18n' =>", $controller);
 		self::assertStringContainsString("'supportUsLicenseUrl' =>", $controller);
 		self::assertStringContainsString('#projectcheck-license', $controller);
+		self::assertStringContainsString("settingsSection", $controller);
 		// SSR must be resilient to a missing/mid-migration license schema.
 		self::assertMatchesRegularExpression('/try\s*\{[^}]*licenseService->status\(\)/s', $controller);
 		self::assertStringContainsString('catch (\Throwable $e)', $controller);

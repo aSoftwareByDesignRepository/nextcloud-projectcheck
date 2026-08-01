@@ -19,7 +19,7 @@ class SavePolicyUiStrings
 	/**
 	 * Use for every JSON error/success "message" field in AppConfigController::savePolicy.
 	 *
-	 * @return array{unauthorized: string, forbidden: string, invalidJson: string, server: string}
+	 * @return array{unauthorized: string, forbidden: string, invalidJson: string, invalidSettingsSection: string, server: string}
 	 */
 	public static function apiMessages(IL10N $l): array
 	{
@@ -27,6 +27,7 @@ class SavePolicyUiStrings
 			'unauthorized' => $l->t('Your session may have expired. Sign in again, then return to this page.'),
 			'forbidden' => $l->t('You do not have permission to save. If you are not a system administrator, you may have been removed from the app’s administrator list. Reload the page.'),
 			'invalidJson' => $l->t('The form data could not be read. Try again, or contact your administrator if this keeps happening.'),
+			'invalidSettingsSection' => $l->t('Invalid settings section. Reload the page and try again.'),
 			'server' => $l->t('A server error occurred. Try again later, or ask your Nextcloud administrator to check the log.'),
 		];
 	}
@@ -79,16 +80,13 @@ class SavePolicyUiStrings
 			'selectedUsersLegend' => $l->t('Users allowed to use the app (when restriction is on)'),
 			'selectedGroupsLegend' => $l->t('Groups allowed to use the app (when restriction is on)'),
 			'selectedAdminsLegend' => $l->t('Delegated app administrators'),
-			'noResults' => $l->t('No matches. Try another search, or use manual entry below.'),
+			'noResults' => $l->t('No matches. Try another search — never type a raw user or group id.'),
 			'searchErrorAuth' => $l->t('Search could not run. Sign in again, then return to this page and try once more; your session may have ended.'),
-			'searchErrorPermission' => $l->t('You are not allowed to search the directory. If this is unexpected, reload the page, or use manual entry below.'),
-			'searchErrorNetwork' => $l->t('Could not reach the server to search. Check your network and try again, or use manual entry below.'),
-			'searchErrorServer' => $l->t('The server could not run the search. Try again in a moment, or use manual entry below.'),
+			'searchErrorPermission' => $l->t('You are not allowed to search the directory. If this is unexpected, reload the page or ask a Nextcloud administrator.'),
+			'searchErrorNetwork' => $l->t('Could not reach the server to search. Check your network and try again.'),
+			'searchErrorServer' => $l->t('The server could not run the search. Try again in a moment.'),
 			'removeItemAria' => $l->t('Remove from selection'),
 			'addButton' => $l->t('Add'),
-			'manualUserIds' => $l->t('Manual entry: one user ID per line'),
-			'manualGroupIds' => $l->t('Manual entry: one group ID per line'),
-			'manualAppAdmins' => $l->t('Manual entry: one user ID per line (app administrators)'),
 		];
 	}
 }

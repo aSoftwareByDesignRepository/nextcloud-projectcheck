@@ -802,7 +802,10 @@
 						renderSuggestions([], tr('seatSearchErrorServer', 'The server could not run the search. Try again in a moment.'));
 						return;
 					}
-					renderSuggestions(Array.isArray(res.data.items) ? res.data.items : [], null);
+					var raw = Array.isArray(res.data.items)
+						? res.data.items
+						: (Array.isArray(res.data.users) ? res.data.users : []);
+					renderSuggestions(raw, null);
 				});
 			}, 300);
 		});

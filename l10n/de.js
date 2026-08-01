@@ -1634,6 +1634,16 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 Abrechenbare Arbeit",
 	"💻 Product Development" : "💻 Produktentwicklung",
 	"📊 Why This Matters" : "📊 Warum das wichtig ist",
-	"🔬 Research & Development" : "🔬 Forschung & Entwicklung"
+	"🔬 Research & Development" : "🔬 Forschung & Entwicklung",
+	"Access" : "Zugriff",
+	"App admins" : "App-Admins",
+	"Defaults" : "Standards",
+	"Support us" : "Unterstützt uns",
+	"Save access settings" : "Zugriffseinstellungen speichern",
+	"Save administrators" : "Administratoren speichern",
+	"Save defaults" : "Standards speichern",
+	"Settings pages" : "Einstellungsseiten",
+	"Prefer in-app Settings for per-topic pages." : "Bevorzugen Sie die In-App-Einstellungen für thematische Seiten.",
+	"Default values for projects and budgets. Changes apply to all users in this Nextcloud." : "Standardwerte für Projekte und Budgets. Änderungen gelten für alle Benutzer dieser Nextcloud."
 	}
 );

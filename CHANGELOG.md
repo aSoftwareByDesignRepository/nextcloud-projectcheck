@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.89 - 2026-07-31
+
+### Changed
+
+- **In-app Settings:** multipage `/settings/{section}` (Access, App admins, Defaults, License, Support us) per SETTINGS-PAGES-STANDARD; `/settings` redirects to Access; scoped `savePolicy` (`settings_section`) so Access/Admins/Defaults saves cannot wipe sibling lists; NC admin mega-form kept with `settings_section=all`.
+
+### Security / integrity
+
+- Unknown `settings_section` values are rejected with HTTP 400 (never coerced to full `all` wipe).
+- NC Administration Support CTA deep-links to `/settings/license` (not `/settings#…` after redirect).
+- In-app settings load policy/license scripts only on the sections that need them.
+- Multipage Access/Admins/Defaults demote duplicate panel H2s (page H1 remains the title).
+
 ## 2.0.88 - 2026-07-31
 
 ### Changed

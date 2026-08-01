@@ -41,4 +41,23 @@ class SavePolicyUiStringsTest extends TestCase
 		self::assertArrayHasKey('unauthorized', $out);
 		self::assertArrayHasKey('forbidden', $out);
 	}
+
+	public function testOrgPolicyPickerStringsForbidManualEntryAndRawIds(): void
+	{
+		$l = $this->createMock(IL10N::class);
+		$l->method('t')->willReturnArgument(0);
+
+		$picker = SavePolicyUiStrings::orgPolicyPickerStrings($l);
+		$blob = implode("\n", $picker);
+
+		self::assertArrayHasKey('noResults', $picker);
+		self::assertStringNotContainsString('manual entry', strtolower($blob));
+		self::assertStringNotContainsString('Manual entry:', $blob);
+		self::assertStringNotContainsString('one user ID per line', $blob);
+		self::assertStringNotContainsString('one group ID per line', $blob);
+		self::assertArrayNotHasKey('manualUserIds', $picker);
+		self::assertArrayNotHasKey('manualGroupIds', $picker);
+		self::assertArrayNotHasKey('manualAppAdmins', $picker);
+		self::assertStringContainsString('never type a raw user or group id', $blob);
+	}
 }

@@ -472,7 +472,8 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IUserManager::class),
 				$c->query(\OCP\IGroupManager::class),
 				$c->query(\OCA\ProjectCheck\Service\CSPService::class),
-				$c->query(\OCA\ProjectCheck\Service\LicenseService::class)
+				$c->query(\OCA\ProjectCheck\Service\LicenseService::class),
+				$c->query(\OCA\ProjectCheck\Service\SettingsSectionCatalog::class),
 			);
 		});
 

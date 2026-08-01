@@ -12,7 +12,7 @@ const URLS = {
 	timeEntries: `${BASE}/index.php/apps/projectcheck/time-entries`,
 	timeEntriesOutstanding: `${BASE}/index.php/apps/projectcheck/time-entries?billing_status=outstanding`,
 	projectsOutstanding: `${BASE}/index.php/apps/projectcheck/projects?settlement=outstanding`,
-	settings: `${BASE}/index.php/apps/projectcheck/settings`,
+	settings: `${BASE}/index.php/apps/projectcheck/settings/license`,
 };
 
 /**

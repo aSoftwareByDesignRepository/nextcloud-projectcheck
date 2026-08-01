@@ -1634,6 +1634,16 @@ OC.L10N.register(
 	"You do not have permission for this action." : "You do not have permission for this action.",
 	"You do not have permission to manage the ProjectCheck license." : "You do not have permission to manage the ProjectCheck license.",
 	"Your license is about to expire" : "Your license is about to expire",
-	"Your mobile seat is above the licensed limit." : "Your mobile seat is above the licensed limit."
+	"Your mobile seat is above the licensed limit." : "Your mobile seat is above the licensed limit.",
+	"Access" : "Access",
+	"App admins" : "App admins",
+	"Defaults" : "Defaults",
+	"Support us" : "Support us",
+	"Save access settings" : "Save access settings",
+	"Save administrators" : "Save administrators",
+	"Save defaults" : "Save defaults",
+	"Settings pages" : "Settings pages",
+	"Prefer in-app Settings for per-topic pages." : "Prefer in-app Settings for per-topic pages.",
+	"Default values for projects and budgets. Changes apply to all users in this Nextcloud." : "Default values for projects and budgets. Changes apply to all users in this Nextcloud."
 	}
 );

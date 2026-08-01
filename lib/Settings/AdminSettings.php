@@ -85,7 +85,10 @@ class AdminSettings implements ISettings
 
         $removeSeatTemplate = $this->urlGenerator->linkToRoute('projectcheck.license.removeSeat', ['uid' => '__UID__']);
         $licenseRemoveSeatBase = str_replace('__UID__', '', $removeSeatTemplate);
-        $settingsIndexUrl = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
+        $licenseSectionUrl = $this->urlGenerator->linkToRoute(
+			'projectcheck.app_config.settingsSection',
+			['section' => 'license'],
+		);
 
         // SSR is best-effort: a missing/mid-migration license schema must never fatal the settings page.
         $licenseStatus = null;
@@ -118,7 +121,7 @@ class AdminSettings implements ISettings
             'saveUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.savePolicy'),
             'orgSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
             'orgSearchGroupsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchGroups'),
-            'supportUsLicenseUrl' => $settingsIndexUrl . '#projectcheck-license',
+            'supportUsLicenseUrl' => $licenseSectionUrl . '#projectcheck-license',
             'licenseApiUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.show'),
             'licenseClearUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.remove'),
             'licenseSeatsUrl' => $this->urlGenerator->linkToRoute('projectcheck.license.seats'),

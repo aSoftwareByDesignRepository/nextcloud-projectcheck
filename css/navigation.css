@@ -217,3 +217,32 @@
 		height: 1.75rem;
 	}
 }
+
+.projectcheck-nav__sublist {
+	list-style: none;
+	margin: 2px 0 0.5rem 0.75rem;
+	padding: 0 0 0 calc(24px + 0.5rem - 2px);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	border-left: 2px solid var(--color-border);
+}
+.projectcheck-nav__sublink {
+	display: flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 0.25rem 0.75rem;
+	border-radius: 6px;
+	color: var(--color-main-text);
+	text-decoration: none;
+	font-size: 0.875rem;
+}
+.projectcheck-nav__subitem.is-active .projectcheck-nav__sublink {
+	background: var(--color-primary-element-light);
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+.projectcheck-nav__sublink:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 60%, transparent);
+	outline-offset: 2px;
+}

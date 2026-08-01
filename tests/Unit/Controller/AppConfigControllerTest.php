@@ -10,6 +10,7 @@ use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\LicenseService;
 use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Service\SettingsSectionCatalog;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -110,7 +111,8 @@ class AppConfigControllerTest extends TestCase {
 			$this->userManager,
 			$this->groupManager,
 			$this->cspService,
-			$this->licenseService
+			$this->licenseService,
+			new SettingsSectionCatalog(),
 		);
 	}
 
@@ -311,5 +313,154 @@ class AppConfigControllerTest extends TestCase {
 		$this->assertSame(200, $response->getStatus());
 		$body = $response->getData();
 		$this->assertTrue($body['success']);
+	}
+
+	public function testSavePolicyAccessScopeDoesNotTouchAdminsOrDefaults(): void
+	{
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->expects($this->once())->method('saveAccessPolicy')->with(true, ['bob'], ['team']);
+		$this->accessControl->expects($this->never())->method('saveAppAdmins');
+		$this->accessControl->expects($this->never())->method('applyFullAccessPolicy');
+		$this->accessControl->method('getPolicyState')->willReturn([
+			'restrictionEnabled' => true,
+			'allowedUserIds' => ['bob'],
+			'allowedGroupIds' => ['team'],
+			'appAdminUserIds' => ['kept-admin'],
+		]);
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'settings_section' => 'access',
+			'access_restriction_enabled' => '1',
+			'access_allowed_user_ids' => "bob\n",
+			'access_allowed_group_ids' => "team\n",
+			'app_admin_user_ids' => "should-not-apply\n",
+			'currency' => 'USD',
+		]);
+		$this->config->expects($this->never())->method('setAppValue');
+		$this->eventDispatcher->method('dispatchTyped');
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(200, $response->getStatus());
+	}
+
+	public function testSavePolicyAdminsScopeDoesNotTouchAccessOrDefaults(): void
+	{
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->expects($this->once())->method('saveAppAdmins')->with(['carol']);
+		$this->accessControl->expects($this->never())->method('saveAccessPolicy');
+		$this->accessControl->expects($this->never())->method('applyFullAccessPolicy');
+		$this->accessControl->method('getPolicyState')->willReturn([
+			'restrictionEnabled' => true,
+			'allowedUserIds' => ['bob'],
+			'allowedGroupIds' => ['team'],
+			'appAdminUserIds' => ['carol'],
+		]);
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'settings_section' => 'admins',
+			'access_restriction_enabled' => '0',
+			'access_allowed_user_ids' => '',
+			'app_admin_user_ids' => "carol\n",
+			'currency' => 'USD',
+		]);
+		$this->config->expects($this->never())->method('setAppValue');
+		$this->eventDispatcher->method('dispatchTyped');
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(200, $response->getStatus());
+	}
+
+	public function testSavePolicyDefaultsScopeDoesNotTouchAccessOrAdmins(): void
+	{
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->expects($this->never())->method('saveAccessPolicy');
+		$this->accessControl->expects($this->never())->method('saveAppAdmins');
+		$this->accessControl->expects($this->never())->method('applyFullAccessPolicy');
+		$this->accessControl->method('getPolicyState')->willReturn([
+			'restrictionEnabled' => true,
+			'allowedUserIds' => ['bob'],
+			'allowedGroupIds' => ['team'],
+			'appAdminUserIds' => ['carol'],
+		]);
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'settings_section' => 'defaults',
+			'access_restriction_enabled' => '0',
+			'app_admin_user_ids' => "wiped\n",
+			'currency' => 'chf',
+		]);
+		$this->config->expects($this->once())
+			->method('setAppValue')
+			->with('projectcheck', 'currency', 'CHF');
+		$this->eventDispatcher->method('dispatchTyped');
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(200, $response->getStatus());
+	}
+
+	public function testSavePolicyAllScopeKeepsLegacyFullWrite(): void
+	{
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->expects($this->once())->method('applyFullAccessPolicy')->with(false, [], [], []);
+		$this->accessControl->expects($this->never())->method('saveAccessPolicy');
+		$this->accessControl->expects($this->never())->method('saveAppAdmins');
+		$this->accessControl->method('getPolicyState')->willReturn([
+			'restrictionEnabled' => false,
+			'allowedUserIds' => [],
+			'allowedGroupIds' => [],
+			'appAdminUserIds' => [],
+		]);
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'settings_section' => 'all',
+			'currency' => 'eur',
+		]);
+		$this->config->expects($this->once())
+			->method('setAppValue')
+			->with('projectcheck', 'currency', 'EUR');
+		$this->eventDispatcher->method('dispatchTyped');
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(200, $response->getStatus());
+	}
+
+	public function testSavePolicyRejectsInvalidSettingsSectionWithoutWriting(): void
+	{
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->expects($this->never())->method('applyFullAccessPolicy');
+		$this->accessControl->expects($this->never())->method('saveAccessPolicy');
+		$this->accessControl->expects($this->never())->method('saveAppAdmins');
+		$this->config->expects($this->never())->method('setAppValue');
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'settings_section' => 'license',
+			'access_allowed_user_ids' => '',
+			'app_admin_user_ids' => '',
+			'currency' => 'USD',
+		]);
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(400, $response->getStatus());
+		$body = $response->getData();
+		$this->assertSame('validation', $body['error']);
+	}
+
+	public function testSavePolicyRejectsGarbageSettingsSection(): void
+	{
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->expects($this->never())->method('applyFullAccessPolicy');
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'settings_section' => 'not-a-real-section',
+		]);
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(400, $response->getStatus());
 	}
 }

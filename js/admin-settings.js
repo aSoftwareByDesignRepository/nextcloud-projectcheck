@@ -54,6 +54,12 @@
 		if (restrict) {
 			o.access_restriction_enabled = restrict.checked ? '1' : '0';
 		}
+		var section = form.getAttribute('data-pc-settings-section') || o.settings_section || 'all';
+		if (typeof section === 'string' && section !== '') {
+			o.settings_section = section;
+		} else {
+			o.settings_section = 'all';
+		}
 		return o;
 	}
 

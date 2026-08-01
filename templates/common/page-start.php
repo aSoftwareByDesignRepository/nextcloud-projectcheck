@@ -27,8 +27,28 @@ $includeScopeStrip = !empty($includeScopeStrip) || !empty($_['includeScopeStrip'
 $pageHeaderActionsHtml = trim((string)($pageHeaderActionsHtml ?? $_['pageHeaderActionsHtml'] ?? ''));
 $pageHeaderMetaHtml = trim((string)($pageHeaderMetaHtml ?? $_['pageHeaderMetaHtml'] ?? ''));
 $pageHeaderActionsLabel = (string)($pageHeaderActionsLabel ?? $_['pageHeaderActionsLabel'] ?? $l->t('Page actions'));
+$settingsSection = (string)($settingsSection ?? $_['settingsSection'] ?? '');
+$pcUrlsPayload = $_['urls'] ?? [];
+if (!isset($pcUrlsPayload['settingsSections']) || !is_array($pcUrlsPayload['settingsSections'])) {
+	if (isset($_['settingsSections']) && is_array($_['settingsSections'])) {
+		$pcUrlsPayload['settingsSections'] = $_['settingsSections'];
+	} else {
+		$pcUrlsPayload['settingsSections'] = [];
+	}
+}
+try {
+	$pcUrlsJson = htmlspecialchars(
+		(string) json_encode($pcUrlsPayload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+		ENT_QUOTES | ENT_SUBSTITUTE,
+		'UTF-8'
+	);
+} catch (\JsonException) {
+	$pcUrlsJson = htmlspecialchars('{}', ENT_QUOTES, 'UTF-8');
+}
 ?>
-<div id="app-content" class="pc-app pc-app--<?php p($pageId); ?>">
+<div id="app-content" class="pc-app pc-app--<?php p($pageId); ?>"
+	data-pc-settings-section="<?php p($settingsSection); ?>"
+	data-pc-urls="<?php print_unescaped($pcUrlsJson); ?>">
 	<a class="pc-skip-link" href="#<?php p($mainContentId); ?>"><?php p($l->t('Skip to main content')); ?></a>
 	<a class="pc-skip-link pc-skip-link--nav" href="#app-navigation"><?php p($l->t('Skip to navigation')); ?></a>
 	<div id="pc-live-region" class="pc-sr-only" role="status" aria-live="polite" aria-atomic="true"></div>

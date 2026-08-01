@@ -16,12 +16,14 @@ use OCA\ProjectCheck\AppInfo\Application;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\JsL10nCatalogBuilder;
 use OCA\ProjectCheck\Service\LocaleFormatService;
+use OCA\ProjectCheck\Service\SettingsSectionCatalog;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
+use OCP\L10N\IFactory;
 use OCP\Util;
 
 /**
@@ -35,6 +37,8 @@ class EnrichTemplateNavigationContext implements IEventListener
 		private IURLGenerator $urlGenerator,
 		private JsL10nCatalogBuilder $jsL10nCatalogBuilder,
 		private LocaleFormatService $localeFormat,
+		private IFactory $l10nFactory,
+		private SettingsSectionCatalog $settingsSections,
 	) {
 	}
 
@@ -91,6 +95,27 @@ class EnrichTemplateNavigationContext implements IEventListener
 		}
 		if (!isset($params['settingsUrl'])) {
 			$params['settingsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
+		}
+		if (($canManageSettings || $canManageOrganization)
+			&& (!isset($params['settingsSectionLabels']) || !is_array($params['settingsSectionLabels']) || $params['settingsSectionLabels'] === [])
+		) {
+			$l = $this->l10nFactory->get(Application::APP_ID);
+			$labels = [];
+			$sectionUrls = [];
+			foreach (SettingsSectionCatalog::SECTIONS as $sectionId) {
+				$labels[$sectionId] = $this->settingsSections->navLabel($l, $sectionId);
+				$sectionUrls[$sectionId] = $this->urlGenerator->linkToRoute(
+					'projectcheck.app_config.settingsSection',
+					['section' => $sectionId],
+				);
+			}
+			$params['settingsSectionLabels'] = $labels;
+			$params['settingsSections'] = $sectionUrls;
+			$urls = is_array($params['urls'] ?? null) ? $params['urls'] : [];
+			if (!isset($urls['settingsSections']) || !is_array($urls['settingsSections'])) {
+				$urls['settingsSections'] = $sectionUrls;
+			}
+			$params['urls'] = $urls;
 		}
 		$params['jsL10n'] = $this->jsL10nCatalogBuilder->buildForApp();
 		// Locale-aware server-side formatting bridge (audit ref. AUDIT-FINDINGS B10/H28).
