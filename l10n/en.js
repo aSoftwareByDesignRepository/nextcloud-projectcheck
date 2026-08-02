@@ -1206,10 +1206,6 @@ OC.L10N.register(
 	"Shows or hides customer features where the app enforces it." : "Shows or hides customer features where the app enforces it.",
 	"Signed in as" : "Signed in as",
 	"Skip to main content" : "Skip to main content",
-	"Skip to navigation" : "Skip to navigation",
-	"License seats table" : "License seats table",
-	"Project type table for %s" : "Project type table for %s",
-	"Settlement metrics" : "Settlement metrics",
 	"Something went wrong" : "Something went wrong",
 	"Something went wrong. Please try again." : "Something went wrong. Please try again.",
 	"Source Code" : "Source Code",
@@ -1635,6 +1631,10 @@ OC.L10N.register(
 	"You do not have permission to manage the ProjectCheck license." : "You do not have permission to manage the ProjectCheck license.",
 	"Your license is about to expire" : "Your license is about to expire",
 	"Your mobile seat is above the licensed limit." : "Your mobile seat is above the licensed limit.",
+	"Skip to navigation" : "Skip to navigation",
+	"Settlement metrics" : "Settlement metrics",
+	"Project type table for %s" : "Project type table for %s",
+	"License seats table" : "License seats table",
 	"Access" : "Access",
 	"App admins" : "App admins",
 	"Defaults" : "Defaults",
@@ -1644,6 +1644,14 @@ OC.L10N.register(
 	"Save defaults" : "Save defaults",
 	"Settings pages" : "Settings pages",
 	"Prefer in-app Settings for per-topic pages." : "Prefer in-app Settings for per-topic pages.",
-	"Default values for projects and budgets. Changes apply to all users in this Nextcloud." : "Default values for projects and budgets. Changes apply to all users in this Nextcloud."
+	"Default values for projects and budgets. Changes apply to all users in this Nextcloud." : "Default values for projects and budgets. Changes apply to all users in this Nextcloud.",
+	"(open + invoiced hours still unpaid in ProjectCheck)" : "(open + invoiced hours still unpaid in ProjectCheck)",
+	"Unpaid invoices in InvoicingCheck" : "Unpaid invoices in InvoicingCheck",
+	"Unpaid invoices (InvoicingCheck):" : "Unpaid invoices (InvoicingCheck):",
+	"None open" : "None open",
+	"%n invoice" : "%n invoice",
+	"%n invoices" : "%n invoices",
+	"%n overdue" : "%n overdue",
+	"Full remaining on invoices linked to this project (including shared multi-project invoices)." : "Full remaining on invoices linked to this project (including shared multi-project invoices)."
 	}
 );

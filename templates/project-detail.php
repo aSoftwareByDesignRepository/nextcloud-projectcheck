@@ -441,7 +441,35 @@ include __DIR__ . '/common/page-start.php';
                             <strong><?php p($l->t('Not yet paid:')); ?></strong>
                             <?php p($stlFmtHours($stlOutstandingHours)); ?> ·
                             <?php p($fmt ? $fmt->currency($stlOutstandingAmount) : $currencyCode . ' ' . number_format($stlOutstandingAmount, 2)); ?>
+                            <span class="pc-invoicing-outstanding__hint"><?php p($l->t('(open + invoiced hours still unpaid in ProjectCheck)')); ?></span>
                         </p>
+                        <?php
+                        $icUnpaid = is_array($_['invoicingCheckUnpaid'] ?? null) ? $_['invoicingCheckUnpaid'] : null;
+                        if ($icUnpaid !== null && array_key_exists('remainingCents', $icUnpaid) && array_key_exists('unpaidInvoiceCount', $icUnpaid)):
+                            $icCents = (int) $icUnpaid['remainingCents'];
+                            $icCount = (int) $icUnpaid['unpaidInvoiceCount'];
+                            $icOverdue = (int) ($icUnpaid['overdueCount'] ?? 0);
+                            $icAmount = $icCents / 100;
+                            $icAmountLabel = $fmt
+                                ? $fmt->currency($icAmount)
+                                : $currencyCode . ' ' . number_format($icAmount, 2);
+                        ?>
+                        <p class="pc-invoicing-ic-unpaid" data-testid="pc-ic-unpaid-strip" role="status"
+                            aria-label="<?php p($l->t('Unpaid invoices in InvoicingCheck')); ?>">
+                            <strong><?php p($l->t('Unpaid invoices (InvoicingCheck):')); ?></strong>
+                            <?php if ($icCount === 0): ?>
+                                <?php p($l->t('None open')); ?>
+                            <?php else: ?>
+                                <?php p($icAmountLabel); ?>
+                                ·
+                                <?php p($l->n('%n invoice', '%n invoices', $icCount)); ?>
+                                <?php if ($icOverdue > 0): ?>
+                                    · <span class="pc-invoicing-ic-unpaid__overdue"><?php p($l->n('%n overdue', '%n overdue', $icOverdue)); ?></span>
+                                <?php endif; ?>
+                                <span class="pc-invoicing-outstanding__hint"><?php p($l->t('Full remaining on invoices linked to this project (including shared multi-project invoices).')); ?></span>
+                            <?php endif; ?>
+                        </p>
+                        <?php endif; ?>
                     </div>
                     <div class="pc-invoicing-actions">
                         <a class="button secondary" href="<?php p((string)($_['settlementReviewUrl'] ?? '')); ?>">

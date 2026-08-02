@@ -664,6 +664,7 @@ class ProjectController extends Controller
 		]);
 		$invoicingCheckCreateUrl = null;
 		$invoicingCheckReceivablesUrl = null;
+		$invoicingCheckUnpaid = null;
 		try {
 			$appManager = \OCP\Server::get(\OCP\App\IAppManager::class);
 			if ($appManager->isEnabledForUser('invoicecheck')) {
@@ -674,10 +675,28 @@ class ProjectController extends Controller
 				$invoicingCheckReceivablesUrl = $this->urlGenerator->linkToRoute('invoicecheck.page.receivables', [
 					'projectId' => $id,
 				]);
+				// Soft feature-detect: older IC without summarizeUnpaidByPcProject → strip hidden.
+				if (class_exists(\OCA\InvoiceCheck\Facade\CrmInvoiceReadFacade::class)) {
+					$facade = \OCP\Server::get(\OCA\InvoiceCheck\Facade\CrmInvoiceReadFacade::class);
+					if (is_object($facade) && method_exists($facade, 'summarizeUnpaidByPcProject')) {
+						$rollup = $facade->summarizeUnpaidByPcProject($id);
+						if (is_array($rollup)
+							&& array_key_exists('remainingCents', $rollup)
+							&& array_key_exists('unpaidInvoiceCount', $rollup)
+						) {
+							$invoicingCheckUnpaid = [
+								'remainingCents' => (int) $rollup['remainingCents'],
+								'unpaidInvoiceCount' => (int) $rollup['unpaidInvoiceCount'],
+								'overdueCount' => (int) ($rollup['overdueCount'] ?? 0),
+							];
+						}
+					}
+				}
 			}
 		} catch (\Throwable) {
 			$invoicingCheckCreateUrl = null;
 			$invoicingCheckReceivablesUrl = null;
+			$invoicingCheckUnpaid = null;
 		}
 		$response = new TemplateResponse($this->appName, 'project-detail', [
 			'project' => $project,
@@ -722,6 +741,7 @@ class ProjectController extends Controller
 			'settlementReviewUrl' => $settlementReviewUrl,
 			'invoicingCheckCreateUrl' => $invoicingCheckCreateUrl,
 			'invoicingCheckReceivablesUrl' => $invoicingCheckReceivablesUrl,
+			'invoicingCheckUnpaid' => $invoicingCheckUnpaid,
 			'settlementPreviewUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.projectPreview', ['id' => $id]),
 			'settlementApplyUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.projectApply', ['id' => $id]),
 			'memberRoleUrlTemplate' => $this->urlGenerator->linkToRoute('projectcheck.project.updateTeamMemberRole', ['id' => $id, 'userId' => '__USER__']),

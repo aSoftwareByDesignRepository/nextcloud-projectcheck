@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.90 - 2026-08-02
+
+### Added
+
+- **InvoicingCheck unpaid strip** on project detail: when InvoicingCheck exposes `CrmInvoiceReadFacade::summarizeUnpaidByPcProject`, shows remaining €, open invoice count, and overdue count (soft feature-detect; never invents amounts). Clarifies that ProjectCheck “Not yet paid” is open + invoiced hours still unpaid in ProjectCheck.
+
 ## 2.0.89 - 2026-07-31
 
 ### Changed

@@ -72,9 +72,19 @@ final class SuiteComposabilityContractTest extends TestCase
 			$src,
 			'Receivables deep link must default null when IC absent'
 		);
+		$this->assertMatchesRegularExpression(
+			'/\$invoicingCheckUnpaid\s*=\s*null/',
+			$src,
+			'Unpaid € strip must default null when IC absent'
+		);
+		$this->assertStringContainsString('summarizeUnpaidByPcProject', $src);
+		$this->assertStringContainsString("array_key_exists('remainingCents'", $src);
 		$tpl = (string)file_get_contents($this->root . '/templates/project-detail.php');
 		$this->assertStringContainsString('invoicingCheckReceivablesUrl', $tpl);
 		$this->assertStringContainsString('Open unpaid invoices (InvoicingCheck)', $tpl);
+		$this->assertStringContainsString('invoicingCheckUnpaid', $tpl);
+		$this->assertStringContainsString('pc-ic-unpaid-strip', $tpl);
+		$this->assertStringContainsString('Unpaid invoices (InvoicingCheck):', $tpl);
 	}
 
 	public function testInfoXmlDoesNotHardRequireComposePartners(): void
