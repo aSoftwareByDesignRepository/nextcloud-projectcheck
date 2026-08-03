@@ -517,15 +517,16 @@ template {
   }
 }
 
-/* High Contrast Mode Support */
-@media (prefers-contrast: high) {
-  * {
-    border-color: currentColor !important;
-  }
+/* High Contrast Mode Support — scoped; do not blanket !important on all borders */
+@media (prefers-contrast: more) {
+	#content.app-projectcheck .pc-app {
+		--pc-border: var(--color-border-dark, var(--color-border));
+		--pc-border-strong: var(--color-main-text);
+	}
 
-  img {
-    filter: contrast(1.2);
-  }
+	#content.app-projectcheck .pc-app img {
+		filter: contrast(1.15);
+	}
 }
 
 /* Reduced Motion Support */
@@ -541,24 +542,8 @@ template {
   }
 }
 
-/* Dark Mode Support - explicit fallbacks for sidebar/content contrast when theme vars not applied */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --color-background: #1a1a1a;
-    --color-background-secondary: #2a2a2a;
-    --color-background-tertiary: #3a3a3a;
-    --color-main-background: #1a1a1a;
-    --color-background-dark: #2a2a2a;
-    --color-text: #e8e8e8;
-    --color-text-secondary: #d0d0d0;
-    --color-text-tertiary: #b0b0b0;
-    --color-main-text: #e8e8e8;
-    --color-text-maxcontrast: #e8e8e8;
-    --color-text-lighter: #a0a0a0;
-    --color-border: #4a4a4a;
-    --color-border-secondary: #3a3a3a;
-  }
-}
+/* Dark Mode: never invent a hex palette here.
+   Nextcloud sets --color-* on body[data-theme-*]; --pc-* tokens (tokens.css) derive from those. */
 
 /* Base Element Styles */
 html {

@@ -28,7 +28,7 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 $isEdit = isset($isEdit) ? $isEdit : (isset($timeEntry) && $timeEntry instanceof \OCA\ProjectCheck\Db\TimeEntry);
 $pageId = $isEdit ? 'time-entry-edit' : 'time-entry-create';
 $pageTitle = $isEdit ? $l->t('Edit Time Entry') : $l->t('Add Time Entry');
-$pageHelp = $l->t('Log time for Active or On Hold projects you are on. Administrators may also log time on projects that use one fixed rate or organisation-wide employee rates without being on the team.');
+$pageHelp = $l->t('Pick a project, enter the date and hours — that is all you need.');
 ob_start(); ?>
 					<a href="<?php p($_['indexUrl']); ?>" class="button secondary">
 						<?php p($l->t('Cancel')); ?>
@@ -115,9 +115,23 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 					</div>
 				</div>
 				<?php if (empty($projects)): ?>
-					<div class="time-entry-form-note" role="status" aria-live="polite">
-						<?php p($l->t('No selectable project found. Check project status and team assignment.')); ?>
-					</div>
+					<?php
+					$projectsIndexUrl = (string)($_['projectsUrl'] ?? '');
+					if ($projectsIndexUrl === '' && isset($_['urlGenerator']) && is_object($_['urlGenerator'])) {
+						$projectsIndexUrl = (string)$_['urlGenerator']->linkToRoute('projectcheck.project.index');
+					}
+					$projectsCreateUrl = '';
+					if (isset($_['urlGenerator']) && is_object($_['urlGenerator'])) {
+						$projectsCreateUrl = (string)$_['urlGenerator']->linkToRoute('projectcheck.project.create');
+					}
+					$iconLucide = 'folder';
+					$title = $l->t('No selectable project found');
+					$description = $l->t('Create a project first, or ask to be added to an Active or On Hold project team.');
+					$ctaHref = $projectsCreateUrl !== '' ? $projectsCreateUrl : $projectsIndexUrl;
+					$ctaLabel = $projectsCreateUrl !== '' ? $l->t('Create New Project') : $l->t('View Projects');
+					$ctaIconLucide = $projectsCreateUrl !== '' ? 'plus' : 'folder';
+					include __DIR__ . '/parts/pc-empty-state.php';
+					?>
 				<?php endif; ?>
 
 				<?php

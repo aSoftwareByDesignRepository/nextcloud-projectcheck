@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.91 - 2026-08-03
+
+### Added
+
+- **Inline customer quick-add** on the project form: create and select a customer without leaving the page (keeps draft fields); full customer form link for email/address.
+- **Grouped app navigation** (`pc-nav`): Overview / Work / Governance sections with short hints, Lucide icons via `IconCatalog`, and clearer empty-state guidance on list and time-entry pages.
+
+### Changed
+
+- Sidebar shell uses main background (MobilityCheck parity) instead of a dark fill; theme/CSS compliance contracts and UX journey e2e coverage expanded.
+
 ## 2.0.90 - 2026-08-02
 
 ### Added

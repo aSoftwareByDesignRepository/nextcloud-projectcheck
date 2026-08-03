@@ -143,6 +143,10 @@ include __DIR__ . '/common/page-start.php';
             </div>
             <div class="pc-list-panel__toolbar">
             <div class="filters-container pc-filters" role="search" aria-label="<?php p($l->t('Search and filter customers')); ?>">
+                <?php
+                $settlementFilterValue = (string)($_['filters']['settlement'] ?? '');
+                $customersAdvancedOpen = $settlementFilterValue !== '' && $settlementFilterValue !== 'all';
+                ?>
                 <div class="pc-filters__grid">
                     <div class="pc-filters__field pc-filters__field--search">
                         <label for="customer-search" class="pc-filters__label"><?php p($l->t('Search')); ?></label>
@@ -154,8 +158,13 @@ include __DIR__ . '/common/page-start.php';
                                 autocomplete="off">
                         </div>
                     </div>
+                </div>
 
-                    <?php $settlementFilterValue = (string)($_['filters']['settlement'] ?? ''); ?>
+                <details class="pc-filters__more"<?php if ($customersAdvancedOpen) {
+                	echo ' open';
+                } ?>>
+                    <summary class="pc-filters__more-summary"><?php p($l->t('More filters')); ?></summary>
+                    <div class="pc-filters__grid pc-filters__grid--advanced">
                     <div class="pc-filters__field">
                         <label for="settlement-filter" class="pc-filters__label"><?php p($l->t('Settlement')); ?></label>
                         <select id="settlement-filter" class="filter-select">
@@ -168,7 +177,8 @@ include __DIR__ . '/common/page-start.php';
                             <option value="n_a"<?php if ($settlementFilterValue === 'n_a') echo ' selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
                         </select>
                     </div>
-                </div>
+                    </div>
+                </details>
 
                 <div class="pc-filters__actions">
                     <button id="apply-filters" class="button primary" type="button">
@@ -196,11 +206,22 @@ include __DIR__ . '/common/page-start.php';
             </div>
 
             <?php if (empty($_['customers'])): ?>
-                <div class="emptycontent">
-                    <div class="emptycontent__icon" aria-hidden="true"><span data-lucide="user" class="lucide-icon"></span></div>
-                    <h2><?php p($l->t('No customers found')); ?></h2>
-                    <p><?php p($l->t('Add your first customer to get started!')); ?></p>
-                </div>
+                <?php
+                $iconLucide = 'users';
+                $title = $l->t('No customers found');
+                $description = $l->t('Add your first customer to get started!');
+                $ctaHref = '';
+                $ctaLabel = '';
+                $hint = '';
+                if (!empty($_['canCreateCustomer']) && isset($_['urlGenerator']) && is_object($_['urlGenerator'])) {
+                	$ctaHref = (string)$_['urlGenerator']->linkToRoute('projectcheck.customer.create');
+                	$ctaLabel = $l->t('Add New Customer');
+                	$ctaIconLucide = 'plus';
+                } else {
+                	$hint = $l->t('Ask an administrator if you need a new customer.');
+                }
+                include __DIR__ . '/parts/pc-empty-state.php';
+                ?>
             <?php else: ?>
                 <div class="pc-list-table-wrap" tabindex="0" role="region" aria-label="<?php p($l->t('Customers')); ?>">
                 <table class="grid customers-table pc-data-table">

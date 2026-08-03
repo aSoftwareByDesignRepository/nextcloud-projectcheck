@@ -1174,9 +1174,16 @@ body[dir="rtl"] .projectcheck-select {
 .pc-app .pc-settings-nav__link.is-active,
 .pc-app .pc-settings-nav__link[aria-current="page"] {
 	border-color: var(--color-primary-element);
-	background: var(--color-primary-element-light);
+	background: var(--pc-tint-info, var(--color-primary-element-light));
 	color: var(--color-main-text);
 	font-weight: 700;
+}
+/* Desktop sidebar already shows settings children — hide duplicate chip bar */
+@media (min-width: 1024px) {
+	.pc-settings-nav,
+	.projectcheck-settings-nav {
+		display: none;
+	}
 }
 @media (max-width: 640px) {
 	.pc-settings-nav,
@@ -1217,10 +1224,13 @@ body[dir="rtl"] .projectcheck-select {
 	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 60%, transparent);
 	outline-offset: 2px;
 }
-.projectcheck-nav__subitem.is-active .projectcheck-nav__sublink {
-	background: var(--color-primary-element-light);
-	font-weight: 600;
+.projectcheck-nav__subitem.is-active .projectcheck-nav__sublink,
+.projectcheck-nav__sublink[aria-current='page'] {
+	background: var(--pc-tint-info, var(--color-primary-element-light));
+	font-weight: 700;
 	color: var(--color-main-text);
+	box-shadow: none;
+	transform: none;
 }
 
 /* Settings breadcrumb: AA contrast (main-text, not primary-on-dark) */

@@ -126,7 +126,8 @@
     --color-background-tertiary: var(--color-background-darker);
   }
 
-  [data-theme="dark"] {
+  [data-theme-dark],
+  body[data-theme-dark] {
     --color-primary: var(--color-primary-element);
     --color-primary-hover: var(--color-primary-element-hover);
     --color-error: var(--color-error);
@@ -148,12 +149,7 @@
   }
 
   /* Ensure focus indicators are highly visible */
-  *:focus {
-    outline: 3px solid var(--color-primary-element);
-    outline-offset: 2px;
-  }
-
-  [data-theme="dark"] *:focus {
+  *:focus-visible {
     outline: 3px solid var(--color-primary-element);
     outline-offset: 2px;
   }

@@ -159,10 +159,21 @@
 	-webkit-appearance: none;
 	-moz-appearance: none;
 	appearance: none;
-	background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
-	background-repeat: no-repeat !important;
-	background-position: right 12px center !important;
-	background-size: 16px !important;
+	background-image: var(
+		--icon-triangle-s-dark,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+	);
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	background-size: 16px;
+}
+
+body[data-theme-dark] .time-entry-form .form-group select,
+[data-theme-dark] .time-entry-form .form-group select {
+	background-image: var(
+		--icon-triangle-s-light,
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%23c4c4c4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+	);
 }
 
 .time-entry-form .form-hint {
@@ -178,7 +189,7 @@
 .time-entry-form .form-group textarea:focus {
 	outline: none;
 	border-color: var(--color-primary-element, var(--color-primary));
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-element, #0082c9) 25%, transparent);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-element, var(--color-primary)) 25%, transparent);
 }
 
 .time-entry-form .form-group input:focus-visible,

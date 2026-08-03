@@ -94,6 +94,14 @@ include __DIR__ . '/common/page-start.php';
             </div>
             <div class="time-entries-panel__toolbar pc-list-panel__toolbar">
             <div class="filters-container pc-filters" role="search" aria-label="<?php p($l->t('Search and filter time entries')); ?>">
+                <?php
+                $teAdvancedOpen = !empty($filters['project_id'])
+                	|| !empty($filters['user_id'])
+                	|| !empty($filters['project_type'])
+                	|| !empty($filters['date_from'])
+                	|| !empty($filters['date_to'])
+                	|| ($billingStatusFilter !== '' && $billingStatusFilter !== null);
+                ?>
                 <div class="pc-filters__grid">
                     <div class="pc-filters__field pc-filters__field--search filter-group">
                         <label for="time-entry-search" class="pc-filters__label filter-label"><?php p($l->t('Search')); ?></label>
@@ -105,7 +113,13 @@ include __DIR__ . '/common/page-start.php';
                                 autocomplete="off">
                         </div>
                     </div>
+                </div>
 
+                <details class="pc-filters__more"<?php if ($teAdvancedOpen) {
+                	echo ' open';
+                } ?>>
+                    <summary class="pc-filters__more-summary"><?php p($l->t('More filters')); ?></summary>
+                    <div class="pc-filters__grid pc-filters__grid--advanced">
                     <div class="pc-filters__field filter-group">
                         <label for="project-filter" class="pc-filters__label filter-label"><?php p($l->t('Project')); ?></label>
                         <select id="project-filter" class="filter-select">
@@ -189,7 +203,8 @@ include __DIR__ . '/common/page-start.php';
                             value="<?php p($filterDateTo); ?>"
                             autocomplete="off">
                     </div>
-                </div>
+                    </div>
+                </details>
 
                 <div class="pc-filters__actions filter-actions">
                     <button type="button" id="apply-filters" class="button primary">

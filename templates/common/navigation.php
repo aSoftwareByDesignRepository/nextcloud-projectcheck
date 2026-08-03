@@ -5,7 +5,12 @@
  *
  * @copyright Copyright (c) 2024, Nextcloud GmbH
  * @license AGPL-3.0-or-later
+ *
+ * @var array $_
+ * @var \OCP\IL10N $l
  */
+
+use OCA\ProjectCheck\Service\IconCatalog;
 
 \OCP\Util::addStyle('projectcheck', 'common/feedback-system');
 // Centralized locale-aware formatting (number/currency/date). Must load before any
@@ -19,8 +24,6 @@
 // Shared modal accessibility helper (focus trap, Escape, backdrop, restore focus).
 // Must load before messaging/components so every openModal call gets the trap.
 \OCP\Util::addScript('projectcheck', 'common/modal-a11y');
-// SVG icon injection: external app script (CSP via Nextcloud app resource pipeline, not inline).
-\OCP\Util::addScript('projectcheck', 'navigation-icons');
 // Mobile drawer: in-page Menu button (replaces core #app-navigation-toggle).
 \OCP\Util::addScript('projectcheck', 'pc-mobile-nav');
 // Centralised icon catalog and hydration (audit ref. AUDIT-FINDINGS H22/icon-dedup).
@@ -45,119 +48,161 @@ $settingsSectionLabels = (array)($settingsSectionLabels ?? $_['settingsSectionLa
 $settingsSectionUrls = (array)(($_['urls']['settingsSections'] ?? []) ?: ($_['settingsSections'] ?? []));
 $isOnSettings = $isSettings || $isOrganization || $settingsSection !== '';
 // Dashboard is active if URL contains /dashboard OR if it's the base app URL without any specific section
-$isDashboard = strpos($currentPage, '/dashboard') !== false || 
-               (!$isProjects && !$isCustomers && !$isEmployees && !$isTimeEntries && !$isSettings && !$isOrganization && 
-                strpos($currentPage, '/apps/projectcheck') !== false);
+$isDashboard = strpos($currentPage, '/dashboard') !== false ||
+	(!$isProjects && !$isCustomers && !$isEmployees && !$isTimeEntries && !$isSettings && !$isOrganization &&
+		strpos($currentPage, '/apps/projectcheck') !== false);
 
-// Get stats for the footer (if available)
-$projectCount = $_['stats']['total_projects'] ?? $_['stats']['totalProjects'] ?? 0;
-$customerCount = $_['stats']['total_customers'] ?? $_['stats']['totalCustomers'] ?? 0;
-$timeEntryCount = $_['stats']['total_time_entries'] ?? $_['stats']['totalTimeEntries'] ?? 0;
+$navPageId = 'dashboard';
+if ($isTimeEntries) {
+	$navPageId = 'time-entries';
+} elseif ($isProjects) {
+	$navPageId = 'projects';
+} elseif ($isCustomers) {
+	$navPageId = 'customers';
+} elseif ($isEmployees) {
+	$navPageId = 'employees';
+} elseif ($isOnSettings) {
+	$navPageId = 'settings';
+} elseif ($isDashboard) {
+	$navPageId = 'dashboard';
+}
 
-// Ensure we have valid numbers and provide fallbacks
-$projectCount = is_numeric($projectCount) ? (int)$projectCount : 0;
-$customerCount = is_numeric($customerCount) ? (int)$customerCount : 0;
-$timeEntryCount = is_numeric($timeEntryCount) ? (int)$timeEntryCount : 0;
+$roleLabel = (string)($_['roleLabel'] ?? '');
+if ($roleLabel === '') {
+	$roleLabel = $canAccessSettings ? $l->t('Administrator') : $l->t('Member');
+}
 
-// If stats are not available yet, fall back to explicit zeros.
-if (!isset($_['stats']) || empty($_['stats'])) {
-    $projectCount = 0;
-    $customerCount = 0;
-    $timeEntryCount = 0;
+$settingsChildren = [];
+if ($canAccessSettings && $isOnSettings && $settingsSectionLabels !== []) {
+	foreach ($settingsSectionLabels as $sectionId => $sectionLabel) {
+		$childHref = (string)($settingsSectionUrls[$sectionId] ?? '');
+		if ($childHref === '' || $childHref === '#') {
+			continue;
+		}
+		$settingsChildren[] = [
+			'id' => (string)$sectionId,
+			'label' => (string)$sectionLabel,
+			'url' => $childHref,
+			'active' => $settingsSection === (string)$sectionId,
+		];
+	}
+}
+
+$groups = [
+	[
+		'title' => $l->t('Overview'),
+		'items' => [
+			[
+				'id' => 'dashboard',
+				'label' => $l->t('Dashboard'),
+				'hint' => $l->t('Current status and priorities'),
+				'icon' => 'layout-grid',
+				'url' => $_['dashboardUrl'] ?? '/index.php/apps/projectcheck/dashboard',
+			],
+			[
+				'id' => 'time-entries',
+				'label' => $l->t('Time Entries'),
+				'hint' => $l->t('Log and review tracked time'),
+				'icon' => 'clock',
+				'url' => $_['timeEntriesUrl'] ?? '/index.php/apps/projectcheck/time-entries',
+			],
+		],
+	],
+	[
+		'title' => $l->t('Management'),
+		'items' => [
+			[
+				'id' => 'projects',
+				'label' => $l->t('Projects'),
+				'hint' => $l->t('Create and manage projects'),
+				'icon' => 'folder',
+				'url' => $_['projectsUrl'] ?? '/index.php/apps/projectcheck/projects',
+			],
+			[
+				'id' => 'customers',
+				'label' => $l->t('Customers'),
+				'hint' => $l->t('Clients and organisations'),
+				'icon' => 'users',
+				'url' => $_['customersUrl'] ?? '/index.php/apps/projectcheck/customers',
+			],
+			[
+				'id' => 'employees',
+				'label' => $l->t('Employees'),
+				'hint' => $l->t('Team members and rates'),
+				'icon' => 'user-check',
+				'url' => $_['employeesUrl'] ?? '/index.php/apps/projectcheck/employees',
+			],
+		],
+	],
+];
+
+if ($canAccessSettings) {
+	$groups[] = [
+		'title' => $l->t('Governance'),
+		'items' => [
+			[
+				'id' => 'settings',
+				'label' => $l->t('Settings'),
+				'hint' => $l->t('Access, policy and defaults'),
+				'icon' => 'settings',
+				'url' => $_['settingsUrl'] ?? $orgAppSettingsUrl,
+				'children' => $settingsChildren,
+			],
+		],
+	];
 }
 
 include __DIR__ . '/pc-l10n-bootstrap.php';
 ?>
 
-<div id="app-navigation" class="pc-app-nav" role="navigation" aria-label="<?php p($l->t('ProjectCheck primary navigation')); ?>">
-    <!-- Sidebar Header -->
-    <div class="sidebar-header">
-        <div class="app-brand">
-            <div class="app-icon">
-                <i data-lucide="folder" class="lucide-icon"></i>
-            </div>
-            <div class="app-info">
-                <h3><?php p($l->t('ProjectCheck')); ?></h3>
-                <p><?php p($l->t('Manage your projects')); ?></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Navigation Menu -->
-    <ul class="nav-menu" aria-label="<?php p($l->t('Main sections')); ?>">
-        <li class="<?php echo $isDashboard ? 'active' : ''; ?>">
-            <a href="<?php p($_['dashboardUrl'] ?? '/index.php/apps/projectcheck/dashboard'); ?>" <?php echo $isDashboard ? 'aria-current="page"' : ''; ?>>
-                <i data-lucide="home" class="lucide-icon" aria-hidden="true"></i>
-                <span><?php p($l->t('Dashboard')); ?></span>
-            </a>
-        </li>
-        <li class="<?php echo $isTimeEntries ? 'active' : ''; ?>">
-            <a href="<?php p($_['timeEntriesUrl'] ?? '/index.php/apps/projectcheck/time-entries'); ?>" <?php echo $isTimeEntries ? 'aria-current="page"' : ''; ?>>
-                <i data-lucide="clock" class="lucide-icon" aria-hidden="true"></i>
-                <span><?php p($l->t('Time Entries')); ?></span>
-            </a>
-        </li>
-        <li class="<?php echo $isProjects ? 'active' : ''; ?>">
-            <a href="<?php p($_['projectsUrl'] ?? '/index.php/apps/projectcheck/projects'); ?>" <?php echo $isProjects ? 'aria-current="page"' : ''; ?>>
-                <i data-lucide="folder" class="lucide-icon" aria-hidden="true"></i>
-                <span><?php p($l->t('Projects')); ?></span>
-            </a>
-        </li>
-        <li class="<?php echo $isCustomers ? 'active' : ''; ?>">
-            <a href="<?php p($_['customersUrl'] ?? '/index.php/apps/projectcheck/customers'); ?>" <?php echo $isCustomers ? 'aria-current="page"' : ''; ?>>
-                <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
-                <span><?php p($l->t('Customers')); ?></span>
-            </a>
-        </li>
-        <li class="<?php echo $isEmployees ? 'active' : ''; ?>">
-            <a href="<?php p($_['employeesUrl'] ?? '/index.php/apps/projectcheck/employees'); ?>" <?php echo $isEmployees ? 'aria-current="page"' : ''; ?>>
-                <i data-lucide="user-check" class="lucide-icon" aria-hidden="true"></i>
-                <span><?php p($l->t('Employees')); ?></span>
-            </a>
-        </li>
-        <?php if ($canAccessSettings) {
-			$settingsChildren = ($isOnSettings && $settingsSectionLabels !== []) ? $settingsSectionLabels : [];
-			$parentAriaCurrent = $isOnSettings && $settingsChildren === [];
-			?>
-        <li class="<?php echo $isOnSettings ? 'active' : ''; ?>">
-            <a href="<?php p($_['settingsUrl'] ?? $orgAppSettingsUrl); ?>" <?php echo $parentAriaCurrent ? 'aria-current="page"' : ''; ?>>
-                <i data-lucide="settings" class="lucide-icon" aria-hidden="true"></i>
-                <span><?php p($l->t('Settings')); ?></span>
-            </a>
-			<?php if ($settingsChildren !== []): ?>
-				<ul class="projectcheck-nav__sublist">
-					<?php foreach ($settingsChildren as $childId => $childLabel):
-						$childId = (string) $childId;
-						$childHref = (string) ($settingsSectionUrls[$childId] ?? '');
-						if ($childHref === '' || $childHref === '#') {
-							continue;
-						}
-						$childActive = $settingsSection === $childId;
-						?>
-						<li class="projectcheck-nav__subitem<?php p($childActive ? ' is-active' : ''); ?>">
-							<a class="projectcheck-nav__sublink" href="<?php p($childHref); ?>"
-								<?php if ($childActive): ?>aria-current="page"<?php endif; ?>>
-								<?php p((string) $childLabel); ?>
-							</a>
-						</li>
-					<?php endforeach; ?>
-				</ul>
-			<?php endif; ?>
-        </li>
-        <?php } ?>
-    </ul>
-
-    <!-- Sidebar Footer -->
-    <div class="sidebar-footer">
-        <div class="quick-stats">
-            <div class="stat-item">
-                <span class="stat-number"><?php p($projectCount); ?></span>
-                <span class="stat-label"><?php p($l->t('Projects')); ?></span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number"><?php p($customerCount); ?></span>
-                <span class="stat-label"><?php p($l->t('Customers')); ?></span>
-            </div>
-        </div>
-    </div>
+<div id="app-navigation" class="pc-app-nav pc-nav" role="navigation" aria-label="<?php p($l->t('ProjectCheck navigation')); ?>">
+	<div class="pc-nav__brand">
+		<span class="pc-nav__brand-icon" aria-hidden="true">
+			<?php print_unescaped(IconCatalog::render('folder', 'pc-icon--lg')); ?>
+		</span>
+		<div>
+			<h2 class="pc-nav__title"><?php p($l->t('ProjectCheck')); ?></h2>
+			<p class="pc-nav__subtitle"><?php p($l->t('Manage your projects')); ?></p>
+			<span class="pc-badge pc-badge--info"><?php p($roleLabel); ?></span>
+		</div>
+	</div>
+	<?php foreach ($groups as $group): ?>
+		<div class="pc-nav__group">
+			<p class="pc-nav__group-title"><?php p((string)$group['title']); ?></p>
+			<ul class="pc-nav__list">
+				<?php foreach ((array)$group['items'] as $item):
+					$children = (array)($item['children'] ?? []);
+					$active = $navPageId === $item['id'];
+					$parentAriaCurrent = $active && $children === [];
+					?>
+					<li class="pc-nav__item<?php p($active ? ' is-active active' : ''); ?>">
+						<a class="pc-nav__link" href="<?php p((string)$item['url']); ?>"
+							<?php if ($parentAriaCurrent): ?>aria-current="page"<?php endif; ?>>
+							<span class="pc-nav__icon" aria-hidden="true">
+								<?php print_unescaped(IconCatalog::render((string)$item['icon'])); ?>
+							</span>
+							<span class="pc-nav__label">
+								<span class="pc-nav__name"><?php p((string)$item['label']); ?></span>
+								<span class="pc-nav__hint"><?php p((string)$item['hint']); ?></span>
+							</span>
+						</a>
+						<?php if ($children !== []): ?>
+							<ul class="pc-nav__sublist projectcheck-nav__sublist">
+								<?php foreach ($children as $child):
+									$childActive = !empty($child['active']);
+									?>
+									<li class="pc-nav__subitem projectcheck-nav__subitem<?php p($childActive ? ' is-active active' : ''); ?>">
+										<a class="pc-nav__sublink projectcheck-nav__sublink" href="<?php p((string)$child['url']); ?>"
+											<?php if ($childActive): ?>aria-current="page"<?php endif; ?>>
+											<?php p((string)$child['label']); ?>
+										</a>
+									</li>
+								<?php endforeach; ?>
+							</ul>
+						<?php endif; ?>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</div>
+	<?php endforeach; ?>
 </div>

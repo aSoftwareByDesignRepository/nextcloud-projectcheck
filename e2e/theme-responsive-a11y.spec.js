@@ -26,6 +26,8 @@ const BASE = (process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, ''
 const routes = [
 	{ id: 'dashboard', url: process.env.E2E_DASHBOARD_URL || `${BASE}/index.php/apps/projectcheck/dashboard` },
 	{ id: 'projects', url: process.env.E2E_PROJECTS_URL || `${BASE}/index.php/apps/projectcheck/projects` },
+	{ id: 'customers', url: `${BASE}/index.php/apps/projectcheck/customers` },
+	{ id: 'timeEntries', url: `${BASE}/index.php/apps/projectcheck/time-entries` },
 	{ id: 'settings', url: process.env.E2E_PROJECTCHECK_SETTINGS_URL || `${BASE}/index.php/apps/projectcheck/settings` },
 ];
 

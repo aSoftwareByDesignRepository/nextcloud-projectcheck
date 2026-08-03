@@ -213,9 +213,11 @@ final class SettingsPagesContractTest extends TestCase
 	public function testNavigationBuildsSubListFromControllerData(): void
 	{
 		$nav = self::read('templates/common/navigation.php');
+		self::assertStringContainsString('pc-nav__sublist', $nav);
 		self::assertStringContainsString('projectcheck-nav__sublist', $nav);
+		self::assertStringContainsString('pc-nav__sublink', $nav);
 		self::assertStringContainsString('projectcheck-nav__sublink', $nav);
-		self::assertStringContainsString('$parentAriaCurrent = $isOnSettings && $settingsChildren === [];', $nav);
+		self::assertStringContainsString('$parentAriaCurrent = $active && $children === [];', $nav);
 		self::assertMatchesRegularExpression(
 			'/if \(\$childActive\): \?>aria-current="page"/',
 			$nav,

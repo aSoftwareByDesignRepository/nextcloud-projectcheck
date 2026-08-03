@@ -188,7 +188,8 @@ include __DIR__ . '/common/page-start.php';
 
                 <div class="form-group">
                     <label for="customer_id"><?php p($l->t('Customer')); ?> *</label>
-                    <select id="customer_id" name="customer_id" class="form-input form-select" required>
+                    <select id="customer_id" name="customer_id" class="form-input form-select" required
+                        aria-describedby="customer_id-help<?php p(!empty($_['canCreateCustomer']) ? ' pc-quick-customer-status' : ''); ?>">
                         <option value=""><?php p($l->t('Select a customer')); ?></option>
                         <?php if (isset($customers) && is_array($customers)): ?>
                             <?php foreach ($customers as $customer): ?>
@@ -207,6 +208,50 @@ include __DIR__ . '/common/page-start.php';
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
+                    <?php
+                    $canCreateCustomer = !empty($_['canCreateCustomer']);
+                    $customerStoreUrl = (string)($_['customerStoreUrl'] ?? '');
+                    $customerCreateUrl = (string)($_['customerCreateUrl'] ?? '');
+                    if ($customerCreateUrl === '' && isset($_['urlGenerator']) && is_object($_['urlGenerator'])) {
+                    	$customerCreateUrl = (string)$_['urlGenerator']->linkToRoute('projectcheck.customer.create');
+                    }
+                    if ($customerStoreUrl === '' && isset($_['urlGenerator']) && is_object($_['urlGenerator'])) {
+                    	$customerStoreUrl = (string)$_['urlGenerator']->linkToRoute('projectcheck.customer.store');
+                    }
+                    ?>
+                    <p class="form-hint" id="customer_id-help">
+                        <?php if ($canCreateCustomer): ?>
+                            <?php p($l->t('Missing from the list? Add them below — your project details stay filled in.')); ?>
+                        <?php else: ?>
+                            <?php p($l->t('Ask an administrator if you need a new customer.')); ?>
+                        <?php endif; ?>
+                    </p>
+                    <?php if ($canCreateCustomer && $customerStoreUrl !== ''): ?>
+                    <div class="pc-quick-customer"
+                        data-store-url="<?php p($customerStoreUrl); ?>"
+                        data-create-url="<?php p($customerCreateUrl); ?>">
+                        <label class="pc-quick-customer__label" for="pc-quick-customer-name"><?php p($l->t('New customer name')); ?></label>
+                        <div class="pc-quick-customer__row">
+                            <input type="text"
+                                id="pc-quick-customer-name"
+                                class="form-input pc-quick-customer__input"
+                                maxlength="255"
+                                autocomplete="organization"
+                                placeholder="<?php p($l->t('e.g. Acme GmbH')); ?>"
+                                aria-describedby="pc-quick-customer-status">
+                            <button type="button" id="pc-quick-customer-create" class="button primary pc-quick-customer__btn">
+                                <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($l->t('Add customer')); ?>
+                            </button>
+                        </div>
+                        <p class="pc-quick-customer__status" id="pc-quick-customer-status" role="status" aria-live="polite"></p>
+                        <?php if ($customerCreateUrl !== ''): ?>
+                        <p class="pc-quick-customer__more">
+                            <a href="<?php p($customerCreateUrl); ?>"><?php p($l->t('Need email or address? Open full customer form')); ?></a>
+                        </p>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 </section>
 

@@ -619,7 +619,8 @@ i {
     --text-color-inverse: var(--color-primary-element-text);
   }
 
-  [data-theme="dark"] {
+  [data-theme-dark],
+  body[data-theme-dark] {
     --text-color-primary: var(--color-main-text);
     --text-color-secondary: var(--color-text-maxcontrast);
     --text-color-tertiary: var(--color-text-lighter);

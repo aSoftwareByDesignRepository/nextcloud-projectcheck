@@ -341,6 +341,35 @@
 	word-break: normal;
 }
 
+/*
+ * Row entity links: NC core styles anchors with --color-primary-element, which
+ * often fails WCAG AA on dark themes (~2.9:1). Use main text + underline so
+ * colour is never the only cue (DS §0.3 / WCAG 1.4.1) and contrast stays ≥4.5:1.
+ */
+#app-content.pc-app .pc-data-table tbody td a:not(.button):not(.action-item),
+#app-content.pc-app .pc-list-panel .pc-data-table tbody td a:not(.button):not(.action-item),
+#app-content.pc-app .time-entries-table tbody td a:not(.button):not(.action-item) {
+	color: var(--color-main-text);
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+	text-decoration-thickness: from-font;
+}
+
+#app-content.pc-app .pc-data-table tbody td a:not(.button):not(.action-item):hover,
+#app-content.pc-app .pc-list-panel .pc-data-table tbody td a:not(.button):not(.action-item):hover,
+#app-content.pc-app .time-entries-table tbody td a:not(.button):not(.action-item):hover {
+	color: var(--color-main-text);
+	background: var(--pc-tint-info, var(--color-background-hover));
+	border-radius: var(--pc-radius-sm, 6px);
+}
+
+#app-content.pc-app .pc-data-table tbody td a:not(.button):not(.action-item):focus-visible,
+#app-content.pc-app .pc-list-panel .pc-data-table tbody td a:not(.button):not(.action-item):focus-visible,
+#app-content.pc-app .time-entries-table tbody td a:not(.button):not(.action-item):focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 60%, transparent);
+	outline-offset: 2px;
+}
+
 .pc-list-panel .pc-data-table thead th,
 .pc-app--time-entries .time-entries-table thead th {
 	white-space: nowrap;

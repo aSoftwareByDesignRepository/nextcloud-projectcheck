@@ -501,6 +501,9 @@ class ProjectController extends Controller
 			'orgCurrency' => $currency,
 			'costRateModeLocked' => false,
 			'employeesIndexUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.index'),
+			'canCreateCustomer' => $this->projectService->canUserCreateCustomer($userId),
+			'customerStoreUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.store'),
+			'customerCreateUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.create'),
 		]);
 
 		return $this->configureCSP($response);
@@ -1015,6 +1018,9 @@ class ProjectController extends Controller
 			'teamMembersActiveCount' => $teamMembersActiveCount,
 			'teamMembersFormerCount' => $teamMembersFormerCount,
 			'canManageMembers' => $canManageMembers,
+			'canCreateCustomer' => $this->projectService->canUserCreateCustomer($uid),
+			'customerStoreUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.store'),
+			'customerCreateUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.create'),
 		]);
 
 		return $this->configureCSP($response);

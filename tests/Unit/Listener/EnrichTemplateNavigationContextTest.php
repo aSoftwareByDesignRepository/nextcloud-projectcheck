@@ -113,6 +113,7 @@ class EnrichTemplateNavigationContextTest extends TestCase
 		$this->assertSame('EUR', $params['orgCurrency'] ?? null);
 		$this->assertSame('de-DE', $params['htmlLang'] ?? null);
 		$this->assertSame('/index.php/apps/projectcheck/employees', $params['employeesUrl'] ?? null);
+		$this->assertSame('Administrator', $params['roleLabel'] ?? null);
 		$this->assertInstanceOf(LocaleFormatService::class, $params['fmt'] ?? null);
 		$this->assertSame($urlGenerator, $params['urlGenerator'] ?? null);
 	}

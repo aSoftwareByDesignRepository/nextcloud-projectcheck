@@ -11,6 +11,8 @@ const BASE = (process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, ''
 const URLS = {
 	dashboard: process.env.E2E_DASHBOARD_URL || `${BASE}/index.php/apps/projectcheck/dashboard`,
 	projects: process.env.E2E_PROJECTS_URL || `${BASE}/index.php/apps/projectcheck/projects`,
+	customers: `${BASE}/index.php/apps/projectcheck/customers`,
+	timeEntries: `${BASE}/index.php/apps/projectcheck/time-entries`,
 	settings: process.env.E2E_PROJECTCHECK_SETTINGS_URL || `${BASE}/index.php/apps/projectcheck/settings`,
 };
 

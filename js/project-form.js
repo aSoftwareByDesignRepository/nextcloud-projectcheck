@@ -1,8 +1,12 @@
 /**
- * Project form: native date inputs (ISO wire format, WCAG §10).
+ * Project form: native date inputs + inline customer quick-add (stay on page).
  */
 (function () {
 	'use strict';
+
+	function tPc(msg) {
+		return typeof t === 'function' ? t('projectcheck', msg) : msg;
+	}
 
 	function normalizeDateToIso(dateString) {
 		if (!dateString) {
@@ -56,15 +60,135 @@
 			return true;
 		}
 		if (end < start) {
-			endInput.setCustomValidity(
-				typeof t === 'function'
-					? t('projectcheck', 'End date must be on or after the start date.')
-					: 'End date must be on or after the start date.'
-			);
+			endInput.setCustomValidity(tPc('End date must be on or after the start date.'));
 			return false;
 		}
 		endInput.setCustomValidity('');
 		return true;
+	}
+
+	function setQuickCustomerStatus(el, message, isError) {
+		if (!el) {
+			return;
+		}
+		el.textContent = message || '';
+		el.classList.toggle('is-error', !!isError);
+		el.classList.toggle('is-success', !!message && !isError);
+	}
+
+	function announce(message) {
+		const live = document.getElementById('pc-live-region');
+		if (live) {
+			live.textContent = '';
+			window.setTimeout(function () {
+				live.textContent = message;
+			}, 20);
+		}
+		if (window.ProjectCheckNotify && typeof window.ProjectCheckNotify.show === 'function') {
+			window.ProjectCheckNotify.show(message, 'success');
+		}
+	}
+
+	function selectCustomerOption(select, customer) {
+		const id = String(customer.id);
+		const name = String(customer.name || '');
+		let option = null;
+		for (let i = 0; i < select.options.length; i++) {
+			if (select.options[i].value === id) {
+				option = select.options[i];
+				break;
+			}
+		}
+		if (!option) {
+			option = document.createElement('option');
+			option.value = id;
+			option.textContent = name;
+			select.appendChild(option);
+		} else {
+			option.textContent = name;
+		}
+		select.value = id;
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+	}
+
+	function initializeQuickCustomer() {
+		const wrap = document.querySelector('.pc-quick-customer');
+		const select = document.getElementById('customer_id');
+		const nameInput = document.getElementById('pc-quick-customer-name');
+		const createBtn = document.getElementById('pc-quick-customer-create');
+		const statusEl = document.getElementById('pc-quick-customer-status');
+		if (!wrap || !select || !nameInput || !createBtn) {
+			return;
+		}
+
+		const storeUrl = wrap.getAttribute('data-store-url') || '';
+		if (!storeUrl) {
+			return;
+		}
+
+		async function createCustomer() {
+			const name = String(nameInput.value || '').trim();
+			if (!name) {
+				setQuickCustomerStatus(statusEl, tPc('Enter a customer name.'), true);
+				nameInput.focus();
+				return;
+			}
+
+			createBtn.disabled = true;
+			nameInput.disabled = true;
+			setQuickCustomerStatus(statusEl, tPc('Creating customer…'), false);
+
+			const token = (typeof OC !== 'undefined' && OC.requestToken) ? OC.requestToken : '';
+			try {
+				const response = await fetch(storeUrl, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+						requesttoken: token,
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+					body: new URLSearchParams({ name: name }).toString(),
+					credentials: 'same-origin',
+				});
+				const result = await response.json().catch(function () {
+					return {};
+				});
+
+				if (!response.ok || !result.success || !result.customer || !result.customer.id) {
+					let err = result.error || tPc('Could not create customer. Please check your input.');
+					if (result.errors && result.errors.name) {
+						err = Array.isArray(result.errors.name) ? result.errors.name.join(' ') : String(result.errors.name);
+					}
+					setQuickCustomerStatus(statusEl, err, true);
+					nameInput.focus();
+					return;
+				}
+
+				selectCustomerOption(select, result.customer);
+				nameInput.value = '';
+				const okMsg = tPc('Customer added and selected.');
+				setQuickCustomerStatus(statusEl, okMsg, false);
+				announce(okMsg);
+				select.focus();
+			} catch (e) {
+				setQuickCustomerStatus(statusEl, tPc('Could not create customer. Please check your input.'), true);
+				nameInput.focus();
+			} finally {
+				createBtn.disabled = false;
+				nameInput.disabled = false;
+			}
+		}
+
+		createBtn.addEventListener('click', function (e) {
+			e.preventDefault();
+			createCustomer();
+		});
+		nameInput.addEventListener('keydown', function (e) {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				createCustomer();
+			}
+		});
 	}
 
 	function initializeProjectForm() {
@@ -92,6 +216,8 @@
 				}
 			});
 		}
+
+		initializeQuickCustomer();
 	}
 
 	if (document.readyState === 'loading') {

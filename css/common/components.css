@@ -343,25 +343,17 @@
   color: var(--color-main-text, var(--color-text));
 }
 
-/* Dark theme support for select elements */
-[data-theme="dark"] .form-select,
-[data-theme="dark"] .form-select option,
-[data-theme="dark"] .form-input.form-select,
-[data-theme="dark"] .form-input.form-select option {
-  background-color: var(--color-main-background, #181818);
-  color: var(--color-main-text, #e0e0e0);
-}
-
-/* Dark theme support using prefers-color-scheme */
-@media (prefers-color-scheme: dark) {
-
-  .form-select,
-  .form-select option,
-  .form-input.form-select,
-  .form-input.form-select option {
-    background-color: var(--color-main-background, #181818);
-    color: var(--color-main-text, #e0e0e0);
-  }
+/* Dark theme: NC sets vars on body[data-theme-dark] — rely on inherited --color-* (no hex). */
+body[data-theme-dark] .form-select,
+body[data-theme-dark] .form-select option,
+body[data-theme-dark] .form-input.form-select,
+body[data-theme-dark] .form-input.form-select option,
+[data-theme-dark] .form-select,
+[data-theme-dark] .form-select option,
+[data-theme-dark] .form-input.form-select,
+[data-theme-dark] .form-input.form-select option {
+  background-color: var(--color-main-background);
+  color: var(--color-main-text);
 }
 
 /* Form Checkbox and Radio */
@@ -817,26 +809,26 @@
   z-index: var(--z-modal);
 }
 
-/* Modal Variants */
+/* Modal Variants — fluid; never exceed viewport */
 .modal--sm {
-  width: 400px;
+  width: min(400px, 100%);
 }
 
 .modal--md {
-  width: 600px;
+  width: min(600px, 100%);
 }
 
 .modal--lg {
-  width: 800px;
+  width: min(800px, 100%);
 }
 
 .modal--xl {
-  width: 1000px;
+  width: min(1000px, 100%);
 }
 
 .modal--fullscreen {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   max-width: none;
   max-height: none;
   border-radius: 0;

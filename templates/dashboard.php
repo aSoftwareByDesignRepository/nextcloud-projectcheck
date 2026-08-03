@@ -88,22 +88,6 @@ include __DIR__ . '/common/page-start.php';
             </div>
         <?php endif; ?>
 
-        <!-- Quick Navigation Toolbar (jump-to surfaces only; primary CTAs live in the header) -->
-        <nav class="quick-actions-toolbar" aria-label="<?php p($l->t('Quick navigation')); ?>">
-            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.project.index')); ?>" class="toolbar-action">
-                <i data-lucide="folder" class="lucide-icon" aria-hidden="true"></i>
-                <span><?php p($l->t('View Projects')); ?></span>
-            </a>
-            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="toolbar-action">
-                <i data-lucide="bar-chart-3" class="lucide-icon" aria-hidden="true"></i>
-                <span><?php p($l->t('View Time Entries')); ?></span>
-            </a>
-            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.customer.index')); ?>" class="toolbar-action">
-                <i data-lucide="users" class="lucide-icon" aria-hidden="true"></i>
-                <span><?php p($l->t('View Customers')); ?></span>
-            </a>
-        </nav>
-
         <?php
         $settlementOutstanding = $_['settlementOutstanding'] ?? null;
         if (is_array($settlementOutstanding)):

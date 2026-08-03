@@ -142,6 +142,19 @@ include __DIR__ . '/common/page-start.php';
             </div>
             <div class="pc-list-panel__toolbar">
             <div class="filters-container pc-filters" role="search" aria-label="<?php p($l->t('Search and filter projects')); ?>">
+                <?php
+                $pf = $_['filters'] ?? [];
+                $pfStatus = (string)($pf['status'] ?? 'Active');
+                $pfPriority = (string)($pf['priority'] ?? '');
+                $pfType = (string)($pf['project_type'] ?? '');
+                $pfCustomer = (string)($pf['customer_id'] ?? '');
+                $pfSettlement = (string)($pf['settlement'] ?? '');
+                $projectsAdvancedOpen = ($pfStatus !== 'Active' && $pfStatus !== '')
+                	|| $pfPriority !== ''
+                	|| $pfType !== ''
+                	|| $pfCustomer !== ''
+                	|| ($pfSettlement !== '' && $pfSettlement !== 'all');
+                ?>
                 <div class="pc-filters__grid">
                     <div class="pc-filters__field pc-filters__field--search">
                         <label for="project-search" class="pc-filters__label"><?php p($l->t('Search')); ?></label>
@@ -153,7 +166,13 @@ include __DIR__ . '/common/page-start.php';
                                 autocomplete="off">
                         </div>
                     </div>
+                </div>
 
+                <details class="pc-filters__more"<?php if ($projectsAdvancedOpen) {
+                	echo ' open';
+                } ?>>
+                    <summary class="pc-filters__more-summary"><?php p($l->t('More filters')); ?></summary>
+                    <div class="pc-filters__grid pc-filters__grid--advanced">
                     <div class="pc-filters__field">
                         <label for="status-filter" class="pc-filters__label"><?php p($l->t('Status')); ?></label>
                         <select id="status-filter" class="filter-select">
@@ -219,7 +238,8 @@ include __DIR__ . '/common/page-start.php';
                             <option value="n_a"<?php if ($settlementFilterValue === 'n_a') echo ' selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
                         </select>
                     </div>
-                </div>
+                    </div>
+                </details>
 
                 <div class="pc-filters__actions">
                     <button id="apply-filters" class="button primary" type="button">
@@ -247,11 +267,22 @@ include __DIR__ . '/common/page-start.php';
             </div>
 
             <?php if (empty($_['projects'])): ?>
-                <div class="emptycontent">
-                    <div class="emptycontent__icon" aria-hidden="true"><span data-lucide="folder" class="lucide-icon"></span></div>
-                    <h2><?php p($l->t('No projects found')); ?></h2>
-                    <p><?php p($l->t('Create your first project to get started!')); ?></p>
-                </div>
+                <?php
+                $iconLucide = 'folder';
+                $title = $l->t('No projects found');
+                $description = $l->t('Create your first project to get started!');
+                $ctaHref = '';
+                $ctaLabel = '';
+                $hint = '';
+                if (!empty($_['canCreateProject']) && !empty($_['createUrl'])) {
+                	$ctaHref = (string)$_['createUrl'];
+                	$ctaLabel = $l->t('Create New Project');
+                	$ctaIconLucide = 'plus';
+                } else {
+                	$hint = $l->t('Ask an administrator if you need a new project.');
+                }
+                include __DIR__ . '/parts/pc-empty-state.php';
+                ?>
             <?php else: ?>
             <div class="pc-list-table-wrap" tabindex="0" role="region" aria-label="<?php p($l->t('Projects')); ?>">
                 <table class="grid projects-table pc-data-table">

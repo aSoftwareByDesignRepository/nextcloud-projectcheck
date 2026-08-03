@@ -77,6 +77,10 @@ class EnrichTemplateNavigationContext implements IEventListener
 		$params['canManageSettings'] = $canManageSettings;
 		$params['canManageOrganization'] = $canManageOrganization;
 		$params['canManageOrg'] = $canManageOrganization; // backward compatibility for existing templates
+		$l = $this->l10nFactory->get(Application::APP_ID);
+		$params['roleLabel'] = ($canManageSettings || $canManageOrganization)
+			? $l->t('Administrator')
+			: $l->t('Member');
 		$params['orgAppSettingsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
 		if (!isset($params['dashboardUrl'])) {
 			$params['dashboardUrl'] = $this->urlGenerator->linkToRoute('projectcheck.dashboard.index');
@@ -99,7 +103,6 @@ class EnrichTemplateNavigationContext implements IEventListener
 		if (($canManageSettings || $canManageOrganization)
 			&& (!isset($params['settingsSectionLabels']) || !is_array($params['settingsSectionLabels']) || $params['settingsSectionLabels'] === [])
 		) {
-			$l = $this->l10nFactory->get(Application::APP_ID);
 			$labels = [];
 			$sectionUrls = [];
 			foreach (SettingsSectionCatalog::SECTIONS as $sectionId) {
