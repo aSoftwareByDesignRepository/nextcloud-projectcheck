@@ -347,7 +347,7 @@ class ProjectController extends Controller
 			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => 'PROJECT_ID']),
 			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.edit', ['id' => 'PROJECT_ID']),
 			'customersUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.index'),
-			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
+			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index'),
 			'dashboardUrl' => $this->urlGenerator->linkToRoute('projectcheck.dashboard.index'),
 			'canCreateProject' => $this->projectService->canUserCreateProject($userId),
 			'urlGenerator' => $this->urlGenerator,
@@ -661,7 +661,7 @@ class ProjectController extends Controller
 
 		// Settlement read model + full-settle endpoints (feature spec §12.3/§12.4).
 		$settlementInfo = $this->projectSettlementService->getSettlementInfo($project, $uid);
-		$settlementReviewUrl = $this->urlGenerator->linkToRoute('projectcheck.timeentry.index', [
+		$settlementReviewUrl = $this->urlGenerator->linkToRoute('projectcheck.time_entry.index', [
 			'project_id' => $id,
 			'billing_status' => 'open',
 		]);

@@ -75,13 +75,13 @@ ob_start(); ?>
 $pageHeaderMetaHtml = ob_get_clean();
 ob_start(); ?>
                 <?php if (!$isFormer): ?>
-                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>"
+                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.create')); ?>"
                     class="button primary">
                     <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
                     <?php p($l->t('New time entry')); ?>
                 </a>
                 <?php endif; ?>
-                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>"
+                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.index')); ?>"
                     class="button secondary">
                     <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
                     <?php p($l->t('View time entries')); ?>

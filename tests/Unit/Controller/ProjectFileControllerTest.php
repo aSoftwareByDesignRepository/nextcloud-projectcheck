@@ -7,6 +7,7 @@ namespace OCA\ProjectCheck\Tests\Unit\Controller;
 use OCA\ProjectCheck\Controller\ProjectFileController;
 use OCA\ProjectCheck\Service\ProjectFileService;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\RedirectResponse;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
@@ -20,8 +21,9 @@ use PHPUnit\Framework\TestCase;
  * Audit reference: AUDIT-FINDINGS G24 - the file controller previously had
  * no dedicated unit tests. We cover the most security-relevant branches:
  * unauthenticated requests are rejected with the right status, errors do
- * not leak internal exception messages, and successful list/delete paths
- * shape the JSON envelope as documented.
+ * not leak internal exception messages, successful list/delete paths
+ * shape the JSON envelope as documented, and upload never honours a
+ * client-supplied redirect (open-redirect / phishing).
  */
 class ProjectFileControllerTest extends TestCase {
 	/** @var IRequest|\PHPUnit\Framework\MockObject\MockObject */
@@ -32,16 +34,28 @@ class ProjectFileControllerTest extends TestCase {
 	private $user;
 	/** @var ProjectFileService|\PHPUnit\Framework\MockObject\MockObject */
 	private $fileService;
+	/** @var IURLGenerator|\PHPUnit\Framework\MockObject\MockObject */
+	private $urlGenerator;
 	/** @var IL10N|\PHPUnit\Framework\MockObject\MockObject */
 	private $l10n;
 	private ProjectFileController $controller;
+
+	/** @var list<array{0: string, 1: array}> */
+	private array $linkToRouteCalls = [];
 
 	protected function setUp(): void {
 		parent::setUp();
 		$this->request = $this->createMock(IRequest::class);
 		$this->fileService = $this->createMock(ProjectFileService::class);
-		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->method('linkToRoute')->willReturn('/x');
+		$this->urlGenerator = $this->createMock(IURLGenerator::class);
+		$this->linkToRouteCalls = [];
+		$this->urlGenerator->method('linkToRoute')->willReturnCallback(
+			function (string $route, array $params = []) {
+				$this->linkToRouteCalls[] = [$route, $params];
+				$query = $params === [] ? '' : ('?' . http_build_query($params));
+				return '/apps/projectcheck/projects/' . ($params['id'] ?? '0') . $query;
+			}
+		);
 		$this->l10n = $this->createMock(IL10N::class);
 		$this->l10n->method('t')->willReturnCallback(static fn ($s, $p = []) => (string)$s);
 
@@ -54,7 +68,7 @@ class ProjectFileControllerTest extends TestCase {
 			$this->request,
 			$this->fileService,
 			$this->userSession,
-			$urlGenerator,
+			$this->urlGenerator,
 			$this->l10n
 		);
 	}
@@ -122,5 +136,86 @@ class ProjectFileControllerTest extends TestCase {
 		$response = $this->controller->deletePost(7, 99);
 		$this->assertSame(200, $response->getStatus());
 		$this->assertTrue($response->getData()['success']);
+	}
+
+	public function testUploadReturns401WithoutUser(): void {
+		$this->userSession->method('getUser')->willReturn(null);
+		$response = $this->controller->upload(7);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertSame(401, $response->getStatus());
+		$this->fileService->expects($this->never())->method('addFilesFromUpload');
+	}
+
+	public function testUploadAjaxSuccessReturnsJsonEnvelope(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
+		$this->request->method('getUploadedFile')->with('project_files')->willReturn([
+			'name' => 'a.pdf',
+			'tmp_name' => '/tmp/x',
+			'error' => UPLOAD_ERR_OK,
+			'size' => 10,
+			'type' => 'application/pdf',
+		]);
+		$this->fileService->expects($this->once())->method('addFilesFromUpload')->with(7, $this->anything(), 'alice');
+
+		$response = $this->controller->upload(7);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertSame(200, $response->getStatus());
+		$this->assertTrue($response->getData()['success']);
+		$this->assertSame([], $this->linkToRouteCalls, 'AJAX success must not redirect');
+	}
+
+	public function testUploadAjaxFailureDoesNotLeakInternalMessage(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
+		$this->request->method('getUploadedFile')->willReturn([]);
+		$this->fileService->method('addFilesFromUpload')->willThrowException(new \RuntimeException('disk-full-secret'));
+
+		$response = $this->controller->upload(7);
+		$this->assertSame(400, $response->getStatus());
+		$body = $response->getData();
+		$this->assertArrayHasKey('error', $body);
+		$this->assertStringNotContainsString('disk-full-secret', (string)$body['error']);
+	}
+
+	public function testUploadNonAjaxSuccessIgnoresClientRedirectParam(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('');
+		$this->request->method('getUploadedFile')->willReturn([]);
+		$this->request->expects($this->never())->method('getParam');
+		$this->fileService->method('addFilesFromUpload')->willReturn([]);
+
+		$response = $this->controller->upload(42);
+		$this->assertInstanceOf(RedirectResponse::class, $response);
+		$target = $response->getRedirectURL();
+		$this->assertStringNotContainsString('evil.example', $target);
+		$this->assertStringContainsString('/apps/projectcheck/projects/42', $target);
+		$this->assertCount(1, $this->linkToRouteCalls);
+		$this->assertSame('projectcheck.project.show', $this->linkToRouteCalls[0][0]);
+		$this->assertSame(42, $this->linkToRouteCalls[0][1]['id']);
+		$this->assertSame('success', $this->linkToRouteCalls[0][1]['message']);
+	}
+
+	public function testUploadNonAjaxFailureIgnoresClientRedirectParam(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('');
+		$this->request->method('getUploadedFile')->willReturn([]);
+		$this->request->expects($this->never())->method('getParam');
+		$this->fileService->method('addFilesFromUpload')->willThrowException(new \RuntimeException('boom'));
+
+		$response = $this->controller->upload(42);
+		$this->assertInstanceOf(RedirectResponse::class, $response);
+		$target = $response->getRedirectURL();
+		$this->assertStringNotContainsString('https://', $target);
+		$this->assertSame('projectcheck.project.show', $this->linkToRouteCalls[0][0]);
+		$this->assertSame('error', $this->linkToRouteCalls[0][1]['message']);
+		$this->assertArrayHasKey('error_text', $this->linkToRouteCalls[0][1]);
+	}
+
+	public function testControllerSourceNeverReadsRedirectRequestParam(): void {
+		$source = (string) file_get_contents(dirname(__DIR__, 3) . '/lib/Controller/ProjectFileController.php');
+		$this->assertStringNotContainsString("getParam(\n\t\t\t\t'redirect'", $source);
+		$this->assertStringNotContainsString("getParam('redirect'", $source);
+		$this->assertStringNotContainsString('getParam("redirect"', $source);
 	}
 }

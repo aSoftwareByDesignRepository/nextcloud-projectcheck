@@ -37,11 +37,13 @@ return [
 		['name' => 'project#deletePost', 'url' => '/projects/{id}/delete', 'verb' => 'POST'],
 		['name' => 'project#changeStatus', 'url' => '/projects/{id}/status', 'verb' => 'PUT'],
 		['name' => 'project#changeStatusPost', 'url' => '/projects/{id}/status', 'verb' => 'POST'],
-		['name' => 'projectfile#upload', 'url' => '/projects/{projectId}/files', 'verb' => 'POST'],
-		['name' => 'projectfile#list', 'url' => '/projects/{projectId}/files', 'verb' => 'GET'],
-		['name' => 'projectfile#download', 'url' => '/projects/{projectId}/files/{fileId}/download', 'verb' => 'GET'],
-		['name' => 'projectfile#delete', 'url' => '/projects/{projectId}/files/{fileId}', 'verb' => 'DELETE'],
-		['name' => 'projectfile#deletePost', 'url' => '/projects/{projectId}/files/{fileId}/delete', 'verb' => 'POST'],
+		// Must be project_file# (underscore) so routing maps to ProjectFileController,
+		// not ProjectfileController (Linux PSR-4 is case-sensitive; see GitHub #8).
+		['name' => 'project_file#upload', 'url' => '/projects/{projectId}/files', 'verb' => 'POST'],
+		['name' => 'project_file#list', 'url' => '/projects/{projectId}/files', 'verb' => 'GET'],
+		['name' => 'project_file#download', 'url' => '/projects/{projectId}/files/{fileId}/download', 'verb' => 'GET'],
+		['name' => 'project_file#delete', 'url' => '/projects/{projectId}/files/{fileId}', 'verb' => 'DELETE'],
+		['name' => 'project_file#deletePost', 'url' => '/projects/{projectId}/files/{fileId}/delete', 'verb' => 'POST'],
 
 		// Team member management routes
 		['name' => 'project#getTeamMembers', 'url' => '/projects/{id}/members', 'verb' => 'GET'],
@@ -109,12 +111,14 @@ return [
 		['name' => 'settlement#projectApply', 'url' => '/projects/{id}/settlement/apply', 'verb' => 'POST'],
 
 		// Time entry management routes
-		['name' => 'timeentry#index', 'url' => '/time-entries', 'verb' => 'GET'],
-		['name' => 'timeentry#create', 'url' => '/time-entries/create', 'verb' => 'GET'],
-		['name' => 'timeentry#store', 'url' => '/time-entries', 'verb' => 'POST'],
-		['name' => 'timeentry#export', 'url' => '/time-entries/export', 'verb' => 'GET'],
-		['name' => 'timeentry#search', 'url' => '/time-entries/search', 'verb' => 'GET'],
-		['name' => 'timeentry#getForProject', 'url' => '/time-entries/project/{projectId}', 'verb' => 'GET'],
+		// Must be time_entry# (underscore) so routing maps to TimeEntryController,
+		// not TimeentryController (same Nextcloud underScoreToCamelCase rule as app_config#).
+		['name' => 'time_entry#index', 'url' => '/time-entries', 'verb' => 'GET'],
+		['name' => 'time_entry#create', 'url' => '/time-entries/create', 'verb' => 'GET'],
+		['name' => 'time_entry#store', 'url' => '/time-entries', 'verb' => 'POST'],
+		['name' => 'time_entry#export', 'url' => '/time-entries/export', 'verb' => 'GET'],
+		['name' => 'time_entry#search', 'url' => '/time-entries/search', 'verb' => 'GET'],
+		['name' => 'time_entry#getForProject', 'url' => '/time-entries/project/{projectId}', 'verb' => 'GET'],
 
 		// Employee management routes
 		// Static /employees/* paths MUST be registered before /employees/{userId}.
@@ -125,14 +129,14 @@ return [
 		['name' => 'employee#assignProject', 'url' => '/employees/{userId}/projects', 'verb' => 'POST'],
 		['name' => 'employee#unassignProject', 'url' => '/employees/{userId}/projects/{projectId}', 'verb' => 'DELETE'],
 		['name' => 'employee#unassignProjectPost', 'url' => '/employees/{userId}/projects/{projectId}/remove', 'verb' => 'POST'],
-		['name' => 'timeentry#show', 'url' => '/time-entries/{id}', 'verb' => 'GET'],
-		['name' => 'timeentry#edit', 'url' => '/time-entries/{id}/edit', 'verb' => 'GET'],
-		['name' => 'timeentry#update', 'url' => '/time-entries/{id}', 'verb' => 'PUT'],
-		['name' => 'timeentry#updatePost', 'url' => '/time-entries/{id}/update', 'verb' => 'POST'],
-		['name' => 'timeentry#delete', 'url' => '/time-entries/{id}', 'verb' => 'DELETE'],
-		['name' => 'timeentry#deletePost', 'url' => '/time-entries/{id}/delete', 'verb' => 'POST'],
-		['name' => 'timeentry#getDeletionImpact', 'url' => '/api/time-entries/{id}/deletion-impact', 'verb' => 'GET'],
-		['name' => 'timeentry#getStats', 'url' => '/api/time-entries/stats', 'verb' => 'GET'],
+		['name' => 'time_entry#show', 'url' => '/time-entries/{id}', 'verb' => 'GET'],
+		['name' => 'time_entry#edit', 'url' => '/time-entries/{id}/edit', 'verb' => 'GET'],
+		['name' => 'time_entry#update', 'url' => '/time-entries/{id}', 'verb' => 'PUT'],
+		['name' => 'time_entry#updatePost', 'url' => '/time-entries/{id}/update', 'verb' => 'POST'],
+		['name' => 'time_entry#delete', 'url' => '/time-entries/{id}', 'verb' => 'DELETE'],
+		['name' => 'time_entry#deletePost', 'url' => '/time-entries/{id}/delete', 'verb' => 'POST'],
+		['name' => 'time_entry#getDeletionImpact', 'url' => '/api/time-entries/{id}/deletion-impact', 'verb' => 'GET'],
+		['name' => 'time_entry#getStats', 'url' => '/api/time-entries/stats', 'verb' => 'GET'],
 
 		// Budget impact API route
 		['name' => 'project#checkBudgetImpact', 'url' => '/api/budget/impact', 'verb' => 'POST'],
@@ -143,9 +147,11 @@ return [
 		['name' => 'employee#addHourlyRate', 'url' => '/api/employees/{userId}/hourly-rates', 'verb' => 'POST'],
 
 		// Project member management routes
-		['name' => 'projectmember#getDeletionImpact', 'url' => '/api/project-members/{id}/deletion-impact', 'verb' => 'GET'],
-		['name' => 'projectmember#remove', 'url' => '/api/project-members/{id}/remove', 'verb' => 'DELETE'],
-		['name' => 'projectmember#removePost', 'url' => '/api/project-members/{id}/remove', 'verb' => 'POST'],
+		// Must be project_member# (underscore) so routing maps to ProjectMemberController,
+		// not ProjectmemberController.
+		['name' => 'project_member#getDeletionImpact', 'url' => '/api/project-members/{id}/deletion-impact', 'verb' => 'GET'],
+		['name' => 'project_member#remove', 'url' => '/api/project-members/{id}/remove', 'verb' => 'DELETE'],
+		['name' => 'project_member#removePost', 'url' => '/api/project-members/{id}/remove', 'verb' => 'POST'],
 
 		// PC2 commercial license (settings / mobile prep)
 		['name' => 'license#show', 'url' => '/api/license', 'verb' => 'GET'],
@@ -154,10 +160,6 @@ return [
 		['name' => 'license#seats', 'url' => '/api/license/seats', 'verb' => 'GET'],
 		['name' => 'license#assignSeat', 'url' => '/api/license/seats', 'verb' => 'POST'],
 		['name' => 'license#removeSeat', 'url' => '/api/license/seats/{uid}', 'verb' => 'DELETE'],
-
-		// Public probe (mobile login reachability + ops) — no auth, no version fingerprint
-		// Public probe (mobile login reachability + ops) — no auth, no version fingerprint
-		['name' => 'health#check', 'url' => '/health', 'verb' => 'GET'],
 
 		// Mobile companion API v1 (PC2 gated; web stays free)
 		['name' => 'mobile#bootstrap', 'url' => '/mobile/v1/bootstrap', 'verb' => 'GET'],

@@ -58,7 +58,7 @@ class Notifier implements INotifier
 							]
 						)
 					)
-					->setLink($this->urlGenerator->linkToRouteAbsolute('projectcheck.timeentry.index'));
+					->setLink($this->urlGenerator->linkToRouteAbsolute('projectcheck.time_entry.index'));
 				break;
 
 			default:

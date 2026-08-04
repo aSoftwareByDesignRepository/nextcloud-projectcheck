@@ -617,7 +617,7 @@ class AppConfigController extends Controller
 			'dashboardUrl' => $this->urlGenerator->linkToRoute('projectcheck.dashboard.index'),
 			'projectsUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index'),
 			'customersUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.index'),
-			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
+			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index'),
 			'employeesUrl' => $this->urlGenerator->linkToRoute('projectcheck.employee.index'),
 			'settingsUrl' => $settingsIndexUrl,
 			'orgAppSettingsUrl' => $settingsIndexUrl,

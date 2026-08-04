@@ -218,7 +218,7 @@ include __DIR__ . '/common/page-start.php';
                     <?php
                     $exportUrl = (string)($_['exportUrl'] ?? '');
                     if ($exportUrl === '' && isset($_['urlGenerator']) && is_object($_['urlGenerator'])) {
-                    	$exportUrl = (string)$_['urlGenerator']->linkToRoute('projectcheck.timeentry.export');
+                    	$exportUrl = (string)$_['urlGenerator']->linkToRoute('projectcheck.time_entry.export');
                     }
                     $exportEntityLabel = 'time_entries';
                     $exportFilterKeys = 'search,project_id,user_id,project_type,date_from,date_to,billing_status';

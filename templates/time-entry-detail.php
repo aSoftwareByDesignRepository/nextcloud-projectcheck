@@ -81,12 +81,12 @@ $pageHeaderMetaHtml = ob_get_clean();
 ob_start(); ?>
                     <?php $entryBillingLocked = $timeEntry->isBillingLocked(); ?>
                     <?php if ($timeEntry->isOwnedBy((string)($userId ?? '')) && !$entryBillingLocked): ?>
-                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $timeEntryId])); ?>" class="button secondary">
+                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.edit', ['id' => $timeEntryId])); ?>" class="button secondary">
                             <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
                             <?php p($l->t('Edit Time Entry')); ?>
                         </a>
                     <?php endif; ?>
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="button secondary">
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.index')); ?>" class="button secondary">
                         <span data-lucide="arrow-left" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Back to List')); ?>
                     </a>
@@ -99,7 +99,7 @@ include __DIR__ . '/common/page-start.php';
         <div class="breadcrumb-container">
             <nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
                 <ol>
-                    <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>"><?php p($l->t('Time Entries')); ?></a></li>
+                    <li><a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.index')); ?>"><?php p($l->t('Time Entries')); ?></a></li>
                     <li aria-current="page"><?php p($l->t('Time Entry Details')); ?></li>
                 </ol>
             </nav>
@@ -423,14 +423,14 @@ include __DIR__ . '/common/page-start.php';
             <div class="section-content">
                 <div class="actions-grid">
                     <?php if ($timeEntry->isOwnedBy((string)($_['userId'] ?? '')) && !$entryBillingLocked): ?>
-                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $timeEntryId])); ?>" class="button primary">
+                        <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.edit', ['id' => $timeEntryId])); ?>" class="button primary">
                             <span data-lucide="edit" class="lucide-icon"></span>
                             <?php p($l->t('Edit Time Entry')); ?>
                         </a>
                         <button type="button" class="button danger delete-time-entry" id="delete-time-entry-btn"
                             data-id="<?php p((string)$timeEntryId); ?>"
-                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.deletePost', ['id' => $timeEntryId])); ?>"
-                            data-index-url="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>"
+                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.deletePost', ['id' => $timeEntryId])); ?>"
+                            data-index-url="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.index')); ?>"
                             data-confirm="<?php p($l->t('Are you sure you want to delete this time entry? This action cannot be undone.')); ?>"
                             aria-label="<?php p($l->t('Delete time entry')); ?>">
                             <span data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></span>
@@ -442,7 +442,7 @@ include __DIR__ . '/common/page-start.php';
                             <?php p($l->t('Editing and deleting are disabled because this entry has been invoiced or paid.')); ?>
                         </p>
                     <?php endif; ?>
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="button secondary">
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.index')); ?>" class="button secondary">
                         <span data-lucide="clock" class="lucide-icon"></span>
                         <?php p($l->t('View All Time Entries')); ?>
                     </a>

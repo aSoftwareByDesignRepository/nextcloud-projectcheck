@@ -172,7 +172,7 @@ class DashboardController extends Controller
 			'dashboardUrl' => $this->urlGenerator->linkToRoute('projectcheck.dashboard.index'),
 			'projectsUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index'),
 			'customersUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.index'),
-			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
+			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index'),
 			'settingsUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex'),
 			'canCreateProject' => $this->projectService->canUserCreateProject($userId),
 		]);

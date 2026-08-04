@@ -455,8 +455,8 @@ include __DIR__ . '/common/page-start.php';
                                 : $currencyCode . ' ' . number_format($icAmount, 2);
                         ?>
                         <p class="pc-invoicing-ic-unpaid" data-testid="pc-ic-unpaid-strip" role="status"
-                            aria-label="<?php p($l->t('Unpaid invoices in InvoicingCheck')); ?>">
-                            <strong><?php p($l->t('Unpaid invoices (InvoicingCheck):')); ?></strong>
+                            aria-label="<?php p($l->t('Unpaid invoices in InvoiceCheck')); ?>">
+                            <strong><?php p($l->t('Unpaid invoices (InvoiceCheck):')); ?></strong>
                             <?php if ($icCount === 0): ?>
                                 <?php p($l->t('None open')); ?>
                             <?php else: ?>
@@ -479,13 +479,13 @@ include __DIR__ . '/common/page-start.php';
                         <?php if (!empty($_['invoicingCheckCreateUrl'])): ?>
                             <a class="button secondary" href="<?php p((string)$_['invoicingCheckCreateUrl']); ?>">
                                 <span data-lucide="receipt" class="lucide-icon" aria-hidden="true"></span>
-                                <?php p($l->t('Create invoice (InvoicingCheck)')); ?>
+                                <?php p($l->t('Create invoice (InvoiceCheck)')); ?>
                             </a>
                         <?php endif; ?>
                         <?php if (!empty($_['invoicingCheckReceivablesUrl'])): ?>
                             <a class="button secondary" href="<?php p((string)$_['invoicingCheckReceivablesUrl']); ?>">
                                 <span data-lucide="wallet" class="lucide-icon" aria-hidden="true"></span>
-                                <?php p($l->t('Open unpaid invoices (InvoicingCheck)')); ?>
+                                <?php p($l->t('Open unpaid invoices (InvoiceCheck)')); ?>
                             </a>
                         <?php endif; ?>
                         <?php if ($stlCanSettle): ?>
@@ -670,7 +670,7 @@ include __DIR__ . '/common/page-start.php';
                 <?php if ($canManageFiles): ?>
                     <form id="project-file-upload-form"
                         class="pc-file-upload-form"
-                        action="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.upload', ['projectId' => $projectId])); ?>"
+                        action="<?php p($urlGenerator->linkToRoute('projectcheck.project_file.upload', ['projectId' => $projectId])); ?>"
                         method="POST"
                         enctype="multipart/form-data">
                         <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>">
@@ -710,7 +710,7 @@ include __DIR__ . '/common/page-start.php';
                                     <span data-lucide="file-text" class="lucide-icon" aria-hidden="true"></span>
                                     <div class="file-meta">
                                         <a class="file-name"
-                                            href="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
+                                            href="<?php p($urlGenerator->linkToRoute('projectcheck.project_file.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
                                             target="_blank" rel="noreferrer noopener">
                                             <?php p($file->getDisplayName()); ?>
                                         </a>
@@ -725,7 +725,7 @@ include __DIR__ . '/common/page-start.php';
                                 </div>
                                 <div class="file-actions">
                                     <a class="button secondary"
-                                        href="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
+                                        href="<?php p($urlGenerator->linkToRoute('projectcheck.project_file.download', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
                                         target="_blank" rel="noreferrer noopener"
                                         aria-label="<?php p($l->t('Download %s', [$file->getDisplayName()])); ?>">
                                         <span data-lucide="download" class="lucide-icon" aria-hidden="true"></span>
@@ -734,7 +734,7 @@ include __DIR__ . '/common/page-start.php';
                                     <?php if ($canManageFiles): ?>
                                         <button type="button"
                                             class="button danger ghost delete-file-btn"
-                                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectfile.deletePost', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
+                                            data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.project_file.deletePost', ['projectId' => $projectId, 'fileId' => $file->getId()])); ?>"
                                             data-file-name="<?php p($file->getDisplayName()); ?>"
                                             aria-label="<?php p($l->t('Delete %s', [$file->getDisplayName()])); ?>">
                                             <span data-lucide="trash-2" class="lucide-icon" aria-hidden="true"></span>
@@ -800,7 +800,7 @@ include __DIR__ . '/common/page-start.php';
                                     <span class="pc-admin-override-badge__text"><?php p($l->t('Admin override')); ?></span>
                                 </span>
                             <?php endif; ?>
-                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId])); ?>" class="button primary">
+                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.create', ['project_id' => $projectId])); ?>" class="button primary">
                                 <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
                                 <?php p($l->t('Add time entry')); ?>
                             </a>
@@ -850,13 +850,13 @@ include __DIR__ . '/common/page-start.php';
                                     </td>
                                     <td class="col-actions" data-label="<?php p($colActions); ?>">
                                         <div class="action-items" role="group" aria-label="<?php p($l->t('Time entry actions')); ?>">
-                                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => $entry->getId()])); ?>"
+                                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.show', ['id' => $entry->getId()])); ?>"
                                                 class="action-item action-item--view" title="<?php p($l->t('View Details')); ?>"
                                                 aria-label="<?php p($l->t('View time entry details')); ?>">
                                                 <span data-lucide="eye" class="lucide-icon" aria-hidden="true"></span>
                                             </a>
                                             <?php if ($entryOwned && !$entryLocked): ?>
-                                                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $entry->getId()])); ?>"
+                                                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.edit', ['id' => $entry->getId()])); ?>"
                                                     class="action-item action-item--edit" title="<?php p($l->t('Edit Time Entry')); ?>"
                                                     aria-label="<?php p($l->t('Edit time entry')); ?>">
                                                     <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
@@ -877,7 +877,7 @@ include __DIR__ . '/common/page-start.php';
                     </table>
                 </div>
                 <div class="pc-list-panel__footer">
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index', ['project_id' => $projectId])); ?>" class="button secondary">
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.index', ['project_id' => $projectId])); ?>" class="button secondary">
                         <?php p($l->t('View all time entries')); ?>
                     </a>
                 </div>
@@ -894,7 +894,7 @@ include __DIR__ . '/common/page-start.php';
                     $title = $l->t('No time entries yet');
                     $description = $l->t('Start tracking time for this project by adding your first time entry.');
                     if ($canAddTimeEntry) {
-                        $ctaHref = $urlGenerator->linkToRoute('projectcheck.timeentry.create', ['project_id' => $projectId]);
+                        $ctaHref = $urlGenerator->linkToRoute('projectcheck.time_entry.create', ['project_id' => $projectId]);
                         $ctaLabel = $l->t('Add first time entry');
                         if ($usingAdminTimeEntryOverride) {
                             $description = $l->t('Start tracking time. You can log your own time here because of your administrator role, even though you are not on the team.');
@@ -983,7 +983,7 @@ include __DIR__ . '/common/page-start.php';
                                     <?php endif; ?>
                                     <?php if (!empty($canViewMemberTimeEntries) && !empty($member['user_id'])): ?>
                                         <a class="action-btn member-timeentries-btn"
-                                            href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index', ['project_id' => $projectId, 'user_id' => (string)($member['user_id'] ?? '')])); ?>"
+                                            href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.index', ['project_id' => $projectId, 'user_id' => (string)($member['user_id'] ?? '')])); ?>"
                                             title="<?php p($l->t('View time entries for %s', [$member['name'] ?? $l->t('Unknown')])); ?>"
                                             aria-label="<?php p($l->t('View time entries for %s', [$member['name'] ?? $l->t('Unknown')])); ?>">
                                             <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
@@ -1004,7 +1004,7 @@ include __DIR__ . '/common/page-start.php';
                                             data-member-id="<?php p($member['id'] ?? ''); ?>"
                                             data-user-id="<?php p($member['user_id'] ?? ''); ?>"
                                             data-delete-url="<?php p($urlGenerator->linkToRoute('projectcheck.project.removeTeamMemberPost', ['id' => $projectId, 'userId' => (string)($member['user_id'] ?? '')])); ?>"
-                                            data-impact-url="<?php p($urlGenerator->linkToRoute('projectcheck.projectmember.getDeletionImpact', ['id' => (int)($member['id'] ?? 0)])); ?>"
+                                            data-impact-url="<?php p($urlGenerator->linkToRoute('projectcheck.project_member.getDeletionImpact', ['id' => (int)($member['id'] ?? 0)])); ?>"
                                             data-member-name="<?php p($member['name'] ?? $l->t('Unknown')); ?>"
                                             title="<?php p($l->t('Remove from project')); ?>"
                                             aria-label="<?php p($l->t('Remove %s from project', [$member['name'] ?? $l->t('Unknown')])); ?>">

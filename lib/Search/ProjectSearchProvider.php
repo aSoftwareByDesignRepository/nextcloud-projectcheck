@@ -182,7 +182,7 @@ class ProjectSearchProvider implements IProvider
 					$appIcon,
 					$this->l10n->t('Time Entry: %s hours on %s', [$timeEntry->getHours(), $projectName]),
 					$timeEntry->getDescription() ?: $this->l10n->t('No description'),
-					$this->urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => $timeEntry->getId()]),
+					$this->urlGenerator->linkToRoute('projectcheck.time_entry.show', ['id' => $timeEntry->getId()]),
 					'icon-projectcontrol',
 					true
 				);

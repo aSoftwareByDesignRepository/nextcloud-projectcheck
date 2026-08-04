@@ -56,7 +56,7 @@ ob_start(); ?>
 <?php
 $pageHeaderMetaHtml = ob_get_clean();
 ob_start(); ?>
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="button primary">
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.create')); ?>" class="button primary">
                         <span data-lucide="clock" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('New Time Entry')); ?>
                     </a>
@@ -97,7 +97,7 @@ include __DIR__ . '/common/page-start.php';
             $invoicedHours = (float)($settlementOutstanding['invoiced_hours'] ?? 0);
             $projectCount = (int)($settlementOutstanding['project_count'] ?? 0);
             $scope = (string)($settlementOutstanding['scope'] ?? 'managed');
-            $openEntriesUrl = $urlGenerator->linkToRoute('projectcheck.timeentry.index', ['billing_status' => 'open']);
+            $openEntriesUrl = $urlGenerator->linkToRoute('projectcheck.time_entry.index', ['billing_status' => 'open']);
             $outstandingProjectsUrl = $urlGenerator->linkToRoute('projectcheck.project.index', ['settlement' => 'outstanding']);
             $outstandingCustomersUrl = $urlGenerator->linkToRoute('projectcheck.customer.index', ['settlement' => 'outstanding']);
         ?>
@@ -592,7 +592,7 @@ include __DIR__ . '/common/page-start.php';
                     </div>
                     <h4><?php p($l->t('No recent time entries')); ?></h4>
                     <p><?php p($l->t('Start tracking your time to see recent entries!')); ?></p>
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.create')); ?>" class="button primary">
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.create')); ?>" class="button primary">
                         <i data-lucide="plus" class="lucide-icon"></i>
                         <?php p($l->t('Create Time Entry')); ?>
                     </a>
@@ -649,13 +649,13 @@ include __DIR__ . '/common/page-start.php';
                                     </td>
                                     <td class="col-actions" data-label="<?php p($dashColActions); ?>">
                                         <div class="action-items" role="group" aria-label="<?php p($l->t('Time entry actions')); ?>">
-                                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => $entry->getId()])); ?>"
+                                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.show', ['id' => $entry->getId()])); ?>"
                                                 class="action-item action-item--view" title="<?php p($l->t('View Details')); ?>"
                                                 aria-label="<?php p($l->t('View time entry details')); ?>">
                                                 <span data-lucide="eye" class="lucide-icon" aria-hidden="true"></span>
                                             </a>
                                             <?php if ($entryOwned && !$entryLocked): ?>
-                                                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => $entry->getId()])); ?>"
+                                                <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.edit', ['id' => $entry->getId()])); ?>"
                                                     class="action-item action-item--edit" title="<?php p($l->t('Edit Time Entry')); ?>"
                                                     aria-label="<?php p($l->t('Edit time entry')); ?>">
                                                     <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
@@ -676,7 +676,7 @@ include __DIR__ . '/common/page-start.php';
                     </table>
                 </div>
                 <div class="pc-list-panel__footer">
-                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.timeentry.index')); ?>" class="button secondary">
+                    <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.index')); ?>" class="button secondary">
                         <?php p($l->t('View all time entries')); ?>
                     </a>
                 </div>

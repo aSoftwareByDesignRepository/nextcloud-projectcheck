@@ -53,6 +53,10 @@ class ProjectFileController extends Controller
 	 * Rate-limited per user to prevent storage exhaustion / abuse uploads
 	 * (storage I/O is the most expensive write path in this app).
 	 *
+	 * Post-upload redirects always target the project show page via
+	 * {@see IURLGenerator::linkToRoute} — never a client-supplied `redirect`
+	 * parameter (open-redirect / phishing vector).
+	 *
 	 * @return Response
 	 */
 	#[NoAdminRequired]
@@ -71,22 +75,27 @@ class ProjectFileController extends Controller
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
 				return new DataResponse(['error' => $this->l->t('File upload failed. Please check your input and try again.')], 400);
 			}
-			$url = $this->request->getParam(
-				'redirect',
-				$this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $projectId])
-			);
-			return new RedirectResponse($url . '?message=error&error_text=' . urlencode($this->l->t('File upload failed. Please check your input and try again.')));
+			return new RedirectResponse($this->urlGenerator->linkToRoute(
+				'projectcheck.project.show',
+				[
+					'id' => $projectId,
+					'message' => 'error',
+					'error_text' => $this->l->t('File upload failed. Please check your input and try again.'),
+				]
+			));
 		}
 
 		if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
 			return new DataResponse(['success' => true]);
 		}
 
-		$url = $this->request->getParam(
-			'redirect',
-			$this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $projectId])
-		);
-		return new RedirectResponse($url . '?message=success');
+		return new RedirectResponse($this->urlGenerator->linkToRoute(
+			'projectcheck.project.show',
+			[
+				'id' => $projectId,
+				'message' => 'success',
+			]
+		));
 	}
 
 	/**

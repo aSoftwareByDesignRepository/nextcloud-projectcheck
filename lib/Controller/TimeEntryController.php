@@ -347,13 +347,13 @@ class TimeEntryController extends Controller
 				'totalEntries' => $totalEntries,
 				'totalPages' => $totalPages,
 			],
-			'createUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.create'),
-			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
-			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.show', ['id' => 'ENTRY_ID']),
-			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.edit', ['id' => 'ENTRY_ID']),
-			'deleteUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.deletePost', ['id' => 'ENTRY_ID']),
+			'createUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.create'),
+			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index'),
+			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.show', ['id' => 'ENTRY_ID']),
+			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.edit', ['id' => 'ENTRY_ID']),
+			'deleteUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.deletePost', ['id' => 'ENTRY_ID']),
 			'projectShowUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => 'PROJECT_ID']),
-			'exportUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.export'),
+			'exportUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.export'),
 			'selectionSummary' => [
 				'hoursTotal' => $selectionHoursTotal,
 				'entryCount' => $totalEntries,
@@ -432,9 +432,9 @@ class TimeEntryController extends Controller
 			'isEdit' => false,
 			'stats' => $stats,
 			'prefillDescription' => $prefillDescription,
-			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
-			'storeUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.store'),
-			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.update', ['id' => 'TIME_ENTRY_ID']),
+			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index'),
+			'storeUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.store'),
+			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.update', ['id' => 'TIME_ENTRY_ID']),
 		]);
 
 		return $this->configureCSP($response);
@@ -671,10 +671,10 @@ class TimeEntryController extends Controller
 			'isEdit' => true,
 			'stats' => $stats,
 			'userId' => $userId,
-			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.index'),
-			'storeUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.store'),
-			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.updatePost', ['id' => $timeEntry->getId()]),
-			'deleteUrl' => $this->urlGenerator->linkToRoute('projectcheck.timeentry.deletePost', ['id' => $timeEntry->getId()]),
+			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index'),
+			'storeUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.store'),
+			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.updatePost', ['id' => $timeEntry->getId()]),
+			'deleteUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.deletePost', ['id' => $timeEntry->getId()]),
 		]);
 
 		return $this->configureCSP($response);

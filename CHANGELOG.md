@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- **Project file upload / multi-word routes (GitHub #8):** route controller segments now use underscores (`project_file`, `time_entry`, `project_member`) so Nextcloud resolves `ProjectFileController` / `TimeEntryController` / `ProjectMemberController` instead of the non-existent `ProjectfileController` (Linux PSR-4). All `linkToRoute` call sites updated; contract + container resolution tests and a mutation gauntlet added. Companion `/mobile/v1/*` paths stay on `mobile#` / `MobileController` (web rename is isolated); server↔companion route parity contract + client URL contract cover the full surface.
+- **Project file upload redirect:** non-AJAX upload success/error redirects always use `linkToRoute('projectcheck.project.show')` — client-supplied `redirect` parameters are ignored (open-redirect hardening now that uploads resolve again).
+
 ## 2.0.91 - 2026-08-03
 
 ### Added
@@ -20,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **InvoicingCheck unpaid strip** on project detail: when InvoicingCheck exposes `CrmInvoiceReadFacade::summarizeUnpaidByPcProject`, shows remaining €, open invoice count, and overdue count (soft feature-detect; never invents amounts). Clarifies that ProjectCheck “Not yet paid” is open + invoiced hours still unpaid in ProjectCheck.
+- **InvoiceCheck unpaid strip** on project detail: when InvoiceCheck exposes `CrmInvoiceReadFacade::summarizeUnpaidByPcProject`, shows remaining €, open invoice count, and overdue count (soft feature-detect; never invents amounts). Clarifies that ProjectCheck “Not yet paid” is open + invoiced hours still unpaid in ProjectCheck.
 
 ## 2.0.89 - 2026-07-31
 

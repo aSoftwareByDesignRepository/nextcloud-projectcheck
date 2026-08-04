@@ -86,7 +86,7 @@ class EnrichTemplateNavigationContext implements IEventListener
 			$params['dashboardUrl'] = $this->urlGenerator->linkToRoute('projectcheck.dashboard.index');
 		}
 		if (!isset($params['timeEntriesUrl'])) {
-			$params['timeEntriesUrl'] = $this->urlGenerator->linkToRoute('projectcheck.timeentry.index');
+			$params['timeEntriesUrl'] = $this->urlGenerator->linkToRoute('projectcheck.time_entry.index');
 		}
 		if (!isset($params['projectsUrl'])) {
 			$params['projectsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.project.index');

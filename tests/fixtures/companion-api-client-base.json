@@ -1,0 +1,19 @@
+{
+  "description": "Official ProjectCheck companion HTTP base. Keep in lockstep with mobile/projectcheck/src/api/client.ts (const BASE) and MobileCompanionRoutesContractTest.",
+  "base": "/mobile/v1",
+  "forbiddenBases": [
+    "/apps/projectcheck/mobile/v1",
+    "/index.php/apps/projectcheck/mobile/v1"
+  ],
+  "healthPath": "/health",
+  "relativePaths": [
+    "/bootstrap",
+    "/projects",
+    "/projects/{id}/resolve-hourly-rate",
+    "/time-entries",
+    "/settlement/entries",
+    "/time-entries/{id}/billing",
+    "/projects/{id}/settlement/preview",
+    "/projects/{id}/settlement/apply"
+  ]
+}
