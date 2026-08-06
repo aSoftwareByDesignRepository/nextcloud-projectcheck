@@ -335,15 +335,18 @@ include __DIR__ . '/common/page-start.php';
                                             <?php if ($budgetInfo): ?>
                                                 <?php if ($budgetInfo['consumption_percentage'] >= 100): ?>
                                                     <span class="budget-warning-badge critical" title="<?php p($l->t('Budget Exceeded')); ?>">
-                                                        ⚠️ <?php p($l->t('Over Budget')); ?>
+                                                        <span data-lucide="alert-triangle" class="lucide-icon" aria-hidden="true"></span>
+                                                        <?php p($l->t('Over Budget')); ?>
                                                     </span>
                                                 <?php elseif ($budgetInfo['warning_level'] === 'critical'): ?>
                                                     <span class="budget-warning-badge critical" title="<?php p($l->t('Budget Critical')); ?>">
-                                                        ⚠️ <?php p($l->t('Critical')); ?>
+                                                        <span data-lucide="alert-triangle" class="lucide-icon" aria-hidden="true"></span>
+                                                        <?php p($l->t('Critical')); ?>
                                                     </span>
                                                 <?php elseif ($budgetInfo['warning_level'] === 'warning'): ?>
                                                     <span class="budget-warning-badge warning" title="<?php p($l->t('Budget Warning')); ?>">
-                                                        ⚠️ <?php p($l->t('Warning')); ?>
+                                                        <span data-lucide="alert-triangle" class="lucide-icon" aria-hidden="true"></span>
+                                                        <?php p($l->t('Warning')); ?>
                                                     </span>
                                                 <?php endif; ?>
                                             <?php endif; ?>
@@ -351,30 +354,13 @@ include __DIR__ . '/common/page-start.php';
                                     </div>
                                 </td>
                                 <td data-label="<?php p($colCustomer); ?>"><?php p($project->getCustomerName() ?? $l->t('N/A')); ?></td>
-                                <td data-label="<?php p($colType); ?>">
+                                <td data-label="<?php p($colType); ?>" class="type-cell">
                                     <?php
-                                    // Icon mapping for project types
-                                    $iconMapping = [
-                                        'client' => '👥',
-                                        'admin' => '⚙️',
-                                        'sales' => '📈',
-                                        'customer' => '🎧',
-                                        'product' => '💻',
-                                        'meeting' => '🤝',
-                                        'internal' => '🏢',
-                                        'research' => '🔬',
-                                        'training' => '🎓',
-                                        'other' => '📋'
-                                    ];
-                                    $projectType = strtolower($project->getProjectType());
-                                    $icon = $iconMapping[$projectType] ?? '📋';
+                                    $projectType = strtolower((string)$project->getProjectType());
                                     $displayName = $project->getProjectTypeDisplayName();
+                                    $showLabel = false;
+                                    include __DIR__ . '/parts/project-type-chip.php';
                                     ?>
-                                    <span class="project-type-icon"
-                                        data-project-type="<?php p($projectType); ?>"
-                                        title="<?php p($displayName); ?>">
-                                        <?php p($icon); ?>
-                                    </span>
                                 </td>
                                 <td data-label="<?php p($colStatus); ?>">
                                     <span class="status-badge status-<?php echo strtolower(str_replace(' ', '-', $project->getStatus())); ?>">
@@ -429,29 +415,7 @@ include __DIR__ . '/common/page-start.php';
                                     <?php endif; ?>
                                 </td>
                                 <td class="progress-cell" data-label="<?php p($colProgress); ?>">
-                                    <?php if ($budgetInfo): ?>
-                                        <div class="progress-info">
-                                            <div class="budget-progress-bar compact">
-                                                <div class="budget-progress-fill <?php p($budgetInfo['warning_level']); ?>"
-                                                    style="width: <?php p(min(100, $budgetInfo['consumption_percentage'])); ?>%"></div>
-                                            </div>
-                                            <span class="hours-logged">
-                                                <?php p(number_format($budgetInfo['used_hours'], 1)); ?>h <?php p($l->t('logged')); ?>
-                                                <?php if (!empty($budgetInfo['hours_estimated']) && ($budgetInfo['available_hours'] ?? 0) > 0): ?>
-                                                    <span class="hours-capacity-estimate" title="<?php p($l->t('Estimated capacity based on planning or project rate')); ?>">
-                                                        · <?php p($l->t('%sh remaining (estimate)', [number_format((float) $budgetInfo['remaining_hours'], 1, '.', '')])); ?>
-                                                    </span>
-                                                <?php endif; ?>
-                                            </span>
-                                        </div>
-                                    <?php else: ?>
-                                        <div class="progress-info">
-                                            <div class="budget-progress-bar compact">
-                                                <div class="budget-progress-fill" style="width: 0%"></div>
-                                            </div>
-                                            <span class="hours-logged">0h <?php p($l->t('logged')); ?></span>
-                                        </div>
-                                    <?php endif; ?>
+                                    <?php include __DIR__ . '/parts/project-progress-cell.php'; ?>
                                 </td>
                                 <td class="col-invoicing" data-label="<?php p($colInvoicing); ?>">
                                     <?php $rowSettlement = $settlementInfoByProject[(int)$project->getId()] ?? null; ?>

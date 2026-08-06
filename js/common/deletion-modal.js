@@ -86,6 +86,29 @@
 	}
 
 	/**
+	 * Theme-safe Lucide host (hydrated by ProjectCheckIcons MutationObserver).
+	 *
+	 * @param {string} name
+	 * @returns {HTMLElement}
+	 */
+	function createLucideHost(name) {
+		const host = createEl('span', 'lucide-icon');
+		host.setAttribute('data-lucide', name);
+		host.setAttribute('aria-hidden', 'true');
+		return host;
+	}
+
+	/**
+	 * @param {HTMLElement} heading
+	 * @param {string} lucideName
+	 * @param {string} label
+	 */
+	function appendHeadingWithIcon(heading, lucideName, label) {
+		heading.appendChild(createLucideHost(lucideName));
+		heading.appendChild(textNode(label));
+	}
+
+	/**
 	 * Build modal shell and append to document.body.
 	 */
 	function mountModalShell() {
@@ -104,7 +127,7 @@
 		const header = createEl('div', 'projectcheck-deletion-modal__header');
 		const title = createEl('h2', 'projectcheck-deletion-modal__title');
 		title.id = 'deletion-modal-title';
-		title.appendChild(textNode(t('projectcheck', 'Delete')));
+		appendHeadingWithIcon(title, 'alert-triangle', t('projectcheck', 'Delete'));
 
 		const closeBtn = createEl('button', 'projectcheck-deletion-modal__close');
 		closeBtn.type = 'button';
@@ -177,7 +200,7 @@
 		const warning = createEl('div', 'projectcheck-deletion-modal__warning');
 		const warningTitle = createEl('h3', 'projectcheck-deletion-modal__warning-title');
 		warningTitle.id = 'deletion-modal-warning-title';
-		warningTitle.appendChild(textNode(t('projectcheck', 'Warning')));
+		appendHeadingWithIcon(warningTitle, 'alert-triangle', t('projectcheck', 'Warning'));
 		const message = createEl('p', 'projectcheck-deletion-modal__warning-message');
 		message.id = 'deletion-modal-warning-message';
 		if (customMessage) {
@@ -256,7 +279,7 @@
 	function appendImpactSection(parent, impact) {
 		const section = createEl('div', 'projectcheck-deletion-modal__impact');
 		const impactTitle = createEl('h3', 'projectcheck-deletion-modal__impact-title');
-		impactTitle.appendChild(textNode(t('projectcheck', 'Impact Analysis')));
+		appendHeadingWithIcon(impactTitle, 'bar-chart-3', t('projectcheck', 'Impact Analysis'));
 		const listHost = createEl('div', 'projectcheck-deletion-modal__impact-list');
 		appendImpactList(listHost, impact);
 		const summary = createEl('p', 'projectcheck-deletion-modal__impact-summary');
@@ -277,7 +300,7 @@
 		const section = createEl('div', 'projectcheck-deletion-modal__strategy');
 		const title = createEl('h3', 'projectcheck-deletion-modal__strategy-title');
 		title.id = 'deletion-modal-strategy-title';
-		title.appendChild(textNode(t('projectcheck', 'Deletion Strategy')));
+		appendHeadingWithIcon(title, 'settings', t('projectcheck', 'Deletion Strategy'));
 		const fieldset = document.createElement('fieldset');
 		fieldset.className = 'projectcheck-deletion-modal__strategy-fieldset';
 		const legend = document.createElement('legend');

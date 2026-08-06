@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Composability doctrine (CHECK-SUITE D21): ProjectCheck is complete alone,
- * and exposes soft compose surfaces so InvoicingCheck / CustomerCheck add power.
+ * and exposes soft compose surfaces so InvoiceCheck / CustomerCheck add power.
  *
  * @see planning/check-productivity-suite/COMPOSABILITY.md
  */
@@ -81,10 +81,10 @@ final class SuiteComposabilityContractTest extends TestCase
 		$this->assertStringContainsString("array_key_exists('remainingCents'", $src);
 		$tpl = (string)file_get_contents($this->root . '/templates/project-detail.php');
 		$this->assertStringContainsString('invoicingCheckReceivablesUrl', $tpl);
-		$this->assertStringContainsString('Open unpaid invoices (InvoicingCheck)', $tpl);
+		$this->assertStringContainsString('Open unpaid invoices (InvoiceCheck)', $tpl);
 		$this->assertStringContainsString('invoicingCheckUnpaid', $tpl);
 		$this->assertStringContainsString('pc-ic-unpaid-strip', $tpl);
-		$this->assertStringContainsString('Unpaid invoices (InvoicingCheck):', $tpl);
+		$this->assertStringContainsString('Unpaid invoices (InvoiceCheck):', $tpl);
 	}
 
 	public function testInfoXmlDoesNotHardRequireComposePartners(): void

@@ -210,6 +210,9 @@ body[data-theme-dark] .time-entry-form .form-group select,
 	resize: vertical;
 	min-height: 100px;
 	font-family: inherit;
+	/* Soft keyboard: leave room when scrollIntoView / visualViewport adjusts. */
+	scroll-margin-bottom: min(45vh, 20rem);
+	scroll-margin-top: 5rem;
 }
 
 .time-entry-form .char-count {
@@ -435,20 +438,21 @@ body[data-theme-dark] .time-entry-form .form-group select,
 	gap: var(--pc-space-2, 0.5rem);
 	min-height: var(--pc-touch-min, 44px);
 	padding-inline: var(--pc-space-4, 1rem);
-	background: var(--color-error);
-	color: var(--color-error-text, var(--color-primary-element-text));
-	border: 1px solid color-mix(in srgb, var(--color-error) 80%, var(--color-border));
+	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	color: var(--pc-danger-on-fill, var(--color-primary-element-text));
+	border: 1px solid var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
 	border-radius: var(--pc-radius-sm, 8px);
 }
 
 .pc-form-danger-zone__btn:hover,
 .pc-form-danger-zone__btn:focus-visible {
-	background: color-mix(in srgb, var(--color-error) 88%, var(--color-main-text));
-	color: var(--color-error-text, var(--color-primary-element-text));
+	background: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+	color: var(--pc-danger-on-fill, var(--color-primary-element-text));
+	border-color: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
 }
 
 .pc-form-danger-zone__btn:focus-visible {
-	outline: 2px solid var(--color-error);
+	outline: 2px solid var(--pc-danger-fill, var(--color-element-error));
 	outline-offset: 2px;
 }
 

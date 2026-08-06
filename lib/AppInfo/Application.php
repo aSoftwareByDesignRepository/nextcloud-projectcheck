@@ -208,7 +208,7 @@ class Application extends App implements IBootstrap
 			);
 		});
 
-		// Trusted-app settlement handshake for InvoicingCheck (server-side only).
+		// Trusted-app settlement handshake for InvoiceCheck (server-side only).
 		$context->registerService(\OCA\ProjectCheck\Public\SettlementReadFacade::class, function ($c) {
 			return new \OCA\ProjectCheck\Public\SettlementReadFacade(
 				$c->query(\OCA\ProjectCheck\Db\TimeEntryMapper::class),

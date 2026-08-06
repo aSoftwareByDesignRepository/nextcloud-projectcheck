@@ -86,6 +86,9 @@ async function assertThemeTokensResolved(page) {
 			muted: bodyCs.getPropertyValue('--pc-muted').trim(),
 			tintInfo: bodyCs.getPropertyValue('--pc-tint-info').trim(),
 			tintSuccess: bodyCs.getPropertyValue('--pc-tint-success').trim(),
+			dangerFill: bodyCs.getPropertyValue('--pc-danger-fill').trim(),
+			dangerOnFill: bodyCs.getPropertyValue('--pc-danger-on-fill').trim(),
+			dangerInk: bodyCs.getPropertyValue('--pc-danger-ink').trim(),
 			touch: bodyCs.getPropertyValue('--pc-touch-min').trim(),
 			scrim: bodyCs.getPropertyValue('--pc-scrim').trim(),
 			shadowSm: bodyCs.getPropertyValue('--pc-shadow-sm').trim(),
@@ -98,6 +101,9 @@ async function assertThemeTokensResolved(page) {
 	expect(tokens.muted, 'muted token').not.toEqual('');
 	expect(tokens.tintInfo, 'tint-info must resolve').not.toEqual('');
 	expect(tokens.tintSuccess, 'tint-success must resolve').not.toEqual('');
+	expect(tokens.dangerFill, 'danger-fill must resolve').not.toEqual('');
+	expect(tokens.dangerOnFill, 'danger-on-fill must resolve').not.toEqual('');
+	expect(tokens.dangerInk, 'danger-ink must resolve').not.toEqual('');
 	expect(
 		/,\s*transparent\s*\)\s*$/i.test(tokens.tintInfo),
 		`tint-info must mix into main-background, got: ${tokens.tintInfo}`,
@@ -222,5 +228,67 @@ test.describe('ProjectCheck theme × viewport a11y matrix', () => {
 			resetAccentColor();
 			await resetUserTheme(page).catch(() => {});
 		}
+	});
+
+	test('projects list uses Lucide type chips (no emoji glyphs)', async ({ page }) => {
+		test.skip(!process.env.E2E_USER && !process.env.BASE_URL, 'Set BASE_URL and E2E_USER in e2e/.env');
+		await gotoReady(page, routes.find((r) => r.id === 'projects').url);
+		await setUserTheme(page, 'dark');
+		await dismissOpenAppNavigation(page);
+
+		const row = page.locator('#projects-tbody .project-row').first();
+		await expect(row).toBeVisible({ timeout: 30_000 });
+
+		const typeCell = row.locator('td[data-label="Type"], td[data-label="Typ"]').first();
+		const typeChip = typeCell.locator('.project-type-chip').first();
+		await expect(typeChip).toBeVisible();
+		await expect(typeChip.locator('[data-lucide]')).toHaveCount(1);
+		await expect(typeChip.locator('svg.lucide-icon, .lucide-icon-host svg')).toHaveCount(1, { timeout: 10_000 });
+
+		const typeText = await typeCell.innerText();
+		expect(typeText).not.toMatch(/[👥⚠️✅⚙️📊🚨]/);
+
+		const priority = row.locator('.priority-badge').first();
+		await expect(priority).toBeVisible();
+		const bg = await priority.evaluate((el) => getComputedStyle(el).backgroundColor);
+		expect(bg).not.toMatch(/rgba?\(\s*0,\s*0,\s*0/);
+		expect(bg).not.toEqual('rgba(0, 0, 0, 0)');
+
+		await resetUserTheme(page).catch(() => {});
+	});
+
+	test('projects list: danger delete is visible; zero progress has no empty track', async ({ page }) => {
+		test.skip(!process.env.E2E_USER && !process.env.BASE_URL, 'Set BASE_URL and E2E_USER in e2e/.env');
+		await gotoReady(page, routes.find((r) => r.id === 'projects').url);
+		for (const theme of ['light', 'dark']) {
+			await setUserTheme(page, theme);
+			await dismissOpenAppNavigation(page);
+			await assertThemeTokensResolved(page);
+
+			const danger = page.locator('#projects-tbody .action-item--danger, #projects-tbody .delete-project-btn').first();
+			await expect(danger).toBeVisible({ timeout: 30_000 });
+			const dangerCss = await danger.evaluate((el) => {
+				const cs = getComputedStyle(el);
+				return {
+					color: cs.color,
+					bg: cs.backgroundColor,
+					border: cs.borderTopColor,
+				};
+			});
+			// Must not be transparent / fully invisible chrome
+			expect(dangerCss.color, `${theme} danger ink`).not.toMatch(/rgba\(\s*0,\s*0,\s*0,\s*0\s*\)/);
+			expect(dangerCss.bg, `${theme} danger bg`).not.toMatch(/rgba\(\s*0,\s*0,\s*0,\s*0\s*\)/);
+
+			const emptyProgress = page.locator('#projects-tbody .progress-info--empty').first();
+			if (await emptyProgress.count()) {
+				await expect(emptyProgress.locator('.budget-progress-bar')).toHaveCount(0);
+				await expect(emptyProgress.locator('.hours-logged')).not.toHaveText(/^\s*$/);
+			}
+
+			// No decorative empty 0% tracks left in the list
+			const zeroTracks = await page.locator('#projects-tbody .budget-progress-fill[style*="width: 0%"], #projects-tbody .budget-progress-fill[style*="width:0%"]').count();
+			expect(zeroTracks, `${theme}: empty 0% progress fills`).toBe(0);
+		}
+		await resetUserTheme(page).catch(() => {});
 	});
 });

@@ -29,6 +29,8 @@ Util::addScript('projectcheck', 'admin-settings');
 Util::addScript('projectcheck', 'pc-l10n', 'core', true);
 Util::addScript('projectcheck', 'org-policy-pickers');
 Util::addScript('projectcheck', 'license-settings');
+// Soft keyboard: NC Settings shell skips in-app navigation.php — load IME helper here.
+Util::addScript('projectcheck', 'common/keep-focused-visible');
 Util::addStyle('projectcheck', 'admin-settings');
 Util::addStyle('projectcheck', 'license-settings');
 $restrictOn = !empty($policy['restrictionEnabled']);

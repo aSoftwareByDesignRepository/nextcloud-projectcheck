@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Settlement write API for trusted sibling apps (InvoicingCheck).
+ * Settlement write API for trusted sibling apps (InvoiceCheck).
  *
  * All mutations go through {@see TimeEntryBillingService} — never raw SQL.
  * Optimistic `expectedUpdatedAt` checks fail fast before any write so a

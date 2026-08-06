@@ -1035,9 +1035,20 @@ body[dir="rtl"] .filters-row select {
 	font-size: 1rem;
 }
 
-.action-item.delete-project-btn:hover {
-	background-color: var(--pc-tint-danger, var(--color-error-light));
-	color: var(--pc-emphasis-text-error);
+.action-item.delete-project-btn,
+.action-item.action-item--danger {
+	color: var(--pc-danger-ink, var(--color-error-text, var(--color-error)));
+	background: var(--pc-tint-danger, var(--color-background-hover));
+	border: 1.5px solid color-mix(in srgb, var(--pc-danger-ink, var(--color-error-text, var(--color-error))) 55%, var(--pc-border, var(--color-border)));
+}
+
+.action-item.delete-project-btn:hover,
+.action-item.delete-project-btn:focus-visible,
+.action-item.action-item--danger:hover,
+.action-item.action-item--danger:focus-visible {
+	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	color: var(--pc-danger-on-fill, var(--color-primary-element-text));
 }
 
 /* Main Content Section */
@@ -1223,51 +1234,54 @@ body[dir="rtl"] .filters-row select {
 	border-bottom: none;
 }
 
-/* Status and Priority Badges */
+/* Status and Priority Badges — theme tints + text + left border (WCAG 1.4.1) */
 .status-badge,
 .priority-badge {
 	display: inline-flex;
 	align-items: center;
-	padding: 0.375rem 0.75rem;
-	border-radius: 20px;
-	font-size: 0.85rem;
-	font-weight: 500;
+	gap: var(--pc-space-1, 4px);
+	padding: 0.25rem 0.65rem;
+	border-radius: var(--pc-radius-pill, 999px);
+	font-size: var(--pc-fs-xs, 0.75rem);
+	font-weight: 700;
+	letter-spacing: 0.02em;
 	text-transform: uppercase;
-	letter-spacing: 0.5px;
+	line-height: 1.2;
+	color: var(--color-main-text);
+	background: var(--pc-bg-soft, var(--color-background-hover));
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-inline-start-width: 3px;
 }
 
 .status-active {
-	background-color: var(--color-success-light);
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
-	border-inline-start: 3px solid var(--color-success);
+	background: var(--pc-tint-success);
+	border-color: color-mix(in srgb, var(--color-success-text, var(--color-success)) 40%, var(--color-border));
+	border-inline-start-color: var(--color-success-text, var(--color-success));
 }
 
 .status-on-hold {
-	background-color: var(--color-warning-light);
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-	border-inline-start: 3px solid var(--color-warning);
+	background: var(--pc-tint-warning);
+	border-color: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 40%, var(--color-border));
+	border-inline-start-color: var(--color-warning-text, var(--color-warning));
 }
 
 .status-completed {
-	background-color: var(--color-info-light);
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-info) 28%, var(--color-border));
-	border-inline-start: 3px solid var(--color-info);
+	background: var(--pc-tint-info);
+	border-color: color-mix(in srgb, var(--color-primary-element) 40%, var(--color-border));
+	border-inline-start-color: var(--color-primary-element);
 }
 
 .status-cancelled {
-	background-color: var(--color-error-light);
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
-	border-inline-start: 3px solid var(--color-error);
+	background: var(--pc-tint-danger);
+	border-color: color-mix(in srgb, var(--color-error-text, var(--color-error)) 40%, var(--color-border));
+	border-inline-start-color: var(--color-error-text, var(--color-error));
 }
 
 .status-archived {
-	background-color: color-mix(in srgb, var(--color-text-maxcontrast) 12%, var(--color-main-background));
+	background: color-mix(in srgb, var(--color-text-maxcontrast) 12%, var(--color-main-background));
 	color: var(--color-text-maxcontrast);
-	border: 1px solid var(--color-border);
+	border-color: var(--color-border);
+	border-inline-start-color: var(--color-text-maxcontrast);
 }
 
 /* Project detail: layout + archive notice (WCAG-friendly contrast via theme) */
@@ -1882,106 +1896,79 @@ body[dir="rtl"] .filters-row select {
 }
 
 .priority-low {
-	background-color: var(--color-success-light);
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
-	border-inline-start: 3px solid var(--color-success);
+	background: var(--pc-tint-success);
+	border-color: color-mix(in srgb, var(--color-success-text, var(--color-success)) 40%, var(--color-border));
+	border-inline-start-color: var(--color-success-text, var(--color-success));
 }
 
 .priority-medium {
-	background-color: var(--color-warning-light);
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-	border-inline-start: 3px solid var(--color-warning);
+	background: var(--pc-tint-warning);
+	border-color: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 40%, var(--color-border));
+	border-inline-start-color: var(--color-warning-text, var(--color-warning));
 }
 
 .priority-high {
-	background-color: color-mix(in srgb, var(--color-accent) 15%, var(--color-main-background));
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
-	border-inline-start: 3px solid var(--color-accent);
+	background: var(--pc-tint-info);
+	border-color: color-mix(in srgb, var(--color-primary-element) 40%, var(--color-border));
+	border-inline-start-color: var(--color-primary-element);
 }
 
 .priority-critical {
-	background-color: var(--color-error-light);
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
-	border-inline-start: 3px solid var(--color-error);
+	background: var(--pc-tint-danger);
+	border-color: color-mix(in srgb, var(--color-error-text, var(--color-error)) 40%, var(--color-border));
+	border-inline-start-color: var(--color-error-text, var(--color-error));
 }
 
-/* Project Type Badges */
+/* Project Type Badges — NC tint tokens (no hardcoded palette) */
 .project-type-badge {
 	display: inline-flex;
 	align-items: center;
-	padding: 0.375rem 0.75rem;
-	border-radius: 20px;
-	font-size: 0.85rem;
-	font-weight: 500;
+	padding: 0.25rem 0.65rem;
+	border-radius: var(--pc-radius-pill, 999px);
+	font-size: var(--pc-fs-xs, 0.75rem);
+	font-weight: 600;
 	text-transform: uppercase;
-	letter-spacing: 0.5px;
-}
-
-.project-type-badge.client {
-	background-color: var(--color-success-light);
+	letter-spacing: 0.02em;
 	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
-	border-inline-start: 3px solid var(--color-success);
+	background: var(--pc-bg-soft, var(--color-background-hover));
+	border: 1px solid var(--pc-border, var(--color-border));
+	border-inline-start-width: 3px;
 }
 
-.project-type-badge.admin {
-	background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
-	color: var(--color-primary);
-	border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+.project-type-badge.client,
+.project-type-badge.customer,
+.project-type-badge.research {
+	background: var(--pc-tint-info);
+	border-color: color-mix(in srgb, var(--color-primary-element) 40%, var(--color-border));
+	border-inline-start-color: var(--color-primary-element);
 }
 
-.project-type-badge.sales {
-	background-color: var(--color-warning-light);
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-	border-inline-start: 3px solid var(--color-warning);
+.project-type-badge.admin,
+.project-type-badge.internal,
+.project-type-badge.other {
+	background: color-mix(in srgb, var(--color-text-maxcontrast) 10%, var(--color-main-background));
+	border-color: var(--color-border);
+	border-inline-start-color: var(--color-text-maxcontrast);
+	color: var(--color-text-maxcontrast);
 }
 
-.project-type-badge.customer {
-	background-color: var(--color-info-light);
-	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-info) 28%, var(--color-border));
-	border-inline-start: 3px solid var(--color-info);
+.project-type-badge.sales,
+.project-type-badge.training {
+	background: var(--pc-tint-success);
+	border-color: color-mix(in srgb, var(--color-success-text, var(--color-success)) 40%, var(--color-border));
+	border-inline-start-color: var(--color-success-text, var(--color-success));
 }
 
 .project-type-badge.product {
-	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
-	color: var(--color-accent);
-	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+	background: var(--pc-tint-warning);
+	border-color: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 40%, var(--color-border));
+	border-inline-start-color: var(--color-warning-text, var(--color-warning));
 }
 
 .project-type-badge.meeting {
-	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
-	color: var(--color-accent);
-	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
-}
-
-.project-type-badge.internal {
-	background-color: var(--color-background-tertiary);
-	color: var(--color-text-secondary);
-	border: 1px solid var(--color-border);
-}
-
-.project-type-badge.research {
-	background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
-	color: var(--color-primary);
-	border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
-}
-
-.project-type-badge.training {
-	background-color: var(--color-background-tertiary);
-	color: var(--color-text-secondary);
-	border: 1px solid var(--color-border);
-}
-
-.project-type-badge.other {
-	background-color: var(--color-background-tertiary);
-	color: var(--color-text-muted);
-	border: 1px solid var(--color-border);
+	background: var(--pc-tint-danger);
+	border-color: color-mix(in srgb, var(--color-error-text, var(--color-error)) 36%, var(--color-border));
+	border-inline-start-color: var(--color-error-text, var(--color-error));
 }
 
 /* Action Items */
@@ -2005,6 +1992,23 @@ body[dir="rtl"] .filters-row select {
 .action-item:hover {
 	background-color: var(--color-primary-element);
 	color: var(--color-primary-element-text);
+}
+
+/* Danger must win over the generic .action-item reset above (cascade). */
+.action-item.delete-project-btn,
+.action-item.action-item--danger {
+	color: var(--pc-danger-ink, var(--color-error-text, var(--color-error)));
+	background: var(--pc-tint-danger, var(--color-background-hover));
+	border: 1.5px solid color-mix(in srgb, var(--pc-danger-ink, var(--color-error-text, var(--color-error))) 55%, var(--pc-border, var(--color-border)));
+}
+
+.action-item.delete-project-btn:hover,
+.action-item.delete-project-btn:focus-visible,
+.action-item.action-item--danger:hover,
+.action-item.action-item--danger:focus-visible {
+	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	color: var(--pc-danger-on-fill, var(--color-primary-element-text));
 }
 
 .action-item .icon {
@@ -2112,6 +2116,11 @@ body[dir="rtl"] .filters-row select {
 	box-sizing: border-box;
 }
 
+.pc-quick-customer--ready {
+	border-color: color-mix(in srgb, var(--color-success, var(--color-primary-element)) 55%, var(--pc-border, var(--color-border)));
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-success, var(--color-primary-element)) 18%, transparent);
+}
+
 .pc-quick-customer__label {
 	display: block;
 	margin: 0 0 var(--pc-space-2, 8px);
@@ -2134,6 +2143,7 @@ body[dir="rtl"] .filters-row select {
 	box-sizing: border-box;
 }
 
+/* Secondary only — the form’s primary CTA is Save / Create / Update */
 .pc-quick-customer__btn {
 	display: inline-flex;
 	align-items: center;
@@ -2161,6 +2171,49 @@ body[dir="rtl"] .filters-row select {
 .pc-quick-customer__status.is-success {
 	color: var(--pc-emphasis-text-success, var(--color-success-text, var(--color-success)));
 	font-weight: 600;
+}
+
+.pc-quick-customer__next {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--pc-space-2, 8px);
+	margin-top: var(--pc-space-3, 12px);
+	padding: var(--pc-space-3, 12px);
+	border-radius: var(--pc-radius-md, 12px);
+	background: var(--color-main-background);
+	border: 2px solid var(--color-primary-element);
+	box-sizing: border-box;
+}
+
+.pc-quick-customer__next[hidden] {
+	display: none !important;
+}
+
+.pc-quick-customer__next-text {
+	margin: 0;
+	font-size: var(--pc-fs-md, 1rem);
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--color-main-text);
+}
+
+.pc-quick-customer__save {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--pc-space-2, 8px);
+	min-height: 3rem;
+	width: 100%;
+	font-size: 1.05rem;
+	font-weight: 700;
+	box-sizing: border-box;
+}
+
+#customer_id.pc-customer-selected {
+	border-color: color-mix(in srgb, var(--color-success, var(--color-primary-element)) 50%, var(--color-border));
+	outline: 2px solid color-mix(in srgb, var(--color-success, var(--color-primary-element)) 35%, transparent);
+	outline-offset: 1px;
 }
 
 .pc-quick-customer__more {
@@ -2556,14 +2609,15 @@ body[dir="rtl"] .filters-row select {
 }
 
 .actions-grid .button.danger {
-	background: var(--color-error);
-	color: var(--color-button-danger-text);
-	border-color: var(--color-error);
+	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	color: var(--pc-danger-on-fill, var(--color-button-danger-text, var(--color-primary-element-text)));
+	border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
 }
 
 .actions-grid .button.danger:hover {
-	background: var(--color-error-hover);
-	border-color: var(--color-error-hover);
+	background: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+	border-color: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+	color: var(--pc-danger-on-fill, var(--color-button-danger-text, var(--color-primary-element-text)));
 	transform: translateY(-1px);
 }
 
@@ -4577,21 +4631,28 @@ body[dir="rtl"] .filters-row select {
 	margin: 0;
 }
 
-/* Budget Display Improvements */
+/* Budget Display — compact list cell (theme tokens; no fixed widths) */
 .budget-info-compact {
-	font-size: 0.875rem;
-	line-height: 1.4;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: var(--pc-line-base, 1.45);
+	min-width: 0;
+	max-width: 100%;
 }
 
 .budget-main {
-	margin-bottom: 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-1, 4px);
+	margin-bottom: var(--pc-space-2, 8px);
 }
 
 .budget-line {
 	display: flex;
 	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 0.25rem;
+	align-items: baseline;
+	gap: var(--pc-space-2, 8px);
+	margin-bottom: 0;
+	min-width: 0;
 }
 
 .budget-line:last-child {
@@ -7279,136 +7340,101 @@ a.project-title:hover,
 	color: var(--color-text);
 }
 
-/* Project Type Icons */
+/* Project Type Icons — Lucide currentColor wells (no emoji; theme-safe) */
+.project-type-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--pc-space-2, 8px);
+	min-width: 0;
+	max-width: 100%;
+	color: var(--color-main-text);
+}
+
+.project-type-chip__label {
+	font-size: var(--pc-fs-sm, 0.875rem);
+	font-weight: 500;
+	color: var(--color-main-text);
+	overflow-wrap: anywhere;
+}
+
 .project-type-icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 1.2rem;
-	width: 32px;
-	height: 32px;
-	border-radius: 6px;
-	background: var(--color-background-hover);
-	border: 1px solid var(--color-border);
-	transition: all 0.2s ease;
-	cursor: help;
-	position: relative;
+	width: var(--pc-icon-well, 2.25rem);
+	height: var(--pc-icon-well, 2.25rem);
+	border-radius: var(--pc-radius-sm, 6px);
+	background: var(--pc-bg-soft, var(--color-background-hover));
+	border: 1px solid var(--pc-border, var(--color-border));
+	color: var(--color-main-text);
 	flex-shrink: 0;
-	/* Prevent icon from shrinking */
+	box-sizing: border-box;
 }
 
-.project-type-icon:hover {
-	background: var(--color-primary-element-light);
-	border-color: var(--color-primary-element);
-	transform: scale(1.1);
-	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 20%, transparent);
+.project-type-icon .lucide-icon,
+.project-type-icon .lucide-icon-host {
+	width: var(--pc-icon-md, 1.125rem);
+	height: var(--pc-icon-md, 1.125rem);
+	color: currentColor;
 }
 
-/* Enhanced tooltip for project type icons */
+.project-type-icon:hover,
+.project-type-icon:focus-visible {
+	background: var(--pc-tint-info);
+	border-color: color-mix(in srgb, var(--color-primary-element) 45%, var(--color-border));
+	color: var(--color-primary-element);
+	outline: none;
+}
+
+.project-type-icon:focus-visible {
+	box-shadow: var(--pc-shadow-focus);
+}
+
+/* Disable CSS tooltips that break high-contrast / overflow; native title remains */
 .project-type-icon::after {
-	content: attr(title);
-	position: absolute;
-	top: -45px;
-	/* Position above the icon */
-	left: 50%;
-	transform: translateX(-50%);
-	background: var(--color-main-background);
-	color: var(--color-text);
-	padding: 0.5rem 0.75rem;
-	border-radius: 4px;
-	font-size: 0.875rem;
-	white-space: nowrap;
-	box-shadow: 0 4px 20px color-mix(in srgb, var(--color-main-text) 25%, transparent);
-	border: 1px solid var(--color-border);
-	opacity: 0;
-	visibility: hidden;
-	transition: all 0.2s ease;
-	z-index: 999999;
-	/* Very high z-index to ensure visibility */
-	pointer-events: none;
-	max-width: 250px;
-	text-align: center;
+	content: none !important;
+	display: none !important;
 }
 
-.project-type-icon:hover::after {
-	opacity: 1;
-	visibility: visible;
-	transform: translateX(-50%) translateY(-4px);
+.project-type-icon[data-project-type="client"],
+.project-type-icon[data-project-type="customer"],
+.project-type-icon[data-project-type="research"] {
+	background: var(--pc-tint-info);
+	border-color: color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
+	color: var(--color-primary-element);
 }
 
-/* Make sure parent containers allow tooltips to be visible */
-.project-type-display,
-.type-cell,
-.type-header,
-.project-status-badges,
-.info-item,
-.compact-table,
-.project-types-container,
-.project-type-stats-container,
-.project-types-table,
-.project-types-breakdown,
-.year-section,
-.year-section-compact,
-.employee-project-types-table {
-	position: relative;
-	overflow: visible !important;
-}
-
-/* Ensure tables don't clip tooltips */
-.compact-table td,
-.compact-table th {
-	overflow: visible !important;
-}
-
-/* Specific styling for different project types */
-.project-type-icon[data-project-type="client"] {
-	background: color-mix(in srgb, var(--color-info) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
-}
-
-.project-type-icon[data-project-type="admin"] {
-	background: color-mix(in srgb, var(--color-text-lighter) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-text-lighter) 30%, transparent);
-}
-
-.project-type-icon[data-project-type="sales"] {
-	background: color-mix(in srgb, var(--color-success) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
-}
-
-.project-type-icon[data-project-type="customer"] {
-	background: color-mix(in srgb, var(--color-primary-element) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-primary-element) 30%, transparent);
+.project-type-icon[data-project-type="sales"],
+.project-type-icon[data-project-type="training"] {
+	background: var(--pc-tint-success);
+	border-color: color-mix(in srgb, var(--color-success-text, var(--color-success)) 35%, var(--color-border));
+	color: var(--pc-emphasis-text-success);
 }
 
 .project-type-icon[data-project-type="product"] {
-	background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+	background: var(--pc-tint-warning);
+	border-color: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 35%, var(--color-border));
+	color: var(--pc-emphasis-text-warning);
 }
 
 .project-type-icon[data-project-type="meeting"] {
-	background: color-mix(in srgb, var(--color-error) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+	background: var(--pc-tint-danger);
+	border-color: color-mix(in srgb, var(--color-error-text, var(--color-error)) 30%, var(--color-border));
+	color: var(--pc-emphasis-text-error);
 }
 
-.project-type-icon[data-project-type="internal"] {
-	background: color-mix(in srgb, var(--color-text-lighter) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-text-lighter) 30%, transparent);
-}
-
-.project-type-icon[data-project-type="research"] {
-	background: color-mix(in srgb, var(--color-primary-element) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-primary-element) 30%, transparent);
-}
-
-.project-type-icon[data-project-type="training"] {
-	background: color-mix(in srgb, var(--color-success) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
-}
-
+.project-type-icon[data-project-type="admin"],
+.project-type-icon[data-project-type="internal"],
 .project-type-icon[data-project-type="other"] {
-	background: color-mix(in srgb, var(--color-text-lighter) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-text-lighter) 30%, transparent);
+	background: color-mix(in srgb, var(--color-text-maxcontrast) 10%, var(--color-main-background));
+	border-color: var(--pc-border, var(--color-border));
+	color: var(--color-text-maxcontrast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.project-type-icon {
+		transition: none;
+	}
 }
 
 /* Pagination (shared across listing pages) */
@@ -7455,20 +7481,52 @@ a.project-title:hover,
 
 /* Former account / team history (WCAG-friendly, theme variables only) */
 .pc-badge {
-	display: inline-block;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--pc-space-1, 4px);
 	margin-inline-start: 0.5rem;
-	padding: 0.15rem 0.5rem;
-	font-size: 0.75rem;
+	padding: 0.15rem 0.55rem;
+	font-size: var(--pc-fs-xs, 0.75rem);
 	font-weight: 600;
 	line-height: 1.3;
-	border-radius: var(--border-radius, 4px);
+	min-height: 1.5rem;
+	border-radius: var(--pc-radius-pill, 999px);
 	border: 1px solid var(--color-border);
 	background: var(--color-background-hover);
-	color: var(--color-text-maxcontrast);
+	color: var(--color-main-text);
+	box-sizing: border-box;
 }
 
 .pc-badge--neutral {
 	border-color: var(--color-border);
+	background: var(--color-background-hover);
+	color: var(--color-main-text);
+}
+
+.pc-badge--info {
+	background: var(--pc-tint-info);
+	border-color: color-mix(in srgb, var(--color-primary-element) 42%, var(--color-border));
+	color: var(--color-main-text);
+}
+
+.pc-badge--warning {
+	background: var(--pc-tint-warning);
+	border-color: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 42%, var(--color-border));
+	color: var(--color-main-text);
+}
+
+.pc-badge--critical,
+.pc-badge--danger,
+.pc-badge--error {
+	background: var(--pc-tint-danger);
+	border-color: color-mix(in srgb, var(--color-error-text, var(--color-error)) 42%, var(--color-border));
+	color: var(--color-main-text);
+}
+
+.pc-badge--success {
+	background: var(--pc-tint-success);
+	border-color: color-mix(in srgb, var(--color-success-text, var(--color-success)) 42%, var(--color-border));
+	color: var(--color-main-text);
 }
 
 .team-modal-former-intro {
@@ -9713,6 +9771,15 @@ a.project-title:hover,
 .pc-invoicing-summary__empty {
 	font-weight: 500;
 	color: var(--color-text-maxcontrast);
+}
+
+/* Align strip metrics with action buttons (strip defaults add page-bar padding). */
+.pc-settle-dashboard .pc-settle-strip {
+	padding-inline: 0;
+}
+
+.pc-settle-dashboard .pc-settle-strip__item:first-child {
+	padding-inline-start: 0;
 }
 
 .pc-settle-dashboard__actions {

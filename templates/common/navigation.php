@@ -24,6 +24,8 @@ use OCA\ProjectCheck\Service\IconCatalog;
 // Shared modal accessibility helper (focus trap, Escape, backdrop, restore focus).
 // Must load before messaging/components so every openModal call gets the trap.
 \OCP\Util::addScript('projectcheck', 'common/modal-a11y');
+// Soft keyboard / visualViewport: keep focused notes & inputs above the IME on phones.
+\OCP\Util::addScript('projectcheck', 'common/keep-focused-visible');
 // Mobile drawer: in-page Menu button (replaces core #app-navigation-toggle).
 \OCP\Util::addScript('projectcheck', 'pc-mobile-nav');
 // Centralised icon catalog and hydration (audit ref. AUDIT-FINDINGS H22/icon-dedup).

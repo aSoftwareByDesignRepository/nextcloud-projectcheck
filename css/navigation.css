@@ -64,9 +64,10 @@
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
 	border-radius: var(--pc-radius-pill, 999px);
-	border: 1px solid color-mix(in srgb, var(--pc-notif-fg-info, var(--color-primary-element)) 42%, var(--pc-border, var(--color-border)));
+	border: 1px solid color-mix(in srgb, var(--color-primary-element) 42%, var(--pc-border, var(--color-border)));
 	background: var(--pc-tint-info);
-	color: var(--pc-notif-fg-info, var(--color-primary-element));
+	/* Main text on tint — primary as ink fails WCAG AA on dark (~4.4:1) */
+	color: var(--color-main-text);
 	white-space: nowrap;
 }
 
@@ -76,8 +77,8 @@
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	background: currentColor;
-	opacity: 0.75;
+	background: var(--color-primary-element);
+	opacity: 0.9;
 	flex-shrink: 0;
 }
 

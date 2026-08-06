@@ -221,7 +221,7 @@ include __DIR__ . '/common/page-start.php';
                     ?>
                     <p class="form-hint" id="customer_id-help">
                         <?php if ($canCreateCustomer): ?>
-                            <?php p($l->t('Missing from the list? Add them below — your project details stay filled in.')); ?>
+                            <?php p($l->t('Not in the list? Type a name below, then save the project.')); ?>
                         <?php else: ?>
                             <?php p($l->t('Ask an administrator if you need a new customer.')); ?>
                         <?php endif; ?>
@@ -229,7 +229,8 @@ include __DIR__ . '/common/page-start.php';
                     <?php if ($canCreateCustomer && $customerStoreUrl !== ''): ?>
                     <div class="pc-quick-customer"
                         data-store-url="<?php p($customerStoreUrl); ?>"
-                        data-create-url="<?php p($customerCreateUrl); ?>">
+                        data-create-url="<?php p($customerCreateUrl); ?>"
+                        data-save-label="<?php p($isEdit ? $l->t('Save project') : $l->t('Save project')); ?>">
                         <label class="pc-quick-customer__label" for="pc-quick-customer-name"><?php p($l->t('New customer name')); ?></label>
                         <div class="pc-quick-customer__row">
                             <input type="text"
@@ -239,12 +240,24 @@ include __DIR__ . '/common/page-start.php';
                                 autocomplete="organization"
                                 placeholder="<?php p($l->t('e.g. Acme GmbH')); ?>"
                                 aria-describedby="pc-quick-customer-status">
-                            <button type="button" id="pc-quick-customer-create" class="button primary pc-quick-customer__btn">
+                            <button type="button" id="pc-quick-customer-create" class="button pc-quick-customer__btn">
                                 <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
-                                <?php p($l->t('Add customer')); ?>
+                                <?php p($l->t('Add to list')); ?>
                             </button>
                         </div>
                         <p class="pc-quick-customer__status" id="pc-quick-customer-status" role="status" aria-live="polite"></p>
+                        <div class="pc-quick-customer__next" id="pc-quick-customer-next" hidden>
+                            <p class="pc-quick-customer__next-text" id="pc-quick-customer-next-text">
+                                <?php p($l->t('Customer is selected. One more step:')); ?>
+                            </p>
+                            <button type="submit"
+                                class="button primary pc-quick-customer__save"
+                                id="pc-quick-customer-save"
+                                aria-describedby="pc-quick-customer-next-text">
+                                <span data-lucide="check" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($isEdit ? $l->t('Save project') : $l->t('Save project')); ?>
+                            </button>
+                        </div>
                         <?php if ($customerCreateUrl !== ''): ?>
                         <p class="pc-quick-customer__more">
                             <a href="<?php p($customerCreateUrl); ?>"><?php p($l->t('Need email or address? Open full customer form')); ?></a>
@@ -437,8 +450,8 @@ include __DIR__ . '/common/page-start.php';
                         name="available_hours"
                         class="form-input pc-capacity-input"
                         inputmode="decimal"
-                        value="<?php p($isEdit ? ($project->getAvailableHours() > 0 ? number_format($project->getAvailableHours(), 2, '.', '') : '') : ''); ?>"
-                        placeholder="—"
+                        value="<?php p($isEdit ? number_format(max(0.0, (float) $project->getAvailableHours()), 2, '.', '') : '0'); ?>"
+                        placeholder="0"
                         readonly
                         aria-readonly="true"
                         aria-describedby="pc-available-hours-help">
@@ -452,9 +465,9 @@ include __DIR__ . '/common/page-start.php';
                 </div>
                 </section>
 
-                <!-- Form Actions -->
-                <div class="form-actions">
-                    <button type="submit" class="button primary">
+                <!-- Form Actions: single primary save at the end -->
+                <div class="form-actions" id="pc-project-form-actions">
+                    <button type="submit" class="button primary" id="pc-project-save">
                         <?php p($isEdit ? $l->t('Update Project') : $l->t('Create Project')); ?>
                     </button>
                     <a href="<?php p($_['indexUrl'] ?? '/projects'); ?>" class="button">

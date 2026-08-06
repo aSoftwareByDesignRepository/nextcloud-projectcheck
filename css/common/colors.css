@@ -161,9 +161,9 @@ body {
   --color-button-secondary-hover: var(--color-background-hover);
   --color-button-secondary-active: var(--color-background-hover);
   --color-button-secondary-text: var(--color-main-text);
-  --color-button-danger: var(--color-error);
-  --color-button-danger-hover: var(--color-error);
-  --color-button-danger-text: var(--color-primary-element-text);
+	--color-button-danger: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	--color-button-danger-hover: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+	--color-button-danger-text: var(--pc-danger-on-fill, var(--color-primary-element-text));
 
   /* Loading */
   --color-loading-spinner: var(--color-primary-element);

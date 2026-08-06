@@ -81,14 +81,15 @@
 }
 
 .btn--danger {
-  background-color: var(--color-error);
-  border-color: var(--color-error);
-  color: var(--color-text-inverse);
+  background-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+  border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+  color: var(--pc-danger-on-fill, var(--color-primary-element-text));
 }
 
 .btn--danger:hover:not(:disabled) {
-  background-color: var(--color-error-hover);
-  border-color: var(--color-error-hover);
+  background-color: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+  border-color: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+  color: var(--pc-danger-on-fill, var(--color-primary-element-text));
 }
 
 .btn--success {

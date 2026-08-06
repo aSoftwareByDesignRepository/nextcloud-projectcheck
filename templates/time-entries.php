@@ -479,32 +479,13 @@ include __DIR__ . '/common/page-start.php';
                                             <span><?php p($entry['projectName'] ?? $l->t('Unknown Project')); ?></span>
                                         <?php endif; ?>
                                     </td>
-                                    <td data-label="<?php p($colType); ?>">
+                                    <td data-label="<?php p($colType); ?>" class="type-cell">
                                         <?php
                                         $projectType = $entry['project_type'] ?? 'client';
                                         $displayName = $entry['project_type_display_name'] ?? 'Client Project';
-
-                                        // Icon mapping for project types
-                                        $iconMapping = [
-                                            'client' => '👥',
-                                            'admin' => '⚙️',
-                                            'sales' => '📈',
-                                            'customer' => '🎧',
-                                            'product' => '💻',
-                                            'meeting' => '🤝',
-                                            'internal' => '🏢',
-                                            'research' => '🔬',
-                                            'training' => '🎓',
-                                            'other' => '📋'
-                                        ];
-
-                                        $icon = $iconMapping[$projectType] ?? '📋';
+                                        $showLabel = false;
+                                        include __DIR__ . '/parts/project-type-chip.php';
                                         ?>
-                                        <span class="project-type-icon"
-                                            data-project-type="<?php p($projectType); ?>"
-                                            title="<?php p($displayName); ?>">
-                                            <?php p($icon); ?>
-                                        </span>
                                     </td>
                                     <td data-label="<?php p($colCustomer); ?>"><?php p($entry['customerName'] ?? ''); ?></td>
                                     <td data-label="<?php p($colUser); ?>"><?php p($entry['userDisplayName'] ?? $timeEntry->getUserId() ?? ''); ?></td>

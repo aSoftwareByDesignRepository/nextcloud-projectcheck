@@ -77,6 +77,26 @@ body {
 
 	/* Scrim / modal overlay — theme-aware, never raw rgba(0,0,0,…) */
 	--pc-scrim: color-mix(in srgb, var(--color-main-text) 45%, transparent);
+
+	/*
+	 * Solid danger CTA fill (design-system §3.1 / WCAG 1.4.3).
+	 * NC 30+ maps --color-error to a pale tint — never put on-fill text on that.
+	 * Use --color-element-error; dark themes darken the fill so ink stays ≥ 4.5:1.
+	 */
+	--pc-danger-fill: var(--color-element-error, var(--color-error));
+	--pc-danger-on-fill: var(--color-primary-element-text, var(--color-primary-text));
+	--pc-danger-ink: var(--color-error-text, var(--color-error));
+}
+
+/* Bright accent fills on dark themes fail AA with white/black ink — darken fill + use main-text. */
+body[data-theme-dark],
+body[data-theme-dark-highcontrast] {
+	--pc-danger-fill: color-mix(
+		in srgb,
+		var(--color-element-error, var(--color-error)) 40%,
+		var(--color-main-background)
+	);
+	--pc-danger-on-fill: var(--color-main-text);
 }
 
 @media (prefers-contrast: more) {

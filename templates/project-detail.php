@@ -57,21 +57,8 @@ if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 }
 $htmlLang = isset($_['htmlLang']) && is_string($_['htmlLang']) ? $_['htmlLang'] : 'en';
 
-// Project-type glyph for snapshot / facts (decorative; label is always present in text).
-$projectTypeIconMap = [
-	'client' => '👥',
-	'admin' => '⚙️',
-	'sales' => '📈',
-	'customer' => '🎧',
-	'product' => '💻',
-	'meeting' => '🤝',
-	'internal' => '🏢',
-	'research' => '🔬',
-	'training' => '🎓',
-	'other' => '📋',
-];
+// Project-type chip for snapshot / facts (Lucide; label always present in text).
 $projectTypeKey = strtolower((string)$project->getProjectType());
-$projectTypeIcon = $projectTypeIconMap[$projectTypeKey] ?? '📋';
 $projectTypeDisplayName = $project->getProjectTypeDisplayName();
 ?>
 
@@ -339,8 +326,12 @@ include __DIR__ . '/common/page-start.php';
                             <div class="pc-entity-facts__chip" role="listitem">
                                 <span class="pc-entity-facts__chip-label"><?php p($l->t('Project type')); ?></span>
                                 <span class="pc-entity-facts__type">
-                                    <span class="project-type-icon" data-project-type="<?php p($projectTypeKey); ?>" aria-hidden="true"><?php p($projectTypeIcon); ?></span>
-                                    <span class="project-type-label"><?php p($l->t((string)$projectTypeDisplayName)); ?></span>
+                                    <?php
+                                    $projectType = $projectTypeKey;
+                                    $displayName = $projectTypeDisplayName;
+                                    $showLabel = true;
+                                    include __DIR__ . '/parts/project-type-chip.php';
+                                    ?>
                                 </span>
                             </div>
                         </div>

@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.93 - 2026-08-06
+
+### Fixed
+
+- **Project customer reassignment:** empty `available_hours` / decimal fields no longer abort the whole project UPDATE (MariaDB empty DECIMAL), so changing the customer on edit persists correctly even with zero budget.
+- **Danger / delete actions (WCAG 1.4.3):** solid danger buttons and row delete controls use `--color-element-error` via `--pc-danger-fill` (not pale `--color-error` with on-fill text), so trash/delete stays readable in Light, Dark, and High Contrast.
+- **Empty progress tracks:** list progress cells no longer render a blank 0% bar; they show “No hours logged yet” until consumption is greater than zero.
+
+### Changed
+
+- **Project type icons:** Lucide chips replace emoji glyphs across projects, dashboard, and related views (theme-safe).
+- **Project form quick-add customer:** secondary “Add to list” plus a clear next-step Save control so quick-add no longer competes with the primary Create/Update action.
+
+### Tests
+
+- FormDecimal / customer-reassign integration + mutation gauntlet; ProgressCellPresentation unit + mutation; danger-button and type-chip CSS/theme contracts; theme × viewport axe and UX journey E2E coverage expanded.
+
 ## 2.0.92 - 2026-08-04
 
 ### Fixed

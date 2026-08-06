@@ -968,12 +968,15 @@ body[dir="rtl"] .filters-row select {
 .action-item.delete-entry-btn:focus-visible,
 .action-item.action-item--danger:hover,
 .action-item.action-item--danger:focus-visible {
-	background: var(--color-error);
-	color: var(--color-error-text, var(--color-primary-element-text));
+	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	color: var(--pc-danger-on-fill, var(--color-primary-element-text));
+	border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
 }
 
 .action-item.action-item--danger {
-	color: var(--color-error);
+	color: var(--pc-danger-ink, var(--color-error-text, var(--color-error)));
+	background: var(--pc-tint-danger, var(--color-background-hover));
+	border: 1.5px solid color-mix(in srgb, var(--pc-danger-ink, var(--color-error-text, var(--color-error))) 55%, var(--color-border));
 }
 
 .action-item .lucide-icon {

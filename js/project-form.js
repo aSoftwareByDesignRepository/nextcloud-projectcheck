@@ -1,11 +1,25 @@
 /**
  * Project form: native date inputs + inline customer quick-add (stay on page).
+ *
+ * UX contract (Bachus):
+ * - Exactly one primary “finish” action for the form: Save / Create / Update.
+ * - “Add to list” is secondary — it only puts the customer in the dropdown.
+ * - After quick-add, a local Save affordance appears next to the field so users
+ *   never hunt for the footer button.
  */
 (function () {
 	'use strict';
 
-	function tPc(msg) {
-		return typeof t === 'function' ? t('projectcheck', msg) : msg;
+	function tPc(msg, vars) {
+		if (typeof t === 'function') {
+			return vars ? t('projectcheck', msg, vars) : t('projectcheck', msg);
+		}
+		if (vars && typeof vars === 'object') {
+			return String(msg).replace(/\{(\w+)\}/g, function (_, key) {
+				return Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : '{' + key + '}';
+			});
+		}
+		return msg;
 	}
 
 	function normalizeDateToIso(dateString) {
@@ -108,7 +122,71 @@
 			option.textContent = name;
 		}
 		select.value = id;
+		select.classList.add('pc-customer-selected');
 		select.dispatchEvent(new Event('change', { bubbles: true }));
+	}
+
+	/**
+	 * Readonly capacity fields submit "" when hours are zero — coerce before POST
+	 * so MariaDB DECIMAL columns never receive an empty string.
+	 */
+	function normalizeCapacityFieldsForSubmit(form) {
+		if (!form) {
+			return;
+		}
+		['available_hours', 'total_budget', 'hourly_rate'].forEach(function (name) {
+			const el = form.elements.namedItem(name);
+			if (!el || typeof el.value !== 'string') {
+				return;
+			}
+			if (String(el.value).trim() === '') {
+				el.value = '0';
+			}
+		});
+	}
+
+	function showSaveNextStep(wrap, statusEl, customerName) {
+		const next = document.getElementById('pc-quick-customer-next');
+		const nextText = document.getElementById('pc-quick-customer-next-text');
+		const saveHere = document.getElementById('pc-quick-customer-save');
+		const shortOk = tPc('Added to the list and selected.');
+		setQuickCustomerStatus(statusEl, shortOk, false);
+		announce(shortOk + ' ' + tPc('Save the project to finish.'));
+
+		if (nextText) {
+			const label = customerName
+				? tPc('"{name}" is selected. One more step:', { name: customerName })
+				: tPc('Customer is selected. One more step:');
+			nextText.textContent = label;
+		}
+		if (next) {
+			next.hidden = false;
+			next.classList.add('is-visible');
+			try {
+				next.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+			} catch (e) {
+				next.scrollIntoView(true);
+			}
+		}
+		if (saveHere) {
+			window.setTimeout(function () {
+				saveHere.focus();
+			}, 50);
+		}
+		if (wrap) {
+			wrap.classList.add('pc-quick-customer--ready');
+		}
+	}
+
+	function hideSaveNextStep(wrap) {
+		const next = document.getElementById('pc-quick-customer-next');
+		if (next) {
+			next.hidden = true;
+			next.classList.remove('is-visible');
+		}
+		if (wrap) {
+			wrap.classList.remove('pc-quick-customer--ready');
+		}
 	}
 
 	function initializeQuickCustomer() {
@@ -130,6 +208,7 @@
 			const name = String(nameInput.value || '').trim();
 			if (!name) {
 				setQuickCustomerStatus(statusEl, tPc('Enter a customer name.'), true);
+				hideSaveNextStep(wrap);
 				nameInput.focus();
 				return;
 			}
@@ -137,6 +216,7 @@
 			createBtn.disabled = true;
 			nameInput.disabled = true;
 			setQuickCustomerStatus(statusEl, tPc('Creating customer…'), false);
+			hideSaveNextStep(wrap);
 
 			const token = (typeof OC !== 'undefined' && OC.requestToken) ? OC.requestToken : '';
 			try {
@@ -166,10 +246,7 @@
 
 				selectCustomerOption(select, result.customer);
 				nameInput.value = '';
-				const okMsg = tPc('Customer added and selected.');
-				setQuickCustomerStatus(statusEl, okMsg, false);
-				announce(okMsg);
-				select.focus();
+				showSaveNextStep(wrap, statusEl, String(result.customer.name || name));
 			} catch (e) {
 				setQuickCustomerStatus(statusEl, tPc('Could not create customer. Please check your input.'), true);
 				nameInput.focus();
@@ -214,6 +291,7 @@
 				if (endDateInput && endDateInput.value) {
 					endDateInput.value = normalizeDateToIso(endDateInput.value);
 				}
+				normalizeCapacityFieldsForSubmit(form);
 			});
 		}
 

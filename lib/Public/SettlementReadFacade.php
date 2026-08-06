@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Read-only settlement API for trusted sibling apps (InvoicingCheck).
+ * Read-only settlement API for trusted sibling apps (InvoiceCheck).
  *
  * Never SELECTs from outside ProjectCheck — callers must use this facade
  * instead of querying `pc_*` tables directly.

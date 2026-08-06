@@ -87,9 +87,18 @@
     gap: 0.5rem;
 }
 
-.projectcheck-deletion-modal__title::before {
-    content: "⚠️";
-    font-size: 1.2em;
+.projectcheck-deletion-modal__title .lucide-icon,
+.projectcheck-deletion-modal__title .lucide-icon-host,
+.projectcheck-deletion-modal__warning-title .lucide-icon,
+.projectcheck-deletion-modal__warning-title .lucide-icon-host,
+.projectcheck-deletion-modal__impact-title .lucide-icon,
+.projectcheck-deletion-modal__impact-title .lucide-icon-host,
+.projectcheck-deletion-modal__strategy-title .lucide-icon,
+.projectcheck-deletion-modal__strategy-title .lucide-icon-host {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    color: currentColor;
 }
 
 .projectcheck-deletion-modal__close {
@@ -177,10 +186,6 @@
     gap: 0.5rem;
 }
 
-.projectcheck-deletion-modal__warning-title::before {
-    content: "🚨";
-    font-size: 1.1em;
-}
 
 .projectcheck-deletion-modal__warning-message {
     color: var(--color-text-maxcontrast);
@@ -208,10 +213,6 @@
     gap: 0.5rem;
 }
 
-.projectcheck-deletion-modal__impact-title::before {
-    content: "📊";
-    font-size: 1.1em;
-}
 
 .projectcheck-deletion-modal__impact-list {
     margin-bottom: 0.75rem;
@@ -275,10 +276,6 @@
     gap: 0.5rem;
 }
 
-.projectcheck-deletion-modal__strategy-title::before {
-    content: "⚙️";
-    font-size: 1.1em;
-}
 
 .projectcheck-deletion-modal__strategy-options {
     display: flex;
@@ -432,14 +429,15 @@
 }
 
 .projectcheck-deletion-modal__btn--delete {
-    background: var(--color-error);
-    color: var(--pc-text-on-strong);
-    border-color: var(--color-error);
+    background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+    color: var(--pc-danger-on-fill, var(--color-primary-element-text));
+    border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
 }
 
 .projectcheck-deletion-modal__btn--delete:hover:not(:disabled) {
-    background: var(--color-error-hover);
-    border-color: var(--color-error-hover);
+    background: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+    border-color: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+    color: var(--pc-danger-on-fill, var(--color-primary-element-text));
 }
 
 .projectcheck-deletion-modal__btn:focus-visible {

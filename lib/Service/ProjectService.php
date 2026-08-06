@@ -16,6 +16,7 @@ use OCA\ProjectCheck\Db\ProjectMember;
 use OCA\ProjectCheck\Db\ProjectMapper;
 use OCA\ProjectCheck\Db\ProjectQueryColumns;
 use OCA\ProjectCheck\Util\CostRateMode;
+use OCA\ProjectCheck\Util\FormDecimal;
 use OCA\ProjectCheck\Util\ProjectCalculator;
 use OCA\ProjectCheck\Util\ProjectCapacity;
 use OCA\ProjectCheck\Util\ProjectMemberRole;
@@ -747,13 +748,22 @@ class ProjectService
 		}
 
 		$modeForCapacity = CostRateMode::normalize($data['cost_rate_mode'] ?? $project->getCostRateMode());
-		if (isset($data['total_budget']) || isset($data['hourly_rate'])) {
-			$budget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float) $data['total_budget'] : (float) $project->getTotalBudget();
-			$rate = isset($data['hourly_rate']) && $data['hourly_rate'] !== '' ? (float) $data['hourly_rate'] : (float) $project->getHourlyRate();
+		if (array_key_exists('total_budget', $data) || array_key_exists('hourly_rate', $data)) {
+			try {
+				$budget = array_key_exists('total_budget', $data)
+					? FormDecimal::coerce($data['total_budget'])
+					: (float) $project->getTotalBudget();
+				$rate = array_key_exists('hourly_rate', $data)
+					? FormDecimal::coerce($data['hourly_rate'])
+					: (float) $project->getHourlyRate();
+			} catch (\InvalidArgumentException $e) {
+				throw new \Exception('Hourly rate must be a non-negative number');
+			}
 			if ($budget > 0 && $rate > 0) {
 				$data['available_hours'] = ProjectCapacity::storedAvailableHours($budget, $rate, $modeForCapacity);
-			} elseif ($budget > 0 && $modeForCapacity !== CostRateMode::PROJECT && $rate <= 0) {
-				$data['available_hours'] = 0;
+			} elseif ($budget <= 0 || ($modeForCapacity !== CostRateMode::PROJECT && $rate <= 0)) {
+				// Zero budget (or planning mode without a rate) → store 0, never "".
+				$data['available_hours'] = 0.0;
 			}
 		}
 
@@ -800,8 +810,13 @@ class ProjectService
 					$value = (int)$value;
 				}
 
-				if (in_array($field, ['hourly_rate', 'total_budget', 'available_hours']) && !empty($value)) {
-					$value = (float)$value;
+				// DECIMAL columns reject HTML empty strings (SQLSTATE 22007).
+				if (in_array($field, ['hourly_rate', 'total_budget', 'available_hours'], true)) {
+					try {
+						$value = FormDecimal::coerce($value);
+					} catch (\InvalidArgumentException $e) {
+						throw new \Exception(ucfirst(str_replace('_', ' ', $field)) . ' must be a non-negative number');
+					}
 				}
 
 				if ($value === null) {

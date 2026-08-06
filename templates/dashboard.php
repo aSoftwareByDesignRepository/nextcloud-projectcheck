@@ -461,46 +461,26 @@ include __DIR__ . '/common/page-start.php';
                                     </h4>
                                     <div class="project-status-badges">
                                         <?php
-                                        // Icon mapping for project types
-                                        $iconMapping = [
-                                            'client' => '👥',
-                                            'admin' => '⚙️',
-                                            'sales' => '📈',
-                                            'customer' => '🎧',
-                                            'product' => '💻',
-                                            'meeting' => '🤝',
-                                            'internal' => '🏢',
-                                            'research' => '🔬',
-                                            'training' => '🎓',
-                                            'other' => '📋'
-                                        ];
-                                        $projectType = strtolower($project->getProjectType());
-                                        $icon = $iconMapping[$projectType] ?? '📋';
+                                        $projectType = strtolower((string)$project->getProjectType());
                                         $displayName = $project->getProjectTypeDisplayName();
+                                        $showLabel = false;
+                                        include __DIR__ . '/parts/project-type-chip.php';
                                         ?>
-                                        <span class="project-type-icon"
-                                            data-project-type="<?php p($projectType); ?>"
-                                            title="<?php p($displayName); ?>"
-                                            tabindex="0"
-                                            role="img"
-                                            aria-label="<?php p($displayName); ?>">
-                                            <?php p($icon); ?>
-                                        </span>
                                         <span class="status-badge status-<?php p(strtolower(str_replace(' ', '-', $project->getStatus()))); ?>">
                                             <?php p($project->getStatus()); ?>
                                         </span>
                                         <?php if ($budgetInfo): ?>
                                             <?php if ($budgetInfo['consumption_percentage'] >= 100): ?>
-                                                <span class="budget-status-badge critical">⚠️ <?php p($l->t('Over Budget')); ?></span>
+                                                <span class="budget-status-badge critical"><span data-lucide="alert-triangle" class="lucide-icon" aria-hidden="true"></span> <?php p($l->t('Over Budget')); ?></span>
                                             <?php elseif ($budgetInfo['warning_level'] === 'critical'): ?>
-                                                <span class="budget-status-badge critical">⚠️ <?php p($l->t('Critical')); ?></span>
+                                                <span class="budget-status-badge critical"><span data-lucide="alert-triangle" class="lucide-icon" aria-hidden="true"></span> <?php p($l->t('Critical')); ?></span>
                                             <?php elseif ($budgetInfo['warning_level'] === 'warning'): ?>
-                                                <span class="budget-status-badge warning">⚠️ <?php p($l->t('Warning')); ?></span>
+                                                <span class="budget-status-badge warning"><span data-lucide="alert-triangle" class="lucide-icon" aria-hidden="true"></span> <?php p($l->t('Warning')); ?></span>
                                             <?php else: ?>
-                                                <span class="budget-status-badge safe">✅ <?php p($l->t('On Track')); ?></span>
+                                                <span class="budget-status-badge safe"><span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span> <?php p($l->t('On Track')); ?></span>
                                             <?php endif; ?>
                                         <?php else: ?>
-                                            <span class="budget-status-badge safe">✅ <?php p($l->t('On Track')); ?></span>
+                                            <span class="budget-status-badge safe"><span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span> <?php p($l->t('On Track')); ?></span>
                                         <?php endif; ?>
                                     </div>
                                 </div>

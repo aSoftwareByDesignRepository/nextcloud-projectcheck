@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Suite legacy isolation (CHECK-SUITE L1): ProjectCheck must remain usable
- * without CustomerCheck / InvoicingCheck / InventoryCheck / MaintenanceCheck.
+ * without CustomerCheck / InvoiceCheck / InventoryCheck / MaintenanceCheck.
  * Soft deep-links and facades for siblings are allowed; hard deps are not.
  *
  * @see planning/check-productivity-suite/LEGACY-SAFETY.md

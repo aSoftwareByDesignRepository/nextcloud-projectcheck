@@ -111,12 +111,17 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 			test.skip(true, 'User cannot create customers — quick-add hidden by permission');
 		}
 		await expect(quick).toBeVisible();
+		// Add to list is secondary; Save is the only primary finish action nearby after add
+		await expect(page.locator('#pc-quick-customer-create')).not.toHaveClass(/primary/);
 		await assertAxeClean(page);
 
 		const customerName = `Bachus Customer ${Date.now()}`;
 		await page.locator('#pc-quick-customer-name').fill(customerName);
 		await page.locator('#pc-quick-customer-create').click();
-		await expect(page.locator('#pc-quick-customer-status')).toContainText(/added|angelegt|selected|ausgewählt/i, { timeout: 15_000 });
+		await expect(page.locator('#pc-quick-customer-status')).toContainText(/added|hinzugefügt|selected|ausgewählt/i, { timeout: 15_000 });
+		await expect(page.locator('#pc-quick-customer-next')).toBeVisible();
+		await expect(page.locator('#pc-quick-customer-save')).toBeVisible();
+		await expect(page.locator('#pc-quick-customer-save')).toHaveClass(/primary/);
 
 		const selected = page.locator('#customer_id');
 		await expect(selected).not.toHaveValue('');
@@ -129,6 +134,71 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		// Project draft must still be intact (no navigation away)
 		await expect(page).toHaveURL(/projects\/(create|new)/i);
 		await expect(nameField).toHaveValue(draftName);
+		await assertAxeClean(page, '#pc-quick-customer-next');
+	});
+
+	test('project edit: quick-add customer then save persists reassignment (zero budget)', async ({ page }) => {
+		await gotoApp(page, URLS.projectCreate);
+		await expect(page.locator('#project-form')).toBeVisible();
+		if ((await page.locator('.pc-quick-customer').count()) === 0) {
+			test.skip(true, 'User cannot create customers — quick-add hidden by permission');
+		}
+
+		const projectName = `Bachus Reassign ${Date.now()}`;
+		await page.locator('#name').fill(projectName);
+		await page.locator('#short_description').fill('Reassign customer regression');
+		const firstCustomer = `Bachus Cust A ${Date.now()}`;
+		await page.locator('#pc-quick-customer-name').fill(firstCustomer);
+		await page.locator('#pc-quick-customer-create').click();
+		await expect(page.locator('#pc-quick-customer-next')).toBeVisible({ timeout: 15_000 });
+		await expect(page.locator('#customer_id')).not.toHaveValue('');
+
+		// Zero budget path (empty available_hours) previously broke UPDATE
+		const budget = page.locator('#total_budget');
+		if (await budget.count()) {
+			await budget.fill('0');
+		}
+
+		// Use the in-place Save affordance (same submit as footer)
+		await Promise.all([
+			page.waitForURL(/projects\/\d+/, { timeout: 25_000 }),
+			page.locator('#pc-quick-customer-save').click(),
+		]);
+		const createdUrl = page.url();
+		const idMatch = createdUrl.match(/projects\/(\d+)/);
+		expect(idMatch).toBeTruthy();
+		const projectId = idMatch[1];
+
+		await gotoApp(page, `${BASE}/index.php/apps/projectcheck/projects/${projectId}/edit`);
+		await expect(page.locator('#customer_id')).toBeVisible();
+		await expect(page.locator('#pc-quick-customer-create')).toBeVisible();
+		const secondCustomer = `Bachus Cust B ${Date.now()}`;
+		await page.locator('#pc-quick-customer-name').fill(secondCustomer);
+		await Promise.all([
+			page.waitForResponse((r) => r.url().includes('/customers') && r.request().method() === 'POST'),
+			page.locator('#pc-quick-customer-create').click(),
+		]);
+		await expect.poll(async () => {
+			return page.locator('#customer_id').evaluate((el) => {
+				const opt = el.options[el.selectedIndex];
+				return opt ? opt.textContent.trim() : '';
+			});
+		}, { timeout: 15_000 }).toBe(secondCustomer);
+		await expect(page.locator('#pc-quick-customer-save')).toBeVisible();
+
+		await Promise.all([
+			page.waitForURL(/\/projects/, { timeout: 25_000 }),
+			page.locator('#pc-quick-customer-save').click(),
+		]);
+		expect(page.url()).not.toMatch(/message=error/);
+
+		await gotoApp(page, `${BASE}/index.php/apps/projectcheck/projects/${projectId}/edit`);
+		await expect.poll(async () => {
+			return page.locator('#customer_id').evaluate((el) => {
+				const opt = el.options[el.selectedIndex];
+				return opt ? opt.textContent.trim() : '';
+			});
+		}, { timeout: 15_000 }).toBe(secondCustomer);
 	});
 
 	test('project create: customer quick-add is always available when permitted', async ({ page }) => {
