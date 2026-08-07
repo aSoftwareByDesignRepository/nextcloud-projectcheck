@@ -1687,6 +1687,13 @@
 		"💰 Billable Work": "💰 Billable Work",
 		"💻 Product Development": "💻 Product Development",
 		"📊 Why This Matters": "📊 Why This Matters",
-		"🔬 Research & Development": "🔬 Research & Development"
+		"🔬 Research & Development": "🔬 Research & Development",
+		"Not linked": "Not linked",
+		"CustomerCheck": "CustomerCheck",
+		"Open CRM company": "Open CRM company",
+		"Not linked in CustomerCheck": "Not linked in CustomerCheck",
+		"Link this customer from CustomerCheck when the CRM hub is installed.": "Link this customer from CustomerCheck when the CRM hub is installed.",
+		"Linked": "Linked",
+		"Unavailable": "Unavailable"
 	}
 }

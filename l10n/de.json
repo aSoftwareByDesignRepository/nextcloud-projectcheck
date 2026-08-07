@@ -1687,6 +1687,13 @@
 		"💰 Billable Work": "💰 Abrechenbare Arbeit",
 		"💻 Product Development": "💻 Produktentwicklung",
 		"📊 Why This Matters": "📊 Warum das wichtig ist",
-		"🔬 Research & Development": "🔬 Forschung & Entwicklung"
+		"🔬 Research & Development": "🔬 Forschung & Entwicklung",
+		"Not linked": "Nicht verknüpft",
+		"CustomerCheck": "CustomerCheck",
+		"Open CRM company": "CRM-Unternehmen öffnen",
+		"Not linked in CustomerCheck": "Nicht in CustomerCheck verknüpft",
+		"Link this customer from CustomerCheck when the CRM hub is installed.": "Verknüpfen Sie diesen Kunden aus CustomerCheck, wenn der CRM-Hub installiert ist.",
+		"Linked": "Verknüpft",
+		"Unavailable": "Nicht verfügbar"
 	}
 }

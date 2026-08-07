@@ -549,6 +549,40 @@ class CustomerController extends Controller
 		$canEditCustomer = $this->customerService->canUserEditCustomer($userId, (int) $id);
 		$canCreateProject = $this->projectService->canUserCreateProject($userId);
 
+		$crmLink = [
+			'state' => 'sibling_unavailable',
+			'label' => $this->l->t('CustomerCheck is not available on this instance.'),
+			'deepLink' => null,
+			'name' => null,
+		];
+		try {
+			$appManager = \OC::$server->get(\OCP\App\IAppManager::class);
+			$facadeClass = 'OCA\\CustomerCheck\\Public\\CrmCompanyLinkReadFacade';
+			if ($appManager->isEnabledForUser('customercheck') && class_exists($facadeClass)) {
+				$facade = \OC::$server->get($facadeClass);
+				$found = method_exists($facade, 'findByPcCustomerId')
+					? $facade->findByPcCustomerId($userId, (int)$id)
+					: null;
+				if (is_array($found) && (int)($found['crmCompanyId'] ?? 0) > 0) {
+					$crmLink = [
+						'state' => 'linked',
+						'label' => $this->l->t('Linked CRM company: %s', [(string)($found['name'] ?? '')]),
+						'deepLink' => (string)($found['deepLink'] ?? ''),
+						'name' => (string)($found['name'] ?? ''),
+					];
+				} else {
+					$crmLink = [
+						'state' => 'not_linked',
+						'label' => $this->l->t('Not linked in CustomerCheck'),
+						'deepLink' => null,
+						'name' => null,
+					];
+				}
+			}
+		} catch (\Throwable) {
+			// Degrade: leave sibling_unavailable.
+		}
+
 		$response = new TemplateResponse($this->appName, 'customer-detail', [
 			'customer' => $customer,
 			'projects' => $projectsWithBudgetInfo,
@@ -567,6 +601,7 @@ class CustomerController extends Controller
 			'urlGenerator' => $this->urlGenerator,
 			'customerSettlement' => $customerSettlement,
 			'settlementInfoByProject' => $settlementInfoByProject,
+			'crmLink' => $crmLink,
 		]);
 
 		return $this->configureCSP($response);

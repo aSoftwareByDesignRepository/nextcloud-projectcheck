@@ -80,6 +80,32 @@ $pageHeaderActionsHtml = ob_get_clean();
 $pageHeaderActionsLabel = $l->t('Customer actions');
 include __DIR__ . '/common/page-start.php';
 ?>
+<?php
+$crmLink = $_['crmLink'] ?? ['state' => 'sibling_unavailable', 'label' => '', 'deepLink' => null];
+$crmState = (string)($crmLink['state'] ?? 'sibling_unavailable');
+?>
+		<section class="pc-card" id="pc-crm-link" aria-labelledby="pc-crm-link-title" style="margin-bottom:1.5rem;">
+			<header>
+				<h2 id="pc-crm-link-title"><?php p($l->t('CustomerCheck')); ?></h2>
+			</header>
+			<p>
+				<span class="badge"><?php
+					if ($crmState === 'linked') {
+						p($l->t('Linked'));
+					} elseif ($crmState === 'not_linked') {
+						p($l->t('Not linked'));
+					} else {
+						p($l->t('Unavailable'));
+					}
+				?></span>
+				<?php p((string)($crmLink['label'] ?? '')); ?>
+			</p>
+			<?php if ($crmState === 'linked' && !empty($crmLink['deepLink'])): ?>
+				<p><a class="button" style="min-height:44px;display:inline-flex;align-items:center;" href="<?php p((string)$crmLink['deepLink']); ?>"><?php p($l->t('Open CRM company')); ?></a></p>
+			<?php elseif ($crmState === 'not_linked'): ?>
+				<p class="hint"><?php p($l->t('Link this customer from CustomerCheck when the CRM hub is installed.')); ?></p>
+			<?php endif; ?>
+		</section>
 		<!-- Breadcrumb Navigation -->
 		<div class="breadcrumb-container">
 			<nav class="breadcrumb" aria-label="<?php p($l->t('Breadcrumb')); ?>">
