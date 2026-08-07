@@ -79,19 +79,24 @@ fwrite(STDOUT, "baseline green\n");
 
 $mutants = [
 	[
-		'name' => 'edge-pad-zero',
-		'find' => 'const EDGE_PAD = 20;',
-		'replace' => 'const EDGE_PAD = 0;',
+		'name' => 'desktop-gate-drops-keyboard-check',
+		'find' => 'return needsImeReveal(el) && softKeyboardLikelyOpen(win);',
+		'replace' => 'return needsImeReveal(el);',
 	],
 	[
-		'name' => 'never-pad-room',
-		'find' => 'ensureKeyboardScrollRoom(document, padNeed > 0 ? padNeed + EDGE_PAD : 0, el);',
-		'replace' => 'ensureKeyboardScrollRoom(document, 0, el);',
+		'name' => 'select-still-revealed',
+		'find' => "if (typeof HTMLSelectElement !== 'undefined' && el instanceof HTMLSelectElement) {\n\t\t\treturn false;\n\t\t}",
+		'replace' => "if (false && typeof HTMLSelectElement !== 'undefined' && el instanceof HTMLSelectElement) {\n\t\t\treturn false;\n\t\t}",
 	],
 	[
-		'name' => 'skip-scroll-when-covered',
-		'find' => 'if (delta === 0) {' . "\n" . "\t\t\treturn { moved: false, delta: 0 };" . "\n" . "\t\t}",
-		'replace' => 'if (delta !== 0) {' . "\n" . "\t\t\treturn { moved: false, delta: 0 };" . "\n" . "\t\t}",
+		'name' => 'keyboard-shrink-zero',
+		'find' => 'const KEYBOARD_SHRINK_PX = 120;',
+		'replace' => 'const KEYBOARD_SHRINK_PX = 0;',
+	],
+	[
+		'name' => 'scroll-uses-center',
+		'find' => "el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });",
+		'replace' => "el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });",
 	],
 	[
 		'name' => 'vv-height-ignored',
@@ -109,19 +114,9 @@ $mutants = [
 		'replace' => "/* mutated: no focusin */",
 	],
 	[
-		'name' => 'chrome-inset-always-zero',
-		'find' => 'return Math.min(Math.max(0, Math.round(inset)), Math.max(0, usable - 80));',
-		'replace' => 'return 0;',
-	],
-	[
-		'name' => 'dialog-host-skipped',
-		'find' => 'const dialog = nearEl.closest(DIALOG_HOST_SEL);',
-		'replace' => 'const dialog = null; nearEl.closest(DIALOG_HOST_SEL);',
-	],
-	[
-		'name' => 'ancestor-chrome-skipped',
-		'find' => 'const nodes = chromeCandidates(doc, nearEl);',
-		'replace' => 'const nodes = chromeCandidates(doc, null);',
+		'name' => 'keyboard-close-skips-pad-clear',
+		'find' => "// Keyboard dismissed / desktop: never leave sticky IME padding behind.\n\t\t\t\tensureKeyboardScrollRoom(doc, 0, null);\n\t\t\t\treturn;",
+		'replace' => "// mutated: leave pad\n\t\t\t\treturn;",
 	],
 ];
 

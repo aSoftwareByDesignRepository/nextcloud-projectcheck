@@ -38,10 +38,16 @@ const REQUIRED_PAD_HINTS = [
 	'#mn-main-content',
 	'.dc-dialog',
 	'[role="dialog"]',
+	'.dk-dialog',
 	'.tc-banner',
 	'.projectcheck-admin',
 	'.admin-user-detail__actions',
 	'chromeCandidates',
+	'shouldAutoReveal',
+	'softKeyboardLikelyOpen',
+	'KEYBOARD_SHRINK_PX',
+	"block: 'nearest'",
+	'never leave sticky IME padding',
 ];
 
 describe('keep-focused-visible fleet contract', () => {

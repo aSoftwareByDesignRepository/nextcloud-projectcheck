@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.94 - 2026-08-07
+
+### Fixed
+
+- **Form focus jump (desktop):** selecting dropdowns, date fields, or text inputs no longer yanks the page. The soft-keyboard helper (`keep-focused-visible`) only scrolls when the on-screen keyboard has shrunk the visual viewport, skips non-IME controls (select/checkbox/date/time), uses `scrollIntoView({ block: 'nearest' })` instead of `center`, and clears leftover IME padding when the keyboard closes.
+- **Validation / form messages:** first-error and status message scrolls use `nearest` (with reduced-motion respect) and focus errors with `preventScroll` so long forms stay calm.
+- **Global smooth scroll footgun:** `html { scroll-behavior }` defaults to `auto` so CSS does not amplify programmatic focus scrolls.
+
+### Tests
+
+- Keep-focused unit + fleet contract + mutation gauntlet (desktop gate, select skip, nearest-only, keyboard-close pad clear).
+- E2E: time-entry create focus must not change window/`#app-content` scroll; UX journeys + axe smoke remain green.
+
 ## 2.0.93 - 2026-08-06
 
 ### Fixed

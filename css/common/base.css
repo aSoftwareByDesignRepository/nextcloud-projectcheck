@@ -196,7 +196,8 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
+  /* Instant scroll by default — smooth on html amplifies focus/validation jumps. */
+  scroll-behavior: auto;
 }
 
 body {

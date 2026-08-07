@@ -99,6 +99,37 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		await assertAxeClean(page);
 	});
 
+	test('time entry create: focusing selects/inputs must not jump the page (desktop)', async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 800 });
+		await gotoApp(page, URLS.timeEntryCreate);
+		await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+
+		const jumpProbe = async (locator) => {
+			if ((await locator.count()) === 0) {
+				return;
+			}
+			await locator.first().scrollIntoViewIfNeeded();
+			const before = await page.evaluate(() => ({
+				y: window.scrollY,
+				app: document.querySelector('#app-content')?.scrollTop ?? 0,
+			}));
+			await locator.first().focus();
+			await page.waitForTimeout(450);
+			const after = await page.evaluate(() => ({
+				y: window.scrollY,
+				app: document.querySelector('#app-content')?.scrollTop ?? 0,
+			}));
+			expect(Math.abs(after.y - before.y), `window jump on ${await locator.first().evaluate((el) => el.id || el.name || el.tagName)}`).toBeLessThanOrEqual(2);
+			expect(Math.abs(after.app - before.app), 'app-content jump').toBeLessThanOrEqual(2);
+		};
+
+		await jumpProbe(page.locator('#project_id, select[name="project_id"]').first());
+		await jumpProbe(page.locator('#hours, input[name="hours"]').first());
+		await jumpProbe(page.locator('#date, input[name="date"]').first());
+		await jumpProbe(page.locator('#description, textarea[name="description"], #notes, textarea[name="notes"]').first());
+		await assertAxeClean(page);
+	});
+
 	test('project create: inline customer quick-add without losing form draft', async ({ page }) => {
 		await gotoApp(page, URLS.projectCreate);
 		const nameField = page.locator('#name, input[name="name"]').first();

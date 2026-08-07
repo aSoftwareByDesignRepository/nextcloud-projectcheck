@@ -28,6 +28,26 @@
 
 	const FOCUSABLE =
 		'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled]), [contenteditable=""], [contenteditable="true"]';
+	/** Inputs that never open a soft keyboard — never pad/scroll for these. */
+	const NO_IME_INPUT_TYPES = {
+		checkbox: true,
+		radio: true,
+		button: true,
+		submit: true,
+		reset: true,
+		file: true,
+		image: true,
+		range: true,
+		color: true,
+		hidden: true,
+		date: true,
+		time: true,
+		'datetime-local': true,
+		month: true,
+		week: true,
+	};
+	/** Layout vs visualViewport gap (px) that indicates an on-screen keyboard. */
+	const KEYBOARD_SHRINK_PX = 120;
 	const EDGE_PAD = 20;
 	const RETRY_MS = [50, 200, 400];
 	const SPACER_ID = 'pc-ime-scroll-spacer';
@@ -35,6 +55,8 @@
 	const INSTALL_ATTR = 'pcKeepFocusedVisible';
 
 	const DIALOG_HOST_SEL = [
+		// Prefer InventoryCheck hosts first (shared Check-family helper).
+		'.iv-dialog',
 		'[role="dialog"]',
 		'.modal',
 		'.oc-dialog',
@@ -42,17 +64,18 @@
 		'.bc-dialog',
 		'.crm-dialog',
 		'.mn-dialog',
-		'.iv-dialog',
 		'.ic-dialog',
 		'.tc-dialog',
 		'.mc-dialog',
 		'.azc-dialog',
 		'.pc-dialog',
+		'.dk-dialog',
 		'.helpdesk-dialog',
 		'.dialog',
 	].join(', ');
 
 	const DIALOG_INNER_SEL = [
+		'.iv-dialog__body',
 		'.modal-body',
 		'.modal__content',
 		'.dialog__content',
@@ -61,21 +84,30 @@
 		'.dialog-body',
 	].join(', ');
 
+	/** Full-viewport fixed layers — never treat as sticky bottom chrome. */
+	const OVERLAY_CHROME_SKIP_SEL = [
+		'.modal-backdrop',
+		'.iv-dialog-overlay',
+		'.oc-dialog-dim',
+		'[role="presentation"]',
+	].join(', ');
+
 	const FORM_HOST_SEL = [
+		'.iv-main',
+		'#iv-main-content',
+		'.iv-form',
 		'.time-entry-form',
 		'.pc-main',
 		'.azc-main',
 		'.dc-main',
 		'.bc-main',
 		'.crm-main',
-		'.iv-main',
 		'.ic-main',
 		'.mn-main',
 		'.mc-main',
 		'.tc-main',
 		'#pc-main-content',
 		'#ic-main-content',
-		'#iv-main-content',
 		'#dc-main-content',
 		'#mn-main-content',
 		'#mc-main-content',
@@ -90,26 +122,26 @@
 		'.ticket-form',
 		'.mn-form',
 		'.mc-form',
-		'.iv-form',
 		'.ic-form',
 		'.projectcheck-admin',
 	].join(', ');
 
 	const PAGE_HOST_SELECTORS = [
+		'.iv-main',
+		'#iv-main-content',
+		'.iv-form',
 		'.time-entry-form',
 		'.pc-main',
 		'.azc-main',
 		'.dc-main',
 		'.bc-main',
 		'.crm-main',
-		'.iv-main',
 		'.ic-main',
 		'.mn-main',
 		'.mc-main',
 		'.tc-main',
 		'#pc-main-content',
 		'#ic-main-content',
-		'#iv-main-content',
 		'#dc-main-content',
 		'#mn-main-content',
 		'#mc-main-content',
@@ -121,7 +153,6 @@
 		'.ticket-form',
 		'.mn-form',
 		'.mc-form',
-		'.iv-form',
 		'.ic-form',
 		'.projectcheck-admin',
 		'form[id$="-form"]',
@@ -135,6 +166,7 @@
 	const BOTTOM_CHROME_SEL = [
 		'.tc-banner',
 		'.modal-footer',
+		'.iv-dialog__actions',
 		'.helpdesk-form-actions',
 		'.sticky-actions',
 		'.form-actions--sticky',
@@ -238,11 +270,19 @@
 		if (style.display === 'none' || style.visibility === 'hidden') {
 			return 0;
 		}
+		if (typeof node.matches === 'function' && node.matches(OVERLAY_CHROME_SKIP_SEL)) {
+			return 0;
+		}
 		if (typeof node.getBoundingClientRect !== 'function') {
 			return 0;
 		}
 		const rect = node.getBoundingClientRect();
 		if (!(rect.height > 0)) {
+			return 0;
+		}
+		const usable = band.bottom - band.top;
+		// Full-screen fixed overlays / dialog shells are not bottom chrome.
+		if (usable > 0 && rect.height > usable * 0.45) {
 			return 0;
 		}
 		// Overlaps the lower edge of the visible band (above the soft keyboard).
@@ -422,11 +462,60 @@
 
 	/**
 	 * @param {Element|null|undefined} el
+	 * @returns {boolean}
+	 */
+	function needsImeReveal(el) {
+		if (!(el instanceof Element) || !el.matches(FOCUSABLE)) {
+			return false;
+		}
+		if (typeof HTMLButtonElement !== 'undefined' && el instanceof HTMLButtonElement) {
+			return false;
+		}
+		if (typeof HTMLSelectElement !== 'undefined' && el instanceof HTMLSelectElement) {
+			return false;
+		}
+		if (typeof HTMLInputElement !== 'undefined' && el instanceof HTMLInputElement) {
+			const type = String(el.type || 'text').toLowerCase();
+			if (NO_IME_INPUT_TYPES[type]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * @param {Window|undefined|null} win
+	 * @returns {boolean}
+	 */
+	function softKeyboardLikelyOpen(win) {
+		if (!win || !win.visualViewport || typeof win.innerHeight !== 'number') {
+			return false;
+		}
+		return win.visualViewport.height < win.innerHeight - KEYBOARD_SHRINK_PX;
+	}
+
+	/**
+	 * Desktop mouse focus must never grow dialogs with fake IME padding.
+	 * Reveal only when the soft keyboard has already shrunk the visual viewport.
+	 *
+	 * @param {Element|null|undefined} el
+	 * @param {Window|undefined|null} win
+	 * @returns {boolean}
+	 */
+	function shouldAutoReveal(el, win) {
+		return needsImeReveal(el) && softKeyboardLikelyOpen(win);
+	}
+
+	/**
+	 * @param {Element|null|undefined} el
 	 * @param {Window|undefined|null} win
 	 * @returns {{ moved: boolean, delta: number }}
 	 */
 	function ensureFocusedVisible(el, win) {
 		if (!el || typeof el.getBoundingClientRect !== 'function') {
+			return { moved: false, delta: 0 };
+		}
+		if (!shouldAutoReveal(el, win)) {
 			return { moved: false, delta: 0 };
 		}
 		const band = visibleBand(win);
@@ -474,8 +563,9 @@
 		if (primary) {
 			primary.scrollTop += delta;
 		}
+		// Never use block:'center' — it yanks long lists/dialogs. Nearest is enough.
 		if (typeof el.scrollIntoView === 'function') {
-			el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+			el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
 		}
 
 		delta = coverageDelta();
@@ -524,7 +614,7 @@
 
 		function revealActive() {
 			const active = doc.activeElement;
-			if (!(active instanceof Element) || !active.matches(FOCUSABLE)) {
+			if (!(active instanceof Element) || !shouldAutoReveal(active, win)) {
 				return;
 			}
 			ensureFocusedVisible(active, win);
@@ -532,6 +622,11 @@
 
 		function scheduleReveal() {
 			clearTimers();
+			if (!softKeyboardLikelyOpen(win)) {
+				// Keyboard dismissed / desktop: never leave sticky IME padding behind.
+				ensureKeyboardScrollRoom(doc, 0, null);
+				return;
+			}
 			const epoch = ++focusEpoch;
 			revealActive();
 			RETRY_MS.forEach(function (ms) {
@@ -552,11 +647,14 @@
 		 */
 		function onFocusIn(event) {
 			const target = event.target;
-			if (!(target instanceof Element) || !target.matches(FOCUSABLE)) {
+			if (!(target instanceof Element) || !needsImeReveal(target)) {
 				return;
 			}
+			// Typed field focused: wait for keyboard resize before scrolling.
 			focusEpoch += 1;
-			scheduleReveal();
+			if (softKeyboardLikelyOpen(win)) {
+				scheduleReveal();
+			}
 		}
 
 		function onFocusOut() {
@@ -582,8 +680,8 @@
 		/** @type {{ removeEventListener: Function }|null} */
 		let vv = win && win.visualViewport ? win.visualViewport : null;
 		if (vv) {
+			// Resize = keyboard open/close. Scroll alone must not re-reveal (feedback loop).
 			vv.addEventListener('resize', scheduleReveal);
-			vv.addEventListener('scroll', scheduleReveal);
 		}
 
 		return {
@@ -593,7 +691,6 @@
 				doc.removeEventListener('focusout', onFocusOut, true);
 				if (vv) {
 					vv.removeEventListener('resize', scheduleReveal);
-					vv.removeEventListener('scroll', scheduleReveal);
 				}
 				ensureKeyboardScrollRoom(doc, 0, null);
 				delete doc.documentElement.dataset[INSTALL_ATTR];
@@ -604,8 +701,12 @@
 
 	return {
 		EDGE_PAD,
+		KEYBOARD_SHRINK_PX,
 		FOCUSABLE,
 		PAD_ATTR,
+		needsImeReveal,
+		softKeyboardLikelyOpen,
+		shouldAutoReveal,
 		visibleBand,
 		bottomChromeInset,
 		resolvePadHost,

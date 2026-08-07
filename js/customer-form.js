@@ -488,8 +488,14 @@
 			messageDiv.setAttribute('aria-atomic', 'true');
 			messageDiv.removeAttribute('hidden');
 
-			// Scroll to message
-			messageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			// Nearest + reduced-motion: avoid yanking long forms to vertical center.
+			const reducedMotion =
+				typeof window.matchMedia === 'function' &&
+				window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			messageDiv.scrollIntoView({
+				behavior: reducedMotion ? 'auto' : 'smooth',
+				block: 'nearest',
+			});
 
 			// Auto-hide success messages after 3 seconds
 			if (type === 'success') {

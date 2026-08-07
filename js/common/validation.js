@@ -616,11 +616,15 @@ const ProjectControlValidation = {
   scrollToFirstError(form) {
     const firstError = form.querySelector('.form-input--error');
     if (firstError) {
-      firstError.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center' 
+      const reducedMotion =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // Nearest keeps long forms stable; center was causing jarring jumps.
+      firstError.scrollIntoView({
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'nearest',
       });
-      firstError.focus();
+      firstError.focus({ preventScroll: true });
     }
   },
 
