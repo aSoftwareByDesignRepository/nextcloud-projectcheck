@@ -269,6 +269,42 @@ final class MobileBookingServiceTest extends TestCase
 		self::assertSame(42, $row['id']);
 	}
 
+	public function testCreateIdempotencyOrphanDeleteFailureSurfacesConflict(): void
+	{
+		$idem = $this->createMock(\OCA\ProjectCheck\Db\MobileIdempotencyMapper::class);
+		$time = $this->createMock(\OCP\AppFramework\Utility\ITimeFactory::class);
+		$time->method('getTime')->willReturn(1_700_000_000);
+		$l = $this->createMock(IL10N::class);
+		$l->method('t')->willReturnCallback(static fn (string $s, array $a = []) => $a === [] ? $s : vsprintf($s, $a));
+		$svc = new MobileBookingService($this->projects, $this->timeEntries, $this->rates, $l, $idem, $time);
+
+		$this->projects->method('canUserAddTimeEntryForProject')->willReturn(true);
+		$this->timeEntries->method('validateTimeEntryDataDetailed')->willReturn(['errors' => [], 'errorCodes' => []]);
+		$orphan = $this->makeEntry(99, 12, 'alice', 1.0, BillingStatus::OPEN);
+		$this->timeEntries->expects(self::once())->method('createTimeEntry')->willReturn($orphan);
+		$this->timeEntries->expects(self::once())
+			->method('deleteTimeEntryForMaintenance')
+			->with(99)
+			->willThrowException(new \RuntimeException('delete failed'));
+		$idem->method('findByUserAndRequestId')->willReturn(null);
+		$idem->method('tryInsert')->willReturn(false);
+
+		$this->expectException(MobileApiException::class);
+		try {
+			$svc->createEntry('alice', [
+				'projectId' => 12,
+				'date' => '2026-07-24',
+				'durationMinutes' => 60,
+				'clientRequestId' => 'race-orphan-fail',
+			]);
+		} catch (MobileApiException $e) {
+			self::assertSame('conflict', $e->getErrorCode());
+			self::assertSame(409, $e->getHttpStatus());
+			self::assertStringContainsString('duplicate could not be cleaned up', $e->getMessage());
+			throw $e;
+		}
+	}
+
 	public function testCreateClearsStaleIdempotencyMap(): void
 	{
 		$idem = $this->createMock(\OCA\ProjectCheck\Db\MobileIdempotencyMapper::class);
@@ -345,6 +381,47 @@ final class MobileBookingServiceTest extends TestCase
 		self::assertSame(9, $row['projectId']);
 		self::assertSame('alice', $row['employeeUserId']);
 		self::assertSame(85.5, $row['hourlyRate']);
+	}
+
+	public function testResolveHourlyRateSurfacesRateUnresolvedCode(): void
+	{
+		$this->projects->method('canUserAddTimeEntryForProject')->willReturn(true);
+		$this->rates->method('resolvePreview')->willThrowException(
+			new \OCA\ProjectCheck\Exception\RateResolutionException('Could not resolve hourly rate.', 'rate_unresolved')
+		);
+		$this->expectException(MobileApiException::class);
+		try {
+			$this->svc->resolveHourlyRate('alice', 9, '2026-07-24', null);
+		} catch (MobileApiException $e) {
+			self::assertSame('rate_unresolved', $e->getErrorCode());
+			self::assertSame(422, $e->getHttpStatus());
+			self::assertSame(['rate' => 'rate_unresolved'], $e->getDetails()['fields'] ?? null);
+			throw $e;
+		}
+	}
+
+	public function testCreatePromotesRateUnresolvedFromValidation(): void
+	{
+		$this->projects->method('canUserAddTimeEntryForProject')->willReturn(true);
+		$this->timeEntries->method('validateTimeEntryDataDetailed')->willReturn(['errors' => [], 'errorCodes' => []]);
+		$this->timeEntries->method('createTimeEntry')->willThrowException(
+			new \OCA\ProjectCheck\Exception\ValidationException(
+				['rate' => 'rate_unresolved'],
+				'Could not resolve hourly rate.'
+			)
+		);
+		$this->expectException(MobileApiException::class);
+		try {
+			$this->svc->createEntry('alice', [
+				'projectId' => 12,
+				'date' => '2026-07-24',
+				'durationMinutes' => 60,
+			]);
+		} catch (MobileApiException $e) {
+			self::assertSame('rate_unresolved', $e->getErrorCode());
+			self::assertSame(422, $e->getHttpStatus());
+			throw $e;
+		}
 	}
 
 	public function testResolveHourlyRateRejectsOtherEmployeeEvenWithProjectAccess(): void

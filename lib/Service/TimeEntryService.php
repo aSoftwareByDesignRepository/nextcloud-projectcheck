@@ -89,7 +89,7 @@ class TimeEntryService
 		if (!$project->allowsTimeTracking()) {
 			throw new ValidationException([], $this->l->t('Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.'));
 		}
-		if (!$this->projectService->canUserAccessProject($userId, $pid)) {
+		if (!$this->projectService->canUserAddTimeEntryForProject($userId, $pid)) {
 			throw new PermissionDeniedException('create', 'time entry', $this->l->t('Access denied'));
 		}
 
@@ -347,7 +347,7 @@ class TimeEntryService
 					(float) $timeEntry->getHourlyRate()
 				);
 			} catch (RateResolutionException $e) {
-				throw new ValidationException([], $e->getMessage());
+				throw new ValidationException(['rate' => $e->getCodeKey()], $e->getMessage());
 			}
 		}
 
@@ -415,7 +415,7 @@ class TimeEntryService
 		try {
 			$resolved = $this->hourlyRateService->resolveForTimeEntry($projectId, $userId, $entryDate);
 		} catch (RateResolutionException $e) {
-			throw new ValidationException([], $e->getMessage());
+			throw new ValidationException(['rate' => $e->getCodeKey()], $e->getMessage());
 		}
 
 		if ($clientRate !== null && $clientRate !== '') {
@@ -425,7 +425,7 @@ class TimeEntryService
 			try {
 				$this->hourlyRateService->assertClientRateMatchesResolved((float) $clientRate, $resolved);
 			} catch (RateResolutionException $e) {
-				throw new ValidationException([], $e->getMessage());
+				throw new ValidationException(['rate' => $e->getCodeKey()], $e->getMessage());
 			}
 		}
 

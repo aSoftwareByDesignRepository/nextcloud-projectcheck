@@ -10,6 +10,7 @@ use OCA\ProjectCheck\Service\LicenseService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -27,6 +28,7 @@ class LicenseController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function show(): JSONResponse
 	{
 		try {
@@ -38,6 +40,7 @@ class LicenseController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 10, period: 60)]
 	public function apply(): JSONResponse
 	{
 		try {
@@ -57,6 +60,7 @@ class LicenseController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 10, period: 60)]
 	public function remove(): JSONResponse
 	{
 		try {
@@ -68,6 +72,7 @@ class LicenseController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function seats(): JSONResponse
 	{
 		try {
@@ -81,6 +86,7 @@ class LicenseController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
 	public function assignSeat(): JSONResponse
 	{
 		try {
@@ -96,6 +102,7 @@ class LicenseController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
 	public function removeSeat(string $uid): JSONResponse
 	{
 		try {

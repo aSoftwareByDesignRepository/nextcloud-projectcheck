@@ -2,10 +2,9 @@
  * Project form: native date inputs + inline customer quick-add (stay on page).
  *
  * UX contract (Bachus):
- * - Exactly one primary “finish” action for the form: Save / Create / Update.
+ * - Exactly one primary finish action: #pc-project-save.
  * - “Add to list” is secondary — it only puts the customer in the dropdown.
- * - After quick-add, a local Save affordance appears next to the field so users
- *   never hunt for the footer button.
+ * - After quick-add, pulse + focus footer Save (one finish action; Go to Save remains a nearby helper).
  */
 (function () {
 	'use strict';
@@ -127,14 +126,14 @@
 	}
 
 	/**
-	 * Readonly capacity fields submit "" when hours are zero — coerce before POST
-	 * so MariaDB DECIMAL columns never receive an empty string.
+	 * Readonly capacity is display-only (no name attribute). Keep a numeric
+	 * value in the DOM for a11y; never leave "".
 	 */
 	function normalizeCapacityFieldsForSubmit(form) {
 		if (!form) {
 			return;
 		}
-		['available_hours', 'total_budget', 'hourly_rate'].forEach(function (name) {
+		['total_budget', 'hourly_rate'].forEach(function (name) {
 			const el = form.elements.namedItem(name);
 			if (!el || typeof el.value !== 'string') {
 				return;
@@ -143,20 +142,64 @@
 				el.value = '0';
 			}
 		});
+		const hours = document.getElementById('available_hours');
+		if (hours && typeof hours.value === 'string' && String(hours.value).trim() === '') {
+			hours.value = '0';
+		}
+	}
+
+	/** If short description is blank, copy the project name (server mirrors this). */
+	function fillShortDescriptionFromName(form) {
+		if (!form) {
+			return;
+		}
+		const nameEl = form.elements.namedItem('name');
+		const shortEl = form.elements.namedItem('short_description');
+		if (!nameEl || !shortEl || typeof nameEl.value !== 'string' || typeof shortEl.value !== 'string') {
+			return;
+		}
+		if (String(shortEl.value).trim() !== '') {
+			return;
+		}
+		const name = String(nameEl.value).trim();
+		if (name !== '') {
+			shortEl.value = name.slice(0, 500);
+		}
+	}
+
+	function focusPrimarySave() {
+		const saveBtn = document.getElementById('pc-project-save');
+		const actions = document.getElementById('pc-project-form-actions');
+		if (actions) {
+			actions.classList.add('pc-form-actions--pulse');
+			window.setTimeout(function () {
+				actions.classList.remove('pc-form-actions--pulse');
+			}, 1800);
+		}
+		if (saveBtn) {
+			try {
+				saveBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+			} catch (e) {
+				saveBtn.scrollIntoView(true);
+			}
+			window.setTimeout(function () {
+				saveBtn.focus({ preventScroll: true });
+			}, 50);
+		}
 	}
 
 	function showSaveNextStep(wrap, statusEl, customerName) {
 		const next = document.getElementById('pc-quick-customer-next');
 		const nextText = document.getElementById('pc-quick-customer-next-text');
-		const saveHere = document.getElementById('pc-quick-customer-save');
+		const gotoSave = document.getElementById('pc-quick-customer-goto-save');
 		const shortOk = tPc('Added to the list and selected.');
 		setQuickCustomerStatus(statusEl, shortOk, false);
 		announce(shortOk + ' ' + tPc('Save the project to finish.'));
 
 		if (nextText) {
 			const label = customerName
-				? tPc('"{name}" is selected. One more step:', { name: customerName })
-				: tPc('Customer is selected. One more step:');
+				? tPc('"{name}" is selected. Press Save at the bottom when you are done.', { name: customerName })
+				: tPc('Customer is selected. Press Save at the bottom when you are done.');
 			nextText.textContent = label;
 		}
 		if (next) {
@@ -168,14 +211,19 @@
 				next.scrollIntoView(true);
 			}
 		}
-		if (saveHere) {
-			window.setTimeout(function () {
-				saveHere.focus();
-			}, 50);
+		if (gotoSave && !gotoSave._pcBound) {
+			gotoSave._pcBound = true;
+			gotoSave.addEventListener('click', function (e) {
+				e.preventDefault();
+				focusPrimarySave();
+			});
 		}
 		if (wrap) {
 			wrap.classList.add('pc-quick-customer--ready');
 		}
+		// Next logical control is the single primary finish action (Bachus).
+		// "Go to Save" stays available if the user scrolled away from the footer.
+		focusPrimarySave();
 	}
 
 	function hideSaveNextStep(wrap) {
@@ -204,7 +252,12 @@
 			return;
 		}
 
+		let creating = false;
+
 		async function createCustomer() {
+			if (creating) {
+				return;
+			}
 			const name = String(nameInput.value || '').trim();
 			if (!name) {
 				setQuickCustomerStatus(statusEl, tPc('Enter a customer name.'), true);
@@ -213,6 +266,7 @@
 				return;
 			}
 
+			creating = true;
 			createBtn.disabled = true;
 			nameInput.disabled = true;
 			setQuickCustomerStatus(statusEl, tPc('Creating customer…'), false);
@@ -251,6 +305,7 @@
 				setQuickCustomerStatus(statusEl, tPc('Could not create customer. Please check your input.'), true);
 				nameInput.focus();
 			} finally {
+				creating = false;
 				createBtn.disabled = false;
 				nameInput.disabled = false;
 			}
@@ -272,6 +327,8 @@
 		const startDateInput = document.getElementById('start_date');
 		const endDateInput = document.getElementById('end_date');
 		const form = document.getElementById('project-form');
+		const saveBtn = document.getElementById('pc-project-save');
+		let submitting = false;
 
 		function onDateChange() {
 			validateDateRange(startDateInput, endDateInput);
@@ -284,15 +341,44 @@
 		}
 
 		if (form) {
-			form.addEventListener('submit', function () {
+			form.addEventListener('submit', function (e) {
+				if (submitting) {
+					e.preventDefault();
+					return;
+				}
+				if (!validateDateRange(startDateInput, endDateInput)) {
+					e.preventDefault();
+					if (endDateInput && typeof endDateInput.reportValidity === 'function') {
+						endDateInput.reportValidity();
+					}
+					return;
+				}
 				if (startDateInput && startDateInput.value) {
 					startDateInput.value = normalizeDateToIso(startDateInput.value);
 				}
 				if (endDateInput && endDateInput.value) {
 					endDateInput.value = normalizeDateToIso(endDateInput.value);
 				}
+				fillShortDescriptionFromName(form);
 				normalizeCapacityFieldsForSubmit(form);
+				submitting = true;
+				if (saveBtn) {
+					saveBtn.disabled = true;
+					saveBtn.setAttribute('aria-busy', 'true');
+				}
 			});
+
+			// If HTML5 validation fails inside a closed <details>, open it so the user sees why.
+			form.addEventListener('invalid', function (e) {
+				const target = e.target;
+				if (!target || typeof target.closest !== 'function') {
+					return;
+				}
+				const details = target.closest('details.pc-advanced-details');
+				if (details && !details.open) {
+					details.open = true;
+				}
+			}, true);
 		}
 
 		initializeQuickCustomer();

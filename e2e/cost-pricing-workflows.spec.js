@@ -4,6 +4,7 @@
  */
 const { test, expect } = require('@playwright/test');
 const { gotoApp } = require('./helpers/auth-guard');
+const { openProjectFormPanels } = require('./helpers/project-form-panels');
 
 const BASE = (process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
 const PROJECTS_URL = process.env.E2E_PROJECTS_URL || `${BASE}/index.php/apps/projectcheck/projects`;
@@ -36,6 +37,7 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 
 		const unique = `E2E project add-all ${Date.now()}`;
 		await page.locator('#name').fill(unique);
+		await openProjectFormPanels(page);
 		await page.locator('#short_description').fill('Playwright — project mode add-all visible.');
 		await customerSelect.selectOption({ index: 1 });
 		await page.locator('input[name="cost_rate_mode"][value="project"]').check({ force: true });
@@ -65,6 +67,7 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 
 		const unique = `E2E member pricing ${Date.now()}`;
 		await page.locator('#name').fill(unique);
+		await openProjectFormPanels(page);
 		await page.locator('#short_description').fill('Playwright smoke — per-person project rates.');
 		await customerSelect.selectOption({ index: 1 });
 
@@ -96,6 +99,7 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 		test.skip((await customerSelect.locator('option').count()) < 2, 'Need a customer');
 		const unique = `E2E no rate ${Date.now()}`;
 		await page.locator('#name').fill(unique);
+		await openProjectFormPanels(page);
 		await page.locator('#short_description').fill('Per-person rate required on add.');
 		await customerSelect.selectOption({ index: 1 });
 		await page.locator('input[name="cost_rate_mode"][value="project_member"]').check({ force: true });
@@ -185,6 +189,7 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 
 		const unique = `E2E employee mode ${Date.now()}`;
 		await page.locator('#name').fill(unique);
+		await openProjectFormPanels(page);
 		await page.locator('#short_description').fill('Employee master-data pricing.');
 		await customerSelect.selectOption({ index: 1 });
 		await page.locator('input[name="cost_rate_mode"][value="employee"]').check({ force: true });
@@ -202,6 +207,7 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 
 		const unique = `E2E project rate ${Date.now()}`;
 		await page.locator('#name').fill(unique);
+		await openProjectFormPanels(page);
 		await page.locator('#short_description').fill('Playwright — one project rate.');
 		await customerSelect.selectOption({ index: 1 });
 		await page.locator('input[name="cost_rate_mode"][value="project"]').check({ force: true });
@@ -221,6 +227,7 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 
 		const unique = `E2E mode lock ${Date.now()}`;
 		await page.locator('#name').fill(unique);
+		await openProjectFormPanels(page);
 		await page.locator('#short_description').fill('Mode lock after time entry.');
 		await customerSelect.selectOption({ index: 1 });
 		await page.locator('input[name="cost_rate_mode"][value="project"]').check({ force: true });
@@ -246,7 +253,9 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 
 		await gotoApp(page, `${BASE}/index.php/apps/projectcheck/projects/${projectId}/edit`);
 		await expect(page.locator('#pc-pricing-method-help')).toContainText(/locked|gesperrt/i);
-		await expect(page.locator('#pc-pricing-method input[type="radio"]').first()).toBeDisabled();
+		await expect(page.locator('[data-testid="pc-pricing-locked"]')).toBeVisible();
+		await expect(page.locator('#pc-pricing-method input[type="radio"]')).toHaveCount(0);
+		await expect(page.locator('.pc-pricing-summary__title')).toBeVisible();
 		await expect(page.locator('input[type="hidden"][name="cost_rate_mode"]')).toHaveCount(1);
 	});
 

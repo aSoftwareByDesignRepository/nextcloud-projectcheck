@@ -88,3 +88,6 @@ yarn-error.log*
 
 # Stylelint
 .stylelintcache
+
+# Internal security/architecture audit dumps belong in planning/, not the public app repo
+docs/security/

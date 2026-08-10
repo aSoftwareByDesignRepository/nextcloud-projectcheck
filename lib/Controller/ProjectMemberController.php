@@ -14,6 +14,7 @@ namespace OCA\ProjectCheck\Controller;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\IRequest;
@@ -128,6 +129,7 @@ class ProjectMemberController extends Controller
      * @return JSONResponse
      */
     #[NoAdminRequired]
+    #[UserRateLimit(limit: 60, period: 60)]
     public function remove(int $id): JSONResponse
     {
         $user = $this->userSession->getUser();
@@ -159,6 +161,7 @@ class ProjectMemberController extends Controller
      * @return JSONResponse
      */
     #[NoAdminRequired]
+    #[UserRateLimit(limit: 60, period: 60)]
     public function removePost(int $id): JSONResponse
     {
         $user = $this->userSession->getUser();

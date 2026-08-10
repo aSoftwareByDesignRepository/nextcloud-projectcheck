@@ -47,6 +47,57 @@ class ActivityService
     }
 
     /**
+     * Log project create (best-effort audit trail).
+     */
+    public function logProjectCreated(string $userId, Project $project): void
+    {
+        $event = $this->activityManager->generateEvent();
+        $event->setApp('projectcheck')
+            ->setType('projectcheck')
+            ->setAuthor($userId)
+            ->setAffectedUser($userId)
+            ->setObject('project', $project->getId(), $project->getName())
+            ->setSubject('project_created', [
+                'actor' => $userId,
+                'project' => $project->getName(),
+                'project_id' => $project->getId(),
+            ]);
+
+        $this->publishSafely($event, 'project_created');
+    }
+
+    /**
+     * Log project metadata update (best-effort audit trail).
+     *
+     * @param list<string> $changedFields Allowlisted field names that changed
+     */
+    public function logProjectUpdated(string $userId, Project $project, array $changedFields = []): void
+    {
+        $event = $this->activityManager->generateEvent();
+        $event->setApp('projectcheck')
+            ->setType('projectcheck')
+            ->setAuthor($userId)
+            ->setAffectedUser($userId)
+            ->setObject('project', $project->getId(), $project->getName())
+            ->setSubject('project_updated', [
+                'actor' => $userId,
+                'project' => $project->getName(),
+                'project_id' => $project->getId(),
+            ]);
+
+        if ($changedFields !== []) {
+            $safe = array_values(array_filter($changedFields, static fn ($f) => is_string($f) && $f !== ''));
+            if ($safe !== []) {
+                $event->setMessage('project_updated_fields', [
+                    'changes' => implode(', ', array_slice($safe, 0, 12)),
+                ]);
+            }
+        }
+
+        $this->publishSafely($event, 'project_updated');
+    }
+
+    /**
      * Log project deletion
      *
      * @param string $userId

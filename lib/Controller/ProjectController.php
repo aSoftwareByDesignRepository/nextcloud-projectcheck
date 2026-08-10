@@ -22,6 +22,7 @@ use OCA\ProjectCheck\Util\ProjectCapacity;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
+use OCA\ProjectCheck\Service\FormSubmitIdempotencyService;
 use OCA\ProjectCheck\Service\ProjectFileService;
 use OCA\ProjectCheck\Service\ProjectMemberHourlyRateService;
 use OCA\ProjectCheck\Service\ProjectSettlementService;
@@ -115,6 +116,9 @@ class ProjectController extends Controller
 	/** @var ProjectSettlementService */
 	private $projectSettlementService;
 
+	/** @var FormSubmitIdempotencyService */
+	private $formSubmitIdempotency;
+
 	/**
 	 * ProjectController constructor
 	 *
@@ -138,6 +142,8 @@ class ProjectController extends Controller
 	 * @param UserAccountSnapshotMapper $userAccountSnapshotMapper
 	 * @param ProjectMemberHourlyRateService $projectMemberHourlyRateService
 	 * @param ListExportService $listExportService
+	 * @param ProjectSettlementService $projectSettlementService
+	 * @param FormSubmitIdempotencyService $formSubmitIdempotency
 	 */
 	public function __construct(
 		string $appName,
@@ -160,7 +166,8 @@ class ProjectController extends Controller
 		UserAccountSnapshotMapper $userAccountSnapshotMapper,
 		ProjectMemberHourlyRateService $projectMemberHourlyRateService,
 		ListExportService $listExportService,
-		ProjectSettlementService $projectSettlementService
+		ProjectSettlementService $projectSettlementService,
+		FormSubmitIdempotencyService $formSubmitIdempotency
 	) {
 		parent::__construct($appName, $request);
 		$this->projectService = $projectService;
@@ -181,6 +188,7 @@ class ProjectController extends Controller
 		$this->projectMemberHourlyRateService = $projectMemberHourlyRateService;
 		$this->listExportService = $listExportService;
 		$this->projectSettlementService = $projectSettlementService;
+		$this->formSubmitIdempotency = $formSubmitIdempotency;
 		$this->setCspService($cspService);
 	}
 
@@ -504,6 +512,7 @@ class ProjectController extends Controller
 			'canCreateCustomer' => $this->projectService->canUserCreateCustomer($userId),
 			'customerStoreUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.store'),
 			'customerCreateUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.create'),
+			'createIdempotencyNonce' => $this->formSubmitIdempotency->mintNonce(),
 		]);
 
 		return $this->configureCSP($response);
@@ -515,6 +524,7 @@ class ProjectController extends Controller
 	 * @return RedirectResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
 	public function store(): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -535,22 +545,52 @@ class ProjectController extends Controller
 
 		try {
 			$data = $this->request->getParams();
-			$project = $this->projectService->createProject($data);
+			$nonce = isset($data['pc_form_nonce']) && is_string($data['pc_form_nonce'])
+				? $data['pc_form_nonce']
+				: null;
+			$projectId = $this->formSubmitIdempotency->rememberCreate($userId, $nonce, function () use ($data, $userId): int {
+				$created = $this->projectService->createProject($data);
+				try {
+					$this->activityService->logProjectCreated($userId, $created);
+				} catch (\Throwable) {
+					// best-effort
+				}
+				return (int) $created->getId();
+			});
+			$project = $this->projectService->getProject($projectId);
+			if ($project === null) {
+				throw new \RuntimeException('Project not found after create');
+			}
 
+			$fileWarning = null;
 			$uploads = $this->request->getUploadedFile('project_files');
 			if ($uploads) {
-				$this->projectFileService->addFilesFromUpload($project->getId(), $uploads, $user->getUID());
+				try {
+					$this->projectFileService->addFilesFromUpload($project->getId(), $uploads, $user->getUID());
+				} catch (\Throwable $fileError) {
+					// Project row is already committed — do not report total create failure
+					// (that orphans a usable project and invites duplicate retries).
+					$fileWarning = $this->l->t('Project was created, but one or more files could not be uploaded. You can add files from the project page.');
+				}
 			}
 
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['success' => true, 'message' => $this->l->t('Project created successfully'), 'project' => $project->getId()]);
+				$payload = ['success' => true, 'message' => $this->l->t('Project created successfully'), 'project' => $project->getId()];
+				if ($fileWarning !== null) {
+					$payload['warning'] = $fileWarning;
+				}
+				return new DataResponse($payload);
 			}
 
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.show', [
+			$urlParams = [
 				'id' => $project->getId(),
-				'message' => 'created',
-			]);
+				'message' => $fileWarning !== null ? 'created_files_partial' : 'created',
+			];
+			if ($fileWarning !== null) {
+				$urlParams['error_text'] = $fileWarning;
+			}
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.show', $urlParams);
 			return new RedirectResponse($url);
 		} catch (\Exception $e) {
 			$safeError = $this->toSafeProjectErrorMessage($e, $this->l->t('Could not create project. Please check your input.'));
@@ -658,6 +698,17 @@ class ProjectController extends Controller
 		$requestToken = $this->requestTokenProvider->getEncryptedRequestToken();
 		$pricingModeLabel = $this->pricingModeLabel($project->getCostRateMode());
 		$showCreatedBanner = (string) $this->request->getParam('message', '') === 'created';
+		$showCreatedFilesPartialBanner = (string) $this->request->getParam('message', '') === 'created_files_partial';
+		$createdFilesPartialText = '';
+		if ($showCreatedFilesPartialBanner) {
+			$raw = $this->request->getParam('error_text', '');
+			$createdFilesPartialText = is_string($raw) ? trim($raw) : '';
+			if (function_exists('mb_substr') && mb_strlen($createdFilesPartialText) > 280) {
+				$createdFilesPartialText = mb_substr($createdFilesPartialText, 0, 279) . '…';
+			} elseif (strlen($createdFilesPartialText) > 280) {
+				$createdFilesPartialText = substr($createdFilesPartialText, 0, 279) . '…';
+			}
+		}
 
 		// Settlement read model + full-settle endpoints (feature spec §12.3/§12.4).
 		$settlementInfo = $this->projectSettlementService->getSettlementInfo($project, $uid);
@@ -707,6 +758,8 @@ class ProjectController extends Controller
 			'costRateMode' => $project->getCostRateMode(),
 			'hideAddAllTeam' => $project->getCostRateMode() === CostRateMode::PROJECT_MEMBER,
 			'showCreatedBanner' => $showCreatedBanner,
+			'showCreatedFilesPartialBanner' => $showCreatedFilesPartialBanner,
+			'createdFilesPartialText' => $createdFilesPartialText,
 			'teamMembers' => $teamMembers,
 			'teamMembersActive' => $teamMembersActive,
 			'teamMembersFormer' => $teamMembersFormer,
@@ -1033,6 +1086,7 @@ class ProjectController extends Controller
 	 * @return RedirectResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function update(int $id): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1070,6 +1124,14 @@ class ProjectController extends Controller
 			$data = $this->request->getParams();
 
 			$project = $this->projectService->updateProject($id, $data);
+			try {
+				$changed = array_values(array_intersect(
+					array_keys($data),
+					\OCA\ProjectCheck\Util\ProjectFormPayload::ALLOWED_FIELDS
+				));
+				$this->activityService->logProjectUpdated($user->getUID(), $project, $changed);
+			} catch (\Throwable) {
+			}
 
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
@@ -1086,8 +1148,12 @@ class ProjectController extends Controller
 				return new DataResponse($this->errorPayload($safeError), 400);
 			}
 
-			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $safeError]);
+			// Stay on the edit form so the user sees what to fix (list redirects hide the cause).
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.edit', [
+				'id' => $id,
+				'message' => 'error',
+				'error_text' => $safeError,
+			]);
 			return new RedirectResponse($url);
 		}
 	}
@@ -1099,6 +1165,7 @@ class ProjectController extends Controller
 	 * @return RedirectResponse|DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function updatePost(int $id): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1118,6 +1185,14 @@ class ProjectController extends Controller
 		try {
 			$data = $this->request->getParams();
 			$project = $this->projectService->updateProject($id, $data);
+			try {
+				$changed = array_values(array_intersect(
+					array_keys($data),
+					\OCA\ProjectCheck\Util\ProjectFormPayload::ALLOWED_FIELDS
+				));
+				$this->activityService->logProjectUpdated($user->getUID(), $project, $changed);
+			} catch (\Throwable) {
+			}
 
 			// Return appropriate response based on request type
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
@@ -1134,8 +1209,11 @@ class ProjectController extends Controller
 				return new DataResponse(['error' => $safeError], 400);
 			}
 
-			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $safeError]);
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.edit', [
+				'id' => $id,
+				'message' => 'error',
+				'error_text' => $safeError,
+			]);
 			return new RedirectResponse($url);
 		}
 	}
@@ -1147,6 +1225,7 @@ class ProjectController extends Controller
 	 * @return RedirectResponse|DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 20, period: 60)]
 	public function delete(int $id): RedirectResponse|DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1191,6 +1270,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 20, period: 60)]
 	public function deletePost(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1525,6 +1605,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function addTeamMember(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1586,6 +1667,7 @@ class ProjectController extends Controller
 	 * Add all assignable (enabled, non-member) users to a project.
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 10, period: 60)]
 	public function addAllTeamMembers(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1680,6 +1762,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function updateTeamMember(int $id, string $userId): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1765,6 +1848,7 @@ class ProjectController extends Controller
 	 * catch-up on completed projects may still need a manager.
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function updateTeamMemberRole(int $id, string $userId): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1825,6 +1909,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function removeTeamMember(int $id, string $userId): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1853,6 +1938,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function removeTeamMemberPost(int $id, string $userId): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1986,6 +2072,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
 	public function apiStore(): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -1999,7 +2086,28 @@ class ProjectController extends Controller
 
 		try {
 			$data = $this->request->getParams();
-			$project = $this->projectService->createProject($data);
+			$nonce = null;
+			if (isset($data['pc_form_nonce']) && is_string($data['pc_form_nonce'])) {
+				$nonce = $data['pc_form_nonce'];
+			} elseif (isset($data['idempotencyKey']) && is_string($data['idempotencyKey'])) {
+				$nonce = $data['idempotencyKey'];
+			} else {
+				$header = $this->request->getHeader('Idempotency-Key');
+				$nonce = is_string($header) && $header !== '' ? $header : null;
+			}
+			$uid = $user->getUID();
+			$projectId = $this->formSubmitIdempotency->rememberCreate($uid, $nonce, function () use ($data, $uid): int {
+				$created = $this->projectService->createProject($data);
+				try {
+					$this->activityService->logProjectCreated($uid, $created);
+				} catch (\Throwable) {
+				}
+				return (int) $created->getId();
+			});
+			$project = $this->projectService->getProject($projectId);
+			if ($project === null) {
+				throw new \RuntimeException('Project not found after create');
+			}
 
 			return new DataResponse([
 				'success' => true,
@@ -2055,6 +2163,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function apiUpdate(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -2067,7 +2176,14 @@ class ProjectController extends Controller
 		}
 
 		$raw = $this->request->getParams();
-		$staged = $this->extractProjectApiUpdatePayload($raw);
+		try {
+			$staged = $this->extractProjectApiUpdatePayload($raw);
+		} catch (\InvalidArgumentException $e) {
+			return new DataResponse(
+				$this->errorPayload($this->toSafeProjectErrorMessage($e, $this->l->t('Could not update project. Please check your input.'))),
+				400
+			);
+		}
 		if ($staged === []) {
 			return new DataResponse($this->errorPayload($this->l->t('No update data')), 400);
 		}
@@ -2099,6 +2215,14 @@ class ProjectController extends Controller
 
 		try {
 			$project = $this->projectService->updateProject($id, $staged);
+			try {
+				$changed = array_values(array_intersect(
+					array_keys($staged),
+					\OCA\ProjectCheck\Util\ProjectFormPayload::ALLOWED_FIELDS
+				));
+				$this->activityService->logProjectUpdated($uid, $project, $changed);
+			} catch (\Throwable) {
+			}
 
 			return new DataResponse([
 				'success' => true,
@@ -2116,32 +2240,7 @@ class ProjectController extends Controller
 	 */
 	private function extractProjectApiUpdatePayload(array $raw): array
 	{
-		$internal = ['requesttoken', '_method', 'format', 'g'];
-		$allowed = [
-			'name', 'short_description', 'detailed_description', 'customer_id', 'hourly_rate', 'total_budget',
-			'available_hours', 'category', 'priority', 'status', 'start_date', 'end_date', 'tags', 'project_type',
-			'cost_rate_mode',
-		];
-		$staged = [];
-		foreach ($raw as $k => $v) {
-			if (!\is_string($k) || \in_array($k, $internal, true) || !\in_array($k, $allowed, true)) {
-				continue;
-			}
-			if ($k === 'status') {
-				if (\is_string($v) && $v !== '') {
-					$staged[$k] = $v;
-				}
-				continue;
-			}
-			if ($v === null) {
-				continue;
-			}
-			if (\is_string($v) && $v === '') {
-				continue;
-			}
-			$staged[$k] = $v;
-		}
-		return $staged;
+		return \OCA\ProjectCheck\Util\ProjectFormPayload::stage($raw, false);
 	}
 
 	/**
@@ -2151,6 +2250,7 @@ class ProjectController extends Controller
 	 * @return DataResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 20, period: 60)]
 	public function apiDelete(int $id): DataResponse
 	{
 		$user = $this->userSession->getUser();
@@ -2261,8 +2361,8 @@ class ProjectController extends Controller
 			return $fallback;
 		}
 
-		// Known service-layer validation errors, localized so users can see
-		// what to correct instead of a generic "check your input" message.
+		// Never echo raw exception text by broad regex — DB / PDO / MariaDB errors
+		// often start with "Cannot …" or contain "must be …" and would leak schema.
 		$localized = match ($message) {
 			'Hourly rate is required when the project has a budget in project-rate mode' => $this->l->t('Hourly rate is required when the project has a budget and uses one rate for the whole project.'),
 			'Budget too low for the specified hourly rate' => $this->l->t('Budget too low for the specified hourly rate.'),
@@ -2270,29 +2370,70 @@ class ProjectController extends Controller
 			'Invalid start or end date' => $this->l->t('Invalid start or end date.'),
 			'The pricing method cannot be changed after time has been logged on this project.' => $this->l->t('The pricing method is locked because time has already been logged on this project.'),
 			'Customer not found' => $this->l->t('Customer not found'),
+			'Customer is required' => $this->l->t('Customer is required'),
+			'Access denied' => $this->l->t('Access denied'),
+			'Project not found' => $this->l->t('Project not found'),
+			'User not authenticated' => $this->l->t('User not authenticated'),
+			'Invalid status value' => $this->l->t('Invalid status value'),
+			'Invalid priority value' => $this->l->t('Invalid priority value'),
+			'Invalid project type value' => $this->l->t('Invalid project type value'),
+			'Invalid parameters' => $this->l->t('Invalid parameters'),
+			'Hourly rate must be a non-negative number' => $this->l->t('Hourly rate must be a non-negative number'),
+			'Total budget must be a non-negative number' => $this->l->t('Total budget must be a non-negative number'),
+			'Available hours must be a non-negative number' => $this->l->t('Available hours must be a non-negative number'),
+			'Project name must be 100 characters or less' => $this->l->t('Project name must be 100 characters or less'),
+			'Short description must be 500 characters or less' => $this->l->t('Short description must be 500 characters or less'),
+			'Detailed description must be 2000 characters or less' => $this->l->t('Detailed description must be 2000 characters or less'),
+			'New projects cannot be created as archived. Create an active project and use “Archive” from the project view.' => $this->l->t('New projects cannot be created as archived. Create an active project and use “Archive” from the project view.'),
+			'Cannot edit completed, cancelled, or archived projects. To work on an archived project again, reactivate it from the project page.' => $this->l->t('Cannot edit completed, cancelled, or archived projects. To work on an archived project again, reactivate it from the project page.'),
+			'Project was modified by someone else. Reload the form and try again.' => $this->l->t('Project was modified by someone else. Reload the form and try again.'),
+			'Create already in progress. Please wait and refresh.' => $this->l->t('Create already in progress. Please wait and refresh.'),
 			default => null,
 		};
 		if ($localized !== null) {
-			return $localized;
+			return $this->clipUserFacingError($localized);
 		}
 
-		$allowlistPatterns = [
-			'/^Access denied$/',
-			'/^Project not found$/',
-			'/^Customer not found$/',
-			'/^.+ is required$/',
-			'/^Invalid (parameters|status value|priority value|project type value)$/',
-			'/^Field .+ is required$/',
-			'/^.+ must be .+$/',
-			'/^Cannot .+$/',
-		];
-		foreach ($allowlistPatterns as $pattern) {
-			if (preg_match($pattern, $message) === 1) {
-				return $message;
+		if (preg_match("/^Invalid status transition from '(.+)' to '(.+)'$/", $message, $m) === 1) {
+			return $this->clipUserFacingError($this->l->t(
+				'Cannot change status from %1$s to %2$s. Choose an allowed status, or use “Change status” on the project page.',
+				[$m[1], $m[2]]
+			));
+		}
+
+		if (preg_match("/^Field '([a-z_]+)' is required$/", $message, $m) === 1) {
+			// Only known validation keys — never echo arbitrary snake_case internals.
+			$label = match ($m[1]) {
+				'name' => $this->l->t('Project name'),
+				'short_description' => $this->l->t('Short description'),
+				'customer_id' => $this->l->t('Customer'),
+				default => null,
+			};
+			if ($label === null) {
+				return $fallback;
 			}
+			return $this->clipUserFacingError($this->l->t('%s is required', [$label]));
 		}
 
 		return $fallback;
+	}
+
+	/**
+	 * Cap redirect/query-reflected messages (phishing / log noise / oversized GET).
+	 */
+	private function clipUserFacingError(string $message, int $maxLen = 280): string
+	{
+		$message = trim(preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $message) ?? $message);
+		if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+			if (mb_strlen($message) > $maxLen) {
+				return mb_substr($message, 0, $maxLen - 1) . '…';
+			}
+			return $message;
+		}
+		if (strlen($message) > $maxLen) {
+			return substr($message, 0, $maxLen - 1) . '…';
+		}
+		return $message;
 	}
 
 	private function pricingModeLabel(string $mode): string

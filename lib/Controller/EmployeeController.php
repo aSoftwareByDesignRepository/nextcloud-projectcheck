@@ -440,6 +440,7 @@ class EmployeeController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function assignProject(string $userId): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -505,6 +506,7 @@ class EmployeeController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function addHourlyRate(string $userId): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -539,6 +541,7 @@ class EmployeeController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function unassignProject(string $userId, int $projectId): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -553,6 +556,7 @@ class EmployeeController extends Controller
 	 * Remove employee from project via POST (deletion modal — reliable CSRF).
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function unassignProjectPost(string $userId, int $projectId): JSONResponse
 	{
 		$user = $this->userSession->getUser();

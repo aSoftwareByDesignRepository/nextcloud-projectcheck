@@ -36,6 +36,7 @@ final class ProjectCustomerReassignIntegrationTest extends TestCase
 			$this->markTestSkipped('admin user required');
 		}
 		$user = \OC::$server->get(IUserManager::class)->get(self::ADMIN);
+		\OC_User::setIncognitoMode(false);
 		\OC::$server->get(IUserSession::class)->setUser($user);
 		\OC_User::setUserId(self::ADMIN);
 		\OC_Util::setupFS(self::ADMIN);

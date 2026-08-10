@@ -29,6 +29,13 @@ class FormDecimalTest extends TestCase
 		$this->assertSame(3.25, FormDecimal::coerce(3.25));
 	}
 
+	public function testLocaleCommaDecimals(): void
+	{
+		$this->assertSame(1.5, FormDecimal::coerce('1,5'));
+		$this->assertSame(1234.56, FormDecimal::coerce('1.234,56'));
+		$this->assertSame(1234.56, FormDecimal::coerce('1,234.56'));
+	}
+
 	public function testRejectsNonNumeric(): void
 	{
 		$this->expectException(\InvalidArgumentException::class);

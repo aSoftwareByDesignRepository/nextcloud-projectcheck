@@ -19,6 +19,7 @@ use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Util\FormDecimal;
 use OCA\ProjectCheck\Util\ProjectCalculator;
 use OCA\ProjectCheck\Util\ProjectCapacity;
+use OCA\ProjectCheck\Util\ProjectFormPayload;
 use OCA\ProjectCheck\Util\ProjectMemberRole;
 use OCA\ProjectCheck\Util\SafeDateTime;
 use OCP\DB\QueryBuilder\IQueryBuilder;
@@ -305,6 +306,12 @@ class ProjectService
 			throw new \Exception('Access denied');
 		}
 
+		try {
+			$data = ProjectFormPayload::stage($data, true);
+		} catch (\InvalidArgumentException $e) {
+			throw new \Exception($e->getMessage());
+		}
+
 		$this->validateProjectData($data);
 
 		// Get user's default settings
@@ -333,15 +340,24 @@ class ProjectService
 		}
 
 		$costRateMode = CostRateMode::normalize($data['cost_rate_mode'] ?? null);
-		$totalBudget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float) $data['total_budget'] : 0.0;
+		try {
+			$totalBudget = array_key_exists('total_budget', $data)
+				? FormDecimal::coerce($data['total_budget'])
+				: 0.0;
+			$submittedRate = array_key_exists('hourly_rate', $data)
+				? FormDecimal::coerce($data['hourly_rate'])
+				: null;
+		} catch (\InvalidArgumentException $e) {
+			throw new \Exception('Hourly rate must be a non-negative number');
+		}
 
 		$hourlyRate = 0.0;
 		if ($costRateMode === CostRateMode::PROJECT) {
-			$hourlyRate = isset($data['hourly_rate']) && $data['hourly_rate'] !== ''
-				? (float) $data['hourly_rate']
+			$hourlyRate = ($submittedRate !== null && $submittedRate > 0)
+				? $submittedRate
 				: (float) $defaultHourlyRate;
-		} elseif (isset($data['hourly_rate']) && $data['hourly_rate'] !== '' && is_numeric($data['hourly_rate'])) {
-			$hourlyRate = (float) $data['hourly_rate'];
+		} elseif ($submittedRate !== null) {
+			$hourlyRate = $submittedRate;
 		}
 
 		$availableHours = ProjectCapacity::storedAvailableHours($totalBudget, $hourlyRate, $costRateMode);
@@ -726,11 +742,38 @@ class ProjectService
 			throw new \Exception('Cannot edit completed, cancelled, or archived projects. To work on an archived project again, reactivate it from the project page.');
 		}
 
-		$previousStatus = $project->getStatus();
-		// Merge incoming data with existing project to allow partial updates (e.g. status-only or rate-only changes)
-		$data = $this->mergeWithExistingProjectData($project, $data);
+		// Defense in depth: controllers already check, but every write path must.
+		$user = $this->userSession->getUser();
+		if (!$user) {
+			throw new \Exception('User not authenticated');
+		}
+		if (!$this->canUserEditProject($user->getUID(), $id)) {
+			throw new \Exception('Access denied');
+		}
 
-		$this->validateProjectData($data, $id);
+		$previousStatus = $project->getStatus();
+		$existingBudget = (float) $project->getTotalBudget();
+		$existingRate = (float) $project->getHourlyRate();
+		$existingMode = CostRateMode::normalize($project->getCostRateMode());
+
+		// Stage allowlisted fields + coerce decimals BEFORE merge so "" never
+		// overwrites a stored DECIMAL (full HTML forms always POST empties).
+		try {
+			$staged = ProjectFormPayload::stage($data);
+		} catch (\InvalidArgumentException $e) {
+			throw new \Exception($e->getMessage());
+		}
+		$pricingTouchedInRequest = $this->pricingFieldsDifferFromStored(
+			$staged,
+			$existingBudget,
+			$existingRate,
+			$existingMode
+		);
+
+		// Merge incoming data with existing project to allow partial updates (e.g. status-only or rate-only changes)
+		$data = $this->mergeWithExistingProjectData($project, $staged);
+
+		$this->validateProjectData($data, $id, $pricingTouchedInRequest);
 
 		if (isset($data['status']) && (string)$data['status'] !== (string)$previousStatus) {
 			$this->assertStatusTransitionAllowed((string)$previousStatus, (string)$data['status']);
@@ -748,24 +791,25 @@ class ProjectService
 		}
 
 		$modeForCapacity = CostRateMode::normalize($data['cost_rate_mode'] ?? $project->getCostRateMode());
-		if (array_key_exists('total_budget', $data) || array_key_exists('hourly_rate', $data)) {
-			try {
-				$budget = array_key_exists('total_budget', $data)
-					? FormDecimal::coerce($data['total_budget'])
-					: (float) $project->getTotalBudget();
-				$rate = array_key_exists('hourly_rate', $data)
-					? FormDecimal::coerce($data['hourly_rate'])
-					: (float) $project->getHourlyRate();
-			} catch (\InvalidArgumentException $e) {
-				throw new \Exception('Hourly rate must be a non-negative number');
-			}
-			if ($budget > 0 && $rate > 0) {
-				$data['available_hours'] = ProjectCapacity::storedAvailableHours($budget, $rate, $modeForCapacity);
-			} elseif ($budget <= 0 || ($modeForCapacity !== CostRateMode::PROJECT && $rate <= 0)) {
-				// Zero budget (or planning mode without a rate) → store 0, never "".
-				$data['available_hours'] = 0.0;
-			}
+		// Always recompute capacity from the merged budget/rate so we never
+		// persist a stale "" / non-numeric available_hours from the form.
+		try {
+			$budget = FormDecimal::coerce($data['total_budget'] ?? 0);
+			$rate = FormDecimal::coerce($data['hourly_rate'] ?? 0);
+		} catch (\InvalidArgumentException $e) {
+			throw new \Exception('Hourly rate must be a non-negative number');
 		}
+		if ($budget > 0 && $rate > 0) {
+			$data['available_hours'] = ProjectCapacity::storedAvailableHours($budget, $rate, $modeForCapacity);
+		} else {
+			// Zero budget or missing rate → store 0, never "".
+			$data['available_hours'] = 0.0;
+		}
+
+		$expectedUpdatedAt = $project->getUpdatedAt();
+		$expectedStamp = $expectedUpdatedAt instanceof \DateTimeInterface
+			? $expectedUpdatedAt->format('Y-m-d H:i:s')
+			: null;
 
 		$qb = $this->db->getQueryBuilder();
 		$qb->update('pc_projects')
@@ -828,10 +872,15 @@ class ProjectService
 		}
 
 		$qb->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
+		if ($expectedStamp !== null) {
+			// Optimistic concurrency: concurrent editors / settlement touches lose safely.
+			$qb->andWhere($qb->expr()->eq('updated_at', $qb->createNamedParameter($expectedStamp)));
+		}
 
-		$qb->executeStatement();
-
-		// Removed logger call
+		$affected = $qb->executeStatement();
+		if ($affected === 0) {
+			throw new \Exception('Project was modified by someone else. Reload the form and try again.');
+		}
 
 		return $this->getProject($id);
 	}
@@ -1538,7 +1587,9 @@ class ProjectService
 				->set('member_state', $qb->createNamedParameter(ProjectMember::STATE_ACTIVE))
 				->set('archived_at', $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL))
 				->set('role', $qb->createNamedParameter($role))
-				->set('hourly_rate', $qb->createNamedParameter($hourlyRate))
+				->set('hourly_rate', $hourlyRate === null
+					? $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL)
+					: $qb->createNamedParameter($hourlyRate))
 				->set('assigned_at', $qb->createNamedParameter($now, IQueryBuilder::PARAM_DATETIME_MUTABLE))
 				->set('assigned_by', $qb->createNamedParameter($sessionUser->getUID()))
 				->where($qb->expr()->eq('id', $qb->createNamedParameter($existingMember->getId(), IQueryBuilder::PARAM_INT)));
@@ -1566,7 +1617,9 @@ class ProjectService
 			'project_id' => $qb->createNamedParameter($member->getProjectId(), IQueryBuilder::PARAM_INT),
 			'user_id' => $qb->createNamedParameter($member->getUserId()),
 			'role' => $qb->createNamedParameter($member->getRole()),
-			'hourly_rate' => $qb->createNamedParameter($member->getHourlyRate()),
+			'hourly_rate' => $hourlyRate === null
+				? $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL)
+				: $qb->createNamedParameter($member->getHourlyRate()),
 			'assigned_at' => $qb->createNamedParameter($member->getAssignedAt(), IQueryBuilder::PARAM_DATETIME_MUTABLE),
 			'assigned_by' => $qb->createNamedParameter($member->getAssignedBy()),
 			'member_state' => $qb->createNamedParameter(ProjectMember::STATE_ACTIVE),
@@ -2021,9 +2074,12 @@ class ProjectService
 	 *
 	 * @param array $data
 	 * @param int|null $projectId
+	 * @param bool $pricingTouched When false on update, allow legacy rows that
+	 *        already have budget>0 with rate≤0 so name/status/etc. can still save.
+	 *        Pricing changes (or create) always enforce the rate invariant.
 	 * @throws \Exception
 	 */
-	private function validateProjectData(array &$data, ?int $projectId = null): void
+	private function validateProjectData(array &$data, ?int $projectId = null, bool $pricingTouched = true): void
 	{
 		// Normalize leading/trailing whitespace on the project name so that
 		// stray spaces (e.g. copy/paste artefacts) cannot push a project to
@@ -2035,6 +2091,16 @@ class ProjectService
 		// indented detailed descriptions).
 		if (isset($data['name']) && is_string($data['name'])) {
 			$data['name'] = trim($data['name']);
+		}
+
+		// Bachus: empty short description defaults to the project name so
+		// create does not force users to type the same idea twice.
+		$shortRaw = $data['short_description'] ?? '';
+		$short = is_string($shortRaw) ? trim($shortRaw) : '';
+		if ($short === '' && isset($data['name']) && is_string($data['name']) && $data['name'] !== '') {
+			$data['short_description'] = $data['name'];
+		} elseif (is_string($shortRaw)) {
+			$data['short_description'] = $short;
 		}
 
 		$requiredFields = ['name', 'short_description', 'customer_id'];
@@ -2070,22 +2136,25 @@ class ProjectService
 		}
 
 		// Validate budget and rate fields (optional but if provided, must be valid)
-		if (isset($data['hourly_rate']) && !empty($data['hourly_rate'])) {
-			if (!is_numeric($data['hourly_rate']) || $data['hourly_rate'] < 0) {
-				throw new \Exception('Hourly rate must be a non-negative number');
+		foreach (['hourly_rate', 'total_budget'] as $decimalField) {
+			if (!array_key_exists($decimalField, $data)) {
+				continue;
 			}
-		}
-
-		if (isset($data['total_budget']) && !empty($data['total_budget'])) {
-			if (!is_numeric($data['total_budget']) || $data['total_budget'] < 0) {
-				throw new \Exception('Total budget must be a non-negative number');
+			try {
+				$coerced = FormDecimal::coerce($data[$decimalField]);
+			} catch (\InvalidArgumentException $e) {
+				throw new \Exception(ucfirst(str_replace('_', ' ', $decimalField)) . ' must be a non-negative number');
 			}
+			if ($coerced < 0) {
+				throw new \Exception(ucfirst(str_replace('_', ' ', $decimalField)) . ' must be a non-negative number');
+			}
+			$data[$decimalField] = $coerced;
 		}
 
 		// Minimum capacity check only when a rate is used for estimation (project or planning rate).
 		if (
-			isset($data['hourly_rate']) && $data['hourly_rate'] !== '' && is_numeric($data['hourly_rate']) && (float) $data['hourly_rate'] > 0
-			&& isset($data['total_budget']) && $data['total_budget'] !== '' && is_numeric($data['total_budget']) && (float) $data['total_budget'] > 0
+			isset($data['hourly_rate']) && is_numeric($data['hourly_rate']) && (float) $data['hourly_rate'] > 0
+			&& isset($data['total_budget']) && is_numeric($data['total_budget']) && (float) $data['total_budget'] > 0
 		) {
 			$mode = CostRateMode::normalize($data['cost_rate_mode'] ?? CostRateMode::DEFAULT);
 			$availableHours = ProjectCapacity::storedAvailableHours((float) $data['total_budget'], (float) $data['hourly_rate'], $mode);
@@ -2128,11 +2197,43 @@ class ProjectService
 		$mode = CostRateMode::normalize($data['cost_rate_mode'] ?? CostRateMode::DEFAULT);
 		$data['cost_rate_mode'] = $mode;
 
-		$budget = isset($data['total_budget']) && $data['total_budget'] !== '' ? (float) $data['total_budget'] : 0.0;
-		$rate = isset($data['hourly_rate']) && $data['hourly_rate'] !== '' ? (float) $data['hourly_rate'] : 0.0;
-		if ($mode === CostRateMode::PROJECT && $budget > 0 && $rate <= 0) {
+		$budget = isset($data['total_budget']) ? (float) $data['total_budget'] : 0.0;
+		$rate = isset($data['hourly_rate']) ? (float) $data['hourly_rate'] : 0.0;
+		if ($mode === CostRateMode::PROJECT && $budget > 0 && $rate <= 0 && $pricingTouched) {
 			throw new \Exception('Hourly rate is required when the project has a budget in project-rate mode');
 		}
+	}
+
+	/**
+	 * Whether staged pricing fields differ from what is already stored.
+	 * Used so name/status-only saves are not blocked by a legacy invalid
+	 * budget>0 + rate≤0 row — while budget/rate changes still enforce the rate.
+	 *
+	 * @param array<string, mixed> $staged
+	 */
+	private function pricingFieldsDifferFromStored(
+		array $staged,
+		float $existingBudget,
+		float $existingRate,
+		string $existingMode
+	): bool {
+		if (array_key_exists('cost_rate_mode', $staged)
+			&& CostRateMode::normalize((string) $staged['cost_rate_mode']) !== $existingMode
+		) {
+			return true;
+		}
+		if (array_key_exists('total_budget', $staged)
+			&& abs((float) $staged['total_budget'] - $existingBudget) > 0.00001
+		) {
+			return true;
+		}
+		if (array_key_exists('hourly_rate', $staged)
+			&& abs((float) $staged['hourly_rate'] - $existingRate) > 0.00001
+		) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**

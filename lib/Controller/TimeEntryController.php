@@ -478,6 +478,7 @@ class TimeEntryController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function store()
 	{
 		$user = $this->userSession->getUser();
@@ -690,6 +691,7 @@ class TimeEntryController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function update(int $id)
 	{
 		$user = $this->userSession->getUser();
@@ -774,6 +776,7 @@ class TimeEntryController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function updatePost(int $id)
 	{
 		// Delegate to update() to keep logic in one place
@@ -819,6 +822,7 @@ class TimeEntryController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function delete(int $id)
 	{
 		$user = $this->userSession->getUser();
@@ -885,6 +889,7 @@ class TimeEntryController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function deletePost(int $id): JSONResponse
 	{
 		$response = $this->delete($id);

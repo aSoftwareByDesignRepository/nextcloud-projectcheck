@@ -1,5 +1,11 @@
 /**
  * Project form: pricing mode progressive disclosure, capacity estimates, char counts.
+ *
+ * UX contract:
+ * - Never write "" into available_hours (DECIMAL abort risk if ever submitted).
+ * - Hard-block submit only when the user *changes* budget/rate into an invalid
+ *   project-mode state (budget>0, rate≤0). Legacy invalid rows can still save
+ *   name/status/description — matching the server soft-validation rule.
  */
 (function () {
 	'use strict';
@@ -10,17 +16,57 @@
 		project_member: 'project_member',
 	};
 
+	function tPc(msg) {
+		return typeof t === 'function' ? t('projectcheck', msg) : msg;
+	}
+
 	function selectedMode() {
 		const checked = document.querySelector('input[name="cost_rate_mode"]:checked');
-		return checked ? checked.value : MODES.project;
+		const hidden = document.querySelector('input[type="hidden"][name="cost_rate_mode"]');
+		if (checked) {
+			return checked.value;
+		}
+		if (hidden) {
+			return hidden.value;
+		}
+		return MODES.project;
 	}
 
 	function parseAmount(input) {
 		if (!input) {
 			return 0;
 		}
-		const parsed = Number.parseFloat(input.value);
+		const raw = typeof input === 'string' ? input : input.value;
+		if (raw === null || raw === undefined) {
+			return 0;
+		}
+		const normalized = String(raw).trim().replace(/\s/g, '').replace(',', '.');
+		const parsed = Number.parseFloat(normalized);
 		return Number.isFinite(parsed) ? parsed : 0;
+	}
+
+	function initialAmount(input) {
+		if (!input) {
+			return 0;
+		}
+		const initial = input.getAttribute('data-initial-value');
+		return parseAmount(initial === null ? input.value : initial);
+	}
+
+	function pricingDirty(budgetInput, rateInput) {
+		return parseAmount(budgetInput) !== initialAmount(budgetInput)
+			|| parseAmount(rateInput) !== initialAmount(rateInput);
+	}
+
+	function updatePricingGate(needsRate, dirty) {
+		const gate = document.getElementById('pc-pricing-gate');
+		if (!gate) {
+			return;
+		}
+		const show = needsRate;
+		gate.hidden = !show;
+		gate.classList.toggle('pc-pricing-gate--blocking', show && dirty);
+		gate.classList.toggle('pc-pricing-gate--info', show && !dirty);
 	}
 
 	function updateAvailableHours() {
@@ -55,15 +101,15 @@
 			return;
 		}
 
+		// Always a numeric string — never "" (DECIMAL / form-submit footgun).
+		availableHoursInput.value = '0';
 		if (mode !== MODES.project && budget > 0 && rate <= 0) {
-			availableHoursInput.value = '';
 			availableHoursInput.placeholder = '—';
 			availableHoursInput.classList.add('pc-capacity-input--unavailable');
 			return;
 		}
 
-		availableHoursInput.value = '';
-		availableHoursInput.placeholder = '—';
+		availableHoursInput.placeholder = '0';
 		if (helpEl && budget <= 0 && rate <= 0) {
 			helpEl.textContent = helpEl.dataset.helpEmpty || helpEl.textContent;
 		}
@@ -77,6 +123,7 @@
 		const capacityHint = document.getElementById('pc-capacity-hint');
 		const employeeHint = document.getElementById('pc-pricing-employee-hint');
 		const memberHint = document.getElementById('pc-pricing-member-hint');
+		const budgetInput = document.getElementById('total_budget');
 
 		if (employeeHint) {
 			employeeHint.hidden = mode !== MODES.employee;
@@ -90,30 +137,26 @@
 			return;
 		}
 
-		const budgetInput = document.getElementById('total_budget');
 		const budget = budgetInput ? parseAmount(budgetInput) : 0;
 		const needsProjectRate = mode === MODES.project && budget > 0;
+		const dirty = pricingDirty(budgetInput, rateInput);
 
 		if (mode === MODES.project) {
 			rateGroup.hidden = false;
 			rateLabel.textContent = rateLabel.dataset.labelProject || rateLabel.textContent;
-			rateInput.required = needsProjectRate;
-			rateInput.setAttribute('aria-required', needsProjectRate ? 'true' : 'false');
-			// `required` alone does not catch a pre-filled "0.00" rate (the
-			// field is non-empty), but the server rejects budget > 0 with
-			// rate <= 0 in this mode — surface that before submitting.
-			if (needsProjectRate && parseAmount(rateInput) <= 0) {
-				rateInput.setCustomValidity(
-					typeof t === 'function'
-						? t('projectcheck', 'Hourly rate is required')
-						: 'Hourly rate is required'
-				);
+			// Only hard-require when the user is changing pricing into an invalid state.
+			const mustBlock = needsProjectRate && parseAmount(rateInput) <= 0 && dirty;
+			rateInput.required = mustBlock;
+			rateInput.setAttribute('aria-required', mustBlock ? 'true' : 'false');
+			if (mustBlock) {
+				rateInput.setCustomValidity(tPc('Hourly rate is required'));
 			} else {
 				rateInput.setCustomValidity('');
 			}
 			if (capacityHint) {
 				capacityHint.textContent = capacityHint.dataset.hintProject || '';
 			}
+			updatePricingGate(needsProjectRate && parseAmount(rateInput) <= 0, dirty);
 		} else {
 			rateGroup.hidden = false;
 			rateLabel.textContent = rateLabel.dataset.labelPlanning || rateLabel.textContent;
@@ -123,6 +166,7 @@
 			if (capacityHint) {
 				capacityHint.textContent = capacityHint.dataset.hintPlanning || '';
 			}
+			updatePricingGate(false, false);
 		}
 
 		updateAvailableHours();
@@ -172,6 +216,7 @@
 		});
 		const budgetInput = document.getElementById('total_budget');
 		const rateInput = document.getElementById('hourly_rate');
+		const form = document.getElementById('project-form');
 		if (budgetInput) {
 			budgetInput.addEventListener('input', applyMode);
 			budgetInput.addEventListener('change', applyMode);
@@ -180,8 +225,35 @@
 			rateInput.addEventListener('input', applyMode);
 			rateInput.addEventListener('change', applyMode);
 		}
+		if (form) {
+			form.addEventListener('submit', function (e) {
+				applyMode();
+				if (rateInput && rateInput.validationMessage) {
+					e.preventDefault();
+					rateInput.reportValidity();
+					const gate = document.getElementById('pc-pricing-gate');
+					if (gate && !gate.hidden) {
+						try {
+							gate.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+						} catch (err) {
+							gate.scrollIntoView(true);
+						}
+					}
+				}
+			});
+		}
 		applyMode();
 		bindCharCounts();
+
+		const formError = document.getElementById('pc-project-form-error');
+		if (formError) {
+			try {
+				formError.focus({ preventScroll: true });
+				formError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+			} catch (err) {
+				formError.focus();
+			}
+		}
 	}
 
 	document.addEventListener('DOMContentLoaded', bind);

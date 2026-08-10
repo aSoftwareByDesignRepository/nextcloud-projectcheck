@@ -16,6 +16,7 @@ Util::addScript('projectcheck', 'budget-info');
 Util::addStyle('projectcheck', 'time-entry-form');
 Util::addStyle('projectcheck', 'budget-alerts');
 Util::addStyle('projectcheck', 'navigation');
+Util::addStyle('projectcheck', 'common/filters');
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 	$currencyCode = 'EUR';
@@ -193,10 +194,11 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 					</div>
 				</aside>
 
-				<!-- Project Budget Information -->
+				<!-- Project Budget Information (opt-in disclosure) -->
 				<div id="budget-info-section" class="form-row" style="display: none;">
-					<div class="form-group budget-overview">
-						<label id="budget-overview-heading"><?php p($l->t('Project Budget Overview')); ?></label>
+					<details class="pc-advanced-details budget-overview" id="pc-budget-impact">
+						<summary class="pc-advanced-details__summary" id="budget-overview-heading"><?php p($l->t('Budget impact')); ?></summary>
+						<div class="pc-advanced-details__body">
 						<div class="budget-stats-grid">
 							<div class="budget-stat-item">
 								<span class="budget-stat-label"><?php p($l->t('Total Budget')); ?></span>
@@ -231,7 +233,8 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 								<span id="budget-progress-status"><?php p($l->t('used')); ?></span>
 							</div>
 						</div>
-					</div>
+						</div>
+					</details>
 				</div>
 
 				<?php
@@ -263,6 +266,9 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 						<div class="error-message" id="hours-error"></div>
 					</div>
 
+					<details class="pc-advanced-details" id="pc-te-pricing-summary">
+						<summary class="pc-advanced-details__summary"><?php p($l->t('Rate & total (set by server)')); ?></summary>
+						<div class="pc-advanced-details__body">
 					<div class="form-group">
 						<label for="hourly_rate"><?php p($l->t('Hourly rate (%s)', [$currencyCode])); ?></label>
 						<input type="number" name="hourly_rate" id="hourly_rate" class="form-input" step="0.01" min="0.01" readonly
@@ -280,6 +286,8 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 						<label for="total_cost"><?php p($l->t('Total Cost')); ?></label>
 						<input type="text" id="total_cost" class="form-input" readonly value="<?php p($currencyCode); ?> 0.00">
 					</div>
+						</div>
+					</details>
 				</div>
 
 				<div class="form-group">
@@ -298,6 +306,8 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 					<div class="error-message" id="description-error"></div>
 				</div>
 
+				<div id="time-entry-form-errors" class="time-entry-form-errors" role="alert" aria-live="assertive"></div>
+
 				<div class="form-actions">
 					<button type="submit" class="btn btn-primary" id="submit-btn">
 						<?php if ($isEdit): ?>
@@ -307,7 +317,6 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 						<?php endif; ?>
 					</button>
 				</div>
-				<div id="time-entry-form-errors" class="time-entry-form-errors" role="alert" aria-live="assertive"></div>
 			</form>
 
 			<?php if ($isEdit && isset($timeEntry) && $timeEntry->isOwnedBy((string)($_['userId'] ?? ''))): ?>

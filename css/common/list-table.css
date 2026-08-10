@@ -618,11 +618,17 @@
 	max-width: none;
 }
 
+.pc-list-panel .pc-data-table td.col-invoicing {
+	overflow: hidden;
+	vertical-align: top;
+}
+
 .pc-list-panel .pc-data-table .budget-info-compact,
 .pc-list-panel .pc-data-table .progress-info,
 .pc-list-panel .pc-data-table .pc-invoicing-cell {
 	min-width: 0;
 	max-width: 100%;
+	overflow: hidden;
 }
 
 .pc-list-panel .pc-data-table .budget-line {

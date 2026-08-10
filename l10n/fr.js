@@ -1,8 +1,6 @@
 OC.L10N.register(
 	"projectcheck",
 	{
-	"\"{name}\" is selected. One more step:" : "\"{name}\" is selected. One more step:",
-
 	"%1$s entries updated, %2$s skipped (changed meanwhile or not allowed)." : "%1$s entrées mises à jour, %2$s ignorées (modifiées entre-temps ou non autorisées).",
 	"%1$s h · %2$s" : "%1$s h · %2$s",
 	"%1$s · %2$s" : "%1$s · %2$s",
@@ -340,12 +338,6 @@ OC.L10N.register(
 	"Create First Project" : "Créer un premier projet",
 	"Create New Project" : "Créer un nouveau projet",
 	"Create Project" : "Créer un projet",
-	"Save the project to finish." : "Save the project to finish.",
-	"Added to the list and selected." : "Added to the list and selected.",
-	"Save project" : "Save project",
-	"Customer is selected. One more step:" : "Customer is selected. One more step:",
-	"Add to list" : "Add to list",
-	"Not in the list? Type a name below, then save the project." : "Not in the list? Type a name below, then save the project.",
 	"Create Time Entry" : "Créer une entrée de temps",
 	"Create a new customer with complete contact details" : "Créer un nouveau client avec les coordonnées complètes",
 	"Create a new project" : "Créer un nouveau projet",
@@ -1682,6 +1674,25 @@ OC.L10N.register(
 	"%n invoice" : "%n invoice",
 	"%n invoices" : "%n invoices",
 	"%n overdue" : "%n overdue",
-	"Full remaining on invoices linked to this project (including shared multi-project invoices)." : "Full remaining on invoices linked to this project (including shared multi-project invoices)."
+	"Full remaining on invoices linked to this project (including shared multi-project invoices)." : "Full remaining on invoices linked to this project (including shared multi-project invoices).",
+	"Not in the list? Type a name below, then save the project." : "Not in the list? Type a name below, then save the project.",
+	"Add to list" : "Add to list",
+	"Customer is selected. One more step:" : "Customer is selected. One more step:",
+	"Save project" : "Save project",
+	"Added to the list and selected." : "Added to the list and selected.",
+	"Save the project to finish." : "Save the project to finish.",
+	"\"{name}\" is selected. One more step:" : "\"{name}\" is selected. One more step:",
+	"Could not save" : "Could not save",
+	"Hourly rate needed for this budget" : "Hourly rate needed for this budget",
+	"Enter a project hourly rate greater than 0 to save budget changes. You can still save name, description, dates, status, and other fields." : "Enter a project hourly rate greater than 0 to save budget changes. You can still save name, description, dates, status, and other fields.",
+	"Status changes are saved with the rest of the form. You can also change status from the project page." : "Status changes are saved with the rest of the form. You can also change status from the project page.",
+	"Cannot change status from %1$s to %2$s. Choose an allowed status, or use “Change status” on the project page." : "Cannot change status from %1$s to %2$s. Choose an allowed status, or use “Change status” on the project page.",
+	"Fill in the basics, then press Save once at the bottom. You can add the team after saving." : "Fill in the basics, then press Save once at the bottom. You can add the team after saving.",
+	"Save this form first if you changed anything — then open the team." : "Save this form first if you changed anything — then open the team.",
+	"Customer is selected. Press Save at the bottom when you are done." : "Customer is selected. Press Save at the bottom when you are done.",
+	"\"{name}\" is selected. Press Save at the bottom when you are done." : "\"{name}\" is selected. Press Save at the bottom when you are done.",
+	"Go to Save" : "Go to Save",
+	"Saved together with the rest of this form." : "Saved together with the rest of this form.",
+	"One button saves everything on this page." : "One button saves everything on this page."
 	}
 );

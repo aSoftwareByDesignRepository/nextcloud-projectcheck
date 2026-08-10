@@ -305,6 +305,81 @@ body.dark .pc-filters .filter-select,
 	}
 }
 
+/* Bachus: progressive disclosure for advanced form / detail chrome */
+.pc-advanced-details {
+	margin: 0 0 var(--pc-space-4, 16px);
+	padding: 0;
+	border: none;
+}
+
+.pc-advanced-details__summary {
+	display: flex;
+	align-items: center;
+	min-height: var(--pc-touch-min, 44px);
+	padding: var(--pc-space-2, 8px) var(--pc-space-3, 12px);
+	margin: 0 0 var(--pc-space-2, 8px);
+	border-radius: var(--pc-radius-sm, 6px);
+	border: 1px solid var(--pc-border, var(--color-border));
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font-weight: 600;
+	font-size: var(--pc-fs-md, 1rem);
+	cursor: pointer;
+	list-style: none;
+	box-sizing: border-box;
+}
+
+.pc-advanced-details__summary::-webkit-details-marker {
+	display: none;
+}
+
+.pc-advanced-details__summary::before {
+	content: '';
+	flex: 0 0 auto;
+	width: 0.45em;
+	height: 0.45em;
+	margin-inline-end: 0.55em;
+	border-inline-end: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: rotate(-45deg);
+	transition: transform 120ms ease;
+}
+
+.pc-advanced-details[open] > .pc-advanced-details__summary::before {
+	transform: rotate(45deg);
+}
+
+.pc-advanced-details__summary:hover {
+	border-color: var(--color-primary-element);
+	background: var(--color-background-hover);
+}
+
+.pc-advanced-details__summary:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 60%, transparent);
+	outline-offset: 2px;
+}
+
+.pc-advanced-details__body {
+	padding: 0 var(--pc-space-1, 4px) var(--pc-space-2, 8px);
+}
+
+.pc-form-team-link {
+	margin: 0 0 var(--pc-space-4, 16px);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: 1.45;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-form-team-link__hint {
+	margin-inline-start: 0.25em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pc-advanced-details__summary::before {
+		transition: none;
+	}
+}
+
 @media (min-width: 720px) {
 	.pc-filters__grid {
 		grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));

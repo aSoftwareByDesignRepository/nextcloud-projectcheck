@@ -27,6 +27,7 @@ Util::addStyle('projectcheck', 'common/progress-bars');
 // pull this in; project-detail historically did not, which left empty states
 // visually flat.
 Util::addStyle('projectcheck', 'common/accessibility');
+Util::addStyle('projectcheck', 'common/filters');
 Util::addStyle('projectcheck', 'common/stats-panel');
 Util::addStyle('projectcheck', 'common/list-table');
 // Last: single-column detail stack (overrides legacy 2-col content-grid).
@@ -135,7 +136,19 @@ include __DIR__ . '/common/page-start.php';
 
         <?php if (!empty($showCreatedBanner)): ?>
             <div class="notice notice-success pc-created-banner" role="status" aria-live="polite">
-                <p><?php p($l->t('Project created. Add your team next so people can log time.')); ?></p>
+                <p><?php p($l->t('Project created. Next: add your team so people can log time.')); ?></p>
+                <a class="button secondary" href="#team-section"><?php p($l->t('Go to team')); ?></a>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!empty($showCreatedFilesPartialBanner)): ?>
+            <div class="notice notice-warning pc-created-banner" role="status" aria-live="polite">
+                <p><?php p($l->t('Project created. Next: add your team so people can log time.')); ?></p>
+                <?php if (!empty($createdFilesPartialText)): ?>
+                    <p><?php p($createdFilesPartialText); ?></p>
+                <?php else: ?>
+                    <p><?php p($l->t('Project was created, but one or more files could not be uploaded. You can add files from the project page.')); ?></p>
+                <?php endif; ?>
                 <a class="button secondary" href="#team-section"><?php p($l->t('Go to team')); ?></a>
             </div>
         <?php endif; ?>
@@ -233,12 +246,12 @@ include __DIR__ . '/common/page-start.php';
 
         <!-- Yearly Statistics -->
         <?php if (!empty($yearlyStats)): ?>
-            <section class="section yearly-stats-section pc-section" aria-labelledby="pc-yearly-heading">
-                <div class="section-header">
-                    <h3 id="pc-yearly-heading"><i data-lucide="calendar" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Year by year')); ?></h3>
-                    <p><?php p($l->t('Hours and costs grouped by calendar year.')); ?></p>
-                </div>
-                <div class="section-content">
+            <details class="pc-advanced-details section yearly-stats-section pc-section" id="pc-yearly-stats">
+                <summary class="pc-advanced-details__summary" id="pc-yearly-heading">
+                    <?php p($l->t('Year by year')); ?>
+                </summary>
+                <div class="pc-advanced-details__body">
+                    <p class="pc-section-intro"><?php p($l->t('Hours and costs grouped by calendar year.')); ?></p>
                     <div class="yearly-stats-container">
                         <?php
                         // Local totals only — do not shadow page-level $totalHours from key figures.
@@ -298,7 +311,7 @@ include __DIR__ . '/common/page-start.php';
                         <?php endforeach; ?>
                     </div>
                 </div>
-            </section>
+            </details>
         <?php endif; ?>
 
         <!-- Main content: single-column stack (common/detail-layout.css) -->
@@ -650,7 +663,7 @@ include __DIR__ . '/common/page-start.php';
                 <p><?php p($l->t('Keep contracts, briefs, and other documents together with the project.')); ?></p>
                 <?php if ($canManageFiles && $hasProjectFiles): ?>
                     <div class="section-header-actions">
-                        <label class="button primary pc-section__primary-action" for="project_files_upload">
+                        <label class="button secondary pc-section__primary-action" for="project_files_upload">
                             <span data-lucide="upload-cloud" class="lucide-icon" aria-hidden="true"></span>
                             <span class="pc-section__primary-action-label"><?php p($l->t('Add files')); ?></span>
                         </label>
@@ -791,7 +804,7 @@ include __DIR__ . '/common/page-start.php';
                                     <span class="pc-admin-override-badge__text"><?php p($l->t('Admin override')); ?></span>
                                 </span>
                             <?php endif; ?>
-                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.create', ['project_id' => $projectId])); ?>" class="button primary">
+                            <a href="<?php p($urlGenerator->linkToRoute('projectcheck.time_entry.create', ['project_id' => $projectId])); ?>" class="button secondary">
                                 <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
                                 <?php p($l->t('Add time entry')); ?>
                             </a>
@@ -914,7 +927,7 @@ include __DIR__ . '/common/page-start.php';
                     <p><?php p($l->t('People who can log time on this project. Rates depend on the pricing method above.')); ?></p>
                     <?php if (!empty($canAddTeamMember) && $canAddTeamMember): ?>
                     <div class="section-header-actions">
-                            <button type="button" class="button primary" id="add-team-member-btn" aria-haspopup="dialog" aria-controls="addTeamMemberModal" aria-expanded="false">
+                            <button type="button" class="button secondary" id="add-team-member-btn" aria-haspopup="dialog" aria-controls="addTeamMemberModal" aria-expanded="false">
                                 <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
                                 <?php p($l->t('Add team member')); ?>
                             </button>

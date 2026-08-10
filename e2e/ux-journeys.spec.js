@@ -50,6 +50,9 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 	test('projects list: search first, advanced filters collapsed by default', async ({ page }) => {
 		await gotoApp(page, URLS.projects);
 		await expect(page.locator('#project-search')).toBeVisible();
+		const portfolio = page.locator('#pc-portfolio-overview');
+		await expect(portfolio).toBeAttached();
+		expect(await portfolio.evaluate((el) => el instanceof HTMLDetailsElement && el.open)).toBe(false);
 		const more = page.locator('.pc-filters__more').first();
 		await expect(more).toBeAttached();
 		const open = await more.evaluate((el) => el instanceof HTMLDetailsElement && el.open);
@@ -142,8 +145,10 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 			test.skip(true, 'User cannot create customers — quick-add hidden by permission');
 		}
 		await expect(quick).toBeVisible();
-		// Add to list is secondary; Save is the only primary finish action nearby after add
+		// Add to list is secondary; Save at the bottom is the only primary finish action
 		await expect(page.locator('#pc-quick-customer-create')).not.toHaveClass(/primary/);
+		await expect(page.locator('#project-form button.primary, #project-form .button.primary')).toHaveCount(1);
+		await expect(page.locator('#pc-project-save')).toHaveClass(/primary/);
 		await assertAxeClean(page);
 
 		const customerName = `Bachus Customer ${Date.now()}`;
@@ -151,8 +156,11 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		await page.locator('#pc-quick-customer-create').click();
 		await expect(page.locator('#pc-quick-customer-status')).toContainText(/added|hinzugefügt|selected|ausgewählt/i, { timeout: 15_000 });
 		await expect(page.locator('#pc-quick-customer-next')).toBeVisible();
-		await expect(page.locator('#pc-quick-customer-save')).toBeVisible();
-		await expect(page.locator('#pc-quick-customer-save')).toHaveClass(/primary/);
+		await expect(page.locator('#pc-quick-customer-goto-save')).toBeVisible();
+		await expect(page.locator('#pc-quick-customer-goto-save')).not.toHaveClass(/primary/);
+		// Bachus: after add, focus the single primary finish action (footer Save)
+		await expect(page.locator('#pc-project-save')).toBeFocused({ timeout: 5_000 });
+		await expect(page.locator('#project-form button.primary, #project-form .button.primary')).toHaveCount(1);
 
 		const selected = page.locator('#customer_id');
 		await expect(selected).not.toHaveValue('');
@@ -165,7 +173,7 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		// Project draft must still be intact (no navigation away)
 		await expect(page).toHaveURL(/projects\/(create|new)/i);
 		await expect(nameField).toHaveValue(draftName);
-		await assertAxeClean(page, '#pc-quick-customer-next');
+		await assertAxeClean(page, '#pc-project-form-actions');
 	});
 
 	test('project edit: quick-add customer then save persists reassignment (zero budget)', async ({ page }) => {
@@ -177,6 +185,11 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 
 		const projectName = `Bachus Reassign ${Date.now()}`;
 		await page.locator('#name').fill(projectName);
+		await page.locator('#pc-more-about-project').evaluate((el) => {
+			if (el instanceof HTMLDetailsElement) {
+				el.open = true;
+			}
+		});
 		await page.locator('#short_description').fill('Reassign customer regression');
 		const firstCustomer = `Bachus Cust A ${Date.now()}`;
 		await page.locator('#pc-quick-customer-name').fill(firstCustomer);
@@ -185,15 +198,20 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		await expect(page.locator('#customer_id')).not.toHaveValue('');
 
 		// Zero budget path (empty available_hours) previously broke UPDATE
+		await page.locator('#pc-advanced-budget').evaluate((el) => {
+			if (el instanceof HTMLDetailsElement) {
+				el.open = true;
+			}
+		});
 		const budget = page.locator('#total_budget');
 		if (await budget.count()) {
 			await budget.fill('0');
 		}
 
-		// Use the in-place Save affordance (same submit as footer)
+		// Only the footer Save submits the form
 		await Promise.all([
 			page.waitForURL(/projects\/\d+/, { timeout: 25_000 }),
-			page.locator('#pc-quick-customer-save').click(),
+			page.locator('#pc-project-save').click(),
 		]);
 		const createdUrl = page.url();
 		const idMatch = createdUrl.match(/projects\/(\d+)/);
@@ -215,11 +233,11 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 				return opt ? opt.textContent.trim() : '';
 			});
 		}, { timeout: 15_000 }).toBe(secondCustomer);
-		await expect(page.locator('#pc-quick-customer-save')).toBeVisible();
+		await expect(page.locator('#pc-quick-customer-goto-save')).toBeVisible();
 
 		await Promise.all([
 			page.waitForURL(/\/projects/, { timeout: 25_000 }),
-			page.locator('#pc-quick-customer-save').click(),
+			page.locator('#pc-project-save').click(),
 		]);
 		expect(page.url()).not.toMatch(/message=error/);
 
@@ -230,6 +248,67 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 				return opt ? opt.textContent.trim() : '';
 			});
 		}, { timeout: 15_000 }).toBe(secondCustomer);
+	});
+
+	test('project form: single primary Save and no competing primary CTAs', async ({ page }) => {
+		await gotoApp(page, URLS.projectCreate);
+		await expect(page.locator('#project-form')).toBeVisible();
+		await expect(page.locator('#pc-form-tip, .pc-form-tip')).toBeVisible();
+		await expect(page.locator('.pc-create-workflow')).toHaveCount(0);
+		await expect(page.locator('#project-form .button.primary, #project-form button.primary')).toHaveCount(1);
+		await expect(page.locator('#pc-project-save')).toHaveText(/Save project|Projekt speichern/i);
+		await expect(page.locator('#project-form [type="submit"]')).toHaveCount(1);
+		for (const id of ['#pc-advanced-classification', '#pc-advanced-pricing', '#pc-advanced-budget', '#pc-advanced-schedule', '#pc-more-about-project']) {
+			const panel = page.locator(id);
+			await expect(panel).toBeAttached();
+			expect(await panel.evaluate((el) => el instanceof HTMLDetailsElement && el.open)).toBe(false);
+		}
+		await expect(page.locator('#short_description')).not.toHaveAttribute('required', '');
+		await assertAxeClean(page, '#pc-project-form-actions');
+	});
+
+	test('project create: blank short description still saves via name fallback', async ({ page }) => {
+		await gotoApp(page, URLS.projectCreate);
+		await expect(page.locator('#project-form')).toBeVisible();
+		if ((await page.locator('.pc-quick-customer').count()) === 0) {
+			test.skip(true, 'User cannot create customers — quick-add hidden by permission');
+		}
+		const projectName = `Bachus AutoShort ${Date.now()}`;
+		await page.locator('#name').fill(projectName);
+		// Short description stays collapsed/blank on create — server auto-fills from name
+		await expect(page.locator('#short_description')).toHaveValue('');
+		const customerName = `Bachus AutoCust ${Date.now()}`;
+		await page.locator('#pc-quick-customer-name').fill(customerName);
+		await page.locator('#pc-quick-customer-create').click();
+		await expect(page.locator('#pc-quick-customer-next')).toBeVisible({ timeout: 15_000 });
+		await Promise.all([
+			page.waitForURL(/projects\/\d+/, { timeout: 25_000 }),
+			page.locator('#pc-project-save').click(),
+		]);
+		expect(page.url()).not.toMatch(/message=error/);
+		await assertAxeClean(page);
+	});
+
+	test('project edit: capacity is display-only and pricing gate appears when rate missing', async ({ page }) => {
+		await gotoApp(page, URLS.projectCreate);
+		await expect(page.locator('#project-form')).toBeVisible();
+
+		await page.locator('#pc-advanced-budget').evaluate((el) => {
+			if (el instanceof HTMLDetailsElement) {
+				el.open = true;
+			}
+		});
+		const hours = page.locator('#available_hours');
+		await expect(hours).toBeVisible();
+		await expect(hours).toHaveAttribute('readonly', '');
+		const hoursName = await hours.getAttribute('name');
+		expect(hoursName === null || hoursName === '').toBeTruthy();
+
+		await page.locator('#total_budget').fill('100');
+		await page.locator('#hourly_rate').fill('0');
+		await page.locator('#hourly_rate').dispatchEvent('input');
+		await expect(page.locator('#pc-pricing-gate')).toBeVisible();
+		await expect(page.locator('#available_hours')).toHaveValue('0');
 	});
 
 	test('project create: customer quick-add is always available when permitted', async ({ page }) => {

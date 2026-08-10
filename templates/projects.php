@@ -45,7 +45,7 @@ include __DIR__ . '/common/page-start.php';
 
         <!-- Success/Error Messages -->
         <?php if (isset($_GET['message']) && $_GET['message'] === 'success'): ?>
-            <div class="notice notice-success">
+            <div class="notice notice-success" role="status" aria-live="polite">
                 <span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span>
                 <span>
                     <?php if (isset($_GET['project_name'])): ?>
@@ -62,19 +62,19 @@ include __DIR__ . '/common/page-start.php';
         <?php endif; ?>
 
         <?php if (isset($_GET['message']) && $_GET['message'] === 'error' && isset($_GET['error_text'])): ?>
-            <div class="notice notice-error">
+            <div class="notice notice-error" role="alert">
                 <span data-lucide="alert-circle" class="lucide-icon" aria-hidden="true"></span>
                 <span><?php p($l->t('Error: %s', [$_GET['error_text']])); ?></span>
             </div>
         <?php endif; ?>
 
-        <!-- Project Statistics Overview -->
-        <section class="section pc-stats-panel pc-section stats-overview-section" aria-labelledby="projects-stats-title">
-            <div class="section-header">
-                <h3 id="projects-stats-title"><i data-lucide="bar-chart-3" class="lucide-icon primary" aria-hidden="true"></i> <?php p($l->t('Project statistics')); ?></h3>
-                <p><?php p($l->t('Overview of your project portfolio and performance')); ?></p>
-            </div>
-            <div class="section-content">
+        <!-- Project Statistics Overview (opt-in — search/list first) -->
+        <details class="pc-advanced-details pc-stats-panel pc-section stats-overview-section" id="pc-portfolio-overview">
+            <summary class="pc-advanced-details__summary" id="projects-stats-title">
+                <?php p($l->t('Portfolio overview')); ?>
+            </summary>
+            <div class="pc-advanced-details__body">
+            <p class="pc-section-intro"><?php p($l->t('Overview of your project portfolio and performance')); ?></p>
             <ul class="pc-stats-grid" role="list">
                 <li class="pc-stat-card">
                     <span class="pc-stat-card__icon" aria-hidden="true"><i data-lucide="folder" class="lucide-icon"></i></span>
@@ -121,7 +121,7 @@ include __DIR__ . '/common/page-start.php';
                 </li>
             </ul>
             </div>
-        </section>
+        </details>
 
         <!-- Search, filter, and project list (one panel) -->
         <?php

@@ -116,10 +116,35 @@ class ProjectServiceTest extends TestCase {
 
 	public function testCreateProjectRejectsMissingRequiredFieldsEarly(): void {
 		$this->expectException(\Exception::class);
-		$this->expectExceptionMessage("Field 'short_description' is required");
+		// Short description is auto-filled from name; customer remains required.
+		$this->expectExceptionMessage("Field 'customer_id' is required");
 		$this->projectService->createProject([
 			'name' => 'Test Project',
 		]);
+	}
+
+	public function testCreateProjectFillsBlankShortDescriptionFromName(): void {
+		$ref = new \ReflectionClass(ProjectService::class);
+		$method = $ref->getMethod('validateProjectData');
+		$method->setAccessible(true);
+		$svc = new ProjectService(
+			$this->createDbWithExistingCustomer(),
+			$this->createMock(IUserSession::class),
+			$this->createMock(IUserManager::class),
+			$this->createMock(IConfig::class),
+			$this->createMock(IGroupManager::class)
+		);
+		$data = [
+			'name' => '  Alpha Project  ',
+			'short_description' => '   ',
+			'customer_id' => 1,
+			'status' => 'Active',
+			'priority' => 'Medium',
+			'project_type' => 'client',
+		];
+		$method->invokeArgs($svc, [&$data]);
+		$this->assertSame('Alpha Project', $data['name']);
+		$this->assertSame('Alpha Project', $data['short_description']);
 	}
 
 	public function testCreateProjectRejectsInvalidNumericValuesEarly(): void {
@@ -202,30 +227,40 @@ class ProjectServiceTest extends TestCase {
 
 		$fetchResult = $this->createMock(\OCP\DB\IResult::class);
 		$fetchResult->method('fetch')->willReturn($projectRow);
+		$fetchResult->method('fetchOne')->willReturn(1);
 		$fetchResult->method('closeCursor');
 
 		$countResult = $this->createMock(\OCP\DB\IResult::class);
 		$countResult->method('fetchOne')->willReturn('2');
 
-		$qbIndex = 0;
+		$selectCalls = 0;
 		$db = $this->createMock(IDBConnection::class);
-		$db->method('getQueryBuilder')->willReturnCallback(function () use (&$qbIndex, $fetchResult, $countResult) {
-			$qbIndex++;
+		$db->method('getQueryBuilder')->willReturnCallback(function () use (&$selectCalls, $fetchResult, $countResult) {
 			$qb = $this->createMock(IQueryBuilder::class);
-			$qb->method('select')->willReturnSelf();
+			$qb->method('select')->willReturnCallback(function (...$args) use (&$selectCalls, $qb) {
+				$selectCalls++;
+				return $qb;
+			});
+			$qb->method('selectAlias')->willReturnSelf();
 			$qb->method('from')->willReturnSelf();
 			$qb->method('leftJoin')->willReturnSelf();
 			$qb->method('where')->willReturnSelf();
+			$qb->method('andWhere')->willReturnSelf();
 			$qb->method('createNamedParameter')->willReturn('p');
 			$qb->method('createFunction')->willReturn('COUNT(*)');
 			$expr = $this->createMock(\OCP\DB\QueryBuilder\IExpressionBuilder::class);
 			$expr->method('eq')->willReturn('eq');
 			$qb->method('expr')->willReturn($expr);
-			if ($qbIndex === 1) {
-				$qb->method('executeQuery')->willReturn($fetchResult);
-			} else {
-				$qb->method('executeQuery')->willReturn($countResult);
-			}
+			$qb->method('executeQuery')->willReturnCallback(function () use (&$selectCalls, $fetchResult, $countResult) {
+				// projectHasLoggedTime uses COUNT(*) via createFunction after project/customer loads.
+				if ($selectCalls >= 4) {
+					return $countResult;
+				}
+				return $fetchResult;
+			});
+			$qb->method('executeStatement')->willReturn(1);
+			$qb->method('update')->willReturnSelf();
+			$qb->method('set')->willReturnSelf();
 			return $qb;
 		});
 
@@ -251,6 +286,91 @@ class ProjectServiceTest extends TestCase {
 		$this->expectExceptionMessage('The pricing method cannot be changed after time has been logged on this project.');
 		$svc->updateProject(7, [
 			'cost_rate_mode' => CostRateMode::EMPLOYEE,
+		]);
+	}
+
+	/**
+	 * Zeus MF: stale updated_at must fail closed (lost-update protection).
+	 */
+	public function testUpdateProjectConflictsWhenExecuteAffectsZeroRows(): void {
+		$projectRow = [
+			'id' => 7,
+			'name' => 'Locked Project',
+			'short_description' => 'Short',
+			'detailed_description' => '',
+			'customer_id' => 1,
+			'customer_name' => 'Acme',
+			'hourly_rate' => 100.0,
+			'total_budget' => 0.0,
+			'available_hours' => 0.0,
+			'category' => '',
+			'priority' => 'Medium',
+			'status' => 'Active',
+			'start_date' => null,
+			'end_date' => null,
+			'tags' => '',
+			'project_type' => 'client',
+			'cost_rate_mode' => CostRateMode::PROJECT,
+			'created_by' => 'admin',
+			'created_at' => '2026-01-01 00:00:00',
+			'updated_at' => '2026-01-02 00:00:00',
+		];
+
+		$fetchResult = $this->createMock(\OCP\DB\IResult::class);
+		$fetchResult->method('fetch')->willReturn($projectRow);
+		$fetchResult->method('fetchOne')->willReturn(1);
+		$fetchResult->method('closeCursor');
+
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('getQueryBuilder')->willReturnCallback(function () use ($fetchResult) {
+			$qb = $this->createMock(IQueryBuilder::class);
+			$qb->method('select')->willReturnSelf();
+			$qb->method('selectAlias')->willReturnSelf();
+			$qb->method('from')->willReturnSelf();
+			$qb->method('leftJoin')->willReturnSelf();
+			$qb->method('where')->willReturnSelf();
+			$qb->method('andWhere')->willReturnSelf();
+			$qb->method('update')->willReturnSelf();
+			$qb->method('set')->willReturnSelf();
+			$qb->method('createNamedParameter')->willReturn('p');
+			$expr = $this->createMock(\OCP\DB\QueryBuilder\IExpressionBuilder::class);
+			$expr->method('eq')->willReturn('eq');
+			$qb->method('expr')->willReturn($expr);
+			$qb->method('executeQuery')->willReturn($fetchResult);
+			$qb->method('executeStatement')->willReturn(0);
+			return $qb;
+		});
+
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('admin');
+		$userSession = $this->createMock(IUserSession::class);
+		$userSession->method('getUser')->willReturn($user);
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn(true);
+
+		$svc = new ProjectService(
+			$db,
+			$userSession,
+			$this->createMock(IUserManager::class),
+			$this->createMock(IConfig::class),
+			$groupManager,
+			null,
+			null,
+			$this->createMock(AccessControlService::class)
+		);
+
+		$this->expectException(\Exception::class);
+		$this->expectExceptionMessage('Project was modified by someone else. Reload the form and try again.');
+		$svc->updateProject(7, [
+			'name' => 'Should Conflict',
+			'short_description' => 'Short',
+			'customer_id' => 1,
+			'status' => 'Active',
+			'priority' => 'Medium',
+			'project_type' => 'client',
+			'cost_rate_mode' => CostRateMode::PROJECT,
+			'total_budget' => 0,
+			'hourly_rate' => 100,
 		]);
 	}
 

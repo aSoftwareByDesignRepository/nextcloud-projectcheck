@@ -25,6 +25,7 @@ Util::addScript('projectcheck', 'project-form');
 Util::addScript('projectcheck', 'project-form-cost-rates');
 Util::addStyle('projectcheck', 'projects');
 Util::addStyle('projectcheck', 'common/accessibility');
+Util::addStyle('projectcheck', 'common/filters');
 Util::addStyle('projectcheck', 'navigation');
 
 $isEdit = isset($project) && $project instanceof \OCA\ProjectCheck\Db\Project;
@@ -48,19 +49,7 @@ $teamMembersActiveCount = isset($_['teamMembersActiveCount']) ? max(0, (int)$_['
 $teamMembersFormerCount = isset($_['teamMembersFormerCount']) ? max(0, (int)$_['teamMembersFormerCount']) : 0;
 $canManageMembers = !empty($_['canManageMembers']);
 $teamTotalCount = $teamMembersActiveCount + $teamMembersFormerCount;
-
-// Resolve callout copy once so the template body stays branch-free. Wording
-// adapts to manager vs viewer perms so we never advertise an action the
-// user cannot perform on the destination page.
-if ($canManageMembers) {
-	$teamCalloutTitle = $l->t('Looking to add or remove team members?');
-	$teamCalloutText = $l->t('Team members are managed on the project page, not in this edit form. Open it to add people, set their hourly rates, and review who can log time.');
-	$teamCalloutCta = $l->t('Manage team');
-} else {
-	$teamCalloutTitle = $l->t('Looking for the team list?');
-	$teamCalloutText = $l->t('The team list lives on the project page, not in this edit form. Open it to see who can log time and their hours.');
-	$teamCalloutCta = $l->t('View team');
-}
+$teamCalloutCta = $canManageMembers ? $l->t('Manage team') : $l->t('View team');
 ?>
 
 <?php include __DIR__ . '/common/navigation.php'; ?>
@@ -85,68 +74,56 @@ $pageHeaderActionsHtml = ob_get_clean();
 $pageHeaderActionsLabel = $l->t('Page actions');
 include __DIR__ . '/common/page-start.php';
 ?>
+        <?php
+        $formErrorText = '';
+        if (isset($_GET['message']) && $_GET['message'] === 'error' && isset($_GET['error_text']) && is_string($_GET['error_text'])) {
+        	$formErrorText = trim($_GET['error_text']);
+        	// Cap attacker-crafted query strings (display is escaped via p()).
+        	if (function_exists('mb_substr') && mb_strlen($formErrorText) > 280) {
+        		$formErrorText = mb_substr($formErrorText, 0, 279) . '…';
+        	} elseif (strlen($formErrorText) > 280) {
+        		$formErrorText = substr($formErrorText, 0, 279) . '…';
+        	}
+        }
+        ?>
+        <?php if ($formErrorText !== ''): ?>
+        <div class="pc-form-alert pc-form-alert--error" role="alert" id="pc-project-form-error" tabindex="-1">
+            <span class="pc-form-alert__icon" data-lucide="alert-circle" aria-hidden="true"></span>
+            <div class="pc-form-alert__body">
+                <p class="pc-form-alert__title"><?php p($l->t('Could not save')); ?></p>
+                <p class="pc-form-alert__text"><?php p($formErrorText); ?></p>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <?php if (!$isEdit): ?>
-        <nav class="pc-create-workflow pc-section" aria-label="<?php p($l->t('Steps to create a project')); ?>">
-            <h2 class="pc-create-workflow__title"><?php p($l->t('How to set up a new project')); ?></h2>
-            <ol class="pc-create-workflow__list">
-                <li class="pc-create-workflow__step">
-                    <span class="pc-create-workflow__num" aria-hidden="true">1</span>
-                    <span><?php p($l->t('Enter name, customer, and description')); ?></span>
-                </li>
-                <li class="pc-create-workflow__step">
-                    <span class="pc-create-workflow__num" aria-hidden="true">2</span>
-                    <span><?php p($l->t('Set schedule and status')); ?></span>
-                </li>
-                <li class="pc-create-workflow__step">
-                    <span class="pc-create-workflow__num" aria-hidden="true">3</span>
-                    <span><?php p($l->t('Choose how hours are priced')); ?></span>
-                </li>
-                <li class="pc-create-workflow__step">
-                    <span class="pc-create-workflow__num" aria-hidden="true">4</span>
-                    <span><?php p($l->t('After saving, add your team so people can log time')); ?></span>
-                </li>
-            </ol>
-        </nav>
+        <p class="pc-form-tip pc-section" role="note" id="pc-form-tip">
+            <?php p($l->t('Name, customer, then Save. Everything else stays closed until you need it.')); ?>
+        </p>
         <?php endif; ?>
 
         <?php if ($isEdit && $teamSectionUrl !== ''): ?>
-        <aside class="pc-form-callout" role="note" aria-labelledby="pc-team-callout-title" aria-describedby="pc-team-callout-desc">
-            <div class="pc-form-callout__icon" aria-hidden="true">
-                <span data-lucide="users" class="lucide-icon"></span>
-            </div>
-            <div class="pc-form-callout__body">
-                <h2 id="pc-team-callout-title" class="pc-form-callout__title">
-                    <?php p($teamCalloutTitle); ?>
-                    <?php if ($teamTotalCount > 0): ?>
-                        <span class="pc-form-callout__count" aria-label="<?php p($l->n('%n team member', '%n team members', $teamTotalCount)); ?>">
-                            <?php p($teamTotalCount); ?>
-                        </span>
-                    <?php endif; ?>
-                </h2>
-                <p id="pc-team-callout-desc" class="pc-form-callout__text">
-                    <?php p($teamCalloutText); ?>
-                </p>
-                <p class="pc-form-callout__hint">
-                    <?php p($l->t('Tip: save this form first if you have unsaved changes — leaving the page will discard them.')); ?>
-                </p>
-            </div>
-            <div class="pc-form-callout__actions">
-                <a class="button primary pc-form-callout__cta" href="<?php p($teamSectionUrl); ?>" rel="noopener">
-                    <span data-lucide="users" class="lucide-icon" aria-hidden="true"></span>
-                    <span><?php p($teamCalloutCta); ?></span>
-                </a>
-            </div>
-        </aside>
+        <p class="pc-form-team-link pc-section" role="note">
+            <a class="pc-form-callout__text-link" href="<?php p($teamSectionUrl); ?>" rel="noopener">
+                <?php p($teamCalloutCta); ?><?php if ($teamTotalCount > 0): ?> (<?php p($teamTotalCount); ?>)<?php endif; ?>
+            </a>
+            <span class="pc-form-team-link__hint">
+                — <?php p($l->t('Save this form first if you changed anything.')); ?>
+            </span>
+        </p>
         <?php endif; ?>
 
         <!-- Project Form -->
         <div class="section">
             <form id="project-form" action="<?php p($formAction); ?>" method="POST">
                 <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']) ?>">
+                <?php if (!$isEdit && !empty($_['createIdempotencyNonce'])): ?>
+                    <input type="hidden" name="pc_form_nonce" value="<?php p($_['createIdempotencyNonce']); ?>">
+                <?php endif; ?>
 
                 <section class="pc-section" aria-labelledby="pc-project-basics-heading">
                     <h3 id="pc-project-basics-heading" class="pc-section-title"><?php p($l->t('Basics')); ?></h3>
-                    <p class="pc-section-intro"><?php p($l->t('Name, customer, and what this project is about.')); ?></p>
+                    <p class="pc-section-intro"><?php p($l->t('A name and a customer are enough to save.')); ?></p>
                 <div class="form-group">
                     <label for="name"><?php p($l->t('Project Name')); ?> *</label>
                     <input type="text"
@@ -159,32 +136,39 @@ include __DIR__ . '/common/page-start.php';
                         placeholder="<?php p($l->t('Enter project name')); ?>">
                 </div>
 
-                <div class="form-group">
-                    <label for="short_description"><?php p($l->t('Short Description')); ?> *</label>
-                    <textarea id="short_description"
-                        name="short_description"
-                        class="form-input form-textarea"
-                        maxlength="500"
-                        required
-                        rows="3"
-                        placeholder="<?php p($l->t('Brief description of the project (max 500 characters)')); ?>"><?php p($isEdit ? $project->getShortDescription() : ''); ?></textarea>
-                    <div class="char-count" aria-live="polite">
-                        <span id="short_description-count">0</span>/500
+                <details class="pc-advanced-details" id="pc-more-about-project"<?php if ($isEdit) {
+                	echo ' open';
+                } ?>>
+                    <summary class="pc-advanced-details__summary"><?php p($l->t('More about this project')); ?></summary>
+                    <div class="pc-advanced-details__body">
+                        <div class="form-group">
+                            <label for="short_description"><?php p($l->t('Short Description')); ?></label>
+                            <textarea id="short_description"
+                                name="short_description"
+                                class="form-input form-textarea"
+                                maxlength="500"
+                                rows="2"
+                                aria-describedby="short_description-help short_description-count-wrap"
+                                placeholder="<?php p($l->t('Optional — leave blank to use the project name')); ?>"><?php p($isEdit ? $project->getShortDescription() : ''); ?></textarea>
+                            <p class="form-hint" id="short_description-help"><?php p($l->t('Leave blank to use the project name.')); ?></p>
+                            <div class="char-count" id="short_description-count-wrap" aria-live="polite">
+                                <span id="short_description-count">0</span>/500
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="detailed_description"><?php p($l->t('Detailed Description')); ?></label>
+                            <textarea id="detailed_description"
+                                name="detailed_description"
+                                class="form-input form-textarea"
+                                maxlength="2000"
+                                rows="5"
+                                placeholder="<?php p($l->t('Detailed project description (max 2000 characters)')); ?>"><?php p($isEdit ? $project->getDetailedDescription() : ''); ?></textarea>
+                            <div class="char-count" aria-live="polite">
+                                <span id="detailed_description-count">0</span>/2000
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="detailed_description"><?php p($l->t('Detailed Description')); ?></label>
-                    <textarea id="detailed_description"
-                        name="detailed_description"
-                        class="form-input form-textarea"
-                        maxlength="2000"
-                        rows="5"
-                        placeholder="<?php p($l->t('Detailed project description (max 2000 characters)')); ?>"><?php p($isEdit ? $project->getDetailedDescription() : ''); ?></textarea>
-                    <div class="char-count" aria-live="polite">
-                        <span id="detailed_description-count">0</span>/2000
-                    </div>
-                </div>
+                </details>
 
                 <div class="form-group">
                     <label for="customer_id"><?php p($l->t('Customer')); ?> *</label>
@@ -229,8 +213,7 @@ include __DIR__ . '/common/page-start.php';
                     <?php if ($canCreateCustomer && $customerStoreUrl !== ''): ?>
                     <div class="pc-quick-customer"
                         data-store-url="<?php p($customerStoreUrl); ?>"
-                        data-create-url="<?php p($customerCreateUrl); ?>"
-                        data-save-label="<?php p($isEdit ? $l->t('Save project') : $l->t('Save project')); ?>">
+                        data-create-url="<?php p($customerCreateUrl); ?>">
                         <label class="pc-quick-customer__label" for="pc-quick-customer-name"><?php p($l->t('New customer name')); ?></label>
                         <div class="pc-quick-customer__row">
                             <input type="text"
@@ -248,14 +231,14 @@ include __DIR__ . '/common/page-start.php';
                         <p class="pc-quick-customer__status" id="pc-quick-customer-status" role="status" aria-live="polite"></p>
                         <div class="pc-quick-customer__next" id="pc-quick-customer-next" hidden>
                             <p class="pc-quick-customer__next-text" id="pc-quick-customer-next-text">
-                                <?php p($l->t('Customer is selected. One more step:')); ?>
+                                <?php p($l->t('Customer is selected. Press Save at the bottom when you are done.')); ?>
                             </p>
-                            <button type="submit"
-                                class="button primary pc-quick-customer__save"
-                                id="pc-quick-customer-save"
+                            <button type="button"
+                                class="button pc-quick-customer__goto-save"
+                                id="pc-quick-customer-goto-save"
                                 aria-describedby="pc-quick-customer-next-text">
-                                <span data-lucide="check" class="lucide-icon" aria-hidden="true"></span>
-                                <?php p($isEdit ? $l->t('Save project') : $l->t('Save project')); ?>
+                                <span data-lucide="arrow-down" class="lucide-icon" aria-hidden="true"></span>
+                                <?php p($l->t('Go to Save')); ?>
                             </button>
                         </div>
                         <?php if ($customerCreateUrl !== ''): ?>
@@ -273,9 +256,12 @@ include __DIR__ . '/common/page-start.php';
                 $startDateIso = ($isEdit && $project->getStartDate()) ? $project->getStartDate()->format('Y-m-d') : '';
                 $endDateIso = ($isEdit && $project->getEndDate()) ? $project->getEndDate()->format('Y-m-d') : '';
                 ?>
-                <section class="pc-section" aria-labelledby="pc-project-schedule-heading">
-                    <h3 id="pc-project-schedule-heading" class="pc-section-title"><?php p($l->t('Schedule & status')); ?></h3>
-                    <p class="pc-section-intro"><?php p($l->t('When the project runs and whether work can be logged now.')); ?></p>
+                <details class="pc-advanced-details pc-section" id="pc-advanced-schedule"<?php if ($isEdit) {
+                	echo ' open';
+                } ?>>
+                    <summary class="pc-advanced-details__summary" id="pc-project-schedule-heading"><?php p($l->t('Schedule & status')); ?></summary>
+                    <div class="pc-advanced-details__body">
+                    <p class="pc-section-intro"><?php p($l->t('When the project runs and whether work can be logged now. New projects start as Active.')); ?></p>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="start_date"><?php p($l->t('Start Date')); ?></label>
@@ -303,40 +289,48 @@ include __DIR__ . '/common/page-start.php';
                 </div>
                 <p class="form-hint" id="project-dates-hint"><?php p($l->t('End date must be on or after the start date when both are set.')); ?></p>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="status"><?php p($l->t('Status')); ?> *</label>
-                        <select id="status" name="status" class="form-input form-select" required>
-                            <option value="Active" <?php echo ($isEdit && $project->getStatus() === 'Active') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Active') ? 'selected' : ''; ?>>
-                                <?php p($l->t('Active')); ?>
-                            </option>
-                            <option value="On Hold" <?php echo ($isEdit && $project->getStatus() === 'On Hold') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'On Hold') ? 'selected' : ''; ?>>
-                                <?php p($l->t('On Hold')); ?>
-                            </option>
-                            <option value="Completed" <?php echo ($isEdit && $project->getStatus() === 'Completed') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Completed') ? 'selected' : ''; ?>>
-                                <?php p($l->t('Completed')); ?>
-                            </option>
-                            <option value="Cancelled" <?php echo ($isEdit && $project->getStatus() === 'Cancelled') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Cancelled') ? 'selected' : ''; ?>>
-                                <?php p($l->t('Cancelled')); ?>
-                            </option>
-                            <?php if ($isEdit) { ?>
-                            <option value="Archived" <?php echo $project->getStatus() === 'Archived' ? 'selected' : ''; ?>>
-                                <?php p($l->t('Archived')); ?>
-                            </option>
-                            <?php } ?>
-                        </select>
+                <div class="form-group">
+                    <label for="status"><?php p($l->t('Status')); ?> *</label>
+                    <select id="status" name="status" class="form-input form-select" required>
+                        <option value="Active" <?php echo ($isEdit && $project->getStatus() === 'Active') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Active') ? 'selected' : ''; ?>>
+                            <?php p($l->t('Active')); ?>
+                        </option>
+                        <option value="On Hold" <?php echo ($isEdit && $project->getStatus() === 'On Hold') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'On Hold') ? 'selected' : ''; ?>>
+                            <?php p($l->t('On Hold')); ?>
+                        </option>
+                        <option value="Completed" <?php echo ($isEdit && $project->getStatus() === 'Completed') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Completed') ? 'selected' : ''; ?>>
+                            <?php p($l->t('Completed')); ?>
+                        </option>
+                        <option value="Cancelled" <?php echo ($isEdit && $project->getStatus() === 'Cancelled') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Cancelled') ? 'selected' : ''; ?>>
+                            <?php p($l->t('Cancelled')); ?>
+                        </option>
                         <?php if ($isEdit) { ?>
-                        <p class="form-hint" id="status-hint"><?php p($l->t('To avoid mistakes, use “Change status” on the project page: transitions are validated there. Archiving removes the project from the default list and stops new time entries until you reactivate.')); ?></p>
+                        <option value="Archived" <?php echo $project->getStatus() === 'Archived' ? 'selected' : ''; ?>>
+                            <?php p($l->t('Archived')); ?>
+                        </option>
                         <?php } ?>
+                    </select>
+                    <?php if ($isEdit) { ?>
+                    <p class="form-hint" id="status-hint"><?php p($l->t('Saved together with the rest of this form.')); ?></p>
+                    <?php } ?>
+                </div>
                     </div>
+                </details>
 
+                <details class="pc-advanced-details pc-section" id="pc-advanced-classification"<?php if ($isEdit) {
+                	echo ' open';
+                } ?>>
+                    <summary class="pc-advanced-details__summary"><?php p($l->t('Classification & priority')); ?></summary>
+                    <div class="pc-advanced-details__body">
+                    <p class="pc-section-intro"><?php p($l->t('For reports only — this does not change how hours are priced. Defaults are fine for most projects.')); ?></p>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="priority"><?php p($l->t('Priority')); ?> *</label>
                         <select id="priority" name="priority" class="form-input form-select" required>
                             <option value="Low" <?php echo ($isEdit && $project->getPriority() === 'Low') || (!$isEdit && isset($_['defaultSettings']['priority']) && $_['defaultSettings']['priority'] === 'Low') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Low')); ?>
                             </option>
-                            <option value="Medium" <?php echo ($isEdit && $project->getPriority() === 'Medium') || (!$isEdit && isset($_['defaultSettings']['priority']) && $_['defaultSettings']['priority'] === 'Medium') ? 'selected' : ''; ?>>
+                            <option value="Medium" <?php echo ($isEdit && $project->getPriority() === 'Medium') || (!$isEdit && (!isset($_['defaultSettings']['priority']) || $_['defaultSettings']['priority'] === 'Medium')) ? 'selected' : ''; ?>>
                                 <?php p($l->t('Medium')); ?>
                             </option>
                             <option value="High" <?php echo ($isEdit && $project->getPriority() === 'High') || (!$isEdit && isset($_['defaultSettings']['priority']) && $_['defaultSettings']['priority'] === 'High') ? 'selected' : ''; ?>>
@@ -347,13 +341,7 @@ include __DIR__ . '/common/page-start.php';
                             </option>
                         </select>
                     </div>
-                </div>
-                </section>
 
-                <section class="pc-section" aria-labelledby="pc-project-classification-heading">
-                    <h3 id="pc-project-classification-heading" class="pc-section-title"><?php p($l->t('Classification')); ?></h3>
-                    <p class="pc-section-intro"><?php p($l->t('For reports only — this does not change how hours are priced.')); ?></p>
-                <div class="form-row">
                     <div class="form-group">
                         <label for="project_type"><?php p($l->t('Project Type')); ?> *</label>
                         <select id="project_type" name="project_type" class="form-input form-select" required>
@@ -401,17 +389,32 @@ include __DIR__ . '/common/page-start.php';
                             placeholder="<?php p($l->t('Project category (optional)')); ?>">
                     </div>
                 </div>
-                </section>
+                    </div>
+                </details>
 
-                <section class="pc-section pc-section--pricing" aria-labelledby="pc-pricing-heading">
-                    <h3 id="pc-pricing-heading" class="pc-section-title"><?php p($l->t('Pricing')); ?></h3>
-                    <?php include __DIR__ . '/parts/pricing-mode-cards.php'; ?>
-                </section>
+                <details class="pc-advanced-details pc-section pc-section--pricing" id="pc-advanced-pricing"<?php if ($isEdit) {
+                	echo ' open';
+                } ?>>
+                    <summary class="pc-advanced-details__summary" id="pc-pricing-heading"><?php p($l->t('Pricing')); ?></summary>
+                    <div class="pc-advanced-details__body">
+                    <?php
+                    $selectedMode = $selectedCostRateMode;
+                    include __DIR__ . '/parts/pricing-mode-cards.php';
+                    ?>
+                    </div>
+                </details>
 
                 <!-- Budget & capacity -->
-                <section class="pc-section" aria-labelledby="pc-budget-heading">
-                    <h3 id="pc-budget-heading" class="pc-section-title"><?php p($l->t('Budget & capacity')); ?></h3>
+                <details class="pc-advanced-details pc-section" id="pc-advanced-budget"<?php if ($isEdit) {
+                	echo ' open';
+                } ?>>
+                    <summary class="pc-advanced-details__summary"><?php p($l->t('Budget & capacity')); ?></summary>
+                    <div class="pc-advanced-details__body">
                     <p class="pc-section-intro" id="pc-capacity-hint" data-hint-project="<?php p($l->t('Available hours are calculated from budget ÷ project hourly rate.')); ?>" data-hint-planning="<?php p($l->t('Planning rate is for capacity estimates only — billed cost uses the pricing method above.')); ?>"></p>
+                    <div class="pc-pricing-gate" id="pc-pricing-gate" hidden role="status">
+                        <p class="pc-pricing-gate__title" id="pc-pricing-gate-title"><?php p($l->t('Hourly rate needed for this budget')); ?></p>
+                        <p class="pc-pricing-gate__text" id="pc-pricing-gate-text"><?php p($l->t('Enter a project hourly rate greater than 0 to save budget changes. You can still save name, description, dates, status, and other fields.')); ?></p>
+                    </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="total_budget"><?php p($l->t('Total Budget (%s)', [$currencyCode])); ?></label>
@@ -422,7 +425,8 @@ include __DIR__ . '/common/page-start.php';
                             step="0.01"
                             min="0"
                             value="<?php p($isEdit ? $project->getTotalBudget() : ''); ?>"
-                            placeholder="0.00">
+                            placeholder="0.00"
+                            data-initial-value="<?php p($isEdit ? $project->getTotalBudget() : ''); ?>">
                     </div>
 
                     <div class="form-group" id="pc-hourly-rate-group">
@@ -439,7 +443,8 @@ include __DIR__ . '/common/page-start.php';
                             min="0"
                             value="<?php p($isEdit ? $project->getHourlyRate() : ($_['defaultSettings']['hourly_rate'] ?? '')); ?>"
                             placeholder="0.00"
-                            aria-describedby="pc-capacity-hint">
+                            data-initial-value="<?php p($isEdit ? $project->getHourlyRate() : ($_['defaultSettings']['hourly_rate'] ?? '')); ?>"
+                            aria-describedby="pc-capacity-hint pc-pricing-gate">
                     </div>
                 </div>
 
@@ -447,7 +452,6 @@ include __DIR__ . '/common/page-start.php';
                     <label for="available_hours"><?php p($l->t('Estimated capacity (hours)')); ?></label>
                     <input type="text"
                         id="available_hours"
-                        name="available_hours"
                         class="form-input pc-capacity-input"
                         inputmode="decimal"
                         value="<?php p($isEdit ? number_format(max(0.0, (float) $project->getAvailableHours()), 2, '.', '') : '0'); ?>"
@@ -463,22 +467,26 @@ include __DIR__ . '/common/page-start.php';
                         <?php p($l->t('Calculated automatically from budget and hourly rate')); ?>
                     </small>
                 </div>
-                </section>
+                    </div>
+                </details>
 
-                <!-- Form Actions: single primary save at the end -->
-                <div class="form-actions" id="pc-project-form-actions">
-                    <button type="submit" class="button primary" id="pc-project-save">
-                        <?php p($isEdit ? $l->t('Update Project') : $l->t('Create Project')); ?>
-                    </button>
-                    <a href="<?php p($_['indexUrl'] ?? '/projects'); ?>" class="button">
-                        <?php p($l->t('Cancel')); ?>
-                    </a>
-                    <?php if ($isEdit && $teamSectionUrl !== ''): ?>
-                        <a href="<?php p($teamSectionUrl); ?>" class="button pc-form-actions__secondary-link" rel="noopener">
-                            <span data-lucide="users" class="lucide-icon" aria-hidden="true"></span>
-                            <span><?php p($canManageMembers ? $l->t('Manage team') : $l->t('View team')); ?></span>
+                <!-- Form Actions: exactly one primary Save -->
+                <div class="form-actions pc-form-actions--sticky" id="pc-project-form-actions">
+                    <p class="pc-form-actions__hint" id="pc-project-save-hint">
+                        <?php p($l->t('One button saves everything on this page.')); ?>
+                    </p>
+                    <div class="pc-form-actions__row">
+                        <button type="submit"
+                            class="button primary pc-form-actions__save"
+                            id="pc-project-save"
+                            aria-describedby="pc-project-save-hint">
+                            <span data-lucide="check" class="lucide-icon" aria-hidden="true"></span>
+                            <?php p($l->t('Save project')); ?>
+                        </button>
+                        <a href="<?php p($_['indexUrl'] ?? '/projects'); ?>" class="button pc-form-actions__cancel">
+                            <?php p($l->t('Cancel')); ?>
                         </a>
-                    <?php endif; ?>
+                    </div>
                 </div>
             </form>
         </div>

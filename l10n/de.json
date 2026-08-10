@@ -1694,6 +1694,18 @@
 		"Not linked in CustomerCheck": "Nicht in CustomerCheck verknüpft",
 		"Link this customer from CustomerCheck when the CRM hub is installed.": "Verknüpfen Sie diesen Kunden aus CustomerCheck, wenn der CRM-Hub installiert ist.",
 		"Linked": "Verknüpft",
-		"Unavailable": "Nicht verfügbar"
+		"Unavailable": "Nicht verfügbar",
+		"Could not save": "Speichern fehlgeschlagen",
+		"Hourly rate needed for this budget": "Für dieses Budget ist ein Stundensatz nötig",
+		"Enter a project hourly rate greater than 0 to save budget changes. You can still save name, description, dates, status, and other fields.": "Tragen Sie einen Projekt-Stundensatz größer 0 ein, um Budget-Änderungen zu speichern. Name, Beschreibung, Zeitraum, Status und andere Felder können Sie trotzdem speichern.",
+		"Status changes are saved with the rest of the form. You can also change status from the project page.": "Statusänderungen werden mit dem restlichen Formular gespeichert. Sie können den Status auch auf der Projektseite ändern.",
+		"Cannot change status from %1$s to %2$s. Choose an allowed status, or use “Change status” on the project page.": "Status kann nicht von %1$s nach %2$s geändert werden. Wählen Sie einen erlaubten Status, oder nutzen Sie „Status ändern“ auf der Projektseite.",
+		"Fill in the basics, then press Save once at the bottom. You can add the team after saving.": "Füllen Sie die Grunddaten aus und drücken Sie unten einmal Speichern. Das Team können Sie danach hinzufügen.",
+		"Save this form first if you changed anything — then open the team.": "Speichern Sie das Formular zuerst, wenn Sie etwas geändert haben — öffnen Sie danach das Team.",
+		"Customer is selected. Press Save at the bottom when you are done.": "Kunde ist ausgewählt. Drücken Sie unten Speichern, wenn Sie fertig sind.",
+		"\"{name}\" is selected. Press Save at the bottom when you are done.": "„{name}“ ist ausgewählt. Drücken Sie unten Speichern, wenn Sie fertig sind.",
+		"Go to Save": "Zu Speichern",
+		"Saved together with the rest of this form.": "Wird mit dem restlichen Formular gespeichert.",
+		"One button saves everything on this page.": "Ein Button speichert alles auf dieser Seite."
 	}
 }

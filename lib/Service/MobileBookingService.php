@@ -95,7 +95,7 @@ class MobileBookingService
 		try {
 			$preview = $this->rates->resolvePreview($projectId, $employee, $parsed);
 		} catch (RateResolutionException $e) {
-			throw new MobileApiException('validation', $e->getMessage(), 422, [
+			throw new MobileApiException($e->getCodeKey(), $e->getMessage(), 422, [
 				'fields' => ['rate' => $e->getCodeKey()],
 			]);
 		}
@@ -211,9 +211,7 @@ class MobileBookingService
 		} catch (PermissionDeniedException) {
 			throw new MobileApiException('forbidden', $this->l->t('You cannot book time on this project.'), 403);
 		} catch (ValidationException $e) {
-			throw new MobileApiException('validation', $e->getMessage() !== '' ? $e->getMessage() : $this->l->t('Validation failed.'), 422, [
-				'fields' => $e->getErrors(),
-			]);
+			throw $this->validationToMobile($e);
 		}
 
 		if ($clientRequestId !== null && $this->idempotency !== null) {
@@ -226,7 +224,12 @@ class MobileBookingService
 				try {
 					$this->timeEntries->deleteTimeEntryForMaintenance($orphanId);
 				} catch (\Throwable) {
-					// Best-effort; unique map still points at the winner.
+					// Absolute integrity: never pretend success while a billed orphan may remain.
+					throw new MobileApiException(
+						'conflict',
+						$this->l->t('This request was already processed, but a duplicate could not be cleaned up. Refresh and check your entries.'),
+						409,
+					);
 				}
 				$winner = $this->idempotency->findByUserAndRequestId($uid, $clientRequestId);
 				if ($winner !== null) {
@@ -342,9 +345,7 @@ class MobileBookingService
 				['billingStatus' => $e->getBillingStatus()],
 			);
 		} catch (ValidationException $e) {
-			throw new MobileApiException('validation', $e->getMessage() !== '' ? $e->getMessage() : $this->l->t('Validation failed.'), 422, [
-				'fields' => $e->getErrors(),
-			]);
+			throw $this->validationToMobile($e);
 		}
 
 		return $this->entryRow($entry);
@@ -573,5 +574,20 @@ class MobileBookingService
 			'createdAt' => isset($row['created_at']) ? (string)$row['created_at'] : null,
 			'updatedAt' => isset($row['updated_at']) ? (string)$row['updated_at'] : null,
 		];
+	}
+
+	/**
+	 * Promote rate-resolution failures to a stable mobile error code so companions
+	 * can show a clear soft-pricing / missing-rate message (not a generic 422).
+	 */
+	private function validationToMobile(ValidationException $e): MobileApiException
+	{
+		$fields = $e->getErrors();
+		$rateKey = isset($fields['rate']) && is_string($fields['rate']) ? $fields['rate'] : '';
+		$code = $rateKey === 'rate_unresolved' ? 'rate_unresolved' : 'validation';
+		$message = $e->getMessage() !== '' ? $e->getMessage() : $this->l->t('Validation failed.');
+		return new MobileApiException($code, $message, 422, [
+			'fields' => $fields,
+		]);
 	}
 }

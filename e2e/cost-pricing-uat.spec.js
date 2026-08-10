@@ -3,6 +3,7 @@
  */
 const { test, expect } = require('@playwright/test');
 const { gotoApp } = require('./helpers/auth-guard');
+const { openProjectFormPanels } = require('./helpers/project-form-panels');
 
 const BASE = (process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
 const PROJECTS_URL = `${BASE}/index.php/apps/projectcheck/projects`;
@@ -21,6 +22,7 @@ test.describe('ProjectCheck UAT gaps', () => {
 		test.skip((await customerSelect.locator('option').count()) < 2, 'Need a customer');
 		const unique = `E2E team picker ${Date.now()}`;
 		await page.locator('#name').fill(unique);
+		await openProjectFormPanels(page);
 		await page.locator('#short_description').fill('Empty team for picker test.');
 		await customerSelect.selectOption({ index: 1 });
 		await page.locator('input[name="cost_rate_mode"][value="project"]').check({ force: true });
@@ -69,6 +71,7 @@ test.describe('ProjectCheck UAT gaps', () => {
 		test.skip((await customerSelect.locator('option').count()) < 2, 'Need a customer');
 		const unique = `E2E assign hint ${Date.now()}`;
 		await page.locator('#name').fill(unique);
+		await openProjectFormPanels(page);
 		await page.locator('#short_description').fill('UAT 11 — per-person assign hint.');
 		await customerSelect.selectOption({ index: 1 });
 		await page.locator('input[name="cost_rate_mode"][value="project_member"]').check({ force: true });
@@ -127,6 +130,7 @@ test.describe('ProjectCheck UAT gaps', () => {
 
 		const unique = `E2E motion ${Date.now()}`;
 		await page.locator('#name').fill(unique);
+		await openProjectFormPanels(page);
 		await page.locator('#short_description').fill('Reduced motion scroll check.');
 		await customerSelect.selectOption({ index: 1 });
 		await page.locator('input[name="cost_rate_mode"][value="project_member"]').check({ force: true });

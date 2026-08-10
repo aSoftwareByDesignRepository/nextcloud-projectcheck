@@ -56,6 +56,13 @@ else:
 		</h4>
 		<p class="pc-stl-progress__lead pc-sr-only"><?php p($regionLabel); ?></p>
 
+		<?php if ($progressVariant === 'compact'): ?>
+		<p class="pc-stl-progress__compact-line">
+			<span><?php p($l->t('%s%% paid', [(string)$paidPct])); ?></span>
+			<span class="pc-stl-progress__compact-sep" aria-hidden="true">·</span>
+			<span><?php p($l->t('%s%% invoiced or paid', [(string)$billedPct])); ?></span>
+		</p>
+		<?php else: ?>
 		<div class="pc-stl-progress__stats" role="list">
 			<div class="pc-stl-progress__stat" role="listitem">
 				<span class="pc-stl-progress__stat-label"><?php p($l->t('Paid so far')); ?></span>
@@ -69,15 +76,14 @@ else:
 					<?php p((string)$billedPct); ?>%
 				</span>
 			</div>
-			<?php if ($progressVariant === 'full'): ?>
 			<div class="pc-stl-progress__stat" role="listitem">
 				<span class="pc-stl-progress__stat-label"><?php p($l->t('Still open')); ?></span>
 				<span class="pc-stl-progress__stat-value" aria-label="<?php p($openLabel); ?>">
 					<?php p((string)$openPct); ?>%
 				</span>
 			</div>
-			<?php endif; ?>
 		</div>
+		<?php endif; ?>
 
 		<div class="pc-stl-progress__bar"
 			role="progressbar"

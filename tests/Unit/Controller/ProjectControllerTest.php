@@ -106,6 +106,11 @@ class ProjectControllerTest extends TestCase {
 		$projectMemberHourlyRateService = $this->createMock(\OCA\ProjectCheck\Service\ProjectMemberHourlyRateService::class);
 		$listExportService = new ListExportService($this->config, 'projectcheck');
 
+		$formIdempotency = new \OCA\ProjectCheck\Service\FormSubmitIdempotencyService(
+			$this->createMock(\OCP\ICacheFactory::class),
+			$this->createMock(\OCP\Lock\ILockingProvider::class)
+		);
+
 		$this->controller = new ProjectController(
 			'projectcheck',
 			$this->request,
@@ -127,7 +132,8 @@ class ProjectControllerTest extends TestCase {
 			$userAccountSnapshot,
 			$projectMemberHourlyRateService,
 			$listExportService,
-			$this->createMock(ProjectSettlementService::class)
+			$this->createMock(ProjectSettlementService::class),
+			$formIdempotency
 		);
 		$this->projectService->method('canUserCreateProject')->willReturn(true);
 	}
@@ -186,6 +192,7 @@ class ProjectControllerTest extends TestCase {
 		$project->setCreatedBy('testuser');
 
 		$this->projectService->method('createProject')->willReturn($project);
+		$this->projectService->method('getProject')->with(1)->willReturn($project);
 
 		$response = $this->controller->store();
 
@@ -709,6 +716,61 @@ class ProjectControllerTest extends TestCase {
 	}
 
 	/**
+	 * API: invalid decimal must be 400 (not an uncaught 500)
+	 */
+	public function testApiUpdateInvalidDecimalReturns400(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->projectService->method('canUserAccessProject')->with('testuser', 1)->willReturn(true);
+		$this->request->method('getParams')->willReturn(['hourly_rate' => 'nope', 'requesttoken' => 'tok']);
+
+		$response = $this->controller->apiUpdate(1);
+		$this->assertInstanceOf(DataResponse::class, $response);
+		$this->assertEquals(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertFalse($data['success'] ?? true);
+	}
+
+	/**
+	 * Argus MF-01: DB / infrastructure exceptions must not be reflected to clients.
+	 */
+	public function testSafeProjectErrorMessageDoesNotLeakDatabaseErrors(): void {
+		$ref = new \ReflectionMethod(ProjectController::class, 'toSafeProjectErrorMessage');
+		$ref->setAccessible(true);
+		$fallback = 'Could not update project. Please check your input.';
+
+		$leaky = [
+			"Cannot add or update a child row: a foreign key constraint fails (`oc`.`oc_pc_projects`, CONSTRAINT `fk` FOREIGN KEY (`customer_id`))",
+			"Incorrect decimal value: '' for column 'available_hours' at row 1",
+			"SQLSTATE[22007]: Invalid datetime format: 1292 Incorrect decimal value",
+			'An exception occurred while executing a query: SQLSTATE[HY000]',
+			'Hourly rate must be a secret internal stack trace path /var/www',
+		];
+		foreach ($leaky as $msg) {
+			$out = $ref->invoke($this->controller, new \Exception($msg), $fallback);
+			$this->assertSame($fallback, $out, 'Leaked for: ' . $msg);
+			$this->assertStringNotContainsString('SQLSTATE', $out);
+			$this->assertStringNotContainsString('foreign key', $out);
+			$this->assertStringNotContainsString('/var/www', $out);
+		}
+
+		$ok = $ref->invoke(
+			$this->controller,
+			new \Exception('Hourly rate is required when the project has a budget in project-rate mode'),
+			$fallback
+		);
+		$this->assertStringContainsString('Hourly rate is required', $ok);
+
+		$field = $ref->invoke($this->controller, new \Exception("Field 'name' is required"), $fallback);
+		$this->assertStringContainsString('Project name', $field);
+		$this->assertStringContainsString('required', $field);
+		$this->assertStringNotContainsString("Field 'name'", $field);
+
+		$unknownField = $ref->invoke($this->controller, new \Exception("Field 'internal_secret_column' is required"), $fallback);
+		$this->assertSame($fallback, $unknownField);
+	}
+
+	/**
 	 * API: no payload after stripping internal keys
 	 */
 	public function testApiUpdateNoData(): void {
@@ -906,7 +968,7 @@ class ProjectControllerTest extends TestCase {
 		$this->request->method('getHeader')->with('X-Requested-With')->willReturn('XMLHttpRequest');
 
 		$this->projectService->method('createProject')
-			->willThrowException(new \Exception('Project name is required'));
+			->willThrowException(new \Exception('Customer is required'));
 
 		$response = $this->controller->store();
 
@@ -915,7 +977,7 @@ class ProjectControllerTest extends TestCase {
 
 		$data = $response->getData();
 		$this->assertArrayHasKey('error', $data);
-		$this->assertEquals('Project name is required', $data['error']);
+		$this->assertEquals('Customer is required', $data['error']);
 	}
 
 	/**

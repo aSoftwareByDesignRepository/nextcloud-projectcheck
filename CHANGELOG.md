@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.95 - 2026-08-10
+
+### Fixed
+
+- **Project edit save (Nordhues):** full-form updates no longer fail for name, description, dates, status, priority, or category when a legacy project already has a budget with hourly rate 0. Empty capacity is display-only (not submitted); decimals are staged via `ProjectFormPayload` / `FormDecimal` before merge so `""` never hits MariaDB DECIMAL columns.
+- **Budget changes without a rate:** still rejected with a clear message when the user changes budget/rate into an invalid project-rate state; the edit form shows an on-page error banner (no silent redirect to the list) and a pricing gate callout.
+- **Create parity:** `createProject` stages the same full-form payload (empty decimals → 0) before validation/insert.
+- **API update:** invalid decimal payloads return HTTP 400 instead of bubbling to a 500.
+- **Error reflection (Argus):** `toSafeProjectErrorMessage` no longer allowlists broad `/Cannot …/` / `/must be …/` patterns that could echo MariaDB/PDO text; known validation strings only; user-facing messages clipped to 280 chars (incl. query `error_text` on the form).
+- **Service-layer authz:** `updateProject` re-checks session + `canUserEditProject` after terminal-state guards (defense in depth); **optimistic concurrency** via `updated_at` predicate (conflict if another writer won).
+- **Create + files:** file upload failure no longer reports total create failure (orphan + duplicate risk); success with warning / `created_files_partial` banner.
+- **Time entry create ACL:** `createTimeEntry` requires `canUserAddTimeEntryForProject` (parity with mobile/AZC — closes PROJECT_MEMBER bypass via access-only).
+- **Mobile idempotency:** orphan cleanup failure returns HTTP 409 (never “success” while a billed duplicate may remain).
+- **Companion booking (soft-priced projects):** mobile API promotes `rate_unresolved` as a stable error code on rate preview and create/update so companions can show a clear preview/save failure instead of a generic seat message.
+- **Team member null rates:** nullable `hourly_rate` binds with `PARAM_NULL` (not empty string) on member insert/reactivate.
+- **HTML/API create double-submit:** `pc_form_nonce` / `Idempotency-Key` mapped via `FormSubmitIdempotencyService` (**`ILockingProvider` exclusive lock** + distributed cache replay); create-in-progress surfaces a safe localized error.
+- **Activity audit:** `logProjectCreated` / `logProjectUpdated` on web + API create/update (best-effort; allowlisted field names only).
+- **DoS brake (Zeus):** web `TimeEntryController`, `CustomerController`, and `EmployeeController` mutating endpoints carry `UserRateLimit` (parity with project + mobile).
+- **DoS brake (Argus):** project **delete** / **team** mutators (`addAllTeamMembers` 10/min; delete family 20/min; other team ops 60/min) and `ProjectMemberController` remove paths carry `UserRateLimit`; contract tests extended.
+- **License mutators (Argus):** `LicenseController` apply/remove/assignSeat/removeSeat carry `UserRateLimit` (admin DoS brake).
+- **Create idempotency (Argus):** after a successful insert, cache persist failures no longer clear the nonce mapping (prevents duplicate projects on refresh); mapping write is verified with one retry.
+- **Locked pricing UX:** when time is already logged, show one clear “Current method” summary instead of three faded disabled radio cards (fixes unreadable contrast and broken radio chrome).
+- **Invoicing list cell:** compact settlement progress uses a single wrapping line (`0% paid · 0% invoiced or paid`) + bar instead of two overflowing stat cards.
+- **Create validation UX:** HTML5 `invalid` events open the enclosing advanced `<details>` so closed classification fields cannot trap the user.
+- **Safe required-field errors:** only allowlisted keys (`name`, `short_description`, `customer_id`) map to localized labels; unknown `Field '…' is required` strings fall back (no snake_case leak).
+
+### Changed
+
+- Status on the edit form is a first-class save field again (hint updated); overview “Change status” remains available. Locale decimal commas (`1,50`) are accepted by `FormDecimal`.
+- **Bachus form UX:** exactly **one** primary action — sticky **Save project**. Removed the second mid-form Save after quick-add (replaced with secondary “Go to Save” helper), demoted team CTA from primary button to a text link, collapsed the 4-step create wizard into one tip line, and unified create/update labels to “Save project”. Quick-add focuses footer Save (Go to Save remains a nearby helper); double-submit / double quick-add guarded client-side.
+- **Bachus density pass:** create form keeps Basics above the fold; schedule/status, short description, classification, pricing, and budget sit in closed `<details>` (open on edit). Short description is optional (auto-fills from name client + server). Detailed description, portfolio stats, year-by-year, and time-entry budget impact are opt-in disclosures. Quick-add focuses footer **Save project**. Project detail section CTAs (files / log time / team) are secondary so header Edit stays the clear primary. Time-entry rate/total is collapsed; form errors sit above Submit. List notices use `role="status"` / `role="alert"`.
+- **Rate limits:** `store` / `apiStore` (30/min) and `update` / `updatePost` / `apiUpdate` (60/min) carry `UserRateLimit`.
+
+### Tests
+
+- Unit: `FormDecimal` locale commas; `ProjectFormPayload` full-form vs API staging (whitespace / explicit zero); safe error message non-leak; mutating endpoint rate-limit contract; `FormSubmitIdempotencyService` claim/replay/release; activity create/update audit; create-form `pc_form_nonce` contract; locked pricing and settlement progress template contracts.
+- Integration: soft pricing name/status save; budget change without rate rejected; omit `available_hours` still saves; create with empty decimals.
+- Mutation gauntlet extended (partial-API omit; form create idempotency); JS contract for creating/submitting guards; E2E capacity display-only + pricing gate + cost-pricing workflows (open advanced create panels before fill).
+- **`npm run e2e:auth`:** actually invokes global setup (previously only loaded the module and exited).
+
 ## 2.0.94 - 2026-08-07
 
 ### Fixed
@@ -83,8 +123,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Public `/health` probe** for mobile login reachability and ops (no version fingerprint; advertises `mobileApi: true`). App-access ACL does not block this public endpoint.
-
-## Unreleased
 
 ## 2.0.86 - 2026-07-27
 
@@ -165,8 +203,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Settlement bucket math:** outstanding (not yet paid) is computed with decimal-safe `Money` addition in the billing service; mapper/recompute accumulate when legacy status labels normalize to the same bucket so totals cannot be silently overwritten.
 - **Broken CSS selectors** from earlier icon migration (orphan braces / truncated rules in list and dashboard stylesheets).
-
-## Unreleased
 
 ## 2.0.76 - 2026-07-17
 

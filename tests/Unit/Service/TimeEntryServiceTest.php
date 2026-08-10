@@ -80,7 +80,7 @@ class TimeEntryServiceTest extends TestCase {
 		$project->setStatus('Active');
 
 		$this->projectMapper->method('find')->with(11)->willReturn($project);
-		$this->projectService->method('canUserAccessProject')->with('member-user', 11)->willReturn(false);
+		$this->projectService->method('canUserAddTimeEntryForProject')->with('member-user', 11)->willReturn(false);
 
 		$this->expectException(\Exception::class);
 		$this->expectExceptionMessage('Access denied');
@@ -92,6 +92,28 @@ class TimeEntryServiceTest extends TestCase {
 			'hourly_rate' => 50,
 			'description' => 'Blocked by revoked membership',
 		], 'member-user');
+	}
+
+	public function testCreateTimeEntryDeniedWhenAccessWithoutAddPermission(): void {
+		$project = new Project();
+		$project->setId(13);
+		$project->setStatus('Active');
+		$project->setCostRateMode('project_member');
+
+		$this->projectMapper->method('find')->with(13)->willReturn($project);
+		// Access alone must not be enough for create (PROJECT_MEMBER / non-member admin).
+		$this->projectService->method('canUserAccessProject')->with('admin-user', 13)->willReturn(true);
+		$this->projectService->method('canUserAddTimeEntryForProject')->with('admin-user', 13)->willReturn(false);
+
+		$this->expectException(\Exception::class);
+		$this->expectExceptionMessage('Access denied');
+
+		$this->service->createTimeEntry([
+			'project_id' => 13,
+			'date' => '2026-04-29',
+			'hours' => 1.0,
+			'description' => 'Admin without member rate',
+		], 'admin-user');
 	}
 
 	public function testCreateTimeEntryRejectedForCompletedProject(): void {

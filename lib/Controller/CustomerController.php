@@ -432,6 +432,7 @@ class CustomerController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
 	public function store(): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -663,6 +664,7 @@ class CustomerController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function update($id)
 	{
 		$user = $this->userSession->getUser();
@@ -726,6 +728,7 @@ class CustomerController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
 	public function delete(int $id): JSONResponse
 	{
 		$user = $this->userSession->getUser();
@@ -799,6 +802,7 @@ class CustomerController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 60, period: 60)]
 	public function updatePost(int $id): JSONResponse
 	{
 		// Delegate to the update method
@@ -815,6 +819,7 @@ class CustomerController extends Controller
 	 * @return JSONResponse
 	 */
 	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
 	public function deletePost(int $id): JSONResponse
 	{
 		$user = $this->userSession->getUser();
