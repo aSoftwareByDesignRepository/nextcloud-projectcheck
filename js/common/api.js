@@ -7,6 +7,11 @@
 		if (window.OC && OC.requestToken) {
 			return OC.requestToken;
 		}
+		const head = document.querySelector('head');
+		const fromHead = head ? head.getAttribute('data-requesttoken') : '';
+		if (fromHead) {
+			return fromHead;
+		}
 		const input = document.querySelector('input[name="requesttoken"]');
 		return input ? input.value : '';
 	}

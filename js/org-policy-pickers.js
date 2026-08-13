@@ -12,6 +12,11 @@
 		if (typeof OC !== 'undefined' && OC.requestToken) {
 			return OC.requestToken;
 		}
+		var head = document.querySelector('head');
+		var fromHead = head ? head.getAttribute('data-requesttoken') : '';
+		if (fromHead) {
+			return fromHead;
+		}
 		var m = document.querySelector('meta[name="requesttoken"]');
 		return m ? m.getAttribute('content') || '' : '';
 	}

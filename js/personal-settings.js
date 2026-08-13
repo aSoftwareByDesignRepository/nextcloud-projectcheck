@@ -27,10 +27,14 @@
 		if (fromForm && fromForm.value) {
 			return fromForm.value;
 		}
-		if (typeof OC !== 'undefined' && OC && typeof OC.requestToken === 'string') {
+		if (typeof OC !== 'undefined' && OC && typeof OC.requestToken === 'string' && OC.requestToken !== '') {
 			return OC.requestToken;
 		}
-		const meta = document.head.querySelector('meta[name="requesttoken"]');
+		const fromHead = document.head ? document.head.getAttribute('data-requesttoken') : null;
+		if (fromHead) {
+			return fromHead;
+		}
+		const meta = document.head ? document.head.querySelector('meta[name="requesttoken"]') : null;
 		if (meta && meta.content) {
 			return meta.content;
 		}
