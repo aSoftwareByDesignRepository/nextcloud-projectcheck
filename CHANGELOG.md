@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.97 - 2026-08-13
+
+### Fixed
+
+- **App Store `info.xml` language codes:** store listing `summary` / `description` use `lang="pt-br"` (App Store XSD enumeration). In-app catalogs remain `l10n/pt_BR.*`; only the store metadata attribute changed.
+
+## 2.0.96 - 2026-08-13
+
+### Added
+
+- **Brazilian Portuguese (pt_BR):** full UI catalog (`l10n/pt_BR.json` / `pt_BR.js`) with printf/named-placeholder parity, product-name preservation, and `nplurals=2` plural rule. Regional locale codes `pt_BR` and `pt-BR` resolve via `JsL10nCatalogBuilder`. Store listing summary/description in `info.xml`.
+
+### Fixed
+
+- **l10n parity:** backfilled eight CustomerCheck CRM-link strings into fr/es/da/nl/it/pl/sv/nb so all locale catalogs share the same msgid set as English.
+- **Locale file resolution:** hyphenated regional tags (e.g. `pt-BR`) now map to underscore catalog files (`pt_BR.json`).
+- **Time entry unit mocks:** rate-resolution tests stub `canUserAddTimeEntryForProject` (parity with create ACL).
+- **Version files:** `appinfo/version` aligned with `info.xml` / `package.json`.
+- **Lucide catalog:** register `arrow-down` and `check` used by the project form (audit gate).
+
 ## 2.0.95 - 2026-08-10
 
 ### Fixed

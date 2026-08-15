@@ -7,6 +7,7 @@
     <testsuites>
         <testsuite name="unit">
             <directory suffix="Test.php">tests/Unit/AppInfo</directory>
+            <directory suffix="Test.php">tests/Unit/Activity</directory>
             <directory suffix="Test.php">tests/Unit/Controller</directory>
             <directory suffix="Test.php">tests/Unit/Listener</directory>
             <directory suffix="Test.php">tests/Unit/Middleware</directory>

@@ -16,6 +16,7 @@
 	<summary lang="pl">Zarządzanie projektami IT z rejestracją czasu i kontrolą budżetu</summary>
 	<summary lang="sv">IT-projektledning med tidrapportering och budgetkontroll</summary>
 	<summary lang="nb">IT-prosjektstyring med tidsregistrering og budsjettkontroll</summary>
+	<summary lang="pt-br">Controle projetos, tempo e orçamentos no seu Nextcloud</summary>
 	<description><![CDATA[
 # Projects, time and budgets — in one place.
 
@@ -168,8 +169,21 @@ timesatser på tidsregistreringer beregnes på serveren fra historikk med ikraft
 - WCAG-orientert grensesnitt i Check-appfamilien
 - Kun-tilleggs satshistorikk
 	]]></description>
+	<description lang="pt-br"><![CDATA[
+# ProjectCheck
 
-	<version>2.0.95</version>
+Gestão de projetos de TI com registro de horas, controle orçamentário e precificação de custos no servidor.
+Escolha como as horas são precificadas (taxa do projeto, dados mestres do colaborador ou por pessoa no projeto);
+as taxas horárias nos lançamentos são resolvidas no servidor a partir do histórico com data de vigência.
+
+## Recursos
+
+- Gestão de projetos e clientes, atribuição de equipe, monitoramento de orçamento
+- Interface orientada a WCAG, alinhada à família de apps Check
+- Histórico de taxas apenas com inclusão (append-only)
+	]]></description>
+
+	<version>2.0.97</version>
 	<licence>AGPL-3.0-or-later</licence>
 	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de">Alexander M&#xE4;ule</author>
 
@@ -237,6 +251,12 @@ timesatser på tidsregistreringer beregnes på serveren fra historikk med ikraft
 		<admin>OCA\ProjectCheck\Settings\AdminSettings</admin>
 		<personal>OCA\ProjectCheck\Settings\PersonalSettings</personal>
 	</settings>
+
+	<activity>
+		<providers>
+			<provider>OCA\ProjectCheck\Activity\Provider</provider>
+		</providers>
+	</activity>
 
 	<repair-steps>
 		<install>

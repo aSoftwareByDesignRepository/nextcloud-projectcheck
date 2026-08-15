@@ -57,11 +57,25 @@ class LocaleFormatServiceTest extends TestCase
 
 		$l = $this->createMock(IL10N::class);
 		$l->method('l')->willReturnCallback(function ($type, $value, $opts = []) {
-			if ($type === 'date' && $value instanceof \DateTime) {
-				return $value->format('d.m.Y');
+			// Mirror Nextcloud L10N::l — DateTimeImmutable falls through to (int)$obj === 1.
+			if ($value instanceof \DateTimeImmutable) {
+				$value = 1;
 			}
-			if ($type === 'datetime' && $value instanceof \DateTime) {
-				return $value->format('d.m.Y H:i');
+			$ts = null;
+			if ($value instanceof \DateTime) {
+				$ts = $value->getTimestamp();
+			} elseif (is_int($value) || (is_string($value) && is_numeric($value))) {
+				$ts = (int)$value;
+			}
+			if ($ts === null) {
+				return false;
+			}
+			$dt = (new \DateTime())->setTimestamp($ts);
+			if ($type === 'date') {
+				return $dt->format('d.m.Y');
+			}
+			if ($type === 'datetime') {
+				return $dt->format('d.m.Y H:i');
 			}
 			return false;
 		});
@@ -140,6 +154,14 @@ class LocaleFormatServiceTest extends TestCase
 	{
 		$svc = $this->build('de_DE');
 		$this->assertSame('30.04.2026', $svc->date('2026-04-30'));
+	}
+
+	public function testDateAcceptsDateTimeImmutableWithoutEpoch(): void
+	{
+		$svc = $this->build('de_DE');
+		$out = $svc->date(new \DateTimeImmutable('2026-09-13T12:00:00'));
+		$this->assertSame('13.09.2026', $out);
+		$this->assertStringNotContainsString('1970', $out);
 	}
 
 	public function testDateAcceptsTimestamp(): void

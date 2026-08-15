@@ -113,9 +113,11 @@ class ActivityService
             ->setAffectedUser($userId)
             ->setObject('project', $project->getId(), $project->getName())
             ->setSubject('project_deleted', [
-                'project_name' => $project->getName(),
+                'actor' => $userId,
+                'project' => $project->getName(),
+                'project_id' => $project->getId(),
                 'time_entries' => $impact['time_entries'] ?? 0,
-                'project_members' => $impact['project_members'] ?? 0
+                'project_members' => $impact['project_members'] ?? 0,
             ]);
 
         $this->publishSafely($event, 'project_deleted');

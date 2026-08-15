@@ -20,7 +20,8 @@ function pcPrintfPlaceholders(string $s): array {
 	return $m[0];
 }
 
-foreach (['en.json', 'de.json'] as $file) {
+$localeFiles = ['en.json', 'de.json', 'pt_BR.json'];
+foreach ($localeFiles as $file) {
 	$path = $base . '/' . $file;
 	if (!is_file($path)) {
 		fwrite(STDERR, "Missing locale file: $path\n");
@@ -29,34 +30,44 @@ foreach (['en.json', 'de.json'] as $file) {
 }
 
 $en = json_decode((string)file_get_contents($base . '/en.json'), true, 512, JSON_THROW_ON_ERROR);
-$de = json_decode((string)file_get_contents($base . '/de.json'), true, 512, JSON_THROW_ON_ERROR);
-
 $enT = $en['translations'] ?? [];
-$deT = $de['translations'] ?? [];
 
 $failed = false;
 
-foreach ($enT as $key => $enVal) {
-	$keyPh = pcPrintfPlaceholders($key);
-	if ($keyPh === []) {
-		continue;
-	}
-	if (!isset($deT[$key])) {
-		continue;
-	}
-	$enPh = pcPrintfPlaceholders((string)$enVal);
-	$dePh = pcPrintfPlaceholders((string)$deT[$key]);
-	if ($enPh !== $keyPh) {
-		$failed = true;
-		fwrite(STDERR, "en.json placeholder mismatch for key: $key\n");
-		fwrite(STDERR, "  expected: " . implode(', ', $keyPh) . "\n");
-		fwrite(STDERR, "  got:      " . implode(', ', $enPh) . "\n");
-	}
-	if ($dePh !== $keyPh) {
-		$failed = true;
-		fwrite(STDERR, "de.json placeholder mismatch for key: $key\n");
-		fwrite(STDERR, "  expected: " . implode(', ', $keyPh) . "\n");
-		fwrite(STDERR, "  got:      " . implode(', ', $dePh) . "\n");
+foreach ($localeFiles as $file) {
+	$lang = basename($file, '.json');
+	$cat = json_decode((string)file_get_contents($base . '/' . $file), true, 512, JSON_THROW_ON_ERROR);
+	$langT = $cat['translations'] ?? [];
+
+	foreach ($enT as $key => $enVal) {
+		$keyPh = pcPrintfPlaceholders($key);
+		if ($keyPh === []) {
+			continue;
+		}
+		if (!isset($langT[$key])) {
+			continue;
+		}
+		$val = $langT[$key];
+		if (is_array($val)) {
+			foreach ($val as $idx => $form) {
+				$formPh = pcPrintfPlaceholders((string)$form);
+				// Plural forms may omit %n in some languages; require msgid placeholders ⊆ form or equal when present.
+				if ($formPh !== [] && $formPh !== $keyPh && $formPh !== pcPrintfPlaceholders((string)$enVal)) {
+					$failed = true;
+					fwrite(STDERR, "{$lang}.json plural placeholder mismatch for key: $key [{$idx}]\n");
+					fwrite(STDERR, "  expected: " . implode(', ', $keyPh) . "\n");
+					fwrite(STDERR, "  got:      " . implode(', ', $formPh) . "\n");
+				}
+			}
+			continue;
+		}
+		$langPh = pcPrintfPlaceholders((string)$val);
+		if ($langPh !== $keyPh) {
+			$failed = true;
+			fwrite(STDERR, "{$lang}.json placeholder mismatch for key: $key\n");
+			fwrite(STDERR, "  expected: " . implode(', ', $keyPh) . "\n");
+			fwrite(STDERR, "  got:      " . implode(', ', $langPh) . "\n");
+		}
 	}
 }
 
@@ -65,5 +76,5 @@ if ($failed) {
 	exit(1);
 }
 
-echo "l10n placeholder check OK (en/de printf placeholders match msgids).\n";
+echo "l10n placeholder check OK (en/de/pt_BR printf placeholders match msgids).\n";
 exit(0);

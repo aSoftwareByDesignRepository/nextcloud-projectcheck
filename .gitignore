@@ -29,6 +29,7 @@ logs/
 # Cache
 .cache/
 *.cache
+scripts/l10n_maps/pt_BR-cache.json
 
 # Temporary files
 tmp/

@@ -61,6 +61,7 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 
 		$projectService = $this->createMock(ProjectService::class);
 		$projectService->method('canUserAccessProject')->willReturn(true);
+		$projectService->method('canUserAddTimeEntryForProject')->willReturn(true);
 
 		$hourlyRateService = $this->createMock(HourlyRateService::class);
 		$hourlyRateService->method('resolveForTimeEntry')->willReturn(62.5);
@@ -103,6 +104,7 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 
 		$projectService = $this->createMock(ProjectService::class);
 		$projectService->method('canUserAccessProject')->willReturn(true);
+		$projectService->method('canUserAddTimeEntryForProject')->willReturn(true);
 
 		$hourlyRateService = $this->createMock(HourlyRateService::class);
 		$hourlyRateService->method('resolveForTimeEntry')->willReturn(50.0);
@@ -154,6 +156,7 @@ class TimeEntryServiceRateResolutionTest extends TestCase
 
 		$projectService = $this->createMock(ProjectService::class);
 		$projectService->method('canUserAccessProject')->willReturn(true);
+		$projectService->method('canUserAddTimeEntryForProject')->willReturn(true);
 
 		$hourlyRateService = $this->createMock(HourlyRateService::class);
 		$hourlyRateService->expects($this->once())

@@ -67,7 +67,8 @@ class JsL10nCatalogBuilder
 	}
 
 	/**
-	 * Nextcloud may report de_DE; we ship de.json. Try a small candidate list.
+	 * Nextcloud may report de_DE / pt_BR / pt-BR; we ship de.json and pt_BR.json.
+	 * Try a small candidate list (exact, hyphen↔underscore, then primary subtag).
 	 */
 	private function resolveLocaleJsonFile(): ?string
 	{
@@ -77,6 +78,8 @@ class JsL10nCatalogBuilder
 			array_filter(
 				[
 					$raw,
+					str_contains($raw, '-') ? str_replace('-', '_', $raw) : null,
+					str_contains($raw, '_') ? str_replace('_', '-', $raw) : null,
 					$this->primarySubtag($raw, '-'),
 					$this->primarySubtag($raw, '_'),
 				],

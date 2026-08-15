@@ -63,4 +63,36 @@ final class ActivityServiceProjectAuditTest extends TestCase
 		$svc = new ActivityService($manager, $this->createMock(LoggerInterface::class));
 		$svc->logProjectUpdated('bob', $project, ['name', 'status', '']);
 	}
+
+	public function testLogProjectDeletedUsesProviderCompatibleParams(): void
+	{
+		$event = $this->createMock(IEvent::class);
+		$event->method('setApp')->willReturnSelf();
+		$event->method('setType')->willReturnSelf();
+		$event->method('setAuthor')->willReturnSelf();
+		$event->method('setAffectedUser')->willReturnSelf();
+		$event->method('setObject')->willReturnSelf();
+		$event->expects(self::once())->method('setSubject')->with('project_deleted', self::callback(
+			static fn (array $p): bool => ($p['actor'] ?? null) === 'carol'
+				&& ($p['project'] ?? null) === 'Gamma'
+				&& ($p['project_id'] ?? null) === 9
+				&& ($p['time_entries'] ?? null) === 4
+				&& ($p['project_members'] ?? null) === 2
+				&& !array_key_exists('project_name', $p)
+		))->willReturnSelf();
+
+		$manager = $this->createMock(IManager::class);
+		$manager->method('generateEvent')->willReturn($event);
+		$manager->expects(self::once())->method('publish')->with($event);
+
+		$project = new Project();
+		$project->setId(9);
+		$project->setName('Gamma');
+
+		$svc = new ActivityService($manager, $this->createMock(LoggerInterface::class));
+		$svc->logProjectDeleted('carol', $project, [
+			'time_entries' => 4,
+			'project_members' => 2,
+		]);
+	}
 }

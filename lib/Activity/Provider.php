@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Activity;
 
+use OCA\ProjectCheck\AppInfo\Application;
+use OCP\Activity\Exceptions\UnknownActivityException;
 use OCP\Activity\IEvent;
-use OCP\Activity\IEventMerger;
-use OCP\Activity\IManager;
 use OCP\Activity\IProvider;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -24,52 +24,22 @@ use OCP\IUserManager;
  */
 class Provider implements IProvider
 {
-	/** @var IL10N */
-	private $l10n;
-
-	/** @var IURLGenerator */
-	private $urlGenerator;
-
-	/** @var IUserManager */
-	private $userManager;
-
-	/**
-	 * Provider constructor
-	 *
-	 * @param IL10N $l10n
-	 * @param IURLGenerator $urlGenerator
-	 * @param IUserManager $userManager
-	 */
 	public function __construct(
-		IL10N $l10n,
-		IURLGenerator $urlGenerator,
-		IUserManager $userManager
+		private IL10N $l10n,
+		private IURLGenerator $urlGenerator,
+		private IUserManager $userManager,
 	) {
-		$this->l10n = $l10n;
-		$this->urlGenerator = $urlGenerator;
-		$this->userManager = $userManager;
 	}
 
 	/**
 	 * @param string $language The language which should be used for translating, e.g. "en"
-	 * @param IEvent $event
-	 * @param IEvent|null $previousEvent A previous event which you can combine with the current one.
-	 *                                    To do so, simply use setChildEvent($previousEvent) after setting
-	 *                                    the combined text, then return the current event. The previous
-	 *                                    one will be deleted automatically.
-	 *
-	 * @return IEvent
-	 * @throws \InvalidArgumentException Should be thrown if your provider does not know this event
-	 * @since 11.0.0
+	 * @throws UnknownActivityException when the event is not owned/known by this provider
 	 */
-	public function parse($language, IEvent $event, ?IEvent $previousEvent = null)
+	public function parse($language, IEvent $event, ?IEvent $previousEvent = null): IEvent
 	{
-		if ($event->getApp() !== 'projectcheck') {
-			throw new \InvalidArgumentException();
+		if ($event->getApp() !== Application::APP_ID) {
+			throw new UnknownActivityException();
 		}
-
-		// Set language for translations
-		// Note: setLanguageFromRequest() is not available in all Nextcloud versions
 
 		$subject = $this->getSubject($event);
 		$message = $this->getMessage($event);
@@ -145,7 +115,7 @@ class Provider implements IProvider
 				$subject = $this->l10n->t('Project {project} has reached {percentage}% of its budget');
 				break;
 			default:
-				$subject = $event->getSubject();
+				throw new UnknownActivityException();
 		}
 
 		return $subject;
@@ -172,12 +142,13 @@ class Provider implements IProvider
 			];
 		}
 
-		// Add project
-		if (isset($parameters['project'])) {
+		// Add project (legacy publishers used project_name)
+		$projectLabel = $parameters['project'] ?? $parameters['project_name'] ?? null;
+		if ($projectLabel !== null) {
 			$richParameters['project'] = [
 				'type' => 'project',
 				'id' => $parameters['project_id'] ?? 0,
-				'name' => $parameters['project'],
+				'name' => $projectLabel,
 				'link' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $parameters['project_id'] ?? 0])
 			];
 		}

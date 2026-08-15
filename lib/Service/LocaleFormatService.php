@@ -163,6 +163,9 @@ class LocaleFormatService
 	/**
 	 * Locale-aware short date (e.g. `30.04.2026` for de_DE).
 	 *
+	 * Passes a Unix timestamp into {@see IL10N::l()} — Nextcloud only accepts
+	 * mutable {@see \DateTime} or int; {@see \DateTimeImmutable} would render as 1970-01-01.
+	 *
 	 * @param DateTimeInterface|string|int|null $value
 	 */
 	public function date($value, string $width = 'short'): string
@@ -171,7 +174,7 @@ class LocaleFormatService
 		if ($dt === null) {
 			return '—';
 		}
-		$out = $this->getL10n()->l('date', $dt, ['width' => $width]);
+		$out = $this->getL10n()->l('date', $dt->getTimestamp(), ['width' => $width]);
 		if (is_string($out) && $out !== '') {
 			return $out;
 		}
@@ -189,7 +192,7 @@ class LocaleFormatService
 		if ($dt === null) {
 			return '—';
 		}
-		$out = $this->getL10n()->l('datetime', $dt, ['width' => $width]);
+		$out = $this->getL10n()->l('datetime', $dt->getTimestamp(), ['width' => $width]);
 		if (is_string($out) && $out !== '') {
 			return $out;
 		}
