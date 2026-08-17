@@ -1,0 +1,22 @@
+{
+	"After saving, add your team so people can log time": "Tras guardar, añada su equipo para que las personas puedan registrar el tiempo",
+	"Create your first project to get started!": "Cree su primer proyecto para comenzar.",
+	"DD/MM/YYYY": "DD/MM/AAAA",
+	"Error": "Error del sistema",
+	"Go to your Nextcloud": "Vaya a su Nextcloud",
+	"Log your time": "Registre su tiempo",
+	"MM/DD/YYYY": "MM/DD/AAAA",
+	"Project created. Add your team next so people can log time.": "Proyecto creado. A continuación, añada su equipo para que se pueda registrar el tiempo.",
+	"Total": "Importe total",
+	"User search failed. Check your connection and try again.": "La búsqueda de usuarios falló. Compruebe su conexión e inténtelo de nuevo.",
+	"YYYY-MM-DD": "AAAA-MM-DD",
+	"You are not on this project team, but your administrator role lets you record your own time here.": "No forma parte del equipo de este proyecto, pero su rol de administrador le permite registrar aquí su propio tiempo.",
+	"You can only open your own employee profile unless you are an administrator.": "Solo puede abrir su propio perfil de empleado, salvo que sea administrador.",
+	"Your latest project activities": "Últimas actividades del proyecto",
+	"Your time entry": "Su registro horario",
+	"Your work overview": "Resumen de su trabajo",
+	"total": "importe",
+	"Error: %s": "Error del sistema: %s",
+	"Total: %s": "Importe total: %s",
+	"Total: {hours}": "Horas totales: {hours}"
+}

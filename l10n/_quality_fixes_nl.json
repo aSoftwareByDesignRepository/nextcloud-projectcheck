@@ -1,0 +1,20 @@
+{
+	"Budget:": "Budgetlimiet:",
+	"Email": "E-mail",
+	"Hours and costs for people you can see.": "Uren en kosten voor personen waartoe u toegang hebt.",
+	"Info:": "Informatie:",
+	"Menu": "Menukaart",
+	"Open": "Openstaand",
+	"Open and invoiced hours on projects you manage.": "Open en gefactureerde uren op projecten die u beheert.",
+	"PROJECT": "PROJEKT",
+	"Project": "Projectwerk",
+	"STATUS": "Status",
+	"Start": "Starten",
+	"Step 1 of 2": "Stap 1 van 2",
+	"The numbers changed while you were looking at them. The preview has been refreshed — please check again.": "De aantallen zijn gewijzigd terwijl u ernaar keek. De voorvertoning is vernieuwd — controleer opnieuw.",
+	"Too many rows to export (limit %s). Narrow your filters and try again.": "Te veel rijen om te exporteren (limiet %s). Beperk de filters en probeer het opnieuw.",
+	"Type": "Soort",
+	"product": "productontwikkeling",
+	"Project: %s": "Projectwerk: %s",
+	"Step 1 of 2: invoice all open hours. After you confirm, you will review invoiced hours before marking them paid. Nothing skips the invoiced step.": "Stap 1 van 2: alle open uren factureren. Na bevestiging worden gefactureerde uren beoordeeld voordat ze als betaald worden gemarkeerd. De stap gefactureerd wordt niet overgeslagen."
+}
