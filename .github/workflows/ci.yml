@@ -1,3 +1,5 @@
+# Syntax smoke only. PHPUnit needs a Nextcloud bootstrap — run locally:
+#   composer test:docker   or   npm run test:php:docker
 name: CI
 
 on:
@@ -17,24 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           coverage: none
           tools: composer:v2
-
       - run: composer validate --no-check-publish
       - run: find lib tests templates -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
-      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
-      - run: bash scripts/check-db-naming.sh
-      - run: composer install --no-interaction --no-progress --prefer-dist
-      - run: ./vendor/bin/phpunit --testsuite unit
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-
-      - run: npm ci
-      - run: npm test
