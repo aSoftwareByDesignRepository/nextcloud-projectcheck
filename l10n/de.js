@@ -1764,7 +1764,8 @@ OC.L10N.register(
 	"🔬 Research & Development" : "🔬 Forschung & Entwicklung",
 	"Setup & training" : "Einrichtung & Schulung",
 	"Commissioned feature" : "Beauftragte Funktion",
-	"Mobile & terminal" : "Mobil & Terminal"
+	"Mobile & terminal" : "Mobil & Terminal",
+	"(opens in a new tab)" : "(öffnet in neuem Tab)"
 	},
 	"nplurals=2; plural=(n != 1);"
 );

@@ -1,0 +1,44 @@
+{
+  "identical": [
+    "Info:",
+    "Menu",
+    "STATUS",
+    "Version:"
+  ],
+  "informal": [
+    "Only your data is shown",
+    "Per-person pricing is used for this project. You must be on the team with an hourly rate to log time here. Ask a project manager to add you under Team.",
+    "These users can open ProjectCheck settings and the in-app organization page. System administrators are always included.",
+    "This project uses one fixed hourly rate for everyone. Your entry will be billed at that project rate.",
+    "You are not on this project team, but your administrator role lets you record your own time here.",
+    "You are not on this project team. Your administrator role lets you record your own time here only.",
+    "You must be on the project team to log time. Ask a project manager to add you under Team on the project page.",
+    "Your default hourly rate for time entries",
+    "Your latest project activities",
+    "Your latest time tracking activities",
+    "Your preferences were saved.",
+    "Your session may have expired. Sign in again, then return to this page.",
+    "Your time entry",
+    "Your work overview"
+  ],
+  "all": [
+    "Info:",
+    "Menu",
+    "Only your data is shown",
+    "Per-person pricing is used for this project. You must be on the team with an hourly rate to log time here. Ask a project manager to add you under Team.",
+    "STATUS",
+    "These users can open ProjectCheck settings and the in-app organization page. System administrators are always included.",
+    "This project uses one fixed hourly rate for everyone. Your entry will be billed at that project rate.",
+    "Version:",
+    "You are not on this project team, but your administrator role lets you record your own time here.",
+    "You are not on this project team. Your administrator role lets you record your own time here only.",
+    "You must be on the project team to log time. Ask a project manager to add you under Team on the project page.",
+    "Your default hourly rate for time entries",
+    "Your latest project activities",
+    "Your latest time tracking activities",
+    "Your preferences were saved.",
+    "Your session may have expired. Sign in again, then return to this page.",
+    "Your time entry",
+    "Your work overview"
+  ]
+}

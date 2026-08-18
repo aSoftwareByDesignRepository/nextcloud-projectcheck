@@ -1,0 +1,46 @@
+{
+  "identical": [
+    "DD/MM/YYYY",
+    "Error: %s",
+    "MM/DD/YYYY",
+    "Total",
+    "total",
+    "Total: %s",
+    "Total: {hours}",
+    "YYYY-MM-DD"
+  ],
+  "informal": [
+    "After saving, add your team so people can log time",
+    "Create your first project to get started!",
+    "Go to your Nextcloud",
+    "Log your time",
+    "Project created. Add your team next so people can log time.",
+    "User search failed. Check your connection and try again.",
+    "You are not on this project team, but your administrator role lets you record your own time here.",
+    "You can only open your own employee profile unless you are an administrator.",
+    "Your latest project activities",
+    "Your time entry",
+    "Your work overview"
+  ],
+  "all": [
+    "After saving, add your team so people can log time",
+    "Create your first project to get started!",
+    "DD/MM/YYYY",
+    "Error: %s",
+    "Go to your Nextcloud",
+    "Log your time",
+    "MM/DD/YYYY",
+    "Project created. Add your team next so people can log time.",
+    "Total",
+    "Total: %s",
+    "Total: {hours}",
+    "User search failed. Check your connection and try again.",
+    "YYYY-MM-DD",
+    "You are not on this project team, but your administrator role lets you record your own time here.",
+    "You can only open your own employee profile unless you are an administrator.",
+    "Your latest project activities",
+    "Your time entry",
+    "Your work overview",
+    "total"
+  ]
+}

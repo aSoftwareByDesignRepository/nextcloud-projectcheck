@@ -1,0 +1,41 @@
+{
+  "identical": [
+    "Actions",
+    "Classification",
+    "client",
+    "DATE",
+    "Date",
+    "DD/MM/YYYY",
+    "DESCRIPTION",
+    "Description",
+    "Menu",
+    "MM/DD/YYYY",
+    "Notifications",
+    "Page",
+    "Pagination",
+    "Total",
+    "total",
+    "Version:",
+    "YYYY-MM-DD"
+  ],
+  "informal": [],
+  "all": [
+    "Actions",
+    "Classification",
+    "DATE",
+    "DD/MM/YYYY",
+    "DESCRIPTION",
+    "Date",
+    "Description",
+    "MM/DD/YYYY",
+    "Menu",
+    "Notifications",
+    "Page",
+    "Pagination",
+    "Total",
+    "Version:",
+    "YYYY-MM-DD",
+    "client",
+    "total"
+  ]
+}
