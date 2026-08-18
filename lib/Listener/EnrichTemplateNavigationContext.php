@@ -100,6 +100,9 @@ class EnrichTemplateNavigationContext implements IEventListener
 		if (!isset($params['settingsUrl'])) {
 			$params['settingsUrl'] = $this->urlGenerator->linkToRoute('projectcheck.app_config.settingsIndex');
 		}
+		if (!isset($params['getTheAppUrl'])) {
+			$params['getTheAppUrl'] = $this->urlGenerator->linkToRoute('projectcheck.page.getTheApp');
+		}
 		if (($canManageSettings || $canManageOrganization)
 			&& (!isset($params['settingsSectionLabels']) || !is_array($params['settingsSectionLabels']) || $params['settingsSectionLabels'] === [])
 		) {

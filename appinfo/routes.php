@@ -13,6 +13,7 @@ return [
 	'routes' => [
 		// Main page route
 		['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
+		['name' => 'page#getTheApp', 'url' => '/get-the-app', 'verb' => 'GET'],
 
 		// Public probe (mobile login reachability + ops) — no auth, no version fingerprint
 		['name' => 'health#check', 'url' => '/health', 'verb' => 'GET'],

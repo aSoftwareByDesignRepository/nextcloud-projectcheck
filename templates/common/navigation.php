@@ -31,6 +31,7 @@ use OCA\ProjectCheck\Service\IconCatalog;
 // Centralised icon catalog and hydration (audit ref. AUDIT-FINDINGS H22/icon-dedup).
 // Replaces six duplicated inline svgIcons blocks across page templates.
 \OCP\Util::addScript('projectcheck', 'common/icons');
+\OCP\Util::addScript('projectcheck', 'common/app-feedback');
 
 // Get current page to highlight active navigation item
 $currentPage = $_SERVER['REQUEST_URI'] ?? '';
@@ -40,6 +41,8 @@ $isEmployees = strpos($currentPage, '/employees') !== false;
 $isTimeEntries = strpos($currentPage, '/time-entries') !== false;
 $isSettings = strpos($currentPage, '/settings') !== false;
 $isOrganization = strpos($currentPage, '/organization') !== false;
+$isGetTheApp = strpos($currentPage, '/get-the-app') !== false
+	|| (string)($_['pageId'] ?? '') === 'get-the-app';
 // Injected by EnrichTemplateNavigationContext (BeforeTemplateRendered); safe fallbacks for edge cases.
 $canManageSettings = $canManageSettings ?? ($_['canManageSettings'] ?? $_['canManageOrg'] ?? false);
 $canManageOrganization = $canManageOrganization ?? ($_['canManageOrganization'] ?? $_['canManageOrg'] ?? false);
@@ -51,7 +54,7 @@ $settingsSectionUrls = (array)(($_['urls']['settingsSections'] ?? []) ?: ($_['se
 $isOnSettings = $isSettings || $isOrganization || $settingsSection !== '';
 // Dashboard is active if URL contains /dashboard OR if it's the base app URL without any specific section
 $isDashboard = strpos($currentPage, '/dashboard') !== false ||
-	(!$isProjects && !$isCustomers && !$isEmployees && !$isTimeEntries && !$isSettings && !$isOrganization &&
+	(!$isProjects && !$isCustomers && !$isEmployees && !$isTimeEntries && !$isSettings && !$isOrganization && !$isGetTheApp &&
 		strpos($currentPage, '/apps/projectcheck') !== false);
 
 $navPageId = 'dashboard';
@@ -65,6 +68,8 @@ if ($isTimeEntries) {
 	$navPageId = 'employees';
 } elseif ($isOnSettings) {
 	$navPageId = 'settings';
+} elseif ($isGetTheApp) {
+	$navPageId = 'get-the-app';
 } elseif ($isDashboard) {
 	$navPageId = 'dashboard';
 }
@@ -154,6 +159,19 @@ if ($canAccessSettings) {
 	];
 }
 
+$groups[] = [
+	'title' => $l->t('Companion'),
+	'items' => [
+		[
+			'id' => 'get-the-app',
+			'label' => $l->t('Get the App'),
+			'hint' => $l->t('Android app on Google Play'),
+			'icon' => 'smartphone',
+			'url' => $_['getTheAppUrl'] ?? ($_['urls']['getTheApp'] ?? '/index.php/apps/projectcheck/get-the-app'),
+		],
+	],
+];
+
 include __DIR__ . '/pc-l10n-bootstrap.php';
 ?>
 
@@ -207,4 +225,5 @@ include __DIR__ . '/pc-l10n-bootstrap.php';
 			</ul>
 		</div>
 	<?php endforeach; ?>
+	<?php include __DIR__ . '/../parts/feedback-nav-footer.php'; ?>
 </div>

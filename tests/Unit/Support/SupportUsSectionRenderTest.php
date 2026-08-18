@@ -24,6 +24,11 @@ final class SupportUsSectionRenderTest extends TestCase {
 			'en'
 		);
 		self::assertStringContainsString('data-support-us="1"', $html);
+		self::assertStringContainsString('data-support-us-presentation="embed"', $html);
+		self::assertStringContainsString('support-us__option-title', $html);
+		self::assertStringContainsString('Setup &amp; training', $html);
+		self::assertStringContainsString('Ask about setup or training', $html);
+		self::assertStringContainsString('Commissioned feature', $html);
 		self::assertStringContainsString('Check Partner', $html);
 		self::assertStringContainsString('invoiceable service', $html);
 		self::assertStringContainsString('individual partner offer', $html);
@@ -50,6 +55,7 @@ final class SupportUsSectionRenderTest extends TestCase {
 			'de'
 		);
 		self::assertStringContainsString('Official mobile &amp; terminal licenses', $html);
+		self::assertStringContainsString('Mobile &amp; terminal', $html);
 		self::assertStringContainsString('software licence on invoice', $html);
 		self::assertStringContainsString('href="/apps/projectcheck/admin/license"', $html);
 		self::assertStringContainsString(rawurlencode('ProjectCheck: Partner / Care Retainer'), $html);
@@ -66,12 +72,12 @@ final class SupportUsSectionRenderTest extends TestCase {
 				'Ask for a partner offer' => 'Partner-Angebot anfragen',
 				'Check Partner' => 'Check Partner',
 				'Annual hour packs — Small, Standard, or Premium — with priority email for your organisation. This is invoiceable service — not a donation. See packages on our support page.' =>
-					'Jährliche Stundenpakete — Small, Standard oder Premium — plus priorisierte E-Mail für Ihre Organisation. Das ist eine verrechenbare Leistung — keine Spende. Pakete auf unserer Support-Seite.',
+					'Jährliche Stundenpakete — Small, Standard oder Premium — plus priorisierte E-Mail für Ihre Organisation. Verrechenbare Leistung, keine Spende. Pakete auf unserer Support-Seite.',
 			]
 		);
 		self::assertStringContainsString('Support &amp; wir', $html);
 		self::assertStringContainsString('Partner-Angebot anfragen', $html);
-		self::assertStringContainsString('verrechenbare Leistung', $html);
+		self::assertStringContainsString('Verrechenbare Leistung', $html);
 	}
 
 	/**

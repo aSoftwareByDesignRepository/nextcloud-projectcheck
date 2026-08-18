@@ -13,6 +13,7 @@ declare(strict_types=1);
  * @var string $supportUsBtnPrimaryClass
  * @var string $supportUsBtnSecondaryClass
  * @var string|null $supportUsLanguageCode optional override; defaults to $l->getLanguageCode()
+ * @var string|null $supportUsPresentation 'page' for dedicated Support & us screens
  *
  * @copyright Copyright (c) 2026, Software by Design GbR
  * @license AGPL-3.0-or-later
@@ -39,21 +40,31 @@ $btnPrimary = isset($supportUsBtnPrimaryClass) && is_string($supportUsBtnPrimary
 $btnSecondary = isset($supportUsBtnSecondaryClass) && is_string($supportUsBtnSecondaryClass) && $supportUsBtnSecondaryClass !== ''
 	? $supportUsBtnSecondaryClass
 	: 'button';
+$isPage = isset($supportUsPresentation) && $supportUsPresentation === 'page';
 $appName = (string)$links['appDisplayName'];
 $sectionId = $prefix . '-support-us';
 $titleId = $prefix . '-support-us-title';
 $introId = $prefix . '-support-us-intro';
 $partnerTitleId = $prefix . '-support-us-partner-title';
+$secondaryLabelId = $prefix . '-support-us-secondary-label';
 $hasMobile = !empty($links['hasOfficialMobileLicenses']) && !empty($links['licensePageUrl']);
+$sectionClass = $prefix . '-support-us';
+if ($isPage) {
+	$sectionClass .= ' ' . $prefix . '-support-us--page';
+} else {
+	$sectionClass = $shell . '-card ' . $shell . '-section ' . $sectionClass;
+}
+$newTab = $l->t('(opens in a new tab)');
 ?>
 <section
-	class="<?php p($shell); ?>-card <?php p($shell); ?>-section <?php p($prefix); ?>-support-us"
+	class="<?php p($sectionClass); ?>"
 	id="<?php p($sectionId); ?>"
 	aria-labelledby="<?php p($titleId); ?>"
 	aria-describedby="<?php p($introId); ?>"
 	data-support-us="1"
+	data-support-us-presentation="<?php p($isPage ? 'page' : 'embed'); ?>"
 >
-	<header class="<?php p($shell); ?>-section__header <?php p($prefix); ?>-support-us__header">
+	<header class="<?php p($shell); ?>-section__header <?php p($prefix); ?>-support-us__header<?php p($isPage ? ' ' . $prefix . '-support-us__header--page' : ''); ?>">
 		<div>
 			<h2 id="<?php p($titleId); ?>" class="<?php p($shell); ?>-card__title <?php p($prefix); ?>-support-us__title">
 				<?php p($l->t('Support & us')); ?>
@@ -75,67 +86,85 @@ $hasMobile = !empty($links['hasOfficialMobileLicenses']) && !empty($links['licen
 			class="<?php p($prefix); ?>-support-us__primary"
 			aria-labelledby="<?php p($partnerTitleId); ?>"
 		>
-			<h3 id="<?php p($partnerTitleId); ?>" class="<?php p($prefix); ?>-support-us__offer-title">
-				<?php p($l->t('Check Partner')); ?>
-			</h3>
-			<p class="<?php p($prefix); ?>-support-us__benefit">
-				<?php p($l->t('Annual hour packs — Small, Standard, or Premium — with priority email for your organisation. This is invoiceable service — not a donation. See packages on our support page.')); ?>
-			</p>
-			<p class="<?php p($prefix); ?>-support-us__coverage">
-				<?php p($l->t('List prices on our site apply to published Check apps. For this app, ask for an individual partner offer — we invoice only after you accept a quote.')); ?>
-			</p>
-			<a
-				class="<?php p($btnPrimary); ?> <?php p($prefix); ?>-support-us__cta <?php p($prefix); ?>-support-us__cta--primary"
-				href="<?php p($links['partnerMailto']); ?>"
-			>
-				<?php p($l->t('Ask for a partner offer')); ?>
-			</a>
-			<p class="<?php p($prefix); ?>-support-us__hint">
-				<?php p($l->t('Packages and terms:')); ?>
+			<div class="<?php p($prefix); ?>-support-us__primary-copy">
+				<h3 id="<?php p($partnerTitleId); ?>" class="<?php p($prefix); ?>-support-us__offer-title">
+					<?php p($l->t('Check Partner')); ?>
+				</h3>
+				<p class="<?php p($prefix); ?>-support-us__benefit">
+					<?php p($l->t('Annual hour packs — Small, Standard, or Premium — with priority email for your organisation. This is invoiceable service — not a donation. See packages on our support page.')); ?>
+				</p>
+				<p class="<?php p($prefix); ?>-support-us__coverage">
+					<?php p($l->t('List prices on our site apply to published Check apps. For this app, ask for an individual partner offer — we invoice only after you accept a quote.')); ?>
+				</p>
+			</div>
+			<div class="<?php p($prefix); ?>-support-us__primary-actions">
 				<a
-					href="<?php p($links['supportPageUrl']); ?>"
-					target="_blank"
-					rel="noopener noreferrer"
-				><?php p($l->t('Open support page')); ?></a>
-			</p>
+					class="<?php p($btnPrimary); ?> <?php p($prefix); ?>-support-us__cta <?php p($prefix); ?>-support-us__cta--primary"
+					href="<?php p($links['partnerMailto']); ?>"
+				>
+					<?php p($l->t('Ask for a partner offer')); ?>
+				</a>
+				<p class="<?php p($prefix); ?>-support-us__hint">
+					<?php p($l->t('Packages and terms:')); ?>
+					<a
+						href="<?php p($links['supportPageUrl']); ?>"
+						target="_blank"
+						rel="noopener noreferrer"
+					><?php p($l->t('Open support page')); ?><span class="<?php p($prefix); ?>-support-us__new-tab"><?php p($newTab); ?></span></a>
+				</p>
+			</div>
 		</div>
 
-		<div class="<?php p($prefix); ?>-support-us__secondary" role="group" aria-label="<?php p($l->t('Additional invoiceable options')); ?>">
-			<div class="<?php p($prefix); ?>-support-us__option">
-				<a
-					class="<?php p($btnSecondary); ?> <?php p($prefix); ?>-support-us__cta"
-					href="<?php p($links['onboardingMailto']); ?>"
-				>
-					<?php p($l->t('Ask about setup or training')); ?>
-				</a>
-				<p class="<?php p($prefix); ?>-support-us__option-hint">
-					<?php p($l->t('Remote onboarding or a workshop so your team can roll out cleanly — billed as a service.')); ?>
-				</p>
-			</div>
-			<div class="<?php p($prefix); ?>-support-us__option">
-				<a
-					class="<?php p($btnSecondary); ?> <?php p($prefix); ?>-support-us__cta"
-					href="<?php p($links['featureMailto']); ?>"
-				>
-					<?php p($l->t('Request a commissioned feature')); ?>
-				</a>
-				<p class="<?php p($prefix); ?>-support-us__option-hint">
-					<?php p($l->t('A scoped change with acceptance criteria and a delivery date — billed as project work.')); ?>
-				</p>
-			</div>
-			<?php if ($hasMobile): ?>
+		<div class="<?php p($prefix); ?>-support-us__secondary" role="group" aria-labelledby="<?php p($secondaryLabelId); ?>">
+			<h3 id="<?php p($secondaryLabelId); ?>" class="<?php p($prefix); ?>-support-us__secondary-title">
+				<?php p($l->t('Additional invoiceable options')); ?>
+			</h3>
+			<div class="<?php p($prefix); ?>-support-us__options">
 				<div class="<?php p($prefix); ?>-support-us__option">
-					<a
-						class="<?php p($btnSecondary); ?> <?php p($prefix); ?>-support-us__cta"
-						href="<?php p($links['licensePageUrl']); ?>"
-					>
-						<?php p($l->t('Official mobile & terminal licenses')); ?>
-					</a>
+					<h4 class="<?php p($prefix); ?>-support-us__option-title">
+						<?php p($l->t('Setup & training')); ?>
+					</h4>
 					<p class="<?php p($prefix); ?>-support-us__option-hint">
-						<?php p($l->t('Named seats for the official apps — a software licence on invoice.')); ?>
+						<?php p($l->t('Remote onboarding or a workshop so your team can roll out cleanly — billed as a service.')); ?>
 					</p>
+					<a
+						class="<?php p($btnSecondary); ?> <?php p($prefix); ?>-support-us__cta <?php p($prefix); ?>-support-us__cta--secondary"
+						href="<?php p($links['onboardingMailto']); ?>"
+					>
+						<?php p($l->t('Ask about setup or training')); ?>
+					</a>
 				</div>
-			<?php endif; ?>
+				<div class="<?php p($prefix); ?>-support-us__option">
+					<h4 class="<?php p($prefix); ?>-support-us__option-title">
+						<?php p($l->t('Commissioned feature')); ?>
+					</h4>
+					<p class="<?php p($prefix); ?>-support-us__option-hint">
+						<?php p($l->t('A scoped change with acceptance criteria and a delivery date — billed as project work.')); ?>
+					</p>
+					<a
+						class="<?php p($btnSecondary); ?> <?php p($prefix); ?>-support-us__cta <?php p($prefix); ?>-support-us__cta--secondary"
+						href="<?php p($links['featureMailto']); ?>"
+					>
+						<?php p($l->t('Request a commissioned feature')); ?>
+					</a>
+				</div>
+				<?php if ($hasMobile): ?>
+					<div class="<?php p($prefix); ?>-support-us__option">
+						<h4 class="<?php p($prefix); ?>-support-us__option-title">
+							<?php p($l->t('Mobile & terminal')); ?>
+						</h4>
+						<p class="<?php p($prefix); ?>-support-us__option-hint">
+							<?php p($l->t('Named seats for the official apps — a software licence on invoice.')); ?>
+						</p>
+						<a
+							class="<?php p($btnSecondary); ?> <?php p($prefix); ?>-support-us__cta <?php p($prefix); ?>-support-us__cta--secondary"
+							href="<?php p($links['licensePageUrl']); ?>"
+						>
+							<?php p($l->t('Official mobile & terminal licenses')); ?>
+						</a>
+					</div>
+				<?php endif; ?>
+			</div>
 		</div>
 
 		<div class="<?php p($prefix); ?>-support-us__tertiary">
@@ -144,13 +173,13 @@ $hasMobile = !empty($links['hasOfficialMobileLicenses']) && !empty($links['licen
 					href="<?php p($links['appsPageUrl']); ?>"
 					target="_blank"
 					rel="noopener noreferrer"
-				><?php p($l->t('More Check apps')); ?></a>
+				><?php p($l->t('More Check apps')); ?><span class="<?php p($prefix); ?>-support-us__new-tab"><?php p($newTab); ?></span></a>
 				<span aria-hidden="true"> · </span>
 				<a
 					href="<?php p($links['sponsorsUrl']); ?>"
 					target="_blank"
 					rel="noopener noreferrer"
-				><?php p($l->t('GitHub Sponsors (voluntary, no invoice SLA)')); ?></a>
+				><?php p($l->t('GitHub Sponsors (voluntary, no invoice SLA)')); ?><span class="<?php p($prefix); ?>-support-us__new-tab"><?php p($newTab); ?></span></a>
 			</p>
 			<p class="<?php p($prefix); ?>-support-us__contact">
 				<a href="<?php p($links['contactMailto']); ?>"><?php p($links['contactEmail']); ?></a>

@@ -276,3 +276,147 @@
 		border: 1px solid CanvasText;
 	}
 }
+
+/* === app-feedback:pc start === */
+#app-navigation .pc-nav-footer,
+.pc-nav .pc-nav-footer,
+.pc-app-nav .pc-nav-footer {
+	margin-top: auto;
+	flex-shrink: 0;
+	min-width: 0;
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--pc-space-4, 1rem)
+		var(--pc-space-3, 0.75rem)
+		max(var(--pc-space-5, 1.5rem), env(safe-area-inset-bottom, 0px));
+	border-top: 1px solid var(--pc-border, color-mix(in srgb, var(--color-main-text) 12%, var(--color-main-background)));
+	background: var(--color-main-background);
+	z-index: 1;
+}
+
+.pc-nav-footer__title {
+	margin: 0 0 var(--pc-space-2, 0.5rem);
+	font-size: var(--pc-fs-xs, 0.75rem);
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--color-text-maxcontrast);
+}
+
+.pc-nav-footer__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-1, 0.25rem);
+}
+
+.pc-nav-footer__link {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	/* WCAG 2.5.5: px, not rem — Nextcloud root font is 15px (2.75rem = 41.25px). */
+	min-height: 44px;
+	min-width: 44px;
+	padding: var(--pc-space-2, 0.5rem);
+	border-radius: var(--pc-radius-sm, 6px);
+	box-sizing: border-box;
+	color: var(--color-text-maxcontrast);
+	text-decoration: none;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: var(--pc-line-base, 1.45);
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.pc-nav-footer__link:hover {
+	background: var(--color-background-hover);
+	color: var(--color-main-text);
+}
+
+.pc-nav-footer__link:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+.pc-nav-footer__link:focus:not(:focus-visible),
+.pc-nav-footer__toast-link:focus:not(:focus-visible) {
+	outline: none;
+}
+
+.pc-nav-footer__hint {
+	margin: var(--pc-space-2, 0.5rem) 0 0;
+	font-size: var(--pc-fs-xs, 0.75rem);
+	line-height: 1.45;
+	color: var(--color-text-maxcontrast);
+	overflow-wrap: anywhere;
+}
+
+.pc-nav-footer__new-tab {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+.pc-nav-footer__toast-link {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	min-width: 44px;
+	margin-top: var(--pc-space-2, 0.5rem);
+	padding: 0;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: 1.45;
+	color: var(--color-error-text, var(--color-main-text));
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+	overflow-wrap: anywhere;
+}
+
+.pc-nav-footer__toast-link:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+}
+
+@media (prefers-contrast: more) {
+	#app-navigation .pc-nav-footer,
+	.pc-nav .pc-nav-footer,
+	.pc-app-nav .pc-nav-footer {
+		border-top-width: 2px;
+		border-top-color: var(--color-main-text);
+	}
+
+	.pc-nav-footer__link:focus-visible,
+	.pc-nav-footer__toast-link:focus-visible {
+		outline-width: 3px;
+	}
+}
+
+@media (forced-colors: active) {
+	.pc-nav-footer__link,
+	.pc-nav-footer__toast-link {
+		forced-color-adjust: none;
+		color: LinkText;
+	}
+
+	.pc-nav-footer__link:focus-visible,
+	.pc-nav-footer__toast-link:focus-visible {
+		outline: 3px solid Highlight;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pc-nav-footer__link,
+	.pc-nav-footer__toast-link {
+		transition: none;
+	}
+}
+/* === app-feedback:pc end === */
