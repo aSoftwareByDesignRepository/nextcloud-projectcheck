@@ -296,10 +296,10 @@
 
 .pc-nav-footer__title {
 	margin: 0 0 var(--pc-space-2, 0.5rem);
-	font-size: var(--pc-fs-xs, 0.75rem);
+	font-size: var(--pc-fs-sm, 0.875rem);
 	font-weight: 600;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
+	letter-spacing: 0;
+	text-transform: none;
 	color: var(--color-text-maxcontrast);
 }
 
@@ -309,7 +309,7 @@
 	padding: 0;
 	display: flex;
 	flex-direction: column;
-	gap: var(--pc-space-1, 0.25rem);
+	gap: var(--pc-space-1, 0.2rem);
 }
 
 .pc-nav-footer__link {
@@ -319,7 +319,7 @@
 	/* WCAG 2.5.5: px, not rem — Nextcloud root font is 15px (2.75rem = 41.25px). */
 	min-height: 44px;
 	min-width: 44px;
-	padding: var(--pc-space-2, 0.5rem);
+	padding: 0.375rem var(--pc-space-2, 0.5rem);
 	border-radius: var(--pc-radius-sm, 6px);
 	box-sizing: border-box;
 	color: var(--color-text-maxcontrast);
@@ -346,7 +346,7 @@
 }
 
 .pc-nav-footer__hint {
-	margin: var(--pc-space-2, 0.5rem) 0 0;
+	margin: var(--pc-space-1, 0.2rem) 0 0;
 	font-size: var(--pc-fs-xs, 0.75rem);
 	line-height: 1.45;
 	color: var(--color-text-maxcontrast);

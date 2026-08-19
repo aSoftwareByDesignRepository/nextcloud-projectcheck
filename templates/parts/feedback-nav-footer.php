@@ -60,9 +60,9 @@ $newTab = $l->t('(opens in a new tab)');
 	data-app-feedback-app="<?php p((string)$links['appId']); ?>"
 	aria-labelledby="<?php p($titleId); ?>"
 >
-	<p class="<?php p($prefix); ?>-nav-footer__title" id="<?php p($titleId); ?>">
+	<h3 class="<?php p($prefix); ?>-nav-footer__title" id="<?php p($titleId); ?>">
 		<?php p($l->t('Help')); ?>
-	</p>
+	</h3>
 	<ul class="<?php p($prefix); ?>-nav-footer__list">
 		<li>
 			<a
