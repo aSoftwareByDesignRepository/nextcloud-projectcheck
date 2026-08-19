@@ -185,7 +185,7 @@ as taxas horárias nos lançamentos são resolvidas no servidor a partir do hist
 
 	<version>2.0.98</version>
 	<licence>AGPL-3.0-or-later</licence>
-	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de">Alexander M&#xE4;ule</author>
+	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de">Software by Design GbR</author>
 
 	<namespace>ProjectCheck</namespace>
 
