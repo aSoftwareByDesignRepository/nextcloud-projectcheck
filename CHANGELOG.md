@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.98 - 2026-08-19
+
+### Improved
+
+- **Feedback footer UX:** cleaner layout and interaction for the in-app feedback footer.
+
+### Changed
+
+- **l10n glossary alignment:** corrected wrong translations and standardised button labels across all shipped locales to match the cross-app glossary.
+- **Help, Support & Us / Get the App:** WCAG 2.1 AA hardening and translated footer copy for all website footer locales.
+- **CI:** collapsed GitHub Actions to a single PHP syntax-only smoke job; full test suites stay local.
+- **Nextcloud:** `max-version` remains **34** (current stable **34.0.3**).
+
 ## 2.0.97 - 2026-08-13
 
 ### Fixed
