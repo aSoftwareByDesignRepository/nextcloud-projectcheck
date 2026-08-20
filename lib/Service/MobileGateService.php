@@ -108,6 +108,8 @@ class MobileGateService
 				'uid' => $uid,
 				'displayName' => $displayName,
 			],
+			// ISO-8601 with server TZ offset — companions sync calendar “today” from this.
+			'serverNow' => (new \DateTimeImmutable('now'))->format(\DateTimeInterface::ATOM),
 		];
 	}
 }

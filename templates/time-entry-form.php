@@ -245,8 +245,11 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 				}
 				$todayIso = (new \DateTime('today'))->format('Y-m-d');
 				?>
-				<div class="form-row form-row--split form-row--split-4">
-					<div class="form-group">
+				<div
+					class="form-row form-row--split form-row--metrics"
+					role="group"
+					aria-label="<?php p($l->t('Hours, rate, and total for this entry.')); ?>">
+					<div class="form-group form-group--date">
 						<label for="date" class="required"><?php p($l->t('Date')); ?></label>
 						<input type="date" name="date" id="date" class="form-input" required
 							lang="<?php p($htmlLang); ?>"
@@ -254,41 +257,39 @@ $membershipFlags = isset($_['projectMembershipFlags']) && is_array($_['projectMe
 							max="<?php p($todayIso); ?>"
 							autocomplete="off"
 							aria-describedby="date-hint date-error">
-						<p class="form-hint" id="date-hint"><?php p($l->t('Use the calendar or type the work date. Future dates are not allowed.')); ?></p>
-						<div class="error-message" id="date-error"></div>
+						<div class="error-message" id="date-error" aria-live="polite"></div>
 					</div>
 
-					<div class="form-group">
+					<div class="form-group form-group--hours">
 						<label for="hours" class="required"><?php p($l->t('Hours')); ?></label>
 						<input type="number" name="hours" id="hours" class="form-input" step="0.25" min="0.25" max="24" required
 							value="<?php p($isEdit ? $timeEntry->getHours() : ''); ?>"
-							placeholder="0.00">
-						<div class="error-message" id="hours-error"></div>
+							placeholder="0.00"
+							inputmode="decimal"
+							aria-describedby="hours-error">
+						<div class="error-message" id="hours-error" aria-live="polite"></div>
 					</div>
 
-					<details class="pc-advanced-details" id="pc-te-pricing-summary">
-						<summary class="pc-advanced-details__summary"><?php p($l->t('Rate & total (set by server)')); ?></summary>
-						<div class="pc-advanced-details__body">
-					<div class="form-group">
+					<div class="form-group form-group--rate">
 						<label for="hourly_rate"><?php p($l->t('Hourly rate (%s)', [$currencyCode])); ?></label>
 						<input type="number" name="hourly_rate" id="hourly_rate" class="form-input" step="0.01" min="0.01" readonly
 							value="<?php p($isEdit ? $timeEntry->getHourlyRate() : ''); ?>"
 							placeholder="0.00"
 							aria-required="true"
-							aria-describedby="hourly_rate-hint">
-						<p class="form-hint" id="hourly_rate-hint" role="status" aria-live="polite">
+							aria-describedby="hourly_rate-hint hourly_rate-error">
+						<p class="form-hint form-hint--compact" id="hourly_rate-hint" role="status" aria-live="polite">
 							<?php p($l->t('Rate is set by the server from the project and work date. It cannot be edited.')); ?>
 						</p>
-						<div class="error-message" id="hourly_rate-error"></div>
+						<div class="error-message" id="hourly_rate-error" aria-live="polite"></div>
 					</div>
 
-					<div class="form-group">
+					<div class="form-group form-group--total">
 						<label for="total_cost"><?php p($l->t('Total Cost')); ?></label>
-						<input type="text" id="total_cost" class="form-input" readonly value="<?php p($currencyCode); ?> 0.00">
+						<input type="text" id="total_cost" class="form-input" readonly
+							value="<?php p($currencyCode); ?> 0.00">
 					</div>
-						</div>
-					</details>
 				</div>
+				<p class="form-hint form-row--metrics__date-hint" id="date-hint"><?php p($l->t('Use the calendar or type the work date. Future dates are not allowed.')); ?></p>
 
 				<div class="form-group">
 					<label for="description"><?php p($l->t('Description')); ?></label>

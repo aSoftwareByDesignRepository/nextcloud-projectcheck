@@ -107,6 +107,8 @@ class MobileBookingService
 			'hourlyRate' => $preview['hourly_rate'],
 			'costRateMode' => $preview['cost_rate_mode'],
 			'source' => $preview['source'],
+			// Re-anchor companion calendar while the entry form is open.
+			'serverNow' => (new \DateTimeImmutable('now'))->format(\DateTimeInterface::ATOM),
 		];
 	}
 
@@ -200,7 +202,7 @@ class MobileBookingService
 
 		$validation = $this->timeEntries->validateTimeEntryDataDetailed($data);
 		if ($validation['errors'] !== []) {
-			throw new MobileApiException('validation', $this->l->t('Please check the highlighted fields.'), 422, [
+			throw new MobileApiException('validation', $this->l->t('Please correct the highlighted fields.'), 422, [
 				'fields' => $validation['errorCodes'],
 				'messages' => $validation['errors'],
 			]);
@@ -325,7 +327,7 @@ class MobileBookingService
 		];
 		$validation = $this->timeEntries->validateTimeEntryDataDetailed($merged);
 		if ($validation['errors'] !== []) {
-			throw new MobileApiException('validation', $this->l->t('Please check the highlighted fields.'), 422, [
+			throw new MobileApiException('validation', $this->l->t('Please correct the highlighted fields.'), 422, [
 				'fields' => $validation['errorCodes'],
 				'messages' => $validation['errors'],
 			]);

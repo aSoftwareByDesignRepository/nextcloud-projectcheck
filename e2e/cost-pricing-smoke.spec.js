@@ -61,6 +61,77 @@ for (const vp of viewports) {
 			await expect(page.locator('#pc-pricing-method legend')).toContainText(/how are hours priced|wie werden stunden bewertet/i);
 		});
 
+		test('time entry create: metrics strip aligns Date|Hours|Rate|Total', async ({ page }) => {
+			test.skip(!process.env.BASE_URL && !process.env.E2E_USER, 'Set BASE_URL and E2E_USER in e2e/.env');
+			await page.setViewportSize({ width: 1280, height: 800 });
+			await gotoApp(page, URLS.timeEntryCreate);
+			await assertAppShell(page);
+
+			const metrics = page.locator('#time-entry-form .form-row--metrics');
+			await expect(metrics).toBeVisible();
+			await expect(metrics.locator('> .form-group')).toHaveCount(4);
+			await expect(page.locator('#pc-te-pricing-summary')).toHaveCount(0);
+
+			const rateInput = page.locator('#hourly_rate');
+			const totalInput = page.locator('#total_cost');
+			await expect(rateInput).toBeVisible();
+			await expect(rateInput).toHaveAttribute('readonly', '');
+			await expect(totalInput).toBeVisible();
+			await expect(totalInput).toHaveAttribute('readonly', '');
+
+			const layout = await page.evaluate(() => {
+				const row = document.querySelector('#time-entry-form .form-row--metrics');
+				if (!(row instanceof HTMLElement)) {
+					return { ok: false, reason: 'missing metrics row' };
+				}
+				const groups = [...row.querySelectorAll(':scope > .form-group')];
+				if (groups.length !== 4) {
+					return { ok: false, reason: `expected 4 groups, got ${groups.length}` };
+				}
+				const inputs = groups.map((g) => g.querySelector('input.form-input'));
+				if (inputs.some((el) => !(el instanceof HTMLInputElement))) {
+					return { ok: false, reason: 'each group needs an input' };
+				}
+				const labelBottoms = groups.map((g) => {
+					const label = g.querySelector('label');
+					return label ? label.getBoundingClientRect().bottom : NaN;
+				});
+				const inputTops = inputs.map((el) => el.getBoundingClientRect().top);
+				const inputHeights = inputs.map((el) => el.getBoundingClientRect().height);
+				const maxLabelSpread = Math.max(...labelBottoms) - Math.min(...labelBottoms);
+				const maxInputTopSpread = Math.max(...inputTops) - Math.min(...inputTops);
+				const minHeight = Math.min(...inputHeights);
+				const cs = getComputedStyle(row);
+				return {
+					ok: true,
+					columns: cs.gridTemplateColumns,
+					maxLabelSpread,
+					maxInputTopSpread,
+					minHeight,
+					childCount: groups.length,
+				};
+			});
+
+			expect(layout.ok, layout.reason || 'layout probe failed').toBeTruthy();
+			expect(layout.childCount).toBe(4);
+			expect(String(layout.columns).split(' ').filter(Boolean).length).toBeGreaterThanOrEqual(4);
+			expect(layout.maxLabelSpread, 'labels should share one baseline').toBeLessThanOrEqual(4);
+			expect(layout.maxInputTopSpread, 'inputs should share one baseline').toBeLessThanOrEqual(4);
+			expect(layout.minHeight, 'touch target height').toBeGreaterThanOrEqual(40);
+
+			const dateHint = page.locator('#date-hint.form-row--metrics__date-hint');
+			await expect(dateHint).toBeVisible();
+			const hintBelow = await page.evaluate(() => {
+				const row = document.querySelector('#time-entry-form .form-row--metrics');
+				const hint = document.getElementById('date-hint');
+				if (!(row instanceof HTMLElement) || !(hint instanceof HTMLElement)) {
+					return false;
+				}
+				return hint.getBoundingClientRect().top >= row.getBoundingClientRect().bottom - 1;
+			});
+			expect(hintBelow).toBeTruthy();
+		});
+
 		test('time entry create: hourly rate is readonly (A2)', async ({ page }) => {
 			test.skip(!process.env.BASE_URL && !process.env.E2E_USER, 'Set BASE_URL and E2E_USER in e2e/.env');
 			await gotoApp(page, URLS.timeEntryCreate);

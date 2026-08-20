@@ -40,78 +40,76 @@ final class RateHistoryTables
 
 	private static function ensureEmployeeTable(ISchemaWrapper $schema): bool
 	{
-		if ($schema->hasTable(self::EMPLOYEE)) {
-			return false;
+		if (!$schema->hasTable(self::EMPLOYEE)) {
+			$table = $schema->createTable(self::EMPLOYEE);
+			$table->addColumn('id', Types::BIGINT, [
+				'autoincrement' => true,
+				'notnull' => true,
+				'length' => 20,
+				'unsigned' => true,
+			]);
+			$table->addColumn('user_id', Types::STRING, [
+				'notnull' => true,
+				'length' => 64,
+			]);
+			$table->addColumn('hourly_rate', Types::DECIMAL, [
+				'notnull' => true,
+				'precision' => 12,
+				'scale' => 4,
+				'default' => '0',
+			]);
+			$table->addColumn('effective_from', Types::DATE, ['notnull' => true]);
+			$table->addColumn('created_by', Types::STRING, [
+				'notnull' => true,
+				'length' => 64,
+			]);
+			$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
+			$table->setPrimaryKey(['id'], 'pc_emp_rates_pk');
+			$table->addUniqueIndex(['user_id', 'effective_from'], 'pc_emp_rates_uq');
+			$table->addIndex(['user_id'], 'pc_emp_rates_uidx');
+
+			return true;
 		}
-
-		$table = $schema->createTable(self::EMPLOYEE);
-		$table->addColumn('id', Types::BIGINT, [
-			'autoincrement' => true,
-			'notnull' => true,
-			'length' => 20,
-			'unsigned' => true,
-		]);
-		$table->addColumn('user_id', Types::STRING, [
-			'notnull' => true,
-			'length' => 64,
-		]);
-		$table->addColumn('hourly_rate', Types::DECIMAL, [
-			'notnull' => true,
-			'precision' => 12,
-			'scale' => 4,
-			'default' => '0',
-		]);
-		$table->addColumn('effective_from', Types::DATE, ['notnull' => true]);
-		$table->addColumn('created_by', Types::STRING, [
-			'notnull' => true,
-			'length' => 64,
-		]);
-		$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
-		$table->setPrimaryKey(['id'], 'pc_emp_rates_pk');
-		$table->addUniqueIndex(['user_id', 'effective_from'], 'pc_emp_rates_uq');
-		$table->addIndex(['user_id'], 'pc_emp_rates_uidx');
-
-		return true;
+		return false;
 	}
 
 	private static function ensureProjectMemberTable(ISchemaWrapper $schema): bool
 	{
-		if ($schema->hasTable(self::PROJECT_MEMBER)) {
-			return false;
+		if (!$schema->hasTable(self::PROJECT_MEMBER)) {
+			$table = $schema->createTable(self::PROJECT_MEMBER);
+			$table->addColumn('id', Types::BIGINT, [
+				'autoincrement' => true,
+				'notnull' => true,
+				'length' => 20,
+				'unsigned' => true,
+			]);
+			$table->addColumn('project_id', Types::BIGINT, [
+				'notnull' => true,
+				'length' => 20,
+				'unsigned' => true,
+			]);
+			$table->addColumn('user_id', Types::STRING, [
+				'notnull' => true,
+				'length' => 64,
+			]);
+			$table->addColumn('hourly_rate', Types::DECIMAL, [
+				'notnull' => true,
+				'precision' => 12,
+				'scale' => 4,
+				'default' => '0',
+			]);
+			$table->addColumn('effective_from', Types::DATE, ['notnull' => true]);
+			$table->addColumn('created_by', Types::STRING, [
+				'notnull' => true,
+				'length' => 64,
+			]);
+			$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
+			$table->setPrimaryKey(['id'], 'pc_pm_rates_pk');
+			$table->addUniqueIndex(['project_id', 'user_id', 'effective_from'], 'pc_pm_rates_uq');
+			$table->addIndex(['project_id', 'user_id'], 'pc_pm_rates_puidx');
+
+			return true;
 		}
-
-		$table = $schema->createTable(self::PROJECT_MEMBER);
-		$table->addColumn('id', Types::BIGINT, [
-			'autoincrement' => true,
-			'notnull' => true,
-			'length' => 20,
-			'unsigned' => true,
-		]);
-		$table->addColumn('project_id', Types::BIGINT, [
-			'notnull' => true,
-			'length' => 20,
-			'unsigned' => true,
-		]);
-		$table->addColumn('user_id', Types::STRING, [
-			'notnull' => true,
-			'length' => 64,
-		]);
-		$table->addColumn('hourly_rate', Types::DECIMAL, [
-			'notnull' => true,
-			'precision' => 12,
-			'scale' => 4,
-			'default' => '0',
-		]);
-		$table->addColumn('effective_from', Types::DATE, ['notnull' => true]);
-		$table->addColumn('created_by', Types::STRING, [
-			'notnull' => true,
-			'length' => 64,
-		]);
-		$table->addColumn('created_at', Types::DATETIME, ['notnull' => true]);
-		$table->setPrimaryKey(['id'], 'pc_pm_rates_pk');
-		$table->addUniqueIndex(['project_id', 'user_id', 'effective_from'], 'pc_pm_rates_uq');
-		$table->addIndex(['project_id', 'user_id'], 'pc_pm_rates_puidx');
-
-		return true;
+		return false;
 	}
 }

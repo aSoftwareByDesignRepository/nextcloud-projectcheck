@@ -90,6 +90,8 @@ final class MobileGateServiceTest extends TestCase
 		self::assertFalse($payload['canSettle']);
 		self::assertTrue($payload['licensing']['mobile']['enabledForUser']);
 		self::assertSame('2027-12-31', $payload['licensing']['mobile']['expiresAt']);
+		self::assertIsString($payload['serverNow']);
+		self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T/', (string)$payload['serverNow']);
 
 		$withFlags = $this->gate([])->bootstrapPayload('alice', 'Alice', '2.0.86', true, true);
 		self::assertTrue($withFlags['pushAvailable']);

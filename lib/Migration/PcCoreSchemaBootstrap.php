@@ -84,35 +84,34 @@ final class PcCoreSchemaBootstrap
 	 */
 	public static function ensureMobileIdempotencyTable(ISchemaWrapper $schema): bool
 	{
-		if ($schema->hasTable('pc_mob_idem')) {
-			return false;
+		if (!$schema->hasTable('pc_mob_idem')) {
+			$t = $schema->createTable('pc_mob_idem');
+			$t->addColumn('id', Types::BIGINT, [
+				'autoincrement' => true,
+				'notnull' => true,
+			]);
+			$t->addColumn('user_id', Types::STRING, [
+				'notnull' => true,
+				'length' => 64,
+			]);
+			$t->addColumn('client_request_id', Types::STRING, [
+				'notnull' => true,
+				'length' => 64,
+			]);
+			$t->addColumn('time_entry_id', Types::BIGINT, [
+				'notnull' => true,
+			]);
+			$t->addColumn('created_at', Types::INTEGER, [
+				'notnull' => true,
+				'unsigned' => true,
+			]);
+			$t->setPrimaryKey(['id'], 'pc_mob_idem_pk');
+			$t->addUniqueIndex(['user_id', 'client_request_id'], 'pc_mob_idem_uid_req');
+			$t->addIndex(['time_entry_id'], 'pc_mob_idem_te');
+
+			return true;
 		}
-
-		$t = $schema->createTable('pc_mob_idem');
-		$t->addColumn('id', Types::BIGINT, [
-			'autoincrement' => true,
-			'notnull' => true,
-		]);
-		$t->addColumn('user_id', Types::STRING, [
-			'notnull' => true,
-			'length' => 64,
-		]);
-		$t->addColumn('client_request_id', Types::STRING, [
-			'notnull' => true,
-			'length' => 64,
-		]);
-		$t->addColumn('time_entry_id', Types::BIGINT, [
-			'notnull' => true,
-		]);
-		$t->addColumn('created_at', Types::INTEGER, [
-			'notnull' => true,
-			'unsigned' => true,
-		]);
-		$t->setPrimaryKey(['id'], 'pc_mob_idem_pk');
-		$t->addUniqueIndex(['user_id', 'client_request_id'], 'pc_mob_idem_uid_req');
-		$t->addIndex(['time_entry_id'], 'pc_mob_idem_te');
-
-		return true;
+		return false;
 	}
 
 	/**

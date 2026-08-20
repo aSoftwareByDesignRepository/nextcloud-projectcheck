@@ -381,6 +381,8 @@ final class MobileBookingServiceTest extends TestCase
 		self::assertSame(9, $row['projectId']);
 		self::assertSame('alice', $row['employeeUserId']);
 		self::assertSame(85.5, $row['hourlyRate']);
+		self::assertIsString($row['serverNow'] ?? null);
+		self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T/', (string)$row['serverNow']);
 	}
 
 	public function testResolveHourlyRateSurfacesRateUnresolvedCode(): void

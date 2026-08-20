@@ -82,21 +82,87 @@
 	gap: var(--pc-space-4, 1rem);
 }
 
-@media (min-width: 768px) {
-	.time-entry-form .form-row--split {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--pc-space-4, 1rem);
-	}
+/**
+ * Metrics strip: Date | Hours | Rate | Total
+ * Column count MUST match the four .form-group children (never leave a dead track).
+ */
+.time-entry-form .form-row--metrics {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--pc-space-4, 1rem);
+	align-items: start;
+	margin: 0 0 var(--pc-space-2, 0.5rem);
+}
 
-	.time-entry-form .form-row--split-4 {
+@media (min-width: 640px) {
+	.time-entry-form .form-row--metrics {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
 @media (min-width: 1024px) {
-	.time-entry-form .form-row--split-4 {
-		grid-template-columns: repeat(4, minmax(0, 1fr));
+	.time-entry-form .form-row--metrics {
+		grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
+		gap: var(--pc-space-4, 1rem);
+	}
+}
+
+.time-entry-form .form-row--metrics > .form-group {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	margin: 0;
+}
+
+.time-entry-form .form-row--metrics > .form-group > label {
+	display: block;
+	min-height: 1.5em;
+	margin: 0 0 var(--pc-space-2, 0.5rem);
+	line-height: 1.35;
+}
+
+.time-entry-form .form-row--metrics > .form-group > .form-input,
+.time-entry-form .form-row--metrics > .form-group > input.form-input,
+#app-content.pc-app--time-entry-create .time-entry-form .form-row--metrics input.form-input,
+#app-content.pc-app--time-entry-edit .time-entry-form .form-row--metrics input.form-input {
+	width: 100%;
+	/*
+	 * Prefer --pc-touch-min (app SSOT = 44px). Do NOT lead with
+	 * --default-clickable-area: NC themes often set that to ~34px.
+	 */
+	min-height: var(--pc-touch-min, 44px) !important;
+	height: auto !important;
+	line-height: 1.35;
+	padding-block: 0.55rem;
+	box-sizing: border-box;
+}
+
+.time-entry-form .form-row--metrics > .form-group > .form-hint--compact {
+	margin-top: var(--pc-space-2, 0.5rem);
+	margin-bottom: 0;
+	font-size: var(--pc-fs-xs, 0.75rem);
+	line-height: 1.4;
+	max-width: none;
+	/* WCAG 2.1 AA: prefer main text over ultra-muted chrome on dark themes */
+	color: var(--color-text-maxcontrast, var(--color-main-text));
+}
+
+.time-entry-form .form-row--metrics > .form-group > .error-message {
+	min-height: 0;
+	margin-top: var(--pc-space-1, 0.25rem);
+}
+
+.time-entry-form .form-row--metrics__date-hint {
+	margin: 0 0 var(--pc-space-5, 1.25rem);
+	max-width: 65ch;
+	color: var(--color-text-maxcontrast, var(--color-main-text));
+}
+
+@media (min-width: 768px) {
+	.time-entry-form .form-row--split:not(.form-row--metrics) {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--pc-space-4, 1rem);
 	}
 }
 
