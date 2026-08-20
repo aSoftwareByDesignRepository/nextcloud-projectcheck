@@ -142,10 +142,9 @@ include __DIR__ . '/common/page-start.php';
                 <p><?php p($l->t('Search and filter')); ?></p>
             </div>
             <div class="pc-list-panel__toolbar">
-            <div class="filters-container pc-filters" role="search" aria-label="<?php p($l->t('Search and filter customers')); ?>">
+            <div class="filters-container pc-filters pc-filters--all-visible" role="search" aria-label="<?php p($l->t('Search and filter customers')); ?>">
                 <?php
                 $settlementFilterValue = (string)($_['filters']['settlement'] ?? '');
-                $customersAdvancedOpen = $settlementFilterValue !== '' && $settlementFilterValue !== 'all';
                 ?>
                 <div class="pc-filters__grid">
                     <div class="pc-filters__field pc-filters__field--search">
@@ -158,13 +157,7 @@ include __DIR__ . '/common/page-start.php';
                                 autocomplete="off">
                         </div>
                     </div>
-                </div>
 
-                <details class="pc-filters__more"<?php if ($customersAdvancedOpen) {
-                	echo ' open';
-                } ?>>
-                    <summary class="pc-filters__more-summary"><?php p($l->t('More filters')); ?></summary>
-                    <div class="pc-filters__grid pc-filters__grid--advanced">
                     <div class="pc-filters__field">
                         <label for="settlement-filter" class="pc-filters__label"><?php p($l->t('Settlement')); ?></label>
                         <select id="settlement-filter" class="filter-select">
@@ -177,8 +170,7 @@ include __DIR__ . '/common/page-start.php';
                             <option value="n_a"<?php if ($settlementFilterValue === 'n_a') echo ' selected'; ?>><?php p($l->t('Nothing to invoice')); ?></option>
                         </select>
                     </div>
-                    </div>
-                </details>
+                </div>
 
                 <div class="pc-filters__actions">
                     <button id="apply-filters" class="button primary" type="button">

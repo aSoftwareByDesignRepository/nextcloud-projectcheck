@@ -242,7 +242,27 @@ body.dark .pc-filters .filter-select,
 	padding-top: 0;
 }
 
-/* Progressive disclosure: keep search primary; advanced filters opt-in */
+/*
+ * Always-visible filters (projects, customers, time entries):
+ * no progressive disclosure — search + all fields share one grid.
+ */
+.pc-filters--all-visible .pc-filters__grid {
+	align-items: end;
+}
+
+@media (min-width: 720px) {
+	.pc-filters--all-visible .pc-filters__field--search {
+		grid-column: span 2;
+	}
+}
+
+@media (max-width: 719px) {
+	.pc-filters--all-visible .pc-filters__field--search {
+		grid-column: 1 / -1;
+	}
+}
+
+/* Progressive disclosure: kept for any remaining opt-in filter UIs */
 .pc-filters__more {
 	margin: 0;
 	padding: 0;

@@ -93,14 +93,19 @@ include __DIR__ . '/common/page-start.php';
                 <p><?php p($l->t('Search and filter')); ?></p>
             </div>
             <div class="time-entries-panel__toolbar pc-list-panel__toolbar">
-            <div class="filters-container pc-filters" role="search" aria-label="<?php p($l->t('Search and filter time entries')); ?>">
+            <div class="filters-container pc-filters pc-filters--all-visible" role="search" aria-label="<?php p($l->t('Search and filter time entries')); ?>">
                 <?php
-                $teAdvancedOpen = !empty($filters['project_id'])
-                	|| !empty($filters['user_id'])
-                	|| !empty($filters['project_type'])
-                	|| !empty($filters['date_from'])
-                	|| !empty($filters['date_to'])
-                	|| ($billingStatusFilter !== '' && $billingStatusFilter !== null);
+                $htmlLang = isset($_['htmlLang']) && is_string($_['htmlLang']) ? $_['htmlLang'] : 'en';
+                $filterDateFrom = '';
+                if (!empty($filters['date_from'])) {
+                	$dateObj = \DateTime::createFromFormat('Y-m-d', (string)$filters['date_from']);
+                	$filterDateFrom = $dateObj ? $dateObj->format('Y-m-d') : '';
+                }
+                $filterDateTo = '';
+                if (!empty($filters['date_to'])) {
+                	$dateObj = \DateTime::createFromFormat('Y-m-d', (string)$filters['date_to']);
+                	$filterDateTo = $dateObj ? $dateObj->format('Y-m-d') : '';
+                }
                 ?>
                 <div class="pc-filters__grid">
                     <div class="pc-filters__field pc-filters__field--search filter-group">
@@ -113,13 +118,7 @@ include __DIR__ . '/common/page-start.php';
                                 autocomplete="off">
                         </div>
                     </div>
-                </div>
 
-                <details class="pc-filters__more"<?php if ($teAdvancedOpen) {
-                	echo ' open';
-                } ?>>
-                    <summary class="pc-filters__more-summary"><?php p($l->t('More filters')); ?></summary>
-                    <div class="pc-filters__grid pc-filters__grid--advanced">
                     <div class="pc-filters__field filter-group">
                         <label for="project-filter" class="pc-filters__label filter-label"><?php p($l->t('Project')); ?></label>
                         <select id="project-filter" class="filter-select">
@@ -163,19 +162,6 @@ include __DIR__ . '/common/page-start.php';
                         </select>
                     </div>
 
-                    <?php
-                    $htmlLang = isset($_['htmlLang']) && is_string($_['htmlLang']) ? $_['htmlLang'] : 'en';
-                    $filterDateFrom = '';
-                    if (!empty($filters['date_from'])) {
-                        $dateObj = \DateTime::createFromFormat('Y-m-d', (string)$filters['date_from']);
-                        $filterDateFrom = $dateObj ? $dateObj->format('Y-m-d') : '';
-                    }
-                    $filterDateTo = '';
-                    if (!empty($filters['date_to'])) {
-                        $dateObj = \DateTime::createFromFormat('Y-m-d', (string)$filters['date_to']);
-                        $filterDateTo = $dateObj ? $dateObj->format('Y-m-d') : '';
-                    }
-                    ?>
                     <div class="pc-filters__field filter-group">
                         <label for="billing-status-filter" class="pc-filters__label filter-label"><?php p($l->t('Settlement')); ?></label>
                         <select id="billing-status-filter" class="filter-select">
@@ -203,8 +189,7 @@ include __DIR__ . '/common/page-start.php';
                             value="<?php p($filterDateTo); ?>"
                             autocomplete="off">
                     </div>
-                    </div>
-                </details>
+                </div>
 
                 <div class="pc-filters__actions filter-actions">
                     <button type="button" id="apply-filters" class="button primary">

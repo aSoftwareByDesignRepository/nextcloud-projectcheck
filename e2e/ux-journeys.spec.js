@@ -47,19 +47,20 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		await assertAxeClean(page);
 	});
 
-	test('projects list: search first, advanced filters collapsed by default', async ({ page }) => {
+	test('projects list: all filters visible by default (no More filters)', async ({ page }) => {
 		await gotoApp(page, URLS.projects);
 		await expect(page.locator('#project-search')).toBeVisible();
 		const portfolio = page.locator('#pc-portfolio-overview');
 		await expect(portfolio).toBeAttached();
 		expect(await portfolio.evaluate((el) => el instanceof HTMLDetailsElement && el.open)).toBe(false);
-		const more = page.locator('.pc-filters__more').first();
-		await expect(more).toBeAttached();
-		const open = await more.evaluate((el) => el instanceof HTMLDetailsElement && el.open);
-		// Default Active status alone should keep disclosure closed
-		expect(open).toBe(false);
-		await more.locator('summary').click();
+		await expect(page.locator('.pc-filters--all-visible')).toBeVisible();
+		await expect(page.locator('.pc-filters__more')).toHaveCount(0);
 		await expect(page.locator('#status-filter')).toBeVisible();
+		await expect(page.locator('#priority-filter')).toBeVisible();
+		await expect(page.locator('#project-type-filter')).toBeVisible();
+		await expect(page.locator('#customer-filter')).toBeVisible();
+		await expect(page.locator('#settlement-filter')).toBeVisible();
+		await expect(page.locator('#apply-filters')).toBeVisible();
 		const emptyOrTable = page.locator('.pc-empty-state, .projects-table, .pc-data-table');
 		await expect(emptyOrTable.first()).toBeVisible();
 		const emptyCta = page.locator('.pc-empty-state__cta');
@@ -73,11 +74,30 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 	test('customers list: empty state has CTA or table is present', async ({ page }) => {
 		await gotoApp(page, URLS.customers);
 		await expect(page.locator('#customer-search')).toBeVisible();
+		await expect(page.locator('.pc-filters--all-visible')).toBeVisible();
+		await expect(page.locator('.pc-filters__more')).toHaveCount(0);
+		await expect(page.locator('#settlement-filter')).toBeVisible();
 		const emptyOrTable = page.locator('.pc-empty-state, .customers-table, .pc-data-table');
 		await expect(emptyOrTable.first()).toBeVisible();
 		if (await page.locator('.pc-empty-state__cta').count()) {
 			await expect(page.locator('.pc-empty-state__cta').first()).toHaveAttribute('href', /customers\/(create|new)/i);
 		}
+		await assertAxeClean(page);
+	});
+
+	test('time entries: all filters visible by default (no More filters)', async ({ page }) => {
+		await gotoApp(page, URLS.timeEntries);
+		await expect(page.locator('.pc-filters--all-visible')).toBeVisible();
+		await expect(page.locator('.pc-filters__more')).toHaveCount(0);
+		await expect(page.locator('#time-entry-search')).toBeVisible();
+		await expect(page.locator('#project-filter')).toBeVisible();
+		await expect(page.locator('#time-entry-project-type-filter')).toBeVisible();
+		await expect(page.locator('#billing-status-filter')).toBeVisible();
+		await expect(page.locator('#date-from-filter')).toBeVisible();
+		await expect(page.locator('#date-to-filter')).toBeVisible();
+		await expect(page.locator('#apply-filters')).toBeVisible();
+		await expect(page.locator('#clear-filters')).toBeVisible();
+		await expect(page.locator('.pc-filters--all-visible .pc-filters__more, .pc-filters--all-visible .pc-filters__more-summary')).toHaveCount(0);
 		await assertAxeClean(page);
 	});
 
@@ -98,6 +118,10 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 			await expect(rescue).toHaveAttribute('href', /projects/i);
 		} else {
 			await expect(page.locator('#hours, #date, input[name="hours"], input[name="date"]').first()).toBeAttached();
+			await expect(page.locator('#time-entry-form .form-row--metrics > .form-group')).toHaveCount(4);
+			await expect(page.locator('#hourly_rate')).toBeVisible();
+			await expect(page.locator('#total_cost')).toBeVisible();
+			await expect(page.locator('#pc-te-pricing-summary')).toHaveCount(0);
 		}
 		await assertAxeClean(page);
 	});
