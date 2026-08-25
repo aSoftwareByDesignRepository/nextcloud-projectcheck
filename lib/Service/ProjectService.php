@@ -1440,12 +1440,13 @@ class ProjectService
 	}
 
 	/**
-	 * Get projects for specific user
+	 * Get projects for specific user (active membership), newest first.
 	 *
 	 * @param string $userId
-	 * @return array
+	 * @param int|null $limit Optional SQL LIMIT (clamped 1–500). Null = no limit.
+	 * @return list<\OCA\ProjectCheck\Db\Project>
 	 */
-	public function getProjectsByUser(string $userId): array
+	public function getProjectsByUser(string $userId, ?int $limit = null): array
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select(...ProjectQueryColumns::qualified('p'))
@@ -1454,6 +1455,10 @@ class ProjectService
 			->where($qb->expr()->eq('pm.user_id', $qb->createNamedParameter($userId)))
 			->andWhere($this->buildActiveMemberExpression($qb, 'pm'))
 			->orderBy('p.created_at', 'DESC');
+
+		if ($limit !== null) {
+			$qb->setMaxResults(max(1, min(500, $limit)));
+		}
 
 		$result = $qb->executeQuery();
 		$projects = [];

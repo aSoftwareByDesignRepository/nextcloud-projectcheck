@@ -495,6 +495,27 @@ class Application extends App implements IBootstrap
 		// Register capabilities
 		$context->registerCapability(\OCA\ProjectCheck\Capabilities::class);
 
+		$context->registerService(\OCA\ProjectCheck\Service\AppIconService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\AppIconService(
+				$c->query(\OCP\IURLGenerator::class),
+				$c->query(\OCP\App\IAppManager::class),
+			);
+		});
+
+		$context->registerService(\OCA\ProjectCheck\Dashboard\ProjectWidget::class, function ($c) {
+			return new \OCA\ProjectCheck\Dashboard\ProjectWidget(
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+				$c->query(\OCP\IURLGenerator::class),
+				$c->query(\OCP\IUserSession::class),
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Service\AccessControlService::class),
+				$c->query(\OCA\ProjectCheck\Service\BudgetService::class),
+				$c->query(\OCA\ProjectCheck\Service\SchemaGuardService::class),
+				$c->query(\OCA\ProjectCheck\Service\AppIconService::class),
+				$c->query(\Psr\Log\LoggerInterface::class),
+			);
+		});
+
 		$context->registerDashboardWidget(\OCA\ProjectCheck\Dashboard\ProjectWidget::class);
 
 		$context->registerSearchProvider(\OCA\ProjectCheck\Search\ProjectSearchProvider::class);
@@ -662,15 +683,16 @@ class Application extends App implements IBootstrap
 				return;
 			}
 			$navigationManager = $container->get(INavigationManager::class);
-			$urlGenerator = $container->get(\OCP\IURLGenerator::class);
-			$l10nFactory = $container->get(IFactory::class);
-			$navigationManager->add(function () use ($urlGenerator, $l10nFactory): array {
+			$navigationManager->add(function () use ($container): array {
+				$urlGenerator = $container->get(\OCP\IURLGenerator::class);
+				$l10nFactory = $container->get(IFactory::class);
+				$icons = $container->get(\OCA\ProjectCheck\Service\AppIconService::class);
 				return [
 					'id' => self::APP_ID,
 					'app' => self::APP_ID,
 					'order' => 10,
 					'href' => $urlGenerator->linkToRoute('projectcheck.page.index'),
-					'icon' => $urlGenerator->imagePath(self::APP_ID, 'app.svg'),
+					'icon' => $icons->headerIconPath(),
 					'name' => $l10nFactory->get(self::APP_ID)->t('ProjectCheck'),
 				];
 			});

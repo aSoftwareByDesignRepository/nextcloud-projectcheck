@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.99 - 2026-08-25
+
+### Fixed (Dashboard — ProjectCheck desklet not loading)
+- Honour widget `limit` in `getProjectsByUser` (was returning 100+ rows + N+1 budget lookups and hanging the dashboard)
+- Fix scrambled `WidgetItem` / swapped `WidgetButton` constructor args (links were budget text; buttons showed labels as URLs)
+- Implement `IAPIWidgetV2` + empty states, absolute URLs, theme-safe `app-dashboard.svg` + `desklet-nextcloud.css`
+- Keep legacy widget id `projectcontrol-projects` so existing dashboard layouts keep the desklet
+
 ## 2.0.98 - 2026-08-19
 
 ### Improved
