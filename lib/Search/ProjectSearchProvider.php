@@ -32,6 +32,9 @@ use RuntimeException;
  */
 class ProjectSearchProvider implements IProvider
 {
+	private const MIN_TERM_LENGTH = 2;
+	private const MAX_LIMIT = 25;
+
 	/** @var IL10N */
 	private $l10n;
 
@@ -133,39 +136,52 @@ class ProjectSearchProvider implements IProvider
 			return SearchResult::complete($this->getName(), []);
 		}
 
-		$searchTerm = $query->getTerm();
-		$limit = $query->getLimit();
-		$offset = $query->getCursor() ?? 0;
+		$searchTerm = trim($query->getTerm());
+		if (mb_strlen($searchTerm) < self::MIN_TERM_LENGTH) {
+			return SearchResult::complete($this->getName(), []);
+		}
 
-		$results = [];
+		$limit = max(1, min(self::MAX_LIMIT, $query->getLimit()));
+		$offset = max(0, (int) ($query->getCursor() ?? 0));
+
+		/** @var list<array{title: string, entry: SearchResultEntry}> $ranked */
+		$ranked = [];
 		$appIcon = $this->resolveAppIconPath();
 
 		try {
 			// Search projects (visibility-scoped)
 			$projects = $this->projectService->searchProjects($searchTerm, $user->getUID(), $limit);
 			foreach ($projects as $project) {
-				$results[] = new SearchResultEntry(
-					$appIcon,
-					$this->l10n->t('Project: %s', [$project->getName()]),
-					$project->getShortDescription() ?: $this->l10n->t('No description'),
-					$this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $project->getId()]),
-					'icon-projectcontrol',
-					true
-				);
+				$title = $this->l10n->t('Project: %s', [$project->getName()]);
+				$ranked[] = [
+					'title' => $title,
+					'entry' => new SearchResultEntry(
+						$appIcon,
+						$title,
+						$project->getShortDescription() ?: $this->l10n->t('No description'),
+						$this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => $project->getId()]),
+						'icon-projectcontrol',
+						true
+					),
+				];
 			}
 
-			// Search customers (visibility-scoped)
+			// Search customers (visibility-scoped). Subline avoids email (PII) in unified search UI.
 			$customers = $this->customerService->searchCustomersForUser($user->getUID(), $searchTerm);
 			$customers = array_slice($customers, 0, $limit);
 			foreach ($customers as $customer) {
-				$results[] = new SearchResultEntry(
-					$appIcon,
-					$this->l10n->t('Customer: %s', [$customer->getName()]),
-					$customer->getEmail() ?: $this->l10n->t('No email'),
-					$this->urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => $customer->getId()]),
-					'icon-projectcontrol',
-					true
-				);
+				$title = $this->l10n->t('Customer: %s', [$customer->getName()]);
+				$ranked[] = [
+					'title' => $title,
+					'entry' => new SearchResultEntry(
+						$appIcon,
+						$title,
+						$this->l10n->t('Customer'),
+						$this->urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => $customer->getId()]),
+						'icon-projectcontrol',
+						true
+					),
+				];
 			}
 
 			// Search time entries (scoped to the requesting user)
@@ -177,15 +193,19 @@ class ProjectSearchProvider implements IProvider
 			foreach ($timeEntries as $timeEntry) {
 				$project = $this->projectService->getProject($timeEntry->getProjectId());
 				$projectName = $project ? $project->getName() : $this->l10n->t('Unknown Project');
-				
-				$results[] = new SearchResultEntry(
-					$appIcon,
-					$this->l10n->t('Time Entry: %s hours on %s', [$timeEntry->getHours(), $projectName]),
-					$timeEntry->getDescription() ?: $this->l10n->t('No description'),
-					$this->urlGenerator->linkToRoute('projectcheck.time_entry.show', ['id' => $timeEntry->getId()]),
-					'icon-projectcontrol',
-					true
-				);
+				$title = $this->l10n->t('Time Entry: %s hours on %s', [$timeEntry->getHours(), $projectName]);
+
+				$ranked[] = [
+					'title' => $title,
+					'entry' => new SearchResultEntry(
+						$appIcon,
+						$title,
+						$timeEntry->getDescription() ?: $this->l10n->t('No description'),
+						$this->urlGenerator->linkToRoute('projectcheck.time_entry.show', ['id' => $timeEntry->getId()]),
+						'icon-projectcontrol',
+						true
+					),
+				];
 			}
 
 		} catch (\Exception $e) {
@@ -195,27 +215,32 @@ class ProjectSearchProvider implements IProvider
 			]);
 		}
 
-		// Sort results by relevance (simplified)
-		usort($results, function (SearchResultEntry $a, SearchResultEntry $b) use ($searchTerm) {
-			// Get titles from the search result entries
-			$aTitle = strtolower($a->getTitle() ?? '');
-			$bTitle = strtolower($b->getTitle() ?? '');
-			$searchTermLower = strtolower($searchTerm);
+		// Sort by relevance using titles kept alongside entries.
+		// OCP\Search\SearchResultEntry has no public getTitle(); never call it.
+		$searchTermLower = mb_strtolower($searchTerm);
+		usort($ranked, static function (array $a, array $b) use ($searchTermLower): int {
+			$aTitle = mb_strtolower($a['title']);
+			$bTitle = mb_strtolower($b['title']);
+			$aPos = mb_strpos($aTitle, $searchTermLower);
+			$bPos = mb_strpos($bTitle, $searchTermLower);
+			$aHit = $aPos !== false;
+			$bHit = $bPos !== false;
 
-			// Exact matches first
-			if (strpos($aTitle, $searchTermLower) === 0 && strpos($bTitle, $searchTermLower) !== 0) {
+			if ($aHit && !$bHit) {
 				return -1;
 			}
-			if (strpos($bTitle, $searchTermLower) === 0 && strpos($aTitle, $searchTermLower) !== 0) {
+			if ($bHit && !$aHit) {
 				return 1;
 			}
+			if ($aHit && $bHit && $aPos !== $bPos) {
+				return $aPos <=> $bPos;
+			}
 
-			// Then by title length (shorter titles are more relevant)
-			return strlen($aTitle) - strlen($bTitle);
+			return strlen($aTitle) <=> strlen($bTitle);
 		});
 
-		// Limit results
-		$results = array_slice($results, 0, $limit);
+		$results = array_column($ranked, 'entry');
+		$results = array_slice($results, $offset, $limit);
 
 		return SearchResult::complete(
 			$this->getName(),
