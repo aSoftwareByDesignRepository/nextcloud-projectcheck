@@ -12,6 +12,7 @@ use OCA\ProjectCheck\Service\LicenseService;
 use OCA\ProjectCheck\Service\MobileBookingService;
 use OCA\ProjectCheck\Service\MobileSettlementService;
 use OCA\ProjectCheck\Service\ProjectService;
+use OCA\ProjectCheck\Tests\Support\IntegrationTestUsers;
 use OCA\ProjectCheck\Tests\Support\Pc2TestSigning;
 use OCA\ProjectCheck\Util\BillingStatus;
 use OCP\IUserManager;
@@ -184,9 +185,7 @@ final class MobileSettlementHttpIntegrationTest extends TestCase
 	private function ensureUser(string $uid): void
 	{
 		$um = \OC::$server->get(IUserManager::class);
-		if (!$um->userExists($uid)) {
-			$um->createUser($uid, self::PASS);
-		}
+		IntegrationTestUsers::ensure($um, $uid, self::PASS);
 		$this->createdUsers[] = $uid;
 	}
 

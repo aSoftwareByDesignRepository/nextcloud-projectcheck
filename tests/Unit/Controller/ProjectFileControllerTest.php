@@ -121,13 +121,24 @@ class ProjectFileControllerTest extends TestCase {
 		$this->assertSame(401, $response->getStatus());
 	}
 
-	public function testDeleteReturns400WhenServiceRejects(): void {
+	public function testDeleteReturns403WhenAccessDenied(): void {
 		$this->userSession->method('getUser')->willReturn($this->user);
-		$this->fileService->method('deleteFile')->willThrowException(new \RuntimeException('Access denied'));
+		$this->fileService->method('deleteFile')->willThrowException(
+			new \OCA\ProjectCheck\Exception\PermissionDeniedException('manage', 'project file', 'Access denied')
+		);
+		$response = $this->controller->delete(7, 99);
+		$this->assertSame(403, $response->getStatus());
+		$body = $response->getData();
+		$this->assertSame('Access denied', (string)$body['error']);
+	}
+
+	public function testDeleteReturns400WhenServiceRejectsGeneric(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->fileService->method('deleteFile')->willThrowException(new \RuntimeException('disk-full-internal'));
 		$response = $this->controller->delete(7, 99);
 		$this->assertSame(400, $response->getStatus());
 		$body = $response->getData();
-		$this->assertStringNotContainsString('Access denied', (string)$body['error']);
+		$this->assertStringNotContainsString('disk-full-internal', (string)$body['error']);
 	}
 
 	public function testDeletePostSucceedsForAuthorisedUser(): void {

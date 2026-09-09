@@ -115,6 +115,51 @@ final class MobileBookingServiceTest extends TestCase
 		}
 	}
 
+	public function testUpdateBlocksForeignOwner(): void
+	{
+		$entry = $this->makeEntry(7, 1, 'bob', 1.0, BillingStatus::OPEN);
+		$this->timeEntries->method('getTimeEntry')->willReturn($entry);
+		$this->timeEntries->expects(self::never())->method('updateTimeEntry');
+		$this->expectException(MobileApiException::class);
+		try {
+			$this->svc->updateEntry('alice', 7, ['description' => 'stolen']);
+		} catch (MobileApiException $e) {
+			self::assertSame('forbidden', $e->getErrorCode());
+			self::assertSame(403, $e->getHttpStatus());
+			throw $e;
+		}
+	}
+
+	public function testListMyEntriesReportsHasMoreWhenTruncated(): void
+	{
+		$rows = [];
+		for ($i = 1; $i <= 201; $i++) {
+			$rows[] = [
+				'id' => $i,
+				'project_id' => 1,
+				'project_name' => 'P',
+				'user_id' => 'alice',
+				'date' => '2026-07-24',
+				'hours' => 1.0,
+				'hourly_rate' => 100.0,
+				'description' => '',
+				'billing_status' => BillingStatus::OPEN,
+				'updated_at' => '2026-07-24 12:00:00',
+			];
+		}
+		$this->timeEntries->expects(self::once())->method('getTimeEntriesWithProjectInfo')
+			->with(self::callback(static function (array $filters): bool {
+				return ($filters['user_id'] ?? null) === 'alice'
+					&& (int)($filters['limit'] ?? 0) === 201;
+			}))
+			->willReturn($rows);
+
+		$result = $this->svc->listMyEntries('alice', null, null, 'open');
+		self::assertTrue($result['hasMore']);
+		self::assertSame(200, $result['limit']);
+		self::assertCount(200, $result['entries']);
+	}
+
 	public function testUpdateBlocksInvoiced(): void
 	{
 		$entry = $this->makeEntry(7, 1, 'alice', 1.0, BillingStatus::INVOICED);
@@ -201,6 +246,27 @@ final class MobileBookingServiceTest extends TestCase
 			$this->svc->deleteEntry('alice', 7);
 		} catch (MobileApiException $e) {
 			self::assertSame('entry_not_editable', $e->getErrorCode());
+			throw $e;
+		}
+	}
+
+	public function testUpdateMapsSettlementConflictToConflictEnvelope(): void
+	{
+		$entry = $this->makeEntry(7, 1, 'alice', 1.0, BillingStatus::OPEN);
+		$this->timeEntries->method('getTimeEntry')->willReturn($entry);
+		$this->timeEntries->method('validateTimeEntryDataDetailed')->willReturn(['errors' => [], 'errorCodes' => []]);
+		$this->timeEntries->method('updateTimeEntry')->willThrowException(
+			new \OCA\ProjectCheck\Exception\SettlementConflictException(
+				\OCA\ProjectCheck\Exception\SettlementConflictException::CODE_UPDATED_AT,
+				'stale'
+			)
+		);
+		$this->expectException(MobileApiException::class);
+		try {
+			$this->svc->updateEntry('alice', 7, ['description' => 'x']);
+		} catch (MobileApiException $e) {
+			self::assertSame('conflict', $e->getErrorCode());
+			self::assertSame(409, $e->getHttpStatus());
 			throw $e;
 		}
 	}

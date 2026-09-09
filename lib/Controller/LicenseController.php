@@ -92,8 +92,9 @@ class LicenseController extends Controller
 		try {
 			$uid = $this->requireAppAdmin();
 			$result = $this->license->assignSeat($uid, $this->request->getParam('userId'));
+			$seat = is_array($result['seat'] ?? null) ? $result['seat'] : ['seat' => $result['seat'] ?? null];
 			return new JSONResponse(
-				$result['seat'],
+				array_merge(['ok' => true], $seat),
 				$result['created'] ? Http::STATUS_CREATED : Http::STATUS_OK,
 			);
 		} catch (LicenseException $e) {
@@ -108,7 +109,7 @@ class LicenseController extends Controller
 		try {
 			$this->requireAppAdmin();
 			$this->license->removeSeat($uid);
-			return new JSONResponse(['deleted' => true]);
+			return new JSONResponse(['ok' => true, 'deleted' => true]);
 		} catch (LicenseException $e) {
 			return $this->fromLicenseException($e);
 		}

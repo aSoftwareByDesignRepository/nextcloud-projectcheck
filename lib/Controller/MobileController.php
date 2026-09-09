@@ -7,24 +7,29 @@ namespace OCA\ProjectCheck\Controller;
 use OCA\ProjectCheck\AppInfo\Application;
 use OCA\ProjectCheck\Exception\MobileApiException;
 use OCA\ProjectCheck\Exception\PermissionDeniedException;
-use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCA\ProjectCheck\Service\MobileBookingService;
 use OCA\ProjectCheck\Service\MobileGateService;
 use OCA\ProjectCheck\Service\MobileSettlementService;
 use OCP\App\IAppManager;
+use OCP\Authentication\Exceptions\ExpiredTokenException;
+use OCP\Authentication\Exceptions\InvalidTokenException;
+use OCP\Authentication\Exceptions\WipeTokenException;
+use OCP\Authentication\Token\IProvider;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserManager;
 use OCP\IUserSession;
 
 /**
  * Mobile companion API v1 (SERVER-MOBILE-API) + v1.1 settlement / idempotent create.
  *
  * CSRF posture: NoCSRFRequired on routes — official app uses Basic app-password.
- * Mutations still reject cookie-only requests without a valid requesttoken.
+ * Mutations accept passesCSRFCheck OR Basic credentials that checkPassword as
+ * the current session user. Forged Bearer/Basic headers must not skip CSRF.
  */
 class MobileController extends Controller
 {
@@ -35,7 +40,8 @@ class MobileController extends Controller
 		private readonly MobileBookingService $booking,
 		private readonly MobileSettlementService $settlement,
 		private readonly IAppManager $appManager,
-		private readonly IRequestTokenProvider $requestTokens,
+		private readonly IUserManager $userManager,
+		private readonly IProvider $tokenProvider,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -182,25 +188,65 @@ class MobileController extends Controller
 	}
 
 	/**
-	 * Mutations accept app-password Authorization OR a valid CSRF requesttoken.
+	 * Mutations accept a valid CSRF token OR Basic credentials that
+	 * checkPassword as the current user. Forged Bearer/Basic headers must not
+	 * skip CSRF for a cookie session.
 	 */
 	private function assertSafeMutationChannel(): void
 	{
-		$auth = trim((string)$this->request->getHeader('Authorization'));
-		if ($auth !== '' && preg_match('/^(Basic|Bearer)\s+\S+/i', $auth) === 1) {
+		if ($this->request->passesCSRFCheck()) {
 			return;
 		}
-
-		$token = trim((string)(
-			$this->request->getHeader('requesttoken')
-			?: $this->request->getParam('requesttoken')
-			?: ''
-		));
-		if ($token !== '' && $this->requestTokens->isRequestTokenValid($token)) {
+		if ($this->authorizationBasicAuthenticatesCurrentUser()) {
 			return;
 		}
 
 		throw new PermissionDeniedException('mutate', 'mobile', 'CSRF or app password required');
+	}
+
+	/**
+	 * True only when Authorization Basic credentials authenticate as the
+	 * current session UID — either via login password (checkPassword) or a
+	 * Login Flow / CLI app password (IProvider::getToken). Forged Bearer or
+	 * Basic shape alone must not skip CSRF.
+	 */
+	private function authorizationBasicAuthenticatesCurrentUser(): bool
+	{
+		$auth = trim((string)$this->request->getHeader('Authorization'));
+		if (preg_match('/^Basic\s+(\S+)$/i', $auth, $m) !== 1) {
+			return false;
+		}
+		$decoded = base64_decode($m[1], true);
+		if ($decoded === false || !str_contains($decoded, ':')) {
+			return false;
+		}
+		[$login, $secret] = explode(':', $decoded, 2);
+		if ($login === '' || $secret === '') {
+			return false;
+		}
+		$current = $this->userSession->getUser();
+		if ($current === null) {
+			return false;
+		}
+
+		$authed = $this->userManager->checkPassword($login, $secret);
+		if ($authed !== false) {
+			return hash_equals($current->getUID(), $authed->getUID());
+		}
+
+		try {
+			$token = $this->tokenProvider->getToken($secret);
+		} catch (InvalidTokenException|ExpiredTokenException|WipeTokenException) {
+			return false;
+		}
+
+		if (!hash_equals($current->getUID(), $token->getUID())) {
+			return false;
+		}
+
+		// Bind the Basic login name to the token (UID or loginName used at mint).
+		return hash_equals($token->getUID(), $login)
+			|| hash_equals($token->getLoginName(), $login);
 	}
 
 	/**

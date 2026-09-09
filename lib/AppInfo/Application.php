@@ -591,7 +591,8 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Service\MobileBookingService::class),
 				$c->query(\OCA\ProjectCheck\Service\MobileSettlementService::class),
 				$c->query(IAppManager::class),
-				$c->query(\OCA\ProjectCheck\Service\IRequestTokenProvider::class),
+				$c->query(\OCP\IUserManager::class),
+				$c->query(\OCP\Authentication\Token\IProvider::class),
 			);
 		});
 
@@ -641,6 +642,13 @@ class Application extends App implements IBootstrap
 			\OCP\Security\CSP\AddContentSecurityPolicyEvent::class,
 			\OCA\ProjectCheck\Listener\CSPListener::class,
 		);
+		// Files sidebar scripts (shipping surface — was dead/unregistered)
+		if (class_exists(\OCA\Files\Event\LoadSidebar::class)) {
+			$context->registerEventListener(
+				\OCA\Files\Event\LoadSidebar::class,
+				\OCA\ProjectCheck\Listener\LoadSidebarScripts::class,
+			);
+		}
 	}
 
 	/**

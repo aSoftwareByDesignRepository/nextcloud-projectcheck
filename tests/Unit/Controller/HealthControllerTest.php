@@ -21,6 +21,7 @@ class HealthControllerTest extends TestCase
 		self::assertSame(200, $response->getStatus());
 
 		$data = $response->getData();
+		self::assertTrue($data['ok']);
 		self::assertSame('healthy', $data['status']);
 		self::assertSame('projectcheck', $data['app']);
 		self::assertTrue($data['mobileApi']);

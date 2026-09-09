@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck;
 
+use OCA\ProjectCheck\AppInfo\Application;
+use OCP\App\IAppManager;
 use OCP\Capabilities\ICapability;
 
 /**
@@ -18,6 +20,11 @@ use OCP\Capabilities\ICapability;
  */
 class Capabilities implements ICapability
 {
+	public function __construct(
+		private IAppManager $appManager,
+	) {
+	}
+
 	/**
 	 * Function an app uses to return the capabilities
 	 *
@@ -25,9 +32,14 @@ class Capabilities implements ICapability
 	 */
 	public function getCapabilities()
 	{
+		$version = $this->appManager->getAppVersion(Application::APP_ID);
+		if ($version === '') {
+			$version = trim((string)@file_get_contents(__DIR__ . '/../appinfo/version'));
+		}
+
 		return [
 			'projectcheck' => [
-				'version' => '1.0.0',
+				'version' => $version !== '' ? $version : '2.0.99',
 				'features' => [
 					'project_management' => [
 						'description' => 'Project management functionality',

@@ -11,6 +11,7 @@ use OCA\ProjectCheck\Exception\MobileGateException;
 use OCA\ProjectCheck\Middleware\AppAccessMiddleware;
 use OCA\ProjectCheck\Service\LicenseService;
 use OCA\ProjectCheck\Service\MobileGateService;
+use OCA\ProjectCheck\Tests\Support\IntegrationTestUsers;
 use OCA\ProjectCheck\Tests\Support\Pc2TestSigning;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -194,9 +195,7 @@ final class MobileGateHttpIntegrationTest extends TestCase
 	private function ensureUser(string $uid): void
 	{
 		$um = \OC::$server->get(IUserManager::class);
-		if (!$um->userExists($uid)) {
-			$um->createUser($uid, self::PASS);
-		}
+		IntegrationTestUsers::ensure($um, $uid, self::PASS);
 		$this->testUsers[] = $uid;
 	}
 

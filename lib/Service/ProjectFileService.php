@@ -24,6 +24,7 @@ namespace OCA\ProjectCheck\Service;
 
 use OCA\ProjectCheck\Db\ProjectFile;
 use OCA\ProjectCheck\Db\ProjectFileMapper;
+use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\IAppData;
 use OCP\Files\AppData\IAppDataFactory;
@@ -460,14 +461,14 @@ class ProjectFileService
 	private function assertProjectAccess(int $projectId, string $userId): void
 	{
 		if (!$this->projectService->canUserAccessProject($userId, $projectId)) {
-			throw new \RuntimeException('Access denied');
+			throw new PermissionDeniedException('access', 'project file', 'Access denied');
 		}
 	}
 
 	private function assertProjectManage(int $projectId, string $userId): void
 	{
 		if (!$this->projectService->canUserEditProject($userId, $projectId)) {
-			throw new \RuntimeException('Access denied');
+			throw new PermissionDeniedException('manage', 'project file', 'Access denied');
 		}
 	}
 }

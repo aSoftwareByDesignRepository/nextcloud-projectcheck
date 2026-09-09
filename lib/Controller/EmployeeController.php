@@ -37,6 +37,7 @@ use OCA\ProjectCheck\Db\UserAccountSnapshotMapper;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCP\IConfig;
 use OCP\IL10N;
+use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCA\ProjectCheck\Util\RateResolutionMessage;
 use OCA\ProjectCheck\Traits\StatsTrait;
@@ -530,12 +531,17 @@ class EmployeeController extends Controller
 				],
 				'message' => $this->l->t('Rate saved. Past time entries keep their previous rate.'),
 			]);
+		} catch (PermissionDeniedException $e) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 		} catch (RateResolutionException $e) {
 			return new JSONResponse([
 				'error' => RateResolutionMessage::forException($e, $this->l),
 				'code' => $e->getCodeKey(),
 			], 400);
 		} catch (\Exception $e) {
+			if (stripos($e->getMessage(), 'Access denied') !== false) {
+				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+			}
 			return new JSONResponse(['error' => $this->l->t('Could not save rate. Please check your input.')], 400);
 		}
 	}

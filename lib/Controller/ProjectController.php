@@ -2310,6 +2310,10 @@ class ProjectController extends Controller
 			return new DataResponse($this->errorPayload($this->l->t('User not authenticated')), 401);
 		}
 
+		if (!$this->customerService->canUserViewCustomer($user->getUID(), $customerId)) {
+			return new DataResponse($this->errorPayload($this->l->t('Access denied')), 403);
+		}
+
 		try {
 			// Scope projects by customer and per-user visibility.
 			$projects = $this->projectService->getUserScopedProjects($user->getUID(), [

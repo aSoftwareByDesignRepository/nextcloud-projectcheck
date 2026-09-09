@@ -226,6 +226,7 @@ class DashboardController extends Controller
 		$stats['detailedProjectTypeStats'] = $detailedProjectTypeStats;
 		$stats['productivityAnalysis'] = $productivityAnalysis;
 		$stats['isGlobalViewer'] = $isGlobalViewer;
+		$stats['ok'] = true;
 
 		return new JSONResponse($stats);
 	}

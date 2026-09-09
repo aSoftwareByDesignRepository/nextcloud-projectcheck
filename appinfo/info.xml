@@ -278,6 +278,11 @@ as taxas horárias nos lançamentos são resolvidas no servidor a partir do hist
 		<command>OCA\ProjectCheck\Command\SettlementRecomputeCommand</command>
 	</commands>
 
+	<background-jobs>
+		<job>OCA\ProjectCheck\BackgroundJob\CleanupJob</job>
+		<job>OCA\ProjectCheck\Cron\CleanupJob</job>
+	</background-jobs>
+
 	<release>
 		<databases>
 			<database>mysql</database>

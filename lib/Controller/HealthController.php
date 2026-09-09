@@ -35,6 +35,7 @@ class HealthController extends Controller
 	public function check(): JSONResponse
 	{
 		return new JSONResponse([
+			'ok' => true,
 			'status' => 'healthy',
 			'app' => Application::APP_ID,
 			// Stable capability flag — clients must not require a version field here.
