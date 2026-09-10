@@ -83,12 +83,23 @@ module.exports = async function globalSetup() {
 	}
 
 	// Verify ProjectCheck is reachable while authenticated.
-	await page.goto(`${base}/index.php/apps/projectcheck/dashboard`, { waitUntil: 'domcontentloaded' });
+	// One reload retry: under concurrent farm PHPUnit/E2E load the first paint can miss #app-content.
 	const appContent = page.locator('#app-content');
-	await appContent.waitFor({ state: 'visible', timeout: 15_000 }).catch(async () => {
+	let dashboardOk = false;
+	for (let attempt = 0; attempt < 2; attempt++) {
+		await page.goto(`${base}/index.php/apps/projectcheck/dashboard`, { waitUntil: 'domcontentloaded' });
+		dashboardOk = await appContent
+			.waitFor({ state: 'visible', timeout: 15_000 })
+			.then(() => true)
+			.catch(() => false);
+		if (dashboardOk) {
+			break;
+		}
+	}
+	if (!dashboardOk) {
 		await browser.close();
 		throw new Error('[projectcheck:e2e] ProjectCheck dashboard did not load after login');
-	});
+	}
 
 	await context.storageState({ path: outputPath });
 	await browser.close();

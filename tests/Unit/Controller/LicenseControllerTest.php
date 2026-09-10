@@ -203,7 +203,7 @@ final class LicenseControllerTest extends TestCase
 		$response = $this->makeController()->assignSeat();
 
 		self::assertSame(Http::STATUS_CREATED, $response->getStatus());
-		self::assertSame($seatRow, $response->getData());
+		self::assertSame(array_merge(['ok' => true], $seatRow), $response->getData());
 	}
 
 	public function testAssignSeatReturns200WhenAlreadyAssigned(): void

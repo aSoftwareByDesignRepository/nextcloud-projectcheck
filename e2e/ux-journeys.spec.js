@@ -12,6 +12,7 @@ const URLS = {
 	dashboard: process.env.E2E_DASHBOARD_URL || `${BASE}/index.php/apps/projectcheck/dashboard`,
 	projects: process.env.E2E_PROJECTS_URL || `${BASE}/index.php/apps/projectcheck/projects`,
 	customers: `${BASE}/index.php/apps/projectcheck/customers`,
+	employees: `${BASE}/index.php/apps/projectcheck/employees`,
 	timeEntries: `${BASE}/index.php/apps/projectcheck/time-entries`,
 	timeEntryCreate: process.env.E2E_TIME_ENTRY_CREATE_URL || `${BASE}/index.php/apps/projectcheck/time-entries/create`,
 	projectCreate: process.env.E2E_PROJECT_CREATE_URL || `${BASE}/index.php/apps/projectcheck/projects/create`,
@@ -91,6 +92,7 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		await expect(page.locator('.pc-filters__more')).toHaveCount(0);
 		await expect(page.locator('#time-entry-search')).toBeVisible();
 		await expect(page.locator('#project-filter')).toBeVisible();
+		await expect(page.locator('#user-filter')).toBeVisible();
 		await expect(page.locator('#time-entry-project-type-filter')).toBeVisible();
 		await expect(page.locator('#billing-status-filter')).toBeVisible();
 		await expect(page.locator('#date-from-filter')).toBeVisible();
@@ -98,6 +100,98 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		await expect(page.locator('#apply-filters')).toBeVisible();
 		await expect(page.locator('#clear-filters')).toBeVisible();
 		await expect(page.locator('.pc-filters--all-visible .pc-filters__more, .pc-filters--all-visible .pc-filters__more-summary')).toHaveCount(0);
+		await assertAxeClean(page);
+	});
+
+	test('time entries: user-filter toggles each value with honest empty results', async ({ page }) => {
+		await gotoApp(page, URLS.timeEntries);
+		const userFilter = page.locator('#user-filter');
+		await expect(userFilter).toBeVisible();
+		const optionValues = await userFilter.locator('option').evaluateAll((opts) =>
+			opts.map((o) => /** @type {HTMLOptionElement} */ (o).value).filter((v) => v !== ''),
+		);
+		expect(optionValues.length, 'user-filter should expose at least one user option').toBeGreaterThan(0);
+
+		for (const value of optionValues) {
+			await userFilter.selectOption(value);
+			await page.locator('#apply-filters').click();
+			await page.waitForLoadState('networkidle').catch(() => {});
+			await expect(page.locator('#user-filter')).toHaveValue(value);
+			const emptyOrRows = page.locator(
+				'.time-entries-empty, .pc-empty-state, #time-entries-table tbody tr, .time-entries-table tbody tr',
+			);
+			await expect(emptyOrRows.first()).toBeAttached();
+		}
+
+		// Impossible user id → honest empty (no fake KPI rows)
+		await userFilter.selectOption({ index: 0 });
+		await page.goto(`${URLS.timeEntries}?user_id=__atlas_no_such_user__`);
+		await page.waitForLoadState('domcontentloaded');
+		const emptyState = page.locator('.time-entries-empty, .pc-empty-state, .empty-content');
+		const rows = page.locator('#time-entries-table tbody tr, .time-entries-table tbody tr');
+		const emptyCount = await emptyState.count();
+		const rowCount = await rows.count();
+		expect(emptyCount > 0 || rowCount === 0, 'restrictive user filter must not invent rows').toBeTruthy();
+
+		await page.locator('#clear-filters').click();
+		await page.waitForLoadState('networkidle').catch(() => {});
+		await expect(page.locator('#user-filter')).toBeVisible();
+	});
+
+	test('employees: search filter toggles populated and empty honesty', async ({ page }) => {
+		await gotoApp(page, URLS.employees);
+		const search = page.locator('#employee-search');
+		await expect(search).toBeVisible();
+		await expect(page.locator('.employees-search-form')).toBeVisible();
+
+		await search.fill('a');
+		await page.locator('#apply-filters').click();
+		await page.waitForURL(/search=/);
+		await expect(page.locator('#employee-search')).toBeVisible();
+		const populatedOrEmpty = page.locator(
+			'.employees-table tbody tr, .pc-data-table tbody tr, .emptycontent, .pc-empty-state, .employees-empty',
+		);
+		await expect(populatedOrEmpty.first()).toBeAttached();
+
+		await search.fill('zzznomatch-atlas-xyz-999');
+		await page.locator('#apply-filters').click();
+		await page.waitForURL(/search=zzznomatch/);
+		// Locale may be de (Keine Mitarbeitenden…) or en (No employees match…)
+		await expect(page.locator('.emptycontent h2')).toBeVisible();
+		await expect(page.locator('.emptycontent h2')).toContainText(/match|entsprechen|passen|matchar|correspon/i);
+		await page.locator('#clear-filters, .emptycontent a.button').first().click();
+		await page.waitForLoadState('networkidle').catch(() => {});
+		await expect(page.locator('#employee-search')).toBeVisible();
+		await expect(page.locator('#employee-search')).toHaveValue('');
+		await assertAxeClean(page);
+	});
+
+	test('time entries: search filter toggles populated and empty honesty', async ({ page }) => {
+		await gotoApp(page, URLS.timeEntries);
+		const search = page.locator('#time-entry-search');
+		await expect(search).toBeVisible();
+		await expect(page.locator('.pc-filters--all-visible')).toBeVisible();
+
+		await search.fill('a');
+		await page.locator('#apply-filters').click();
+		await page.waitForURL(/search=/);
+		await expect(page.locator('#time-entry-search')).toBeVisible();
+		const populatedOrEmpty = page.locator(
+			'#time-entries-table tbody tr, .time-entries-table tbody tr, .time-entries-empty, .pc-empty-state',
+		);
+		await expect(populatedOrEmpty.first()).toBeAttached();
+
+		await search.fill('zzznomatch-atlas-xyz-999');
+		await page.locator('#apply-filters').click();
+		await page.waitForURL(/search=zzznomatch/);
+		await expect(page.locator('.time-entries-empty h2, .pc-empty-state h2').first()).toBeVisible();
+		await expect(page.locator('.time-entries-empty h2, .pc-empty-state h2').first()).toContainText(
+			/No time entries|Keine Zeiteintr|Ingen tid|Inga tids|Ninguna entrada|Aucun|Nessun/i,
+		);
+		await page.locator('#clear-filters').click();
+		await page.waitForLoadState('networkidle').catch(() => {});
+		await expect(page.locator('#time-entry-search')).toBeVisible();
+		await expect(page.locator('#time-entry-search')).toHaveValue('');
 		await assertAxeClean(page);
 	});
 

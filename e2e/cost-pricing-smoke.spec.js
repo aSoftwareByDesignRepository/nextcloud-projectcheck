@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const { gotoApp } = require('./helpers/auth-guard');
+const { openProjectFormPanels } = require('./helpers/project-form-panels');
 
 const BASE = (process.env.BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
 
@@ -48,12 +49,15 @@ for (const vp of viewports) {
 			test.skip(!process.env.BASE_URL && !process.env.E2E_USER, 'Set BASE_URL and E2E_USER in e2e/.env');
 			await gotoApp(page, URLS.projectCreate);
 			await assertAppShell(page);
+			// Pricing lives in a closed <details> accordion on create — open before assert.
+			await openProjectFormPanels(page, { more: false, pricing: true, budget: false });
 
 			const pricing = page.locator('#pc-pricing-method');
 			await pricing.scrollIntoViewIfNeeded();
 			await expect(pricing).toBeVisible();
 			await expect(page.getByRole('radio', { name: /one rate for the whole project|ein satz für das ganze projekt/i })).toBeVisible();
-			await expect(page.getByRole('radio', { name: /rate per employee|satz je mitarbeitendem/i })).toBeVisible();
+			// DE l10n: "Satz je Mitarbeitende/r (Stammdaten)" (inclusive form — not "mitarbeitendem")
+			await expect(page.getByRole('radio', { name: /rate per employee|satz je mitarbeitende/i })).toBeVisible();
 			await expect(page.getByRole('radio', { name: /rate per person on this project|satz je person in diesem projekt/i })).toBeVisible();
 
 			await expect(page.locator('.pc-section').first()).toBeVisible();
@@ -178,14 +182,19 @@ for (const vp of viewports) {
 
 		test('settings: skip link and security notice', async ({ page }) => {
 			test.skip(!process.env.BASE_URL && !process.env.E2E_USER, 'Set BASE_URL and E2E_USER in e2e/.env');
+			// /settings redirects to /settings/access (trust notice). Rate hint lives on defaults.
 			await gotoApp(page, URLS.settings);
-			await expect(page).toHaveURL(/\/apps\/projectcheck\/settings/, { timeout: 20000 });
+			await expect(page).toHaveURL(/\/apps\/projectcheck\/settings\/access/, { timeout: 20000 });
 			await assertAppShell(page);
 			await expect(page.locator('#app-content.pc-app a.pc-skip-link[href="#projectcheck-org-main"]')).toBeAttached();
 			await expect(page.locator('#app-content.pc-app a.pc-skip-link[href="#app-navigation"]')).toBeAttached();
 			const trustHeading = page.locator('#projectcheck-org-trust-h');
 			await trustHeading.scrollIntoViewIfNeeded();
 			await expect(trustHeading).toBeVisible();
+
+			const defaultsUrl = `${BASE}/index.php/apps/projectcheck/settings/defaults`;
+			await gotoApp(page, defaultsUrl);
+			await expect(page).toHaveURL(/\/apps\/projectcheck\/settings\/defaults/, { timeout: 20000 });
 			const rateHint = page.locator('#pc_def_rate_hint');
 			await rateHint.scrollIntoViewIfNeeded();
 			await expect(rateHint).toContainText(/one rate for the whole project|ein satz für das ganze projekt/i);

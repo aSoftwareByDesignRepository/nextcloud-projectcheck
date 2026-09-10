@@ -112,9 +112,23 @@ async function dismissOpenAppNavigation(page) {
 		.catch(() => {});
 }
 
+async function isNcNotFound(page) {
+	const heading = page.getByRole('heading', {
+		name: /page not found|seite nicht gefunden/i,
+	});
+	return heading.isVisible({ timeout: 1500 }).catch(() => false);
+}
+
+/**
+ * Navigate into the app. One reload retry on transient Nextcloud 404 under concurrent farm load.
+ */
 async function gotoApp(page, url) {
 	await page.goto(url, { waitUntil: 'domcontentloaded' });
 	await ensureAuthenticated(page);
+	if (await isNcNotFound(page)) {
+		await page.reload({ waitUntil: 'domcontentloaded' });
+		await ensureAuthenticated(page);
+	}
 	await dismissOpenAppNavigation(page);
 }
 

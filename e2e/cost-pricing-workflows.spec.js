@@ -238,7 +238,16 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 		test.skip(!projectId, 'Missing project id');
 
 		await gotoApp(page, TIME_ENTRY_CREATE_URL);
-		await page.locator('#project_id').selectOption(projectId);
+		const projectSelect = page.locator('#project_id');
+		await expect
+			.poll(async () => {
+				const values = await projectSelect.locator('option').evaluateAll((opts) =>
+					opts.map((o) => o.value),
+				);
+				return values.includes(String(projectId));
+			}, { timeout: 20000, message: `Project ${projectId} should appear in time-entry project select` })
+			.toBe(true);
+		await projectSelect.selectOption(String(projectId));
 		const today = new Date();
 		const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 		await page.locator('#date').fill(iso);
@@ -252,6 +261,17 @@ test.describe('ProjectCheck cost-pricing workflows', () => {
 		await page.waitForURL(/time-entries/, { timeout: 30000 });
 
 		await gotoApp(page, `${BASE}/index.php/apps/projectcheck/projects/${projectId}/edit`);
+		await expect
+			.poll(async () => {
+				const help = await page.locator('#pc-pricing-method-help').innerText().catch(() => '');
+				const locked = await page.locator('[data-testid="pc-pricing-locked"]').count();
+				if (/locked|gesperrt/i.test(help) || locked > 0) {
+					return true;
+				}
+				await page.reload({ waitUntil: 'domcontentloaded' });
+				return false;
+			}, { timeout: 20000, message: 'Pricing method should lock after time is logged on the project' })
+			.toBe(true);
 		await expect(page.locator('#pc-pricing-method-help')).toContainText(/locked|gesperrt/i);
 		await expect(page.locator('[data-testid="pc-pricing-locked"]')).toBeVisible();
 		await expect(page.locator('#pc-pricing-method input[type="radio"]')).toHaveCount(0);

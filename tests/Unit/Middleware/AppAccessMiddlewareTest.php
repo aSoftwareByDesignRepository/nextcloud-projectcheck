@@ -66,7 +66,8 @@ class AppAccessMiddlewareTest extends TestCase {
 		$controller = new \OCA\ProjectCheck\Controller\PageController(
 			'projectcheck',
 			$this->createMock(\OCP\IRequest::class),
-			$this->createMock(\OCP\IURLGenerator::class)
+			$this->createMock(\OCP\IURLGenerator::class),
+			$this->createMock(\OCP\IL10N::class)
 		);
 		$this->middleware->beforeController($controller, 'index');
 	}
