@@ -10,8 +10,14 @@ use OCA\ProjectCheck\Cron\CleanupJob as CronCleanupJob;
 use OCA\ProjectCheck\Middleware\AppAccessMiddleware;
 use OCA\ProjectCheck\Middleware\SchemaGuardMiddleware;
 use OCA\ProjectCheck\Service\AccessControlService;
+use OCA\ProjectCheck\Service\BudgetAlertService;
 use OCA\ProjectCheck\Service\CSPService;
+use OCA\ProjectCheck\Service\CustomerService;
+use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\SchemaGuardService;
+use OCA\ProjectCheck\Service\TimeEntryService;
+use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\IConfig;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
@@ -48,23 +54,31 @@ final class AtlasEntrypointsInvokeCoverageTest extends TestCase
 			$this->createMock(LoggerInterface::class),
 		]);
 
-		foreach ([BgCleanupJob::class, CronCleanupJob::class] as $job) {
+		// Construct via real ctors (ITimeFactory) — never newInstanceWithoutConstructor
+		// alone; that hides ArgumentCountError on parent Job::__construct (GH #12).
+		$time = $this->createMock(ITimeFactory::class);
+		$logger = $this->createMock(LoggerInterface::class);
+		$projects = $this->createMock(ProjectService::class);
+		$entries = $this->createMock(TimeEntryService::class);
+		$customers = $this->createMock(CustomerService::class);
+		$config = $this->createMock(IConfig::class);
+		$schema = $this->createMock(SchemaGuardService::class);
+		foreach ([
+			[BgCleanupJob::class, [$time, $logger, $projects, $entries, $customers, $config, $schema]],
+			[CronCleanupJob::class, [$time, $logger, $projects, $entries, $customers, $this->createMock(BudgetAlertService::class), $config, $schema]],
+		] as [$job, $ctorArgs]) {
 			if (!class_exists($job)) {
 				continue;
 			}
 			$ref = new ReflectionClass($job);
+			$obj = $ref->newInstanceArgs($ctorArgs);
+			$run = $ref->getMethod('run');
+			$run->setAccessible(true);
 			try {
-				$obj = $ref->newInstanceWithoutConstructor();
-				$run = $ref->getMethod('run');
-				$run->setAccessible(true);
-				try {
-					$run->invoke($obj, null);
-				} catch (\Throwable) {
-				}
-				$this->invoked[] = $ref->getShortName() . '::run';
+				$run->invoke($obj, null);
 			} catch (\Throwable) {
-				$this->invoked[] = $ref->getShortName() . '::run';
 			}
+			$this->invoked[] = $ref->getShortName() . '::run';
 		}
 
 		$listenerDir = dirname(__DIR__, 3) . '/lib/Listener';

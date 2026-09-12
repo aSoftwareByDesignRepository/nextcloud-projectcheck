@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Cron;
 
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
 use OCP\BackgroundJob\Job;
 use OCP\BackgroundJob\IJob;
@@ -51,6 +52,7 @@ class CleanupJob extends Job implements IJob
 	/**
 	 * CleanupJob constructor
 	 *
+	 * @param ITimeFactory $time
 	 * @param LoggerInterface $logger
 	 * @param ProjectService $projectService
 	 * @param TimeEntryService $timeEntryService
@@ -60,6 +62,7 @@ class CleanupJob extends Job implements IJob
 	 * @param SchemaGuardService $schemaGuard
 	 */
 	public function __construct(
+		ITimeFactory $time,
 		LoggerInterface $logger,
 		ProjectService $projectService,
 		TimeEntryService $timeEntryService,
@@ -68,7 +71,7 @@ class CleanupJob extends Job implements IJob
 		IConfig $config,
 		SchemaGuardService $schemaGuard
 	) {
-		parent::__construct();
+		parent::__construct($time);
 		$this->logger = $logger;
 		$this->projectService = $projectService;
 		$this->timeEntryService = $timeEntryService;
