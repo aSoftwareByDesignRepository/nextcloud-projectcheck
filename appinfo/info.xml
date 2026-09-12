@@ -37,6 +37,10 @@ ProjectCheck keeps customers, projects, people, time entries and optional budget
 - Mobile may preview rates; the server stays authoritative.
 - Prefer `ProjectCheck*` in new integrations — `ProjectControl*` / `OCA.ProjectControl` are deprecated aliases.
 
+## Feedback welcome
+
+We improve this app with real-world use. Bug reports, rough edges, and ideas help — open a GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) or write to info@software-by-design.de. Your feedback directly shapes what we build next.
+
 ## Requirements
 
 - Nextcloud 32–34 · PHP 8.2–8.5 · MySQL/MariaDB or PostgreSQL
@@ -61,6 +65,10 @@ ProjectCheck führt Kunden, Projekte, Personen, Zeiteinträge und optionale Budg
 - Mobile kann Tarife nur voranzeigen; maßgeblich ist der Server.
 - Für neue Anbindungen `ProjectCheck*` verwenden — `ProjectControl*` / `OCA.ProjectControl` sind veraltete Aliase.
 
+## Feedback willkommen
+
+Wir verbessern diese App mit Rückmeldungen aus der Praxis. Fehlerberichte, Stolpersteine und Ideen helfen — öffnen Sie ein GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) oder schreiben Sie an info@software-by-design.de. Ihr Feedback prägt direkt, was wir als Nächstes bauen.
+
 ## Voraussetzungen
 
 - Nextcloud 32–34 · PHP 8.2–8.5 · MySQL/MariaDB oder PostgreSQL
@@ -77,7 +85,11 @@ les taux horaires des saisies de temps sont résolus côté serveur à partir de
 - Gestion des projets et clients, affectation d'équipe, suivi budgétaire
 - Interface orientée WCAG, alignée sur la famille d'apps Check
 - Historique des tarifs en ajout seul
-	]]></description>
+
+## Retours bienvenus
+
+Nous améliorons cette app grâce à votre usage réel. Bugs, frottements et idées aident — ouvrez une GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) ou écrivez à info@software-by-design.de. Vos retours façonnent directement la suite.
+]]></description>
 	<description lang="da"><![CDATA[
 # ProjectCheck
 
@@ -90,7 +102,11 @@ timesatser på tidsregistreringer beregnes på serveren ud fra historik med ikra
 - Projekt- og kundestyring, teamtildeling, budgetovervågning
 - WCAG-orienteret brugerflade i Check-app-familien
 - Kun-tilføjelses taksthistorik
-	]]></description>
+
+## Feedback er velkommen
+
+Vi forbedrer denne app med brug i praksis. Fejlrapporter, friktioner og idéer hjælper — åbn et GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) eller skriv til info@software-by-design.de. Jeres feedback former direkte det, vi bygger næste gang.
+]]></description>
 	<description lang="es"><![CDATA[
 # ProjectCheck
 
@@ -103,7 +119,11 @@ las tarifas horarias en entradas de tiempo se resuelven en el servidor desde el 
 - Gestión de proyectos y clientes, asignación de equipos, supervisión presupuestaria
 - Interfaz orientada a WCAG, alineada con la familia de apps Check
 - Historial de tarifas solo de adición
-	]]></description>
+
+## Comentarios bienvenidos
+
+Mejoramos esta app con el uso real. Informes de errores, fricciones e ideas ayudan — abra un GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) o escriba a info@software-by-design.de. Su feedback da forma directa a lo que construimos después.
+]]></description>
 	<description lang="nl"><![CDATA[
 # ProjectCheck
 
@@ -116,7 +136,11 @@ uurtarieven op tijdregistraties worden op de server bepaald vanuit historie met 
 - Project- en klantbeheer, teamtoewijzing, budgetbewaking
 - WCAG-gerichte interface, afgestemd op de Check-appfamilie
 - Append-only tariefhistorie
-	]]></description>
+
+## Feedback welkom
+
+We verbeteren deze app met gebruik in de praktijk. Bugmeldingen, struikelblokken en ideeën helpen — open een GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) of mail naar info@software-by-design.de. Uw feedback bepaalt mede wat we als volgende bouwen.
+]]></description>
 	<description lang="it"><![CDATA[
 # ProjectCheck
 
@@ -129,7 +153,11 @@ le tariffe orarie sulle registrazioni sono risolte sul server dalla cronologia c
 - Gestione progetti e clienti, assegnazione team, monitoraggio budget
 - Interfaccia orientata WCAG, allineata alla famiglia di app Check
 - Cronologia tariffe solo in aggiunta
-	]]></description>
+
+## Feedback benvenuto
+
+Miglioriamo questa app con l’uso reale. Segnalazioni di bug, punti deboli e idee aiutano — aprite una GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) o scrivete a info@software-by-design.de. Il vostro feedback guida direttamente ciò che costruiamo dopo.
+]]></description>
 	<description lang="pl"><![CDATA[
 # ProjectCheck
 
@@ -142,7 +170,11 @@ stawki godzinowe w wpisach czasu są ustalane na serwerze z historii obowiązywa
 - Zarządzanie projektami i klientami, przypisanie zespołu, monitoring budżetu
 - Interfejs zgodny z WCAG, spójny z rodziną aplikacji Check
 - Historia stawek tylko do dopisywania
-	]]></description>
+
+## Feedback mile widziany
+
+Ulepszamy tę aplikację dzięki realnemu użyciu. Zgłoszenia błędów, tarcia i pomysły pomagają — otwórz GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) lub napisz na info@software-by-design.de. Wasza opinia bezpośrednio kształtuje to, co budujemy dalej.
+]]></description>
 	<description lang="sv"><![CDATA[
 # ProjectCheck
 
@@ -155,7 +187,11 @@ timpriser på tidposter löses på servern från historik med giltighetsdatum.
 - Projekt- och kundhantering, teamtilldelning, budgetövervakning
 - WCAG-orienterat gränssnitt i Check-appfamiljen
 - Endast tilläggbar taxehistorik
-	]]></description>
+
+## Feedback välkomnas
+
+Vi förbättrar den här appen med verklig användning. Felrapporter, friktioner och idéer hjälper — öppna en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) eller skriv till info@software-by-design.de. Er feedback formar direkt det vi bygger härnäst.
+]]></description>
 	<description lang="nb"><![CDATA[
 # ProjectCheck
 
@@ -168,7 +204,11 @@ timesatser på tidsregistreringer beregnes på serveren fra historikk med ikraft
 - Prosjekt- og kundestyring, teamtildeling, budsjettovervåking
 - WCAG-orientert grensesnitt i Check-appfamilien
 - Kun-tilleggs satshistorikk
-	]]></description>
+
+## Feedback er velkommen
+
+Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer hjelper — åpne en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) eller skriv til info@software-by-design.de. Tilbakemeldingen deres former direkte det vi bygger videre.
+]]></description>
 	<description lang="pt-br"><![CDATA[
 # ProjectCheck
 
@@ -183,7 +223,7 @@ as taxas horárias nos lançamentos são resolvidas no servidor a partir do hist
 - Histórico de taxas apenas com inclusão (append-only)
 	]]></description>
 
-	<version>2.0.99</version>
+	<version>2.0.100</version>
 	<licence>AGPL-3.0-or-later</licence>
 	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de">Software by Design GbR</author>
 

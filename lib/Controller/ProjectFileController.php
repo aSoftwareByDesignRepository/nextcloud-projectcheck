@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Controller;
 
-use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Service\ProjectFileService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -72,18 +71,6 @@ class ProjectFileController extends Controller
 		try {
 			$uploads = $this->request->getUploadedFile('project_files');
 			$this->fileService->addFilesFromUpload($projectId, $uploads ?? [], $user->getUID());
-		} catch (PermissionDeniedException $e) {
-			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
-				return new DataResponse(['error' => $this->l->t('Access denied')], 403);
-			}
-			return new RedirectResponse($this->urlGenerator->linkToRoute(
-				'projectcheck.project.show',
-				[
-					'id' => $projectId,
-					'message' => 'error',
-					'error_text' => $this->l->t('Access denied'),
-				]
-			));
 		} catch (\Throwable $e) {
 			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
 				return new DataResponse(['error' => $this->l->t('File upload failed. Please check your input and try again.')], 400);
@@ -141,8 +128,6 @@ class ProjectFileController extends Controller
 					];
 				}, $files),
 			]);
-		} catch (PermissionDeniedException $e) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		} catch (\Throwable $e) {
 			return new DataResponse(['error' => $this->l->t('Could not load project files.')], 400);
 		}
@@ -197,10 +182,8 @@ class ProjectFileController extends Controller
 			$response->addHeader('X-Content-Type-Options', 'nosniff');
 
 			return $response;
-		} catch (PermissionDeniedException $e) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		} catch (\Throwable $e) {
-			return new DataResponse(['error' => $this->l->t('File not found.')], 404);
+			return new DataResponse(['error' => $this->l->t('File not found or access denied.')], 404);
 		}
 	}
 
@@ -241,8 +224,6 @@ class ProjectFileController extends Controller
 		try {
 			$this->fileService->deleteFile($projectId, $fileId, $uid);
 			return new DataResponse(['success' => true, 'message' => $this->l->t('File deleted successfully')]);
-		} catch (PermissionDeniedException $e) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		} catch (\Throwable $e) {
 			return new DataResponse(['error' => $this->l->t('Could not delete the file.')], 400);
 		}

@@ -11,12 +11,10 @@ use OCA\ProjectCheck\Exception\BillingLockedException;
 use OCA\ProjectCheck\Exception\MobileApiException;
 use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Exception\RateResolutionException;
-use OCA\ProjectCheck\Exception\SettlementConflictException;
 use OCA\ProjectCheck\Exception\TimeEntryNotFoundException;
 use OCA\ProjectCheck\Exception\ValidationException;
 use OCA\ProjectCheck\Util\BillingStatus;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\IDBConnection;
 use OCP\IL10N;
 
 /**
@@ -36,7 +34,6 @@ class MobileBookingService
 		private readonly IL10N $l,
 		private readonly ?MobileIdempotencyMapper $idempotency = null,
 		private readonly ?ITimeFactory $timeFactory = null,
-		private readonly ?IDBConnection $db = null,
 	) {
 	}
 
@@ -110,13 +107,11 @@ class MobileBookingService
 			'hourlyRate' => $preview['hourly_rate'],
 			'costRateMode' => $preview['cost_rate_mode'],
 			'source' => $preview['source'],
-			// Re-anchor companion calendar while the entry form is open.
-			'serverNow' => (new \DateTimeImmutable('now'))->format(\DateTimeInterface::ATOM),
 		];
 	}
 
 	/**
-	 * @return array{entries: list<array<string, mixed>>, hasMore: bool, limit: int}
+	 * @return array{entries: list<array<string, mixed>>}
 	 */
 	public function listMyEntries(string $uid, ?string $from, ?string $to, ?string $billingStatus): array
 	{
@@ -131,8 +126,7 @@ class MobileBookingService
 
 		$filters = [
 			'user_id' => $uid,
-			// Fetch one extra so we can set hasMore without a second count query.
-			'limit' => self::MAX_ENTRIES + 1,
+			'limit' => self::MAX_ENTRIES,
 			'offset' => 0,
 		];
 		if ($from !== null && $from !== '') {
@@ -153,19 +147,10 @@ class MobileBookingService
 
 		$raw = $this->timeEntries->getTimeEntriesWithProjectInfo($filters);
 		$entries = [];
-		$hasMore = false;
 		foreach ($raw as $row) {
-			if (count($entries) >= self::MAX_ENTRIES) {
-				$hasMore = true;
-				break;
-			}
 			$entries[] = $this->entryRowFromJoined($row);
 		}
-		return [
-			'entries' => $entries,
-			'hasMore' => $hasMore,
-			'limit' => self::MAX_ENTRIES,
-		];
+		return ['entries' => $entries];
 	}
 
 	/**
@@ -215,91 +200,54 @@ class MobileBookingService
 
 		$validation = $this->timeEntries->validateTimeEntryDataDetailed($data);
 		if ($validation['errors'] !== []) {
-			throw new MobileApiException('validation', $this->l->t('Please correct the highlighted fields.'), 422, [
+			throw new MobileApiException('validation', $this->l->t('Please check the highlighted fields.'), 422, [
 				'fields' => $validation['errorCodes'],
 				'messages' => $validation['errors'],
 			]);
 		}
 
 		try {
-			$entry = $this->createEntryAtomic($uid, $data, $clientRequestId);
+			$entry = $this->timeEntries->createTimeEntry($data, $uid);
 		} catch (PermissionDeniedException) {
 			throw new MobileApiException('forbidden', $this->l->t('You cannot book time on this project.'), 403);
 		} catch (ValidationException $e) {
 			throw $this->validationToMobile($e);
 		}
 
+		if ($clientRequestId !== null && $this->idempotency !== null) {
+			$now = $this->timeFactory !== null ? $this->timeFactory->getTime() : time();
+			$inserted = $this->idempotency->tryInsert($uid, $clientRequestId, (int)$entry->getId(), $now);
+			if (!$inserted) {
+				// Lost the race: another request owns this key. Remove our orphan
+				// so AR / hours are never double-booked, then return the winner.
+				$orphanId = (int)$entry->getId();
+				try {
+					$this->timeEntries->deleteTimeEntryForMaintenance($orphanId);
+				} catch (\Throwable) {
+					// Absolute integrity: never pretend success while a billed orphan may remain.
+					throw new MobileApiException(
+						'conflict',
+						$this->l->t('This request was already processed, but a duplicate could not be cleaned up. Refresh and check your entries.'),
+						409,
+					);
+				}
+				$winner = $this->idempotency->findByUserAndRequestId($uid, $clientRequestId);
+				if ($winner !== null) {
+					$prior = $this->timeEntries->getTimeEntry((int)$winner->getTimeEntryId());
+					if ($prior !== null) {
+						return $this->entryRow($prior);
+					}
+				}
+				// Winner map vanished between insert conflict and read — surface conflict.
+				throw new MobileApiException(
+					'conflict',
+					$this->l->t('This request was already processed. Refresh and try again.'),
+					409,
+				);
+			}
+		}
+
 		return $this->entryRow($entry);
-	}
-
-	/**
-	 * Create + idempotency map in one outer transaction when a clientRequestId is present.
-	 * Nested createTimeEntry commits become savepoints — a crash before outer commit rolls
-	 * both the entry and the map back (no billed orphan without a key).
-	 *
-	 * @param array<string, mixed> $data
-	 */
-	private function createEntryAtomic(string $uid, array $data, ?string $clientRequestId): TimeEntry
-	{
-		if ($clientRequestId === null || $this->idempotency === null || $this->db === null) {
-			$entry = $this->timeEntries->createTimeEntry($data, $uid);
-			if ($clientRequestId !== null && $this->idempotency !== null) {
-				return $this->finalizeIdempotencyMap($uid, $clientRequestId, $entry);
-			}
-			return $entry;
-		}
-
-		$this->db->beginTransaction();
-		try {
-			$entry = $this->timeEntries->createTimeEntry($data, $uid);
-			$resolved = $this->finalizeIdempotencyMap($uid, $clientRequestId, $entry);
-			$this->db->commit();
-			return $resolved;
-		} catch (\Throwable $e) {
-			$this->db->rollBack();
-			throw $e;
-		}
-	}
-
-	/**
-	 * Insert or resolve the offline-create idempotency map for $entry.
-	 */
-	private function finalizeIdempotencyMap(string $uid, string $clientRequestId, TimeEntry $entry): TimeEntry
-	{
-		if ($this->idempotency === null) {
-			return $entry;
-		}
-		$now = $this->timeFactory !== null ? $this->timeFactory->getTime() : time();
-		$inserted = $this->idempotency->tryInsert($uid, $clientRequestId, (int)$entry->getId(), $now);
-		if ($inserted) {
-			return $entry;
-		}
-		// Lost the race: another request owns this key. Remove our orphan
-		// so AR / hours are never double-booked, then return the winner.
-		$orphanId = (int)$entry->getId();
-		try {
-			$this->timeEntries->deleteTimeEntryForMaintenance($orphanId);
-		} catch (\Throwable) {
-			// Absolute integrity: never pretend success while a billed orphan may remain.
-			throw new MobileApiException(
-				'conflict',
-				$this->l->t('This request was already processed, but a duplicate could not be cleaned up. Refresh and check your entries.'),
-				409,
-			);
-		}
-		$winner = $this->idempotency->findByUserAndRequestId($uid, $clientRequestId);
-		if ($winner !== null) {
-			$prior = $this->timeEntries->getTimeEntry((int)$winner->getTimeEntryId());
-			if ($prior !== null) {
-				return $prior;
-			}
-		}
-		// Winner map vanished between insert conflict and read — surface conflict.
-		throw new MobileApiException(
-			'conflict',
-			$this->l->t('This request was already processed. Refresh and try again.'),
-			409,
-		);
 	}
 
 	/**
@@ -377,7 +325,7 @@ class MobileBookingService
 		];
 		$validation = $this->timeEntries->validateTimeEntryDataDetailed($merged);
 		if ($validation['errors'] !== []) {
-			throw new MobileApiException('validation', $this->l->t('Please correct the highlighted fields.'), 422, [
+			throw new MobileApiException('validation', $this->l->t('Please check the highlighted fields.'), 422, [
 				'fields' => $validation['errorCodes'],
 				'messages' => $validation['errors'],
 			]);
@@ -395,12 +343,6 @@ class MobileBookingService
 				$e->getMessage() !== '' ? $e->getMessage() : $this->l->t('This time entry can no longer be edited.'),
 				409,
 				['billingStatus' => $e->getBillingStatus()],
-			);
-		} catch (SettlementConflictException $e) {
-			throw new MobileApiException(
-				'conflict',
-				$e->getMessage() !== '' ? $e->getMessage() : $this->l->t('This time entry was changed by someone else. Refresh and try again.'),
-				409,
 			);
 		} catch (ValidationException $e) {
 			throw $this->validationToMobile($e);
@@ -433,12 +375,6 @@ class MobileBookingService
 				$e->getMessage() !== '' ? $e->getMessage() : $this->l->t('This time entry can no longer be deleted.'),
 				409,
 				['billingStatus' => $e->getBillingStatus()],
-			);
-		} catch (SettlementConflictException $e) {
-			throw new MobileApiException(
-				'conflict',
-				$e->getMessage() !== '' ? $e->getMessage() : $this->l->t('This time entry was changed by someone else. Refresh and try again.'),
-				409,
 			);
 		}
 	}

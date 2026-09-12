@@ -279,6 +279,26 @@
 	line-height: 1.3;
 }
 
+/*
+ * All filters are always visible (no "More filters" disclosure).
+ * Give search a double-width cell on wider viewports so it stays easy to spot.
+ */
+.pc-app--time-entries .pc-filters--all-visible .pc-filters__grid {
+	align-items: end;
+}
+
+@media (min-width: 720px) {
+	.pc-app--time-entries .pc-filters--all-visible .pc-filters__field--search {
+		grid-column: span 2;
+	}
+}
+
+@media (max-width: 719px) {
+	.pc-app--time-entries .pc-filters--all-visible .pc-filters__field--search {
+		grid-column: 1 / -1;
+	}
+}
+
 .pc-app--time-entries .filter-select,
 .pc-app--time-entries .filter-date {
 	/* Visual chrome lives in common/filters.css */

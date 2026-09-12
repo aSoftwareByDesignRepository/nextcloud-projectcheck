@@ -138,6 +138,137 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		await expect(page.locator('#user-filter')).toBeVisible();
 	});
 
+	test('projects: search filter toggles populated and empty honesty', async ({ page }) => {
+		await gotoApp(page, URLS.projects);
+		const search = page.locator('#project-search');
+		await expect(search).toBeVisible();
+		await expect(page.locator('.pc-filters--all-visible')).toBeVisible();
+
+		await search.fill('a');
+		await page.locator('#apply-filters').click();
+		await page.waitForURL(/search=/);
+		await expect(page.locator('#project-search')).toBeVisible();
+		const populatedOrEmpty = page.locator(
+			'.projects-table tbody tr, .pc-data-table tbody tr, .pc-empty-state',
+		);
+		await expect(populatedOrEmpty.first()).toBeAttached();
+
+		await search.fill('zzznomatch-atlas-xyz-999');
+		await page.locator('#apply-filters').click();
+		await page.waitForURL(/search=zzznomatch/);
+		await expect(page.locator('.pc-empty-state__title, .pc-empty-state h3').first()).toBeVisible();
+		await expect(page.locator('.pc-empty-state__title, .pc-empty-state h3').first()).toContainText(
+			/No projects found|Keine Projekte|Ingen projekter|Inga projekt|Ningún proyecto|Aucun projet|Nessun progetto|Geen projecten|Brak projektów|Nenhum projekt/i,
+		);
+		const rows = page.locator('.projects-table tbody tr, #projects-tbody tr');
+		expect(await rows.count(), 'nonsense project search must not invent rows').toBe(0);
+		await page.locator('#clear-filters').click();
+		await page.waitForLoadState('networkidle').catch(() => {});
+		await expect(page.locator('#project-search')).toBeVisible();
+		await expect(page.locator('#project-search')).toHaveValue('');
+		await assertAxeClean(page);
+	});
+
+	test('projects: facet filters toggle each value with honest empty results', async ({ page }) => {
+		test.setTimeout(180_000);
+		await gotoApp(page, URLS.projects);
+		await expect(page.locator('.pc-filters--all-visible')).toBeVisible();
+
+		/** @type {Array<{ id: string, param: string }>} */
+		const facets = [
+			{ id: '#status-filter', param: 'status' },
+			{ id: '#priority-filter', param: 'priority' },
+			{ id: '#project-type-filter', param: 'project_type' },
+			{ id: '#customer-filter', param: 'customer_id' },
+			{ id: '#settlement-filter', param: 'settlement' },
+		];
+
+		for (const facet of facets) {
+			const select = page.locator(facet.id);
+			await expect(select).toBeVisible();
+			let optionValues = await select.locator('option').evaluateAll((opts) =>
+				opts
+					.map((o) => /** @type {HTMLOptionElement} */ (o).value)
+					.filter((v) => v !== '' && v !== 'all'),
+			);
+			// Customer lists can be long — prove every listed option up to a stable cap.
+			if (facet.id === '#customer-filter' && optionValues.length > 12) {
+				optionValues = optionValues.slice(0, 12);
+			}
+			expect(
+				optionValues.length,
+				`${facet.id} should expose at least one concrete option`,
+			).toBeGreaterThan(0);
+
+			for (const value of optionValues) {
+				await select.selectOption(value);
+				await Promise.all([
+					page.waitForURL((url) => url.searchParams.has(facet.param), { timeout: 30_000 }).catch(() => {}),
+					page.locator('#apply-filters').click(),
+				]);
+				await page.waitForLoadState('domcontentloaded');
+				await expect(page.locator(facet.id)).toHaveValue(value);
+				const emptyOrRows = page.locator(
+					'.pc-empty-state, .projects-table tbody tr, #projects-tbody tr, .pc-data-table tbody tr',
+				);
+				await expect(emptyOrRows.first()).toBeAttached();
+			}
+
+			await Promise.all([
+				page.waitForLoadState('domcontentloaded'),
+				page.locator('#clear-filters').click(),
+			]);
+			await expect(page.locator(facet.id)).toBeVisible();
+		}
+
+		// Impossible customer id → honest empty (no invented project rows)
+		await page.goto(`${URLS.projects}?customer_id=__atlas_no_such_customer__&status=all`);
+		await page.waitForLoadState('domcontentloaded');
+		const emptyState = page.locator('.pc-empty-state, .empty-content');
+		const projectRows = page.locator('.projects-table tbody tr, #projects-tbody tr');
+		const emptyCount = await emptyState.count();
+		const rowCount = await projectRows.count();
+		expect(
+			emptyCount > 0 || rowCount === 0,
+			'restrictive customer facet must not invent rows',
+		).toBeTruthy();
+
+		await page.locator('#clear-filters').click();
+		await page.waitForLoadState('domcontentloaded');
+		await expect(page.locator('#status-filter')).toBeVisible();
+	});
+
+	test('customers: search filter toggles populated and empty honesty', async ({ page }) => {
+		await gotoApp(page, URLS.customers);
+		const search = page.locator('#customer-search');
+		await expect(search).toBeVisible();
+		await expect(page.locator('.pc-filters--all-visible')).toBeVisible();
+
+		await search.fill('a');
+		await page.locator('#apply-filters').click();
+		await page.waitForURL(/search=/);
+		await expect(page.locator('#customer-search')).toBeVisible();
+		const populatedOrEmpty = page.locator(
+			'.customers-table tbody tr, .pc-data-table tbody tr, .pc-empty-state',
+		);
+		await expect(populatedOrEmpty.first()).toBeAttached();
+
+		await search.fill('zzznomatch-atlas-xyz-999');
+		await page.locator('#apply-filters').click();
+		await page.waitForURL(/search=zzznomatch/);
+		await expect(page.locator('.pc-empty-state__title, .pc-empty-state h3').first()).toBeVisible();
+		await expect(page.locator('.pc-empty-state__title, .pc-empty-state h3').first()).toContainText(
+			/No customers found|Keine Kunden|Ingen kunder|Inga kunder|Ningún cliente|Aucun client|Nessun cliente|Geen klanten|Brak klientów|Nenhum cliente/i,
+		);
+		const rows = page.locator('.customers-table tbody tr');
+		expect(await rows.count(), 'nonsense customer search must not invent rows').toBe(0);
+		await page.locator('#clear-filters').click();
+		await page.waitForLoadState('networkidle').catch(() => {});
+		await expect(page.locator('#customer-search')).toBeVisible();
+		await expect(page.locator('#customer-search')).toHaveValue('');
+		await assertAxeClean(page);
+	});
+
 	test('employees: search filter toggles populated and empty honesty', async ({ page }) => {
 		await gotoApp(page, URLS.employees);
 		const search = page.locator('#employee-search');

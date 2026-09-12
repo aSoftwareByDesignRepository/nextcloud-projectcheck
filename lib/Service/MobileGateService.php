@@ -92,8 +92,6 @@ class MobileGateService
 				'offlineCreate' => true,
 				// Advertise push only when the notifications app can deliver it.
 				'push' => $pushAvailable,
-				// Companion API floor — clients fail closed to app_outdated when missing/mismatched.
-				'projectcheck.companion.min' => 1,
 			],
 			'licensing' => $licensing,
 			// Raw seat membership (not the enabled composite). Clients must also honour
@@ -108,8 +106,6 @@ class MobileGateService
 				'uid' => $uid,
 				'displayName' => $displayName,
 			],
-			// ISO-8601 with server TZ offset — companions sync calendar “today” from this.
-			'serverNow' => (new \DateTimeImmutable('now'))->format(\DateTimeInterface::ATOM),
 		];
 	}
 }
