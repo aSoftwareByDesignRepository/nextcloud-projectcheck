@@ -882,7 +882,7 @@ OC.L10N.register(
 	"Must be no more than %s" : "Não deve ser superior a %s",
 	"Must be no more than %s characters long" : "Não deve ter mais que %s caracteres",
 	"My projects" : "Meus projetos",
-	"N\/A" : "N \/ D",
+	"N\/A" : "n\/d",
 	"Name" : "Nome",
 	"Name, contact, and account details." : "Nome, contato e detalhes da conta.",
 	"Name, contact, and other details for this customer." : "Nome, contato e outros detalhes deste cliente.",
@@ -1772,6 +1772,5 @@ OC.L10N.register(
 	"💻 Product Development" : "💻 Desenvolvimento de Produto",
 	"📊 Why This Matters" : "📊 Por que isso é importante",
 	"🔬 Research & Development" : "🔬 Pesquisa e Desenvolvimento"
-	},
-	"nplurals=2; plural=(n > 1);"
+	}
 );
