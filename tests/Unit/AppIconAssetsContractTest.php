@@ -64,7 +64,7 @@ final class AppIconAssetsContractTest extends TestCase
 	{
 		$info = (string)file_get_contents($this->root . '/appinfo/info.xml');
 		$ver = trim((string)file_get_contents($this->root . '/appinfo/version'));
-		$this->assertSame('2.0.99', $ver);
+		$this->assertSame('2.0.100', $ver);
 		$this->assertMatchesRegularExpression('/<version>\s*' . preg_quote($ver, '/') . '\s*<\/version>/', $info);
 	}
 }

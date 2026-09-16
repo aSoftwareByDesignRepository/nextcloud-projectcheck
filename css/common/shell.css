@@ -77,7 +77,9 @@
 	padding: var(--pc-space-3) var(--pc-space-3) var(--pc-space-7);
 	box-sizing: border-box;
 	min-width: 0;
+	/* Pair overflow-x clip with overflow-y auto — unpaired clip truncates tall pages (CSS Overflow L3). */
 	overflow-x: clip;
+	overflow-y: auto;
 }
 
 /* ≥768px tablet: slightly wider padding */

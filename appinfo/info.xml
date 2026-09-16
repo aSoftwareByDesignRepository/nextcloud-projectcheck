@@ -223,7 +223,7 @@ as taxas horárias nos lançamentos são resolvidas no servidor a partir do hist
 - Histórico de taxas apenas com inclusão (append-only)
 	]]></description>
 
-	<version>2.0.100</version>
+	<version>2.0.101</version>
 	<licence>AGPL-3.0-or-later</licence>
 	<author mail="info@software-by-design.de" homepage="https://nextcloud.software-by-design.de">Software by Design GbR</author>
 
@@ -239,7 +239,7 @@ as taxas horárias nos lançamentos são resolvidas no servidor a partir do hist
 
 	<dependencies>
 		<!-- Compatible with Nextcloud 32–34 (see dependencies) -->
-		<nextcloud min-version="32" max-version="34"/>
+		<nextcloud min-version="32" max-version="35"/>
 		<!-- Must live under <dependencies>: MigrationService only reads these for migration naming checks -->
 		<database>mysql</database>
 		<database>pgsql</database>

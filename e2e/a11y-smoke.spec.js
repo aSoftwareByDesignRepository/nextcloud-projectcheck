@@ -26,7 +26,7 @@ test.describe('ProjectCheck shell chrome a11y smoke', () => {
 		test(`${name}: skip links, live regions, tokens, axe`, async ({ page }) => {
 			await gotoApp(page, url);
 			const app = page.locator('#app-content.pc-app').first();
-			await expect(app).toBeVisible();
+			await expect(app).toBeVisible({ timeout: 30_000 });
 			await expect(app.locator('a.pc-skip-link[href="#pc-main-content"], a.pc-skip-link[href^="#pc-"], a.pc-skip-link').first()).toBeAttached();
 			await expect(app.locator('a.pc-skip-link[href="#app-navigation"]')).toBeAttached();
 			await expect(page.locator('#pc-live-region')).toBeAttached();

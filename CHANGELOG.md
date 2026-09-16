@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.101 - 2026-09-16
+
+### Fixed
+
+- **Mobile companion bootstrap:** restore `projectcheck.companion.min` (and `serverNow`) in `/mobile/v1` bootstrap. The 2.0.100 packaging pass dropped the floor advertisement and hard-blocked official ProjectCheck Mobile against licensed servers.
+- **Project file API:** map `PermissionDeniedException` to HTTP 403 instead of generic 400/404.
+- **Mobile booking:** atomic create + idempotency, entry-list `hasMore` pagination signal, and `serverNow` on rate preview so companions stay calendar-aligned.
+- **Symfony Console (NC35):** `CleanupCommand::execute()` declares `: int`.
+
+### Changed
+
+- **Nextcloud:** `max-version` raised to **35** (current stable **35.0.0**).
+- **Get the App:** dedicated `/get-the-app` page route for the store / companion CTA.
+
 ## 2.0.100 - 2026-09-10
 
 ### Fixed

@@ -86,6 +86,8 @@ final class MobileGateServiceTest extends TestCase
 		self::assertTrue($payload['capabilities']['settlement']);
 		self::assertTrue($payload['capabilities']['offlineCreate']);
 		self::assertFalse($payload['capabilities']['push']);
+		// Paying-customer contract: official companions require this floor when present.
+		self::assertSame(1, $payload['capabilities']['projectcheck.companion.min']);
 		self::assertFalse($payload['pushAvailable']);
 		self::assertFalse($payload['canSettle']);
 		self::assertTrue($payload['licensing']['mobile']['enabledForUser']);

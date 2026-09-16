@@ -572,6 +572,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
 				$c->query(\OCA\ProjectCheck\Db\MobileIdempotencyMapper::class),
 				$c->query(\OCP\AppFramework\Utility\ITimeFactory::class),
+				$c->query(IDBConnection::class),
 			);
 		});
 		$context->registerService(\OCA\ProjectCheck\Service\MobileSettlementService::class, function ($c) {

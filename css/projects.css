@@ -4127,14 +4127,16 @@ body[dir="rtl"] .filters-row select {
 }
 
 .breadcrumb a {
-	color: var(--color-primary);
-	text-decoration: none;
+	/* Main-text ink — primary on dark themes fails axe WCAG 1.4.3 (~2.9:1). */
+	color: var(--color-main-text);
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
 	font-size: 0.875rem;
 	transition: color 0.2s ease;
 }
 
 .breadcrumb a:hover {
-	color: var(--color-primary-hover);
+	color: var(--color-main-text);
 	text-decoration: underline;
 }
 

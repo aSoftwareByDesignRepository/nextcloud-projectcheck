@@ -39,7 +39,7 @@ class Capabilities implements ICapability
 
 		return [
 			'projectcheck' => [
-				'version' => $version !== '' ? $version : '2.0.99',
+				'version' => $version !== '' ? $version : '2.0.101',
 				'features' => [
 					'project_management' => [
 						'description' => 'Project management functionality',
