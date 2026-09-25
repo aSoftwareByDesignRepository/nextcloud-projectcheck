@@ -448,11 +448,27 @@ class EmployeeController extends Controller
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		$projectId = (int)$this->request->getParam('project_id', 0);
+		if ($projectId <= 0) {
+			return new JSONResponse(['error' => $this->l->t('Invalid parameters')], 400);
+		}
+
+		// Capability before any existence/state checks: no foreign-vs-missing
+		// project oracle and no user-id enumeration for unauthorized callers.
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $projectId)) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+		}
+		$project = $this->projectService->getProject($projectId);
+		if ($project === null) {
+			return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
+		}
+		if (!$project->isEditableState()) {
+			return new JSONResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
+		}
 		if ($this->userManager->get($userId) === null) {
 			return new JSONResponse(['error' => $this->l->t('Employee not found')], 404);
 		}
 
-		$projectId = (int)$this->request->getParam('project_id', 0);
 		$role = \OCA\ProjectCheck\Service\ProjectService::DEFAULT_MEMBER_ROLE;
 		$hourlyRateRaw = $this->request->getParam('hourly_rate', null);
 		$hourlyRate = null;
@@ -464,20 +480,6 @@ class EmployeeController extends Controller
 			if ($hourlyRate < 0) {
 				return new JSONResponse(['error' => $this->l->t('Hourly rate must be a non-negative number')], 400);
 			}
-		}
-		if ($projectId <= 0) {
-			return new JSONResponse(['error' => $this->l->t('Invalid parameters')], 400);
-		}
-
-		$project = $this->projectService->getProject($projectId);
-		if ($project === null) {
-			return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
-		}
-		if (!$project->isEditableState()) {
-			return new JSONResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
-		}
-		if (!$this->projectService->canUserManageMembers($user->getUID(), $projectId)) {
-			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
 		if ($project->getCostRateMode() === CostRateMode::PROJECT_MEMBER) {
@@ -513,6 +515,11 @@ class EmployeeController extends Controller
 		$user = $this->userSession->getUser();
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
+		}
+		// Capability before the account-existence probe: no user-id enumeration
+		// for unauthorized callers.
+		if (!$this->accessControlService->canManageAppConfiguration($user->getUID())) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 		if ($this->userManager->get($userId) === null) {
 			return new JSONResponse(['error' => $this->l->t('Cannot add rates for a removed account.')], 400);
@@ -575,15 +582,16 @@ class EmployeeController extends Controller
 
 	private function finishUnassignProject(string $actorUid, string $memberUserId, int $projectId): JSONResponse
 	{
+		// Capability before existence/state: no foreign-vs-missing oracle.
+		if (!$this->projectService->canUserManageMembers($actorUid, $projectId)) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 		$project = $this->projectService->getProject($projectId);
 		if ($project === null) {
 			return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
 		}
 		if (!$project->isEditableState()) {
 			return new JSONResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
-		}
-		if (!$this->projectService->canUserManageMembers($actorUid, $projectId)) {
-			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
 		try {

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Service;
 
+use OCA\ProjectCheck\Exception\IdempotencyConflictException;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\Lock\ILockingProvider;
@@ -38,8 +39,12 @@ final class FormSubmitIdempotencyService
 
 	/**
 	 * @param callable(): int $factory Must return the new project id
+	 * @param string|null $payloadFingerprint Hash of the normalized create
+	 *        payload. When a stored mapping carries a fingerprint, a replay with
+	 *        a different fingerprint is a 409 conflict — never a silent replay.
+	 * @throws IdempotencyConflictException
 	 */
-	public function rememberCreate(string $userId, ?string $nonce, callable $factory): int
+	public function rememberCreate(string $userId, ?string $nonce, callable $factory, ?string $payloadFingerprint = null): int
 	{
 		$nonce = $this->normalizeNonce($nonce);
 		if ($nonce === null) {
@@ -49,9 +54,10 @@ final class FormSubmitIdempotencyService
 		$cache = $this->cache();
 		$key = $this->createKey($userId, $nonce);
 
-		$existing = $this->readProjectId($cache->get($key));
+		$existing = $this->readMapping($cache->get($key));
 		if ($existing !== null) {
-			return $existing;
+			$this->assertFingerprintMatches($existing['hash'], $payloadFingerprint);
+			return $existing['id'];
 		}
 
 		$lockKey = 'projectcheck/form_idem/' . hash('sha256', $userId . "\0" . $nonce);
@@ -61,9 +67,10 @@ final class FormSubmitIdempotencyService
 			// Another request holds the lock — wait briefly for the id.
 			for ($i = 0; $i < 40; $i++) {
 				usleep(50_000);
-				$existing = $this->readProjectId($cache->get($key));
+				$existing = $this->readMapping($cache->get($key));
 				if ($existing !== null) {
-					return $existing;
+					$this->assertFingerprintMatches($existing['hash'], $payloadFingerprint);
+					return $existing['id'];
 				}
 			}
 			throw new \RuntimeException('Create already in progress. Please wait and refresh.');
@@ -71,13 +78,17 @@ final class FormSubmitIdempotencyService
 
 		$projectId = null;
 		try {
-			$existing = $this->readProjectId($cache->get($key));
+			$existing = $this->readMapping($cache->get($key));
 			if ($existing !== null) {
-				return $existing;
+				$this->assertFingerprintMatches($existing['hash'], $payloadFingerprint);
+				return $existing['id'];
 			}
 			$projectId = $factory();
-			$this->persistMapping($cache, $key, $projectId);
+			$this->persistMapping($cache, $key, $projectId, $payloadFingerprint);
 			return $projectId;
+		} catch (IdempotencyConflictException $e) {
+			// Never destroy another request's mapping on a payload conflict.
+			throw $e;
 		} catch (\Throwable $e) {
 			// Only clear when create itself failed. After a successful insert,
 			// never remove the key — retry persist and surface the created id.
@@ -86,7 +97,7 @@ final class FormSubmitIdempotencyService
 				throw $e;
 			}
 			try {
-				$cache->set($key, $projectId, self::TTL_SECONDS);
+				$cache->set($key, $this->formatMapping($projectId, $payloadFingerprint), self::TTL_SECONDS);
 			} catch (\Throwable) {
 				// Best-effort; caller still receives the real project id.
 			}
@@ -126,29 +137,67 @@ final class FormSubmitIdempotencyService
 		return 'create:' . $userId . ':' . $nonce;
 	}
 
-	private function readProjectId(mixed $raw): ?int
+	/**
+	 * Cache value format: "<id>" (legacy) or "<id>:<sha256>" (fingerprinted).
+	 *
+	 * @return array{id: int, hash: ?string}|null
+	 */
+	private function readMapping(mixed $raw): ?array
 	{
 		if (is_int($raw) && $raw > 0) {
-			return $raw;
+			return ['id' => $raw, 'hash' => null];
 		}
-		if (is_string($raw) && ctype_digit($raw)) {
-			$id = (int) $raw;
-			return $id > 0 ? $id : null;
+		if (is_string($raw) && $raw !== '') {
+			$idPart = $raw;
+			$hash = null;
+			$colon = strpos($raw, ':');
+			if ($colon !== false) {
+				$idPart = substr($raw, 0, $colon);
+				$hash = substr($raw, $colon + 1) ?: null;
+			}
+			if (ctype_digit($idPart)) {
+				$id = (int) $idPart;
+				return $id > 0 ? ['id' => $id, 'hash' => $hash] : null;
+			}
 		}
 		return null;
+	}
+
+	private function formatMapping(int $projectId, ?string $payloadFingerprint): string
+	{
+		return $payloadFingerprint !== null
+			? $projectId . ':' . $payloadFingerprint
+			: (string) $projectId;
+	}
+
+	/**
+	 * A stored NULL fingerprint means the mapping predates fingerprinting —
+	 * a mismatch cannot be proven, so it replays (legacy semantics).
+	 *
+	 * @throws IdempotencyConflictException
+	 */
+	private function assertFingerprintMatches(?string $stored, ?string $incoming): void
+	{
+		if ($stored !== null && $incoming !== null && !hash_equals($stored, $incoming)) {
+			throw new IdempotencyConflictException(
+				'This idempotency key was already used with different form data.'
+			);
+		}
 	}
 
 	/**
 	 * Write mapping and verify it round-trips (silent APCu/Redis glitches).
 	 */
-	private function persistMapping(ICache $cache, string $key, int $projectId): void
+	private function persistMapping(ICache $cache, string $key, int $projectId, ?string $payloadFingerprint): void
 	{
-		$cache->set($key, $projectId, self::TTL_SECONDS);
-		if ($this->readProjectId($cache->get($key)) === $projectId) {
+		$cache->set($key, $this->formatMapping($projectId, $payloadFingerprint), self::TTL_SECONDS);
+		$read = $this->readMapping($cache->get($key));
+		if ($read !== null && $read['id'] === $projectId) {
 			return;
 		}
-		$cache->set($key, $projectId, self::TTL_SECONDS);
-		if ($this->readProjectId($cache->get($key)) !== $projectId) {
+		$cache->set($key, $this->formatMapping($projectId, $payloadFingerprint), self::TTL_SECONDS);
+		$read = $this->readMapping($cache->get($key));
+		if ($read === null || $read['id'] !== $projectId) {
 			throw new \RuntimeException('Could not persist create idempotency mapping.');
 		}
 	}

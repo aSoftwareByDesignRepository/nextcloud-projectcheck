@@ -391,11 +391,7 @@
 
 /* ===== NAVIGATION ACCESSIBILITY ===== */
 
-/* Navigation Menu */
-.nav[role="navigation"] {
-  /* Ensure navigation role is properly supported */
-}
-
+/* Navigation Menu — nav[role=navigation] carries its landmark via the role attribute; no declarations needed. */
 .nav[role="navigation"] ul {
   list-style: none;
   margin: 0;
@@ -540,16 +536,10 @@ a[aria-disabled="true"] {
 
 /* ===== TEXT ACCESSIBILITY ===== */
 
-/* Text Resizing */
-html {
-  font-size: 16px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 18px;
-  }
-}
+/* NOTE (ds_chrome): a previous `html { font-size: 16px/18px }` block was
+   removed — Nextcloud core's html rule (15px) wins the cascade anyway,
+   and apps must not pin the root font-size (it defeats the user's font
+   preference). Interactive floors are enforced in px via --pc-touch-min.
 
 /* Line Height for Readability */
 p,
@@ -949,4 +939,134 @@ textarea.projectcheck-textarea,
 textarea {
 	scroll-margin-bottom: min(45vh, 20rem);
 	scroll-margin-top: 5rem;
+}
+
+/* =====================================================================
+ * ds_chrome cascade hardening — POLICY 3.5.11 Atlas farm learned classes:
+ *   - "body-mounted dialog escape": dialogs appended to document.body do
+ *     not sit under #app-content; app-scoped fixes never reach them.
+ *   - "Nextcloud specificity defeats app CSS": NC35 core rules such as
+ *     button:not(.button-vue), input:not(...) and a.button carry
+ *     pseudo-class specificity that beats bare app classes — several app
+ *     declarations of 44px computed at 34-41px live.
+ *
+ * Every selector below is anchored at (0,2,0)+ / id-level so the 44px
+ * Atlas touch-target floor actually computes. Verified via live
+ * getComputedStyle() measurements — never trust a declaration alone.
+ * ===================================================================== */
+
+/* All .button controls inside the app shell (links, buttons, label file
+   triggers such as the project-files "Add files" label). */
+#app-content .button,
+#app-content a.button,
+#app-content button.button,
+#app-content label.button {
+	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch-min, 44px);
+}
+
+/* Form controls inside the app shell. NC core sizes inputs/selects at
+   ~34-36px; the Atlas floor is 44px. Checkboxes/radios/file inputs are
+   excluded — checkbox rows get a label-level floor below, and visually
+   hidden file inputs are triggered through ≥44px labels/dropzones. */
+#app-content input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+#app-content select {
+	min-height: var(--pc-touch-min, 44px);
+}
+
+/* Checkbox + sibling-label rows: the label is the real click target.
+   Give it a 44px row so the combined target meets the floor. */
+#app-content .projectcheck-form-row--checkbox,
+.projectcheck-form-row--checkbox {
+	align-items: center;
+}
+
+#app-content .projectcheck-form-row--checkbox label,
+.projectcheck-form-row--checkbox label {
+	min-height: var(--pc-touch-min, 44px);
+	display: inline-flex;
+	align-items: center;
+}
+
+#app-content .projectcheck-form-row--checkbox input[type="checkbox"],
+.projectcheck-form-row--checkbox input[type="checkbox"] {
+	margin-top: 0;
+}
+
+/* App navigation footer ("Help" trigger, popover menu items, toast link)
+   — bare classes (0,1,0) lose to core button:not(...) / nav link rules;
+   re-assert under the nav id. */
+#app-navigation .pc-nav-footer__trigger,
+#app-navigation .pc-nav-footer__menu-item,
+#app-navigation .pc-nav-footer__toast-link {
+	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch-min, 44px);
+}
+
+/* Standalone content links rendered as block-level targets in meta rows
+   (project detail customer link measured 27.2px). */
+#app-content .customer-link {
+	min-height: var(--pc-touch-min, 44px);
+	display: inline-flex;
+	align-items: center;
+}
+
+/* Dense table icon buttons (member profile / time-entries / unassign).
+   Some page rules pin 20px or 40px squares — min-* wins over height/width
+   so the floor applies without disturbing layout declarations.
+   These are <a> anchors: min-* is IGNORED on inline boxes, so the display
+   must be upgraded to a flex box for the floor to take effect
+   (ds_chrome: measured 20px with computed min-height:44px). */
+#app-content .member-actions .action-btn,
+.member-actions .action-btn,
+#app-content .team-member-actions .action-btn,
+#app-content .member-profile-btn,
+#app-content .member-timeentries-btn,
+#app-content .employee-unassign-project-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+	box-sizing: border-box;
+}
+
+/* Entity picker (policy pickers): search input + chip remove buttons.
+   The component files use 2.75rem which computes to 41.25px under the
+   15px root font-size; pin px so rem-collapse cannot reappear. */
+.projectcheck-entity-picker .projectcheck-entity-picker__q,
+input.projectcheck-entity-picker__q {
+	min-height: var(--pc-touch-min, 44px);
+}
+
+.projectcheck-entity-picker .projectcheck-entity-chip__remove,
+.projectcheck-entity-chip .projectcheck-entity-chip__remove {
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+}
+
+/* ---- Body-mounted surfaces (outside #app-content) ---- */
+
+/* Deletion modal: appended to document.body; core button rules win over
+   the component's own (0,1,0) classes, and core :hover/:focus variants
+   reach (0,2,1). Re-assert under the body-mounted root id (1,1,0). */
+#projectcheck-deletion-modal .projectcheck-deletion-modal__close,
+#projectcheck-deletion-modal .projectcheck-deletion-modal__btn {
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+}
+
+/* Strategy radios are 17px glyphs; the wrapping label row is the target. */
+#projectcheck-deletion-modal .projectcheck-deletion-modal__strategy-option {
+	min-height: var(--pc-touch-min, 44px);
+}
+
+/* Toasts / persistent notifications are body-mounted too; the feedback
+   stylesheet's 2.75rem rules compute below 44px under the 15px root. */
+.toast-container .toast-close,
+.toastify .toast-close,
+.persistent-notification .persistent-notification__acknowledge,
+.persistent-notification .persistent-notification__dismiss {
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
 }

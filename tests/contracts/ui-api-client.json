@@ -2,5 +2,6 @@
   "schemaVersion": 1,
   "appId": "projectcheck",
   "companionDir": "mobile/projectcheck",
+  "notes": "web_api audit 2026-09-24: no conditional reason/justification requirements exist in this app. The only 'reason' inputs are optional free-text (project status-change activity note, ProjectController::changeStatus truncates at 2000 chars; UpgradeBackupIntegrity::normalizeReason). All server-required human fields (project name/customer_id, time-entry project_id/date/hours, customer name, member user_id, hourly rate, settlement target/token, access-policy lists) are unconditionally required and present in the web UI and companion create/edit surfaces. Mobile create idempotency uses clientRequestId (not a human-entered field).",
   "contracts": []
 }

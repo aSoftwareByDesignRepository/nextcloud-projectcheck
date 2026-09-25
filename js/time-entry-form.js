@@ -431,6 +431,7 @@
 			deleteUrl: deleteUrl,
 			simpleConfirm: true,
 			confirmMessage: confirmMessage,
+			triggerEl: trigger,
 			onSuccess: function () {
 				showNotification(t('projectcheck', 'Time entry was deleted successfully!'), 'success');
 				setTimeout(function () {

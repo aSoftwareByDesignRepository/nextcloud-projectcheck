@@ -777,8 +777,10 @@ body[dir="rtl"] .projectcheck-select {
 
 .projectcheck-entity-chip__remove {
     flex-shrink: 0;
-    min-width: 2.75rem;
-    min-height: 2.75rem;
+    /* px, not rem: 2.75rem computed to 41.25px under the 15px root font
+       size (rem-collapse) — ds_chrome touch-target finding. */
+    min-width: var(--pc-touch-min, 44px);
+    min-height: var(--pc-touch-min, 44px);
     margin: -0.1rem 0.1rem -0.1rem 0;
     border: 0;
     border-radius: 9999px;
@@ -811,7 +813,8 @@ body[dir="rtl"] .projectcheck-select {
 .projectcheck-entity-picker__q {
     width: 100%;
     box-sizing: border-box;
-    min-height: 2.75rem;
+    /* px floor: 2.75rem rem-collapses below 44px (ds_chrome). */
+    min-height: var(--pc-touch-min, 44px);
     padding: 0.45rem 0.65rem;
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius, 6px);

@@ -244,7 +244,7 @@
 		if (!(target instanceof Element)) {
 			return;
 		}
-		if (target.matches('[data-action="show-productivity-info"], .info-popup-trigger')) {
+		if (target.closest('[data-action="show-productivity-info"], .info-popup-trigger')) {
 			event.preventDefault();
 			event.stopPropagation();
 			showProductivityInfoPopup();

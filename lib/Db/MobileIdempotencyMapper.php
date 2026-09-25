@@ -38,13 +38,14 @@ class MobileIdempotencyMapper extends QBMapper
 	/**
 	 * Insert mapping. Returns false on unique-constraint race (caller must re-read).
 	 */
-	public function tryInsert(string $userId, string $clientRequestId, int $timeEntryId, int $createdAt): bool
+	public function tryInsert(string $userId, string $clientRequestId, int $timeEntryId, int $createdAt, ?string $payloadHash = null): bool
 	{
 		$entity = new MobileIdempotency();
 		$entity->setUserId($userId);
 		$entity->setClientRequestId($clientRequestId);
 		$entity->setTimeEntryId($timeEntryId);
 		$entity->setCreatedAt($createdAt);
+		$entity->setPayloadHash($payloadHash);
 		try {
 			$this->insert($entity);
 			return true;

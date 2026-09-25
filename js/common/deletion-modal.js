@@ -383,7 +383,13 @@
 			deleteUrl: options.deleteUrl,
 			impactUrl: options.impactUrl || null,
 			simpleConfirm: options.simpleConfirm === true,
-			confirmMessage: options.confirmMessage || null
+			confirmMessage: options.confirmMessage || null,
+			// The control that opened the modal. Several callers disable the
+			// trigger before show() runs, which blurs it — attach() would then
+			// capture <body> and focus would be lost on dismiss (ds_chrome
+			// focus-restoration defect). Pass the trigger explicitly so focus
+			// can be restored even while the element is disabled.
+			triggerEl: options.triggerEl instanceof HTMLElement ? options.triggerEl : null
 		};
 		currentCallbacks = {
 			onSuccess: typeof options.onSuccess === 'function' ? options.onSuccess : null,
@@ -408,6 +414,7 @@
 				dismissOnEscape: true,
 				dismissOnBackdrop: false,
 				initialFocus: shell.closeBtn,
+				restoreTo: currentEntity.triggerEl,
 				onDismiss: function () {
 					dismissDeletionModal('a11y');
 				}

@@ -129,6 +129,7 @@
             deleteUrl: deleteUrl,
             simpleConfirm: true,
             confirmMessage: confirmMessage,
+            triggerEl: button,
             onSuccess: function () {
                 const indexUrl = button.getAttribute('data-index-url');
                 if (indexUrl) {

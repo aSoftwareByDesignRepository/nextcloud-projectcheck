@@ -490,18 +490,19 @@ class CustomerController extends Controller
 			return $this->configureCSP($response, 'guest');
 		}
 
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->customerService->canUserViewCustomer($user->getUID(), (int) $id)) {
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPage(
+				$this->l->t('Access denied')
+			));
+			return $this->configureCSP($response, 'main');
+		}
 		$customer = $this->customerService->getCustomer($id);
 		if (!$customer) {
 			$response = new TemplateResponse($this->appName, 'error', $this->errorPageCustomers(
 				$this->l->t('Customer not found')
 			), 'guest');
 			return $this->configureCSP($response, 'guest');
-		}
-		if (!$this->customerService->canUserViewCustomer($user->getUID(), (int) $id)) {
-			$response = new TemplateResponse($this->appName, 'error', $this->errorPage(
-				$this->l->t('Access denied')
-			));
-			return $this->configureCSP($response, 'main');
 		}
 
 		$userId = $user->getUID();
@@ -626,18 +627,19 @@ class CustomerController extends Controller
 			return $this->configureCSP($response, 'guest');
 		}
 
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->customerService->canUserEditCustomer($user->getUID(), (int) $id)) {
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPage(
+				$this->l->t('Access denied')
+			));
+			return $this->configureCSP($response, 'main');
+		}
 		$customer = $this->customerService->getCustomer($id);
 		if (!$customer) {
 			$response = new TemplateResponse($this->appName, 'error', $this->errorPageCustomers(
 				$this->l->t('Customer not found')
 			), 'guest');
 			return $this->configureCSP($response, 'guest');
-		}
-		if (!$this->customerService->canUserEditCustomer($user->getUID(), (int) $id)) {
-			$response = new TemplateResponse($this->appName, 'error', $this->errorPage(
-				$this->l->t('Access denied')
-			));
-			return $this->configureCSP($response, 'main');
 		}
 
 		// Get common stats for the sidebar

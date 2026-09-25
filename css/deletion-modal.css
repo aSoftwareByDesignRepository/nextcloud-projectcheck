@@ -101,8 +101,11 @@
     color: currentColor;
 }
 
-.projectcheck-deletion-modal__close {
-    background: none;
+/* Scoped under the body-mounted root id: bare classes (0,1,0) lose to
+   Nextcloud core `button:not(...)` (0,1,1), which pins the clickable area at
+   ~34px, and its :hover/:focus variants reach (0,2,1). The id anchor (1,1,0) beats them all (ds_chrome). */
+#projectcheck-deletion-modal .projectcheck-deletion-modal__close {
+    background-color: transparent;
     border: none;
     padding: 0.5rem;
     cursor: pointer;
@@ -112,14 +115,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: var(--pc-touch-min, 44px);
+    min-height: var(--pc-touch-min, 44px);
+    box-sizing: border-box;
 }
 
-.projectcheck-deletion-modal__close:hover {
-    background: var(--color-background-hover);
+#projectcheck-deletion-modal .projectcheck-deletion-modal__close:hover {
+    background-color: var(--color-background-hover);
     color: var(--color-main-text);
 }
 
-.projectcheck-deletion-modal__close:focus-visible {
+#projectcheck-deletion-modal .projectcheck-deletion-modal__close:focus-visible {
     outline: 2px solid var(--color-primary-element);
     outline-offset: 2px;
 }
@@ -289,15 +295,19 @@
     }
 }
 
-.projectcheck-deletion-modal__strategy-option {
+/* Label row = the click target for the 17px radio glyph — enforce the
+   44px floor on the row (ds_chrome touch-target fix). */
+#projectcheck-deletion-modal .projectcheck-deletion-modal__strategy-option {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.75rem;
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 6px;
+    min-height: var(--pc-touch-min, 44px);
+    box-sizing: border-box;
     transition: background-color 0.2s ease;
 }
 
@@ -389,7 +399,7 @@
     }
 }
 
-.projectcheck-deletion-modal__btn {
+#projectcheck-deletion-modal .projectcheck-deletion-modal__btn {
     padding: 0.75rem 1.5rem;
     border-radius: 8px;
     font-weight: 500;
@@ -413,34 +423,39 @@
     }
 }
 
-.projectcheck-deletion-modal__btn:disabled {
+#projectcheck-deletion-modal .projectcheck-deletion-modal__btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
-.projectcheck-deletion-modal__btn--cancel {
-    background: var(--color-main-background);
+/* All variant/interactive rules are scoped under the body-mounted root id:
+   bare classes (0,1,0) lose to Nextcloud core button:not(…) (0,1,1),
+   which paints the default --color-primary-element-light fill on every
+   button — including the danger Delete — and its state variants hit (0,2,1).
+   The id anchor (1,1,0) re-asserts the real tokens (ds_chrome live-measured). */
+#projectcheck-deletion-modal .projectcheck-deletion-modal__btn--cancel {
+    background-color: var(--color-main-background);
     color: var(--color-main-text);
     border-color: var(--color-border);
 }
 
-.projectcheck-deletion-modal__btn--cancel:hover:not(:disabled) {
-    background: var(--color-background-hover);
+#projectcheck-deletion-modal .projectcheck-deletion-modal__btn--cancel:hover:not(:disabled) {
+    background-color: var(--color-background-hover);
 }
 
-.projectcheck-deletion-modal__btn--delete {
-    background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+#projectcheck-deletion-modal .projectcheck-deletion-modal__btn--delete {
+    background-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
     color: var(--pc-danger-on-fill, var(--color-primary-element-text));
     border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
 }
 
-.projectcheck-deletion-modal__btn--delete:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+#projectcheck-deletion-modal .projectcheck-deletion-modal__btn--delete:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
     border-color: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
     color: var(--pc-danger-on-fill, var(--color-primary-element-text));
 }
 
-.projectcheck-deletion-modal__btn:focus-visible {
+#projectcheck-deletion-modal .projectcheck-deletion-modal__btn:focus-visible {
     outline: 2px solid var(--color-primary-element);
     outline-offset: 2px;
 }

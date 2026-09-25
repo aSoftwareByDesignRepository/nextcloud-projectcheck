@@ -6,6 +6,11 @@
 	flex-wrap: wrap;
 }
 
+.projects-table th[data-sort="name"],
+.projects-table .project-name-cell {
+	min-width: 240px;
+}
+
 .project-name-cell .project-title {
 	flex: 1 1 auto;
 	min-width: 0;
@@ -107,6 +112,18 @@
 
 .project-file-row .file-actions .button i {
 	display: block;
+}
+
+.project-file-row .file-actions .button.danger {
+	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	color: var(--pc-danger-on-fill, var(--color-button-danger-text, var(--color-primary-element-text)));
+	border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+}
+
+.project-file-row .file-actions .button.danger:hover {
+	background: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+	border-color: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
+	color: var(--pc-danger-on-fill, var(--color-button-danger-text, var(--color-primary-element-text)));
 }
 
 .icon-project-files {
@@ -7747,8 +7764,13 @@ a.project-title:hover,
 }
 
 #team-section .member-actions .action-btn {
-	min-width: 44px;
-	min-height: 44px;
+	/* <a> anchors: min-* is ignored on inline boxes — needs a flex box so
+	   the 44px floor actually applies (ds_chrome). */
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
 }
 
 #team-section .team-former-section {
@@ -7903,8 +7925,11 @@ a.project-title:hover,
 }
 
 #employee-project-assignments .member-actions .action-btn {
-	width: 40px;
-	height: 40px;
+	/* 44px Atlas touch-target floor (ds_chrome: was 40x40) */
+	width: var(--pc-touch-min, 44px);
+	height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;

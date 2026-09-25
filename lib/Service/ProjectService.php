@@ -810,6 +810,12 @@ class ProjectService
 		$expectedStamp = $expectedUpdatedAt instanceof \DateTimeInterface
 			? $expectedUpdatedAt->format('Y-m-d H:i:s')
 			: null;
+		if ($expectedStamp === null) {
+			// Optimistic locking is mandatory: never run an unguarded
+			// last-write-wins UPDATE (pc_projects.updated_at is NOT NULL, so a
+			// missing stamp means a broken hydration path — refuse the write).
+			throw new \RuntimeException('Cannot update project without a concurrency stamp');
+		}
 
 		$qb = $this->db->getQueryBuilder();
 		$qb->update('pc_projects')
@@ -872,10 +878,8 @@ class ProjectService
 		}
 
 		$qb->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
-		if ($expectedStamp !== null) {
-			// Optimistic concurrency: concurrent editors / settlement touches lose safely.
-			$qb->andWhere($qb->expr()->eq('updated_at', $qb->createNamedParameter($expectedStamp)));
-		}
+		// Optimistic concurrency: concurrent editors / settlement touches lose safely.
+		$qb->andWhere($qb->expr()->eq('updated_at', $qb->createNamedParameter($expectedStamp)));
 
 		$affected = $qb->executeStatement();
 		if ($affected === 0) {

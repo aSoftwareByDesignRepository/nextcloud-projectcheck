@@ -105,10 +105,24 @@ final class PcCoreSchemaBootstrap
 				'notnull' => true,
 				'unsigned' => true,
 			]);
+			$t->addColumn('payload_hash', Types::STRING, [
+				'notnull' => false,
+				'length' => 64,
+			]);
 			$t->setPrimaryKey(['id'], 'pc_mob_idem_pk');
 			$t->addUniqueIndex(['user_id', 'client_request_id'], 'pc_mob_idem_uid_req');
 			$t->addIndex(['time_entry_id'], 'pc_mob_idem_te');
 
+			return true;
+		}
+
+		// Existing installs: self-heal the Version2016 payload-hash column.
+		$table = $schema->getTable('pc_mob_idem');
+		if (!$table->hasColumn('payload_hash')) {
+			$table->addColumn('payload_hash', Types::STRING, [
+				'notnull' => false,
+				'length' => 64,
+			]);
 			return true;
 		}
 		return false;

@@ -148,6 +148,12 @@ class ProjectMemberController extends Controller
             return new JSONResponse(['error' => $this->l->t('Method not allowed')], 405);
         }
 
+        // Same capability-before-existence gate as removePost: no
+        // foreign-vs-missing member-id oracle.
+        if (!$this->canManageMemberId($user->getUID(), $id)) {
+            return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+        }
+
         return $this->executeRemoveMember($id, $user->getUID());
     }
 

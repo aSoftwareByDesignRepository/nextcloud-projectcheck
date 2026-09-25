@@ -112,6 +112,63 @@ final class FormSubmitIdempotencyServiceTest extends TestCase
 		self::assertGreaterThanOrEqual(2, $setCalls);
 	}
 
+	public function testReplayWithDifferentFingerprintThrowsConflict(): void
+	{
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->with('create:alice:nonce-1')->willReturn('77:' . str_repeat('a', 64));
+		$locking = $this->lockingMock();
+		$locking->expects(self::never())->method('acquireLock');
+		$cacheFactory = $this->createMock(ICacheFactory::class);
+		$cacheFactory->method('createDistributed')->willReturn($cache);
+		$svc = new FormSubmitIdempotencyService($cacheFactory, $locking);
+		$this->expectException(\OCA\ProjectCheck\Exception\IdempotencyConflictException::class);
+		$svc->rememberCreate('alice', 'nonce-1', static fn (): int => 1, str_repeat('b', 64));
+	}
+
+	public function testReplayWithSameFingerprintReturnsId(): void
+	{
+		$hash = str_repeat('a', 64);
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->with('create:alice:nonce-1')->willReturn('77:' . $hash);
+		$locking = $this->lockingMock();
+		$locking->expects(self::never())->method('acquireLock');
+		$cacheFactory = $this->createMock(ICacheFactory::class);
+		$cacheFactory->method('createDistributed')->willReturn($cache);
+		$svc = new FormSubmitIdempotencyService($cacheFactory, $locking);
+		$id = $svc->rememberCreate('alice', 'nonce-1', static fn (): int => 1, $hash);
+		self::assertSame(77, $id);
+	}
+
+	public function testStoredMappingWithoutFingerprintReplaysForAnyFingerprint(): void
+	{
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->with('create:alice:nonce-1')->willReturn('77');
+		$locking = $this->lockingMock();
+		$locking->expects(self::never())->method('acquireLock');
+		$cacheFactory = $this->createMock(ICacheFactory::class);
+		$cacheFactory->method('createDistributed')->willReturn($cache);
+		$svc = new FormSubmitIdempotencyService($cacheFactory, $locking);
+		// Legacy row: mismatch cannot be proven → replay.
+		$id = $svc->rememberCreate('alice', 'nonce-1', static fn (): int => 1, str_repeat('b', 64));
+		self::assertSame(77, $id);
+	}
+
+	public function testFingerprintMismatchDuringLockWaitThrowsAndKeepsMapping(): void
+	{
+		$cache = $this->createMock(ICache::class);
+		$calls = 0;
+		$cache->method('get')->willReturnCallback(static function () use (&$calls) {
+			$calls++;
+			return $calls >= 2 ? '55:' . str_repeat('a', 64) : null;
+		});
+		$cache->expects(self::never())->method('remove');
+		$cacheFactory = $this->createMock(ICacheFactory::class);
+		$cacheFactory->method('createDistributed')->willReturn($cache);
+		$svc = new FormSubmitIdempotencyService($cacheFactory, $this->lockingMock(false));
+		$this->expectException(\OCA\ProjectCheck\Exception\IdempotencyConflictException::class);
+		$svc->rememberCreate('alice', 'wait-me', static fn (): int => 1, str_repeat('b', 64));
+	}
+
 	public function testNormalizeRejectsGarbage(): void
 	{
 		$svc = new FormSubmitIdempotencyService(

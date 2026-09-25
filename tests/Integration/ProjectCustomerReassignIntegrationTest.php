@@ -47,6 +47,7 @@ final class ProjectCustomerReassignIntegrationTest extends TestCase
 		if (!isset(\OC::$server)) {
 			return;
 		}
+		\OCA\ProjectCheck\Tests\Support\IntegrationFixtureCleanup::purge(\OC::$server->get(\OCP\IDBConnection::class));
 		$projects = \OC::$server->get(ProjectService::class);
 		$customers = \OC::$server->get(CustomerService::class);
 		foreach ($this->projectIds as $id) {

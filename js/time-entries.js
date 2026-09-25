@@ -797,6 +797,9 @@
 			deleteUrl: resolvedDeleteUrl,
 			simpleConfirm: true,
 			confirmMessage: confirmMessage,
+			// Trigger disabled above blurs it — pass explicitly so focus
+			// restores on dismiss (ds_chrome focus-restoration fix).
+			triggerEl: triggerButton,
 			onSuccess: function (entity) {
 				releaseDeletionTrigger();
 				try {

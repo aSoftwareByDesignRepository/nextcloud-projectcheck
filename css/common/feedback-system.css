@@ -170,8 +170,9 @@
   position: absolute;
   top: 0.25rem;
   inset-inline-end: 0.25rem;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
+  /* px floor: 2.75rem rem-collapses to 41.25px under the 15px root (ds_chrome). */
+  min-width: var(--pc-touch-min, 44px);
+  min-height: var(--pc-touch-min, 44px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -282,8 +283,9 @@
 
 .persistent-notification__acknowledge,
 .persistent-notification__dismiss {
-  min-width: 2.75rem;
-  min-height: 2.75rem;
+  /* px floor: 2.75rem rem-collapses below 44px (ds_chrome). */
+  min-width: var(--pc-touch-min, 44px);
+  min-height: var(--pc-touch-min, 44px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -614,8 +616,9 @@
 /* Dismiss on inline alerts (ProjectControlMessaging / components) */
 #app-content .alert-close,
 .alert-close {
-  min-width: 2.75rem;
-  min-height: 2.75rem;
+  /* px floor: 2.75rem rem-collapses below 44px (ds_chrome). */
+  min-width: var(--pc-touch-min, 44px);
+  min-height: var(--pc-touch-min, 44px);
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -146,6 +146,12 @@
 			restoreFocus: true,
 			onDismiss: null,
 			initialFocus: null,
+			// Explicit element focus should return to on dismiss. Needed when the
+			// caller disables the triggering control before opening the modal:
+			// disabling a focused button blurs it, so document.activeElement has
+			// already fallen back to <body> by the time attach() runs (ds_chrome
+			// audit — focus restoration defect).
+			restoreTo: null,
 		}, options || {});
 
 		// Ensure proper ARIA semantics.
@@ -158,7 +164,9 @@
 		}
 
 		const restoreTo = opts.restoreFocus
-			? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
+			? (opts.restoreTo instanceof HTMLElement
+				? opts.restoreTo
+				: (document.activeElement instanceof HTMLElement ? document.activeElement : null))
 			: null;
 
 		const entry = { modal: modal, options: opts, restoreTo: restoreTo };

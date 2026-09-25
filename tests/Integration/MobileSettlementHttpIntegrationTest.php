@@ -13,6 +13,7 @@ use OCA\ProjectCheck\Service\MobileBookingService;
 use OCA\ProjectCheck\Service\MobileSettlementService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Tests\Support\IntegrationTestUsers;
+use OCA\ProjectCheck\Tests\Support\LicenseStateGuard;
 use OCA\ProjectCheck\Tests\Support\Pc2TestSigning;
 use OCA\ProjectCheck\Util\BillingStatus;
 use OCP\IUserManager;
@@ -41,7 +42,7 @@ final class MobileSettlementHttpIntegrationTest extends TestCase
 		putenv('PC_VENDOR_PUBLIC_KEY_B64=' . Pc2TestSigning::publicKeyB64());
 		putenv('PC_ALLOW_VENDOR_KEY_OVERRIDE=1');
 		\OC_User::setIncognitoMode(false);
-		$this->wipeLicense();
+		$this->wipeLicenseSetUp();
 		$this->ensureUser(self::MEMBER);
 		if (!\OC::$server->get(IUserManager::class)->userExists(self::ADMIN)) {
 			$this->markTestSkipped('admin user required for settlement setup');
@@ -53,17 +54,30 @@ final class MobileSettlementHttpIntegrationTest extends TestCase
 		if (!isset(\OC::$server)) {
 			return;
 		}
-		\OC::$server->get(IUserSession::class)->setUser(null);
-		$this->wipeLicense();
-		$um = \OC::$server->get(IUserManager::class);
-		foreach ($this->createdUsers as $uid) {
-			if ($um->userExists($uid)) {
-				$um->get($uid)?->delete();
+		try {
+			\OCA\ProjectCheck\Tests\Support\IntegrationFixtureCleanup::purge(\OC::$server->get(\OCP\IDBConnection::class));
+			\OC::$server->get(IUserSession::class)->setUser(null);
+		} finally {
+			// Shared-state restore is never skipped: a throw in fixture
+			// cleanup must not strand the captured license/seat rows.
+			try {
+				$this->wipeLicenseTearDown();
+			} finally {
+				// Test-artifact cleanup is likewise never skipped — a
+				// purge or license-restore throw must not leak the test
+				// users or the vendor-key env override into the next test.
+				$um = \OC::$server->get(IUserManager::class);
+				foreach ($this->createdUsers as $uid) {
+					if ($um->userExists($uid)) {
+						$um->get($uid)?->delete();
+					}
+				}
+				$this->createdUsers = [];
+				putenv('PC_VENDOR_PUBLIC_KEY_B64');
+				putenv('PC_ALLOW_VENDOR_KEY_OVERRIDE');
+				parent::tearDown();
 			}
 		}
-		$this->createdUsers = [];
-		putenv('PC_VENDOR_PUBLIC_KEY_B64');
-		putenv('PC_ALLOW_VENDOR_KEY_OVERRIDE');
 	}
 
 	public function testSettlementListAndEntryBillingAsAdmin(): void
@@ -109,23 +123,52 @@ final class MobileSettlementHttpIntegrationTest extends TestCase
 		$requestId = 'idem-' . bin2hex(random_bytes(8));
 
 		$booking = \OC::$server->get(MobileBookingService::class);
-		$first = $booking->createEntry(self::MEMBER, [
+		$payload = [
+			'projectId' => $projectId,
+			'date' => '2026-07-21',
+			'durationMinutes' => 30,
+			'description' => 'Idempotent create',
+			'clientRequestId' => $requestId,
+		];
+		$first = $booking->createEntry(self::MEMBER, $payload);
+		// A true offline retry resends the byte-identical payload.
+		$second = $booking->createEntry(self::MEMBER, $payload);
+
+		self::assertSame($first['id'], $second['id']);
+		self::assertSame(30, $second['durationMinutes']);
+	}
+
+	public function testIdempotentCreateRejectsSameKeyDifferentPayload(): void
+	{
+		$this->applyLicense(5);
+		$this->assignSeat(self::MEMBER);
+		$projectId = $this->ensureBookableProject();
+		$requestId = 'idem-' . bin2hex(random_bytes(8));
+
+		$booking = \OC::$server->get(MobileBookingService::class);
+		$booking->createEntry(self::MEMBER, [
 			'projectId' => $projectId,
 			'date' => '2026-07-21',
 			'durationMinutes' => 30,
 			'description' => 'Idempotent create',
 			'clientRequestId' => $requestId,
 		]);
-		$second = $booking->createEntry(self::MEMBER, [
-			'projectId' => $projectId,
-			'date' => '2026-07-21',
-			'durationMinutes' => 30,
-			'description' => 'Idempotent create retry',
-			'clientRequestId' => $requestId,
-		]);
 
-		self::assertSame($first['id'], $second['id']);
-		self::assertSame(30, $second['durationMinutes']);
+		// Same clientRequestId + different payload must conflict (409), never
+		// silently replay the original entry or create a second one.
+		try {
+			$booking->createEntry(self::MEMBER, [
+				'projectId' => $projectId,
+				'date' => '2026-07-21',
+				'durationMinutes' => 30,
+				'description' => 'Different data under the same key',
+				'clientRequestId' => $requestId,
+			]);
+			self::fail('Expected idempotency_mismatch for same key with different payload');
+		} catch (\OCA\ProjectCheck\Exception\MobileApiException $e) {
+			self::assertSame('idempotency_mismatch', $e->getErrorCode());
+			self::assertSame(409, $e->getHttpStatus());
+		}
 	}
 
 	public function testMemberCannotSettle(): void
@@ -176,10 +219,23 @@ final class MobileSettlementHttpIntegrationTest extends TestCase
 		\OC::$server->get(LicenseService::class)->assignSeat(self::ADMIN, $uid);
 	}
 
-	private function wipeLicense(): void
+	private LicenseStateGuard $licenseGuard;
+
+	/**
+	 * Capture-and-restore, not unscoped deleteAll: a suite run on a
+	 * licensed instance must not destroy the installed license or real
+	 * seat assignments. setUp captures + clears; tearDown clears the
+	 * test-created state and re-inserts the captured rows.
+	 */
+	private function wipeLicenseSetUp(): void
 	{
-		\OC::$server->get(MobileSeatMapper::class)->deleteAll();
-		\OC::$server->get(LicenseStateMapper::class)->deleteAll();
+		$this->licenseGuard = new LicenseStateGuard();
+		$this->licenseGuard->setUp();
+	}
+
+	private function wipeLicenseTearDown(): void
+	{
+		$this->licenseGuard->tearDown();
 	}
 
 	private function ensureUser(string $uid): void

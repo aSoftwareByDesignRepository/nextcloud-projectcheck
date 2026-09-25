@@ -317,7 +317,7 @@
 			removeBtn.setAttribute('aria-label', t('projectcheck', 'Remove from project'));
 			removeBtn.appendChild(document.createTextNode(t('projectcheck', 'Remove')));
 			removeBtn.addEventListener('click', function () {
-				removeTeamMember(currentProjectId, member);
+				removeTeamMember(currentProjectId, member, removeBtn);
 			});
 			actions.appendChild(removeBtn);
 			row.appendChild(actions);
@@ -366,7 +366,7 @@
 	/**
 	 * Remove team member
 	 */
-	function removeTeamMember(projectId, member) {
+	function removeTeamMember(projectId, member, triggerButton) {
 		if (typeof window.projectcheckDeletionModal === 'undefined') {
 			showNotification(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'), 'error');
 			return;
@@ -388,6 +388,7 @@
 			entityId: memberId != null ? memberId : userId,
 			entityName: memberName,
 			deleteUrl: deleteUrl,
+			triggerEl: triggerButton || null,
 			onSuccess: function () {
 				showTeamMembers(projectId);
 			},
@@ -440,6 +441,9 @@
 			entityId: projectId,
 			entityName: projectName,
 			deleteUrl: deleteUrl,
+			// The trigger is disabled above (which blurs it) — pass it
+			// explicitly so focus restores here on dismiss (ds_chrome).
+			triggerEl: triggerButton,
 			onSuccess: function () {
 				releaseDeletionTrigger();
 				const url = new URL(window.location.href);

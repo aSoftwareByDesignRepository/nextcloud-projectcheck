@@ -82,15 +82,17 @@ class TimeEntryService
 	public function createTimeEntry($data, $userId)
 	{
 		$pid = (int) ($data['project_id'] ?? 0);
+		// Capability before existence/state: a caller without project access must
+		// not learn whether the project exists or is open for time tracking.
+		if (!$this->projectService->canUserAddTimeEntryForProject($userId, $pid)) {
+			throw new PermissionDeniedException('create', 'time entry', $this->l->t('Access denied'));
+		}
 		$project = $this->projectMapper->find($pid);
 		if (!$project) {
 			throw new ValidationException([], $this->l->t('Project not found'));
 		}
 		if (!$project->allowsTimeTracking()) {
 			throw new ValidationException([], $this->l->t('Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.'));
-		}
-		if (!$this->projectService->canUserAddTimeEntryForProject($userId, $pid)) {
-			throw new PermissionDeniedException('create', 'time entry', $this->l->t('Access denied'));
 		}
 
 		$parsedDate = $this->parseTimeEntryDateString($data['date'] ?? null);
@@ -254,12 +256,10 @@ class TimeEntryService
 	public function updateTimeEntry($id, $data, $userId)
 	{
 		$timeEntry = $this->getTimeEntry($id);
-		if (!$timeEntry) {
+		// Foreign and missing ids collapse to the same not-found (existence-oracle
+		// hardening): a non-owner must not learn that the entry exists.
+		if (!$timeEntry || !$timeEntry->isOwnedBy($userId)) {
 			throw new TimeEntryNotFoundException((int) $id, $this->l->t('Time entry not found'));
-		}
-
-		if (!$timeEntry->isOwnedBy($userId)) {
-			throw new PermissionDeniedException('update', 'time entry', $this->l->t('Access denied'));
 		}
 
 		// Settled entries are frozen (spec 9.3): invoiced/paid rows cannot be
@@ -305,18 +305,21 @@ class TimeEntryService
 		$targetProjectId = (int) $timeEntry->getProjectId();
 		$projectChanged = $targetProjectId !== $originalProjectId;
 
+		if ($projectChanged) {
+			// Capability before existence/state: the move target must not leak
+			// whether it exists or is open for time tracking.
+			if (!$this->projectService->canUserAddTimeEntryForProject($userId, $targetProjectId)) {
+				throw new PermissionDeniedException('move', 'time entry', $this->l->t('Access denied'));
+			}
+		}
+
 		$targetProject = $this->projectMapper->find($targetProjectId);
 		if (!$targetProject) {
 			throw new ValidationException([], $this->l->t('Project not found'));
 		}
 
-		if ($projectChanged) {
-			if (!$targetProject->allowsTimeTracking()) {
-				throw new ValidationException([], $this->l->t('Time entries cannot be moved to a project that is not Active or On Hold.'));
-			}
-			if (!$this->projectService->canUserAddTimeEntryForProject($userId, $targetProjectId)) {
-				throw new PermissionDeniedException('move', 'time entry', $this->l->t('Access denied'));
-			}
+		if ($projectChanged && !$targetProject->allowsTimeTracking()) {
+			throw new ValidationException([], $this->l->t('Time entries cannot be moved to a project that is not Active or On Hold.'));
 		}
 
 		$entryDate = $timeEntry->getDate();
@@ -443,12 +446,10 @@ class TimeEntryService
 	public function deleteTimeEntry($id, $userId)
 	{
 		$timeEntry = $this->getTimeEntry($id);
-		if (!$timeEntry) {
+		// Foreign and missing ids collapse to the same not-found (existence-oracle
+		// hardening): a non-owner must not learn that the entry exists.
+		if (!$timeEntry || !$timeEntry->isOwnedBy($userId)) {
 			throw new TimeEntryNotFoundException((int) $id, $this->l->t('Time entry not found'));
-		}
-
-		if (!$timeEntry->isOwnedBy($userId)) {
-			throw new PermissionDeniedException('delete', 'time entry', $this->l->t('Access denied'));
 		}
 
 		if ($timeEntry->isBillingLocked()) {

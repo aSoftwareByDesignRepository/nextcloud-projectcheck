@@ -49,6 +49,7 @@ class EmployeeControllerTest extends TestCase
 	private $user;
 	/** @var AccessControlService|\PHPUnit\Framework\MockObject\MockObject */
 	private $accessControl;
+	private bool $canManageAppConfig = false;
 
 	/** @var EmployeeHourlyRateService|\PHPUnit\Framework\MockObject\MockObject */
 	private $employeeHourlyRateService;
@@ -106,7 +107,8 @@ class EmployeeControllerTest extends TestCase
 		$this->user->method('getUID')->willReturn('manager1');
 		$this->userSession->method('getUser')->willReturn($this->user);
 		$this->accessControl->method('isSystemAdministrator')->willReturn(false);
-		$this->accessControl->method('canManageAppConfiguration')->willReturn(false);
+		$this->accessControl->method('canManageAppConfiguration')
+			->willReturnCallback(fn (): bool => $this->canManageAppConfig);
 	}
 
 	public function testAssignProjectDeniedWhenNoPermission(): void
@@ -284,6 +286,9 @@ class EmployeeControllerTest extends TestCase
 
 	public function testAddHourlyRateRejectedForRemovedAccount(): void
 	{
+		// Authorized config manager probing a removed account → the
+		// account-existence check is reached only after the capability gate.
+		$this->canManageAppConfig = true;
 		$this->userManager->method('get')->with('former1')->willReturn(null);
 		$this->employeeHourlyRateService->expects($this->never())->method('addRateRow');
 

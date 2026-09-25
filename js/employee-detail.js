@@ -261,6 +261,7 @@ function initializeEmployeeDetail() {
 					deleteUrl: url,
 					simpleConfirm: true,
 					confirmMessage: confirmMessage,
+					triggerEl: button,
 					onSuccess: function () {
 						window.location.reload();
 					},

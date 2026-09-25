@@ -193,11 +193,10 @@ class ProjectSettlementService
 	 */
 	private function assertProjectSettleable(int $projectId, string $actorUid): void
 	{
-		$project = $this->projectService->getProject($projectId);
-		if (!$project) {
-			throw new ValidationException([], $this->l->t('Project not found'));
-		}
-		if (!$this->projectService->canUserSettleProject($actorUid, $projectId)) {
+		// Missing and foreign project ids collapse to the same denial
+		// (existence-oracle hardening).
+		if (!$this->projectService->canUserSettleProject($actorUid, $projectId)
+			|| $this->projectService->getProject($projectId) === null) {
 			throw new PermissionDeniedException('settle', 'project', $this->l->t('Access denied'));
 		}
 	}

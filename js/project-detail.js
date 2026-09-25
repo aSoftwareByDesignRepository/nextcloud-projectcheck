@@ -1206,6 +1206,7 @@ const projectcheckToken = cfg.requestToken || '';
             entityName: memberName,
             deleteUrl: deleteUrl,
             impactUrl: impactUrl,
+            triggerEl: button,
             onSuccess: function() {
                 removeMemberRow(button);
                 notify(cfg.messages.removeSuccess);

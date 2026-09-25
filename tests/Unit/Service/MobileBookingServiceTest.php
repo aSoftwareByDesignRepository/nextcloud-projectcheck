@@ -115,8 +115,10 @@ final class MobileBookingServiceTest extends TestCase
 		}
 	}
 
-	public function testUpdateBlocksForeignOwner(): void
+	public function testUpdateForeignOwnerCollapsesToNotFound(): void
 	{
+		// Existence-oracle hardening: foreign-owned and missing ids share the
+		// same not_found reply — the caller cannot distinguish them.
 		$entry = $this->makeEntry(7, 1, 'bob', 1.0, BillingStatus::OPEN);
 		$this->timeEntries->method('getTimeEntry')->willReturn($entry);
 		$this->timeEntries->expects(self::never())->method('updateTimeEntry');
@@ -124,8 +126,8 @@ final class MobileBookingServiceTest extends TestCase
 		try {
 			$this->svc->updateEntry('alice', 7, ['description' => 'stolen']);
 		} catch (MobileApiException $e) {
-			self::assertSame('forbidden', $e->getErrorCode());
-			self::assertSame(403, $e->getHttpStatus());
+			self::assertSame('not_found', $e->getErrorCode());
+			self::assertSame(404, $e->getHttpStatus());
 			throw $e;
 		}
 	}
@@ -221,15 +223,18 @@ final class MobileBookingServiceTest extends TestCase
 		}
 	}
 
-	public function testDeleteBlocksForeignOwner(): void
+	public function testDeleteForeignOwnerCollapsesToNotFound(): void
 	{
+		// Existence-oracle hardening: foreign-owned and missing ids share the
+		// same not_found reply — the caller cannot distinguish them.
 		$entry = $this->makeEntry(7, 1, 'bob', 1.0, BillingStatus::OPEN);
 		$this->timeEntries->method('getTimeEntry')->willReturn($entry);
 		$this->expectException(MobileApiException::class);
 		try {
 			$this->svc->deleteEntry('alice', 7);
 		} catch (MobileApiException $e) {
-			self::assertSame('forbidden', $e->getErrorCode());
+			self::assertSame('not_found', $e->getErrorCode());
+			self::assertSame(404, $e->getHttpStatus());
 			throw $e;
 		}
 	}
@@ -399,6 +404,39 @@ final class MobileBookingServiceTest extends TestCase
 			'clientRequestId' => 'stale-1',
 		]);
 		self::assertSame(88, $row['id']);
+	}
+
+	public function testCreateIdempotencyPayloadMismatchReturnsConflict(): void
+	{
+		$idem = $this->createMock(\OCA\ProjectCheck\Db\MobileIdempotencyMapper::class);
+		$time = $this->createMock(\OCP\AppFramework\Utility\ITimeFactory::class);
+		$l = $this->createMock(IL10N::class);
+		$l->method('t')->willReturnCallback(static fn (string $s, array $a = []) => $a === [] ? $s : vsprintf($s, $a));
+		$svc = new MobileBookingService($this->projects, $this->timeEntries, $this->rates, $l, $idem, $time);
+
+		// Stored map was written for a *different* payload (different project).
+		$map = new \OCA\ProjectCheck\Db\MobileIdempotency();
+		$map->setTimeEntryId(42);
+		$map->setPayloadHash(hash('sha256', 'other-payload'));
+		$idem->expects(self::once())->method('findByUserAndRequestId')
+			->with('alice', 'req-mm-1')
+			->willReturn($map);
+		$prior = $this->makeEntry(42, 99, 'alice', 1.0, BillingStatus::OPEN);
+		$this->timeEntries->expects(self::once())->method('getTimeEntry')->with(42)->willReturn($prior);
+		$this->timeEntries->expects(self::never())->method('createTimeEntry');
+
+		try {
+			$svc->createEntry('alice', [
+				'projectId' => 12,
+				'date' => '2026-07-24',
+				'durationMinutes' => 60,
+				'clientRequestId' => 'req-mm-1',
+			]);
+			self::fail('expected MobileApiException');
+		} catch (MobileApiException $e) {
+			self::assertSame('idempotency_mismatch', $e->getErrorCode());
+			self::assertSame(409, $e->getHttpStatus());
+		}
 	}
 
 	public function testCreateRejectsInvalidClientRequestId(): void

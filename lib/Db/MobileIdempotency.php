@@ -15,6 +15,8 @@ use OCP\AppFramework\Db\Entity;
  * @method void setTimeEntryId(int $v)
  * @method int getCreatedAt()
  * @method void setCreatedAt(int $v)
+ * @method string|null getPayloadHash()
+ * @method void setPayloadHash(?string $v)
  */
 class MobileIdempotency extends Entity
 {
@@ -22,6 +24,7 @@ class MobileIdempotency extends Entity
 	protected string $clientRequestId = '';
 	protected int $timeEntryId = 0;
 	protected int $createdAt = 0;
+	protected ?string $payloadHash = null;
 
 	public function __construct()
 	{
@@ -29,5 +32,6 @@ class MobileIdempotency extends Entity
 		$this->addType('clientRequestId', 'string');
 		$this->addType('timeEntryId', 'integer');
 		$this->addType('createdAt', 'integer');
+		$this->addType('payloadHash', 'string');
 	}
 }

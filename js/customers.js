@@ -176,6 +176,9 @@
             entityId: customerId,
             entityName: customerName,
             deleteUrl: deleteUrl,
+            // Trigger disabled above blurs it — pass explicitly so focus
+            // restores on dismiss (ds_chrome focus-restoration fix).
+            triggerEl: triggerButton,
             onSuccess: function (entity) {
                 releaseDeletionTrigger();
                 const row = document.querySelector(`tr[data-customer-id="${entity.id}"]`);

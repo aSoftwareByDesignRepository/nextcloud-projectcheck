@@ -12,6 +12,7 @@ use OCA\ProjectCheck\Middleware\AppAccessMiddleware;
 use OCA\ProjectCheck\Service\LicenseService;
 use OCA\ProjectCheck\Service\MobileGateService;
 use OCA\ProjectCheck\Tests\Support\IntegrationTestUsers;
+use OCA\ProjectCheck\Tests\Support\LicenseStateGuard;
 use OCA\ProjectCheck\Tests\Support\Pc2TestSigning;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -41,7 +42,7 @@ final class MobileGateHttpIntegrationTest extends TestCase
 		putenv('PC_VENDOR_PUBLIC_KEY_B64=' . Pc2TestSigning::publicKeyB64());
 		putenv('PC_ALLOW_VENDOR_KEY_OVERRIDE=1');
 		\OC_User::setIncognitoMode(false);
-		$this->wipeLicense();
+		$this->wipeLicenseSetUp();
 		$this->ensureUser(self::UID);
 		$this->ensureUser(self::ADMIN);
 	}
@@ -51,17 +52,29 @@ final class MobileGateHttpIntegrationTest extends TestCase
 		if (!isset(\OC::$server)) {
 			return;
 		}
-		\OC::$server->get(IUserSession::class)->setUser(null);
-		$this->wipeLicense();
-		$um = \OC::$server->get(IUserManager::class);
-		foreach ($this->testUsers as $uid) {
-			if ($um->userExists($uid)) {
-				$um->get($uid)?->delete();
+		try {
+			\OC::$server->get(IUserSession::class)->setUser(null);
+		} finally {
+			// Shared-state restore is never skipped: a throw in fixture
+			// cleanup must not strand the captured license/seat rows.
+			try {
+				$this->wipeLicenseTearDown();
+			} finally {
+				// Test-artifact cleanup is likewise never skipped — a
+				// license-restore throw must not leak the test users or
+				// the vendor-key env override into the next test.
+				$um = \OC::$server->get(IUserManager::class);
+				foreach ($this->testUsers as $uid) {
+					if ($um->userExists($uid)) {
+						$um->get($uid)?->delete();
+					}
+				}
+				$this->testUsers = [];
+				putenv('PC_VENDOR_PUBLIC_KEY_B64');
+				putenv('PC_ALLOW_VENDOR_KEY_OVERRIDE');
+				parent::tearDown();
 			}
 		}
-		$this->testUsers = [];
-		putenv('PC_VENDOR_PUBLIC_KEY_B64');
-		putenv('PC_ALLOW_VENDOR_KEY_OVERRIDE');
 	}
 
 	public function testBootstrapWithoutLicenseReportsNullEnvelope(): void
@@ -186,10 +199,23 @@ final class MobileGateHttpIntegrationTest extends TestCase
 		\OC::$server->get(LicenseService::class)->assignSeat(self::ADMIN, $uid);
 	}
 
-	private function wipeLicense(): void
+	private LicenseStateGuard $licenseGuard;
+
+	/**
+	 * Capture-and-restore, not unscoped deleteAll: a suite run on a
+	 * licensed instance must not destroy the installed license or real
+	 * seat assignments. setUp captures + clears; tearDown clears the
+	 * test-created state and re-inserts the captured rows.
+	 */
+	private function wipeLicenseSetUp(): void
 	{
-		\OC::$server->get(MobileSeatMapper::class)->deleteAll();
-		\OC::$server->get(LicenseStateMapper::class)->deleteAll();
+		$this->licenseGuard = new LicenseStateGuard();
+		$this->licenseGuard->setUp();
+	}
+
+	private function wipeLicenseTearDown(): void
+	{
+		$this->licenseGuard->tearDown();
 	}
 
 	private function ensureUser(string $uid): void

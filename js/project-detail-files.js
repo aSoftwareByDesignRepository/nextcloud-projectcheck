@@ -119,6 +119,7 @@
 						deleteUrl: deleteUrl,
 						simpleConfirm: true,
 						confirmMessage: confirmMessage,
+						triggerEl: button,
 						onSuccess: function () {
 							const row = button.closest('.project-file-row');
 							if (row) {

@@ -15,6 +15,7 @@ use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\HourlyRateService;
 use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCA\ProjectCheck\Exception\IdempotencyConflictException;
 use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCA\ProjectCheck\Util\RateResolutionMessage;
 use OCA\ProjectCheck\Util\CostRateMode;
@@ -556,7 +557,7 @@ class ProjectController extends Controller
 					// best-effort
 				}
 				return (int) $created->getId();
-			});
+			}, $this->createPayloadFingerprint($data));
 			$project = $this->projectService->getProject($projectId);
 			if ($project === null) {
 				throw new \RuntimeException('Project not found after create');
@@ -592,6 +593,14 @@ class ProjectController extends Controller
 			}
 			$url = $this->urlGenerator->linkToRoute('projectcheck.project.show', $urlParams);
 			return new RedirectResponse($url);
+		} catch (IdempotencyConflictException $e) {
+			// Same nonce, different payload → 409, never a silent replay.
+			$safeError = $this->l->t('This form was already submitted with different data. Reload the page and try again.');
+			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
+				return new DataResponse($this->errorPayload($safeError), 409);
+			}
+			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $safeError]);
+			return new RedirectResponse($url);
 		} catch (\Exception $e) {
 			$safeError = $this->toSafeProjectErrorMessage($e, $this->l->t('Could not create project. Please check your input.'));
 			// Return appropriate response based on request type
@@ -621,13 +630,15 @@ class ProjectController extends Controller
 			return $this->configureCSP($response, 'guest');
 		}
 
+		// Capability before existence: missing and foreign project ids must be
+		// indistinguishable (existence-oracle hardening).
+		if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('Access denied')), 'guest');
+			return $this->configureCSP($response, 'guest');
+		}
 		$project = $this->projectService->getProject($id);
 		if (!$project) {
 			$response = new TemplateResponse($this->appName, 'error', $this->errorPageProjects($this->l->t('Project not found')), 'guest');
-			return $this->configureCSP($response, 'guest');
-		}
-		if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
-			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('Access denied')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -866,13 +877,13 @@ class ProjectController extends Controller
 		}
 
 		try {
+			// Capability before existence: no foreign-vs-missing oracle.
+			if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
+				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+			}
 			$project = $this->projectService->getProject($id);
 			if (!$project) {
 				return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
-			}
-
-			if (!$this->projectService->canUserAccessProject($user->getUID(), $id)) {
-				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 			}
 
 			$budgetInfo = $this->budgetService->getProjectBudgetInfo($project, $user->getUID());
@@ -934,12 +945,13 @@ class ProjectController extends Controller
 		}
 
 		try {
+			// Capability before existence: no foreign-vs-missing oracle.
+			if (!$this->projectService->canUserAddTimeEntryForProject($user->getUID(), $projectId)) {
+				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+			}
 			$project = $this->projectService->getProject($projectId);
 			if (!$project) {
 				return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
-			}
-			if (!$this->projectService->canUserAddTimeEntryForProject($user->getUID(), $projectId)) {
-				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 			}
 
 			$entryDate = $this->parseEntryDateParam($entryDateRaw);
@@ -1017,13 +1029,14 @@ class ProjectController extends Controller
 			return $this->configureCSP($response, 'guest');
 		}
 
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
+			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('Access denied')), 'guest');
+			return $this->configureCSP($response, 'guest');
+		}
 		$project = $this->projectService->getProject($id);
 		if (!$project) {
 			$response = new TemplateResponse($this->appName, 'error', $this->errorPageProjects($this->l->t('Project not found')), 'guest');
-			return $this->configureCSP($response, 'guest');
-		}
-		if (!$this->projectService->canUserEditProject($user->getUID(), $id)) {
-			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest($this->l->t('Access denied')), 'guest');
 			return $this->configureCSP($response, 'guest');
 		}
 
@@ -1543,12 +1556,13 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new JSONResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 		$project = $this->projectService->getProject($id);
 		if ($project === null) {
 			return new JSONResponse(['error' => $this->l->t('Project not found')], 404);
-		}
-		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
-			return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 		if (!$project->isEditableState()) {
 			return new JSONResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
@@ -1612,12 +1626,13 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 		$project = $this->projectService->getProject($id);
 		if ($project === null) {
 			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
-		}
-		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 		if (!$project->isEditableState()) {
 			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
@@ -1674,12 +1689,13 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 		$project = $this->projectService->getProject($id);
 		if ($project === null) {
 			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
-		}
-		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 		if (!$project->isEditableState()) {
 			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
@@ -1769,12 +1785,13 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 		$project = $this->projectService->getProject($id);
 		if ($project === null) {
 			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
-		}
-		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 		if (!$project->isEditableState()) {
 			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
@@ -1855,12 +1872,13 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 		$project = $this->projectService->getProject($id);
 		if ($project === null) {
 			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
-		}
-		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 
 		// Reject anything that is not literally a known role (case-insensitive).
@@ -1916,12 +1934,13 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 		$project = $this->projectService->getProject($id);
 		if ($project === null) {
 			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
-		}
-		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 		if (!$project->isEditableState()) {
 			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
@@ -1945,12 +1964,13 @@ class ProjectController extends Controller
 		if (!$user) {
 			return new DataResponse(['error' => $this->l->t('User not authenticated')], 401);
 		}
+		// Capability before existence: no foreign-vs-missing oracle.
+		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
+			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
+		}
 		$project = $this->projectService->getProject($id);
 		if ($project === null) {
 			return new DataResponse(['error' => $this->l->t('Project not found')], 404);
-		}
-		if (!$this->projectService->canUserManageMembers($user->getUID(), $id)) {
-			return new DataResponse(['error' => $this->l->t('Access denied')], 403);
 		}
 		if (!$project->isEditableState()) {
 			return new DataResponse(['error' => $this->l->t('Cannot change the team for a completed, cancelled, or archived project')], 403);
@@ -2103,7 +2123,7 @@ class ProjectController extends Controller
 				} catch (\Throwable) {
 				}
 				return (int) $created->getId();
-			});
+			}, $this->createPayloadFingerprint($data));
 			$project = $this->projectService->getProject($projectId);
 			if ($project === null) {
 				throw new \RuntimeException('Project not found after create');
@@ -2114,6 +2134,10 @@ class ProjectController extends Controller
 				'project' => $project,
 				'message' => $this->l->t('Project created successfully')
 			]);
+		} catch (IdempotencyConflictException $e) {
+			return new DataResponse($this->errorPayload(
+				$this->l->t('This idempotency key was already used with different data.')
+			), 409);
 		} catch (\Exception $e) {
 			return new DataResponse($this->errorPayload($this->toSafeProjectErrorMessage($e, $this->l->t('Could not create project. Please check your input.'))), 400);
 		}
@@ -2459,6 +2483,26 @@ class ProjectController extends Controller
 			'error' => $message,
 			'message' => $message,
 		];
+	}
+
+	/**
+	 * Canonical fingerprint of the create payload for idempotency replay
+	 * detection. The nonce/key itself and the CSRF token are excluded — they
+	 * identify the submission, they are not part of the semantic payload.
+	 *
+	 * @param array<string, mixed> $data
+	 */
+	private function createPayloadFingerprint(array $data): string
+	{
+		$canonical = $data;
+		unset(
+			$canonical['requesttoken'],
+			$canonical['pc_form_nonce'],
+			$canonical['idempotencyKey'],
+			$canonical['Idempotency-Key']
+		);
+		ksort($canonical);
+		return hash('sha256', (string) json_encode($canonical, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 	}
 
 }

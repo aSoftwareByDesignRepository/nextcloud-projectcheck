@@ -557,18 +557,13 @@ class TimeEntryController extends Controller
 			return $this->configureCSP($response);
 		}
 
+		// Missing and foreign entries must be indistinguishable (existence-oracle
+		// hardening): both collapse to the same deny page.
 		$timeEntry = $this->timeEntryService->getTimeEntry($id);
-		if (!$timeEntry) {
-			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
-				$this->l->t('Time entry not found')
-			), 'guest');
-			return $this->configureCSP($response, 'guest');
-		}
-
 		$uid = $user->getUID();
-		$isOwner = $timeEntry->isOwnedBy($uid);
+		$isOwner = $timeEntry !== null && $timeEntry->isOwnedBy($uid);
 		// Owner, global viewer, or scoped settler (Manager/creator — spec D5b).
-		if (!$isOwner && !$this->projectService->canUserViewTimeEntry($uid, $timeEntry)) {
+		if ($timeEntry === null || (!$isOwner && !$this->projectService->canUserViewTimeEntry($uid, $timeEntry))) {
 			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
 				$this->l->t('Access denied')
 			), 'guest');
@@ -620,16 +615,10 @@ class TimeEntryController extends Controller
 			return $this->configureCSP($response, 'guest');
 		}
 
+		// Missing and foreign entries must be indistinguishable: both collapse to
+		// the same deny page (existence-oracle hardening).
 		$timeEntry = $this->timeEntryService->getTimeEntry($id);
-		if (!$timeEntry) {
-			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
-				$this->l->t('Time entry not found')
-			), 'guest');
-			return $this->configureCSP($response, 'guest');
-		}
-
-		// Check if user has access to this time entry
-		if (!$timeEntry->isOwnedBy($user->getUID())) {
+		if ($timeEntry === null || !$timeEntry->isOwnedBy($user->getUID())) {
 			$response = new TemplateResponse($this->appName, 'error', $this->errorPageGuest(
 				$this->l->t('Access denied')
 			), 'guest');

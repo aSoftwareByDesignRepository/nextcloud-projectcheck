@@ -121,6 +121,9 @@ class TimeEntryServiceTest extends TestCase {
 		$project->setId(12);
 		$project->setStatus('Completed');
 
+		// Capability is checked before existence/state — authorize the actor so
+		// the terminal-state validation is reached.
+		$this->projectService->method('canUserAddTimeEntryForProject')->with('member-user', 12)->willReturn(true);
 		$this->projectMapper->method('find')->with(12)->willReturn($project);
 
 		$this->expectException(\Exception::class);
@@ -243,12 +246,16 @@ class TimeEntryServiceTest extends TestCase {
 		], 'member-user');
 	}
 
-	public function testUpdateDeniedForNonOwner(): void {
+	/**
+	 * Existence-oracle hardening: a foreign-owned entry collapses to the same
+	 * typed not-found as a missing id — the non-owner learns nothing.
+	 */
+	public function testUpdateForeignEntryThrowsTypedNotFound(): void {
 		$existing = $this->makeOwnedEntry(99, 3, 'owner-user');
 		$this->timeEntryMapper->method('find')->with(99)->willReturn($existing);
 		$this->timeEntryMapper->expects($this->never())->method('updateContentGuarded');
 
-		$this->expectException(PermissionDeniedException::class);
+		$this->expectException(TimeEntryNotFoundException::class);
 
 		$this->service->updateTimeEntry(99, ['hours' => 1.0], 'other-user');
 	}
@@ -270,12 +277,16 @@ class TimeEntryServiceTest extends TestCase {
 		$this->service->deleteTimeEntry(55, 'member-user');
 	}
 
-	public function testDeleteDeniedForNonOwner(): void {
+	/**
+	 * Existence-oracle hardening: a foreign-owned entry collapses to the same
+	 * typed not-found as a missing id — the non-owner learns nothing.
+	 */
+	public function testDeleteForeignEntryThrowsTypedNotFound(): void {
 		$existing = $this->makeOwnedEntry(55, 12, 'owner-user');
 		$this->timeEntryMapper->method('find')->with(55)->willReturn($existing);
 		$this->timeEntryMapper->expects($this->never())->method('deleteGuardedUnlocked');
 
-		$this->expectException(PermissionDeniedException::class);
+		$this->expectException(TimeEntryNotFoundException::class);
 
 		$this->service->deleteTimeEntry(55, 'other-user');
 	}

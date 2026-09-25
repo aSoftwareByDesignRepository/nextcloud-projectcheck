@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Tests\Integration;
 
 use OCA\ProjectCheck\Repair\UninstallDropTables;
+use OCA\ProjectCheck\Tests\Support\UpgradeBackupStateGuard;
 use OCP\App\IAppManager;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
@@ -15,9 +16,15 @@ use Test\TestCase;
  */
 final class DisablePreserveDataIntegrationTest extends TestCase
 {
+	private UpgradeBackupStateGuard $backupStateGuard;
+
 	protected function setUp(): void
 	{
 		parent::setUp();
+		// Guard first: installApp() below runs the pre-migration repair step,
+		// which creates a snapshot this guard must treat as test-created.
+		$this->backupStateGuard = new UpgradeBackupStateGuard();
+		$this->backupStateGuard->setUp();
 
 		/** @var IAppManager $appManager */
 		$appManager = \OC::$server->get(IAppManager::class);
@@ -112,14 +119,21 @@ final class DisablePreserveDataIntegrationTest extends TestCase
 
 	protected function tearDown(): void
 	{
-		/** @var IAppManager $appManager */
-		$appManager = \OC::$server->get(IAppManager::class);
-		if (!$appManager->isEnabledForUser(UninstallDropTables::APP_ID)) {
-			$installer = \OC::$server->get(\OC\Installer::class);
-			$installer->installApp(UninstallDropTables::APP_ID);
-			$appManager->enableApp(UninstallDropTables::APP_ID);
+		try {
+			/** @var IAppManager $appManager */
+			$appManager = \OC::$server->get(IAppManager::class);
+			if (!$appManager->isEnabledForUser(UninstallDropTables::APP_ID)) {
+				$installer = \OC::$server->get(\OC\Installer::class);
+				$installer->installApp(UninstallDropTables::APP_ID);
+				$appManager->enableApp(UninstallDropTables::APP_ID);
+			}
+		} finally {
+			// After the re-enable above — its pre-migration snapshot is
+			// test-created too and must be swept with the rest. finally:
+			// a throw in installApp must not skip the guard cleanup.
+			$this->backupStateGuard->tearDown();
+			parent::tearDown();
 		}
-		parent::tearDown();
 	}
 
 	private function resolveExistingTable(IDBConnection $db): string

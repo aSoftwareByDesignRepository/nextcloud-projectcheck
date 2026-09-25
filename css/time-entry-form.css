@@ -207,7 +207,9 @@
 .time-entry-form .form-group #project_id {
 	width: 100% !important;
 	max-width: 100% !important;
-	min-height: var(--default-clickable-area, var(--pc-touch-min, 44px)) !important;
+	/* Atlas floor is 44px — NC's --default-clickable-area (~37px) must not
+	   win this chain (ds_chrome rem-collapse/cascade finding). */
+	min-height: var(--pc-touch-min, 44px) !important;
 	height: auto !important;
 	line-height: 1.35 !important;
 	padding: 0.65rem 2.75rem 0.65rem 0.75rem !important;
@@ -497,7 +499,7 @@ body[data-theme-dark] .time-entry-form .form-group select,
 	line-height: 1.5;
 }
 
-.pc-form-danger-zone__btn {
+.pc-form-danger-zone .pc-form-danger-zone__btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -510,14 +512,14 @@ body[data-theme-dark] .time-entry-form .form-group select,
 	border-radius: var(--pc-radius-sm, 8px);
 }
 
-.pc-form-danger-zone__btn:hover,
-.pc-form-danger-zone__btn:focus-visible {
+.pc-form-danger-zone .pc-form-danger-zone__btn:hover,
+.pc-form-danger-zone .pc-form-danger-zone__btn:focus-visible {
 	background: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
 	color: var(--pc-danger-on-fill, var(--color-primary-element-text));
 	border-color: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
 }
 
-.pc-form-danger-zone__btn:focus-visible {
+.pc-form-danger-zone .pc-form-danger-zone__btn:focus-visible {
 	outline: 2px solid var(--pc-danger-fill, var(--color-element-error));
 	outline-offset: 2px;
 }

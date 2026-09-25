@@ -177,12 +177,21 @@ class MobileBookingService
 		$clientRequestId = $this->normalizeClientRequestId(
 			isset($body['clientRequestId']) ? (string)$body['clientRequestId'] : (isset($body['client_request_id']) ? (string)$body['client_request_id'] : null)
 		);
+		$payloadHash = $this->fingerprintCreatePayload($body);
 
 		if ($clientRequestId !== null && $this->idempotency !== null) {
 			$existingMap = $this->idempotency->findByUserAndRequestId($uid, $clientRequestId);
 			if ($existingMap !== null) {
 				$prior = $this->timeEntries->getTimeEntry((int)$existingMap->getTimeEntryId());
 				if ($prior !== null) {
+					// Same key, different payload → conflict, never a silent replay.
+					if (!$this->idempotencyHashMatches($existingMap->getPayloadHash(), $payloadHash)) {
+						throw new MobileApiException(
+							'idempotency_mismatch',
+							$this->l->t('This request id was already used with different entry data.'),
+							409,
+						);
+					}
 					return $this->entryRow($prior);
 				}
 				// Stale map (entry deleted) — free the key so a retry can succeed.
@@ -222,7 +231,7 @@ class MobileBookingService
 		}
 
 		try {
-			$entry = $this->createEntryAtomic($uid, $data, $clientRequestId);
+			$entry = $this->createEntryAtomic($uid, $data, $clientRequestId, $payloadHash);
 		} catch (PermissionDeniedException) {
 			throw new MobileApiException('forbidden', $this->l->t('You cannot book time on this project.'), 403);
 		} catch (ValidationException $e) {
@@ -239,12 +248,12 @@ class MobileBookingService
 	 *
 	 * @param array<string, mixed> $data
 	 */
-	private function createEntryAtomic(string $uid, array $data, ?string $clientRequestId): TimeEntry
+	private function createEntryAtomic(string $uid, array $data, ?string $clientRequestId, ?string $payloadHash = null): TimeEntry
 	{
 		if ($clientRequestId === null || $this->idempotency === null || $this->db === null) {
 			$entry = $this->timeEntries->createTimeEntry($data, $uid);
 			if ($clientRequestId !== null && $this->idempotency !== null) {
-				return $this->finalizeIdempotencyMap($uid, $clientRequestId, $entry);
+				return $this->finalizeIdempotencyMap($uid, $clientRequestId, $entry, $payloadHash);
 			}
 			return $entry;
 		}
@@ -252,7 +261,7 @@ class MobileBookingService
 		$this->db->beginTransaction();
 		try {
 			$entry = $this->timeEntries->createTimeEntry($data, $uid);
-			$resolved = $this->finalizeIdempotencyMap($uid, $clientRequestId, $entry);
+			$resolved = $this->finalizeIdempotencyMap($uid, $clientRequestId, $entry, $payloadHash);
 			$this->db->commit();
 			return $resolved;
 		} catch (\Throwable $e) {
@@ -262,15 +271,45 @@ class MobileBookingService
 	}
 
 	/**
+	 * Canonical fingerprint of the semantic create payload. Same
+	 * clientRequestId + different fingerprint ⇒ idempotency_mismatch (409).
+	 *
+	 * @param array<string, mixed> $body
+	 */
+	private function fingerprintCreatePayload(array $body): string
+	{
+		$canonical = [
+			'projectId' => (int)($body['projectId'] ?? $body['project_id'] ?? 0),
+			'date' => (string)($body['date'] ?? ''),
+			'durationMinutes' => $body['durationMinutes'] ?? null,
+			'startTime' => $body['startTime'] ?? null,
+			'endTime' => $body['endTime'] ?? null,
+			'hours' => $body['hours'] ?? null,
+			'description' => isset($body['description']) ? (string)$body['description'] : '',
+		];
+		return hash('sha256', (string) json_encode($canonical, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+	}
+
+	/**
+	 * NULL stored hash = legacy row written before payload_hash existed —
+	 * mismatch cannot be proven, so it replays. Non-NULL hashes compare
+	 * constant-time.
+	 */
+	private function idempotencyHashMatches(?string $stored, string $incoming): bool
+	{
+		return $stored === null || hash_equals($stored, $incoming);
+	}
+
+	/**
 	 * Insert or resolve the offline-create idempotency map for $entry.
 	 */
-	private function finalizeIdempotencyMap(string $uid, string $clientRequestId, TimeEntry $entry): TimeEntry
+	private function finalizeIdempotencyMap(string $uid, string $clientRequestId, TimeEntry $entry, ?string $payloadHash = null): TimeEntry
 	{
 		if ($this->idempotency === null) {
 			return $entry;
 		}
 		$now = $this->timeFactory !== null ? $this->timeFactory->getTime() : time();
-		$inserted = $this->idempotency->tryInsert($uid, $clientRequestId, (int)$entry->getId(), $now);
+		$inserted = $this->idempotency->tryInsert($uid, $clientRequestId, (int)$entry->getId(), $now, $payloadHash);
 		if ($inserted) {
 			return $entry;
 		}
@@ -291,6 +330,14 @@ class MobileBookingService
 		if ($winner !== null) {
 			$prior = $this->timeEntries->getTimeEntry((int)$winner->getTimeEntryId());
 			if ($prior !== null) {
+				// Lost the race with a different payload → conflict.
+				if (!$this->idempotencyHashMatches($winner->getPayloadHash(), (string)$payloadHash)) {
+					throw new MobileApiException(
+						'idempotency_mismatch',
+						$this->l->t('This request id was already used with different entry data.'),
+						409,
+					);
+				}
 				return $prior;
 			}
 		}
@@ -329,11 +376,10 @@ class MobileBookingService
 	public function updateEntry(string $uid, int $id, array $body): array
 	{
 		$existing = $this->timeEntries->getTimeEntry($id);
-		if ($existing === null) {
+		// Foreign and missing ids collapse to the same not_found (existence-oracle
+		// hardening): a non-owner must not learn that the entry exists.
+		if ($existing === null || !$existing->isOwnedBy($uid)) {
 			throw new MobileApiException('not_found', $this->l->t('Time entry not found.'), 404);
-		}
-		if (!$existing->isOwnedBy($uid)) {
-			throw new MobileApiException('forbidden', $this->l->t('You can only edit your own time entries.'), 403);
 		}
 		// Spec D5 / SERVER-MOBILE-API §3.6: mobile may mutate only open entries.
 		$this->assertEntryOpenForMutation($existing, 'edit');
@@ -412,11 +458,10 @@ class MobileBookingService
 	public function deleteEntry(string $uid, int $id): void
 	{
 		$existing = $this->timeEntries->getTimeEntry($id);
-		if ($existing === null) {
+		// Foreign and missing ids collapse to the same not_found (existence-oracle
+		// hardening): a non-owner must not learn that the entry exists.
+		if ($existing === null || !$existing->isOwnedBy($uid)) {
 			throw new MobileApiException('not_found', $this->l->t('Time entry not found.'), 404);
-		}
-		if (!$existing->isOwnedBy($uid)) {
-			throw new MobileApiException('forbidden', $this->l->t('You can only delete your own time entries.'), 403);
 		}
 		// Spec D5 / SERVER-MOBILE-API §3.6: mobile may mutate only open entries.
 		$this->assertEntryOpenForMutation($existing, 'delete');

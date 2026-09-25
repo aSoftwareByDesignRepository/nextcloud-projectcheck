@@ -41,17 +41,25 @@ final class LegacyPcManualSettleIsolationIntegrationTest extends TestCase
 		if (!isset(\OC::$server)) {
 			return;
 		}
-		\OC::$server->get(IUserSession::class)->setUser(null);
-		$apps = \OC::$server->get(IAppManager::class);
-		foreach ($this->wasEnabled as $appId => $enabled) {
-			try {
-				if ($enabled) {
-					$apps->enableApp($appId);
+		try {
+			\OCA\ProjectCheck\Tests\Support\IntegrationFixtureCleanup::purge(\OC::$server->get(\OCP\IDBConnection::class));
+			\OC::$server->get(IUserSession::class)->setUser(null);
+		} finally {
+			// Sibling-app re-enable is shared-state restore: a purge throw
+			// must not leave invoicecheck/customercheck disabled for the
+			// rest of the instance.
+			$apps = \OC::$server->get(IAppManager::class);
+			foreach ($this->wasEnabled as $appId => $enabled) {
+				try {
+					if ($enabled) {
+						$apps->enableApp($appId);
+					}
+				} catch (\Throwable) {
 				}
-			} catch (\Throwable) {
 			}
+			$this->wasEnabled = [];
+			parent::tearDown();
 		}
-		$this->wasEnabled = [];
 	}
 
 	public function testCreateTimeEntryAndManualSettleWithSuiteHubsDisabled(): void

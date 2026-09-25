@@ -87,12 +87,10 @@ class TimeEntryBillingService
 		}
 
 		$entry = $this->findEntry($entryId);
-		if ($entry === null) {
+		// Foreign and missing ids collapse to the same not-found (existence-oracle
+		// hardening): a non-settler must not learn that the entry exists.
+		if ($entry === null || !$this->actorMaySettle($actorUid, (int) $entry->getProjectId())) {
 			throw new TimeEntryNotFoundException($entryId, $this->l->t('Time entry not found'));
-		}
-
-		if (!$this->actorMaySettle($actorUid, (int) $entry->getProjectId())) {
-			throw new PermissionDeniedException('settle', 'time entry', $this->l->t('Access denied'));
 		}
 
 		$from = $entry->getBillingStatus();
@@ -331,8 +329,10 @@ class TimeEntryBillingService
 					$failed[] = ['id' => $entryId, 'reason' => 'not_found'];
 					continue;
 				}
+				// Same reason as a missing id: no foreign-vs-missing oracle in
+				// bulk replies (existence-oracle hardening).
 				if (!$skipSettleAcl && !$this->actorMaySettle($actorUid, (int) $entry->getProjectId())) {
-					$failed[] = ['id' => $entryId, 'reason' => 'forbidden'];
+					$failed[] = ['id' => $entryId, 'reason' => 'not_found'];
 					continue;
 				}
 				$from = $entry->getBillingStatus();
