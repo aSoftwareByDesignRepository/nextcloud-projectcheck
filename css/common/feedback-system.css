@@ -76,6 +76,9 @@
 
 #toast-container.toast-container,
 .toast-container {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
   top: max(0.75rem, env(safe-area-inset-top, 0.75rem));
   right: max(0.75rem, env(safe-area-inset-right, 0.75rem));
   left: auto;

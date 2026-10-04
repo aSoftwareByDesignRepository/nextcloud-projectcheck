@@ -85,11 +85,37 @@
 
 	/**
 	 * Accessible user feedback — never blocks with window.alert (WCAG / audit).
+	 *
+	 * Nextcloud ≥30 removed `OC.Notification`, so the primary path is the
+	 * app's own toast module (`common/messaging.js` → window.ProjectCheckMessaging,
+	 * loaded via templates/common/navigation.php). The screen-reader-only
+	 * `#pc-alert-region` remains the last fallback — visible to AT but
+	 * invisible on screen, so it must never be the first choice.
 	 */
 	function notifyUser(message, type) {
 		const msg = String(message || '').trim();
 		if (msg === '') {
 			return;
+		}
+		const Messaging = window.ProjectCheckMessaging || window.ProjectControlMessaging;
+		if (Messaging && typeof Messaging.show === 'function') {
+			try {
+				if (typeof Messaging.setupToastContainer === 'function' && !Messaging.toastContainer) {
+					Messaging.setupToastContainer();
+				}
+				if (type === 'error' && typeof Messaging.error === 'function') {
+					Messaging.error(msg);
+					return;
+				}
+				if (typeof Messaging[type] === 'function') {
+					Messaging[type](msg);
+					return;
+				}
+				Messaging.show(type || 'info', msg);
+				return;
+			} catch (e) {
+				// Fall through to the remaining channels — never lose the message.
+			}
 		}
 		if (typeof window.OC !== 'undefined' && window.OC.Notification) {
 			window.OC.Notification.showTemporary(

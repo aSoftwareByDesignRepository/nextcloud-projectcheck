@@ -103,6 +103,10 @@ class Version2009Date20260522120000 extends SimpleMigrationStep
 				$output->info(sprintf('ProjectCheck: seeded %d %s row(s) from legacy member rates.', $seeded, RateHistoryTables::PROJECT_MEMBER));
 			}
 		} catch (Throwable $e) {
+			// best-effort: if the seed aborts, rate resolution still falls back to
+			// the legacy pc_project_members.hourly_rate column
+			// (ProjectMemberHourlyRateService::getLegacyMemberRate), so blocking
+			// the whole upgrade here buys nothing — warn and continue.
 			$output->warning('ProjectCheck: member rate history seed skipped: ' . $e->getMessage());
 		}
 	}

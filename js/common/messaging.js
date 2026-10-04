@@ -76,6 +76,23 @@ const ProjectControlMessaging = {
       actions = []
     } = options;
 
+    // Dedup on kind + text (learned defect class vis-duplicate-toast-stacking):
+    // replaying an identical notification must not stack a second toast —
+    // the existing one's auto-dismiss timer is reset instead.
+    const duplicate = this.findDuplicateToast(type, message);
+    if (duplicate) {
+      if (duplicate._pcDismissTimer) {
+        clearTimeout(duplicate._pcDismissTimer);
+        duplicate._pcDismissTimer = null;
+      }
+      if (duration > 0) {
+        duplicate._pcDismissTimer = setTimeout(() => {
+          this.dismissToast(duplicate);
+        }, duration);
+      }
+      return duplicate;
+    }
+
     const toast = this.createToast(type, title, message, dismissible, actions);
     
     // Add to container
@@ -88,7 +105,7 @@ const ProjectControlMessaging = {
     
     // Auto-dismiss
     if (duration > 0) {
-      setTimeout(() => {
+      toast._pcDismissTimer = setTimeout(() => {
         this.dismissToast(toast);
       }, duration);
     }
@@ -722,6 +739,35 @@ const ProjectControlMessaging = {
     toasts.forEach(toast => {
       this.dismissToast(toast);
     });
+  },
+
+  /**
+   * Find a live (not removing) toast of the same kind carrying the same
+   * message text. Used by show() to dedup identical notifications.
+   */
+  findDuplicateToast(type, message) {
+    if (!this.toastContainer) {
+      return null;
+    }
+    const wanted = String(message || '').trim();
+    if (wanted === '') {
+      return null;
+    }
+    const toasts = this.toastContainer.querySelectorAll('.toast');
+    for (const toast of toasts) {
+      if (toast.classList.contains('toast--removing')) {
+        continue;
+      }
+      if (!toast.classList.contains(`toast--${type}`)) {
+        continue;
+      }
+      const textEl = toast.querySelector('.toast-message');
+      const text = (textEl ? textEl.textContent : toast.textContent) || '';
+      if (text.trim() === wanted) {
+        return toast;
+      }
+    }
+    return null;
   },
 
   /**

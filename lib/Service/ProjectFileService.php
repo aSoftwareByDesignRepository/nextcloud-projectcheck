@@ -228,6 +228,10 @@ class ProjectFileService
 			$appFile = $this->resolveFile($file);
 			$appFile->delete();
 		} catch (\Throwable $e) {
+			// best-effort: a missing/locked storage blob must not block unlinking
+			// the DB record — mapper->delete() below still runs so the user's
+			// delete succeeds; the orphaned appdata blob is tolerable vs an
+			// undeletable file entry.
 			$this->logger->warning('Could not delete file from storage: ' . $e->getMessage(), ['app' => 'projectcheck']);
 		}
 

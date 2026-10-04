@@ -266,6 +266,9 @@ class Version2005Date20260505213000 extends SimpleMigrationStep
 			));
 			$output->info('ProjectCheck (PG): renamed primary constraint ' . $current . ' to ' . $newName . ' on ' . $prefixedTable);
 		} catch (\Throwable $e) {
+			// best-effort: the constraint name is cosmetic — if the RENAME fails the
+			// PK keeps working under its old name, so warn and let the migration
+			// continue rather than fail the whole upgrade on a naming detail.
 			$output->warning('ProjectCheck (PG): could not rename PK on ' . $prefixedTable . ': ' . $e->getMessage());
 		}
 	}

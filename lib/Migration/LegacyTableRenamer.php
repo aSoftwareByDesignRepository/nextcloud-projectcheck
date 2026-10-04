@@ -195,6 +195,9 @@ final class LegacyTableRenamer
 					$newSeq
 				));
 			} catch (\Throwable $e) {
+				// best-effort: sequence names are cosmetic consistency — serial
+				// defaults reference the sequence by OID, so an unrenamed sequence
+				// keeps working; warn per item and continue with the next one.
 				$output->warning(sprintf(
 					'ProjectCheck (PG): could not rename sequence %s: %s',
 					$oldSeq,

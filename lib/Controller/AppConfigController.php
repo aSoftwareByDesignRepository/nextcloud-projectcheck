@@ -342,8 +342,36 @@ class AppConfigController extends Controller
 
 		// Missing key = legacy NC mega-form / older clients → full write ("all").
 		// Present-but-invalid must NEVER coerce to "all" (that path can wipe lists).
+		// Fail-closed hardening: a payload carrying NO recognised field at all is
+		// not a legacy mega-form — it is a malformed/mis-typed request (e.g. a raw
+		// JSON body without the JSON Content-Type, which getParams() never sees).
+		// Treating it as "all" would apply every default and wipe the allowlists.
 		$allowedSaveSections = ['access', 'admins', 'defaults', 'all'];
 		if (!array_key_exists('settings_section', $payload)) {
+			$knownFieldKeys = [
+				'access_restriction_enabled', 'access_allowed_user_ids',
+				'access_allowed_group_ids', 'app_admin_user_ids',
+				'allowedUserLines', 'allowedGroupLines', 'appAdminLines',
+				'currency', 'default_hourly_rate', 'default_project_status',
+				'default_project_priority', 'budget_warning_threshold',
+				'budget_critical_threshold', 'items_per_page',
+				'max_projects_per_user', 'enable_time_tracking',
+				'enable_customer_management', 'enable_budget_tracking',
+			];
+			$hasKnownField = false;
+			foreach ($knownFieldKeys as $fieldKey) {
+				if (array_key_exists($fieldKey, $payload)) {
+					$hasKnownField = true;
+					break;
+				}
+			}
+			if (!$hasKnownField) {
+				return new JSONResponse([
+					'error' => 'validation',
+					'message' => $apiMsg['invalidSettingsSection']
+						?? $l->t('Invalid settings section. Reload the page and try again.'),
+				], 400);
+			}
 			$settingsSection = 'all';
 		} else {
 			$rawSection = strtolower(trim((string) $payload['settings_section']));

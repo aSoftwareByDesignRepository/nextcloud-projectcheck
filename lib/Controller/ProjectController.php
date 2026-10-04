@@ -17,9 +17,11 @@ use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCA\ProjectCheck\Exception\IdempotencyConflictException;
 use OCA\ProjectCheck\Exception\RateResolutionException;
+use OCA\ProjectCheck\Exception\ValidationException;
 use OCA\ProjectCheck\Util\RateResolutionMessage;
 use OCA\ProjectCheck\Util\CostRateMode;
 use OCA\ProjectCheck\Util\ProjectCapacity;
+use OCA\ProjectCheck\Util\ProjectFormPayload;
 use OCA\ProjectCheck\Service\BudgetService;
 use OCA\ProjectCheck\Service\DeletionService;
 use OCA\ProjectCheck\Service\ActivityService;
@@ -32,6 +34,7 @@ use OCA\ProjectCheck\Db\ProjectSettlementFilter;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\Response;
@@ -461,6 +464,33 @@ class ProjectController extends Controller
 			return $this->configureCSP($response, 'main');
 		}
 
+		// Get pre-selected customer ID from URL parameter
+		$selectedCustomerId = $this->request->getParam('customer_id', null);
+
+		$response = new TemplateResponse(
+			$this->appName,
+			'project-form',
+			$this->buildProjectCreateFormContext(
+				$userId,
+				is_scalar($selectedCustomerId) ? (string) $selectedCustomerId : null
+			)
+		);
+
+		return $this->configureCSP($response);
+	}
+
+	/**
+	 * Full template context for the project-form in create mode.
+	 *
+	 * Shared by {@see create()} and the store() failure re-render so the
+	 * re-rendered form is byte-for-byte the same surface (customer select,
+	 * defaults, stats, urls, fresh idempotency nonce) plus the draft and
+	 * field-error overlays added by the caller.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function buildProjectCreateFormContext(string $userId, ?string $selectedCustomerId): array
+	{
 		// Get user's default settings for pre-filling the form
 		$defaultSettings = [
 			'hourly_rate' => $this->config->getUserValue(
@@ -486,9 +516,6 @@ class ProjectController extends Controller
 		// Get customers for the dropdown
 		$customers = $this->customerService->getCustomersForSelectForUser($userId);
 
-		// Get pre-selected customer ID from URL parameter
-		$selectedCustomerId = $this->request->getParam('customer_id', null);
-
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, null, $userId);
 
@@ -497,7 +524,7 @@ class ProjectController extends Controller
 			$currency = 'EUR';
 		}
 
-		$response = new TemplateResponse($this->appName, 'project-form', [
+		return [
 			'project' => null,
 			'mode' => 'create',
 			'customers' => $customers,
@@ -513,20 +540,165 @@ class ProjectController extends Controller
 			'canCreateCustomer' => $this->projectService->canUserCreateCustomer($userId),
 			'customerStoreUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.store'),
 			'customerCreateUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.create'),
+			// Always a fresh nonce — the submitted one may be claimed/burned.
 			'createIdempotencyNonce' => $this->formSubmitIdempotency->mintNonce(),
-		]);
+		];
+	}
 
+	/**
+	 * Re-render the create form after a failed non-XHR store().
+	 *
+	 * A RedirectResponse to the index would throw away everything the user
+	 * typed (pc-store-redirect-draft-loss) and could only communicate via a
+	 * single banner. Instead the form is rendered again with the submitted
+	 * draft repopulated and — for {@see ValidationException} — the
+	 * getErrors() map rendered inline per field (aria-invalid + linked
+	 * .form-error, WCAG 3.3.1/3.3.3). File inputs (project_files) cannot be
+	 * repopulated; browsers intentionally forbid presetting them.
+	 *
+	 * @param array<string, mixed> $data Raw submitted params (draft source)
+	 * @param array<string|int, string> $fieldErrors field-name => localized message
+	 */
+	private function renderProjectCreateForm(array $data, array $fieldErrors, string $formErrorText, string $userId): TemplateResponse
+	{
+		$draft = $this->projectFormDraft($data);
+		$context = $this->buildProjectCreateFormContext(
+			$userId,
+			isset($draft['customer_id']) && $draft['customer_id'] !== '' ? $draft['customer_id'] : null
+		);
+		$context['draft'] = $draft;
+		$context['fieldErrors'] = $fieldErrors;
+		$context['formErrorText'] = $formErrorText;
+
+		$response = new TemplateResponse($this->appName, 'project-form', $context);
+		$response->setStatus(Http::STATUS_UNPROCESSABLE_ENTITY);
 		return $this->configureCSP($response);
+	}
+
+	/**
+	 * Submitted create-form values to repopulate after a failed POST.
+	 * Allowlisted to the writable form fields, cast to strings (the template
+	 * escapes via p()); non-scalar params are dropped. start_date/end_date
+	 * are normalized to Y-m-d when the accepted European format was used so
+	 * type="date" inputs can display them again.
+	 *
+	 * @param array<string, mixed> $data
+	 * @return array<string, string>
+	 */
+	private function projectFormDraft(array $data): array
+	{
+		$draft = [];
+		foreach (ProjectFormPayload::ALLOWED_FIELDS as $field) {
+			if (!array_key_exists($field, $data)) {
+				continue;
+			}
+			$value = $data[$field];
+			if ($value === null || (!is_scalar($value) && !(is_object($value) && method_exists($value, '__toString')))) {
+				continue;
+			}
+			$value = (string) $value;
+			if (($field === 'start_date' || $field === 'end_date') && $value !== '') {
+				$value = $this->normalizeDraftDate($value);
+			}
+			$draft[$field] = $value;
+		}
+		return $draft;
+	}
+
+	/**
+	 * Convert the European date format (dd.mm.yyyy) accepted by
+	 * ProjectService::parseEuropeanDate to ISO Y-m-d for the date input.
+	 * ISO and unparseable values pass through unchanged — the browser then
+	 * renders an empty date input rather than a silently clamped date.
+	 */
+	private function normalizeDraftDate(string $value): string
+	{
+		if (preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $value, $m) === 1
+			&& checkdate((int) $m[2], (int) $m[1], (int) $m[3])) {
+			return $m[3] . '-' . $m[2] . '-' . $m[1];
+		}
+		return $value;
+	}
+
+	/**
+	 * Defensive copy of ValidationException::getErrors(): keep only
+	 * non-empty string messages, clipped to the same length cap as other
+	 * user-facing error text. Positional (int-keyed) messages are kept so
+	 * they still surface in the form-level alert — they just cannot be
+	 * pinned to a named control.
+	 *
+	 * @param array<mixed> $errors
+	 * @return array<string|int, string>
+	 */
+	private function sanitizeFieldErrors(array $errors): array
+	{
+		$out = [];
+		foreach ($errors as $field => $message) {
+			if ((!is_string($field) && !is_int($field)) || $field === '' || !is_string($message) || trim($message) === '') {
+				continue;
+			}
+			$out[$field] = $this->clipUserFacingError($message);
+		}
+		return $out;
+	}
+
+	/**
+	 * Map a known store() failure message to the form field it belongs to so
+	 * the non-XHR re-render can pin the message inline even for the plain
+	 * \Exception validation failures the service throws today. Same
+	 * allowlist philosophy as {@see toSafeProjectErrorMessage()} — unknown
+	 * messages map to no field and surface only in the form-level alert.
+	 */
+	private function projectFieldKeyForError(\Exception $e): ?string
+	{
+		$message = trim($e->getMessage());
+		$mapped = match ($message) {
+			'Customer is required', 'Customer not found' => 'customer_id',
+			'Project name must be 100 characters or less' => 'name',
+			'Short description must be 500 characters or less' => 'short_description',
+			'Detailed description must be 2000 characters or less' => 'detailed_description',
+			'Hourly rate must be a non-negative number',
+			'Hourly rate is required when the project has a budget in project-rate mode' => 'hourly_rate',
+			'Total budget must be a non-negative number',
+			'Budget too low for the specified hourly rate' => 'total_budget',
+			'Available hours must be a non-negative number' => 'available_hours',
+			'Invalid start or end date' => 'start_date',
+			'End date must be on or after the start date' => 'end_date',
+			'Invalid status value',
+			'New projects cannot be created as archived. Create an active project and use “Archive” from the project view.' => 'status',
+			'Invalid priority value' => 'priority',
+			'Invalid project type value' => 'project_type',
+			default => null,
+		};
+		if ($mapped !== null) {
+			return $mapped;
+		}
+		if (preg_match("/^Field '([a-z_]+)' is required$/", $message, $m) === 1
+			&& in_array($m[1], ['name', 'short_description', 'customer_id'], true)) {
+			return $m[1];
+		}
+		return null;
 	}
 
 	/**
 	 * Store new project
 	 *
-	 * @return RedirectResponse
+	 * Non-XHR failure handling (pc-store-redirect-draft-loss):
+	 * - ValidationException → re-render project-form in create mode with the
+	 *   submitted draft and the getErrors() map pinned inline per field.
+	 * - other \Exception → same re-render with the safe message as the
+	 *   form-level alert (and an inline field error when the message is a
+	 *   known, mappable validation failure) — never a bare banner redirect
+	 *   that loses the draft.
+	 * - IdempotencyConflictException stays a redirect: replaying the same
+	 *   nonce with a different payload means another submission may already
+	 *   have committed; a fresh form would invite a duplicate project.
+	 *
+	 * @return RedirectResponse|DataResponse|TemplateResponse
 	 */
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 30, period: 60)]
-	public function store(): RedirectResponse|DataResponse
+	public function store(): RedirectResponse|DataResponse|TemplateResponse
 	{
 		$user = $this->userSession->getUser();
 		if (!$user) {
@@ -544,8 +716,8 @@ class ProjectController extends Controller
 			return new RedirectResponse($this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $this->l->t('Access denied')]));
 		}
 
+		$data = $this->request->getParams();
 		try {
-			$data = $this->request->getParams();
 			$nonce = isset($data['pc_form_nonce']) && is_string($data['pc_form_nonce'])
 				? $data['pc_form_nonce']
 				: null;
@@ -601,6 +773,13 @@ class ProjectController extends Controller
 			}
 			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $safeError]);
 			return new RedirectResponse($url);
+		} catch (ValidationException $e) {
+			$safeError = $this->toSafeProjectErrorMessage($e, $this->l->t('Could not create project. Please check your input.'));
+			if ($this->request->getHeader('X-Requested-With') === 'XMLHttpRequest') {
+				return new DataResponse($this->errorPayload($safeError), 400);
+			}
+			// Re-render the create form: draft repopulated, field errors inline.
+			return $this->renderProjectCreateForm($data, $this->sanitizeFieldErrors($e->getErrors()), $safeError, $userId);
 		} catch (\Exception $e) {
 			$safeError = $this->toSafeProjectErrorMessage($e, $this->l->t('Could not create project. Please check your input.'));
 			// Return appropriate response based on request type
@@ -608,9 +787,12 @@ class ProjectController extends Controller
 				return new DataResponse($this->errorPayload($safeError), 400);
 			}
 
-			// Redirect to projects list with error message
-			$url = $this->urlGenerator->linkToRoute('projectcheck.project.index', ['message' => 'error', 'error_text' => $safeError]);
-			return new RedirectResponse($url);
+			// Re-render the create form with the draft + alert instead of a
+			// bare index redirect that loses everything the user typed. When
+			// the failure is a known validation message, pin it to its field.
+			$fieldKey = $this->projectFieldKeyForError($e);
+			$fieldErrors = $fieldKey !== null ? [$fieldKey => $safeError] : [];
+			return $this->renderProjectCreateForm($data, $fieldErrors, $safeError, $userId);
 		}
 	}
 

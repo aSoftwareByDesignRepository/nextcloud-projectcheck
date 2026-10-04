@@ -1096,6 +1096,7 @@ OC.L10N.register(
 	"Planning hourly rate (estimate)" : "Tariffa oraria di pianificazione (stima)",
 	"Planning rate is for capacity estimates only — billed cost uses the pricing method above." : "La tariffa di pianificazione serve solo per stimare la capacità — il costo fatturato usa il metodo di tariffazione sopra.",
 	"Please correct the following errors" : "Correggi i seguenti errori",
+	"Please check the highlighted fields." : "Controlla i campi evidenziati.",
 	"Please correct the highlighted fields." : "Correggi i campi evidenziati.",
 	"Please ensure all tasks are completed before the deadline." : "Assicurati che tutte le attività siano completate prima della scadenza.",
 	"Please enter a valid URL" : "Inserisci un URL valido",

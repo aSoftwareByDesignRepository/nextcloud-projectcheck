@@ -301,7 +301,10 @@
 	gap: var(--pc-space-2, 0.5rem);
 }
 
-.pc-nav-footer__trigger {
+/* Scoped under #content: bare .{p}-nav-footer__trigger loses to NC core
+ * `#app-content button` / `#app-navigation button` min-height rules
+ * (var(--default-clickable-area) → 34px) — Atlas touch-target defect. */
+#content .pc-nav-footer__trigger {
 	display: inline-flex;
 	gap: var(--pc-space-3, 0.75rem);
 	min-height: 44px;
@@ -363,7 +366,7 @@
 	display: none;
 }
 
-.pc-nav-footer__menu-item {
+#content .pc-nav-footer__menu-item {
 	display: flex;
 	align-items: center;
 	gap: var(--pc-space-3, 0.75rem);
@@ -428,7 +431,7 @@
 	border: 0;
 }
 
-.pc-nav-footer__toast-link {
+#content .pc-nav-footer__toast-link {
 	display: inline-flex;
 	align-items: center;
 	min-height: 44px;

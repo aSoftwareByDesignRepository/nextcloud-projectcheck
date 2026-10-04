@@ -55,14 +55,27 @@ for (const vp of viewports) {
 			const pricing = page.locator('#pc-pricing-method');
 			await pricing.scrollIntoViewIfNeeded();
 			await expect(pricing).toBeVisible();
-			await expect(page.getByRole('radio', { name: /one rate for the whole project|ein satz für das ganze projekt/i })).toBeVisible();
-			// DE l10n: "Satz je Mitarbeitende/r (Stammdaten)" (inclusive form — not "mitarbeitendem")
-			await expect(page.getByRole('radio', { name: /rate per employee|satz je mitarbeitende/i })).toBeVisible();
-			await expect(page.getByRole('radio', { name: /rate per person on this project|satz je person in diesem projekt/i })).toBeVisible();
+			// Structural: the three pricing radios are keyed by the locale-free
+			// cost_rate_mode values from CostRateMode (project|employee|project_member).
+			const modeRadio = (value) =>
+				pricing.locator(`input[type="radio"][name="cost_rate_mode"][value="${value}"]`);
+			await expect(modeRadio('project')).toBeAttached();
+			await expect(modeRadio('employee')).toBeAttached();
+			await expect(modeRadio('project_member')).toBeAttached();
+			// Every card must render a non-empty localized title (text itself is
+			// l10n'd — never match it literally).
+			const cards = pricing.locator('.pc-pricing-card');
+			await expect(cards).toHaveCount(3);
+			for (let i = 0; i < 3; i++) {
+				await expect(cards.nth(i).locator('.pc-pricing-card__title')).not.toBeEmpty();
+			}
 
 			await expect(page.locator('.pc-section').first()).toBeVisible();
-			await expect(page.getByRole('heading', { name: /basics|grundlagen/i })).toBeVisible();
-			await expect(page.locator('#pc-pricing-method legend')).toContainText(/how are hours priced|wie werden stunden bewertet/i);
+			await expect(page.locator('#pc-project-basics-heading')).toBeVisible();
+			// legend is .pc-sr-only — assert presence + non-empty localized text.
+			const legend = pricing.locator('legend');
+			await expect(legend).toBeAttached();
+			await expect(legend).not.toBeEmpty();
 		});
 
 		test('time entry create: metrics strip aligns Date|Hours|Rate|Total', async ({ page }) => {

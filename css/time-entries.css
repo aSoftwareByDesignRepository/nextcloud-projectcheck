@@ -1149,6 +1149,9 @@ body[dir="rtl"] .filters-row select {
 	min-height: 44px;
 	margin: 0;
 	cursor: pointer;
+	/* Don't inherit th.col-select centering: the checkbox is flex-centred and
+	 * the hit label must stay alignment-neutral for surface contracts. */
+	text-align: left;
 }
 
 .time-entries-table .pc-billing-select,

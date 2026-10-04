@@ -29,12 +29,67 @@ Util::addStyle('projectcheck', 'common/filters');
 Util::addStyle('projectcheck', 'navigation');
 
 $isEdit = isset($project) && $project instanceof \OCA\ProjectCheck\Db\Project;
+
+// Server-rendered re-draft after a failed non-XHR store() (see
+// ProjectController::renderProjectCreateForm): the submitted values are
+// repopulated and the server's per-field messages are pinned inline —
+// aria-invalid + a linked .form-error element, the same surface contract
+// js/common/validation.js and customer-form.js produce client-side
+// (WCAG 3.3.1/3.3.3). File inputs (project_files) cannot be repopulated;
+// browsers intentionally forbid presetting them.
+$draft = (isset($_['draft']) && is_array($_['draft'])) ? $_['draft'] : [];
+$fieldErrors = (isset($_['fieldErrors']) && is_array($_['fieldErrors'])) ? $_['fieldErrors'] : [];
+$draftOr = static function (string $key, string $fallback = '') use ($draft): string {
+	if (!array_key_exists($key, $draft)) {
+		return $fallback;
+	}
+	$v = $draft[$key];
+	return is_scalar($v) ? (string) $v : $fallback;
+};
+$fieldErrorMessage = static function (string $key) use ($fieldErrors): ?string {
+	$msg = $fieldErrors[$key] ?? null;
+	return (is_string($msg) && trim($msg) !== '') ? $msg : null;
+};
+// Attribute suffix for a control carrying a server field error:
+// aria-invalid plus the error element id merged into aria-describedby.
+// Without an error it emits only the given describedby ids (or nothing).
+$fieldErrorAttrs = static function (string $key, string $describedBy = '') use ($fieldErrorMessage): string {
+	if ($fieldErrorMessage($key) === null) {
+		return $describedBy !== '' ? ' aria-describedby="' . $describedBy . '"' : '';
+	}
+	$ids = trim($describedBy . ' ' . $key . '-error');
+	return ' aria-invalid="true" aria-describedby="' . $ids . '"';
+};
+// Field keys wired with an inline error element below; any other key in the
+// server's map still surfaces in the form-level alert so no message is lost.
+$inlineErrorFields = [
+	'name', 'short_description', 'detailed_description', 'customer_id',
+	'start_date', 'end_date', 'status', 'priority', 'project_type',
+	'category', 'total_budget', 'hourly_rate',
+];
+$unmappedFieldErrors = [];
+foreach ($fieldErrors as $errorKey => $errorMessage) {
+	if (!in_array($errorKey, $inlineErrorFields, true) && is_string($errorMessage) && trim($errorMessage) !== '') {
+		$unmappedFieldErrors[] = $errorMessage;
+	}
+}
+// Effective create-mode values: the submitted draft wins over the user's
+// configured defaults; without a draft these equal the old defaults.
+$effStatus = $draftOr('status', (string)($_['defaultSettings']['status'] ?? ''));
+$effPriority = $draftOr('priority', (string)($_['defaultSettings']['priority'] ?? 'Medium'));
+$effProjectType = $draftOr('project_type', (string)($_['defaultSettings']['project_type'] ?? 'client'));
+$effCustomerId = array_key_exists('customer_id', $draft)
+	? $draftOr('customer_id')
+	: (isset($selectedCustomerId) ? (string) $selectedCustomerId : null);
+
 $pageTitle = $isEdit ? $l->t('Edit Project') : $l->t('Create New Project');
 $formAction = $_['formAction'] ?? ($isEdit ? '/projects/' . $project->getId() : '/projects');
 $formMethod = $isEdit ? 'PUT' : 'POST';
 $currencyCode = isset($_['orgCurrency']) && is_string($_['orgCurrency']) ? strtoupper(trim($_['orgCurrency'])) : 'EUR';
 $costRateModeLocked = !empty($_['costRateModeLocked']);
-$selectedCostRateMode = $isEdit ? $project->getCostRateMode() : \OCA\ProjectCheck\Util\CostRateMode::DEFAULT;
+$selectedCostRateMode = $isEdit
+	? $project->getCostRateMode()
+	: ($draftOr('cost_rate_mode') !== '' ? $draftOr('cost_rate_mode') : \OCA\ProjectCheck\Util\CostRateMode::DEFAULT);
 $employeesIndexUrl = $_['employeesIndexUrl'] ?? '';
 if (preg_match('/^[A-Z]{3}$/', $currencyCode) !== 1) {
 	$currencyCode = 'EUR';
@@ -76,22 +131,34 @@ include __DIR__ . '/common/page-start.php';
 ?>
         <?php
         $formErrorText = '';
-        if (isset($_GET['message']) && $_GET['message'] === 'error' && isset($_GET['error_text']) && is_string($_GET['error_text'])) {
+        // Controller-provided alert text (failed store() re-render) takes
+        // precedence; the GET banner path stays for redirects that still
+        // pass ?message=error&error_text=… (e.g. update() failures).
+        if (isset($_['formErrorText']) && is_string($_['formErrorText'])) {
+        	$formErrorText = trim($_['formErrorText']);
+        } elseif (isset($_GET['message']) && $_GET['message'] === 'error' && isset($_GET['error_text']) && is_string($_GET['error_text'])) {
         	$formErrorText = trim($_GET['error_text']);
-        	// Cap attacker-crafted query strings (display is escaped via p()).
-        	if (function_exists('mb_substr') && mb_strlen($formErrorText) > 280) {
-        		$formErrorText = mb_substr($formErrorText, 0, 279) . '…';
-        	} elseif (strlen($formErrorText) > 280) {
-        		$formErrorText = substr($formErrorText, 0, 279) . '…';
-        	}
+        }
+        // Cap attacker-crafted query strings (display is escaped via p()).
+        if (function_exists('mb_substr') && mb_strlen($formErrorText) > 280) {
+        	$formErrorText = mb_substr($formErrorText, 0, 279) . '…';
+        } elseif (strlen($formErrorText) > 280) {
+        	$formErrorText = substr($formErrorText, 0, 279) . '…';
         }
         ?>
-        <?php if ($formErrorText !== ''): ?>
+        <?php if ($formErrorText !== '' || $unmappedFieldErrors !== []): ?>
         <div class="pc-form-alert pc-form-alert--error" role="alert" id="pc-project-form-error" tabindex="-1">
             <span class="pc-form-alert__icon" data-lucide="alert-circle" aria-hidden="true"></span>
             <div class="pc-form-alert__body">
                 <p class="pc-form-alert__title"><?php p($l->t('Could not save')); ?></p>
-                <p class="pc-form-alert__text"><?php p($formErrorText); ?></p>
+                <p class="pc-form-alert__text"><?php p($formErrorText !== '' ? $formErrorText : $l->t('Please check the highlighted fields.')); ?></p>
+                <?php if ($unmappedFieldErrors !== []): ?>
+                <ul class="pc-form-alert__list">
+                    <?php foreach ($unmappedFieldErrors as $unmappedError): ?>
+                    <li><?php p($unmappedError); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php endif; ?>
             </div>
         </div>
         <?php endif; ?>
@@ -130,10 +197,13 @@ include __DIR__ . '/common/page-start.php';
                         id="name"
                         name="name"
                         class="form-input"
-                        value="<?php p($isEdit ? $project->getName() : ''); ?>"
+                        value="<?php p($isEdit ? $project->getName() : $draftOr('name')); ?>"
                         maxlength="100"
-                        required
+                        required<?php echo $fieldErrorAttrs('name'); ?>
                         placeholder="<?php p($l->t('Enter project name')); ?>">
+                    <?php if (($fieldError = $fieldErrorMessage('name')) !== null): ?>
+                    <p class="form-error" id="name-error" role="alert"><?php p($fieldError); ?></p>
+                    <?php endif; ?>
                 </div>
 
                 <details class="pc-advanced-details" id="pc-more-about-project"<?php if ($isEdit) {
@@ -147,9 +217,11 @@ include __DIR__ . '/common/page-start.php';
                                 name="short_description"
                                 class="form-input form-textarea"
                                 maxlength="500"
-                                rows="2"
-                                aria-describedby="short_description-help short_description-count-wrap"
-                                placeholder="<?php p($l->t('Optional — leave blank to use the project name')); ?>"><?php p($isEdit ? $project->getShortDescription() : ''); ?></textarea>
+                                rows="2"<?php echo $fieldErrorAttrs('short_description', 'short_description-help short_description-count-wrap'); ?>
+                                placeholder="<?php p($l->t('Optional — leave blank to use the project name')); ?>"><?php p($isEdit ? $project->getShortDescription() : $draftOr('short_description')); ?></textarea>
+                            <?php if (($fieldError = $fieldErrorMessage('short_description')) !== null): ?>
+                            <p class="form-error" id="short_description-error" role="alert"><?php p($fieldError); ?></p>
+                            <?php endif; ?>
                             <p class="form-hint" id="short_description-help"><?php p($l->t('Leave blank to use the project name.')); ?></p>
                             <div class="char-count" id="short_description-count-wrap" aria-live="polite">
                                 <span id="short_description-count">0</span>/500
@@ -161,8 +233,11 @@ include __DIR__ . '/common/page-start.php';
                                 name="detailed_description"
                                 class="form-input form-textarea"
                                 maxlength="2000"
-                                rows="5"
-                                placeholder="<?php p($l->t('Detailed project description (max 2000 characters)')); ?>"><?php p($isEdit ? $project->getDetailedDescription() : ''); ?></textarea>
+                                rows="5"<?php echo $fieldErrorAttrs('detailed_description'); ?>
+                                placeholder="<?php p($l->t('Detailed project description (max 2000 characters)')); ?>"><?php p($isEdit ? $project->getDetailedDescription() : $draftOr('detailed_description')); ?></textarea>
+                            <?php if (($fieldError = $fieldErrorMessage('detailed_description')) !== null): ?>
+                            <p class="form-error" id="detailed_description-error" role="alert"><?php p($fieldError); ?></p>
+                            <?php endif; ?>
                             <div class="char-count" aria-live="polite">
                                 <span id="detailed_description-count">0</span>/2000
                             </div>
@@ -172,8 +247,7 @@ include __DIR__ . '/common/page-start.php';
 
                 <div class="form-group">
                     <label for="customer_id"><?php p($l->t('Customer')); ?> *</label>
-                    <select id="customer_id" name="customer_id" class="form-input form-select" required
-                        aria-describedby="customer_id-help<?php p(!empty($_['canCreateCustomer']) ? ' pc-quick-customer-status' : ''); ?>">
+                    <select id="customer_id" name="customer_id" class="form-input form-select" required<?php echo $fieldErrorAttrs('customer_id', 'customer_id-help' . (!empty($_['canCreateCustomer']) ? ' pc-quick-customer-status' : '')); ?>>
                         <option value=""><?php p($l->t('Select a customer')); ?></option>
                         <?php if (isset($customers) && is_array($customers)): ?>
                             <?php foreach ($customers as $customer): ?>
@@ -182,7 +256,7 @@ include __DIR__ . '/common/page-start.php';
                                     $selected = false;
                                     if ($isEdit && $project->getCustomerId() == $customer['id']) {
                                         $selected = true;
-                                    } elseif (!$isEdit && isset($selectedCustomerId) && $selectedCustomerId == $customer['id']) {
+                                    } elseif (!$isEdit && $effCustomerId !== null && $effCustomerId !== '' && $effCustomerId == $customer['id']) {
                                         $selected = true;
                                     }
                                     echo $selected ? 'selected' : '';
@@ -192,6 +266,9 @@ include __DIR__ . '/common/page-start.php';
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
+                    <?php if (($fieldError = $fieldErrorMessage('customer_id')) !== null): ?>
+                    <p class="form-error" id="customer_id-error" role="alert"><?php p($fieldError); ?></p>
+                    <?php endif; ?>
                     <?php
                     $canCreateCustomer = !empty($_['canCreateCustomer']);
                     $customerStoreUrl = (string)($_['customerStoreUrl'] ?? '');
@@ -253,8 +330,8 @@ include __DIR__ . '/common/page-start.php';
 
                 <?php
                 $htmlLang = isset($_['htmlLang']) && is_string($_['htmlLang']) ? $_['htmlLang'] : 'en';
-                $startDateIso = ($isEdit && $project->getStartDate()) ? $project->getStartDate()->format('Y-m-d') : '';
-                $endDateIso = ($isEdit && $project->getEndDate()) ? $project->getEndDate()->format('Y-m-d') : '';
+                $startDateIso = ($isEdit && $project->getStartDate()) ? $project->getStartDate()->format('Y-m-d') : $draftOr('start_date');
+                $endDateIso = ($isEdit && $project->getEndDate()) ? $project->getEndDate()->format('Y-m-d') : $draftOr('end_date');
                 ?>
                 <details class="pc-advanced-details pc-section" id="pc-advanced-schedule"<?php if ($isEdit) {
                 	echo ' open';
@@ -271,8 +348,10 @@ include __DIR__ . '/common/page-start.php';
                             class="form-input"
                             lang="<?php p($htmlLang); ?>"
                             value="<?php p($startDateIso); ?>"
-                            autocomplete="off"
-                            aria-describedby="project-dates-hint">
+                            autocomplete="off"<?php echo $fieldErrorAttrs('start_date', 'project-dates-hint'); ?>>
+                        <?php if (($fieldError = $fieldErrorMessage('start_date')) !== null): ?>
+                        <p class="form-error" id="start_date-error" role="alert"><?php p($fieldError); ?></p>
+                        <?php endif; ?>
                     </div>
 
                     <div class="form-group">
@@ -283,25 +362,27 @@ include __DIR__ . '/common/page-start.php';
                             class="form-input"
                             lang="<?php p($htmlLang); ?>"
                             value="<?php p($endDateIso); ?>"
-                            autocomplete="off"
-                            aria-describedby="project-dates-hint">
+                            autocomplete="off"<?php echo $fieldErrorAttrs('end_date', 'project-dates-hint'); ?>>
+                        <?php if (($fieldError = $fieldErrorMessage('end_date')) !== null): ?>
+                        <p class="form-error" id="end_date-error" role="alert"><?php p($fieldError); ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <p class="form-hint" id="project-dates-hint"><?php p($l->t('End date must be on or after the start date when both are set.')); ?></p>
 
                 <div class="form-group">
                     <label for="status"><?php p($l->t('Status')); ?> *</label>
-                    <select id="status" name="status" class="form-input form-select" required>
-                        <option value="Active" <?php echo ($isEdit && $project->getStatus() === 'Active') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Active') ? 'selected' : ''; ?>>
+                    <select id="status" name="status" class="form-input form-select" required<?php echo $fieldErrorAttrs('status'); ?>>
+                        <option value="Active" <?php echo ($isEdit && $project->getStatus() === 'Active') || (!$isEdit && $effStatus === 'Active') ? 'selected' : ''; ?>>
                             <?php p($l->t('Active')); ?>
                         </option>
-                        <option value="On Hold" <?php echo ($isEdit && $project->getStatus() === 'On Hold') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'On Hold') ? 'selected' : ''; ?>>
+                        <option value="On Hold" <?php echo ($isEdit && $project->getStatus() === 'On Hold') || (!$isEdit && $effStatus === 'On Hold') ? 'selected' : ''; ?>>
                             <?php p($l->t('On Hold')); ?>
                         </option>
-                        <option value="Completed" <?php echo ($isEdit && $project->getStatus() === 'Completed') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Completed') ? 'selected' : ''; ?>>
+                        <option value="Completed" <?php echo ($isEdit && $project->getStatus() === 'Completed') || (!$isEdit && $effStatus === 'Completed') ? 'selected' : ''; ?>>
                             <?php p($l->t('Completed')); ?>
                         </option>
-                        <option value="Cancelled" <?php echo ($isEdit && $project->getStatus() === 'Cancelled') || (!$isEdit && isset($_['defaultSettings']['status']) && $_['defaultSettings']['status'] === 'Cancelled') ? 'selected' : ''; ?>>
+                        <option value="Cancelled" <?php echo ($isEdit && $project->getStatus() === 'Cancelled') || (!$isEdit && $effStatus === 'Cancelled') ? 'selected' : ''; ?>>
                             <?php p($l->t('Cancelled')); ?>
                         </option>
                         <?php if ($isEdit) { ?>
@@ -310,6 +391,9 @@ include __DIR__ . '/common/page-start.php';
                         </option>
                         <?php } ?>
                     </select>
+                    <?php if (($fieldError = $fieldErrorMessage('status')) !== null): ?>
+                    <p class="form-error" id="status-error" role="alert"><?php p($fieldError); ?></p>
+                    <?php endif; ?>
                     <?php if ($isEdit) { ?>
                     <p class="form-hint" id="status-hint"><?php p($l->t('Saved together with the rest of this form.')); ?></p>
                     <?php } ?>
@@ -326,56 +410,62 @@ include __DIR__ . '/common/page-start.php';
                 <div class="form-row">
                     <div class="form-group">
                         <label for="priority"><?php p($l->t('Priority')); ?> *</label>
-                        <select id="priority" name="priority" class="form-input form-select" required>
-                            <option value="Low" <?php echo ($isEdit && $project->getPriority() === 'Low') || (!$isEdit && isset($_['defaultSettings']['priority']) && $_['defaultSettings']['priority'] === 'Low') ? 'selected' : ''; ?>>
+                        <select id="priority" name="priority" class="form-input form-select" required<?php echo $fieldErrorAttrs('priority'); ?>>
+                            <option value="Low" <?php echo ($isEdit && $project->getPriority() === 'Low') || (!$isEdit && $effPriority === 'Low') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Low')); ?>
                             </option>
-                            <option value="Medium" <?php echo ($isEdit && $project->getPriority() === 'Medium') || (!$isEdit && (!isset($_['defaultSettings']['priority']) || $_['defaultSettings']['priority'] === 'Medium')) ? 'selected' : ''; ?>>
+                            <option value="Medium" <?php echo ($isEdit && $project->getPriority() === 'Medium') || (!$isEdit && $effPriority === 'Medium') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Medium')); ?>
                             </option>
-                            <option value="High" <?php echo ($isEdit && $project->getPriority() === 'High') || (!$isEdit && isset($_['defaultSettings']['priority']) && $_['defaultSettings']['priority'] === 'High') ? 'selected' : ''; ?>>
+                            <option value="High" <?php echo ($isEdit && $project->getPriority() === 'High') || (!$isEdit && $effPriority === 'High') ? 'selected' : ''; ?>>
                                 <?php p($l->t('High')); ?>
                             </option>
-                            <option value="Critical" <?php echo ($isEdit && $project->getPriority() === 'Critical') || (!$isEdit && isset($_['defaultSettings']['priority']) && $_['defaultSettings']['priority'] === 'Critical') ? 'selected' : ''; ?>>
+                            <option value="Critical" <?php echo ($isEdit && $project->getPriority() === 'Critical') || (!$isEdit && $effPriority === 'Critical') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Critical')); ?>
                             </option>
                         </select>
+                        <?php if (($fieldError = $fieldErrorMessage('priority')) !== null): ?>
+                        <p class="form-error" id="priority-error" role="alert"><?php p($fieldError); ?></p>
+                        <?php endif; ?>
                     </div>
 
                     <div class="form-group">
                         <label for="project_type"><?php p($l->t('Project Type')); ?> *</label>
-                        <select id="project_type" name="project_type" class="form-input form-select" required>
-                            <option value="client" <?php echo ($isEdit && $project->getProjectType() === 'client') || (!$isEdit && (!isset($_['defaultSettings']['project_type']) || $_['defaultSettings']['project_type'] === 'client')) ? 'selected' : ''; ?>>
+                        <select id="project_type" name="project_type" class="form-input form-select" required<?php echo $fieldErrorAttrs('project_type'); ?>>
+                            <option value="client" <?php echo ($isEdit && $project->getProjectType() === 'client') || (!$isEdit && $effProjectType === 'client') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Client Project')); ?>
                             </option>
-                            <option value="admin" <?php echo ($isEdit && $project->getProjectType() === 'admin') || (!$isEdit && isset($_['defaultSettings']['project_type']) && $_['defaultSettings']['project_type'] === 'admin') ? 'selected' : ''; ?>>
+                            <option value="admin" <?php echo ($isEdit && $project->getProjectType() === 'admin') || (!$isEdit && $effProjectType === 'admin') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Administrative')); ?>
                             </option>
-                            <option value="sales" <?php echo ($isEdit && $project->getProjectType() === 'sales') || (!$isEdit && isset($_['defaultSettings']['project_type']) && $_['defaultSettings']['project_type'] === 'sales') ? 'selected' : ''; ?>>
+                            <option value="sales" <?php echo ($isEdit && $project->getProjectType() === 'sales') || (!$isEdit && $effProjectType === 'sales') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Sales & Marketing')); ?>
                             </option>
-                            <option value="customer" <?php echo ($isEdit && $project->getProjectType() === 'customer') || (!$isEdit && isset($_['defaultSettings']['project_type']) && $_['defaultSettings']['project_type'] === 'customer') ? 'selected' : ''; ?>>
+                            <option value="customer" <?php echo ($isEdit && $project->getProjectType() === 'customer') || (!$isEdit && $effProjectType === 'customer') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Customer Support')); ?>
                             </option>
-                            <option value="product" <?php echo ($isEdit && $project->getProjectType() === 'product') || (!$isEdit && isset($_['defaultSettings']['project_type']) && $_['defaultSettings']['project_type'] === 'product') ? 'selected' : ''; ?>>
+                            <option value="product" <?php echo ($isEdit && $project->getProjectType() === 'product') || (!$isEdit && $effProjectType === 'product') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Product Development')); ?>
                             </option>
-                            <option value="meeting" <?php echo ($isEdit && $project->getProjectType() === 'meeting') || (!$isEdit && isset($_['defaultSettings']['project_type']) && $_['defaultSettings']['project_type'] === 'meeting') ? 'selected' : ''; ?>>
+                            <option value="meeting" <?php echo ($isEdit && $project->getProjectType() === 'meeting') || (!$isEdit && $effProjectType === 'meeting') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Meetings & Overhead')); ?>
                             </option>
-                            <option value="internal" <?php echo ($isEdit && $project->getProjectType() === 'internal') || (!$isEdit && isset($_['defaultSettings']['project_type']) && $_['defaultSettings']['project_type'] === 'internal') ? 'selected' : ''; ?>>
+                            <option value="internal" <?php echo ($isEdit && $project->getProjectType() === 'internal') || (!$isEdit && $effProjectType === 'internal') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Internal Project')); ?>
                             </option>
-                            <option value="research" <?php echo ($isEdit && $project->getProjectType() === 'research') || (!$isEdit && isset($_['defaultSettings']['project_type']) && $_['defaultSettings']['project_type'] === 'research') ? 'selected' : ''; ?>>
+                            <option value="research" <?php echo ($isEdit && $project->getProjectType() === 'research') || (!$isEdit && $effProjectType === 'research') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Research & Development')); ?>
                             </option>
-                            <option value="training" <?php echo ($isEdit && $project->getProjectType() === 'training') || (!$isEdit && isset($_['defaultSettings']['project_type']) && $_['defaultSettings']['project_type'] === 'training') ? 'selected' : ''; ?>>
+                            <option value="training" <?php echo ($isEdit && $project->getProjectType() === 'training') || (!$isEdit && $effProjectType === 'training') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Training & Education')); ?>
                             </option>
-                            <option value="other" <?php echo ($isEdit && $project->getProjectType() === 'other') || (!$isEdit && isset($_['defaultSettings']['project_type']) && $_['defaultSettings']['project_type'] === 'other') ? 'selected' : ''; ?>>
+                            <option value="other" <?php echo ($isEdit && $project->getProjectType() === 'other') || (!$isEdit && $effProjectType === 'other') ? 'selected' : ''; ?>>
                                 <?php p($l->t('Other')); ?>
                             </option>
                         </select>
+                        <?php if (($fieldError = $fieldErrorMessage('project_type')) !== null): ?>
+                        <p class="form-error" id="project_type-error" role="alert"><?php p($fieldError); ?></p>
+                        <?php endif; ?>
                         <small class="form-help"><?php p($l->t('Select the type of project to categorize it for productivity analysis')); ?></small>
                     </div>
 
@@ -385,8 +475,11 @@ include __DIR__ . '/common/page-start.php';
                             id="category"
                             name="category"
                             class="form-input"
-                            value="<?php p($isEdit ? $project->getCategory() : ''); ?>"
+                            value="<?php p($isEdit ? $project->getCategory() : $draftOr('category')); ?>"<?php echo $fieldErrorAttrs('category'); ?>
                             placeholder="<?php p($l->t('Project category (optional)')); ?>">
+                        <?php if (($fieldError = $fieldErrorMessage('category')) !== null): ?>
+                        <p class="form-error" id="category-error" role="alert"><?php p($fieldError); ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
                     </div>
@@ -424,9 +517,12 @@ include __DIR__ . '/common/page-start.php';
                             class="form-input"
                             step="0.01"
                             min="0"
-                            value="<?php p($isEdit ? $project->getTotalBudget() : ''); ?>"
+                            value="<?php p($isEdit ? $project->getTotalBudget() : $draftOr('total_budget')); ?>"
                             placeholder="0.00"
-                            data-initial-value="<?php p($isEdit ? $project->getTotalBudget() : ''); ?>">
+                            data-initial-value="<?php p($isEdit ? $project->getTotalBudget() : $draftOr('total_budget')); ?>"<?php echo $fieldErrorAttrs('total_budget'); ?>>
+                        <?php if (($fieldError = $fieldErrorMessage('total_budget')) !== null): ?>
+                        <p class="form-error" id="total_budget-error" role="alert"><?php p($fieldError); ?></p>
+                        <?php endif; ?>
                     </div>
 
                     <div class="form-group" id="pc-hourly-rate-group">
@@ -441,10 +537,12 @@ include __DIR__ . '/common/page-start.php';
                             class="form-input"
                             step="0.01"
                             min="0"
-                            value="<?php p($isEdit ? $project->getHourlyRate() : ($_['defaultSettings']['hourly_rate'] ?? '')); ?>"
+                            value="<?php p($isEdit ? $project->getHourlyRate() : $draftOr('hourly_rate', (string)($_['defaultSettings']['hourly_rate'] ?? ''))); ?>"
                             placeholder="0.00"
-                            data-initial-value="<?php p($isEdit ? $project->getHourlyRate() : ($_['defaultSettings']['hourly_rate'] ?? '')); ?>"
-                            aria-describedby="pc-capacity-hint pc-pricing-gate">
+                            data-initial-value="<?php p($isEdit ? $project->getHourlyRate() : $draftOr('hourly_rate', (string)($_['defaultSettings']['hourly_rate'] ?? ''))); ?>"<?php echo $fieldErrorAttrs('hourly_rate', 'pc-capacity-hint pc-pricing-gate'); ?>>
+                        <?php if (($fieldError = $fieldErrorMessage('hourly_rate')) !== null): ?>
+                        <p class="form-error" id="hourly_rate-error" role="alert"><?php p($fieldError); ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -454,7 +552,7 @@ include __DIR__ . '/common/page-start.php';
                         id="available_hours"
                         class="form-input pc-capacity-input"
                         inputmode="decimal"
-                        value="<?php p($isEdit ? number_format(max(0.0, (float) $project->getAvailableHours()), 2, '.', '') : '0'); ?>"
+                        value="<?php p($isEdit ? number_format(max(0.0, (float) $project->getAvailableHours()), 2, '.', '') : $draftOr('available_hours', '0')); ?>"
                         placeholder="0"
                         readonly
                         aria-readonly="true"

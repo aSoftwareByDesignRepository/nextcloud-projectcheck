@@ -1086,6 +1086,8 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			'filters' => ['billing_status' => 'open'],
 			'token' => 'tok',
 			'action' => 'invoice_open',
+			'settings_section' => 'all',
+			'currency' => 'EUR',
 		];
 		$req = $this->createMock(IRequest::class);
 		$req->method('getParam')->willReturnCallback(static function (string $k, $default = null) use ($params) {

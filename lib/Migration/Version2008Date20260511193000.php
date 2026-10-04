@@ -93,6 +93,8 @@ class Version2008Date20260511193000 extends SimpleMigrationStep
 				));
 			}
 		} catch (Throwable $e) {
+			// best-effort: cosmetic data cleanup — a stray space is undesirable but
+			// not a blocker for upgrade (see method docblock); warn and continue.
 			$output->warning('ProjectCheck: pc_projects.name whitespace cleanup skipped: ' . $e->getMessage());
 		}
 	}

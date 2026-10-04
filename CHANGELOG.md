@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- **Files sidebar listener:** removed the `LoadSidebar` registration and the dead `LoadSidebarScripts` listener. It requested `js/sidebar.js` + `css/sidebar.css`, which do not exist in the package, so `jsresourceloader` logged a level-3 "Could not find resource" error on every Files page load (#13).
+
 ## 2.0.101 - 2026-09-16
 
 ### Fixed

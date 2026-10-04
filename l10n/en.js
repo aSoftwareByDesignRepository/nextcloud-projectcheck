@@ -1096,6 +1096,7 @@ OC.L10N.register(
 	"Planning hourly rate (estimate)" : "Planning hourly rate (estimate)",
 	"Planning rate is for capacity estimates only — billed cost uses the pricing method above." : "Planning rate is for capacity estimates only — billed cost uses the pricing method above.",
 	"Please correct the following errors" : "Please correct the following errors",
+	"Please check the highlighted fields." : "Please check the highlighted fields.",
 	"Please correct the highlighted fields." : "Please correct the highlighted fields.",
 	"Please ensure all tasks are completed before the deadline." : "Please ensure all tasks are completed before the deadline.",
 	"Please enter a valid URL" : "Please enter a valid URL",

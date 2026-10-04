@@ -233,6 +233,13 @@
 		formGroups.forEach(group => {
 			group.classList.remove('error');
 		});
+
+		// WCAG 3.3.1: keep the invalid flag in sync with the visible error state.
+		const invalidFields = document.querySelectorAll('#customer-form [aria-invalid="true"]');
+		invalidFields.forEach(field => {
+			field.removeAttribute('aria-invalid');
+			field.removeAttribute('aria-describedby');
+		});
 	}
 
 	/**
@@ -247,6 +254,14 @@
 				errorElement.textContent = errors[fieldName];
 				errorElement.style.display = 'block';
 				formGroup.classList.add('error');
+
+				// WCAG 3.3.1/4.1.3: mark the control invalid and wire the
+				// inline message to it, not just the red border.
+				const field = formGroup.querySelector('input, select, textarea');
+				if (field) {
+					field.setAttribute('aria-invalid', 'true');
+					field.setAttribute('aria-describedby', errorElement.id);
+				}
 			}
 		});
 	}
@@ -310,13 +325,22 @@
 			});
 
 			field.addEventListener('input', function () {
-				// Clear error state on input
+				// Clear error state on input. HIDE the template error node —
+				// do not remove() it: showFieldErrors() re-populates the same
+				// #<field>-error element, and a deleted node makes the next
+				// failed submit render no error at all (dead-end).
 				const formGroup = this.closest('.form-group');
 				formGroup.classList.remove('error');
 				const errorMessage = formGroup.querySelector('.error-message');
-				if (errorMessage) {
+				if (errorMessage && errorMessage.id === this.id + '-error') {
+					errorMessage.textContent = '';
+					errorMessage.style.display = 'none';
+				} else if (errorMessage) {
+					// Blur-path error divs (#error-<field>) are generated; remove is safe.
 					errorMessage.remove();
 				}
+				this.removeAttribute('aria-invalid');
+				this.removeAttribute('aria-describedby');
 			});
 		});
 	}
@@ -415,9 +439,15 @@
 		const formGroup = field.closest('.form-group');
 		formGroup.classList.remove('error');
 
-		const errorMessage = formGroup.querySelector('.error-message');
-		if (errorMessage) {
-			errorMessage.remove();
+		// Remove only generated error divs (#error-<fieldId>); the template
+		// error node (#<fieldId>-error) is hidden, never deleted — it is the
+		// anchor showFieldErrors() re-populates on the next failed submit.
+		const generated = formGroup.querySelectorAll('.error-message:not(#' + CSS.escape(field.id + '-error') + ')');
+		generated.forEach((el) => el.remove());
+		const templateError = formGroup.querySelector('#' + CSS.escape(field.id + '-error'));
+		if (templateError) {
+			templateError.textContent = '';
+			templateError.style.display = 'none';
 		}
 
 		// Remove ARIA attributes

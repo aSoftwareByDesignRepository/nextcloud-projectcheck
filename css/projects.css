@@ -8450,6 +8450,22 @@ a.project-title:hover,
 	color: var(--color-main-text);
 }
 
+.pc-form-alert__list {
+	margin: 0.4rem 0 0;
+	padding-inline-start: 1.1rem;
+	font-size: 0.9rem;
+	line-height: 1.5;
+	color: var(--color-main-text);
+}
+
+/* Server-rendered field errors after a failed non-XHR store() —
+   mirrors #employee-project-assignments [aria-invalid] and the
+   .form-error text styles from common/accessibility.css (WCAG 3.3.1). */
+#project-form [aria-invalid="true"] {
+	border-color: var(--color-error);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error) 22%, transparent);
+}
+
 .pc-pricing-gate {
 	margin: 0 0 var(--pc-space-4, 1rem);
 	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);

@@ -89,9 +89,9 @@ OVERRIDES: dict[str, dict[str, str]] = {
         "How to set up a new project": "Så här skapas ett nytt projekt",
         "Info:": "Information:",
         "Information": "Information",
-        "Log time for Active or On Hold projects you are on. Administrators may also log time on projects that use one fixed rate or organisation-wide employee rates without being on the team.": "Registrera tid på aktiva eller pausade projekt där kontot ingår i teamet. Administratörer kan även registrera tid på projekt med fast taxa eller organisationens medarbetartaxa utan teammedlemskap.",
+        "Log time for Active or On Hold projects you are on. Administrators may also log time on projects that use one fixed rate or organisation-wide employee rates without being on the team.": "Registrera tid på aktiva eller parkerade projekt där kontot ingår i teamet. Administratörer kan även registrera tid på projekt med fast taxa eller organisationens medarbetartaxa utan teammedlemskap.",
         "Log your time": "Registrera tid",
-        "Looking for the team list?": "Söks teamlistan?",
+        "Looking for the team list?": "Letar du efter teamlistan?",
         "Looking to add or remove team members?": "Ska teammedlemmar läggas till eller tas bort?",
         "MM/DD/YYYY": "MM/DD/ÅÅÅÅ",
         "Manage your customer relationships": "Hantera kundrelationer",
@@ -175,7 +175,7 @@ OVERRIDES: dict[str, dict[str, str]] = {
         "You are offline": "Offline",
         "You are still offline.": "Fortfarande offline.",
         "You can log time on this project because of your administrator role, not because you are on the team.": "Tid kan registreras på projektet på grund av administratörsroll, inte teammedlemskap.",
-        "You can log time only for projects with status Active or On Hold that you can access (creator, admin, or active team member).": "Tid kan registreras endast på projekt med status Aktiv eller Pausad som kontot har åtkomst till (skapare, admin eller aktivt teammedlem).",
+        "You can log time only for projects with status Active or On Hold that you can access (creator, admin, or active team member).": "Tid kan registreras endast på projekt med status Aktiv eller Parkerad som kontot har åtkomst till (skapare, admin eller aktivt teammedlem).",
         "You can only open your own employee profile unless you are an administrator.": "Endast eget medarbetarprofil kan öppnas, om inte administratörsroll gäller.",
         "You can upload up to %d files at once.": "Upp till %d filer kan laddas upp åt gången.",
         "You can upload up to 20 files at once.": "Upp till 20 filer kan laddas upp åt gången.",
@@ -311,9 +311,101 @@ OVERRIDES: dict[str, dict[str, str]] = {
         "You\u2019re offline": "Sem conexão",
         "total": "total geral",
     },
+    # Hand-written Danish and Norwegian (Bokmål) overrides, keyed by English
+    # msgid. These MUST take precedence over the mechanical sv_to_da/sv_to_nb
+    # fallback: that fallback only replaces a handful of words and ships
+    # Swedish residue (ä/ö, och, inte, är, …) into the da/nb catalogs.
+    # Root cause of the 2026-10-04 Scandinavian seed-leakage bug — see
+    # documentation/projectcheck/bugs/20261004-l10n-scandinavian-seed-leakage.md
+    "da": {
+        "\"{name}\" is selected. Press Save at the bottom when you are done.": "\"{name}\" er valgt. Tryk på Gem nederst, når alt er klart.",
+        "Are you sure you want to delete": "Bekræft sletning af",
+        "Are you sure you want to delete %s? This action cannot be undone.": "Bekræft sletning af %s? Handlingen kan ikke fortrydes.",
+        "Are you sure you want to delete the project \"%s\"? This action cannot be undone.": "Bekræft sletning af projektet \"%s\"? Handlingen kan ikke fortrydes.",
+        "Are you sure you want to delete this project? This action cannot be undone.": "Bekræft sletning af dette projekt? Handlingen kan ikke fortrydes.",
+        "Are you sure you want to delete this time entry? This action cannot be undone.": "Bekræft sletning af denne tidsregistrering? Handlingen kan ikke fortrydes.",
+        "Are you sure you want to remove this team member?": "Bekræft fjernelse af teammedlemmet?",
+        "Are you sure you want to reset all settings to their default values?": "Bekræft nulstilling af alle indstillinger til standardværdierne?",
+        "Ask an administrator if you need a new customer.": "Bed en administrator om en ny kunde ved behov.",
+        "Ask an administrator if you need a new project.": "Bed en administrator om et nyt projekt ved behov.",
+        "Before you change anything": "Inden noget ændres",
+        "Customer is selected. Press Save at the bottom when you are done.": "Kunden er valgt. Tryk på Gem nederst, når alt er klart.",
+        "Do you want to remove this person from the selected project?": "Fjern personen fra det valgte projekt?",
+        "Employee analytics are restricted to your own time entries unless you are an administrator.": "Medarbejderanalyse er begrænset til egne tidsregistreringer, medmindre administratorrollen gælder.",
+        "Enter a project hourly rate greater than 0 to save budget changes. You can still save name, description, dates, status, and other fields.": "Angiv en projekt-timepris over 0 for at gemme budgetændringer. Navn, beskrivelse, datoer, status og andre felter kan stadig gemmes.",
+        "Fill in the basics, then press Save once at the bottom. You can add the team after saving.": "Udfyld grundoplysningerne, og tryk én gang på Gem nederst. Teamet kan tilføjes bagefter.",
+        "Hours and costs for people you can see.": "Timer og omkostninger for personer, som kontoen har indsigt i.",
+        "Log time for Active or On Hold projects you are on. Administrators may also log time on projects that use one fixed rate or organisation-wide employee rates without being on the team.": "Registrer tid på projekter med status Aktiv eller På hold, hvor kontoen indgår i teamet. Administratorer kan også registrere tid på projekter med fast sats eller organisationens medarbejdersats uden teammedlemskab.",
+        "Looking for the team list?": "Leder du efter teamlisten?",
+        "Looking to add or remove team members?": "Skal teammedlemmer tilføjes eller fjernes?",
+        "Open and invoiced hours on projects you manage.": "Åbne og fakturerede timer på projekter, som kontoen administrerer.",
+        "Per-person pricing is used for this project. You must be on the team with an hourly rate to log time here. Ask a project manager to add you under Team.": "Der bruges personprissætning for dette projekt. For at registrere tid kræves teammedlemskab med timepris. Bed en projektleder om at tilføje kontoen under Team.",
+        "Save this form first if you changed anything — then open the team.": "Gem formularen først ved ændringer — åbn derefter teamet.",
+        "Select entries below, then choose what happens to them. Payments always go through \"Invoiced\" first. To settle every matching entry at once, filter Settlement to Open, Invoiced, Paid, or Not billable.": "Vælg poster nedenfor, og vælg hvad der skal ske med dem. Betalinger går altid via Faktureret først. For at afregne alle matchende poster på én gang: filtrér Afregning til Åben, Faktureret, Betalt eller Ikke fakturerbar.",
+        "Start tracking time. You can log your own time here because of your administrator role, even though you are not on the team.": "Begynd tidsregistrering. Administratorrollen tillader registrering af egen tid her, selv om kontoen ikke indgår i teamet.",
+        "Status changes are saved with the rest of the form. You can also change status from the project page.": "Statusændringer gemmes med resten af formularen. Status kan også ændres fra projektsiden.",
+        "Step 1 of 2: invoice all open hours. After you confirm, you will review invoiced hours before marking them paid. Nothing skips the invoiced step.": "Trin 1 af 2: fakturér alle åbne timer. Efter bekræftelse gennemgås fakturerede timer, før de markeres som betalt. Intet springer trinnet Faktureret over.",
+        "The ProjectCheck web app always stays free. A PC2 license unlocks named seats for the official ProjectCheck mobile companion app for your organisation.": "ProjectCheck-webappen er altid gratis. En PC2-licens låser op for navngivne pladser til den officielle ProjectCheck-mobilapp for organisationen.",
+        "The numbers changed while you were looking at them. The preview has been refreshed — please check again.": "Tallene ændredes under gennemgangen. Forhåndsvisningen er opdateret — kontrollér igen.",
+        "This project uses your organisation-wide employee hourly rate. Make sure a rate is effective for you on the work date.": "Projektet bruger organisationens medarbejdertimepris. Sørg for, at en sats gælder på arbejdsdatoen.",
+        "You are logging time as an administrator": "Tid registreres som administrator",
+        "You are not on this project team, but your administrator role lets you record your own time here.": "Kontoen indgår ikke i projektteamet, men administratorrollen tillader registrering af egen tid her.",
+        "You are not on this project team. Your administrator role lets you record your own time here only.": "Kontoen indgår ikke i projektteamet. Administratorrollen tillader kun registrering af egen tid her.",
+        "You can log time on this project because of your administrator role, not because you are on the team.": "Tid kan registreres på projektet på grund af administratorrolle, ikke teammedlemskab.",
+        "You can log time only for projects with status Active or On Hold that you can access (creator, admin, or active team member).": "Tid kan kun registreres på projekter med status Aktiv eller På hold, som kontoen har adgang til (opretter, admin eller aktivt teammedlem).",
+        "You can only open your own employee profile unless you are an administrator.": "Kun egen medarbejderprofil kan åbnes, medmindre administratorrollen gælder.",
+        "You do not currently have access to ProjectCheck. Ask an administrator if you should be added.": "Ingen adgang til ProjectCheck i øjeblikket. Bed en administrator om tilføjelse ved behov.",
+        "You do not have access to ProjectCheck.": "Ingen adgang til ProjectCheck.",
+        "You do not have permission to change organization settings for ProjectCheck.": "Ingen tilladelse til at ændre organisationsindstillingerne for ProjectCheck.",
+        "You do not have permission to manage the ProjectCheck license.": "Ingen tilladelse til at administrere ProjectCheck-licensen.",
+        "You do not have permission to perform this action": "Ingen tilladelse til at udføre denne handling",
+        "You do not have permission to save. If you are not a system administrator, you may have been removed from the app\u2019s administrator list. Reload the page.": "Ingen tilladelse til at gemme. Hvis kontoen ikke er systemadministrator, kan det være blevet fjernet fra appens administratorliste. Genindlæs siden.",
+        "You must be on the project team to log time.": "Teammedlemskab kræves for at registrere tid.",
+        "You must be on the project team to log time. Ask a project manager to add you under Team on the project page.": "Teammedlemskab kræves. Bed en projektleder om tilføjelse under Team på projektsiden.",
+        "Your time entry on %1$s (%2$s) changed from %3$s to %4$s.": "Tidsregistreringen %1$s (%2$s) ændredes fra %3$s til %4$s.",
+    },
+    "nb": {
+        "\"{name}\" is selected. Press Save at the bottom when you are done.": "\"{name}\" er valgt. Trykk Lagre nederst når alt er klart.",
+        "Before you change anything": "Før noe endres",
+        "Choose how billable hours are calculated. You can change this until someone logs time on the project.": "Velg hvordan fakturerbare timer beregnes. Kan endres til tid registreres på prosjektet.",
+        "Customer is selected. Press Save at the bottom when you are done.": "Kunden er valgt. Trykk Lagre nederst når alt er klart.",
+        "Do you want to remove this person from the selected project?": "Fjern personen fra det valgte prosjektet?",
+        "Everyone uses the project hourly rate you set below.": "Alle bruker prosjekttimeprisen som angis nedenfor.",
+        "Fill in the basics, then press Save once at the bottom. You can add the team after saving.": "Fyll inn grunnopplysningene, og trykk Lagre én gang nederst. Teamet kan legges til etter lagring.",
+        "Hours and costs for people you can see.": "Timer og kostnader for personer som kontoen har innsyn i.",
+        "Log time for Active or On Hold projects you are on. Administrators may also log time on projects that use one fixed rate or organisation-wide employee rates without being on the team.": "Registrer tid på prosjekter med status Aktiv eller På vent der kontoen inngår i teamet. Administratorer kan også registrere tid på prosjekter med fast sats eller organisasjonens medarbeidersats uten teammedlemskap.",
+        "Looking for the team list?": "Leter du etter teamlisten?",
+        "Manage your projects": "Administrer prosjekter",
+        "Need email or address? Open full customer form": "Trengs e-post eller adresse? Åpne fullstendig kundeskjema",
+        "Only active projects you can manage are listed here.": "Kun aktive prosjekter som kontoen kan administrere vises her.",
+        "Only projects you can log time on are listed. Per-person priced projects require an active team membership with a personal hourly rate.": "Kun prosjekter der tid kan registreres vises. Personprisede prosjekter krever aktivt teammedlemskap med egen timepris.",
+        "Only projects you can manage are shown.": "Kun prosjekter som kontoen kan administrere vises.",
+        "Only projects you can manage are shown. Already assigned projects are hidden.": "Kun prosjekter som kontoen kan administrere vises. Allerede tildelte prosjekter skjules.",
+        "Only your data is shown": "Kun data for den aktuelle kontoen vises",
+        "Open and invoiced hours on projects you manage.": "Åpne og fakturerte timer på prosjekter som kontoen administrerer.",
+        "Review your own time tracking and yearly performance.": "Gjennomgå egen tidsregistrering og årsresultat.",
+        "Save this form first if you changed anything — then open the team.": "Lagre skjemaet først ved endringer — åpne deretter teamet.",
+        "Set a project hourly rate on the project before logging time.": "Angi prosjekttimepris på prosjektet før tid registreres.",
+        "Start tracking time for this project by adding your first time entry.": "Start tidsregistrering ved å legge til den første tidsregistreringen.",
+        "Step 1 of 2: invoice all open hours. After you confirm, you will review invoiced hours before marking them paid. Nothing skips the invoiced step.": "Trinn 1 av 2: fakturer alle åpne timer. Etter bekreftelse gjennomgås fakturerte timer før de markeres som betalt. Ingenting hopper over trinnet Fakturert.",
+        "The ProjectCheck web app always stays free. A PC2 license unlocks named seats for the official ProjectCheck mobile companion app for your organisation.": "ProjectCheck-nettappen er alltid gratis. En PC2-lisens låser opp navngitte plasser for den offisielle ProjectCheck-mobilappen for organisasjonen.",
+        "The numbers changed while you were looking at them. The preview has been refreshed — please check again.": "Tallene ble endret under gjennomgangen. Forhåndsvisningen er oppdatert — kontroller igjen.",
+        "This person is already on all projects you can manage.": "Personen finnes allerede i alle prosjekter som kontoen kan administrere.",
+        "This project uses a separate hourly rate for each team member. Search for a person, then enter their rate before adding them.": "Prosjektet har separat timepris per teammedlem. Søk etter person og angi sats før tillegging.",
+        "This project uses one fixed hourly rate for everyone. Your entry will be billed at that project rate.": "Prosjektet har én fast timepris for alle. Posten faktureres etter prosjektsatsen.",
+        "This project uses your organisation-wide employee hourly rate. Make sure a rate is effective for you on the work date.": "Prosjektet bruker organisasjonens medarbeidertimepris. Sørg for at en sats gjelder på arbeidsdatoen.",
+        "Track and manage your time entries": "Spor og administrer tidsregistreringer",
+        "You can log time only for projects with status Active or On Hold that you can access (creator, admin, or active team member).": "Tid kan bare registreres på prosjekter med status Aktiv eller På vent som kontoen har tilgang til (oppretter, admin eller aktivt teammedlem).",
+        "Your default hourly rate for time entries": "Standardtimepris for tidsregistreringer",
+        "Your latest time tracking activities": "Siste tidsregistreringsaktiviteter",
+        "Your preferences were saved.": "Innstillingene ble lagret.",
+        "Your time entry on %1$s (%2$s) changed from %3$s to %4$s.": "Tidsregistreringen %1$s (%2$s) ble endret fra %3$s til %4$s.",
+    },
 }
 
-# Danish and Norwegian: derive from Swedish with locale-specific adjustments where needed.
+# Danish and Norwegian: small hand-curated tables for short labels only.
+# Full sentences must go through OVERRIDES["da"] / OVERRIDES["nb"] — never
+# through mechanical Swedish substitution (see seed-leakage bug doc).
 DA_FROM_SV = {
     "Menu": "Menukort",
     "Download": "Hent",
@@ -363,116 +455,6 @@ NB_FROM_SV = {
 }
 
 
-def sv_to_da(text: str) -> str:
-    repl = [
-        ("organisationen", "organisationen"),
-        ("Tryck på", "Tryk på"),
-        ("Spara", "Gem"),
-        ("längst ned", "nederst"),
-        ("Försök igen", "Prøv igen"),
-        ("Webbläsaren", "Browseren"),
-        ("kontot", "kontoet"),
-        ("Medarbetaranalys", "Medarbejderanalyse"),
-        ("tidposter", "tidsregistreringer"),
-        ("Tidpost", "Tidsregistrering"),
-        ("Projekttimtaxa", "Projekttimepris"),
-        ("timtaxa", "timepris"),
-        ("taxa", "sats"),
-        ("Taxan", "Satsen"),
-        ("taxor", "satser"),
-        ("Granska", "Gennemgå"),
-        ("Ladda om", "Genindlæs"),
-        ("Logga in", "Log ind"),
-        ("sessionen", "sessionen"),
-        ("Förhandsgranskningen", "Forhåndsvisningen"),
-        ("Siffrorna", "Tallene"),
-        ("Inställningarna", "Indstillingerne"),
-        ("Administratörsrollen", "Administratorrollen"),
-        ("teammedlem", "teammedlem"),
-        ("projektteamet", "projektteamet"),
-        ("Åtkomst", "Adgang"),
-        ("behörighet", "tilladelse"),
-        ("Behörighet", "Tilladelse"),
-        ("användare", "bruger"),
-        ("Användare", "Bruger"),
-        ("Skapa", "Opret"),
-        ("Lägg till", "Tilføj"),
-        ("Ta bort", "Fjern"),
-        ("Välj", "Vælg"),
-        ("Kontrollera", "Kontrollér"),
-        ("Fakturerade", "Fakturerede"),
-        ("Öppna", "Åbne"),
-        ("Steg", "Trin"),
-        ("Tips", "Tip"),
-        ("Anteckning", "Note"),
-        ("Meny", "Menukort"),
-        ("Ladda ned", "Hent"),
-        ("Fortfarande", "Stadig"),
-        ("Ingen inloggning", "Ikke logget ind"),
-        ("Offline", "Offline"),
-        ("ÅÅÅÅ", "ÅÅÅ"),
-    ]
-    out = text
-    for a, b in repl:
-        out = out.replace(a, b)
-    return out
-
-
-def sv_to_nb(text: str) -> str:
-    repl = [
-        ("Tryck på", "Trykk"),
-        ("Spara", "Lagre"),
-        ("längst ned", "nederst"),
-        ("Försök igen", "Prøv igjen"),
-        ("Webbläsaren", "Nettleseren"),
-        ("kontot", "kontoet"),
-        ("Medarbetaranalys", "Ansattanalyse"),
-        ("tidposter", "tidsregistreringer"),
-        ("Tidpost", "Tidsregistrering"),
-        ("Projekttimtaxa", "Prosjekttimepris"),
-        ("timtaxa", "timepris"),
-        ("taxa", "sats"),
-        ("Taxan", "Satsen"),
-        ("taxor", "satser"),
-        ("Granska", "Gjennomgå"),
-        ("Ladda om", "Last inn på nytt"),
-        ("Logga in", "Logg inn"),
-        ("Förhandsgranskningen", "Forhåndsvisningen"),
-        ("Siffrorna", "Tallene"),
-        ("Inställningarna", "Innstillingene"),
-        ("Administratörsrollen", "Administratorrollen"),
-        ("teammedlem", "teammedlem"),
-        ("projektteamet", "prosjektteamet"),
-        ("Åtkomst", "Tilgang"),
-        ("behörighet", "tillatelse"),
-        ("Behörighet", "Tillatelse"),
-        ("användare", "bruker"),
-        ("Användare", "Brukere"),
-        ("Skapa", "Opprett"),
-        ("Lägg till", "Legg til"),
-        ("Ta bort", "Fjern"),
-        ("Välj", "Velg"),
-        ("Kontrollera", "Kontroller"),
-        ("Fakturerade", "Fakturerte"),
-        ("Öppna", "Åpne"),
-        ("Steg", "Trinn"),
-        ("Anteckning", "Notat"),
-        ("Meny", "Meny"),
-        ("Ladda ned", "Last ned"),
-        ("Fortfarande", "Fortsatt"),
-        ("Ingen inloggning", "Ikke pålogget"),
-        ("Offline", "Frakoblet"),
-        ("ÅÅÅÅ", "ÅÅÅ"),
-        ("Budget:", "Budsjett:"),
-        ("Version:", "Versjon:"),
-        ("Information:", "Informasjon:"),
-    ]
-    out = text
-    for a, b in repl:
-        out = out.replace(a, b)
-    return out
-
-
 def build_locale(lang: str) -> dict[str, str]:
     fail = json.loads((L10N / f"_fail_{lang}.json").read_text(encoding="utf-8"))["all"]
     seeds = load_seeds(lang)
@@ -481,14 +463,19 @@ def build_locale(lang: str) -> dict[str, str]:
     for key in fail:
         if key in seeds:
             fixes[key] = seeds[key]
-        elif lang == "sv" and key in sv_map:
-            fixes[key] = sv_map[key]
-        elif lang == "da" and key in sv_map:
-            fixes[key] = DA_FROM_SV.get(key, sv_to_da(sv_map[key]))
-        elif lang == "nb" and key in sv_map:
-            fixes[key] = NB_FROM_SV.get(key, sv_to_nb(sv_map[key]))
         elif lang in OVERRIDES and key in OVERRIDES[lang]:
             fixes[key] = OVERRIDES[lang][key]
+        elif lang == "sv" and key in sv_map:
+            fixes[key] = sv_map[key]
+        elif lang == "da" and key in sv_map and key in DA_FROM_SV:
+            fixes[key] = DA_FROM_SV[key]
+        elif lang == "nb" and key in sv_map and key in NB_FROM_SV:
+            fixes[key] = NB_FROM_SV[key]
+        # No mechanical sv_to_da / sv_to_nb fallback here: it produces
+        # Swedish-with-a-few-substitutions strings, which is exactly how the
+        # Swedish residue leaked into da.json/nb.json. Unresolved msgids land
+        # in _missing_after_build_{lang}.json and need hand-written entries in
+        # OVERRIDES[lang] above.
     return fixes
 
 

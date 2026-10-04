@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Migration;
 
 use Closure;
+use OCP\DB\Exception as DbException;
 use OCP\DB\ISchemaWrapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
@@ -125,8 +126,14 @@ class Version2000Date202501280001 extends SimpleMigrationStep
 				$insertQb->executeStatement();
 				$migrated++;
 			} catch (\Exception $e) {
-				// Config key might already exist, skip
-				$output->warning("Could not migrate config key: {$row['configkey']}");
+				// Only a unique-constraint hit is a skippable row (key already
+				// migrated by a prior partial run). Any other failure must abort
+				// the migration instead of silently dropping config values.
+				if (!($e instanceof DbException
+					&& $e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION)) {
+					throw $e;
+				}
+				$output->warning("Config key already migrated, skipping: {$row['configkey']}");
 			}
 		}
 		$result->closeCursor();
@@ -186,8 +193,14 @@ class Version2000Date202501280001 extends SimpleMigrationStep
 				$insertQb->executeStatement();
 				$migrated++;
 			} catch (\Exception $e) {
-				// Preference might already exist, skip
-				$output->warning("Could not migrate preference for user {$row['userid']}: {$row['configkey']}");
+				// Only a unique-constraint hit is a skippable row (preference
+				// already migrated by a prior partial run). Any other failure
+				// must abort the migration instead of silently dropping prefs.
+				if (!($e instanceof DbException
+					&& $e->getReason() === DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION)) {
+					throw $e;
+				}
+				$output->warning("Preference already migrated, skipping: {$row['userid']}: {$row['configkey']}");
 			}
 		}
 		$result->closeCursor();

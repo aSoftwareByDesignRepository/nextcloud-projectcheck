@@ -156,8 +156,8 @@ class Version2007Date20260506180000 extends SimpleMigrationStep
 				));
 			}
 		} catch (Throwable $e) {
-			// Never block the migration on the backfill: if the UPDATE fails
-			// (column was just created and the operator's DB does not allow
+			// best-effort: never block the migration on the backfill: if the UPDATE
+			// fails (column was just created and the operator's DB does not allow
 			// touching it in the same transaction, exotic engine, …) the
 			// schema-level NOT NULL DEFAULT already keeps reads correct.
 			$output->warning('ProjectCheck: project_type backfill skipped: ' . $e->getMessage());

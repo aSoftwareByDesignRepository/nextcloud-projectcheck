@@ -28,6 +28,7 @@ use OCA\ProjectCheck\Service\ProjectSettlementService;
 use OCA\ProjectCheck\Db\Project;
 use OCA\ProjectCheck\Db\ProjectMember;
 use OCA\ProjectCheck\Exception\RateResolutionException;
+use OCA\ProjectCheck\Exception\ValidationException;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -978,6 +979,98 @@ class ProjectControllerTest extends TestCase {
 		$data = $response->getData();
 		$this->assertArrayHasKey('error', $data);
 		$this->assertEquals('Customer is required', $data['error']);
+	}
+
+	/**
+	 * pc-store-redirect-draft-loss: a ValidationException on a non-XHR
+	 * store() must re-render the create form (draft + inline fieldErrors),
+	 * not redirect to the index and lose the submitted data.
+	 */
+	public function testStoreValidationExceptionRerendersCreateFormWithDraft(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+
+		$submitted = [
+			'name' => 'Half-finished draft',
+			'short_description' => 'keep me',
+			'customer_id' => '',
+			'hourly_rate' => '75.50',
+			'total_budget' => '1200',
+			'priority' => 'High',
+			'start_date' => '01.04.2026',
+			'requesttoken' => 'csrf-token-must-not-leak-into-draft',
+		];
+		$this->request->method('getParams')->willReturn($submitted);
+		// Non-XHR: no X-Requested-With header.
+		$this->request->method('getHeader')->willReturn('');
+
+		$fieldErrors = [
+			'name' => 'Project name is required',
+			'customer_id' => 'Customer is required',
+		];
+		$this->projectService->method('createProject')
+			->willThrowException(new ValidationException($fieldErrors));
+
+		$response = $this->controller->store();
+
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame('project-form', $response->getTemplateName());
+		$this->assertSame(422, $response->getStatus());
+
+		$params = $response->getParams();
+		$this->assertSame('create', $params['mode']);
+		$this->assertNull($params['project']);
+		$this->assertSame($fieldErrors, $params['fieldErrors']);
+
+		// Draft repopulation in the shape project-form.php consumes.
+		$this->assertIsArray($params['draft']);
+		$this->assertSame('Half-finished draft', $params['draft']['name']);
+		$this->assertSame('keep me', $params['draft']['short_description']);
+		$this->assertSame('75.50', $params['draft']['hourly_rate']);
+		$this->assertSame('1200', $params['draft']['total_budget']);
+		$this->assertSame('High', $params['draft']['priority']);
+		// European-format date normalized for the type="date" input.
+		$this->assertSame('2026-04-01', $params['draft']['start_date']);
+		// Internal/request keys never reach the template draft.
+		$this->assertArrayNotHasKey('requesttoken', $params['draft']);
+
+		// Full create() context is rebuilt + a fresh nonce is minted.
+		foreach ([
+			'customers', 'defaultSettings', 'stats', 'indexUrl', 'formAction',
+			'urlGenerator', 'orgCurrency', 'costRateModeLocked',
+			'employeesIndexUrl', 'canCreateCustomer', 'customerStoreUrl',
+			'customerCreateUrl', 'createIdempotencyNonce',
+		] as $contextKey) {
+			$this->assertArrayHasKey($contextKey, $params, "missing create context key: {$contextKey}");
+		}
+		$this->assertNotEmpty($params['createIdempotencyNonce']);
+		$this->assertNotSame('', $params['formErrorText']);
+	}
+
+	/**
+	 * Same defect, service's plain-\Exception validation failures: the
+	 * non-XHR path re-renders the form (banner + draft), pinning the error
+	 * inline when the message maps to a known field.
+	 */
+	public function testStoreGenericValidationErrorRerendersCreateForm(): void {
+		$this->user->method('getUID')->willReturn('testuser');
+		$this->userSession->method('getUser')->willReturn($this->user);
+
+		$submitted = ['name' => 'Draft name', 'customer_id' => ''];
+		$this->request->method('getParams')->willReturn($submitted);
+		$this->request->method('getHeader')->willReturn('');
+
+		$this->projectService->method('createProject')
+			->willThrowException(new \Exception('Customer is required'));
+
+		$response = $this->controller->store();
+
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame('project-form', $response->getTemplateName());
+		$params = $response->getParams();
+		$this->assertSame('Draft name', $params['draft']['name']);
+		$this->assertSame('Customer is required', $params['formErrorText']);
+		$this->assertSame(['customer_id' => 'Customer is required'], $params['fieldErrors']);
 	}
 
 	/**

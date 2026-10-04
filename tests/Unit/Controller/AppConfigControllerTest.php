@@ -463,4 +463,52 @@ class AppConfigControllerTest extends TestCase {
 		$response = $this->makeController()->savePolicy();
 		$this->assertSame(400, $response->getStatus());
 	}
+
+	public function testSavePolicyRejectsEmptyPayloadWithoutSection(): void
+	{
+		// Regression: a body that yields no recognised field (e.g. raw JSON
+		// posted without the JSON Content-Type, which getParams() cannot see)
+		// must NOT fall into the legacy "all" full-write path — that wiped
+		// access lists and disabled restriction on a stray POST.
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->expects($this->never())->method('applyFullAccessPolicy');
+		$this->accessControl->expects($this->never())->method('saveAccessPolicy');
+		$this->accessControl->expects($this->never())->method('saveAppAdmins');
+		$this->config->expects($this->never())->method('setAppValue');
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'_route' => 'projectcheck.app_config.savePolicy',
+		]);
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(400, $response->getStatus());
+		$body = $response->getData();
+		$this->assertSame('validation', $body['error']);
+	}
+
+	public function testSavePolicyMissingSectionWithKnownFieldStillFullWrites(): void
+	{
+		// Legacy NC mega-form posts no settings_section but does carry real
+		// fields — must keep the full-write semantics.
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->accessControl->expects($this->once())->method('applyFullAccessPolicy');
+		$this->accessControl->method('getPolicyState')->willReturn([
+			'restrictionEnabled' => false,
+			'allowedUserIds' => [],
+			'allowedGroupIds' => [],
+			'appAdminUserIds' => [],
+		]);
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getParams')->willReturn([
+			'_route' => 'projectcheck.app_config.savePolicy',
+			'currency' => 'USD',
+		]);
+		$this->config->method('setAppValue');
+		$this->eventDispatcher->method('dispatchTyped');
+
+		$response = $this->makeController()->savePolicy();
+		$this->assertSame(200, $response->getStatus());
+	}
 }

@@ -1096,6 +1096,7 @@ OC.L10N.register(
 	"Planning hourly rate (estimate)" : "Planungs-Stundensatz (Schätzung)",
 	"Planning rate is for capacity estimates only — billed cost uses the pricing method above." : "Planungssatz nur für Kapazitätsschätzung — abgerechnete Kosten folgen der gewählten Bewertungsmethode.",
 	"Please correct the following errors" : "Bitte korrigieren Sie die folgenden Fehler",
+	"Please check the highlighted fields." : "Bitte prüfen Sie die markierten Felder.",
 	"Please correct the highlighted fields." : "Bitte korrigieren Sie die markierten Felder.",
 	"Please ensure all tasks are completed before the deadline." : "Stellen Sie sicher, dass alle Aufgaben vor der Frist abgeschlossen sind.",
 	"Please enter a valid URL" : "Bitte geben Sie eine gültige URL ein",

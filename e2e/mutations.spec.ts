@@ -19,7 +19,16 @@ test.describe('ProjectCheck mutation hardening (optional E2E)', () => {
 		const mutationResult = await page.evaluate(async () => {
 			const tokenFromMeta = document.querySelector('meta[name="requesttoken"]')?.getAttribute('content') || '';
 			const tokenFromWindow = (window as unknown as { oc_requesttoken?: string }).oc_requesttoken || '';
-			const requestToken = tokenFromMeta || tokenFromWindow;
+			// Nextcloud core settings pages do not emit meta[name="requesttoken"] or
+			// window.oc_requesttoken — the CSRF token lives on OC.requestToken (a
+			// string property, not a function) and/or a data-requesttoken attribute.
+			const tokenFromOC =
+				typeof (window as unknown as { OC?: { requestToken?: unknown } }).OC?.requestToken === 'string'
+					? ((window as unknown as { OC: { requestToken: string } }).OC.requestToken)
+					: '';
+			const tokenFromDataAttr =
+				document.querySelector('[data-requesttoken]')?.getAttribute('data-requesttoken') || '';
+			const requestToken = tokenFromMeta || tokenFromWindow || tokenFromOC || tokenFromDataAttr;
 
 			const response = await fetch('/index.php/apps/projectcheck/api/preferences/save', {
 				method: 'POST',

@@ -31,6 +31,12 @@ use OCA\ProjectCheck\Service\IconCatalog;
 // Centralised icon catalog and hydration (audit ref. AUDIT-FINDINGS H22/icon-dedup).
 // Replaces six duplicated inline svgIcons blocks across page templates.
 \OCP\Util::addScript('projectcheck', 'common/icons');
+// Visual toast system (common/messaging.js → window.ProjectCheckMessaging).
+// OC.Notification was removed in Nextcloud ≥30; without this module every
+// ProjectCheckNotify call silently degraded to the screen-reader-only
+// #pc-alert-region, leaving sighted users with no visible feedback. Toasts
+// dedup on kind|text with timer reset (learned class vis-duplicate-toast-stacking).
+\OCP\Util::addScript('projectcheck', 'common/messaging');
 \OCP\Util::addScript('projectcheck', 'common/app-feedback');
 
 // Get current page to highlight active navigation item
