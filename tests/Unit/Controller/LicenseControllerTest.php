@@ -224,7 +224,7 @@ final class LicenseControllerTest extends TestCase
 		$this->userSession->method('getUser')->willReturn($this->user);
 		$this->access->method('canManageAppConfiguration')->willReturn(true);
 		$this->license->method('removeSeat')
-			->with('bob')
+			->with('alice', 'bob')
 			->willThrowException(new LicenseException('seat_not_found', 'Seat not found.', 404));
 
 		$response = $this->makeController()->removeSeat('bob');

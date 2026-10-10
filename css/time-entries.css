@@ -180,13 +180,13 @@
 .button:not(.primary) {
 	background: var(--color-background-hover);
 	color: var(--color-main-text);
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 .button.secondary {
 	background: var(--color-main-background);
 	color: var(--color-main-text);
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 .button.secondary:hover {
@@ -229,9 +229,9 @@
 }
 
 .notice-success {
-	background: color-mix(in srgb, var(--color-success) 12%, transparent);
+	background: var(--color-success);
 	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-element-success) 40%, transparent);
 }
 
 .notice-success::before {
@@ -239,9 +239,9 @@
 }
 
 .notice-error {
-	background: color-mix(in srgb, var(--color-error) 12%, transparent);
+	background: var(--color-error);
 	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-element-error) 40%, transparent);
 }
 
 .notice-error::before {
@@ -388,7 +388,7 @@
 .searchbox input {
 	width: 100%;
 	padding: 0.875rem 1rem;
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: 8px;
 	background: var(--color-main-background);
 	color: var(--color-text);
@@ -414,7 +414,7 @@
 .filters-row select,
 .filters-row input[type="date"] {
 	padding: 0.75rem 1rem;
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: 8px;
 	background-color: var(--color-main-background);
 	color: var(--color-main-text);
@@ -422,14 +422,17 @@
 	min-width: 0;
 	width: 100%;
 	min-height: var(--pc-touch-min, 44px);
-	appearance: none;
-	-webkit-appearance: none;
-	-moz-appearance: none;
 	box-sizing: border-box;
 	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .filters-row select {
+	/* appearance:none lives on the select ONLY — stripping it from
+	   input[type="date"] removes Chromium's calendar affordance with no
+	   painted replacement (learned class: dead affordance). */
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
 	background-image: var(
 		--icon-triangle-s-dark,
 		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
@@ -811,7 +814,7 @@ body[dir="rtl"] .filters-row select {
 /* Specific styling for different project types */
 .project-type-icon[data-project-type="client"] {
 	background: var(--color-info-light);
-	border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
+	border-color: color-mix(in srgb, var(--color-element-info) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="admin"] {
@@ -821,7 +824,7 @@ body[dir="rtl"] .filters-row select {
 
 .project-type-icon[data-project-type="sales"] {
 	background: var(--color-success-light);
-	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+	border-color: color-mix(in srgb, var(--color-element-success) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="customer"] {
@@ -831,12 +834,12 @@ body[dir="rtl"] .filters-row select {
 
 .project-type-icon[data-project-type="product"] {
 	background: var(--color-warning-light);
-	border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+	border-color: color-mix(in srgb, var(--color-element-warning) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="meeting"] {
 	background: var(--color-error-light);
-	border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+	border-color: color-mix(in srgb, var(--color-element-error) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="internal"] {
@@ -851,7 +854,7 @@ body[dir="rtl"] .filters-row select {
 
 .project-type-icon[data-project-type="training"] {
 	background: var(--color-success-light);
-	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+	border-color: color-mix(in srgb, var(--color-element-success) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="other"] {
@@ -1156,10 +1159,24 @@ body[dir="rtl"] .filters-row select {
 
 .time-entries-table .pc-billing-select,
 #pc-billing-select-all {
-	width: 1.25rem;
-	height: 1.25rem;
+	/* WCAG 2.5.8: the input itself is measured as the hit target even though
+	 * the wrapping .pc-billing-select-hit label already gives it a 44px zone.
+	 * px, not rem: the NC root font-size makes 1.5rem render <24px. */
+	width: 24px;
+	height: 24px;
+	min-width: 24px;
+	min-height: 24px;
 	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
 	cursor: pointer;
+	accent-color: var(--color-primary-element);
+	background-color: var(--color-main-background);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
+	border-radius: 3px;
+	color-scheme: inherit;
+	appearance: auto;
+	-webkit-appearance: auto;
 }
 
 .action-item--locked {

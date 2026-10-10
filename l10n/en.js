@@ -1827,6 +1827,8 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 Billable Work",
 	"💻 Product Development" : "💻 Product Development",
 	"📊 Why This Matters" : "📊 Why This Matters",
-	"🔬 Research & Development" : "🔬 Research & Development"
+	"🔬 Research & Development" : "🔬 Research & Development",
+	"%d skipped (already members or disabled)." : "%d skipped (already members or disabled).",
+	"No users were added — %d were skipped (already members or disabled)." : "No users were added — %d were skipped (already members or disabled)."
 	}
 );

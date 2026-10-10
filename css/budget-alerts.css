@@ -78,9 +78,9 @@
 
 /* Two-class pattern from templates: .alert.alert-warning */
 .budget-alerts-section .alert.alert-warning {
-    background: color-mix(in srgb, var(--color-warning) 8%, var(--color-main-background));
-    border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-    border-inline-start: 4px solid var(--color-warning);
+    background: var(--color-warning);
+    border: 1px solid color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
+    border-inline-start: 4px solid var(--color-element-warning);
 }
 
 .budget-alerts-section .alert.alert-warning .alert-icon {
@@ -88,9 +88,9 @@
 }
 
 .budget-alerts-section .alert.alert-critical {
-    background: color-mix(in srgb, var(--color-error) 7%, var(--color-main-background));
-    border: 1px solid color-mix(in srgb, var(--color-error) 32%, var(--color-border));
-    border-inline-start: 4px solid var(--color-error);
+    background: var(--color-error);
+    border: 1px solid color-mix(in srgb, var(--color-element-error) 32%, var(--color-border));
+    border-inline-start: 4px solid var(--color-element-error);
 }
 
 .budget-alerts-section .alert.alert-critical .alert-icon {
@@ -98,9 +98,9 @@
 }
 
 .budget-alerts-section .alert.alert-none {
-    background: color-mix(in srgb, var(--color-info) 5%, var(--color-main-background));
-    border: 1px solid color-mix(in srgb, var(--color-info) 28%, var(--color-border));
-    border-inline-start: 4px solid var(--color-info);
+    background: var(--color-info);
+    border: 1px solid color-mix(in srgb, var(--color-element-info) 28%, var(--color-border));
+    border-inline-start: 4px solid var(--color-element-info);
 }
 
 .budget-alerts-section .alert.alert-none .alert-icon {
@@ -125,23 +125,23 @@
     color: var(--pc-emphasis-text-success);
 }
 
-/* Budget progress bar warning levels */
+/* Budget progress bar warning levels — solid element fills (bare --color-* are pale surface tints on NC 30+) */
 .budget-progress-fill.budget-warning {
-    background-color: var(--color-warning);
+    background-color: var(--color-element-warning);
 }
 
 .budget-progress-fill.budget-critical {
-    background-color: var(--color-error);
+    background-color: var(--color-element-error);
 }
 
 .budget-progress-fill.budget-none {
-    background-color: var(--color-success);
+    background-color: var(--color-element-success);
 }
 
 /* Over budget styling */
 .breakdown-item.over-budget {
-    background-color: color-mix(in srgb, var(--color-error) 10%, var(--color-main-background));
-    border: 1px solid color-mix(in srgb, var(--color-error) 20%, transparent);
+    background-color: var(--color-error);
+    border: 1px solid var(--color-border-error, var(--color-element-error));
     border-radius: 4px;
     padding: 8px 12px;
     margin-top: 8px;
@@ -174,11 +174,11 @@
 
 /* Budget form warnings */
 .form-group.budget-warning {
-    border-left: 4px solid var(--color-warning);
+    border-left: 4px solid var(--color-element-warning);
 }
 
 .form-group.budget-critical {
-    border-left: 4px solid var(--color-error);
+    border-left: 4px solid var(--color-element-error);
 }
 
 .budget-impact-info {
@@ -211,15 +211,15 @@
 }
 
 .budget-impact-info.ok {
-    border-color: color-mix(in srgb, var(--color-success) 32%, var(--color-border));
+    border-color: color-mix(in srgb, var(--color-element-success) 32%, var(--color-border));
     color: var(--color-main-text);
-    background-color: color-mix(in srgb, var(--color-success) 8%, var(--color-background-dark));
+    background-color: color-mix(in srgb, var(--color-element-success) 8%, var(--color-background-dark));
 }
 
 .budget-impact-info.over-budget {
-    border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-border));
+    border-color: color-mix(in srgb, var(--color-element-error) 35%, var(--color-border));
     color: var(--color-main-text);
-    background-color: color-mix(in srgb, var(--color-error) 8%, var(--color-background-dark));
+    background-color: color-mix(in srgb, var(--color-element-error) 8%, var(--color-background-dark));
 }
 
 @media (min-width: 768px) {
@@ -338,17 +338,17 @@
 
 .budget-progress-fill {
     height: 100%;
-    background: var(--color-success);
+    background: var(--color-element-success);
     transition: width 0.3s ease, background-color 0.3s ease;
     border-radius: 999px;
 }
 
 .budget-progress-fill--warning {
-    background: var(--color-warning);
+    background: var(--color-element-warning);
 }
 
 .budget-progress-fill--critical {
-    background: var(--color-error);
+    background: var(--color-element-error);
 }
 
 /* Full budget progress gets rounded corners on both sides */
@@ -421,18 +421,18 @@
 }
 
 .project-card.dashboard-card.budget-status-safe {
-    box-shadow: inset 4px 0 0 var(--color-success);
-    background: linear-gradient(135deg, color-mix(in srgb, var(--color-success) 2%, transparent) 0%, transparent 50%);
+    box-shadow: inset 4px 0 0 var(--color-element-success);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-element-success) 8%, transparent) 0%, transparent 55%);
 }
 
 .project-card.dashboard-card.budget-status-warning {
-    box-shadow: inset 4px 0 0 var(--color-warning);
-    background: linear-gradient(135deg, color-mix(in srgb, var(--color-warning) 5%, transparent) 0%, transparent 50%);
+    box-shadow: inset 4px 0 0 var(--color-element-warning);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-element-warning) 8%, transparent) 0%, transparent 55%);
 }
 
 .project-card.dashboard-card.budget-status-critical {
-    box-shadow: inset 4px 0 0 var(--color-error);
-    background: linear-gradient(135deg, color-mix(in srgb, var(--color-error) 5%, transparent) 0%, transparent 50%);
+    box-shadow: inset 4px 0 0 var(--color-element-error);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-element-error) 8%, transparent) 0%, transparent 55%);
 }
 
 /* Card Header Improvements */
@@ -491,21 +491,23 @@
     flex-shrink: 0;
 }
 
+/* Variant borders use the semantic *-text tokens (>=3:1 vs page bg) — a
+   pale element-mix rim fails WCAG 1.4.11 for state-bearing indicators. */
 .budget-status-badge.safe {
-    background: color-mix(in srgb, var(--color-success) 14%, var(--color-main-background));
-    border-color: color-mix(in srgb, var(--color-success) 36%, var(--color-border));
+    background: var(--color-success);
+    border-color: var(--color-success-text, color-mix(in srgb, var(--color-element-success) 60%, var(--color-border)));
     color: var(--color-main-text);
 }
 
 .budget-status-badge.warning {
-    background: color-mix(in srgb, var(--color-warning) 16%, var(--color-main-background));
-    border-color: color-mix(in srgb, var(--color-warning) 40%, var(--color-border));
+    background: var(--color-warning);
+    border-color: var(--color-warning-text, color-mix(in srgb, var(--color-element-warning) 60%, var(--color-border)));
     color: var(--color-main-text);
 }
 
 .budget-status-badge.critical {
-    background: color-mix(in srgb, var(--color-error) 14%, var(--color-main-background));
-    border-color: color-mix(in srgb, var(--color-error) 36%, var(--color-border));
+    background: var(--color-error);
+    border-color: var(--color-error-text, color-mix(in srgb, var(--color-element-error) 60%, var(--color-border)));
     color: var(--color-main-text);
 }
 
@@ -667,17 +669,17 @@
 }
 
 .project-row.budget-status-safe {
-    border-left-color: var(--color-success);
+    border-left-color: var(--color-element-success);
 }
 
 .project-row.budget-status-warning {
-    background-color: color-mix(in srgb, var(--color-warning) 3%, transparent);
-    border-left-color: var(--color-warning);
+    background-color: var(--color-warning);
+    border-left-color: var(--color-element-warning);
 }
 
 .project-row.budget-status-critical {
-    background-color: color-mix(in srgb, var(--color-error) 3%, transparent);
-    border-left-color: var(--color-error);
+    background-color: var(--color-error);
+    border-left-color: var(--color-element-error);
 }
 
 /* Project Name Cell */
@@ -925,22 +927,22 @@
 .priority-badge.priority-medium {
     background-color: var(--color-warning-light);
     color: var(--color-main-text);
-    border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-    border-inline-start: 2px solid var(--color-warning);
+    border: 1px solid color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
+    border-inline-start: 2px solid var(--color-element-warning);
 }
 
 .priority-badge.priority-high {
     background-color: var(--color-warning-light);
     color: var(--color-main-text);
-    border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-    border-inline-start: 2px solid var(--color-warning);
+    border: 1px solid color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
+    border-inline-start: 2px solid var(--color-element-warning);
 }
 
 .priority-badge.priority-critical {
     background-color: var(--color-error-light);
     color: var(--color-main-text);
-    border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
-    border-inline-start: 2px solid var(--color-error);
+    border: 1px solid color-mix(in srgb, var(--color-element-error) 30%, var(--color-border));
+    border-inline-start: 2px solid var(--color-element-error);
 }
 
 .progress-info {

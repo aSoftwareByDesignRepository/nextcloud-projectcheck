@@ -46,7 +46,9 @@ $todayYmd = gmdate('Y-m-d');
         employeeId: '<?php p($eid); ?>',
         assignProjectUrl: '<?php p($_['assignProjectUrl'] ?? ''); ?>',
         addEmployeeRateUrl: '<?php p($_['addEmployeeRateUrl'] ?? ''); ?>',
-        unassignProjectUrlTemplate: '<?php p($urlGenerator->linkToRoute('projectcheck.employee.unassignProjectPost', ['userId' => 'USER_ID', 'projectId' => 'PROJECT_ID'])); ?>'
+        // Placeholder appended to the collection URL — {projectId} is pinned \d+
+        // so linkToRoute rejects a literal 'PROJECT_ID' (strict-id class).
+        unassignProjectUrlTemplate: '<?php p($urlGenerator->linkToRoute('projectcheck.employee.index') . '/USER_ID/projects/PROJECT_ID/remove'); ?>'
     };
 </script>
 

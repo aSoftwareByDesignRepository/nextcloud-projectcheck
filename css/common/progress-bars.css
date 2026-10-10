@@ -77,13 +77,13 @@
 /* Success State */
 .progress-fill--success,
 .nc-progress-fill--success {
-    background: linear-gradient(90deg, var(--color-success), var(--color-success-hover));
+    background: var(--color-element-success);
 }
 
 /* Warning State */
 .progress-fill--warning,
 .nc-progress-fill--warning {
-    background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover));
+    background: var(--color-element-warning);
 }
 
 /* Error/Critical State */
@@ -91,13 +91,13 @@
 .nc-progress-fill--error,
 .progress-fill--critical,
 .nc-progress-fill--critical {
-    background: linear-gradient(90deg, var(--color-error), var(--color-error-hover));
+    background: var(--color-element-error);
 }
 
 /* Info State */
 .progress-fill--info,
 .nc-progress-fill--info {
-    background: linear-gradient(90deg, var(--color-info), var(--color-info-hover));
+    background: var(--color-element-info);
 }
 
 /* ================================================================
@@ -112,28 +112,30 @@
 
 .progress-fill--flat.progress-fill--success,
 .nc-progress-fill--flat.nc-progress-fill--success {
-    background: var(--color-success);
+    background: var(--color-element-success);
 }
 
 .progress-fill--flat.progress-fill--warning,
 .nc-progress-fill--flat.nc-progress-fill--warning {
-    background: var(--color-warning);
+    background: var(--color-element-warning);
 }
 
 .progress-fill--flat.progress-fill--error,
 .nc-progress-fill--flat.nc-progress-fill--error {
-    background: var(--color-error);
+    background: var(--color-element-error);
 }
 
-/* Striped style for loading/indeterminate states */
+/* Striped style for loading/indeterminate states.
+   Stripes use the always-light sheen token — --color-primary-element-text
+   resolves to BLACK in dark themes (mix would darken, not lighten). */
 .progress-fill--striped,
 .nc-progress-fill--striped {
     background-image: linear-gradient(45deg,
-            color-mix(in srgb, var(--color-primary-element-text) 15%, transparent) 25%,
+            var(--pc-sheen-on-fill) 25%,
             transparent 25%,
             transparent 50%,
-            color-mix(in srgb, var(--color-primary-element-text) 15%, transparent) 50%,
-            color-mix(in srgb, var(--color-primary-element-text) 15%, transparent) 75%,
+            var(--pc-sheen-on-fill) 50%,
+            var(--pc-sheen-on-fill) 75%,
             transparent 75%,
             transparent);
     background-size: 16px 16px;
@@ -378,13 +380,13 @@
 .budget-progress-fill.warning,
 .yearly-progress-fill.warning,
 .compact-progress .progress-fill.warning {
-    background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover)) !important;
+    background: var(--color-element-warning) !important;
 }
 
 .budget-progress-fill.critical,
 .yearly-progress-fill.critical,
 .compact-progress .progress-fill.critical {
-    background: linear-gradient(90deg, var(--color-error), var(--color-error-hover)) !important;
+    background: var(--color-element-error) !important;
 }
 
 .budget-progress-fill[style*="width: 100%"],

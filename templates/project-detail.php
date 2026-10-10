@@ -49,6 +49,7 @@ $usingAdminTimeEntryOverride = !empty($_['usingAdminTimeEntryOverride']);
 $addTeamMemberUrl = $_['addTeamMemberUrl'] ?? null;
 $bulkAddSuccess = isset($_GET['bulk_add_success']) && (string)$_GET['bulk_add_success'] === '1';
 $bulkAddAddedCount = isset($_GET['added_count']) ? max(0, (int)$_GET['added_count']) : 0;
+$bulkAddSkippedCount = isset($_GET['skipped_count']) ? max(0, (int)$_GET['skipped_count']) : 0;
 $uploadSuccessCount = isset($_GET['uploaded']) ? max(0, (int)$_GET['uploaded']) : 0;
 $uploadSuccess = $uploadSuccessCount > 0;
 $fmt = $_['fmt'] ?? null;
@@ -154,10 +155,17 @@ include __DIR__ . '/common/page-start.php';
         <?php endif; ?>
 
         <?php if ($bulkAddSuccess): ?>
-            <div class="notice notice-success" role="status" aria-live="polite" aria-atomic="true">
-                <span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span>
-                <span><?php p($l->t('Added %d users to the project', [$bulkAddAddedCount])); ?></span>
-            </div>
+            <?php if ($bulkAddAddedCount === 0 && $bulkAddSkippedCount > 0): ?>
+                <div class="notice notice-warning" role="status" aria-live="polite" aria-atomic="true">
+                    <span data-lucide="alert-circle" class="lucide-icon" aria-hidden="true"></span>
+                    <span><?php p($l->t('No users were added — %d were skipped (already members or disabled).', [$bulkAddSkippedCount])); ?></span>
+                </div>
+            <?php else: ?>
+                <div class="notice notice-success" role="status" aria-live="polite" aria-atomic="true">
+                    <span data-lucide="circle-check" class="lucide-icon" aria-hidden="true"></span>
+                    <span><?php p($l->t('Added %d users to the project', [$bulkAddAddedCount])); ?><?php if ($bulkAddSkippedCount > 0): ?> <?php p($l->t('%d skipped (already members or disabled).', [$bulkAddSkippedCount])); ?><?php endif; ?></span>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
 
         <?php if ($uploadSuccess): ?>

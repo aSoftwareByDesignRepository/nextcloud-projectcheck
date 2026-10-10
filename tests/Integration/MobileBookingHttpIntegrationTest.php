@@ -126,7 +126,7 @@ final class MobileBookingHttpIntegrationTest extends TestCase
 		$this->applyLicense(5);
 		$this->assignSeat(self::UID);
 		self::assertSame(1, \OC::$server->get(MobileSeatMapper::class)->countAll());
-		\OC::$server->get(LicenseService::class)->remove();
+		\OC::$server->get(LicenseService::class)->remove(self::ADMIN);
 		self::assertSame(0, \OC::$server->get(MobileSeatMapper::class)->countAll());
 		self::assertNull(\OC::$server->get(LicenseStateMapper::class)->findSingleton());
 	}

@@ -1417,7 +1417,7 @@ OC.L10N.register(
 	"Start" : "Begynd",
 	"Start Date" : "Startdato",
 	"Start Time Entry" : "Start tidsregistrering",
-	"Start Timer" : "Start timer",
+	"Start Timer" : "Start tidsregistrering",
 	"Start date" : "Startdato",
 	"Start tracking time for this project by adding your first time entry." : "Begynd tidsregistrering for dette projekt ved at tilføje den første tidsregistrering.",
 	"Start tracking time. You can log your own time here because of your administrator role, even though you are not on the team." : "Begynd tidsregistrering. Administratorrollen tillader registrering af egen tid her, selv om kontoen ikke indgår i teamet.",
@@ -1819,7 +1819,7 @@ OC.L10N.register(
 	"{hours} h still not yet paid ({amount})" : "{hours} t endnu ikke betalt ({amount})",
 	"—" : "—",
 	"€%s remaining" : "€%s tilbage",
-	"⚠️ Over Budget" : "⚠️ Over budget",
+	"⚠️ Over Budget" : "⚠️ Over budgetgrænsen",
 	"✅ On Track" : "✅ På sporet",
 	"🏢 Internal Project" : "🏢 Internt projekt",
 	"🏢 Overhead Work" : "🏢 Overhead-arbejde",
@@ -1827,6 +1827,8 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 Fakturerbart arbejde",
 	"💻 Product Development" : "💻 Produktudvikling",
 	"📊 Why This Matters" : "📊 Hvorfor det betyder noget",
-	"🔬 Research & Development" : "🔬 Forskning og udvikling"
+	"🔬 Research & Development" : "🔬 Forskning og udvikling",
+	"%d skipped (already members or disabled)." : "%d sprunget over (allerede medlemmer eller deaktiverede).",
+	"No users were added — %d were skipped (already members or disabled)." : "Ingen brugere blev tilføjet — %d blev sprunget over (allerede medlemmer eller deaktiverede)."
 	}
 );

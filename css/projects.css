@@ -773,7 +773,7 @@ body {
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	background-color: var(--color-background-hover);
 	color: var(--color-main-text);
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	box-shadow: 0 1px 3px color-mix(in srgb, var(--color-main-text) 10%, transparent);
 }
 
@@ -849,7 +849,7 @@ body {
 .searchbox input {
 	width: 100%;
 	padding: 1.1rem 1.25rem;
-	border: 2px solid var(--color-border);
+	border: 2px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: var(--border-radius);
 	font-size: 1rem;
 	background-color: var(--color-main-background);
@@ -894,7 +894,7 @@ body {
 .filters-row select,
 .filters-row input[type="date"] {
 	padding: 0.75rem 1rem;
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: 8px;
 	font-size: var(--pc-fs-sm, 0.875rem);
 	line-height: 1.4;
@@ -904,9 +904,8 @@ body {
 	min-width: 0;
 	width: 100%;
 	min-height: var(--pc-touch-min, 44px);
-	appearance: none;
-	-webkit-appearance: none;
-	-moz-appearance: none;
+	/* No appearance:none here — it removes Chromium's calendar affordance
+	   with no painted replacement (learned class: dead affordance). */
 	box-sizing: border-box;
 }
 
@@ -970,7 +969,7 @@ body[dir="rtl"] .filters-row select {
 
 .date-picker-input {
 	padding: 0.75rem 2.5rem 0.75rem 1rem;
-	border: 2px solid var(--color-border);
+	border: 2px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: var(--border-radius);
 	font-size: 0.95rem;
 	background-color: var(--color-main-background);
@@ -1056,7 +1055,7 @@ body[dir="rtl"] .filters-row select {
 .action-item.action-item--danger {
 	color: var(--pc-danger-ink, var(--color-error-text, var(--color-error)));
 	background: var(--pc-tint-danger, var(--color-background-hover));
-	border: 1.5px solid color-mix(in srgb, var(--pc-danger-ink, var(--color-error-text, var(--color-error))) 55%, var(--pc-border, var(--color-border)));
+	border: 1.5px solid color-mix(in srgb, var(--pc-danger-ink, var(--color-error-text, var(--color-error))) 55%, var(--pc-border, var(--pc-form-border)));
 }
 
 .action-item.delete-project-btn:hover,
@@ -1227,24 +1226,24 @@ body[dir="rtl"] .filters-row select {
 /* Budget Status Row Highlighting */
 .grid tbody tr.budget-status-warning {
 	background-color: var(--color-warning-light);
-	border-left: 4px solid var(--color-warning);
+	border-left: 4px solid var(--color-element-warning);
 }
 
 .grid tbody tr.budget-status-warning:hover {
-	background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+	background-color: var(--color-warning-hover, var(--color-warning-light));
 	transform: translateY(-1px);
-	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-warning) 25%, transparent);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-element-warning) 25%, transparent);
 }
 
 .grid tbody tr.budget-status-critical {
 	background-color: var(--color-error-light);
-	border-left: 4px solid var(--color-error);
+	border-left: 4px solid var(--color-element-error);
 }
 
 .grid tbody tr.budget-status-critical:hover {
-	background-color: color-mix(in srgb, var(--color-error) 15%, transparent);
+	background-color: var(--color-error-hover, var(--color-error-light));
 	transform: translateY(-1px);
-	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-error) 25%, transparent);
+	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-element-error) 25%, transparent);
 }
 
 .grid tbody tr:last-child td {
@@ -1515,7 +1514,7 @@ body[dir="rtl"] .filters-row select {
 .projectcheck-dialog__footer .button:not(.primary) {
 	background: var(--color-main-background) !important;
 	color: var(--color-main-text) !important;
-	border: 1px solid var(--color-border-dark, var(--color-border)) !important;
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border-dark, var(--color-border)))) !important;
 }
 
 .projectcheck-dialog__footer .button.secondary:hover,
@@ -1829,7 +1828,7 @@ body[dir="rtl"] .filters-row select {
 	width: 100%;
 	padding: 0.75rem 0.85rem;
 	border-radius: var(--border-radius-large, 12px);
-	border: 1px solid color-mix(in srgb, var(--color-success) 35%, var(--color-border));
+	border: 1px solid color-mix(in srgb, var(--color-element-success) 35%, var(--color-border));
 	background: color-mix(in srgb, var(--color-success-light) 65%, var(--color-main-background));
 }
 
@@ -1847,7 +1846,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 .team-user-selected__clear {
-	border: 1px solid transparent;
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--color-main-background) 65%, transparent);
 	color: var(--color-primary-element);
@@ -1861,7 +1860,7 @@ body[dir="rtl"] .filters-row select {
 .team-user-selected__clear:hover,
 .team-user-selected__clear:focus-visible {
 	color: var(--color-primary-element-hover);
-	border-color: color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
+	border-color: color-mix(in srgb, var(--color-primary-element) 35%, var(--pc-form-border));
 	outline: 2px solid var(--color-primary-element);
 	outline-offset: 2px;
 }
@@ -2016,7 +2015,7 @@ body[dir="rtl"] .filters-row select {
 .action-item.action-item--danger {
 	color: var(--pc-danger-ink, var(--color-error-text, var(--color-error)));
 	background: var(--pc-tint-danger, var(--color-background-hover));
-	border: 1.5px solid color-mix(in srgb, var(--pc-danger-ink, var(--color-error-text, var(--color-error))) 55%, var(--pc-border, var(--color-border)));
+	border: 1.5px solid color-mix(in srgb, var(--pc-danger-ink, var(--color-error-text, var(--color-error))) 55%, var(--pc-border, var(--pc-form-border)));
 }
 
 .action-item.delete-project-btn:hover,
@@ -2047,13 +2046,13 @@ body[dir="rtl"] .filters-row select {
 .notice-success {
 	background-color: var(--color-success-light);
 	color: var(--color-main-text);
-	border-left-color: var(--color-success);
+	border-left-color: var(--color-element-success);
 }
 
 .notice-error {
 	background-color: var(--color-error-light);
 	color: var(--color-main-text);
-	border-left-color: var(--color-error);
+	border-left-color: var(--color-element-error);
 }
 
 .notice .icon {
@@ -2134,8 +2133,8 @@ body[dir="rtl"] .filters-row select {
 }
 
 .pc-quick-customer--ready {
-	border-color: color-mix(in srgb, var(--color-success, var(--color-primary-element)) 55%, var(--pc-border, var(--color-border)));
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-success, var(--color-primary-element)) 18%, transparent);
+	border-color: color-mix(in srgb, var(--color-element-success, var(--color-primary-element)) 55%, var(--pc-border, var(--color-border)));
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-element-success, var(--color-primary-element)) 18%, transparent);
 }
 
 .pc-quick-customer__label {
@@ -2199,7 +2198,7 @@ body[dir="rtl"] .filters-row select {
 	padding: var(--pc-space-3, 12px);
 	border-radius: var(--pc-radius-md, 12px);
 	background: var(--color-main-background);
-	border: 1px solid color-mix(in srgb, var(--color-success, var(--color-primary-element)) 40%, var(--pc-border, var(--color-border)));
+	border: 1px solid color-mix(in srgb, var(--color-element-success, var(--color-primary-element)) 40%, var(--pc-border, var(--color-border)));
 	box-sizing: border-box;
 }
 
@@ -2227,8 +2226,8 @@ body[dir="rtl"] .filters-row select {
 }
 
 #customer_id.pc-customer-selected {
-	border-color: color-mix(in srgb, var(--color-success, var(--color-primary-element)) 50%, var(--color-border));
-	outline: 2px solid color-mix(in srgb, var(--color-success, var(--color-primary-element)) 35%, transparent);
+	border-color: color-mix(in srgb, var(--color-element-success, var(--color-primary-element)) 50%, var(--color-border));
+	outline: 2px solid color-mix(in srgb, var(--color-element-success, var(--color-primary-element)) 35%, transparent);
 	outline-offset: 1px;
 }
 
@@ -2254,12 +2253,12 @@ body[dir="rtl"] .filters-row select {
 	}
 }
 
-.form-group input,
+.form-group input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='file'], [type='image'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color']),
 .form-group select,
 .form-group textarea {
 	width: 100%;
 	padding: 0.875rem 1rem;
-	border: 2px solid var(--color-border);
+	border: 2px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: var(--border-radius);
 	background-color: var(--color-main-background);
 	color: var(--color-main-text);
@@ -2268,7 +2267,7 @@ body[dir="rtl"] .filters-row select {
 	box-shadow: 0 1px 3px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 }
 
-.form-group input:focus,
+.form-group input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='file'], [type='image'], [type='submit'], [type='button'], [type='reset'], [type='range'], [type='color']):focus,
 .form-group select:focus,
 .form-group textarea:focus {
 	outline: none;
@@ -2715,7 +2714,7 @@ body[dir="rtl"] .filters-row select {
 .actions-grid .button.secondary {
 	background: var(--color-background-hover);
 	color: var(--color-main-text);
-	border-color: var(--color-border);
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 .actions-grid .button.secondary:hover {
@@ -3302,14 +3301,14 @@ body[dir="rtl"] .filters-row select {
 }
 
 .budget-progress-fill.warning {
-	background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover));
+	background: var(--color-element-warning);
 	margin-top: 0 !important;
 	padding: 0 !important;
 	background-color: transparent !important;
 }
 
 .budget-progress-fill.critical {
-	background: linear-gradient(90deg, var(--color-error), var(--color-error-dark));
+	background: var(--color-element-error);
 	margin-top: 0 !important;
 	padding: 0 !important;
 	background-color: transparent !important;
@@ -3859,7 +3858,7 @@ body[dir="rtl"] .filters-row select {
 .button:not(.primary) {
 	background: var(--color-background-hover);
 	color: var(--color-text);
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 .button:not(.primary):hover {
@@ -4598,7 +4597,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 .budget-progress-fill.warning {
-	background: linear-gradient(90deg, var(--color-warning) 0%, var(--color-warning) 100%);
+	background: linear-gradient(90deg, var(--color-element-warning) 0%, var(--color-element-warning) 100%);
 	border-radius: 3px 0 0 3px !important;
 	/* Override Nextcloud's global .warning class */
 	margin-top: 0 !important;
@@ -4607,7 +4606,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 .budget-progress-fill.critical {
-	background: linear-gradient(90deg, var(--color-error) 0%, var(--color-error) 100%);
+	background: linear-gradient(90deg, var(--color-element-error) 0%, var(--color-element-error) 100%);
 	border-radius: 3px 0 0 3px !important;
 	/* Override Nextcloud's global .critical class if it exists */
 	margin-top: 0 !important;
@@ -5091,6 +5090,7 @@ a.project-title,
 	align-items: center;
 	gap: 0.5rem;
 	min-width: 0;
+	min-height: 24px; /* WCAG 2.5.8 target size */
 	max-width: 100%;
 	text-decoration: underline;
 	text-underline-offset: 0.12em;
@@ -5106,6 +5106,9 @@ a.project-title,
 	max-width: 100%;
 	overflow-wrap: anywhere;
 	word-break: break-word;
+	display: inline-flex;
+	align-items: center;
+	min-height: 24px; /* WCAG 2.5.8 target size */
 }
 
 .project-title a:hover,
@@ -5243,14 +5246,14 @@ a.project-title:hover,
 
 /* Warning and critical states */
 .progress-fill.warning {
-	background: linear-gradient(90deg, var(--color-warning), var(--color-warning-hover));
+	background: var(--color-element-warning);
 	margin-top: 0 !important;
 	padding: 0 !important;
 	background-color: transparent !important;
 }
 
 .progress-fill.critical {
-	background: linear-gradient(90deg, var(--color-error), var(--color-error-dark));
+	background: var(--color-element-error);
 	margin-top: 0 !important;
 	padding: 0 !important;
 	background-color: transparent !important;
@@ -5356,7 +5359,7 @@ a.project-title:hover,
 
 .popup-close:hover,
 .popup-close:focus-visible {
-	background: var(--color-error);
+	background: var(--color-element-error);
 	color: var(--pc-text-on-strong, #fff);
 }
 
@@ -6299,11 +6302,11 @@ a.project-title:hover,
 }
 
 .productivity-card.billable {
-	border-left: 4px solid var(--color-success);
+	border-left: 4px solid var(--color-element-success);
 }
 
 .productivity-card.overhead {
-	border-left: 4px solid var(--color-warning);
+	border-left: 4px solid var(--color-element-warning);
 }
 
 .productivity-card .card-header {
@@ -6375,11 +6378,11 @@ a.project-title:hover,
 }
 
 .ratio-fill.billable {
-	background: linear-gradient(90deg, var(--color-success) 0%, var(--color-success-hover) 100%);
+	background: var(--color-element-success);
 }
 
 .ratio-fill.overhead {
-	background: linear-gradient(90deg, var(--color-warning) 0%, var(--color-warning-hover) 100%);
+	background: var(--color-element-warning);
 }
 
 .ratio-labels {
@@ -6397,13 +6400,13 @@ a.project-title:hover,
 .ratio-label.billable {
 	color: var(--color-main-text);
 	background: var(--color-success-light);
-	border: 1px solid color-mix(in srgb, var(--color-success) 28%, var(--color-border));
+	border: 1px solid color-mix(in srgb, var(--color-element-success) 28%, var(--color-border));
 }
 
 .ratio-label.overhead {
 	color: var(--color-main-text);
 	background: var(--color-warning-light);
-	border: 1px solid color-mix(in srgb, var(--color-warning) 28%, var(--color-border));
+	border: 1px solid color-mix(in srgb, var(--color-element-warning) 28%, var(--color-border));
 }
 
 .project-type-stats-container .year-header {
@@ -7366,16 +7369,21 @@ a.project-title:hover,
 	color: var(--pc-text-on-strong);
 }
 
+/* Semantic type badges are tonal: tint surface + AA `-text` ink (bare
+   `--color-*` fills were pale tints with white text — invisible on NC 30+) */
 .project-type-client {
 	background: var(--color-success);
+	color: var(--color-success-text);
 }
 
 .project-type-admin {
 	background: var(--color-warning);
+	color: var(--color-warning-text);
 }
 
 .project-type-sales {
 	background: var(--color-info);
+	color: var(--color-info-text);
 }
 
 .project-type-customer {
@@ -7384,6 +7392,7 @@ a.project-title:hover,
 
 .project-type-product {
 	background: var(--color-info);
+	color: var(--color-info-text);
 }
 
 .project-type-meeting {
@@ -7615,27 +7624,29 @@ a.project-title:hover,
 	line-height: 1.3;
 	min-height: 1.5rem;
 	border-radius: var(--pc-radius-pill, 999px);
-	border: 1px solid var(--color-border);
+	/* Pill boundary must stay visible: bare --color-border measured ~1.07:1 on
+	   main-background (invisible rim). --pc-form-border = maxcontrast token. */
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	background: var(--color-background-hover);
 	color: var(--color-main-text);
 	box-sizing: border-box;
 }
 
 .pc-badge--neutral {
-	border-color: var(--color-border);
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	background: var(--color-background-hover);
 	color: var(--color-main-text);
 }
 
 .pc-badge--info {
 	background: var(--pc-tint-info);
-	border-color: color-mix(in srgb, var(--color-primary-element) 42%, var(--color-border));
+	border-color: color-mix(in srgb, var(--color-primary-element) 60%, var(--pc-form-border, var(--color-border)));
 	color: var(--color-main-text);
 }
 
 .pc-badge--warning {
 	background: var(--pc-tint-warning);
-	border-color: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 42%, var(--color-border));
+	border-color: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 60%, var(--pc-form-border, var(--color-border)));
 	color: var(--color-main-text);
 }
 
@@ -7643,13 +7654,13 @@ a.project-title:hover,
 .pc-badge--danger,
 .pc-badge--error {
 	background: var(--pc-tint-danger);
-	border-color: color-mix(in srgb, var(--color-error-text, var(--color-error)) 42%, var(--color-border));
+	border-color: color-mix(in srgb, var(--color-error-text, var(--color-error)) 60%, var(--pc-form-border, var(--color-border)));
 	color: var(--color-main-text);
 }
 
 .pc-badge--success {
 	background: var(--pc-tint-success);
-	border-color: color-mix(in srgb, var(--color-success-text, var(--color-success)) 42%, var(--color-border));
+	border-color: color-mix(in srgb, var(--color-success-text, var(--color-success)) 60%, var(--pc-form-border, var(--color-border)));
 	color: var(--color-main-text);
 }
 
@@ -7737,7 +7748,7 @@ a.project-title:hover,
 
 #team-section #add-team-member-btn {
 	color: var(--color-primary-text, #fff);
-	border-color: color-mix(in srgb, var(--color-primary) 70%, var(--color-border));
+	border-color: color-mix(in srgb, var(--color-primary) 70%, var(--pc-form-border));
 }
 
 #team-section #add-team-member-btn:hover,
@@ -7882,7 +7893,7 @@ a.project-title:hover,
 .employee-assignments-form .form-error-text {
 	margin: 0;
 	font-size: 0.9rem;
-	color: var(--color-error);
+	color: var(--color-error-text);
 }
 
 .employee-assignments-form .form-error-text:empty {
@@ -7890,8 +7901,8 @@ a.project-title:hover,
 }
 
 #employee-project-assignments [aria-invalid="true"] {
-	border-color: var(--color-error);
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error) 22%, transparent);
+	border-color: var(--color-border-error, var(--color-element-error));
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-element-error) 22%, transparent);
 }
 
 #employee-project-assignments .team-members-list {
@@ -8323,9 +8334,9 @@ a.project-title:hover,
 	gap: var(--pc-space-3, 0.75rem);
 	margin: 0 0 var(--pc-space-4, 1rem);
 	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
-	border: 1px solid color-mix(in srgb, var(--color-warning, #e6a700) 45%, var(--color-border));
+	border: 1px solid color-mix(in srgb, var(--color-element-warning, #e6a700) 45%, var(--color-border));
 	border-radius: var(--pc-radius-md, 10px);
-	background: color-mix(in srgb, var(--color-warning, #e6a700) 12%, var(--color-main-background));
+	background: var(--color-warning, #fff4d6);
 }
 
 .pc-pricing-lock-notice__icon {
@@ -8336,7 +8347,7 @@ a.project-title:hover,
 	width: 1.5rem;
 	height: 1.5rem;
 	margin-top: 0.1rem;
-	color: var(--color-warning, #9a6700);
+	color: var(--color-warning-text, #9a6700);
 	font-size: 1.25rem;
 }
 
@@ -8423,8 +8434,8 @@ a.project-title:hover,
 	margin: 0 0 var(--pc-space-4, 1rem);
 	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
 	border-radius: var(--pc-radius-md, 10px);
-	border: 1px solid color-mix(in srgb, var(--color-error, #e94b3c) 45%, var(--color-border));
-	background: color-mix(in srgb, var(--color-error, #e94b3c) 12%, var(--color-main-background));
+	border: 1px solid color-mix(in srgb, var(--color-element-error, #e94b3c) 45%, var(--color-border));
+	background: var(--color-error, #ffe7e7);
 	outline: none;
 }
 
@@ -8462,16 +8473,16 @@ a.project-title:hover,
    mirrors #employee-project-assignments [aria-invalid] and the
    .form-error text styles from common/accessibility.css (WCAG 3.3.1). */
 #project-form [aria-invalid="true"] {
-	border-color: var(--color-error);
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error) 22%, transparent);
+	border-color: var(--color-border-error, var(--color-element-error));
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-element-error) 22%, transparent);
 }
 
 .pc-pricing-gate {
 	margin: 0 0 var(--pc-space-4, 1rem);
 	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
 	border-radius: var(--pc-radius-md, 10px);
-	border: 1px solid color-mix(in srgb, var(--color-warning, #e6a700) 45%, var(--color-border));
-	background: color-mix(in srgb, var(--color-warning, #e6a700) 12%, var(--color-main-background));
+	border: 1px solid color-mix(in srgb, var(--color-element-warning, #e6a700) 45%, var(--color-border));
+	background: var(--color-warning, #fff4d6);
 }
 
 .pc-pricing-gate[hidden] {
@@ -8479,8 +8490,8 @@ a.project-title:hover,
 }
 
 .pc-pricing-gate--blocking {
-	border-color: color-mix(in srgb, var(--color-error, #e94b3c) 50%, var(--color-border));
-	background: color-mix(in srgb, var(--color-error, #e94b3c) 10%, var(--color-main-background));
+	border-color: color-mix(in srgb, var(--color-element-error, #e94b3c) 50%, var(--color-border));
+	background: var(--color-error, #ffe7e7);
 }
 
 .pc-pricing-gate__title {
@@ -8657,7 +8668,7 @@ a.project-title:hover,
 	width: 1.35rem;
 	height: 1.35rem;
 	margin-top: 0.15rem;
-	border: 2px solid var(--color-border-dark, var(--color-border));
+	border: 2px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border-dark, var(--color-border))));
 	border-radius: 50%;
 	background: var(--color-main-background);
 }
@@ -8789,7 +8800,7 @@ a.project-title:hover,
 	gap: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
 	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
 	margin: 0 0 var(--pc-space-5, 1.5rem) 0;
-	border: 1px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 32%, var(--color-border, #e1e5eb));
+	border: 1px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 32%, var(--pc-form-border, #e1e5eb));
 	border-left: 4px solid var(--color-primary-element, #0082c9);
 	border-radius: var(--pc-radius-md, 12px);
 	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 6%, var(--color-main-background, #fff));
@@ -9183,7 +9194,7 @@ a.project-title:hover,
 }
 
 .pc-member-rate-current--missing {
-	color: var(--color-warning, #c98600);
+	color: var(--color-warning-text, #c98600);
 }
 
 .pc-member-rate__form {
@@ -9210,7 +9221,7 @@ a.project-title:hover,
 .pc-member-rate-error {
 	min-height: 1.25rem;
 	margin: 0;
-	color: var(--color-error);
+	color: var(--color-error-text);
 	font-size: var(--pc-fs-sm, 0.875rem);
 }
 
@@ -9220,7 +9231,7 @@ a.project-title:hover,
 
 .projectcheck-access-denied__icon {
 	margin-bottom: var(--pc-space-3, 0.75rem);
-	color: var(--color-warning, #c98600);
+	color: var(--color-warning-text, #c98600);
 }
 
 .projectcheck-access-denied__icon .pc-icon {
@@ -9364,8 +9375,8 @@ a.project-title:hover,
 }
 
 .pc-settlement-chip--open {
-	border-color: color-mix(in srgb, var(--color-warning, #eca700) 55%, var(--color-border));
-	background: color-mix(in srgb, var(--color-warning, #eca700) 12%, var(--color-main-background));
+	border-color: color-mix(in srgb, var(--color-element-warning, #eca700) 55%, var(--color-border));
+	background: var(--color-warning, #fff4d6);
 }
 
 .pc-settlement-chip--invoiced,
@@ -9375,8 +9386,8 @@ a.project-title:hover,
 }
 
 .pc-settlement-chip--paid {
-	border-color: color-mix(in srgb, var(--color-success, #46ba61) 55%, var(--color-border));
-	background: color-mix(in srgb, var(--color-success, #46ba61) 12%, var(--color-main-background));
+	border-color: color-mix(in srgb, var(--color-element-success, #46ba61) 55%, var(--color-border));
+	background: var(--color-success, #d8f3da);
 }
 
 .pc-settlement-chip--excluded,
@@ -9386,8 +9397,8 @@ a.project-title:hover,
 }
 
 .pc-settlement-chip--partial {
-	border-color: color-mix(in srgb, var(--color-warning, #eca700) 45%, var(--color-primary-element, #0082c9) 45%);
-	background: color-mix(in srgb, var(--color-warning, #eca700) 8%, var(--color-main-background));
+	border-color: color-mix(in srgb, var(--color-element-warning, #eca700) 45%, var(--color-primary-element, #0082c9) 45%);
+	background: var(--color-warning, #fff4d6);
 }
 
 /* Settlement summary strip (list pages + detail sections)
@@ -9983,11 +9994,11 @@ a.project-title:hover,
 }
 
 .pc-stl-progress__seg--paid {
-	background: var(--color-success);
+	background: var(--color-element-success);
 }
 
 .pc-stl-progress__seg--invoiced {
-	background: var(--color-warning);
+	background: var(--color-element-warning);
 }
 
 .pc-stl-progress__seg--open {
@@ -10022,11 +10033,11 @@ a.project-title:hover,
 }
 
 .pc-stl-progress__swatch--paid {
-	background: var(--color-success);
+	background: var(--color-element-success);
 }
 
 .pc-stl-progress__swatch--invoiced {
-	background: var(--color-warning);
+	background: var(--color-element-warning);
 }
 
 .pc-stl-progress__swatch--open {

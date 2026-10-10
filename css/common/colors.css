@@ -26,9 +26,12 @@ body[data-theme-dark-highcontrast] {
   --color-primary: var(--color-primary-element);
   --color-primary-hover: var(--color-primary-element-hover);
   --color-primary-active: var(--color-primary-element);
-  --color-primary-light: var(--color-primary-element-light, var(--color-background-dark));
+  /* NC <=29 compat: --color-primary-element-light was the pale primary surface;
+     NC 30+ calls it --color-primary-light (native, do not alias over it). */
+  --color-primary-element-light: var(--color-primary-light, color-mix(in srgb, var(--color-primary-element) 16%, var(--color-main-background)));
   --color-primary-lighter: var(--color-background-dark);
   --color-primary-text: var(--color-primary-element-text);
+  --color-primary-dark: var(--color-primary-element-hover);
 
   /* Secondary / neutral - from Nextcloud */
   --color-secondary: var(--color-background-dark);
@@ -41,31 +44,33 @@ body[data-theme-dark-highcontrast] {
   --color-accent-active: var(--color-primary-element-hover);
   --color-accent-light: var(--color-primary-element-light, var(--color-background-dark));
 
-  /* Semantic “light” surfaces: real tints (not plain --color-background-dark) so +text patterns stay AA */
+  /* Legacy semantic names (removed in NC 30): on NC 30+ `--color-*` IS the tinted
+     surface, so "-light" aliases the tint itself and "-dark" is the AA text token.
+     `-hover` is NC's darkened tint — safe on >=30 where it exists natively. */
   --color-success-hover: var(--color-success);
-  --color-success-light: color-mix(in srgb, var(--color-success) 14%, var(--color-main-background));
-  --color-success-dark: var(--color-success);
+  --color-success-light: var(--color-success);
+  --color-success-dark: var(--color-success-text);
 
   --color-warning-hover: var(--color-warning);
-  --color-warning-light: color-mix(in srgb, var(--color-warning) 14%, var(--color-main-background));
-  --color-warning-dark: var(--color-warning);
+  --color-warning-light: var(--color-warning);
+  --color-warning-dark: var(--color-warning-text);
 
   --color-error-hover: var(--color-error);
-  --color-error-light: color-mix(in srgb, var(--color-error) 12%, var(--color-main-background));
-  --color-error-dark: var(--color-error);
+  --color-error-light: var(--color-error);
+  --color-error-dark: var(--color-error-text);
 
   --color-info-hover: var(--color-info);
-  --color-info-light: color-mix(in srgb, var(--color-info) 12%, var(--color-main-background));
-  --color-info-dark: var(--color-info);
+  --color-info-light: var(--color-info);
+  --color-info-dark: var(--color-info-text);
 
   /**
-   * WCAG 2.1 AA: emphasis text on main / hover / card surfaces (avoids dark green on dark grey).
-   * Blends semantic hue toward --color-main-text so contrast tracks light and dark themes.
+   * WCAG 2.1 AA: emphasis text on main / hover / card surfaces. NC 30+ ships
+   * dedicated --color-*-text tokens that are AA-checked per theme — use them.
    */
-  --pc-emphasis-text-success: color-mix(in srgb, var(--color-success) 28%, var(--color-main-text) 72%);
-  --pc-emphasis-text-warning: color-mix(in srgb, var(--color-warning) 28%, var(--color-main-text) 72%);
-  --pc-emphasis-text-error: color-mix(in srgb, var(--color-error) 22%, var(--color-main-text) 78%);
-  --pc-emphasis-text-info: color-mix(in srgb, var(--color-info) 24%, var(--color-main-text) 76%);
+  --pc-emphasis-text-success: var(--color-success-text);
+  --pc-emphasis-text-warning: var(--color-warning-text);
+  --pc-emphasis-text-error: var(--color-error-text);
+  --pc-emphasis-text-info: var(--color-info-text);
 
   /* Nextcloud: text on primary / saturated action surfaces (replaces ad-hoc `white`) */
   --pc-text-on-strong: var(--color-primary-element-text);
@@ -83,14 +88,21 @@ body[data-theme-dark-highcontrast] {
   --color-text-tertiary: var(--color-text-lighter);
   --color-text-inverse: var(--color-primary-element-text);
   --color-text-muted: var(--color-text-lighter);
+  /* Legacy neutral names still referenced by a few components */
+  --color-text-dark: var(--color-main-text);
+  --color-text-disabled: var(--color-text-maxcontrast);
 
-  /* Borders */
-  --color-border: var(--color-border);
+  /* Borders — NOTE: never alias `--color-border` to itself here; a custom
+     property self-reference is invalid at computed-value time and would
+     poison every var(--color-border) in the subtree. */
   --color-border-secondary: var(--color-border);
+  --color-border-light: var(--color-border);
+  --color-border-muted: var(--color-border);
   --color-border-focus: var(--color-primary-element);
-  --color-border-error: var(--color-error);
-  --color-border-success: var(--color-success);
-  --color-border-warning: var(--color-warning);
+  /* NC 30+ defines --color-border-error/-success natively (element colors);
+     warning/info have no native border token — element is the border accent. */
+  --color-border-warning: var(--color-element-warning);
+  --color-border-info: var(--color-element-info);
 
   /* Shadows - use Nextcloud's if available */
   --color-shadow-light: var(--color-box-shadow, color-mix(in srgb, var(--color-main-text) 10%, transparent));
@@ -126,13 +138,13 @@ body[data-theme-dark-highcontrast] {
 
   /* Form */
   --color-form-background: var(--color-main-background);
-  --color-form-border: var(--color-border);
+  --color-form-border: var(--pc-form-border);
   --color-form-border-focus: var(--color-primary-element);
-  --color-form-border-error: var(--color-error);
-  --color-form-border-success: var(--color-success);
+  --color-form-border-error: var(--color-border-error, var(--color-element-error));
+  --color-form-border-success: var(--color-border-success, var(--color-element-success));
   --color-form-label: var(--color-main-text);
   --color-form-help: var(--color-text-maxcontrast);
-  --color-form-required: var(--color-error);
+  --color-form-required: var(--color-error-text, var(--color-error));
 
   /* Table */
   --color-table-background: var(--color-main-background);
@@ -223,9 +235,10 @@ body[data-theme-dark-highcontrast] {
 .border-primary { border-color: var(--color-primary-element); }
 .border-secondary { border-color: var(--color-border); }
 .border-focus { border-color: var(--color-primary-element); }
-.border-error { border-color: var(--color-error); }
-.border-success { border-color: var(--color-success); }
-.border-warning { border-color: var(--color-warning); }
+.border-error { border-color: var(--color-border-error, var(--color-element-error)); }
+.border-success { border-color: var(--color-border-success, var(--color-element-success)); }
+.border-warning { border-color: var(--color-element-warning); }
+.border-info { border-color: var(--color-element-info); }
 
 .text-status-online { color: var(--pc-emphasis-text-success); }
 .text-status-offline { color: var(--color-text-lighter); }
@@ -253,8 +266,8 @@ body[data-theme-dark-highcontrast] {
 .bg-form { background-color: var(--color-main-background); }
 .border-form { border-color: var(--color-border); }
 .border-form-focus:focus { border-color: var(--color-primary-element); }
-.border-form-error { border-color: var(--color-error); }
-.border-form-success { border-color: var(--color-success); }
+.border-form-error { border-color: var(--color-border-error, var(--color-element-error)); }
+.border-form-success { border-color: var(--color-border-success, var(--color-element-success)); }
 .text-form-label { color: var(--color-main-text); }
 .text-form-help { color: var(--color-text-maxcontrast); }
 .text-form-required { color: var(--pc-emphasis-text-error); }
@@ -287,8 +300,8 @@ body[data-theme-dark-highcontrast] {
 .bg-button-secondary { background-color: var(--color-background-dark); }
 .bg-button-secondary-hover:hover { background-color: var(--color-background-hover); }
 .text-button-secondary { color: var(--color-main-text); }
-.bg-button-danger { background-color: var(--color-error); }
-.bg-button-danger-hover:hover { background-color: var(--color-error); }
+.bg-button-danger { background-color: var(--color-button-danger); }
+.bg-button-danger-hover:hover { background-color: var(--color-button-danger-hover); }
 .text-button-danger { color: var(--color-primary-element-text); }
 
 .text-loading-spinner { color: var(--color-primary-element); }
@@ -310,9 +323,9 @@ body[data-theme-dark-highcontrast] {
 .hover\:text-info:hover { color: var(--pc-emphasis-text-info); }
 
 .focus\:border-primary:focus { border-color: var(--color-primary-element); }
-.focus\:border-error:focus { border-color: var(--color-error); }
-.focus\:border-success:focus { border-color: var(--color-success); }
-.focus\:border-warning:focus { border-color: var(--color-warning); }
+.focus\:border-error:focus { border-color: var(--color-border-error, var(--color-element-error)); }
+.focus\:border-success:focus { border-color: var(--color-border-success, var(--color-element-success)); }
+.focus\:border-warning:focus { border-color: var(--color-element-warning); }
 
 /* Reduced motion support - WCAG */
 @media (prefers-reduced-motion: reduce) {

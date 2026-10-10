@@ -74,7 +74,7 @@
 .form-control {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--border-radius);
     background: var(--color-main-background);
     color: var(--color-text);
@@ -85,11 +85,11 @@
 .form-control:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px var(--color-primary-alpha-20);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-element) 20%, transparent);
 }
 
 .form-control.has-error {
-    border-color: var(--color-error);
+    border-color: var(--color-border-error, var(--color-element-error));
 }
 
 .error-message {
@@ -99,7 +99,7 @@
 }
 
 .form-group.has-error .form-control {
-    border-color: var(--color-error);
+    border-color: var(--color-border-error, var(--color-element-error));
 }
 
 .form-actions {
@@ -133,7 +133,7 @@
 .btn-secondary {
     background: var(--color-background-dark);
     color: var(--color-text);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 .btn-secondary:hover {
@@ -177,7 +177,7 @@
     cursor: pointer;
     accent-color: var(--color-primary-element);
     background-color: var(--color-main-background);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: 3px;
     color-scheme: inherit;
     appearance: auto;
@@ -192,7 +192,7 @@
 .admin-warning {
     background: var(--color-warning);
     color: var(--color-warning-text);
-    border: 1px solid var(--color-warning-border);
+    border: 1px solid var(--color-border-warning, var(--color-element-warning));
     border-radius: var(--border-radius);
     padding: 15px;
     margin-bottom: 20px;
@@ -354,7 +354,7 @@ section.projectcheck-panel,
     box-sizing: border-box;
     accent-color: var(--color-primary-element);
     background-color: var(--color-main-background);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: 3px;
     color-scheme: inherit;
     appearance: auto;
@@ -376,7 +376,7 @@ section.projectcheck-panel,
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: 8px;
     background-color: var(--color-main-background);
     color: var(--color-main-text);
@@ -610,7 +610,7 @@ body[dir="rtl"] .projectcheck-select {
 
 .projectcheck-callout--caution {
     background: var(--color-background-dark, rgba(0, 0, 0, 0.04));
-    border: 1px solid var(--color-warning, #a37200);
+    border: 1px solid var(--color-element-warning, #a37200);
     color: var(--color-main-text);
 }
 
@@ -684,7 +684,7 @@ body[dir="rtl"] .projectcheck-select {
 .projectcheck-form-group--with-picker {
     margin-top: 1.25rem;
     padding: 0.9rem 1rem 1rem;
-    border: 1px solid var(--pc-border, var(--color-border));
+    border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--pc-radius-sm, var(--border-radius, 6px));
     background: var(--pc-bg-soft, var(--color-main-background));
 }
@@ -816,7 +816,7 @@ body[dir="rtl"] .projectcheck-select {
     /* px floor: 2.75rem rem-collapses below 44px (ds_chrome). */
     min-height: var(--pc-touch-min, 44px);
     padding: 0.45rem 0.65rem;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--border-radius, 6px);
     background: var(--color-main-background);
     color: var(--color-main-text);
@@ -898,7 +898,7 @@ body[dir="rtl"] .projectcheck-select {
 
 .projectcheck-entity-picker__manual {
     margin-top: 0.25rem;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
     border-radius: var(--border-radius, 6px);
     background: var(--color-main-background);
     padding: 0;

@@ -268,14 +268,14 @@
 #app-content .notice-success,
 #app-content-wrapper > .notice-success {
 	background: var(--pc-tint-success);
-	border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-border));
+	border-color: color-mix(in srgb, var(--color-element-success) 35%, var(--color-border));
 	border-inline-start: 4px solid var(--color-success-text, var(--color-success));
 }
 
 #app-content .notice-error,
 #app-content-wrapper > .notice-error {
 	background: var(--pc-tint-danger);
-	border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-border));
+	border-color: color-mix(in srgb, var(--color-element-error) 35%, var(--color-border));
 	border-inline-start: 4px solid var(--color-error-text, var(--color-error));
 }
 

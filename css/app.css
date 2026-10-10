@@ -5,3 +5,38 @@
  */
 @import url('common/tokens.css');
 @import url('common/colors.css');
+
+/*
+ * Global control-border baseline (WCAG 1.4.11 ≥3:1 vs background).
+ * NC core styles every button/input with the faint `--color-border-dark`
+ * (core/css/inputs.scss), and its `button:disabled` rule (0,2,1) outranks
+ * page-level `.button.secondary` (0,2,0) — disabled controls silently lose
+ * their frame. This rule only re-colours borders that are already drawn;
+ * borderless icon buttons (border-style none) are unaffected. State classes
+ * (.has-error, aria-invalid, .form-input--*) keep their semantic border.
+ */
+#app-content.pc-app input:not([type='range'], [type='hidden'], [type='color'], [type='file'], [type='image'], [type='submit'], [type='button'], [type='reset'], .form-input--error, .form-input--success, .form-input--warning, .has-error, [aria-invalid='true'], .has-error *),
+#app-content.pc-app select:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
+#app-content.pc-app textarea:not(.form-input--error, .form-input--success, .form-input--warning, [aria-invalid='true'], .has-error *),
+#app-content.pc-app button:not(.primary, .error, .warning, .success, .danger, .button-vue),
+#app-content.pc-app .button:not(.primary, .error, .warning, .success, .danger) {
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
+}
+
+/*
+ * aria-invalid catch-all (WCAG 3.3.1 / 1.4.1): the baseline above skips
+ * [aria-invalid] controls, so the error frame must come from a semantic
+ * rule — but the scoped ones only cover #project-form,
+ * #employee-project-assignments and .projectcheck-personal__input. Every
+ * OTHER surface that sets the attribute (add-member dialog, member-rate
+ * rows, employee rate form) got NO painted border at all (learned class:
+ * aria-invalid without painted border, no-rule variant). Scope on
+ * #content.app-projectcheck — dialogs mount as siblings of #app-content,
+ * outside the baseline's reach. Same paint as the scoped rules.
+ */
+#content.app-projectcheck input[aria-invalid='true'],
+#content.app-projectcheck select[aria-invalid='true'],
+#content.app-projectcheck textarea[aria-invalid='true'] {
+	border-color: var(--color-border-error, var(--color-element-error));
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-element-error) 22%, transparent);
+}

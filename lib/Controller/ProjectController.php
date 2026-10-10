@@ -356,8 +356,12 @@ class ProjectController extends Controller
 			],
 			'createUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.create'),
 			'projectsUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index'),
-			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => 'PROJECT_ID']),
-			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.edit', ['id' => 'PROJECT_ID']),
+			// Placeholder URLs for str_replace('PROJECT_ID', $id, …): the {id}
+			// route params are pinned \d+ (strict-id class), so a literal
+			// 'PROJECT_ID' can no longer be passed to linkToRoute — append the
+			// placeholder to the collection URL instead (same final shape).
+			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index') . '/PROJECT_ID',
+			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index') . '/PROJECT_ID/edit',
 			'customersUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.index'),
 			'timeEntriesUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index'),
 			'dashboardUrl' => $this->urlGenerator->linkToRoute('projectcheck.dashboard.index'),

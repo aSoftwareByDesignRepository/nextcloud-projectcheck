@@ -34,11 +34,21 @@ final class IntegrationFixtureCleanup
 		'Saved Without Hours Field ',
 		'OCC After Race ', 'OCC Cust ', 'OCC First Writer ', 'OCC Proj ',
 		'Stale Hours ', 'Stale Hours Proj ',
+		'PC Par Cust ', 'PC Par Proj ',
 		'PC_UPGRADE_BACKUP_IT',
 	];
 
 	/** client_request_id prefixes used by mobile idempotency fixtures. */
-	private const IDEM_PREFIXES = ['stl-create-', 'idem-'];
+	private const IDEM_PREFIXES = ['stl-create-', 'idem-', 'par-'];
+
+	/**
+	 * Fixture user-id prefixes (IntegrationTestUsers::ensure constants).
+	 * Child rows keyed by uid survive a name-marker purge when a test dies
+	 * before its named parent exists — the uid leg closes that hole.
+	 */
+	private const UID_PREFIXES = [
+		'pc_gate_', 'pc_book_', 'pc_mob_', 'pc_stl_', 'pc_par_', 'pc_upgrade_',
+	];
 
 	public static function purge(IDBConnection $db): void
 	{
@@ -84,6 +94,21 @@ final class IntegrationFixtureCleanup
 		$idemParams = [];
 		$idemWhere = self::likeAny('client_request_id', self::IDEM_PREFIXES, $idemParams);
 		$db->executeStatement("DELETE FROM oc_pc_mob_idem WHERE $idemWhere", $idemParams);
+
+		// Fixture-uid leg: rows keyed by uid, independent of name markers.
+		$uidParams = [];
+		$uidWhere = self::likeAny('user_id', self::UID_PREFIXES, $uidParams);
+		$db->executeStatement("DELETE FROM oc_pc_time_entries WHERE $uidWhere", $uidParams);
+		$db->executeStatement("DELETE FROM oc_pc_project_members WHERE $uidWhere", $uidParams);
+		$db->executeStatement("DELETE FROM oc_pc_emp_rates WHERE $uidWhere", $uidParams);
+		$db->executeStatement("DELETE FROM oc_pc_pm_rates WHERE $uidWhere", $uidParams);
+		$db->executeStatement("DELETE FROM oc_pc_mob_idem WHERE $uidWhere", $uidParams);
+		$seatParams = [];
+		$seatWhere = self::likeAny('uid', self::UID_PREFIXES, $seatParams);
+		$db->executeStatement("DELETE FROM oc_pc_mobile_seats WHERE $seatWhere", $seatParams);
+		$snapParams = [];
+		$snapWhere = self::likeAny('user_id', self::UID_PREFIXES, $snapParams);
+		$db->executeStatement("DELETE FROM oc_pc_user_account_snapshots WHERE $snapWhere", $snapParams);
 
 		// Activity rows whose subjectparams embed fixture names.
 		$actParams = [];

@@ -153,7 +153,7 @@
 
 /* Performance statistics specific styling */
 .stats-row.performance .stat-card {
-    border-left: 4px solid var(--color-success);
+    border-left: 4px solid var(--color-element-success);
 }
 
 .stats-row.performance .stat-card:hover {

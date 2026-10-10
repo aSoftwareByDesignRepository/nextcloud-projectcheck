@@ -442,18 +442,18 @@ template {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-400);
+  background: var(--color-border-maxcontrast);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-500);
+  background: var(--color-text-maxcontrast);
 }
 
-/* Firefox Scrollbar */
+/* Firefox Scrollbar — matches NC's own --color-scrollbar pair */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-gray-400) var(--color-background-secondary);
+  scrollbar-color: var(--color-border-maxcontrast) var(--color-background-secondary);
 }
 
 /* Print Styles */
@@ -586,7 +586,7 @@ select {
   line-height: inherit;
   color: inherit;
   background-color: var(--color-background);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
   border-radius: var(--radius-base);
   padding: var(--space-2) var(--space-3);
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
@@ -797,17 +797,21 @@ progress::-webkit-progress-bar {
 }
 
 meter::-webkit-meter-optimum-value,
-progress::-webkit-progress-value {
-  background-color: var(--color-success);
+progress::-webkit-progress-value,
+meter::-moz-meter-optimum,
+progress::-moz-progress-bar {
+  background-color: var(--color-element-success);
   border-radius: var(--radius-full);
 }
 
-meter::-webkit-meter-suboptimum-value {
-  background-color: var(--color-warning);
+meter::-webkit-meter-suboptimum-value,
+meter::-moz-meter-suboptimum {
+  background-color: var(--color-element-warning);
   border-radius: var(--radius-full);
 }
 
-meter::-webkit-meter-even-less-good-value {
-  background-color: var(--color-error);
+meter::-webkit-meter-even-less-good-value,
+meter::-moz-meter-sub-suboptimum {
+  background-color: var(--color-element-error);
   border-radius: var(--radius-full);
 }

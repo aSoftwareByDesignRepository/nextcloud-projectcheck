@@ -162,7 +162,7 @@
 	width: 100%;
 	min-height: var(--pc-touch-min, 44px);
 	padding: var(--pc-space-3, 12px) var(--pc-space-4, 16px) var(--pc-space-3, 12px) 2.75rem;
-	border: 1px solid var(--pc-border, var(--color-border));
+	border: 1px solid var(--pc-form-border, var(--pc-border, var(--color-border)));
 	border-radius: var(--pc-radius-sm, 8px);
 	font-size: var(--pc-fs-md, 1rem);
 	background: var(--color-main-background);
@@ -354,6 +354,14 @@
 	text-decoration: underline;
 	text-underline-offset: 0.15em;
 	text-decoration-thickness: from-font;
+	/* WCAG 2.5.8: ≥24px hit target. Vertical padding grows the clickable
+	 * border box while keeping the element inline, so long names can still
+	 * wrap mid-anchor and row height stays unchanged (line-height does not
+	 * affect an inline box's border rect, and vertical padding does not push
+	 * line boxes apart). */
+	padding-block: 4px;
+	box-decoration-break: clone;
+	-webkit-box-decoration-break: clone;
 }
 
 #app-content.pc-app .pc-data-table tbody td a:not(.button):not(.action-item):hover,

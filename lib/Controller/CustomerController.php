@@ -291,7 +291,10 @@ class CustomerController extends Controller
 		// Get common stats for the sidebar
 		$stats = $this->getCommonStats($this->projectService, $this->customerService, $this->timeEntryService, $userId);
 
-		$deleteUrl = $this->urlGenerator->linkToRoute('projectcheck.customer.deletePost', ['id' => 'CUSTOMER_ID']);
+		// Placeholder appended to the collection URL — {id} is pinned \d+
+		// so linkToRoute rejects a literal 'CUSTOMER_ID' (strict-id class).
+		$customerIndexUrl = $this->urlGenerator->linkToRoute('projectcheck.customer.index');
+		$deleteUrl = $customerIndexUrl . '/CUSTOMER_ID/delete';
 
 		$response = new TemplateResponse($this->appName, 'customers', [
 			'customers' => $customers,
@@ -307,8 +310,8 @@ class CustomerController extends Controller
 			'userId' => $userId,
 			'stats' => array_merge($stats, $comprehensiveStats),
 			'urlGenerator' => $this->urlGenerator,
-			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.show', ['id' => 'CUSTOMER_ID']),
-			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.customer.edit', ['id' => 'CUSTOMER_ID']),
+			'showUrl' => $customerIndexUrl . '/CUSTOMER_ID',
+			'editUrl' => $customerIndexUrl . '/CUSTOMER_ID/edit',
 			'deleteUrl' => $deleteUrl,
 			'canCreateCustomer' => $this->projectService->canUserCreateCustomer($userId),
 			'editableCustomerIds' => $editableCustomerIds,

@@ -545,6 +545,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\AppFramework\Utility\ITimeFactory::class),
 				$c->query(\OCP\IUserManager::class),
 				$c->query(ILockingProvider::class),
+				$c->query(\Psr\Log\LoggerInterface::class),
 			);
 		});
 		$context->registerService(\OCA\ProjectCheck\Controller\LicenseController::class, function ($c) {

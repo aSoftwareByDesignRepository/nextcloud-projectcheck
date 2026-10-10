@@ -27,23 +27,23 @@
 
 /* Semantic tint (status on border, text stays main for readability) */
 .toastify.toast.toast-error {
-  background: color-mix(in srgb, var(--color-error) 8%, var(--color-main-background)) !important;
-  border-color: color-mix(in srgb, var(--color-error) 35%, var(--color-border));
-  border-inline-start: 4px solid var(--color-error);
+  background: var(--color-error) !important;
+  border-color: color-mix(in srgb, var(--color-element-error) 35%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1rem - 1px);
 }
 
 .toastify.toast.toast-success {
-  background: color-mix(in srgb, var(--color-success) 8%, var(--color-main-background)) !important;
-  border-color: color-mix(in srgb, var(--color-success) 30%, var(--color-border));
-  border-inline-start: 4px solid var(--color-success);
+  background: var(--color-success) !important;
+  border-color: color-mix(in srgb, var(--color-element-success) 30%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1rem - 1px);
 }
 
 .toastify.toast.toast-warning {
-  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-main-background)) !important;
-  border-color: color-mix(in srgb, var(--color-warning) 35%, var(--color-border));
-  border-inline-start: 4px solid var(--color-warning);
+  background: var(--color-warning) !important;
+  border-color: color-mix(in srgb, var(--color-element-warning) 35%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-warning);
   padding-inline-start: calc(1rem - 1px);
 }
 
@@ -105,30 +105,30 @@
 }
 
 .toast--success {
-  background: color-mix(in srgb, var(--color-success) 7%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-success) 28%, var(--color-border));
-  border-inline-start: 4px solid var(--color-success);
+  background: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-element-success) 28%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(0.75rem - 1px);
 }
 
 .toast--error {
-  background: color-mix(in srgb, var(--color-error) 7%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-error) 30%, var(--color-border));
-  border-inline-start: 4px solid var(--color-error);
+  background: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-element-error) 30%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(0.75rem - 1px);
 }
 
 .toast--warning {
-  background: color-mix(in srgb, var(--color-warning) 9%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-  border-inline-start: 4px solid var(--color-warning);
+  background: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-warning);
   padding-inline-start: calc(0.75rem - 1px);
 }
 
 .toast--info {
-  background: color-mix(in srgb, var(--color-info) 7%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-info) 30%, var(--color-border));
-  border-inline-start: 4px solid var(--color-info);
+  background: var(--color-info);
+  border-color: color-mix(in srgb, var(--color-element-info) 30%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-info);
   padding-inline-start: calc(0.75rem - 1px);
 }
 
@@ -232,23 +232,23 @@
 }
 
 .persistent-notification--error {
-  border-inline-start: 4px solid var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 6%, var(--color-main-background));
+  border-inline-start: 4px solid var(--color-element-error);
+  background: var(--color-error);
 }
 
 .persistent-notification--success {
-  border-inline-start: 4px solid var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 6%, var(--color-main-background));
+  border-inline-start: 4px solid var(--color-element-success);
+  background: var(--color-success);
 }
 
 .persistent-notification--warning {
-  border-inline-start: 4px solid var(--color-warning);
-  background: color-mix(in srgb, var(--color-warning) 8%, var(--color-main-background));
+  border-inline-start: 4px solid var(--color-element-warning);
+  background: var(--color-warning);
 }
 
 .persistent-notification--info {
-  border-inline-start: 4px solid var(--color-info);
-  background: color-mix(in srgb, var(--color-info) 6%, var(--color-main-background));
+  border-inline-start: 4px solid var(--color-element-info);
+  background: var(--color-info);
 }
 
 .persistent-notification__icon {
@@ -335,25 +335,25 @@
 
 .settings-message.success,
 #settings-message.settings-message.success {
-  background: color-mix(in srgb, var(--color-success) 8%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-success) 32%, var(--color-border));
-  border-inline-start: 4px solid var(--color-success);
+  background: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-element-success) 32%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
 .settings-message.error,
 #settings-message.settings-message.error {
-  background: color-mix(in srgb, var(--color-error) 8%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-error) 32%, var(--color-border));
-  border-inline-start: 4px solid var(--color-error);
+  background: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-element-error) 32%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
 .settings-message.warning,
 #settings-message.settings-message.warning {
-  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-  border-inline-start: 4px solid var(--color-warning);
+  background: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-warning);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
@@ -372,23 +372,23 @@
 }
 
 #app-content .form-message.success {
-  background: color-mix(in srgb, var(--color-success) 8%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-success) 30%, var(--color-border));
-  border-inline-start: 4px solid var(--color-success);
+  background: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-element-success) 30%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
 #app-content .form-message.error {
-  background: color-mix(in srgb, var(--color-error) 8%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-error) 32%, var(--color-border));
-  border-inline-start: 4px solid var(--color-error);
+  background: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-element-error) 32%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
 #app-content .form-message.info {
-  background: color-mix(in srgb, var(--color-info) 6%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-info) 28%, var(--color-border));
-  border-inline-start: 4px solid var(--color-info);
+  background: var(--color-info);
+  border-color: color-mix(in srgb, var(--color-element-info) 28%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-info);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
@@ -410,23 +410,23 @@
 }
 
 #app-content .notice-info {
-  background: color-mix(in srgb, var(--color-info) 5%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-info) 25%, var(--color-border));
-  border-inline-start: 4px solid var(--color-info);
+  background: var(--color-info);
+  border-color: color-mix(in srgb, var(--color-element-info) 25%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-info);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
 #app-content .notice-success {
-  background: color-mix(in srgb, var(--color-success) 7%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-success) 28%, var(--color-border));
-  border-inline-start: 4px solid var(--color-success);
+  background: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-element-success) 28%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
 #app-content .notice-error {
-  background: color-mix(in srgb, var(--color-error) 7%, var(--color-main-background));
-  border-color: color-mix(in srgb, var(--color-error) 30%, var(--color-border));
-  border-inline-start: 4px solid var(--color-error);
+  background: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-element-error) 30%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
@@ -526,25 +526,25 @@
 }
 
 .pc-budget-impact.budget-impact-info.ok {
-  border-color: color-mix(in srgb, var(--color-success) 32%, var(--color-border));
-  border-inline-start: 4px solid var(--color-success);
+  border-color: color-mix(in srgb, var(--color-element-success) 32%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1rem - 1px);
-  background: color-mix(in srgb, var(--color-success) 6%, var(--color-main-background));
+  background: var(--color-success);
 }
 
 .pc-budget-impact.budget-impact-info.warning {
-  border-color: color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-  border-inline-start: 4px solid var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-warning);
   padding-inline-start: calc(1rem - 1px);
-  background: color-mix(in srgb, var(--color-warning) 8%, var(--color-main-background));
+  background: var(--color-warning);
 }
 
 .pc-budget-impact.budget-impact-info.critical,
 .pc-budget-impact.budget-impact-info.over-budget {
-  border-color: color-mix(in srgb, var(--color-error) 32%, var(--color-border));
-  border-inline-start: 4px solid var(--color-error);
+  border-color: color-mix(in srgb, var(--color-element-error) 32%, var(--color-border));
+  border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1rem - 1px);
-  background: color-mix(in srgb, var(--color-error) 7%, var(--color-main-background));
+  background: var(--color-error);
 }
 
 /* -------------------------------------------------------------------------- */

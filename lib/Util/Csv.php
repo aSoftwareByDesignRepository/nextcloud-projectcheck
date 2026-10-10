@@ -26,17 +26,16 @@ final class Csv
 	/**
 	 * Neutralize spreadsheet formulas in exported text fields.
 	 *
-	 * Without this, values starting with =,+,-,@ (or a leading tab/CR that
-	 * some spreadsheet parsers skip before formula detection) can execute
-	 * formulas when opened in spreadsheet tools (CSV injection).
+	 * Without this, values starting with =,+,-,@ (or a leading tab/CR/LF/VT
+	 * that some spreadsheet parsers skip before formula detection) can
+	 * execute formulas when opened in spreadsheet tools (CSV injection).
 	 */
 	public static function sanitizeField(string $value): string
 	{
 		if ($value === '') {
 			return $value;
 		}
-		$first = $value[0];
-		if ($first === '=' || $first === '+' || $first === '-' || $first === '@' || $first === "\t" || $first === "\r") {
+		if (in_array($value[0], ['=', '+', '-', '@', "\t", "\r", "\n", "\x0B"], true)) {
 			return "'" . $value;
 		}
 		return $value;

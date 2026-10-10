@@ -26,6 +26,8 @@ class CsvTest extends TestCase {
 			'at' => ['@calc', "'@calc"],
 			'tab' => ["\t=1+1", "'\t=1+1"],
 			'carriage return' => ["\r=1+1", "'\r=1+1"],
+			'line feed' => ["\n=1+1", "'\n=1+1"],
+			'vertical tab' => ["\x0B=1+1", "'\x0B=1+1"],
 			'plain text untouched' => ['Project Alpha', 'Project Alpha'],
 			'empty untouched' => ['', ''],
 			'inner formula untouched' => ['a=b', 'a=b'],

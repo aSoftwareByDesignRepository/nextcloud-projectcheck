@@ -94,7 +94,7 @@
 	font: inherit;
 	color: var(--color-text);
 	background: var(--color-main-background);
-	border: 2px solid var(--color-border-dark, var(--color-border));
+	border: 2px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border-dark, var(--color-border))));
 	border-radius: var(--border-radius);
 	transition: border-color 120ms ease, box-shadow 120ms ease;
 }
@@ -107,12 +107,12 @@
 
 .projectcheck-personal__input.has-error,
 .projectcheck-personal__input[aria-invalid="true"] {
-	border-color: var(--color-error);
+	border-color: var(--color-border-error, var(--color-element-error));
 }
 
 .projectcheck-personal__input.has-error:focus,
 .projectcheck-personal__input[aria-invalid="true"]:focus {
-	box-shadow: 0 0 0 2px var(--color-error);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-element-error) 30%, transparent);
 }
 
 .projectcheck-personal__suffix {
@@ -137,7 +137,7 @@
 .projectcheck-personal__error {
 	margin: 6px 0 0;
 	font-size: 0.85rem;
-	color: var(--color-error);
+	color: var(--color-error-text);
 	line-height: 1.4;
 }
 
@@ -204,9 +204,9 @@
 }
 
 .projectcheck-personal__status.is-success {
-	color: var(--color-success, var(--color-primary-element));
+	color: var(--color-success-text);
 }
 
 .projectcheck-personal__status.is-error {
-	color: var(--color-error);
+	color: var(--color-error-text);
 }

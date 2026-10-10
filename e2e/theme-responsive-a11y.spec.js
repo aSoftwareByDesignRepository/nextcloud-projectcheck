@@ -28,6 +28,7 @@ const routes = [
 	{ id: 'projects', url: process.env.E2E_PROJECTS_URL || `${BASE}/index.php/apps/projectcheck/projects` },
 	{ id: 'customers', url: `${BASE}/index.php/apps/projectcheck/customers` },
 	{ id: 'timeEntries', url: `${BASE}/index.php/apps/projectcheck/time-entries` },
+	{ id: 'timeEntryCreate', url: process.env.E2E_TIME_ENTRY_CREATE_URL || `${BASE}/index.php/apps/projectcheck/time-entries/create` },
 	{ id: 'settings', url: process.env.E2E_PROJECTCHECK_SETTINGS_URL || `${BASE}/index.php/apps/projectcheck/settings` },
 ];
 
@@ -151,6 +152,76 @@ async function assertChromeTouchTargets(page) {
 }
 
 /**
+ * WCAG 1.4.11 for every rendered app control: visible border ≥1px and ≥3:1
+ * against the effective painted background. Catches regressions to
+ * var(--color-border) on inputs/selects/textareas/buttons in any theme.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} label
+ */
+async function assertVisibleControlBorders(page, label) {
+	const result = await page.evaluate(() => {
+		const parse = (rgb) => (rgb.match(/[\d.]+/g) || []).map(Number);
+		const lum = ([r, g, b]) => {
+			const f = (c) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+			return 0.2126 * f(r / 255) + 0.7152 * f(g / 255) + 0.0722 * f(b / 255);
+		};
+		const effectiveBg = (el) => {
+			let node = el;
+			while (node && node !== document.documentElement) {
+				const bg = getComputedStyle(node).backgroundColor;
+				const p = parse(bg);
+				if (p.length >= 4 && p[3] < 1) { node = node.parentElement; continue; }
+				if (bg === 'rgba(0, 0, 0, 0)') { node = node.parentElement; continue; }
+				return bg;
+			}
+			return getComputedStyle(document.body).backgroundColor;
+		};
+		const scope = document.querySelector('#app-content.pc-app, #app-content');
+		const nodes = [...scope.querySelectorAll([
+			'input[type="text"]', 'input[type="search"]', 'input[type="date"]',
+			'input[type="number"]', 'input[type="email"]', 'input[type="password"]',
+			'input[type="time"]', 'input[type="url"]', 'input[type="checkbox"]',
+			'input[type="radio"]', 'select', 'textarea',
+			'.button.secondary', '.btn-secondary', '.pc-nav-toggle',
+		].join(', '))].slice(0, 120);
+		const weak = [];
+		for (const el of nodes) {
+			const cs = getComputedStyle(el);
+			if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+			// Visually-hidden fields are clipped for screen readers only.
+			if (el.closest('.visually-hidden, .sr-only, [hidden]') || cs.clipPath !== 'none' || cs.clip !== 'auto') continue;
+			const rect = el.getBoundingClientRect();
+			if (rect.width === 0 && rect.height === 0) continue;
+			if (rect.width <= 2 && rect.height <= 2) continue;
+			// Native-appearance checkbox/radio widgets ignore author borders
+			// (appearance:auto paints UA chrome); only custom ones are ours.
+			const type = el.getAttribute('type');
+			if ((type === 'checkbox' || type === 'radio') && cs.appearance !== 'none') continue;
+			const w = parseFloat(cs.borderTopWidth);
+			const bg = effectiveBg(el);
+			const b = lum(parse(cs.borderTopColor));
+			const g = lum(parse(bg));
+			const ratio = (Math.max(b, g) + 0.05) / (Math.min(b, g) + 0.05);
+			if (w < 1 || ratio < 3) {
+				const id = el.id ? `#${el.id}` : '';
+				weak.push({
+					el: `${el.tagName.toLowerCase()}${id}.${String(el.className).split(' ').slice(0, 2).join('.')}`,
+					border: cs.borderTopColor,
+					w,
+					bg,
+					ratio: Math.round(ratio * 100) / 100,
+				});
+			}
+		}
+		return { ok: weak.length === 0, weak, checked: nodes.length };
+	});
+	expect(
+		result.ok,
+		`weak/missing control borders at ${label} (${result.checked} checked):\n${JSON.stringify(result.weak.slice(0, 20), null, 2)}`,
+	).toBeTruthy();
+}
+
+/**
  * @param {import('@playwright/test').Page} page
  * @param {string} label
  */
@@ -205,6 +276,7 @@ test.describe('ProjectCheck theme × viewport a11y matrix', () => {
 				}
 				await page.setViewportSize({ width: 1280, height: 800 });
 				await assertChromeTouchTargets(page);
+			await assertVisibleControlBorders(page, `${theme}/${route.id}@1280`);
 				for (const viewport of axeViewports) {
 					await page.setViewportSize(viewport);
 					await dismissOpenAppNavigation(page);

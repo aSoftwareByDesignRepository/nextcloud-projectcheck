@@ -116,10 +116,6 @@
   body {
     --color-primary: var(--color-primary-element);
     --color-primary-hover: var(--color-primary-element-hover);
-    --color-error: var(--color-error);
-    --color-success: var(--color-success);
-    --color-warning: var(--color-warning);
-    --color-border: var(--color-border);
     --color-text: var(--color-main-text);
     --color-background: var(--color-main-background);
     --color-background-secondary: var(--color-background-dark);
@@ -130,10 +126,6 @@
   body[data-theme-dark] {
     --color-primary: var(--color-primary-element);
     --color-primary-hover: var(--color-primary-element-hover);
-    --color-error: var(--color-error);
-    --color-success: var(--color-success);
-    --color-warning: var(--color-warning);
-    --color-border: var(--color-border);
     --color-text: var(--color-main-text);
     --color-background: var(--color-main-background);
     --color-background-secondary: var(--color-background-dark);
@@ -203,7 +195,7 @@
 
 .form-input--error:focus {
   border-color: var(--color-border-error);
-  box-shadow: 0 0 0 3px var(--color-error-light);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-element-error) 30%, transparent);
 }
 
 /* Success States */
@@ -214,7 +206,7 @@
 
 .form-input--success:focus {
   border-color: var(--color-border-success);
-  box-shadow: 0 0 0 3px var(--color-success-light);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-element-success) 30%, transparent);
 }
 
 /* Form Validation Messages */
@@ -226,7 +218,7 @@
 }
 
 .form-error {
-  border-inline-start: 3px solid var(--color-error, var(--color-border-error));
+  border-inline-start: 3px solid var(--color-border-error, var(--color-element-error));
   padding-inline-start: var(--space-2, 0.5rem);
 }
 
@@ -480,8 +472,8 @@
   left: 50%;
   transform: translateX(-50%);
   padding: var(--space-1) var(--space-2);
-  background-color: var(--color-gray-900);
-  color: var(--color-text-inverse);
+  background-color: var(--color-main-text);
+  color: var(--color-main-background);
   font-size: var(--font-size-xs);
   border-radius: var(--radius-base);
   white-space: nowrap;

@@ -1827,6 +1827,8 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 Abrechenbare Arbeit",
 	"💻 Product Development" : "💻 Produktentwicklung",
 	"📊 Why This Matters" : "📊 Warum das wichtig ist",
-	"🔬 Research & Development" : "🔬 Forschung & Entwicklung"
+	"🔬 Research & Development" : "🔬 Forschung & Entwicklung",
+	"%d skipped (already members or disabled)." : "%d übersprungen (bereits Mitglieder oder deaktiviert).",
+	"No users were added — %d were skipped (already members or disabled)." : "Es wurden keine Benutzer hinzugefügt — %d wurden übersprungen (bereits Mitglieder oder deaktiviert)."
 	}
 );

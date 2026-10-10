@@ -16,6 +16,7 @@ use OCP\IDBConnection;
 use OCP\IUserManager;
 use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
+use Psr\Log\LoggerInterface;
 
 /**
  * PC2 singleton license + named mobile seats (web UI stays ungated).
@@ -34,6 +35,7 @@ class LicenseService
 		private readonly ITimeFactory $timeFactory,
 		private readonly IUserManager $userManager,
 		private readonly ILockingProvider $locking,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -204,20 +206,29 @@ class LicenseService
 					throw $e;
 				}
 
+				$this->logger->info('projectcheck license applied', [
+					'actor' => $uid,
+					'customerId' => $state->getCustomerId(),
+					'issuedAt' => $state->getIssuedAt(),
+					'validUntil' => $state->getValidUntil(),
+					'mobileSeats' => $state->getMobileSeats(),
+				]);
+
 				return $this->status();
 			},
 		);
 	}
 
 	/** @return array<string, mixed> */
-	public function remove(): array
+	public function remove(string $actorUid): array
 	{
 		return $this->withExclusiveLock(
 			self::LICENSE_LOCK,
 			'license_busy',
 			'Another license update is in progress. Try again in a moment.',
 			409,
-			function (): array {
+			function () use ($actorUid): array {
+				$prior = $this->licenseState->findSingleton();
 				$this->db->beginTransaction();
 				try {
 					$this->seats->deleteAll();
@@ -227,6 +238,11 @@ class LicenseService
 					$this->db->rollBack();
 					throw $e;
 				}
+				$this->logger->info('projectcheck license removed', [
+					'actor' => $actorUid,
+					'previousCustomerId' => $prior?->getCustomerId(),
+					'previousValidUntil' => $prior?->getValidUntil(),
+				]);
 				return $this->status();
 			},
 		);
@@ -311,18 +327,26 @@ class LicenseService
 					}
 					throw new LicenseException('seat_assign_failed', 'Could not assign the seat.');
 				}
+				$this->logger->info('projectcheck mobile seat assigned', [
+					'actor' => $adminUid,
+					'seatUid' => $userId,
+				]);
 				return ['created' => true, 'seat' => $this->seatRow($seat)];
 			},
 		);
 	}
 
-	public function removeSeat(string $uid): void
+	public function removeSeat(string $actorUid, string $uid): void
 	{
 		$seat = $this->seats->findByUid($uid);
 		if ($seat === null) {
 			throw new LicenseException('seat_not_found', 'Seat not found.', 404);
 		}
 		$this->seats->delete($seat);
+		$this->logger->info('projectcheck mobile seat removed', [
+			'actor' => $actorUid,
+			'seatUid' => $uid,
+		]);
 	}
 
 	/**

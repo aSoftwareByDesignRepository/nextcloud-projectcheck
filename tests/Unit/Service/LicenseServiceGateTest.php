@@ -15,6 +15,7 @@ use OCP\IDBConnection;
 use OCP\IUserManager;
 use OCP\Lock\ILockingProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 final class LicenseServiceGateTest extends TestCase
 {
@@ -45,6 +46,7 @@ final class LicenseServiceGateTest extends TestCase
 			$time,
 			$this->createMock(IUserManager::class),
 			$this->createMock(ILockingProvider::class),
+			$this->createMock(LoggerInterface::class),
 		);
 	}
 
@@ -165,6 +167,11 @@ final class LicenseServiceGateTest extends TestCase
 		$seats->method('countAll')->willReturn(0);
 		$locking->method('acquireLock');
 		$locking->method('releaseLock');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('info')
+			->with('projectcheck license removed', self::callback(
+				static fn (array $ctx): bool => ($ctx['actor'] ?? null) === 'admin'
+			));
 
 		$svc = new LicenseService(
 			$db,
@@ -173,8 +180,9 @@ final class LicenseServiceGateTest extends TestCase
 			$time,
 			$this->createMock(IUserManager::class),
 			$locking,
+			$logger,
 		);
-		$status = $svc->remove();
+		$status = $svc->remove('admin');
 		self::assertNull($status['state']);
 		self::assertSame(0, $status['seats']['assigned']);
 	}

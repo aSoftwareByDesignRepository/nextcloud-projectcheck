@@ -581,9 +581,11 @@ const projectcheckToken = cfg.requestToken || '';
                 .then(res => {
                     if (res.d && res.d.success) {
                         const addedCount = Number((res.d && res.d.added_count) || 0);
+                        const skippedCount = Number((res.d && res.d.skipped_count) || 0);
                         const reloadUrl = new URL(window.location.href);
                         reloadUrl.searchParams.set('bulk_add_success', '1');
                         reloadUrl.searchParams.set('added_count', String(Number.isFinite(addedCount) ? Math.max(0, Math.trunc(addedCount)) : 0));
+                        reloadUrl.searchParams.set('skipped_count', String(Number.isFinite(skippedCount) ? Math.max(0, Math.trunc(skippedCount)) : 0));
                         window.location.href = reloadUrl.toString();
                         return;
                     }

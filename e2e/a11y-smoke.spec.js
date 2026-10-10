@@ -13,6 +13,7 @@ const URLS = {
 	projects: process.env.E2E_PROJECTS_URL || `${BASE}/index.php/apps/projectcheck/projects`,
 	customers: `${BASE}/index.php/apps/projectcheck/customers`,
 	timeEntries: `${BASE}/index.php/apps/projectcheck/time-entries`,
+	timeEntryCreate: process.env.E2E_TIME_ENTRY_CREATE_URL || `${BASE}/index.php/apps/projectcheck/time-entries/create`,
 	settings: process.env.E2E_PROJECTCHECK_SETTINGS_URL || `${BASE}/index.php/apps/projectcheck/settings`,
 };
 

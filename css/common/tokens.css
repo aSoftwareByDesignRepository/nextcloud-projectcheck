@@ -59,6 +59,9 @@ body {
 	--pc-muted: var(--color-text-maxcontrast);
 	--pc-border: color-mix(in srgb, var(--color-main-text) 12%, transparent);
 	--pc-border-strong: color-mix(in srgb, var(--color-main-text) 24%, transparent);
+	/* Form controls need NC's strong border — --color-border (#ededed light)
+	   is invisible on main-background. NC core inputs use border-maxcontrast. */
+	--pc-form-border: var(--color-border-maxcontrast, var(--pc-border-strong));
 
 	/* Mix INTO main-background (not transparent) so tints stay visible on every theme */
 	--pc-tint-success: color-mix(in srgb, var(--color-success-text, var(--color-success)) 18%, var(--color-main-background));
@@ -86,6 +89,12 @@ body {
 	--pc-danger-fill: var(--color-element-error, var(--color-error));
 	--pc-danger-on-fill: var(--color-primary-element-text, var(--color-primary-text));
 	--pc-danger-ink: var(--color-error-text, var(--color-error));
+
+	/* Sheen overlay on saturated fills (progress stripes). Must be
+	   always-light: --color-primary-element-text resolves to BLACK in
+	   dark themes, so mixing toward it darkens instead of lightening
+	   (learned class: theme-flipping tokens in color-mix targets). */
+	--pc-sheen-on-fill: color-mix(in srgb, #fff 15%, transparent);
 }
 
 /* Bright accent fills on dark themes fail AA with white/black ink — darken fill + use main-text. */
@@ -103,10 +112,33 @@ body[data-theme-dark-highcontrast] {
 	:root {
 		--pc-icon-stroke: 2.25;
 	}
+
+	/* BudgetCheck parity: strengthen borders under forced/high contrast */
+	body {
+		--pc-border: color-mix(in srgb, var(--color-main-text) 28%, transparent);
+		--pc-border-strong: color-mix(in srgb, var(--color-main-text) 40%, transparent);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	:root {
 		--pc-motion-safe: 0.01ms;
 	}
+}
+
+/* Long-name + short-name aliases referenced by admin-settings/get-the-app
+   (dead names silently fell back to literals — keep them real). */
+body {
+	--projectcheck-fs-sm: var(--pc-fs-sm);
+	--projectcheck-fs-md: var(--pc-fs-md);
+	--projectcheck-fs-lg: var(--pc-fs-lg);
+	--projectcheck-fs-xl: var(--pc-fs-xl);
+	--projectcheck-line-base: var(--pc-line-base);
+	--projectcheck-line-tight: var(--pc-line-tight);
+	--projectcheck-radius-md: var(--pc-radius-md);
+	--projectcheck-space-2: var(--pc-space-2);
+	--projectcheck-space-3: var(--pc-space-3);
+	--projectcheck-space-4: var(--pc-space-4);
+	--projectcheck-space-5: var(--pc-space-5);
+	--pc-touch: var(--pc-touch-min);
 }

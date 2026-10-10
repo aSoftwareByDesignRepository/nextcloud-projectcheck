@@ -23,12 +23,16 @@
 	}
 
 	var webroot = typeof OC.webroot === 'string' ? OC.webroot : '';
-	var scope = webroot + '/apps/projectcheck/';
 
 	var useIndexPhp = path.indexOf('/index.php/') !== -1 || path === '/index.php';
 	var scriptUrl = useIndexPhp
 		? webroot + '/index.php/apps/projectcheck/service-worker.js'
 		: webroot + '/apps/projectcheck/service-worker.js';
+
+	// Scope = the worker script's own directory — exactly the app's route root
+	// under both URL shapes (with/without index.php) and guaranteed to sit
+	// inside the Service-Worker-Allowed header emitted by the script route.
+	var scope = scriptUrl.replace(/service-worker\.js$/, '');
 
 	navigator.serviceWorker
 		.register(scriptUrl, { scope: scope, updateViaCache: 'none' })

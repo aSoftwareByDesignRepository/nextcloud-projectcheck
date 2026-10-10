@@ -403,7 +403,7 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		const customerName = `Bachus Customer ${Date.now()}`;
 		await page.locator('#pc-quick-customer-name').fill(customerName);
 		await page.locator('#pc-quick-customer-create').click();
-		await expect(page.locator('#pc-quick-customer-status')).toContainText(/added|hinzugefügt|selected|ausgewählt/i, { timeout: 15_000 });
+		await expect(page.locator('#pc-quick-customer-status')).toContainText(/added|hinzugefügt|selected|ausgewählt|tillagd|vald/i, { timeout: 15_000 });
 		await expect(page.locator('#pc-quick-customer-next')).toBeVisible();
 		await expect(page.locator('#pc-quick-customer-goto-save')).toBeVisible();
 		await expect(page.locator('#pc-quick-customer-goto-save')).not.toHaveClass(/primary/);
@@ -505,7 +505,7 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 		await expect(page.locator('#pc-form-tip, .pc-form-tip')).toBeVisible();
 		await expect(page.locator('.pc-create-workflow')).toHaveCount(0);
 		await expect(page.locator('#project-form .button.primary, #project-form button.primary')).toHaveCount(1);
-		await expect(page.locator('#pc-project-save')).toHaveText(/Save project|Projekt speichern/i);
+		await expect(page.locator('#pc-project-save')).toHaveText(/Save project|Projekt speichern|Spara projekt/i);
 		await expect(page.locator('#project-form [type="submit"]')).toHaveCount(1);
 		for (const id of ['#pc-advanced-classification', '#pc-advanced-pricing', '#pc-advanced-budget', '#pc-advanced-schedule', '#pc-more-about-project']) {
 			const panel = page.locator(id);
@@ -593,8 +593,8 @@ test.describe('ProjectCheck UX journeys (Bachus gauntlet)', () => {
 
 	test('nav groups expose Overview / Management structure', async ({ page }) => {
 		await gotoApp(page, URLS.dashboard);
-		await expect(page.locator('.pc-nav__group-title', { hasText: /overview|überblick/i })).toBeVisible();
-		await expect(page.locator('.pc-nav__name', { hasText: /dashboard|übersicht/i }).first()).toBeVisible();
+		await expect(page.locator('.pc-nav__group-title', { hasText: /overview|überblick|översikt/i })).toBeVisible();
+		await expect(page.locator('.pc-nav__name', { hasText: /dashboard|übersicht|instrumentpanel/i }).first()).toBeVisible();
 		await expect(page.locator('.pc-nav__link[href*="time-entries"]').first()).toBeVisible();
 	});
 });

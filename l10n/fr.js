@@ -272,7 +272,7 @@ OC.L10N.register(
 	"Check connection" : "Vérifier la connexion",
 	"Checking connection…" : "Vérification de la connexion…",
 	"Choose a user from the list" : "Choisissez un utilisateur dans la liste",
-	"Choose how billable hours are calculated. You can change this until someone logs time on the project." : "Choisissez comment les heures facturables sont calculées. You can change this until someone logs time on the project.",
+	"Choose how billable hours are calculated. You can change this until someone logs time on the project." : "Choisissez comment les heures facturables sont calculées. Vous pouvez modifier ce choix tant que personne n’a enregistré de temps sur le projet.",
 	"Choose how hours are priced" : "Choisissez le tarif des heures",
 	"Choose how to handle associated projects" : "Choisissez comment gérer les projets associés",
 	"Choose project files to upload" : "Choisissez les fichiers de projet à télécharger",
@@ -1827,6 +1827,8 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 Travaux facturables",
 	"💻 Product Development" : "💻 Développement de produits",
 	"📊 Why This Matters" : "📊 Pourquoi c'est important",
-	"🔬 Research & Development" : "🔬 Recherche & Développement"
+	"🔬 Research & Development" : "🔬 Recherche & Développement",
+	"%d skipped (already members or disabled)." : "%d ignorés (déjà membres ou désactivés).",
+	"No users were added — %d were skipped (already members or disabled)." : "Aucun utilisateur n’a été ajouté — %d ont été ignorés (déjà membres ou désactivés)."
 	}
 );

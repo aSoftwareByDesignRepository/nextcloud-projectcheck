@@ -615,15 +615,15 @@ body {
 .status-active {
 	background: var(--color-success-light);
 	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-success) 32%, var(--color-border));
-	border-inline-start: 3px solid var(--color-success);
+	border: 1px solid color-mix(in srgb, var(--color-element-success) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-element-success);
 }
 
 .status-on-hold {
 	background: var(--color-warning-light);
 	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-warning) 32%, var(--color-border));
-	border-inline-start: 3px solid var(--color-warning);
+	border: 1px solid color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
+	border-inline-start: 3px solid var(--color-element-warning);
 }
 
 .status-completed {
@@ -636,8 +636,8 @@ body {
 .status-cancelled {
 	background: var(--color-error-light);
 	color: var(--color-main-text);
-	border: 1px solid color-mix(in srgb, var(--color-error) 30%, var(--color-border));
-	border-inline-start: 3px solid var(--color-error);
+	border: 1px solid color-mix(in srgb, var(--color-element-error) 30%, var(--color-border));
+	border-inline-start: 3px solid var(--color-element-error);
 }
 
 .status-archived {
@@ -650,8 +650,8 @@ body {
 .duration {
 	display: inline-block;
 	padding: 0.25rem 0.75rem;
-	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-	color: var(--color-primary-text);
+	background: color-mix(in srgb, var(--color-primary-element) 10%, transparent);
+	color: var(--color-primary-element);
 	border-radius: 20px;
 	font-size: 0.75rem;
 	font-weight: 600;
@@ -809,7 +809,7 @@ body {
 .button.secondary {
 	background: var(--color-background-hover);
 	color: var(--color-main-text);
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 }
 
 .button.secondary:hover {
@@ -932,8 +932,8 @@ body {
 
 /* Specific styling for different project types */
 .project-type-icon[data-project-type="client"] {
-	background: color-mix(in srgb, var(--color-info) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
+	background: var(--color-info);
+	border-color: color-mix(in srgb, var(--color-element-info) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="admin"] {
@@ -942,8 +942,8 @@ body {
 }
 
 .project-type-icon[data-project-type="sales"] {
-	background: color-mix(in srgb, var(--color-success) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+	background: var(--color-success);
+	border-color: color-mix(in srgb, var(--color-element-success) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="customer"] {
@@ -952,13 +952,13 @@ body {
 }
 
 .project-type-icon[data-project-type="product"] {
-	background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+	background: var(--color-warning);
+	border-color: color-mix(in srgb, var(--color-element-warning) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="meeting"] {
-	background: color-mix(in srgb, var(--color-error) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+	background: var(--color-error);
+	border-color: color-mix(in srgb, var(--color-element-error) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="internal"] {
@@ -972,8 +972,8 @@ body {
 }
 
 .project-type-icon[data-project-type="training"] {
-	background: color-mix(in srgb, var(--color-success) 10%, transparent);
-	border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+	background: var(--color-success);
+	border-color: color-mix(in srgb, var(--color-element-success) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="other"] {

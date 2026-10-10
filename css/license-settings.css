@@ -45,13 +45,13 @@
 }
 
 .pc-license-feedback--success {
-	border-inline-start-color: var(--color-success);
+	border-inline-start-color: var(--color-element-success);
 
 	color: var(--pc-emphasis-text-success, var(--color-main-text));
 }
 
 .pc-license-feedback--error {
-	border-inline-start-color: var(--color-error);
+	border-inline-start-color: var(--color-element-error);
 	color: var(--pc-emphasis-text-error, var(--color-main-text));
 }
 
@@ -287,7 +287,7 @@
 
 .pc-license-seat-search__note--err {
 	color: var(--color-main-text);
-	border-inline-start: 3px solid var(--color-error);
+	border-inline-start: 3px solid var(--color-element-error);
 }
 
 .pc-license-seat-table-wrap {

@@ -64,8 +64,8 @@ class LicenseController extends Controller
 	public function remove(): JSONResponse
 	{
 		try {
-			$this->requireAppAdmin();
-			return new JSONResponse($this->license->remove());
+			$uid = $this->requireAppAdmin();
+			return new JSONResponse($this->license->remove($uid));
 		} catch (LicenseException $e) {
 			return $this->fromLicenseException($e);
 		}
@@ -107,8 +107,8 @@ class LicenseController extends Controller
 	public function removeSeat(string $uid): JSONResponse
 	{
 		try {
-			$this->requireAppAdmin();
-			$this->license->removeSeat($uid);
+			$actor = $this->requireAppAdmin();
+			$this->license->removeSeat($actor, $uid);
 			return new JSONResponse(['ok' => true, 'deleted' => true]);
 		} catch (LicenseException $e) {
 			return $this->fromLicenseException($e);

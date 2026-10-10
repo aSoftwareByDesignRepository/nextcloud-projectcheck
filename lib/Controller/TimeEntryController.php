@@ -335,7 +335,9 @@ class TimeEntryController extends Controller
 			'settleableProjectIds' => $settleableProjectIds,
 			'billingBulkUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.bulk'),
 			'billingPreviewUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.preview'),
-			'billingEntryUrl' => $this->urlGenerator->linkToRoute('projectcheck.settlement.changeEntryStatus', ['id' => 'ENTRY_ID']),
+			// Placeholder appended to the collection URL — {id} is pinned \d+
+			// so linkToRoute rejects a literal 'ENTRY_ID' (strict-id class).
+			'billingEntryUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index') . '/ENTRY_ID/billing',
 			'stats' => $stats,
 			'projectTypeStats' => $projectTypeStats,
 			'detailedProjectTypeStats' => $detailedProjectTypeStats,
@@ -349,10 +351,10 @@ class TimeEntryController extends Controller
 			],
 			'createUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.create'),
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index'),
-			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.show', ['id' => 'ENTRY_ID']),
-			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.edit', ['id' => 'ENTRY_ID']),
-			'deleteUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.deletePost', ['id' => 'ENTRY_ID']),
-			'projectShowUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.show', ['id' => 'PROJECT_ID']),
+			'showUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index') . '/ENTRY_ID',
+			'editUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index') . '/ENTRY_ID/edit',
+			'deleteUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index') . '/ENTRY_ID/delete',
+			'projectShowUrl' => $this->urlGenerator->linkToRoute('projectcheck.project.index') . '/PROJECT_ID',
 			'exportUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.export'),
 			'selectionSummary' => [
 				'hoursTotal' => $selectionHoursTotal,
@@ -434,7 +436,9 @@ class TimeEntryController extends Controller
 			'prefillDescription' => $prefillDescription,
 			'indexUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index'),
 			'storeUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.store'),
-			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.update', ['id' => 'TIME_ENTRY_ID']),
+			// Placeholder appended to the collection URL — {id} is pinned \d+
+			// so linkToRoute rejects a literal 'TIME_ENTRY_ID' (strict-id class).
+			'updateUrl' => $this->urlGenerator->linkToRoute('projectcheck.time_entry.index') . '/TIME_ENTRY_ID',
 		]);
 
 		return $this->configureCSP($response);

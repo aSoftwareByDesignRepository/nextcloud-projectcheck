@@ -223,7 +223,7 @@
   "Budget critical: Project {project} has reached {percentage}% of its budget": "Budgetkritisk: Projekt {project} har nått {percentage}%% av sin budget",
   "Budget exceeded: Project {project} has exceeded its budget": "Budget överskriden: Projekt {project} har överskridit sin budget",
   "Budget impact": "Budgetpåverkan",
-  "Budget is close to the limit. Please take action now.": "Budgeten är nära gränsen. Vänligen vidta åtgärder nu.",
+  "Budget is close to the limit. Please take action now.": "Budgeten närmar sig gränsen. Agera nu.",
   "Budget on track": "Budget i fas",
   "Budget too low for the specified hourly rate.": "Budgeten är för låg för den angivna timtaxan.",
   "Budget usage": "Budgetanvändning",
@@ -1017,7 +1017,7 @@
   "Only projects you can log time on are listed. Per-person priced projects require an active team membership with a personal hourly rate.": "Endast projekt där tid kan registreras listas. Personprissatta projekt kräver aktivt teammedlemskap med egen timtaxa.",
   "Only projects you can manage are shown.": "Endast projekt som kontot får hantera visas.",
   "Only projects you can manage are shown. Already assigned projects are hidden.": "Endast projekt som kontot får hantera visas. Redan tilldelade projekt döljs.",
-  "Only your data is shown": "Endast data för det aktuella kontot visas",
+  "Only your data is shown": "Endast data för ditt konto visas",
   "Open": "Öppen",
   "Open CRM company": "Öppna CRM-företag",
   "Open GitHub Issues": "Öppna GitHub Issues",
@@ -1582,10 +1582,10 @@
   "Too many export requests. Please wait a moment and try again.": "För många exportbegäranden. Vänta en stund och försök igen.",
   "Too many rows to export (limit %s). Narrow your filters and try again.": "För många rader att exportera (gräns %s). Begränsa filtren och försök igen.",
   "Total": "Totalt",
-  "Total Budget": "Total budget",
-  "Total Budget (%s)": "Total budget (%s)",
-  "Total Budget (€)": "Total budget (€)",
-  "Total Budget:": "Total budget:",
+  "Total Budget": "Totalt budgetbelopp",
+  "Total Budget (%s)": "Totalt budgetbelopp (%s)",
+  "Total Budget (€)": "Totalt budgetbelopp (€)",
+  "Total Budget:": "Totalt budgetbelopp:",
   "Total Cost": "Total kostnad",
   "Total Customers": "Totalt antal kunder",
   "Total Hours": "Totala timmar",
@@ -1832,6 +1832,8 @@
   "💰 Billable Work": "💰 Fakturerbart arbete",
   "💻 Product Development": "💻 Produktutveckling",
   "📊 Why This Matters": "📊 Varför det är viktigt",
-  "🔬 Research & Development": "🔬 Forskning och utveckling"
+  "🔬 Research & Development": "🔬 Forskning och utveckling",
+  "%d skipped (already members or disabled)." : "%d överhoppade (redan medlemmar eller inaktiverade).",
+  "No users were added — %d were skipped (already members or disabled)." : "Inga användare lades till — %d överhoppades (redan medlemmar eller inaktiverade)."
  }
 }

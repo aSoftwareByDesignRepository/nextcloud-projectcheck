@@ -195,7 +195,7 @@
   "Billable Work: Client projects, sales, customer support, product development, research & development, and other revenue-generating activities. Overhead Work: Administrative tasks, meetings, internal projects, and training activities that do not directly generate revenue.": "Trabalho Faturável: Projetos de clientes, vendas, suporte ao cliente, desenvolvimento de produtos, pesquisa e desenvolvimento e outras atividades geradoras de receita. Trabalhos indiretos: tarefas administrativas, reuniões, projetos internos e atividades de treinamento que não geram receita diretamente.",
   "Billable work": "Trabalho faturável",
   "Billable work earns money. Overhead keeps the business running. Compare both by year.": "O trabalho faturável gera receita. As horas internas mantêm a operação. Compare os dois por ano.",
-  "Breadcrumb": "Pão ralado",
+  "Breadcrumb": "Trilha de navegação",
   "Breadcrumb navigation": "Navegação estrutural",
   "Brief description of the project": "Breve descrição do projeto",
   "Brief description of the project (max 500 characters)": "Breve descrição do projeto (máximo 500 caracteres)",
@@ -1833,6 +1833,8 @@
   "💰 Billable Work": "💰 Trabalho Faturável",
   "💻 Product Development": "💻 Desenvolvimento de Produto",
   "📊 Why This Matters": "📊 Por que isso é importante",
-  "🔬 Research & Development": "🔬 Pesquisa e Desenvolvimento"
+  "🔬 Research & Development": "🔬 Pesquisa e Desenvolvimento",
+  "%d skipped (already members or disabled)." : "%d ignorados (já membros ou desativados).",
+  "No users were added — %d were skipped (already members or disabled)." : "Nenhum usuário foi adicionado — %d foram ignorados (já membros ou desativados)."
  }
 }
