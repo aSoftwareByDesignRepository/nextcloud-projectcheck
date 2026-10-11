@@ -891,7 +891,7 @@ OC.L10N.register(
 	"Must be no more than %s characters long" : "Może mieć maksymalnie %s znaków",
 	"My projects" : "Moje projekty",
 	"N\/A" : "b\/d",
-	"Name" : "Name",
+	"Name" : "Nazwa",
 	"Name, contact, and account details." : "Imię i nazwisko, kontakt i dane konta.",
 	"Name, contact, and other details for this customer." : "Nazwa, kontakt i inne dane tego klienta.",
 	"Name, customer, and what this project is about." : "Nazwa, klient i krótki opis projektu.",
