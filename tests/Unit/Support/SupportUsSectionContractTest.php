@@ -114,6 +114,7 @@ final class SupportUsSectionContractTest extends TestCase {
 			$root . '/css/app.css',
 			$root . '/css/admin-settings.css',
 			$root . '/css/admin-support-us.css',
+			$root . '/css/projectcheck.css',
 		];
 		$css = '';
 		foreach ($candidates as $path) {

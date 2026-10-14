@@ -219,7 +219,8 @@ class UpgradeBackupService
 			UpgradeBackupCatalog::existingBackupTables(fn (string $table): bool => $this->db->tableExists($table)),
 		);
 		$fkChecksDisabled = false;
-		$pgReplicaRole = false;
+		$pgTriggerTables = [];
+		$pgTriggersDisabled = [];
 		$sqliteFkDisabled = false;
 		$oracleConstraintsDeferred = false;
 
@@ -227,8 +228,12 @@ class UpgradeBackupService
 			$this->db->executeStatement('SET FOREIGN_KEY_CHECKS=0');
 			$fkChecksDisabled = true;
 		} elseif ($this->db->getDatabaseProvider() === IDBConnection::PLATFORM_POSTGRES) {
-			$this->db->executeStatement('SET session_replication_role = replica');
-			$pgReplicaRole = true;
+			// `SET session_replication_role = replica` requires superuser,
+			// which the Nextcloud DB user must not have in production.
+			// Per-table `DISABLE TRIGGER ALL` only needs table ownership and
+			// is transactional in PostgreSQL, so it runs inside the restore
+			// transaction and reverts automatically on rollback.
+			$pgTriggerTables = array_values(array_unique(array_merge($tablesToClear, $tables)));
 		} elseif ($this->db->getDatabaseProvider() === IDBConnection::PLATFORM_SQLITE) {
 			$this->db->executeStatement('PRAGMA foreign_keys = OFF');
 			$sqliteFkDisabled = true;
@@ -249,12 +254,34 @@ class UpgradeBackupService
 
 		$this->db->beginTransaction();
 		try {
+			foreach ($pgTriggerTables as $pgTable) {
+				try {
+					$this->db->executeStatement(
+						'ALTER TABLE ' . $this->db->quoteIdentifier($this->tablePrefix() . $pgTable) . ' DISABLE TRIGGER ALL',
+					);
+					$pgTriggersDisabled[] = $pgTable;
+				} catch (\Throwable $e) {
+					// best-effort: missing ownership (e.g. shared/schema-managed
+					// installs) must not abort the restore — the FK-safe order
+					// from sortedRestoreTables still keeps it consistent.
+					$this->logger->warning('ProjectCheck: PostgreSQL triggers could not be disabled for restore; relying on restore table order.', [
+						'exception' => $e,
+					]);
+				}
+			}
+
 			foreach (array_reverse($tablesToClear) as $table) {
 				$this->truncateTableIfExists($table);
 			}
 
 			foreach ($tables as $table) {
 				$this->restoreTableRows($folder, $table, $tableManifest[$table] ?? []);
+			}
+
+			foreach ($pgTriggersDisabled as $pgTable) {
+				$this->db->executeStatement(
+					'ALTER TABLE ' . $this->db->quoteIdentifier($this->tablePrefix() . $pgTable) . ' ENABLE TRIGGER ALL',
+				);
 			}
 
 			$this->restorePreferences($folder);
@@ -266,9 +293,6 @@ class UpgradeBackupService
 		} finally {
 			if ($fkChecksDisabled) {
 				$this->db->executeStatement('SET FOREIGN_KEY_CHECKS=1');
-			}
-			if ($pgReplicaRole) {
-				$this->db->executeStatement('SET session_replication_role = DEFAULT');
 			}
 			if ($sqliteFkDisabled) {
 				$this->db->executeStatement('PRAGMA foreign_keys = ON');
@@ -640,6 +664,15 @@ class UpgradeBackupService
 			}
 			$qb->executeStatement();
 		}
+	}
+
+	/**
+	 * Reads the table prefix from `IConfig` because the public
+	 * `IDBConnection` interface does not expose `getPrefix()`.
+	 */
+	private function tablePrefix(): string
+	{
+		return (string)$this->config->getSystemValue('dbtableprefix', 'oc_');
 	}
 
 	private function truncateTableIfExists(string $table): void
