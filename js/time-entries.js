@@ -98,8 +98,6 @@
 		excluded: t('projectcheck', 'Mark not billable'),
 	};
 
-	let settlementModalOpen = false;
-
 	function initSettlement() {
 		const bar = document.getElementById('pc-billing-bar');
 		const table = getTimeEntriesTable();
@@ -193,7 +191,7 @@
 	}
 
 	function openSettlementConfirm(target, triggerButton) {
-		if (settlementModalOpen || !BILLING_TARGET_LABELS[target]) {
+		if (settlementDialogOpen() || !BILLING_TARGET_LABELS[target]) {
 			return;
 		}
 		const selected = getSelectedEntries();
@@ -342,7 +340,7 @@
 	 * Only offered when Settlement filter is an exact status (server requires that).
 	 */
 	function openFilterModeConfirm(source, target, triggerButton) {
-		if (settlementModalOpen || !BILLING_TARGET_LABELS[target] || !source) {
+		if (settlementDialogOpen() || !BILLING_TARGET_LABELS[target] || !source) {
 			return;
 		}
 		if ((BILLING_TRANSITIONS[source] || []).indexOf(target) === -1) {
@@ -496,106 +494,29 @@
 	}
 
 	/**
-	 * Minimal accessible confirm dialog for settlement actions: role=dialog,
-	 * focus handled by ProjectCheckModalA11y when available, Escape closes.
+	 * Settlement confirms go through the shared accessible dialog
+	 * (common/confirm-dialog.js, loaded app-wide) — never window.confirm.
 	 */
+	function settlementDialogOpen() {
+		const dlg = window.ProjectCheckConfirmDialog;
+		return !!(dlg && typeof dlg.isOpen === 'function' && dlg.isOpen());
+	}
+
 	function showSettlementModal(options) {
-		settlementModalOpen = true;
-		if (options.trigger) {
-			options.trigger.disabled = true;
-		}
-
-		const root = document.createElement('div');
-		root.className = 'pc-settle-modal';
-		root.style.display = 'flex';
-
-		const backdrop = document.createElement('div');
-		backdrop.className = 'pc-settle-modal__backdrop';
-
-		const dialog = document.createElement('div');
-		dialog.className = 'pc-settle-modal__dialog';
-		dialog.setAttribute('role', 'dialog');
-		dialog.setAttribute('aria-modal', 'true');
-		dialog.setAttribute('aria-labelledby', 'pc-settle-modal-title');
-		dialog.setAttribute('aria-describedby', 'pc-settle-modal-message');
-
-		const title = document.createElement('h2');
-		title.id = 'pc-settle-modal-title';
-		title.className = 'pc-settle-modal__title';
-		title.textContent = options.title;
-
-		const message = document.createElement('p');
-		message.id = 'pc-settle-modal-message';
-		message.className = 'pc-settle-modal__message';
-		message.textContent = options.message;
-
-		const actions = document.createElement('div');
-		actions.className = 'pc-settle-modal__actions';
-
-		const cancelBtn = document.createElement('button');
-		cancelBtn.type = 'button';
-		cancelBtn.className = 'button secondary';
-		cancelBtn.textContent = t('projectcheck', 'Cancel');
-
-		const confirmBtn = document.createElement('button');
-		confirmBtn.type = 'button';
-		confirmBtn.className = 'button primary';
-		confirmBtn.textContent = options.confirmLabel;
-
-		actions.appendChild(cancelBtn);
-		actions.appendChild(confirmBtn);
-		dialog.appendChild(title);
-		dialog.appendChild(message);
-		dialog.appendChild(actions);
-		root.appendChild(backdrop);
-		root.appendChild(dialog);
-		document.body.appendChild(root);
-		document.body.style.overflow = 'hidden';
-
-		let a11yAttached = false;
-		let closed = false;
-
-		function closeModal() {
-			if (closed) {
-				return;
-			}
-			closed = true;
-			settlementModalOpen = false;
-			if (a11yAttached && window.ProjectCheckModalA11y && typeof window.ProjectCheckModalA11y.detach === 'function') {
-				window.ProjectCheckModalA11y.detach(dialog);
-			}
-			root.remove();
-			document.body.style.overflow = '';
-			if (options.trigger) {
+		const dlg = window.ProjectCheckConfirmDialog;
+		if (!dlg || typeof dlg.show !== 'function') {
+			if (options && options.trigger) {
 				options.trigger.disabled = false;
-				options.trigger.focus();
 			}
+			showMessage(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'), 'error');
+			return;
 		}
-
-		if (window.ProjectCheckModalA11y && typeof window.ProjectCheckModalA11y.attach === 'function') {
-			a11yAttached = window.ProjectCheckModalA11y.attach(dialog, {
-				dismissOnEscape: true,
-				dismissOnBackdrop: false,
-				initialFocus: cancelBtn,
-				onDismiss: closeModal,
-			}) !== null;
-		} else {
-			cancelBtn.focus();
-			dialog.addEventListener('keydown', function (e) {
-				if (e.key === 'Escape') {
-					closeModal();
-				}
-			});
-		}
-
-		backdrop.addEventListener('click', closeModal);
-		cancelBtn.addEventListener('click', closeModal);
-		confirmBtn.addEventListener('click', function () {
-			confirmBtn.disabled = true;
-			cancelBtn.disabled = true;
-			options.onConfirm(function () {
-				closeModal();
-			});
+		dlg.show({
+			title: options.title,
+			message: options.message,
+			confirmLabel: options.confirmLabel,
+			trigger: options.trigger,
+			onConfirm: options.onConfirm,
 		});
 	}
 

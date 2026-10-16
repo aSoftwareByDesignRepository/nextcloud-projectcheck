@@ -853,19 +853,39 @@
 		body.appendChild(err);
 	}
 
+	/**
+	 * Feedback without native dialogs (design-system §3.9): app toast module
+	 * first (loaded via navigation.php), then the screen-reader alert region.
+	 */
 	function showSuccessMessage(message) {
-		if (typeof OC !== 'undefined' && OC.Notification) {
-			OC.Notification.showTemporary(message);
-		} else {
-			alert(message);
+		if (window.ProjectCheckNotify && typeof window.ProjectCheckNotify.show === 'function') {
+			window.ProjectCheckNotify.show(message, 'success');
+			return;
+		}
+		const Messaging = window.ProjectCheckMessaging || window.ProjectControlMessaging;
+		if (Messaging && typeof Messaging.show === 'function') {
+			Messaging.show('success', message);
+			return;
+		}
+		const region = document.getElementById('pc-alert-region');
+		if (region) {
+			region.textContent = String(message);
 		}
 	}
 
 	function showErrorMessage(message) {
-		if (typeof OC !== 'undefined' && OC.Notification) {
-			OC.Notification.showTemporary(message, { type: 'error' });
-		} else {
-			alert(t('projectcheck', 'Error: %s').replace('%s', String(message)));
+		if (window.ProjectCheckNotify && typeof window.ProjectCheckNotify.error === 'function') {
+			window.ProjectCheckNotify.error(message);
+			return;
+		}
+		const Messaging = window.ProjectCheckMessaging || window.ProjectControlMessaging;
+		if (Messaging && typeof Messaging.error === 'function') {
+			Messaging.error(String(message));
+			return;
+		}
+		const region = document.getElementById('pc-alert-region');
+		if (region) {
+			region.textContent = t('projectcheck', 'Error: %s').replace('%s', String(message));
 		}
 	}
 

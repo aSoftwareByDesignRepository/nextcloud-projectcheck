@@ -78,23 +78,23 @@
 
 /* Two-class pattern from templates: .alert.alert-warning */
 .budget-alerts-section .alert.alert-warning {
-    background: var(--color-warning);
+    background: var(--pc-tint-warning, var(--color-background-dark));
     border: 1px solid color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
     border-inline-start: 4px solid var(--color-element-warning);
 }
 
 .budget-alerts-section .alert.alert-warning .alert-icon {
-    color: var(--pc-emphasis-text-warning, var(--color-warning));
+    color: var(--pc-emphasis-text-warning, var(--color-warning-text));
 }
 
 .budget-alerts-section .alert.alert-critical {
-    background: var(--color-error);
+    background: var(--pc-tint-danger, var(--color-background-dark));
     border: 1px solid color-mix(in srgb, var(--color-element-error) 32%, var(--color-border));
     border-inline-start: 4px solid var(--color-element-error);
 }
 
 .budget-alerts-section .alert.alert-critical .alert-icon {
-    color: var(--pc-emphasis-text-error, var(--color-error));
+    color: var(--pc-emphasis-text-error, var(--color-error-text));
 }
 
 .budget-alerts-section .alert.alert-none {
@@ -140,7 +140,7 @@
 
 /* Over budget styling */
 .breakdown-item.over-budget {
-    background-color: var(--color-error);
+    background-color: var(--pc-tint-danger, var(--color-background-dark));
     border: 1px solid var(--color-border-error, var(--color-element-error));
     border-radius: 4px;
     padding: 8px 12px;
@@ -494,19 +494,19 @@
 /* Variant borders use the semantic *-text tokens (>=3:1 vs page bg) — a
    pale element-mix rim fails WCAG 1.4.11 for state-bearing indicators. */
 .budget-status-badge.safe {
-    background: var(--color-success);
+    background: var(--pc-tint-success, var(--color-background-dark));
     border-color: var(--color-success-text, color-mix(in srgb, var(--color-element-success) 60%, var(--color-border)));
     color: var(--color-main-text);
 }
 
 .budget-status-badge.warning {
-    background: var(--color-warning);
+    background: var(--pc-tint-warning, var(--color-background-dark));
     border-color: var(--color-warning-text, color-mix(in srgb, var(--color-element-warning) 60%, var(--color-border)));
     color: var(--color-main-text);
 }
 
 .budget-status-badge.critical {
-    background: var(--color-error);
+    background: var(--pc-tint-danger, var(--color-background-dark));
     border-color: var(--color-error-text, color-mix(in srgb, var(--color-element-error) 60%, var(--color-border)));
     color: var(--color-main-text);
 }
@@ -673,12 +673,12 @@
 }
 
 .project-row.budget-status-warning {
-    background-color: var(--color-warning);
+    background-color: var(--pc-tint-warning, var(--color-background-dark));
     border-left-color: var(--color-element-warning);
 }
 
 .project-row.budget-status-critical {
-    background-color: var(--color-error);
+    background-color: var(--pc-tint-danger, var(--color-background-dark));
     border-left-color: var(--color-element-error);
 }
 

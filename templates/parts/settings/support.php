@@ -11,6 +11,6 @@ $supportUsCssPrefix = 'projectcheck';
 $supportUsBtnPrimaryClass = 'button primary';
 $supportUsBtnSecondaryClass = 'button';
 $supportUsLicenseUrl = $_['supportUsLicenseUrl']
-	?? (isset($urlGenerator) ? $urlGenerator->linkToRoute('projectcheck.app_config.settingsSection', ['section' => 'license']) . '#projectcheck-license' : '/index.php/apps/projectcheck/settings/license#projectcheck-license');
+	?? ($urlGenerator ?? \OCP\Server::get(\OCP\IURLGenerator::class))->linkToRoute('projectcheck.app_config.settingsSection', ['section' => 'license']) . '#projectcheck-license';
 $supportUsLinks = new \OCA\ProjectCheck\Support\SupportUsLinks('ProjectCheck', true, $supportUsLicenseUrl);
 include __DIR__ . '/../support-us-section.php';

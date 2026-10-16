@@ -53,7 +53,10 @@ $isGetTheApp = strpos($currentPage, '/get-the-app') !== false
 $canManageSettings = $canManageSettings ?? ($_['canManageSettings'] ?? $_['canManageOrg'] ?? false);
 $canManageOrganization = $canManageOrganization ?? ($_['canManageOrganization'] ?? $_['canManageOrg'] ?? false);
 $canAccessSettings = $canManageSettings || $canManageOrganization;
-$orgAppSettingsUrl = $orgAppSettingsUrl ?? ($_['orgAppSettingsUrl'] ?? '/index.php/apps/projectcheck/organization');
+// URL fallbacks go through linkToRoute — literal /index.php/apps/... paths lose
+// the webroot on subdir installs.
+$navUrlGenerator = \OCP\Server::get(\OCP\IURLGenerator::class);
+$orgAppSettingsUrl = $orgAppSettingsUrl ?? ($_['orgAppSettingsUrl'] ?? $navUrlGenerator->linkToRoute('projectcheck.app_config.orgIndex'));
 $settingsSection = (string)($settingsSection ?? $_['settingsSection'] ?? '');
 $settingsSectionLabels = (array)($settingsSectionLabels ?? $_['settingsSectionLabels'] ?? []);
 $settingsSectionUrls = (array)(($_['urls']['settingsSections'] ?? []) ?: ($_['settingsSections'] ?? []));
@@ -110,14 +113,14 @@ $groups = [
 				'label' => $l->t('Dashboard'),
 				'hint' => $l->t('Current status and priorities'),
 				'icon' => 'layout-grid',
-				'url' => $_['dashboardUrl'] ?? '/index.php/apps/projectcheck/dashboard',
+				'url' => $_['dashboardUrl'] ?? $navUrlGenerator->linkToRoute('projectcheck.dashboard.index'),
 			],
 			[
 				'id' => 'time-entries',
 				'label' => $l->t('Time Entries'),
 				'hint' => $l->t('Log and review tracked time'),
 				'icon' => 'clock',
-				'url' => $_['timeEntriesUrl'] ?? '/index.php/apps/projectcheck/time-entries',
+				'url' => $_['timeEntriesUrl'] ?? $navUrlGenerator->linkToRoute('projectcheck.time_entry.index'),
 			],
 		],
 	],
@@ -129,21 +132,21 @@ $groups = [
 				'label' => $l->t('Projects'),
 				'hint' => $l->t('Create and manage projects'),
 				'icon' => 'folder',
-				'url' => $_['projectsUrl'] ?? '/index.php/apps/projectcheck/projects',
+				'url' => $_['projectsUrl'] ?? $navUrlGenerator->linkToRoute('projectcheck.project.index'),
 			],
 			[
 				'id' => 'customers',
 				'label' => $l->t('Customers'),
 				'hint' => $l->t('Clients and organisations'),
 				'icon' => 'users',
-				'url' => $_['customersUrl'] ?? '/index.php/apps/projectcheck/customers',
+				'url' => $_['customersUrl'] ?? $navUrlGenerator->linkToRoute('projectcheck.customer.index'),
 			],
 			[
 				'id' => 'employees',
 				'label' => $l->t('Employees'),
 				'hint' => $l->t('Team members and rates'),
 				'icon' => 'user-check',
-				'url' => $_['employeesUrl'] ?? '/index.php/apps/projectcheck/employees',
+				'url' => $_['employeesUrl'] ?? $navUrlGenerator->linkToRoute('projectcheck.employee.index'),
 			],
 		],
 	],
@@ -173,7 +176,7 @@ $groups[] = [
 			'label' => $l->t('Get the App'),
 			'hint' => $l->t('Android app on Google Play'),
 			'icon' => 'smartphone',
-			'url' => $_['getTheAppUrl'] ?? ($_['urls']['getTheApp'] ?? '/index.php/apps/projectcheck/get-the-app'),
+			'url' => $_['getTheAppUrl'] ?? ($_['urls']['getTheApp'] ?? $navUrlGenerator->linkToRoute('projectcheck.page.getTheApp')),
 		],
 	],
 ];

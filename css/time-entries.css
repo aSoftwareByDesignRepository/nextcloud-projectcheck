@@ -229,7 +229,7 @@
 }
 
 .notice-success {
-	background: var(--color-success);
+	background: var(--pc-tint-success, var(--color-background-dark));
 	color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-element-success) 40%, transparent);
 }
@@ -239,7 +239,7 @@
 }
 
 .notice-error {
-	background: var(--color-error);
+	background: var(--pc-tint-danger, var(--color-background-dark));
 	color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-element-error) 40%, transparent);
 }
@@ -991,9 +991,9 @@ body[dir="rtl"] .filters-row select {
 .action-item.delete-entry-btn:focus-visible,
 .action-item.action-item--danger:hover,
 .action-item.action-item--danger:focus-visible {
-	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	background: var(--pc-danger-fill, var(--color-element-error));
 	color: var(--pc-danger-on-fill, var(--color-primary-element-text));
-	border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	border-color: var(--pc-danger-fill, var(--color-element-error));
 }
 
 .action-item.action-item--danger {

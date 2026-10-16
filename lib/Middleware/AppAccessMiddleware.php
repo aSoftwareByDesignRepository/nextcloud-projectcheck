@@ -124,7 +124,38 @@ class AppAccessMiddleware extends Middleware
 		}
 
 		if (!$exception instanceof AppAccessDeniedException) {
-			throw $exception;
+			// Unexpected exceptions on JSON-facing paths must still answer the
+			// app error envelope — a core HTML 500 breaks API/mobile clients
+			// (learned class api_500_html_envelope). Page GETs keep rethrowing
+			// to the core error page.
+			$fallbackPath = (string) ($this->request->getPathInfo() ?? '');
+			$fallbackAccept = strtolower((string) $this->request->getHeader('Accept'));
+			$fallbackJson = str_contains($fallbackPath, '/api/')
+				|| str_contains($fallbackPath, '/mobile/')
+				|| str_starts_with($fallbackPath, '/ocs/')
+				|| str_contains($fallbackAccept, 'application/json')
+				|| str_contains(strtolower((string) $this->request->getHeader('Content-Type')), 'application/json')
+				|| strtolower((string) $this->request->getHeader('X-Requested-With')) === 'xmlhttprequest'
+				|| $this->request->getMethod() !== 'GET';
+			if (!$fallbackJson) {
+				throw $exception;
+			}
+			$this->logger->error('projectcheck unhandled controller exception', [
+				'exception' => $exception,
+				'path' => $fallbackPath,
+			]);
+			if ($this->isMobilePath()) {
+				return $this->mobileEnvelope(
+					'server_error',
+					$l->t('Unexpected server error. Please try again.'),
+					Http::STATUS_INTERNAL_SERVER_ERROR,
+				);
+			}
+			return new JSONResponse([
+				'success' => false,
+				'error' => 'server_error',
+				'message' => $l->t('Unexpected server error. Please try again.'),
+			], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
 		$user = $this->userSession->getUser();

@@ -290,8 +290,8 @@
 .pc-list-panel .pc-data-table .action-item.action-item--danger:focus-visible,
 .pc-app--time-entries .time-entries-table .action-item.action-item--danger:hover,
 .pc-app--time-entries .time-entries-table .action-item.action-item--danger:focus-visible {
-	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
-	border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	background: var(--pc-danger-fill, var(--color-element-error));
+	border-color: var(--pc-danger-fill, var(--color-element-error));
 	color: var(--pc-danger-on-fill, var(--color-primary-element-text));
 }
 

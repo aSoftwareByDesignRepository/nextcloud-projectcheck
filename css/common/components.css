@@ -81,8 +81,8 @@
 }
 
 .btn--danger {
-  background-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
-  border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+  background-color: var(--pc-danger-fill, var(--color-element-error));
+  border-color: var(--pc-danger-fill, var(--color-element-error));
   color: var(--pc-danger-on-fill, var(--color-primary-element-text));
 }
 
@@ -96,24 +96,24 @@
    tinted surface + AA `--color-*-text` ink. A solid fill with white text
    fails AA for warning in several themes. */
 .btn--success {
-  background-color: var(--color-success);
+  background-color: var(--pc-tint-success, var(--color-background-dark));
   border-color: var(--color-success-hover, var(--color-success));
   color: var(--color-success-text);
 }
 
 .btn--success:hover:not(:disabled) {
-  background-color: var(--color-success-hover, var(--color-success));
+  background-color: var(--color-success-hover, var(--pc-tint-success, var(--color-background-dark)));
   border-color: var(--color-success-hover, var(--color-success));
 }
 
 .btn--warning {
-  background-color: var(--color-warning);
+  background-color: var(--pc-tint-warning, var(--color-background-dark));
   border-color: var(--color-warning-hover, var(--color-warning));
   color: var(--color-warning-text);
 }
 
 .btn--warning:hover:not(:disabled) {
-  background-color: var(--color-warning-hover, var(--color-warning));
+  background-color: var(--color-warning-hover, var(--pc-tint-warning, var(--color-background-dark)));
   border-color: var(--color-warning-hover, var(--color-warning));
 }
 

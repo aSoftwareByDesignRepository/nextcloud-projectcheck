@@ -66,7 +66,7 @@
 	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
 	border-radius: var(--pc-radius-md, 12px);
 	border: 1px solid var(--color-element-warning);
-	background: var(--color-warning);
+	background: var(--pc-tint-warning, var(--color-background-dark));
 	color: var(--color-main-text);
 }
 
@@ -466,7 +466,7 @@ body[data-theme-dark] .time-entry-form .form-group select,
 	padding: var(--pc-space-5, 1.25rem);
 	border: 1px solid color-mix(in srgb, var(--color-element-error) 45%, var(--color-border));
 	border-radius: var(--pc-radius-md, 12px);
-	background: var(--color-error);
+	background: var(--pc-tint-danger, var(--color-background-dark));
 }
 
 .pc-form-danger-zone__header {
@@ -506,9 +506,9 @@ body[data-theme-dark] .time-entry-form .form-group select,
 	gap: var(--pc-space-2, 0.5rem);
 	min-height: var(--pc-touch-min, 44px);
 	padding-inline: var(--pc-space-4, 1rem);
-	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	background: var(--pc-danger-fill, var(--color-element-error));
 	color: var(--pc-danger-on-fill, var(--color-primary-element-text));
-	border: 1px solid var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	border: 1px solid var(--pc-danger-fill, var(--color-element-error));
 	border-radius: var(--pc-radius-sm, 8px);
 }
 

@@ -24,8 +24,11 @@ Util::addStyle('projectcheck', 'common/filters');
 $pageId = 'time-entries';
 $pageTitle = $l->t('Time Entries');
 $pageHelp = $l->t('Track and manage your time entries');
+// Route URLs must go through linkToRoute — literal /index.php/apps/... paths
+// lose the webroot on subdir installs.
+$tplUrlGenerator = \OCP\Server::get(\OCP\IURLGenerator::class);
 ob_start(); ?>
-                    <a href="<?php p($_['createUrl'] ?? '/index.php/apps/projectcheck/time-entries/create'); ?>" class="button primary">
+                    <a href="<?php p($_['createUrl'] ?? $tplUrlGenerator->linkToRoute('projectcheck.time_entry.create')); ?>" class="button primary">
                         <span data-lucide="plus" class="lucide-icon" aria-hidden="true"></span>
                         <?php p($l->t('Add Time Entry')); ?>
                     </a>
@@ -339,7 +342,7 @@ include __DIR__ . '/common/page-start.php';
                     <h2><?php p($l->t('No time entries found')); ?></h2>
                     <p><?php p($l->t('Add your first time entry to get started!')); ?></p>
                     <div class="time-entries-empty__actions">
-                        <a href="<?php p($_['createUrl'] ?? '/index.php/apps/projectcheck/time-entries/create'); ?>" class="button primary">
+                        <a href="<?php p($_['createUrl'] ?? $tplUrlGenerator->linkToRoute('projectcheck.time_entry.create')); ?>" class="button primary">
                             <?php p($l->t('Add Time Entry')); ?>
                         </a>
                     </div>
@@ -457,7 +460,7 @@ include __DIR__ . '/common/page-start.php';
                                             || isset($accessibleProjectIdSet[(int) $timeEntry->getProjectId()]);
                                         ?>
                                         <?php if ($rowProjectLinkable): ?>
-                                            <a href="<?php p(str_replace('PROJECT_ID', $timeEntry->getProjectId(), $_['projectShowUrl'] ?? '/index.php/apps/projectcheck/projects/')); ?>">
+                                            <a href="<?php p(str_replace('PROJECT_ID', $timeEntry->getProjectId(), $_['projectShowUrl'] ?? ($tplUrlGenerator->linkToRoute('projectcheck.project.index') . '/PROJECT_ID'))); ?>">
                                                 <?php p($entry['projectName'] ?? $l->t('Unknown Project')); ?>
                                             </a>
                                         <?php else: ?>
@@ -490,14 +493,14 @@ include __DIR__ . '/common/page-start.php';
                                     </td>
                                     <td class="col-actions" data-label="<?php p($colActions); ?>">
                                         <div class="action-items" role="group" aria-label="<?php p($l->t('Time entry actions')); ?>">
-                                            <a href="<?php p(str_replace('ENTRY_ID', $timeEntry->getId(), $_['showUrl'] ?? '/index.php/apps/projectcheck/time-entries/')); ?>"
+                                            <a href="<?php p(str_replace('ENTRY_ID', $timeEntry->getId(), $_['showUrl'] ?? ($tplUrlGenerator->linkToRoute('projectcheck.time_entry.index') . '/ENTRY_ID'))); ?>"
                                                 class="action-item action-item--view" title="<?php p($l->t('View Details')); ?>"
                                                 aria-label="<?php p($l->t('View time entry details')); ?>">
                                                 <span data-lucide="eye" class="lucide-icon" aria-hidden="true"></span>
                                             </a>
                                             <?php $entryLocked = method_exists($timeEntry, 'isBillingLocked') && $timeEntry->isBillingLocked(); ?>
                                             <?php if ($timeEntry->isOwnedBy((string)($_['userId'] ?? '')) && !$entryLocked): ?>
-                                                <a href="<?php p(str_replace('ENTRY_ID', (string)$timeEntry->getId(), $_['editUrl'] ?? '/index.php/apps/projectcheck/time-entries/edit/')); ?>"
+                                                <a href="<?php p(str_replace('ENTRY_ID', (string)$timeEntry->getId(), $_['editUrl'] ?? ($tplUrlGenerator->linkToRoute('projectcheck.time_entry.index') . '/ENTRY_ID/edit'))); ?>"
                                                     class="action-item action-item--edit" title="<?php p($l->t('Edit Time Entry')); ?>" aria-label="<?php p($l->t('Edit time entry')); ?>">
                                                     <span data-lucide="edit" class="lucide-icon" aria-hidden="true"></span>
                                                     <span class="action-item__label pc-sr-only"><?php p($l->t('Edit')); ?></span>
@@ -570,7 +573,7 @@ include __DIR__ . '/common/page-start.php';
                     $perPage = (int)($pagination['perPage'] ?? 0);
 
                     // Build helper for pagination links with current filters
-                    $baseUrl = $_['indexUrl'] ?? '/index.php/apps/projectcheck/time-entries';
+                    $baseUrl = $_['indexUrl'] ?? $tplUrlGenerator->linkToRoute('projectcheck.time_entry.index');
                     $baseQuery = $filters ?? [];
                     unset($baseQuery['limit'], $baseQuery['offset']);
                 ?>

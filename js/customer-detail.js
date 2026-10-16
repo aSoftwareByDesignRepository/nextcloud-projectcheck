@@ -43,6 +43,16 @@
 			: null;
 	}
 
+	/**
+	 * Last-resort app base when OC.generateUrl is unavailable.
+	 * The /index.php/apps/... shape is routable on every install; only the
+	 * webroot prefix (subdir installs) must be recovered from OC.
+	 */
+	function appFallbackBase() {
+		const webroot = (typeof OC !== 'undefined' && OC.getRootPath) ? OC.getRootPath() : '';
+		return webroot + '/index.php/apps/projectcheck';
+	}
+
 	function requestHeaders() {
 		const token = (typeof OC !== 'undefined' && OC.requestToken)
 			|| (window.projectControlData && window.projectControlData.requestToken)
@@ -62,7 +72,7 @@
 
 		const url = typeof OC !== 'undefined' && OC.generateUrl
 			? OC.generateUrl('/apps/projectcheck/api/projects/by-customer/{id}', { id: customerId })
-			: '/apps/projectcheck/api/projects/by-customer/' + customerId;
+			: appFallbackBase() + '/api/projects/by-customer/' + encodeURIComponent(customerId);
 
 		fetch(url, { headers: requestHeaders() })
 			.then(function (response) {
@@ -122,7 +132,7 @@
 		const projectId = Number(project.id);
 		link.href = typeof OC !== 'undefined' && OC.generateUrl
 			? OC.generateUrl('/apps/projectcheck/projects/{id}', { id: projectId })
-			: '/apps/projectcheck/projects/' + projectId;
+			: appFallbackBase() + '/projects/' + projectId;
 		link.appendChild(document.createTextNode(String(project.name ?? '')));
 		title.appendChild(link);
 
@@ -184,7 +194,7 @@
 		link.className = 'button primary';
 		link.href = typeof OC !== 'undefined' && OC.generateUrl
 			? OC.generateUrl('/apps/projectcheck/projects/create', { customer_id: customerId })
-			: '/apps/projectcheck/projects/create?customer_id=' + encodeURIComponent(String(customerId || ''));
+			: appFallbackBase() + '/projects/create?customer_id=' + encodeURIComponent(String(customerId || ''));
 		link.appendChild(document.createTextNode(t('projectcheck', 'Create First Project')));
 		wrap.appendChild(link);
 		projectsList.appendChild(wrap);
@@ -193,7 +203,7 @@
 	function loadCustomerStats(customerId) {
 		const url = typeof OC !== 'undefined' && OC.generateUrl
 			? OC.generateUrl('/apps/projectcheck/api/customers/stats', { customer_id: customerId })
-			: '/apps/projectcheck/api/customers/stats?customer_id=' + customerId;
+			: appFallbackBase() + '/api/customers/stats?customer_id=' + encodeURIComponent(customerId);
 
 		fetch(url, { headers: requestHeaders() })
 			.then(function (response) {

@@ -790,7 +790,7 @@
 	text-align: center;
 	padding: 2rem;
 	color: var(--color-main-text);
-	background: var(--color-error);
+	background: var(--pc-tint-danger, var(--color-background-dark));
 	border: 1px solid var(--color-border-error, var(--color-element-error));
 	border-radius: 8px;
 	display: flex;
@@ -927,7 +927,7 @@
 }
 
 .notice-success {
-	background: var(--color-success);
+	background: var(--pc-tint-success, var(--color-background-dark));
 		color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-element-success) 40%, transparent);
 }
@@ -939,7 +939,7 @@
 }
 
 .notice-error {
-	background: var(--color-error);
+	background: var(--pc-tint-danger, var(--color-background-dark));
 		color: var(--color-main-text);
 	border: 1px solid color-mix(in srgb, var(--color-element-error) 40%, transparent);
 }
@@ -1155,9 +1155,9 @@ body[dir="rtl"] .filters-row select {
 
 .section:not(.pc-list-panel) .action-item.delete-customer-btn:hover,
 .customer-detail .action-item.delete-customer-btn:hover {
-	background: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	background: var(--pc-danger-fill, var(--color-element-error));
 	color: var(--pc-danger-on-fill, var(--color-button-danger-text, var(--color-primary-element-text)));
-	border-color: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	border-color: var(--pc-danger-fill, var(--color-element-error));
 }
 
 .section:not(.pc-list-panel) .action-item .icon,
@@ -1791,7 +1791,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 .project-type-icon[data-project-type="sales"] {
-	background: var(--color-success);
+	background: var(--pc-tint-success, var(--color-background-dark));
 	border-color: color-mix(in srgb, var(--color-element-success) 30%, transparent);
 }
 
@@ -1801,12 +1801,12 @@ body[dir="rtl"] .filters-row select {
 }
 
 .project-type-icon[data-project-type="product"] {
-	background: var(--color-warning);
+	background: var(--pc-tint-warning, var(--color-background-dark));
 	border-color: color-mix(in srgb, var(--color-element-warning) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="meeting"] {
-	background: var(--color-error);
+	background: var(--pc-tint-danger, var(--color-background-dark));
 	border-color: color-mix(in srgb, var(--color-element-error) 30%, transparent);
 }
 
@@ -1821,7 +1821,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 .project-type-icon[data-project-type="training"] {
-	background: var(--color-success);
+	background: var(--pc-tint-success, var(--color-background-dark));
 	border-color: color-mix(in srgb, var(--color-element-success) 30%, transparent);
 }
 

@@ -156,6 +156,41 @@ class AppAccessMiddlewareTest extends TestCase {
 		$this->assertSame(403, $response->getStatus());
 	}
 
+	public function testAfterExceptionCollapsesUnexpectedThrowableOnApiPath(): void {
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/api/projects');
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->stubL10n();
+		$this->logger->expects($this->once())->method('error')
+			->with('projectcheck unhandled controller exception', $this->anything());
+
+		$response = $this->middleware->afterException(
+			new \stdClass(),
+			'apiIndex',
+			new \RuntimeException('db gone')
+		);
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(500, $response->getStatus());
+		$data = $response->getData();
+		$this->assertFalse($data['success']);
+		$this->assertSame('server_error', $data['error']);
+	}
+
+	public function testAfterExceptionRethrowsUnexpectedThrowableOnPageGet(): void {
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/projects');
+		$this->request->method('getHeader')->willReturn('');
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->stubL10n();
+
+		$this->expectException(\RuntimeException::class);
+		$this->middleware->afterException(
+			new \stdClass(),
+			'index',
+			new \RuntimeException('db gone')
+		);
+	}
+
 	private function stubL10n(): void {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn (string $s): string => $s);

@@ -1122,33 +1122,42 @@ const projectcheckToken = cfg.requestToken || '';
                 const confirmText = targetRole === 'Manager'
                     ? settleMsg('roleConfirmManager', { name: name })
                     : settleMsg('roleConfirmMember', { name: name });
-                if (!window.confirm(confirmText)) {
+                const dlg = window.ProjectCheckConfirmDialog;
+                if (!dlg || typeof dlg.show !== 'function' || (typeof dlg.isOpen === 'function' && dlg.isOpen())) {
+                    notify(settleMsg('roleDialogUnavailable'), 'error');
                     return;
                 }
-                button.disabled = true;
-                fetch(template.replace('__USER__', encodeURIComponent(userId)), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'requesttoken': projectcheckToken,
+                dlg.show({
+                    title: settleMsg('roleDialogTitle'),
+                    message: confirmText,
+                    confirmLabel: (button.getAttribute('title') || '').trim() || targetRole,
+                    trigger: button,
+                    onConfirm: function (done) {
+                        fetch(template.replace('__USER__', encodeURIComponent(userId)), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'requesttoken': projectcheckToken,
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({ role: targetRole }),
+                        })
+                            .then((r) => r.json().then((d) => ({ ok: r.ok, d })).catch(() => ({ ok: r.ok, d: {} })))
+                            .then((res) => {
+                                if (res.ok && res.d && res.d.success) {
+                                    window.location.reload();
+                                    return;
+                                }
+                                done();
+                                notify((res.d && res.d.error) || settleMsg('roleFailed'), 'error');
+                            })
+                            .catch(() => {
+                                done();
+                                notify(settleMsg('roleFailed'), 'error');
+                            });
                     },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ role: targetRole }),
-                })
-                    .then((r) => r.json().then((d) => ({ ok: r.ok, d })).catch(() => ({ ok: r.ok, d: {} })))
-                    .then((res) => {
-                        if (res.ok && res.d && res.d.success) {
-                            window.location.reload();
-                            return;
-                        }
-                        button.disabled = false;
-                        notify((res.d && res.d.error) || settleMsg('roleFailed'), 'error');
-                    })
-                    .catch(() => {
-                        button.disabled = false;
-                        notify(settleMsg('roleFailed'), 'error');
-                    });
+                });
             });
         });
     }

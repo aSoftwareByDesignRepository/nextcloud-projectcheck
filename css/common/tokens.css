@@ -86,7 +86,7 @@ body {
 	 * NC 30+ maps --color-error to a pale tint — never put on-fill text on that.
 	 * Use --color-element-error; dark themes darken the fill so ink stays ≥ 4.5:1.
 	 */
-	--pc-danger-fill: var(--color-element-error, var(--color-error));
+	--pc-danger-fill: var(--color-element-error, var(--color-error-text));
 	--pc-danger-on-fill: var(--color-primary-element-text, var(--color-primary-text));
 	--pc-danger-ink: var(--color-error-text, var(--color-error));
 
@@ -102,7 +102,7 @@ body[data-theme-dark],
 body[data-theme-dark-highcontrast] {
 	--pc-danger-fill: color-mix(
 		in srgb,
-		var(--color-element-error, var(--color-error)) 40%,
+		var(--color-element-error, var(--color-error-text)) 40%,
 		var(--color-main-background)
 	);
 	--pc-danger-on-fill: var(--color-main-text);

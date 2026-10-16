@@ -942,7 +942,7 @@ body {
 }
 
 .project-type-icon[data-project-type="sales"] {
-	background: var(--color-success);
+	background: var(--pc-tint-success, var(--color-background-dark));
 	border-color: color-mix(in srgb, var(--color-element-success) 30%, transparent);
 }
 
@@ -952,12 +952,12 @@ body {
 }
 
 .project-type-icon[data-project-type="product"] {
-	background: var(--color-warning);
+	background: var(--pc-tint-warning, var(--color-background-dark));
 	border-color: color-mix(in srgb, var(--color-element-warning) 30%, transparent);
 }
 
 .project-type-icon[data-project-type="meeting"] {
-	background: var(--color-error);
+	background: var(--pc-tint-danger, var(--color-background-dark));
 	border-color: color-mix(in srgb, var(--color-element-error) 30%, transparent);
 }
 
@@ -972,7 +972,7 @@ body {
 }
 
 .project-type-icon[data-project-type="training"] {
-	background: var(--color-success);
+	background: var(--pc-tint-success, var(--color-background-dark));
 	border-color: color-mix(in srgb, var(--color-element-success) 30%, transparent);
 }
 

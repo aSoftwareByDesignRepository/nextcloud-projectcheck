@@ -27,21 +27,21 @@
 
 /* Semantic tint (status on border, text stays main for readability) */
 .toastify.toast.toast-error {
-  background: var(--color-error) !important;
+  background: var(--pc-tint-danger, var(--color-background-dark)) !important;
   border-color: color-mix(in srgb, var(--color-element-error) 35%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1rem - 1px);
 }
 
 .toastify.toast.toast-success {
-  background: var(--color-success) !important;
+  background: var(--pc-tint-success, var(--color-background-dark)) !important;
   border-color: color-mix(in srgb, var(--color-element-success) 30%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1rem - 1px);
 }
 
 .toastify.toast.toast-warning {
-  background: var(--color-warning) !important;
+  background: var(--pc-tint-warning, var(--color-background-dark)) !important;
   border-color: color-mix(in srgb, var(--color-element-warning) 35%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-warning);
   padding-inline-start: calc(1rem - 1px);
@@ -105,21 +105,21 @@
 }
 
 .toast--success {
-  background: var(--color-success);
+  background: var(--pc-tint-success, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-success) 28%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(0.75rem - 1px);
 }
 
 .toast--error {
-  background: var(--color-error);
+  background: var(--pc-tint-danger, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-error) 30%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(0.75rem - 1px);
 }
 
 .toast--warning {
-  background: var(--color-warning);
+  background: var(--pc-tint-warning, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-warning);
   padding-inline-start: calc(0.75rem - 1px);
@@ -233,17 +233,17 @@
 
 .persistent-notification--error {
   border-inline-start: 4px solid var(--color-element-error);
-  background: var(--color-error);
+  background: var(--pc-tint-danger, var(--color-background-dark));
 }
 
 .persistent-notification--success {
   border-inline-start: 4px solid var(--color-element-success);
-  background: var(--color-success);
+  background: var(--pc-tint-success, var(--color-background-dark));
 }
 
 .persistent-notification--warning {
   border-inline-start: 4px solid var(--color-element-warning);
-  background: var(--color-warning);
+  background: var(--pc-tint-warning, var(--color-background-dark));
 }
 
 .persistent-notification--info {
@@ -335,7 +335,7 @@
 
 .settings-message.success,
 #settings-message.settings-message.success {
-  background: var(--color-success);
+  background: var(--pc-tint-success, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-success) 32%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1.25rem - 1px);
@@ -343,7 +343,7 @@
 
 .settings-message.error,
 #settings-message.settings-message.error {
-  background: var(--color-error);
+  background: var(--pc-tint-danger, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-error) 32%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1.25rem - 1px);
@@ -351,7 +351,7 @@
 
 .settings-message.warning,
 #settings-message.settings-message.warning {
-  background: var(--color-warning);
+  background: var(--pc-tint-warning, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-warning);
   padding-inline-start: calc(1.25rem - 1px);
@@ -372,14 +372,14 @@
 }
 
 #app-content .form-message.success {
-  background: var(--color-success);
+  background: var(--pc-tint-success, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-success) 30%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
 #app-content .form-message.error {
-  background: var(--color-error);
+  background: var(--pc-tint-danger, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-error) 32%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1.25rem - 1px);
@@ -417,14 +417,14 @@
 }
 
 #app-content .notice-success {
-  background: var(--color-success);
+  background: var(--pc-tint-success, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-success) 28%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1.25rem - 1px);
 }
 
 #app-content .notice-error {
-  background: var(--color-error);
+  background: var(--pc-tint-danger, var(--color-background-dark));
   border-color: color-mix(in srgb, var(--color-element-error) 30%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1.25rem - 1px);
@@ -529,14 +529,14 @@
   border-color: color-mix(in srgb, var(--color-element-success) 32%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-success);
   padding-inline-start: calc(1rem - 1px);
-  background: var(--color-success);
+  background: var(--pc-tint-success, var(--color-background-dark));
 }
 
 .pc-budget-impact.budget-impact-info.warning {
   border-color: color-mix(in srgb, var(--color-element-warning) 32%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-warning);
   padding-inline-start: calc(1rem - 1px);
-  background: var(--color-warning);
+  background: var(--pc-tint-warning, var(--color-background-dark));
 }
 
 .pc-budget-impact.budget-impact-info.critical,
@@ -544,7 +544,7 @@
   border-color: color-mix(in srgb, var(--color-element-error) 32%, var(--color-border));
   border-inline-start: 4px solid var(--color-element-error);
   padding-inline-start: calc(1rem - 1px);
-  background: var(--color-error);
+  background: var(--pc-tint-danger, var(--color-background-dark));
 }
 
 /* -------------------------------------------------------------------------- */

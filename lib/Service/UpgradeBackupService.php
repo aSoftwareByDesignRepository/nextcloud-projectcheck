@@ -166,6 +166,8 @@ class UpgradeBackupService
 			try {
 				$snapshots[] = $this->readManifest($this->getSnapshotFolder($snapshotId), $snapshotId);
 			} catch (\Throwable $e) {
+				// best-effort: one corrupt folder must not hide every good
+				// snapshot from the restore listing — skip it and log.
 				$this->logger->warning('ProjectCheck: skipping unreadable upgrade backup folder', [
 					'app' => UpgradeBackupCatalog::APP_ID,
 					'folder' => $snapshotId,
@@ -257,7 +259,7 @@ class UpgradeBackupService
 			foreach ($pgTriggerTables as $pgTable) {
 				try {
 					$this->db->executeStatement(
-						'ALTER TABLE ' . $this->db->quoteIdentifier($this->tablePrefix() . $pgTable) . ' DISABLE TRIGGER ALL',
+						'ALTER TABLE ' . $this->quotePgIdent($this->tablePrefix() . $pgTable) . ' DISABLE TRIGGER ALL',
 					);
 					$pgTriggersDisabled[] = $pgTable;
 				} catch (\Throwable $e) {
@@ -280,7 +282,7 @@ class UpgradeBackupService
 
 			foreach ($pgTriggersDisabled as $pgTable) {
 				$this->db->executeStatement(
-					'ALTER TABLE ' . $this->db->quoteIdentifier($this->tablePrefix() . $pgTable) . ' ENABLE TRIGGER ALL',
+					'ALTER TABLE ' . $this->quotePgIdent($this->tablePrefix() . $pgTable) . ' ENABLE TRIGGER ALL',
 				);
 			}
 
@@ -491,6 +493,7 @@ class UpgradeBackupService
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')->from($table);
 		$result = $qb->executeQuery();
+		/** @var list<array<string, mixed>> $rows */
 		$rows = $result->fetchAll();
 		$result->closeCursor();
 
@@ -548,6 +551,7 @@ class UpgradeBackupService
 			->where($qb->expr()->eq('app', $qb->createNamedParameter(UpgradeBackupCatalog::APP_ID)));
 
 		$result = $qb->executeQuery();
+		/** @var list<array<string, mixed>> $rows */
 		$rows = $result->fetchAll();
 		$result->closeCursor();
 
@@ -675,6 +679,17 @@ class UpgradeBackupService
 		return (string)$this->config->getSystemValue('dbtableprefix', 'oc_');
 	}
 
+	/**
+	 * Double-quote a Postgres identifier. Only used on the Postgres restore
+	 * branch; the input is whitelist-derived (prefix + BACKUP_TABLES name).
+	 * `IDBConnection` does not expose `quoteIdentifier()` (runtime-only on
+	 * `OC\DB\Connection`), so we quote locally.
+	 */
+	private function quotePgIdent(string $name): string
+	{
+		return '"' . str_replace('"', '""', $name) . '"';
+	}
+
 	private function truncateTableIfExists(string $table): void
 	{
 		if (!$this->db->tableExists($table) || !UpgradeBackupCatalog::isBackupTable($table)) {
@@ -708,7 +723,7 @@ class UpgradeBackupService
 
 	private function restorePreferences(Folder $snapshotFolder): void
 	{
-		/** @var list<array{userid: string, configkey: string, configvalue: string}> $rows */
+		/** @var list<array<string, mixed>> $rows */
 		$rows = json_decode($this->readFile($snapshotFolder, 'preferences.json'), true, 512, JSON_THROW_ON_ERROR);
 
 		$deleteQb = $this->db->getQueryBuilder();
@@ -759,6 +774,9 @@ class UpgradeBackupService
 		}
 	}
 
+	/**
+	 * @param list<string> $excludeIds
+	 */
 	private function rotateSnapshots(array $excludeIds = []): void
 	{
 		$max = UpgradeBackupCatalog::clampMaxSnapshots((int)$this->config->getAppValue(
@@ -785,6 +803,9 @@ class UpgradeBackupService
 
 	/**
 	 * @param array<string, mixed> $payload
+	 */
+	/**
+	 * @param array<array-key, mixed> $payload
 	 */
 	private function writeJsonFile(Folder $parent, string $name, array $payload): void
 	{

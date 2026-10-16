@@ -1275,6 +1275,8 @@ include __DIR__ . '/common/page-start.php';
                 'closeOutSkipToPaid' => $l->t('No open hours left to invoice. Continuing with invoiced → paid.'),
                 'roleConfirmManager' => $l->t('Make {name} a project manager? They can then mark hours as invoiced or paid for this project.'),
                 'roleConfirmMember' => $l->t('Remove the project manager role from {name}?'),
+                'roleDialogTitle' => $l->t('Change project role'),
+                'roleDialogUnavailable' => $l->t('Could not open the confirmation dialog. Reload the page and try again.'),
                 'roleFailed' => $l->t('Could not change the role. Please try again.'),
             ],
         ],

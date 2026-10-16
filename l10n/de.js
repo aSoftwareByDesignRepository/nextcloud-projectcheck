@@ -1766,7 +1766,7 @@ OC.L10N.register(
 	"Your work overview" : "Ihr Arbeitsüberblick",
 	"You’re offline" : "Sie sind offline",
 	"_%n team member_::_%n team members_" : ["%n Teammitglied","%n Teammitglieder"],
-	"_Uploaded %n file._::_Uploaded %n files._" : ["Eine Datei hochgeladen.","%n Dateien hochgeladen."],
+	"_Uploaded %n file._::_Uploaded %n files._" : ["%n Datei hochgeladen.","%n Dateien hochgeladen."],
 	"a project" : "einem Projekt",
 	"active" : "aktiv",
 	"based on planning rate" : "basierend auf Planungssatz",

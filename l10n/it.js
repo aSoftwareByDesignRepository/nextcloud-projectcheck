@@ -1524,7 +1524,7 @@ OC.L10N.register(
 	"This project uses your organisation-wide employee hourly rate. Make sure a rate is effective for you on the work date." : "Questo progetto usa la tariffa oraria dipendente a livello di organizzazione. Assicurati che una tariffa sia valida per te alla data di lavoro.",
 	"This rate applies to all time they log on this project from today. You can set a new rate with an effective date later." : "Questa tariffa si applica a tutto il tempo che registrano su questo progetto da oggi. Puoi impostare una nuova tariffa con data di decorrenza successiva.",
 	"This request id was already used with different entry data." : "Questo ID richiesta è già stato usato con dati di voce diversi.",
-	"This request was already processed, but a duplicate could not be cleaned up. Refresh and check your entries." : "Questa richiesta è già stata elaborata, ma un duplicato non ha potuto essere eliminato. Aggiorna e controlla le tue voci.",
+	"This request was already processed, but a duplicate could not be cleaned up. Refresh and check your entries." : "Questa richiesta è già stata elaborata, ma un duplicato non ha potuto essere eliminato. Aggiorni e controlli le Sue voci.",
 	"This request was already processed. Refresh and try again." : "Questa richiesta è già stata elaborata. Aggiorna e riprova.",
 	"This seat exceeds the current license limit. It stays assigned but has no mobile access until you remove a seat or upgrade." : "Questo posto supera il limite attuale della licenza. Resta assegnato ma senza accesso mobile finché non si rimuove un posto o si aggiorna.",
 	"This status change is not allowed for the current project state." : "Questo cambio di stato non è consentito per lo stato attuale del progetto.",

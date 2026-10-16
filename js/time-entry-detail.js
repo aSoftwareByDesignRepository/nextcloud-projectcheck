@@ -47,44 +47,57 @@
                     excluded: t('projectcheck', 'Mark this entry as not billable?')
                 };
                 const confirmText = labels[target] || t('projectcheck', 'Update settlement status for this entry?');
-                if (!window.confirm(confirmText)) {
+                const dlg = window.ProjectCheckConfirmDialog;
+                if (!dlg || typeof dlg.show !== 'function' || dlg.isOpen()) {
+                    showError(t('projectcheck', 'Could not open the confirmation dialog. Reload the page and try again.'));
                     return;
                 }
+                const triggerLabel = (button.textContent || '').replace(/\s+/g, ' ').trim();
 
-                section.querySelectorAll('.pc-entry-billing-action').forEach(function (b) {
-                    b.disabled = true;
+                dlg.show({
+                    title: t('projectcheck', 'Change settlement status'),
+                    message: confirmText,
+                    confirmLabel: triggerLabel || t('projectcheck', 'Confirm'),
+                    trigger: button,
+                    onConfirm: function (done) {
+                        section.querySelectorAll('.pc-entry-billing-action').forEach(function (b) {
+                            b.disabled = true;
+                        });
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                requesttoken: getRequestTokenValue(),
+                            },
+                            body: JSON.stringify({ target: target }),
+                        })
+                            .then(function (response) {
+                                return response.json().catch(function () { return {}; }).then(function (payload) {
+                                    return { ok: response.ok, payload: payload };
+                                });
+                            })
+                            .then(function (result) {
+                                if (result.ok && result.payload && result.payload.success) {
+                                    window.location.reload();
+                                    return;
+                                }
+                                done();
+                                section.querySelectorAll('.pc-entry-billing-action').forEach(function (b) {
+                                    b.disabled = false;
+                                });
+                                showError((result.payload && result.payload.error)
+                                    || t('projectcheck', 'The settlement action failed. Please try again.'));
+                            })
+                            .catch(function () {
+                                done();
+                                section.querySelectorAll('.pc-entry-billing-action').forEach(function (b) {
+                                    b.disabled = false;
+                                });
+                                showError(t('projectcheck', 'The settlement action failed. Please try again.'));
+                            });
+                    }
                 });
-
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        requesttoken: getRequestTokenValue(),
-                    },
-                    body: JSON.stringify({ target: target }),
-                })
-                    .then(function (response) {
-                        return response.json().catch(function () { return {}; }).then(function (payload) {
-                            return { ok: response.ok, payload: payload };
-                        });
-                    })
-                    .then(function (result) {
-                        if (result.ok && result.payload && result.payload.success) {
-                            window.location.reload();
-                            return;
-                        }
-                        section.querySelectorAll('.pc-entry-billing-action').forEach(function (b) {
-                            b.disabled = false;
-                        });
-                        showError((result.payload && result.payload.error)
-                            || t('projectcheck', 'The settlement action failed. Please try again.'));
-                    })
-                    .catch(function () {
-                        section.querySelectorAll('.pc-entry-billing-action').forEach(function (b) {
-                            b.disabled = false;
-                        });
-                        showError(t('projectcheck', 'The settlement action failed. Please try again.'));
-                    });
             });
         });
     }

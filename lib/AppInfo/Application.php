@@ -16,6 +16,7 @@ use OCA\ProjectCheck\Repair\BackupBeforeUpdate;
 use OCA\ProjectCheck\Repair\EnsureProjectCheckSchema;
 use OCA\ProjectCheck\Repair\UninstallDropTables;
 use OCA\ProjectCheck\Service\UpgradeBackupService;
+use OCA\ProjectCheck\Support\NavGate;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -27,7 +28,6 @@ use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\Lock\ILockingProvider;
 use OCP\User\Events\UserDeletedEvent;
-use OCP\INavigationManager;
 use OCP\L10N\IFactory;
 use OCP\Util;
 
@@ -651,7 +651,15 @@ class Application extends App implements IBootstrap
 	 */
 	public function boot(IBootContext $context): void
 	{
-		$this->registerNavigationWhenAllowed();
+		$app = $context->getAppContainer();
+		NavGate::register(
+			$app,
+			'projectcheck.page.index',
+			'app.svg',
+			'ProjectCheck',
+			10,
+			static fn(string $uid): bool => $app->get(\OCA\ProjectCheck\Service\AccessControlService::class)->canUseApp($uid),
+		);
 
 		// Load CSS and JS files ONLY on projectcheck routes to avoid leaking into other apps
 		try {
@@ -662,6 +670,7 @@ class Application extends App implements IBootstrap
 				Util::addStyle(self::APP_ID, 'deletion-modal');
 				Util::addScript(self::APP_ID, 'projects');
 				Util::addScript(self::APP_ID, 'common/deletion-modal');
+				Util::addScript(self::APP_ID, 'common/confirm-dialog');
 				Util::addScript(self::APP_ID, 'service-worker-register');
 			}
 		} catch (\Throwable $e) {
@@ -669,38 +678,4 @@ class Application extends App implements IBootstrap
 		}
 	}
 
-	/**
-	 * Add top navigation only for users who may use the app (static info.xml entry removed).
-	 */
-	private function registerNavigationWhenAllowed(): void
-	{
-		try {
-			$container = $this->getContainer();
-			$userSession = $container->get(\OCP\IUserSession::class);
-			$user = $userSession->getUser();
-			if ($user === null) {
-				return;
-			}
-			$access = $container->get(\OCA\ProjectCheck\Service\AccessControlService::class);
-			if (!$access->canUseApp($user->getUID())) {
-				return;
-			}
-			$navigationManager = $container->get(INavigationManager::class);
-			$navigationManager->add(function () use ($container): array {
-				$urlGenerator = $container->get(\OCP\IURLGenerator::class);
-				$l10nFactory = $container->get(IFactory::class);
-				$icons = $container->get(\OCA\ProjectCheck\Service\AppIconService::class);
-				return [
-					'id' => self::APP_ID,
-					'app' => self::APP_ID,
-					'order' => 10,
-					'href' => $urlGenerator->linkToRoute('projectcheck.page.index'),
-					'icon' => $icons->headerIconPath(),
-					'name' => $l10nFactory->get(self::APP_ID)->t('ProjectCheck'),
-				];
-			});
-		} catch (\Throwable $e) {
-			// best-effort
-		}
-	}
 }

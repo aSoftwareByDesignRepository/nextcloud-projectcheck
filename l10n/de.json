@@ -1769,7 +1769,7 @@
             "%n Teammitglieder"
         ],
         "_Uploaded %n file._::_Uploaded %n files._": [
-            "Eine Datei hochgeladen.",
+            "%n Datei hochgeladen.",
             "%n Dateien hochgeladen."
         ],
         "a project": "einem Projekt",

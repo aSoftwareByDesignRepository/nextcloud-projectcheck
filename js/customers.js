@@ -135,7 +135,8 @@
         if (typeof OC !== 'undefined' && OC.generateUrl) {
             return OC.generateUrl('/apps/projectcheck/customers/{id}/delete', { id: id });
         }
-        return '/index.php/apps/projectcheck/customers/' + encodeURIComponent(id) + '/delete';
+        var webroot = (typeof OC !== 'undefined' && OC.getRootPath) ? OC.getRootPath() : '';
+        return webroot + '/index.php/apps/projectcheck/customers/' + encodeURIComponent(id) + '/delete';
     }
 
     /** @type {boolean} */
@@ -206,10 +207,11 @@
         if (deleteButton && deleteButton.dataset.deleteUrl) {
             url = resolveCustomerDeleteUrl(customerId, deleteButton.dataset.deleteUrl);
         } else {
-            // Use Nextcloud's URL generation if available, otherwise fallback to hardcoded URL
+            // Use Nextcloud's URL generation if available; the fallback keeps
+            // webroot + /index.php so subdir and non-rewriting installs work.
             url = typeof OC !== 'undefined' && OC.generateUrl ?
                 OC.generateUrl(`/apps/projectcheck/customers/${customerId}/delete`) :
-                `/index.php/apps/projectcheck/customers/${customerId}/delete`;
+                `${(typeof OC !== 'undefined' && OC.getRootPath) ? OC.getRootPath() : ''}/index.php/apps/projectcheck/customers/${customerId}/delete`;
         }
 
         const token = document.querySelector('input[name="requesttoken"]')?.value ||

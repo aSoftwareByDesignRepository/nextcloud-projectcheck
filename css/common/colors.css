@@ -180,7 +180,7 @@ body[data-theme-dark-highcontrast] {
   --color-button-secondary-hover: var(--color-background-hover);
   --color-button-secondary-active: var(--color-background-hover);
   --color-button-secondary-text: var(--color-main-text);
-	--color-button-danger: var(--pc-danger-fill, var(--color-element-error, var(--color-error)));
+	--color-button-danger: var(--pc-danger-fill, var(--color-element-error));
 	--color-button-danger-hover: color-mix(in srgb, var(--pc-danger-fill, var(--color-element-error)) 85%, var(--color-main-text));
 	--color-button-danger-text: var(--pc-danger-on-fill, var(--color-primary-element-text));
 
@@ -203,14 +203,14 @@ body[data-theme-dark-highcontrast] {
 .bg-secondary-hover:hover { background-color: var(--color-background-hover); }
 .bg-accent { background-color: var(--color-primary-element); }
 .bg-accent-hover:hover { background-color: var(--color-primary-element-hover); }
-.bg-success { background-color: var(--color-success); }
-.bg-success-hover:hover { background-color: var(--color-success); }
+.bg-success { background-color: var(--color-element-success); }
+.bg-success-hover:hover { background-color: var(--color-element-success); }
 .bg-success-light { background-color: var(--pc-tint-success, var(--color-success-light)); }
-.bg-warning { background-color: var(--color-warning); }
-.bg-warning-hover:hover { background-color: var(--color-warning); }
+.bg-warning { background-color: var(--color-element-warning); }
+.bg-warning-hover:hover { background-color: var(--color-element-warning); }
 .bg-warning-light { background-color: var(--pc-tint-warning, var(--color-warning-light)); }
-.bg-error { background-color: var(--color-error); }
-.bg-error-hover:hover { background-color: var(--color-error); }
+.bg-error { background-color: var(--color-element-error); }
+.bg-error-hover:hover { background-color: var(--color-element-error); }
 .bg-error-light { background-color: var(--pc-tint-danger, var(--color-error-light)); }
 .bg-info { background-color: var(--color-info); }
 .bg-info-hover:hover { background-color: var(--color-info); }
@@ -312,9 +312,9 @@ body[data-theme-dark-highcontrast] {
 .hover\:bg-primary:hover { background-color: var(--color-primary-element-hover); }
 .hover\:bg-secondary:hover { background-color: var(--color-background-hover); }
 .hover\:bg-accent:hover { background-color: var(--color-primary-element-hover); }
-.hover\:bg-success:hover { background-color: var(--color-success); }
-.hover\:bg-warning:hover { background-color: var(--color-warning); }
-.hover\:bg-error:hover { background-color: var(--color-error); }
+.hover\:bg-success:hover { background-color: var(--color-element-success); }
+.hover\:bg-warning:hover { background-color: var(--color-element-warning); }
+.hover\:bg-error:hover { background-color: var(--color-element-error); }
 .hover\:bg-info:hover { background-color: var(--color-info); }
 .hover\:text-primary:hover { color: var(--color-primary-element-hover); }
 .hover\:text-success:hover { color: var(--pc-emphasis-text-success); }

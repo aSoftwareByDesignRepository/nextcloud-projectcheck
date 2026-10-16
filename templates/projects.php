@@ -463,7 +463,7 @@ include __DIR__ . '/common/page-start.php';
                     $totalPages = max(1, (int)($pagination['totalPages'] ?? 1));
                     $totalEntries = (int)($pagination['totalEntries'] ?? 0);
                     $perPage = (int)($pagination['perPage'] ?? 0);
-                    $baseUrl = $_['projectsUrl'] ?? '/index.php/apps/projectcheck/projects';
+                    $baseUrl = $_['projectsUrl'] ?? \OCP\Server::get(\OCP\IURLGenerator::class)->linkToRoute('projectcheck.project.index');
                     $baseQuery = $_['filters'] ?? [];
                     unset($baseQuery['limit'], $baseQuery['offset']);
                 ?>
