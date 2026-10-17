@@ -43,7 +43,7 @@ We improve this app with real-world use. Bug reports, rough edges, and ideas hel
 
 ## Requirements
 
-- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL/MariaDB or PostgreSQL
+- Nextcloud 32–35 · PHP 8.2–8.5 · MySQL/MariaDB or PostgreSQL
 	]]></description>
 	<description lang="de"><![CDATA[
 # Projekte, Zeit und Budgets — an einem Ort.
@@ -71,7 +71,7 @@ Wir verbessern diese App mit Rückmeldungen aus der Praxis. Fehlerberichte, Stol
 
 ## Voraussetzungen
 
-- Nextcloud 32–34 · PHP 8.2–8.5 · MySQL/MariaDB oder PostgreSQL
+- Nextcloud 32–35 · PHP 8.2–8.5 · MySQL/MariaDB oder PostgreSQL
 	]]></description>
 	<description lang="fr"><![CDATA[
 # ProjectCheck
@@ -244,7 +244,7 @@ as taxas horárias nos lançamentos são resolvidas no servidor a partir do hist
 	<donation type="other" title="Software by Design">https://nextcloud.software-by-design.de/</donation>
 
 	<dependencies>
-		<!-- Compatible with Nextcloud 32–34 (see dependencies) -->
+		<!-- Compatible with Nextcloud 32–35 (see dependencies) -->
 		<nextcloud min-version="32" max-version="35"/>
 		<!-- Must live under <dependencies>: MigrationService only reads these for migration naming checks -->
 		<database>mysql</database>
