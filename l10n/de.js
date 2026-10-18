@@ -1151,9 +1151,9 @@ OC.L10N.register(
 	"Project \"%s\" has been updated successfully." : "Projekt \"%s\" wurde erfolgreich aktualisiert.",
 	"Project \"%s\" was created successfully!" : "Projekt \"%s\" wurde erfolgreich erstellt!",
 	"Project Budget Overview" : "Projektbudget-Übersicht",
-	"Project Control" : "Project Control",
-	"Project Control Preferences" : "Project Control Preferences",
-	"Project Control Settings" : "Project Control Settings",
+	"Project Control" : "ProjectCheck",
+	"Project Control Preferences" : "ProjectCheck-Voreinstellungen",
+	"Project Control Settings" : "ProjectCheck-Einstellungen",
 	"Project Created" : "Projekt erstellt",
 	"Project Deleted" : "Projekt gelöscht",
 	"Project Files" : "Projektdateien",
@@ -1829,6 +1829,7 @@ OC.L10N.register(
 	"📊 Why This Matters" : "📊 Warum das wichtig ist",
 	"🔬 Research & Development" : "🔬 Forschung & Entwicklung",
 	"%d skipped (already members or disabled)." : "%d übersprungen (bereits Mitglieder oder deaktiviert).",
-	"No users were added — %d were skipped (already members or disabled)." : "Es wurden keine Benutzer hinzugefügt — %d wurden übersprungen (bereits Mitglieder oder deaktiviert)."
+	"No users were added — %d were skipped (already members or disabled)." : "Es wurden keine Benutzer hinzugefügt — %d wurden übersprungen (bereits Mitglieder oder deaktiviert).",
+	"Unexpected server error. Please try again." : "Unerwarteter Serverfehler. Bitte versuchen Sie es erneut."
 	}
 );

@@ -1001,7 +1001,7 @@
 		"Official Android app — features and Google Play download.": "Aplicação Android oficial — funcionalidades e download no Google Play.",
 		"Official Android companion": "Companheiro Android oficial",
 		"Official mobile & terminal licenses": "Licenças oficiais de móvel e terminal",
-		"Offline — ProjectCheck": "Offline — ProjectCheck",
+		"Offline — ProjectCheck": "Sem ligação — ProjectCheck",
 		"On Google Play. Your organisation licenses official mobile seats — the web app stays free.": "No Google Play. A sua organização licencia postos móveis oficiais — a aplicação web continua gratuita.",
 		"On Hold": "Em pausa",
 		"On Track": "No caminho certo",
@@ -1834,7 +1834,8 @@
 		"📊 Why This Matters": "📊 Porque é que isto importa",
 		"🔬 Research & Development": "🔬 Investigação e desenvolvimento",
 		"%d skipped (already members or disabled).": "%d ignorados (já membros ou desativados).",
-		"No users were added — %d were skipped (already members or disabled).": "Nenhum utilizador foi adicionado — %d foram ignorados (já membros ou desativados)."
+		"No users were added — %d were skipped (already members or disabled).": "Nenhum utilizador foi adicionado — %d foram ignorados (já membros ou desativados).",
+		"Unexpected server error. Please try again.": "Erro inesperado do servidor. Tente novamente."
 	},
 	"pluralForm": "nplurals=2; plural=(n > 1);"
 }

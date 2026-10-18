@@ -32,6 +32,8 @@ function loadDotEnv(filePath) {
 loadDotEnv(path.join(__dirname, '.env'));
 
 module.exports = async function globalSetup() {
+	const { acquireSharedInstanceLock } = await import('./shared-instance-lock.mjs')
+	await acquireSharedInstanceLock('projectcheck')
 	const user = process.env.E2E_USER;
 	const pass = process.env.E2E_PASS || process.env.E2E_PASSWORD;
 	if (!user || !pass) {

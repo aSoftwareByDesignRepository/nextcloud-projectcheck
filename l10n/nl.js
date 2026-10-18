@@ -1829,6 +1829,7 @@ OC.L10N.register(
 	"📊 Why This Matters" : "📊 Waarom dit belangrijk is",
 	"🔬 Research & Development" : "🔬 Onderzoek en ontwikkeling",
 	"%d skipped (already members or disabled)." : "%d overgeslagen (al lid of uitgeschakeld).",
-	"No users were added — %d were skipped (already members or disabled)." : "Er zijn geen gebruikers toegevoegd — %d zijn overgeslagen (al lid of uitgeschakeld)."
+	"No users were added — %d were skipped (already members or disabled)." : "Er zijn geen gebruikers toegevoegd — %d zijn overgeslagen (al lid of uitgeschakeld).",
+	"Unexpected server error. Please try again." : "Onverwachte serverfout. Probeer het opnieuw."
 	}
 );

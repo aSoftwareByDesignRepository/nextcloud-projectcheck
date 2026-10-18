@@ -1829,6 +1829,7 @@ OC.L10N.register(
 	"📊 Why This Matters" : "📊 Varför det är viktigt",
 	"🔬 Research & Development" : "🔬 Forskning och utveckling",
 	"%d skipped (already members or disabled)." : "%d överhoppade (redan medlemmar eller inaktiverade).",
-	"No users were added — %d were skipped (already members or disabled)." : "Inga användare lades till — %d överhoppades (redan medlemmar eller inaktiverade)."
+	"No users were added — %d were skipped (already members or disabled)." : "Inga användare lades till — %d överhoppades (redan medlemmar eller inaktiverade).",
+	"Unexpected server error. Please try again." : "Oväntat serverfel. Försök igen."
 	}
 );

@@ -44,6 +44,8 @@ const storageState = process.env.E2E_STORAGE_STATE
 
 export default defineConfig({
 	testDir: './e2e',
+	globalTeardown: './e2e/global-teardown.mjs',
+
 	globalSetup: './e2e/global-setup.js',
 	fullyParallel: false,
 	forbidOnly: !!process.env.CI,

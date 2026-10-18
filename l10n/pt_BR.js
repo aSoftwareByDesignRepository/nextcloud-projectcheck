@@ -1829,7 +1829,8 @@ OC.L10N.register(
 	"📊 Why This Matters" : "📊 Por que isso é importante",
 	"🔬 Research & Development" : "🔬 Pesquisa e Desenvolvimento",
 	"%d skipped (already members or disabled)." : "%d ignorados (já membros ou desativados).",
-	"No users were added — %d were skipped (already members or disabled)." : "Nenhum usuário foi adicionado — %d foram ignorados (já membros ou desativados)."
+	"No users were added — %d were skipped (already members or disabled)." : "Nenhum usuário foi adicionado — %d foram ignorados (já membros ou desativados).",
+	"Unexpected server error. Please try again." : "Erro inesperado do servidor. Tente novamente."
 	},
 	"nplurals=2; plural=(n > 1);"
 );
