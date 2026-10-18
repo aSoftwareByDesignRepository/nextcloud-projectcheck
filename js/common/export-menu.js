@@ -292,7 +292,11 @@
 				const formatHeader = response.headers.get('X-ProjectCheck-Export-Format')
 					|| response.headers.get('x-projectcheck-export-format');
 				const resolvedFormat = formatHeader === 'json' || format === 'json' ? 'json' : 'csv';
-				const fallbackName = entity + '_' + new Date().toISOString().slice(0, 10)
+				const exportDay = new Date();
+				const fallbackName = entity + '_'
+					// Local calendar day — toISOString() is UTC (off-by-one in negative offsets).
+					+ exportDay.getFullYear() + '-' + String(exportDay.getMonth() + 1).padStart(2, '0')
+					+ '-' + String(exportDay.getDate()).padStart(2, '0')
 					+ (resolvedFormat === 'json' ? '.json' : '.csv');
 				const filename = filenameFromContentDisposition(disposition, fallbackName);
 				const mime = resolvedFormat === 'json'

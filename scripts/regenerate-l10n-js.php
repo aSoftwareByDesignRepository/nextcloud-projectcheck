@@ -21,7 +21,8 @@ $locales = array (
   7 => 'pl',
   8 => 'sv',
   9 => 'nb',
-  10 => 'pt_BR',
+  10 => 'pt',
+  11 => 'pt_BR',
 );
 
 foreach ($locales as $lang) {

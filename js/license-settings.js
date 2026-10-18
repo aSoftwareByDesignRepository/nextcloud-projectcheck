@@ -175,7 +175,7 @@
 		if (!ymd || typeof ymd !== 'string') {
 			return '';
 		}
-		var d = new Date(ymd + 'T00:00:00Z');
+		var d = new Date(ymd + 'T00:00:00');
 		if (isNaN(d.getTime())) {
 			return ymd;
 		}
