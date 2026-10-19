@@ -640,7 +640,7 @@ th {
 
 .section .section-header h3 .lucide-icon,
 .section .section-header h4 .lucide-icon {
-  color: var(--color-primary-element, #0082c9);
+  color: var(--pc-accent-ink, var(--color-primary-element, #0082c9));
 }
 
 @media (min-width: 768px) {
@@ -671,7 +671,7 @@ th {
   margin: 0 auto 1.25rem;
   border-radius: 50%;
   background: color-mix(in srgb, var(--color-primary-element, #0082c9) 14%, transparent);
-  color: var(--color-primary-element, #0082c9);
+  color: var(--pc-accent-ink, var(--color-primary-element, #0082c9));
 }
 
 .pc-empty-state__icon .lucide-icon,

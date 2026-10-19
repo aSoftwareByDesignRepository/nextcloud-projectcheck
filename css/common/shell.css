@@ -153,7 +153,7 @@
 	flex-shrink: 0;
 	border-radius: var(--pc-radius-md);
 	background: var(--pc-tint-info);
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	border: 1px solid var(--pc-border);
 }
 
@@ -230,7 +230,7 @@
 
 .pc-page-header__meta .meta-item .lucide-icon,
 .pc-page-header__meta .meta-item i {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	flex-shrink: 0;
 }
 
@@ -370,7 +370,7 @@
 #app-content .project-stat .stat-icon,
 #app-content .comparison-stat-item .stat-icon,
 #app-content .action-icon {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
 	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
 	box-shadow: none;
@@ -411,7 +411,7 @@
 	margin-inline: auto;
 	margin-bottom: 0.5rem;
 	border-radius: 999px;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
 	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
 }

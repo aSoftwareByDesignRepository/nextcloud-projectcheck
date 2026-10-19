@@ -217,7 +217,7 @@
 }
 
 /* In 2-col wrap, drop the left border on the first cell of each row */
-@media (min-width: 560px) and (max-width: 899px) {
+@media (min-width: 560px) and (max-width: 899.98px) {
 	.pc-app--project-detail .pc-stats-panel .stat-card:nth-child(2n + 1),
 	.pc-app--customer-detail .pc-stats-panel .stat-card:nth-child(2n + 1),
 	.pc-app--employee-detail .pc-stats-panel .stat-card:nth-child(2n + 1),
@@ -425,7 +425,7 @@
 .pc-app--customer-detail .section > .section-header > h3 > i[class*="icon-"],
 .pc-app--employee-detail .section > .section-header > h3 > i[class*="icon-"],
 .pc-app--time-entry-detail .section > .section-header > h3 > i[class*="icon-"] {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	flex-shrink: 0;
 }
 
@@ -710,7 +710,7 @@
 }
 
 .pc-entity-facts__row a {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	text-decoration: underline;
 	text-underline-offset: 0.15em;
 	font-weight: 600;

@@ -34,7 +34,7 @@
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .pc-get-app__icon-well svg,
@@ -50,7 +50,7 @@
 	font-weight: 650;
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .pc-get-app__title {
@@ -254,7 +254,7 @@
 	border: 2px solid var(--color-primary-element);
 	border-radius: var(--border-radius-element, 10px);
 	background: transparent;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	font-weight: 700;
 	font-size: var(--pc-fs-md, 1rem);
 	line-height: 1.25;

@@ -415,7 +415,7 @@
 	height: 50px;
 	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
 	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	border-radius: 8px;
 	display: flex;
 	align-items: center;
@@ -1949,7 +1949,7 @@ body[dir="rtl"] .filters-row select {
 
 .pc-app--customer-detail .pc-customer-projects-table .project-title:hover,
 .pc-app--customer-detail .pc-customer-projects-table .project-title:focus-visible {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	text-decoration: underline;
 }
 

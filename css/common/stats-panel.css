@@ -142,7 +142,7 @@
 	padding: var(--pc-space-2, 0.5rem);
 	border-radius: var(--pc-radius-sm, 8px);
 	background: color-mix(in srgb, var(--color-primary-element) 12%, transparent);
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	position: static;
 	box-shadow: none;
 }

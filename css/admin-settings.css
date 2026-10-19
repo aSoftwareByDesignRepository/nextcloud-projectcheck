@@ -489,7 +489,7 @@ body[dir="rtl"] .projectcheck-select {
 }
 
 .projectcheck-section-nav__link:hover {
-    color: var(--color-primary-element);
+    color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .projectcheck-section-nav__link:focus-visible {
@@ -913,7 +913,7 @@ body[dir="rtl"] .projectcheck-select {
     padding: 0.6rem 0.85rem;
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--color-primary-element, #006aa3);
+    color: var(--pc-accent-ink, var(--color-primary-element, #006aa3));
     cursor: pointer;
     user-select: none;
 }

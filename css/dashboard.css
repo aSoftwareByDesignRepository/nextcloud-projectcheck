@@ -407,7 +407,7 @@ body {
 	height: 48px;
 	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
 	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	border-radius: 12px;
 	display: flex;
 	align-items: center;
@@ -651,7 +651,7 @@ body {
 	display: inline-block;
 	padding: 0.25rem 0.75rem;
 	background: color-mix(in srgb, var(--color-primary-element) 10%, transparent);
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	border-radius: 20px;
 	font-size: 0.75rem;
 	font-weight: 600;
@@ -1043,7 +1043,7 @@ body {
 .toolbar-action .lucide-icon {
 	width: 18px;
 	height: 18px;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 /* Statistics Overview Section - Compact Style */
@@ -1093,7 +1093,7 @@ body {
 	height: 40px;
 	padding: 10px;
 	background: color-mix(in srgb, var(--color-primary-element) 10%, transparent);
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	border-radius: 8px;
 	flex-shrink: 0;
 }

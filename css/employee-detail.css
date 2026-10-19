@@ -266,7 +266,7 @@
 
 .pc-app--employee-detail .project-type-display .lucide-icon {
 	flex-shrink: 0;
-	color: var(--color-primary-element, var(--color-primary));
+	color: var(--pc-accent-ink, var(--color-primary-element, var(--color-primary)));
 }
 
 .pc-app--employee-detail .pc-help-trigger {

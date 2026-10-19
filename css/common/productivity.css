@@ -247,7 +247,7 @@
 	width: 1rem;
 	height: 1rem;
 	flex-shrink: 0;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .pc-productivity__metrics {
@@ -370,7 +370,7 @@
 	width: 1rem;
 	height: 1rem;
 	flex-shrink: 0;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .pc-type-analysis__num {

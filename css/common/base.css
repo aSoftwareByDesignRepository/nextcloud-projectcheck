@@ -132,7 +132,7 @@
   justify-content: center;
   position: relative;
   flex-shrink: 0;
-  color: var(--color-primary-element);
+  color: var(--pc-accent-ink, var(--color-primary-element));
   background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
   border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
 }
@@ -156,7 +156,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  color: var(--color-primary-element);
+  color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .action-icon .lucide-icon,
@@ -635,7 +635,7 @@ a:not(.btn):not(.button):not(.pc-btn):not(.toolbar-action):not(.action-item):not
 }
 
 a:not(.btn):not(.button):not(.pc-btn):not(.toolbar-action):not(.action-item):not(.pc-skip-link):hover {
-  color: var(--color-primary-element);
+  color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 a:focus-visible {

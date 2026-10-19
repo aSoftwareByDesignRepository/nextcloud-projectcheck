@@ -168,7 +168,7 @@
 .pc-app--customers .section > .section-header > h3 .lucide-icon.primary,
 .pc-app--employees .section > .section-header > h3 .lucide-icon.primary,
 .pc-app--time-entries .section > .section-header > h3 .lucide-icon.primary {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	flex-shrink: 0;
 }
 

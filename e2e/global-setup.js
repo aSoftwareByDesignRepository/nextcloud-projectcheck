@@ -34,6 +34,8 @@ loadDotEnv(path.join(__dirname, '.env'));
 module.exports = async function globalSetup() {
 	const { acquireSharedInstanceLock } = await import('./shared-instance-lock.mjs')
 	await acquireSharedInstanceLock('projectcheck')
+	const { resetE2eUserState } = await import('../../_shared/e2e/reset-e2e-user-state.mjs')
+	resetE2eUserState()
 	const user = process.env.E2E_USER;
 	const pass = process.env.E2E_PASS || process.env.E2E_PASSWORD;
 	if (!user || !pass) {

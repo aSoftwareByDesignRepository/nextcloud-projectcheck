@@ -369,7 +369,7 @@
 	width: 3.3rem;
 	height: 3.3rem;
 	border-radius: var(--pc-radius-pill, 999px);
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	background: color-mix(in srgb, var(--color-primary-element-light) 65%, var(--color-main-background));
 	border: 1px solid color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
 }
@@ -676,7 +676,7 @@ body[dir="rtl"] .filters-row select {
 	font-size: clamp(1.125rem, 2.5vw, 1.375rem);
 	font-weight: 700;
 	line-height: 1.2;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
 }
@@ -934,7 +934,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 .grid a {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	text-decoration: none;
 	font-weight: 500;
 }

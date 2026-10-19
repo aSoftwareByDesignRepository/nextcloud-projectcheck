@@ -33,7 +33,7 @@
 	height: var(--pc-touch-min, 44px);
 	flex-shrink: 0;
 	background: var(--pc-tint-info);
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	border-radius: var(--pc-radius-md, 12px);
 }
 

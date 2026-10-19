@@ -252,14 +252,14 @@
 	height: 4.5rem;
 	border-radius: 50%;
 	background: color-mix(in srgb, var(--color-primary-element) 14%, transparent);
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .pc-file-dropzone__icon-wrap .lucide-icon,
 .pc-file-dropzone__icon {
 	width: 1.75rem;
 	height: 1.75rem;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .pc-file-dropzone__title {
@@ -566,7 +566,7 @@ body {
 	display: block;
 	font-size: 1.5rem;
 	font-weight: 700;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	line-height: 1;
 	margin-bottom: 0.25rem;
 }
@@ -1100,7 +1100,7 @@ body[dir="rtl"] .filters-row select {
 	height: 3.2rem;
 	margin-inline: auto;
 	border-radius: 999px;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	background: color-mix(in srgb, var(--color-primary-element-light) 65%, var(--color-main-background));
 	border: 1px solid color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
 }
@@ -1149,7 +1149,7 @@ body[dir="rtl"] .filters-row select {
 	width: 100%;
 }
 
-@media (min-width: 721px) and (max-width: 1199px) {
+@media (min-width: 721px) and (max-width: 1199.98px) {
 	.projectcheck-table-wrap .projects-table {
 		min-width: 52rem;
 	}
@@ -1411,7 +1411,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 .projectcheck-dialog__eyebrow {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	font-size: 0.78rem;
 	font-weight: 700;
 	letter-spacing: 0.08em;
@@ -1849,7 +1849,7 @@ body[dir="rtl"] .filters-row select {
 	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--color-main-background) 65%, transparent);
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	font-size: 0.82rem;
 	font-weight: 600;
 	cursor: pointer;
@@ -2491,7 +2491,7 @@ body[dir="rtl"] .filters-row select {
 
 .pc-form-callout__text-link {
 	font-weight: 600;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	text-decoration: underline;
 }
 
@@ -2973,7 +2973,7 @@ body[dir="rtl"] .filters-row select {
 	height: 45px;
 	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
 	border: 1px solid color-mix(in srgb, var(--color-primary-element) 28%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	border-radius: 8px;
 	display: flex;
 	align-items: center;
@@ -4423,7 +4423,7 @@ body[dir="rtl"] .filters-row select {
 	width: 48px;
 	height: 48px;
 	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	border-radius: 8px;
 	display: flex;
 	align-items: center;
@@ -4998,7 +4998,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 .customer-title i {
-	color: var(--color-primary-element, var(--color-primary));
+	color: var(--pc-accent-ink, var(--color-primary-element, var(--color-primary)));
 	flex-shrink: 0;
 }
 
@@ -5114,7 +5114,7 @@ a.project-title,
 .project-title a:hover,
 a.project-title:hover,
 #app-content.pc-app a.project-title:hover {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .project-title i {
@@ -7515,7 +7515,7 @@ a.project-title:hover,
 .project-type-icon:focus-visible {
 	background: var(--pc-tint-info);
 	border-color: color-mix(in srgb, var(--color-primary-element) 45%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	outline: none;
 }
 
@@ -7534,7 +7534,7 @@ a.project-title:hover,
 .project-type-icon[data-project-type="research"] {
 	background: var(--pc-tint-info);
 	border-color: color-mix(in srgb, var(--color-primary-element) 35%, var(--color-border));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .project-type-icon[data-project-type="sales"],
@@ -7731,7 +7731,7 @@ a.project-title:hover,
 	-webkit-mask: url('../img/icons/user.svg') no-repeat center;
 	mask-size: contain;
 	-webkit-mask-size: contain;
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 #team-section #add-team-member-btn .icon-add-custom {
@@ -7869,7 +7869,7 @@ a.project-title:hover,
 }
 
 .pc-inline-action-link {
-	color: var(--color-primary-element, var(--color-primary));
+	color: var(--pc-accent-ink, var(--color-primary-element, var(--color-primary)));
 	font-weight: 600;
 	text-decoration: underline;
 	text-underline-offset: 0.15em;
@@ -8280,7 +8280,7 @@ a.project-title:hover,
 	padding: 0 0.5rem;
 	border-radius: var(--pc-radius-pill, 999px);
 	background: color-mix(in srgb, var(--color-primary-element) 14%, var(--color-main-background));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
 }
@@ -8292,7 +8292,7 @@ a.project-title:hover,
 }
 
 .pc-app--employees .employee-name-cell a {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	text-decoration: none;
 }
 
@@ -8390,7 +8390,7 @@ a.project-title:hover,
 	height: 2.75rem;
 	border-radius: var(--pc-radius-sm, 8px);
 	background: color-mix(in srgb, var(--color-primary-element) 18%, var(--color-main-background));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	font-size: 1.35rem;
 }
 
@@ -8617,7 +8617,7 @@ a.project-title:hover,
 
 .pc-pricing-card:has(.pc-pricing-card__input:disabled:checked) .pc-pricing-card__icon {
 	background: color-mix(in srgb, var(--color-primary-element) 14%, var(--color-main-background));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 .pc-pricing-card__icon {
@@ -8629,7 +8629,7 @@ a.project-title:hover,
 	height: 2.75rem;
 	border-radius: var(--pc-radius-sm, 8px);
 	background: color-mix(in srgb, var(--color-primary-element) 12%, var(--color-main-background));
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 	font-size: 1.35rem;
 }
 
@@ -8774,7 +8774,7 @@ a.project-title:hover,
 }
 
 .pc-form-hint a {
-	color: var(--color-primary-element);
+	color: var(--pc-accent-ink, var(--color-primary-element));
 }
 
 /* =============================================================
@@ -8825,7 +8825,7 @@ a.project-title:hover,
 	grid-area: icon;
 	border-radius: var(--pc-radius-pill, 999px);
 	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 18%, var(--color-main-background, #fff));
-	color: var(--color-primary-element, #0082c9);
+	color: var(--pc-accent-ink, var(--color-primary-element, #0082c9));
 	flex-shrink: 0;
 }
 
@@ -9018,7 +9018,7 @@ a.project-title:hover,
 
 .pc-form-callout__count--muted {
 	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 14%, var(--color-main-background, #fff));
-	color: var(--color-primary-element, #0082c9);
+	color: var(--pc-accent-ink, var(--color-primary-element, #0082c9));
 	font-weight: 600;
 	font-size: var(--pc-fs-xs, 0.75rem);
 	letter-spacing: 0.02em;
@@ -9101,7 +9101,7 @@ a.project-title:hover,
 	width: 0.95rem;
 	height: 0.95rem;
 	flex: 0 0 auto;
-	color: var(--color-primary-element, #0082c9);
+	color: var(--pc-accent-ink, var(--color-primary-element, #0082c9));
 }
 
 .pc-admin-override-badge__text {
