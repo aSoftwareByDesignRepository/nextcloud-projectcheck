@@ -668,11 +668,12 @@
 		clearFieldError(field);
 
 		field.classList.add('error');
+		field.setAttribute('aria-invalid', 'true');
 
 		const errorDiv = document.createElement('div');
 		errorDiv.className = 'field-error';
 		errorDiv.textContent = message;
-		errorDiv.style.color = 'var(--color-error)';
+		errorDiv.style.color = 'var(--pc-emphasis-text-error, var(--color-error-text, var(--color-error)))';
 		errorDiv.style.fontSize = '12px';
 		errorDiv.style.marginTop = '5px';
 
@@ -684,6 +685,7 @@
 	 */
 	function clearFieldError(field) {
 		field.classList.remove('error');
+		field.removeAttribute('aria-invalid');
 		const errorDiv = field.parentNode.querySelector('.field-error');
 		if (errorDiv) {
 			errorDiv.remove();

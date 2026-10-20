@@ -122,7 +122,7 @@
 	min-width: 0;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 559.98px) {
 	.pc-list-panel .filters-container,
 	.pc-app--time-entries .filters-container,
 	.pc-list-panel .filters-row,
@@ -443,7 +443,7 @@
 }
 
 /* Narrow viewports: labelled card rows (WCAG 1.4.10) */
-@media (max-width: 720px) {
+@media (max-width: 720.98px) {
 	.pc-list-table-wrap,
 	.pc-app--time-entries .time-entries-table-wrap {
 		/* Contain clipped thead intrinsic width — never expand #app-content */
@@ -598,7 +598,7 @@
 
 /* Medium widths: keep a usable table floor so columns don't crush before the
  * card layout kicks in at ≤720px. Scroll stays inside .pc-list-table-wrap. */
-@media (min-width: 721px) and (max-width: 1199px) {
+@media (min-width: 721px) and (max-width: 1199.98px) {
 	.pc-list-panel .pc-data-table.projects-table {
 		min-width: 52rem;
 	}
@@ -763,7 +763,7 @@
 	line-height: 1.35;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 479.98px) {
 	.pc-export {
 		width: 100%;
 	}

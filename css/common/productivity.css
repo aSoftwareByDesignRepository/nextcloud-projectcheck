@@ -411,7 +411,7 @@
 	min-width: 0;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 719.98px) {
 	.pc-type-analysis__table thead {
 		position: absolute;
 		width: 1px;

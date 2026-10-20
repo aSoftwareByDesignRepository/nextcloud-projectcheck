@@ -213,7 +213,7 @@
 }
 
 /* Narrow: full-width filter actions for touch / long translations */
-@media (max-width: 560px) {
+@media (max-width: 559.98px) {
 	.pc-app--projects .section > .section-header,
 	.pc-app--customers .section > .section-header,
 	.pc-app--employees .section > .section-header,

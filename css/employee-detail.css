@@ -328,7 +328,7 @@
 
 /* ── Narrow screens: stack headers / actions for long translations ───────── */
 
-@media (max-width: 560px) {
+@media (max-width: 559.98px) {
 	.pc-app--employee-detail .section-header-actions .button {
 		flex: 1 1 100%;
 		width: 100%;
@@ -344,7 +344,7 @@
 	}
 }
 
-@media (max-width: 480px) {
+@media (max-width: 479.98px) {
 	.pc-app--employee-detail .section > .section-header,
 	.pc-app--employee-detail .section > .section-content,
 	.pc-app--employee-detail .pc-stats-panel {

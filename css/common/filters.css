@@ -256,7 +256,7 @@ body.dark .pc-filters .filter-select,
 	}
 }
 
-@media (max-width: 719px) {
+@media (max-width: 719.98px) {
 	.pc-filters--all-visible .pc-filters__field--search {
 		grid-column: 1 / -1;
 	}
@@ -412,7 +412,7 @@ body.dark .pc-filters .filter-select,
 	}
 }
 
-@media (max-width: 559px) {
+@media (max-width: 559.98px) {
 	.pc-filters__actions {
 		flex-direction: column;
 		align-items: stretch;

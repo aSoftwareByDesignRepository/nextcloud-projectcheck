@@ -76,6 +76,35 @@
 		}
 	}
 
+	/**
+	 * Resolve the focus restore target lazily at close time. A trigger
+	 * captured at open may have been detached mid-open (list re-render after
+	 * a confirmed mutation) — focusing a detached node is a no-op that
+	 * strands focus on <body> (WCAG 2.4.3). Fall back through labelled page
+	 * anchors: header actions → view heading → main landmark; never body.
+	 */
+	function resolveRestoreTarget(entry) {
+		const to = entry && entry.restoreTo;
+		if (to instanceof HTMLElement && to.isConnected) {
+			return to;
+		}
+		const actions = document.querySelector('.pc-page-header__actions');
+		if (actions) {
+			const actionable = actions.querySelector(FOCUSABLE_SELECTOR);
+			if (actionable && isVisible(actionable)) {
+				return actionable;
+			}
+		}
+		const title = document.querySelector('.pc-page-header__title, #pc-page-title, [id$="page-title"], main h1, h1');
+		if (title) {
+			if (!title.hasAttribute('tabindex')) {
+				title.setAttribute('tabindex', '-1');
+			}
+			return title;
+		}
+		return document.querySelector('#pc-main-content, #projectcheck-org-main, main.pc-main, main[role="main"]');
+	}
+
 	function onKeyDown(event) {
 		const top = topOfStack();
 		if (!top) {
@@ -217,8 +246,8 @@
 			} catch (e) { /* swallow callback errors */ }
 		}
 
-		if (entry.options.restoreFocus && entry.restoreTo) {
-			focusElement(entry.restoreTo);
+		if (entry.options.restoreFocus) {
+			focusElement(resolveRestoreTarget(entry));
 		}
 	}
 

@@ -1200,7 +1200,7 @@ body[dir="rtl"] .projectcheck-select {
 	border: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
 	.projectcheck-support-us__options {
 		grid-template-columns: 1fr;
 	}
@@ -1306,7 +1306,7 @@ body[dir="rtl"] .projectcheck-select {
 		display: none;
 	}
 }
-@media (max-width: 640px) {
+@media (max-width: 639.98px) {
 	.pc-settings-nav,
 	.projectcheck-settings-nav {
 		flex-direction: column;

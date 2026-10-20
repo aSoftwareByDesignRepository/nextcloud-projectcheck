@@ -313,24 +313,23 @@
   background-position: right var(--space-2) center;
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
-  padding-right: var(--space-8);
+  padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  height: 48px;
-  line-height: 48px;
+  min-height: var(--pc-touch-min, 44px);
+  line-height: 1.5;
   box-sizing: border-box;
   vertical-align: middle;
 }
 
 /* Enhanced vertical centering for select elements */
 .form-input.form-select {
-  padding: 0 1rem;
-  padding-right: 2.5rem;
+  padding: var(--space-2) 2.5rem var(--space-2) 1rem;
   background-position: right 0.75rem center;
   background-size: 1.25em 1.25em;
-  height: 48px;
-  line-height: 48px;
+  min-height: var(--pc-touch-min, 44px);
+  line-height: 1.5;
   vertical-align: middle;
 }
 

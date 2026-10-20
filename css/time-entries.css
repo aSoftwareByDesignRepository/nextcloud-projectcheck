@@ -293,7 +293,7 @@
 	}
 }
 
-@media (max-width: 719px) {
+@media (max-width: 719.98px) {
 	.pc-app--time-entries .pc-filters--all-visible .pc-filters__field--search {
 		grid-column: 1 / -1;
 	}
@@ -1089,7 +1089,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 /* Time entries — mobile card layout for summary footer (narrow viewports only) */
-@media (max-width: 720px) {
+@media (max-width: 719.98px) {
 	.pc-app--time-entries .time-entries-table {
 		border: 0;
 		background: transparent;
@@ -1188,7 +1188,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 /* Mobile card layout: keep chip + checkbox usable when the table stacks */
-@media (max-width: 767px) {
+@media (max-width: 767.98px) {
 	.time-entries-table td.col-select {
 		text-align: start;
 	}

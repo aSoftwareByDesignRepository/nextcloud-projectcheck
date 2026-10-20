@@ -210,7 +210,7 @@
 	}
 }
 
-@media (max-width: 480px) {
+@media (max-width: 479.98px) {
 	#app-dashboard .panel:has(.panel--header img[src*="/projectcheck/"]) a.item-list__entry {
 		padding: 10px 8px;
 		gap: 12px;

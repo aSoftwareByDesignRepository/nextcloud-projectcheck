@@ -290,6 +290,14 @@ body[data-theme-dark] .time-entry-form .form-group select,
 	margin-top: var(--pc-space-2, 0.5rem);
 }
 
+.time-entry-form .char-count.warning {
+	color: var(--pc-emphasis-text-warning, var(--color-warning-text));
+}
+
+.time-entry-form .char-count.error {
+	color: var(--pc-emphasis-text-error, var(--color-error-text));
+}
+
 .time-entry-form .error-message {
 	color: var(--pc-emphasis-text-error);
 	font-size: var(--pc-fs-sm, 0.875rem);

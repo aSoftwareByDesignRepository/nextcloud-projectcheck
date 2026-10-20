@@ -470,7 +470,7 @@
 }
 
 /* Narrow: stack title → intro → actions for long translations / touch targets */
-@media (max-width: 560px) {
+@media (max-width: 559.98px) {
 	.pc-app--project-detail .section > .section-header,
 	.pc-app--customer-detail .section > .section-header,
 	.pc-app--employee-detail .section > .section-header,
@@ -767,7 +767,7 @@
 	overflow-wrap: anywhere;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 479.98px) {
 	.pc-entity-facts__row {
 		grid-template-columns: 1fr;
 		gap: 0.25rem;

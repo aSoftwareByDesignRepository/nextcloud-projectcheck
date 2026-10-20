@@ -221,6 +221,25 @@ class SettlementReadFacade
 	}
 
 	/**
+	 * F8: project → customer resolution for cross-app invoice pushes
+	 * (InventoryCheck material lines). Scoped read — returns null when the
+	 * actor cannot access the project or the project is gone, never the
+	 * underlying reason (uniform miss, no existence oracle).
+	 */
+	public function getProjectCustomerId(string $actorUid, int $projectId): ?int
+	{
+		if (!$this->projectService->canUserAccessProject($actorUid, $projectId)) {
+			return null;
+		}
+		$project = $this->projectService->getProject($projectId);
+		if ($project === null) {
+			return null;
+		}
+		$customerId = (int) $project->getCustomerId();
+		return $customerId > 0 ? $customerId : null;
+	}
+
+	/**
 	 * @return list<int>|null null = all projects
 	 */
 	public function getSettleableProjectIds(string $actorUid): ?array

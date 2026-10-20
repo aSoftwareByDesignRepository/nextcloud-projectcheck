@@ -445,7 +445,7 @@
 }
 
 /* ---- Responsive ---- */
-@media (max-width: 40rem) {
+@media (max-width: 39.99875rem) {
 	.pc-license-status__row {
 		flex-direction: column;
 		align-items: flex-start;
