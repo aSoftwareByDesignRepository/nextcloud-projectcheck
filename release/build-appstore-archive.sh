@@ -63,7 +63,7 @@ PACK_BASE="$(basename "${APP_DIR}")"
 
 if [[ "${PACK_BASE}" == "${APP}" ]]; then
 	# Monorepo (…/apps/projectcheck) or standalone clone checked out as …/projectcheck
-	(cd "${PACK_PARENT}" && tar \
+	(cd "${PACK_PARENT}" && tar --mode='u+rwX,go+rX,go-w' --owner=0 --group=0 --numeric-owner \
 		--exclude="${APP}/node_modules" \
 		--exclude="${APP}/node_modules.broken-*" \
 		--exclude="${APP}/.git" \
@@ -81,7 +81,7 @@ if [[ "${PACK_BASE}" == "${APP}" ]]; then
 		-czf "${OUT}" "${APP}")
 else
 	# Standalone clone with another directory name (e.g. nextcloud-projectcheck): archive top folder must be projectcheck/
-	(cd "${APP_DIR}" && tar \
+	(cd "${APP_DIR}" && tar --mode='u+rwX,go+rX,go-w' --owner=0 --group=0 --numeric-owner \
 		--transform "s,^,${APP}/," \
 		--exclude='node_modules' \
 		--exclude='node_modules.broken-*' \
