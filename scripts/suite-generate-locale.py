@@ -15,6 +15,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
+import subprocess
 import sys
 import threading
 import time
@@ -245,6 +247,26 @@ def translate_one(text: str, mt_code: str, locale: str, cache: dict[str, str]) -
 
 
 def regenerate_js(app_dir: Path, app_id: str, locales: list[str]) -> None:
+	php_gen = app_dir / "scripts" / "regenerate-l10n-js.php"
+	php_bin = shutil.which("php")
+	if php_gen.is_file() and php_bin:
+		# Delegate to the app's canonical generator — it is the byte contract check-l10n-js-json-parity.py enforces.
+		try:
+			subprocess.run(
+				[php_bin, str(php_gen)],
+				cwd=app_dir,
+				check=True,
+				capture_output=True,
+				text=True,
+			)
+			return
+		except subprocess.CalledProcessError as exc:
+			print(
+				f"WARN {app_id}: canonical {php_gen.name} failed "
+				f"(rc={exc.returncode}): {(exc.stderr or '').strip()} — "
+				"falling back to Python emitter",
+				file=sys.stderr,
+			)
 	base = app_dir / "l10n"
 	for lang in locales:
 		json_path = base / f"{lang}.json"
