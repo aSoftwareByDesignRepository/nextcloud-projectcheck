@@ -47,10 +47,10 @@ class ThemeComplianceContractTest extends TestCase
 	public function testNoLegacyDataThemeDarkAttributeSelectors(): void
 	{
 		$files = [
-			'css/common/components.css',
 			'css/common/accessibility.css',
-			'css/common/typography.css',
-			'css/common/base.css',
+			'css/common/tokens.css',
+			'css/common/colors.css',
+			'css/common/shell.css',
 		];
 		foreach ($files as $file) {
 			$css = self::read($file);
@@ -62,18 +62,18 @@ class ThemeComplianceContractTest extends TestCase
 		}
 	}
 
-	public function testBaseCssDoesNotInventDarkHexPalette(): void
+	public function testColorsCssDoesNotInventDarkHexPalette(): void
 	{
-		$css = self::read('css/common/base.css');
+		$css = self::read('css/common/colors.css');
 		self::assertStringNotContainsString(
 			'--color-main-background: #1a1a1a',
 			$css,
-			'base.css must not invent dark hex palette under prefers-color-scheme',
+			'colors.css must not invent dark hex palette under prefers-color-scheme',
 		);
 		self::assertDoesNotMatchRegularExpression(
 			'/@media\s*\(\s*prefers-contrast:\s*high\s*\)\s*\{\s*\*\s*\{[^}]*border-color:\s*currentColor\s*!important/s',
 			$css,
-			'base.css must not blanket border-color: currentColor !important under prefers-contrast',
+			'colors.css must not blanket border-color: currentColor !important under prefers-contrast',
 		);
 	}
 

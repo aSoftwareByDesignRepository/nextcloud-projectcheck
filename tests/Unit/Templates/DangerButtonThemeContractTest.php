@@ -41,14 +41,14 @@ class DangerButtonThemeContractTest extends TestCase
 
 	public function testBtnDangerUsesDangerFillToken(): void
 	{
-		$components = (string) file_get_contents(dirname(__DIR__, 3) . '/css/common/components.css');
+		$form = (string) file_get_contents(dirname(__DIR__, 3) . '/css/time-entry-form.css');
 		self::assertMatchesRegularExpression(
-			'/\.btn--danger\s*\{[^}]*background-color:\s*var\(--pc-danger-fill/s',
-			$components
+			'/\.pc-form-danger-zone__btn\s*\{[^}]*background:\s*var\(--pc-danger-fill/s',
+			$form
 		);
 		self::assertDoesNotMatchRegularExpression(
-			'/\.btn--danger\s*\{[^}]*background-color:\s*var\(--color-error\)\s*;/s',
-			$components
+			'/\.pc-form-danger-zone__btn\s*\{[^}]*background(-color)?:\s*var\(--color-error\)\s*;/s',
+			$form
 		);
 	}
 
