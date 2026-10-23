@@ -22,7 +22,7 @@
     box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     /* ≥768px: standard modal gutter padding */
     .projectcheck-deletion-modal {
         padding: 1rem;
@@ -53,7 +53,7 @@
     box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .projectcheck-deletion-modal__container {
         max-height: 90vh;
         max-width: min(600px, calc(100vw - 2rem));
@@ -71,7 +71,7 @@
     background: linear-gradient(135deg, color-mix(in srgb, var(--color-element-error) 10%, transparent), var(--color-main-background));
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .projectcheck-deletion-modal__header {
         padding: 1.5rem;
     }
@@ -137,7 +137,7 @@
     max-height: calc(95vh - 200px);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .projectcheck-deletion-modal__body {
         padding: 1.5rem;
         max-height: calc(90vh - 200px);
@@ -289,7 +289,7 @@
     gap: 0.5rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .projectcheck-deletion-modal__strategy-options {
         gap: 0.75rem;
     }
@@ -311,7 +311,7 @@
     transition: background-color 0.2s ease;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .projectcheck-deletion-modal__strategy-option {
         padding: 0.75rem;
     }
@@ -392,7 +392,7 @@
     border-top: 1px solid var(--color-border);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .projectcheck-deletion-modal__actions {
         flex-direction: row;
         gap: 1rem;
@@ -417,7 +417,7 @@
     box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .projectcheck-deletion-modal__btn {
         width: auto;
     }

@@ -539,7 +539,7 @@
 	background: color-mix(in srgb, var(--color-primary-element) 8%, var(--color-main-background));
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.pc-scope-banner {
 		grid-template-columns: auto 1fr;
 	}

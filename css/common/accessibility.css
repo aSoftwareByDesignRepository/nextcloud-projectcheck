@@ -643,7 +643,7 @@ th {
   color: var(--pc-accent-ink, var(--color-primary-element, #0082c9));
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .pc-section {
     margin-bottom: 1.75rem;
     padding: 1.25rem 1.5rem;

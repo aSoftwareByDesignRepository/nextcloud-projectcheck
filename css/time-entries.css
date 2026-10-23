@@ -53,7 +53,7 @@
 	box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	#app-content.pc-app--time-entries #app-content-wrapper:not(.pc-shell) {
 		padding: 2rem;
 	}
@@ -99,7 +99,7 @@
 	border-bottom: 1px solid var(--color-border);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.header-content {
 		flex-direction: row;
 		justify-content: space-between;
@@ -329,7 +329,7 @@
 	flex-shrink: 0;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.pc-app--time-entries .filter-actions {
 		margin-left: auto;
 		width: auto;
@@ -449,7 +449,7 @@ body[dir="rtl"] .filters-row select {
 	background-position: left 0.75rem center;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.filters-row {
 		flex-direction: row;
 		align-items: center;
@@ -691,7 +691,7 @@ body[dir="rtl"] .filters-row select {
 	column-gap: var(--pc-space-4, 1rem);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.time-entries-summary__stats--split {
 		column-gap: var(--pc-space-5, 1.5rem);
 	}
@@ -922,7 +922,7 @@ body[dir="rtl"] .filters-row select {
 	font-size: var(--pc-fs-sm, 0.875rem);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.text-truncate {
 		max-height: 4.2rem;
 		font-size: inherit;
@@ -1056,7 +1056,7 @@ body[dir="rtl"] .filters-row select {
 	justify-content: flex-start;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.grid {
 		font-size: var(--default-font-size);
 	}
@@ -1188,7 +1188,7 @@ body[dir="rtl"] .filters-row select {
 }
 
 /* Mobile card layout: keep chip + checkbox usable when the table stacks */
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	.time-entries-table td.col-select {
 		text-align: start;
 	}

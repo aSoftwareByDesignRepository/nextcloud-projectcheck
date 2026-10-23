@@ -175,6 +175,10 @@ foreach ($mutations as $name => $mutation) {
 		$failedToKill[] = $name . ' (no effect)';
 		continue;
 	}
+	// Baseline-green guard (lesson mutation_runner_baseline_red_false_kill):
+	// a kill-test that is red unmutated turns nonzero exits into fake kills.
+	require_once __DIR__ . '/MutationBaseline.php';
+	mutationBaselineSelfCheck(__FILE__);
 	file_put_contents($backup, $original);
 	if (file_put_contents($source, $mutated) === false) {
 		fwrite(STDERR, "Cannot write mutated {$mutation['file']}\n");

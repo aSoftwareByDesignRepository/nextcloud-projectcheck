@@ -770,7 +770,7 @@ body[data-theme-dark] .form-input.form-select option,
   min-width: 600px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .table-responsive {
     display: block;
     overflow-x: visible;
@@ -1374,7 +1374,7 @@ body[data-theme-dark] .form-input.form-select option,
   max-width: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .form--horizontal,
   .form--inline {
     flex-direction: row;

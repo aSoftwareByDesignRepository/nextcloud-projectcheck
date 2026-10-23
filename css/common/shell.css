@@ -83,7 +83,7 @@
 }
 
 /* ≥768px tablet: slightly wider padding */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.pc-shell {
 		padding: var(--pc-space-5) var(--pc-space-5) var(--pc-space-7);
 	}
@@ -128,7 +128,7 @@
 	width: 100%;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.pc-page-header__row {
 		align-items: center;
 		flex-wrap: nowrap;
@@ -172,7 +172,7 @@
 	color: var(--pc-text, var(--color-main-text));
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 768.98px) {
 	.pc-page-header__main {
 		grid-template-columns: 1fr;
 	}
@@ -455,7 +455,7 @@
 }
 
 /* ≥768px tablet/desktop: scope strip inline row */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.pc-scope-strip {
 		flex-direction: row;
 		align-items: center;

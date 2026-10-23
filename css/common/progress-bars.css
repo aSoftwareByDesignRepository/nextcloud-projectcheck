@@ -194,7 +194,7 @@
     flex-shrink: 0;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
     .progress-item,
     .nc-progress-item {
         gap: 12px;

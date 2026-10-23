@@ -16,7 +16,7 @@
 	}
 }
 
-@media (width < 1024px) and (min-width: 768px) {
+@media (width < 1024px) and (min-width: 769px) {
 	#content.app-projectcheck > #app-content > #app-content-wrapper {
 		padding-inline-start: var(--pc-space-4, 1rem);
 	}
@@ -126,7 +126,7 @@
 	outline-offset: 2px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.pc-page-header__row {
 		align-items: flex-start;
 		flex-wrap: nowrap;

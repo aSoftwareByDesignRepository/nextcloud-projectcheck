@@ -86,7 +86,7 @@
 }
 
 /* ≥768px tablet: standard shell padding */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	#content > #app-content > #app-content-wrapper.pc-shell {
 		padding: var(--pc-space-4, 1rem) var(--pc-space-4, 1rem) var(--pc-space-6, 2rem);
 	}

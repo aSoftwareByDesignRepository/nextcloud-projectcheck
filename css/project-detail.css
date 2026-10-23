@@ -262,7 +262,7 @@
 	border-radius: var(--pc-radius-sm, 8px);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.pc-app--project-detail .team-member-item {
 		align-items: center;
 	}

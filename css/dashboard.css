@@ -162,7 +162,7 @@ body {
 	overflow: visible;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	#app-content.pc-app--dashboard #app-content-wrapper:not(.pc-shell) {
 		padding: 2rem 2rem 4rem;
 	}
@@ -192,7 +192,7 @@ body {
 	box-shadow: 0 2px 8px color-mix(in srgb, var(--color-main-text) 5%, transparent);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.section:first-child {
 		padding: 2.5rem 2rem;
 	}
@@ -206,7 +206,7 @@ body {
 	align-items: stretch;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.header-content {
 		flex-direction: row;
 		justify-content: space-between;
@@ -227,7 +227,7 @@ body {
 	line-height: 1.2;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.header-text h2 {
 		font-size: 2.25rem;
 	}
@@ -248,7 +248,7 @@ body {
 	flex-wrap: nowrap;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.project-meta {
 		flex-direction: row;
 		gap: 1.5rem;
@@ -276,7 +276,7 @@ body {
 	align-items: stretch;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.header-actions {
 		flex-direction: row;
 		gap: 1rem;
@@ -293,7 +293,7 @@ body {
 	box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.section-header {
 		padding: var(--pc-space-5, 1.5rem) var(--pc-space-6, 2rem) var(--pc-space-4, 1rem);
 	}
@@ -320,7 +320,7 @@ body {
 	padding: 1rem 1.25rem 1.5rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.section-content {
 		padding: 1.5rem 2rem 2rem;
 	}
@@ -338,7 +338,7 @@ body {
 	background: color-mix(in srgb, var(--color-primary-element) 8%, var(--color-main-background));
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.pc-scope-banner {
 		grid-template-columns: auto 1fr;
 	}
@@ -375,7 +375,7 @@ body {
 	padding: 1.5rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.overview-stats {
 		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 		gap: 1.5rem;
@@ -701,7 +701,7 @@ body {
 	padding: 1.5rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.actions-grid {
 		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 		gap: 1.5rem;
@@ -999,7 +999,7 @@ body {
 	flex-wrap: nowrap;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.quick-actions-toolbar {
 		flex-direction: row;
 		flex-wrap: wrap;
@@ -1065,7 +1065,7 @@ body {
 	list-style: none;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.overview-stats-compact {
 		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	}
@@ -1151,7 +1151,7 @@ body {
 	justify-content: center;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
 	.toolbar-action {
 		width: auto;
 		justify-content: flex-start;
