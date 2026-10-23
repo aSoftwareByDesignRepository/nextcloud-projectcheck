@@ -27,7 +27,7 @@
 	gap: 0.5rem;
 }
 
-/* Hydrated icon hosts: see common/base.css (.lucide-icon-host) */
+/* Hydrated icon hosts (.lucide-icon-host) — defined below */
 .lucide-icon-host,
 .button > i.lucide-icon,
 .button > [data-lucide].lucide-icon {
