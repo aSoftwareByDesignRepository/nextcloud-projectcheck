@@ -10,20 +10,11 @@ declare(strict_types=1);
  */
 
 $base = __DIR__ . '/../l10n';
-$locales = array (
-  0 => 'en',
-  1 => 'de',
-  2 => 'fr',
-  3 => 'es',
-  4 => 'da',
-  5 => 'nl',
-  6 => 'it',
-  7 => 'pl',
-  8 => 'sv',
-  9 => 'nb',
-  10 => 'pt',
-  11 => 'pt_BR',
-);
+$locales = [];
+foreach (glob($base . '/*.json') ?: [] as $jsonFile) {
+	$locales[] = basename($jsonFile, '.json');
+}
+sort($locales);
 
 foreach ($locales as $lang) {
 	$jsonPath = $base . '/' . $lang . '.json';
