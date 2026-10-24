@@ -1,0 +1,8 @@
+# sv target-lexicon allowlist — reviewed 2026-10-24
+# Legit Swedish words the flat sv_SE wordlist misses plus reviewed
+# proper nouns/abbrevs. Markers: shared|loanword|proper|abbrev|reviewed.
+projectcheck # proper — product name
+åååå # abbrev — localized date-format letter (år)
+admininställningar # shared — admin+inställningar compound
+medarbetarvy # shared — medarbetare+vy compound
+idempotensnyckeln # shared — idempotens+nyckel compound

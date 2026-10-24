@@ -1,0 +1,7 @@
+# pl target-lexicon allowlist — reviewed 2026-10-24
+# Legit Polish words the flat pl_PL wordlist misses plus reviewed
+# proper nouns/abbrevs. Markers: shared|loanword|proper|abbrev|reviewed.
+projectcheck # proper — product name (msgid 'Project Control' maps to brand, same as en/de/fr)
+podjmij # shared — valid imperative ('podjmij działania')
+wieloprojektowe # shared — wielo+projektowe compound adjective
+rrrr # abbrev — localized date-format letter (rok)

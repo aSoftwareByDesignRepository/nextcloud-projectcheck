@@ -270,8 +270,14 @@
 			expiryCalloutEl.hidden = !showExpiry;
 			if (showExpiry && expiryBodyEl) {
 				var days = hasState && typeof state.daysRemaining === 'number' ? Math.max(0, state.daysRemaining) : null;
-				var body = tr('expirySoonBody', 'This license expires in {days} day(s). Renew soon to avoid an interruption for your mobile seats.');
-				expiryBodyEl.textContent = body.replace('{days}', days === null ? '' : String(days));
+				var bodyKey = days === null ? 'expirySoonBodyUnknown' : (days === 1 ? 'expirySoonBodyOne' : 'expirySoonBodyMany');
+				var bodyFallback = days === null
+					? 'This license expires soon. Renew soon to avoid an interruption for your mobile seats.'
+					: (days === 1
+						? 'This license expires in {days} day. Renew soon to avoid an interruption for your mobile seats.'
+						: 'This license expires in {days} days. Renew soon to avoid an interruption for your mobile seats.');
+				var body = tr(bodyKey, bodyFallback);
+				expiryBodyEl.textContent = days === null ? body : body.replace('{days}', String(days));
 			}
 		}
 	}

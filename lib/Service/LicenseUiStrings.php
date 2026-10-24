@@ -42,7 +42,12 @@ class LicenseUiStrings
 			'expirySoonTitle' => $l->t('Your license is about to expire'),
 			// "{days}" is a literal placeholder (not a gettext %-param) so client-side refreshes
 			// can substitute the current day count without re-fetching translated strings.
-			'expirySoonBody' => $l->t('This license expires in {days} day(s). Renew soon to avoid an interruption for your mobile seats.'),
+			// Singular/plural are separate keyed entries — the caller picks by the known
+			// day count (server render and client refresh both know it), which is the only
+			// way to avoid a "day(s)" lazy-plural hack inside a keyed string dictionary.
+			'expirySoonBodyOne' => $l->t('This license expires in {days} day. Renew soon to avoid an interruption for your mobile seats.'),
+			'expirySoonBodyMany' => $l->t('This license expires in {days} days. Renew soon to avoid an interruption for your mobile seats.'),
+			'expirySoonBodyUnknown' => $l->t('This license expires soon. Renew soon to avoid an interruption for your mobile seats.'),
 			'keyPlaceholder' => $l->t('PC2.…'),
 			'keyLabel' => $l->t('License key'),
 			'keyHint' => $l->t('Paste the full key from your license email. Line breaks are OK.'),

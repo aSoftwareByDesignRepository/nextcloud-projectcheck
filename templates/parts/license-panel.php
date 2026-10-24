@@ -94,8 +94,8 @@ $seatsLimit = (int)($licenseSeatsCounts['limit'] ?? 0);
 $seatsUsedText = $l->t('%1$s of %2$s seats used', [(string)$seatsAssigned, (string)$seatsLimit]);
 $meterPercent = $seatsLimit > 0 ? (int)min(100, round($seatsAssigned / $seatsLimit * 100)) : 0;
 $expiryBody = $daysRemaining !== null
-	? str_replace('{days}', (string)max(0, $daysRemaining), $t('expirySoonBody'))
-	: $t('expirySoonBody');
+	? str_replace('{days}', (string)max(0, $daysRemaining), $t($daysRemaining === 1 ? 'expirySoonBodyOne' : 'expirySoonBodyMany'))
+	: $t('expirySoonBodyUnknown');
 
 try {
 	$licenseI18nJson = json_encode($licenseI18n, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP);

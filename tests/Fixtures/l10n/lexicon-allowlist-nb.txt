@@ -1,0 +1,12 @@
+# nb target-lexicon allowlist — reviewed 2026-10-24
+# Legit Bokmål words the flat nb_NO wordlist misses plus reviewed
+# proper nouns/abbrevs. Markers: shared|loanword|proper|abbrev|reviewed.
+projectcheck # proper — product name
+nextclouds # proper — Nextcloud brand genitive ('Nextclouds brukeradministrasjon')
+åååå # abbrev — localized date-format letter (år)
+deaktivert # shared — legit Bokmål participle
+prosjektimer # shared — prosjekt+timer compound
+klientforespørsels # shared — klient+forespørsel compound stem
+forespørselstoken # shared — forespørsel+token compound
+sikkerhetstoken # shared — sikkerhet+token compound
+forhåndsvisningstoken # shared — forhåndsvisning+token compound
