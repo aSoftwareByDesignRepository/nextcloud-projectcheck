@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.104 - 2026-10-25
+
+### Fixed
+
+- strip zero-width doubled tokens, repair donor bleed, catalogue plurals
+- mobile-owns-768 media boundary migration + stale test literal + mutation baseline guard
+- select centring, error-state paint, modal focus restore, media-boundary normalization
+- delegate JS regen to app canonical emitter
+- dark-theme accent-ink token + e2e user-state reset
+- local-day export filename + license valid-until; add pt to l10n regen list
+- wrong-sense/dup-token MT corrections + e2e instance-lock harness
+- Fix stale Nextcloud version range in store descriptions (32–34 → 32–35)
+
+### Changed
+
+- sync canonical runtime-scan, sync and regen tooling
+- repoint stale icon-host comment after donor-css removal
+- remove dead donor ProjectControl stylesheets (8 files, 4.5k LOC)
+- assert intro substitutes %s, never literal (shared pack re-sync)
+- normalize tarball modes + host-side signature audit (GH #47)
+- catalog sync
+- seal projectcheck 3.5.15 — NavGate, native dialogs, landmark uniqueness, probe preflight
+- upgrade-backup integration hardening; l10n sync
+- uninstall-purge family — drop UpgradeBackupStateGuard + fleet sync
+- l10n: escape literal % as %% in .json values (PHP vsprintf safety); fix untranslated/case-only values
+
 ## 2.0.103 - 2026-10-10
 
 ### Changed
