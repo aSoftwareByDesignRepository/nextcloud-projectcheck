@@ -38,15 +38,17 @@ final class UpgradeBackupStateGuard
 
 	private ?string $previousLastSnapshotId = null;
 	private ?string $previousMaxSnapshots = null;
-	private ?int $projectFilesOwnerUid = null;
-	private ?string $projectFilesPath = null;
+
+	/** @var array<string, int> appdata folder path => owner uid at setUp */
+	private array $folderOwnerUids = [];
+
 	private ?string $snapshotRootPath = null;
 
 	public function __construct()
 	{
-		$this->backupService = \OC::$server->get(UpgradeBackupService::class);
-		$this->config = \OC::$server->get(IConfig::class);
-		$this->rootFolder = \OC::$server->get(IRootFolder::class);
+		$this->backupService = \OCP\Server::get(UpgradeBackupService::class);
+		$this->config = \OCP\Server::get(IConfig::class);
+		$this->rootFolder = \OCP\Server::get(IRootFolder::class);
 	}
 
 	public function setUp(): void
@@ -80,22 +82,26 @@ final class UpgradeBackupStateGuard
 			UpgradeBackupCatalog::CONFIG_MAX_SNAPSHOTS,
 			(string)UpgradeBackupCatalog::MAX_SNAPSHOTS_LIMIT,
 		);
-		// restoreSnapshot deletes+recreates the project_files appdata dir —
-		// when the suite runs as container root the recreated dir is
-		// root-owned and the www-data web process can no longer write into
-		// it. Record the owner uid so tearDown can repair it.
+		// A restore can delete+recreate configured appdata folders — when
+		// the suite runs as container root the recreated dir is root-owned
+		// and the www-data web process can no longer write into it. Record
+		// each folder's owner uid so tearDown can repair it.
 		$instanceId = $this->config->getSystemValueString('instanceid');
 		$dataDir = rtrim($this->config->getSystemValueString('datadirectory'), '/');
 		if ($instanceId !== '' && $dataDir !== '') {
 			$appDir = $dataDir . '/appdata_' . $instanceId . '/' . UpgradeBackupCatalog::APP_ID;
 			$this->snapshotRootPath = $appDir . '/' . UpgradeBackupCatalog::APPDATA_ROOT;
 			$this->preExistingDirNames = $this->snapshotEntryNames();
-			$this->projectFilesPath = $appDir . '/project_files';
-			// If project_files does not exist yet, the appdata app dir's
-			// owner is the correct expected owner for anything a restore
-			// creates inside it.
-			$anchor = is_dir($this->projectFilesPath) ? $this->projectFilesPath : $appDir;
-			$this->projectFilesOwnerUid = is_dir($anchor) ? (int)fileowner($anchor) : null;
+			foreach (UpgradeBackupCatalog::APPDATA_FOLDERS as $folderName) {
+				$path = $appDir . '/' . $folderName;
+				// If the folder does not exist yet, the appdata app dir's
+				// owner is the correct expected owner for anything a
+				// restore creates inside it.
+				$anchor = is_dir($path) ? $path : $appDir;
+				if (is_dir($anchor)) {
+					$this->folderOwnerUids[$path] = (int)fileowner($anchor);
+				}
+			}
 		}
 	}
 
@@ -138,7 +144,7 @@ final class UpgradeBackupStateGuard
 				$this->previousMaxSnapshots,
 			);
 		}
-		$this->repairProjectFilesOwner();
+		$this->repairAppDataFolderOwners();
 		if ($missing !== []) {
 			throw new \RuntimeException(
 				'Pre-existing upgrade backup snapshot(s) destroyed by test run: '
@@ -148,35 +154,34 @@ final class UpgradeBackupStateGuard
 	}
 
 	/**
-	 * Restore the project_files appdata dir to the owner uid it had before
-	 * the test — a root-run suite leaves a recreated dir root-owned, which
-	 * silently breaks web uploads. Only attempts repair when the current
-	 * process can actually chown (i.e. is root); a www-data-run suite never
-	 * produced the wrong owner in the first place.
+	 * Restore each configured appdata folder to the owner uid it had
+	 * before the test — a root-run suite leaves a recreated dir
+	 * root-owned, which silently breaks web writes. Only attempts repair
+	 * when the current process can actually chown (i.e. is root); a
+	 * www-data-run suite never produced the wrong owner in the first
+	 * place.
 	 */
-	private function repairProjectFilesOwner(): void
+	private function repairAppDataFolderOwners(): void
 	{
-		if ($this->projectFilesOwnerUid === null) {
-			return;
+		foreach ($this->folderOwnerUids as $path => $ownerUid) {
+			if (!is_dir($path)) {
+				continue;
+			}
+			if ((int)fileowner($path) === $ownerUid) {
+				continue;
+			}
+			if (function_exists('posix_geteuid') && posix_geteuid() !== 0) {
+				continue;
+			}
+			$iterator = new \RecursiveIteratorIterator(
+				new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS),
+				\RecursiveIteratorIterator::SELF_FIRST,
+			);
+			foreach ($iterator as $node) {
+				@chown($node->getPathname(), $ownerUid);
+			}
+			@chown($path, $ownerUid);
 		}
-		$path = $this->projectFilesPath ?? null;
-		if ($path === null || !is_dir($path)) {
-			return;
-		}
-		if ((int)fileowner($path) === $this->projectFilesOwnerUid) {
-			return;
-		}
-		if (function_exists('posix_geteuid') && posix_geteuid() !== 0) {
-			return;
-		}
-		$iterator = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::SELF_FIRST,
-		);
-		foreach ($iterator as $node) {
-			@chown($node->getPathname(), $this->projectFilesOwnerUid);
-		}
-		@chown($path, $this->projectFilesOwnerUid);
 	}
 
 	/**

@@ -22,6 +22,7 @@ use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\L10N\IFactory;
+use OCP\Lock\ILockingProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
@@ -64,8 +65,8 @@ final class AtlasEntrypointsInvokeCoverageTest extends TestCase
 		$config = $this->createMock(IConfig::class);
 		$schema = $this->createMock(SchemaGuardService::class);
 		foreach ([
-			[BgCleanupJob::class, [$time, $logger, $projects, $entries, $customers, $config, $schema]],
-			[CronCleanupJob::class, [$time, $logger, $projects, $entries, $customers, $this->createMock(BudgetAlertService::class), $config, $schema]],
+			[BgCleanupJob::class, [$time, $logger, $projects, $entries, $customers, $config, $schema, $this->createMock(ILockingProvider::class)]],
+			[CronCleanupJob::class, [$time, $logger, $projects, $entries, $customers, $this->createMock(BudgetAlertService::class), $config, $schema, $this->createMock(ILockingProvider::class)]],
 		] as [$job, $ctorArgs]) {
 			if (!class_exists($job)) {
 				continue;

@@ -13,6 +13,7 @@ use OCA\ProjectCheck\Service\SchemaGuardService;
 use OCA\ProjectCheck\Service\TimeEntryService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
+use OCP\Lock\ILockingProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
@@ -34,6 +35,7 @@ final class CleanupJobConstructTest extends TestCase
 			$this->createMock(CustomerService::class),
 			$this->createMock(IConfig::class),
 			$this->createMock(SchemaGuardService::class),
+			$this->createMock(ILockingProvider::class),
 		);
 		self::assertInstanceOf(BgCleanupJob::class, $job);
 	}
@@ -50,6 +52,7 @@ final class CleanupJobConstructTest extends TestCase
 			$this->createMock(BudgetAlertService::class),
 			$this->createMock(IConfig::class),
 			$this->createMock(SchemaGuardService::class),
+			$this->createMock(ILockingProvider::class),
 		);
 		self::assertInstanceOf(CronCleanupJob::class, $job);
 	}

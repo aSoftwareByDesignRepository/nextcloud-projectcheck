@@ -31,7 +31,9 @@ use Psr\Log\LoggerInterface;
 
 class UpgradeBackupService
 {
-	private const LOCK_KEY = 'projectcheck-upgrade-backup';
+	// Public on purpose: this key is the coordination contract — background
+	// jobs take a SHARED lock on it so restores (exclusive) block scans.
+	public const LOCK_KEY = 'projectcheck-upgrade-backup';
 
 	public function __construct(
 		private readonly IDBConnection $db,
@@ -654,10 +656,17 @@ class UpgradeBackupService
 
 		/** @var list<array<string, mixed>> $rows */
 		$rows = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+		$generatedColumns = $this->generatedColumnsOf($table);
 		foreach ($rows as $row) {
 			$qb = $this->db->getQueryBuilder();
 			$qb->insert($table);
 			foreach ($row as $column => $value) {
+				// Generated columns are recomputed by the engine on insert —
+				// writing them explicitly is an SQL error (MySQL/MariaDB 1906,
+				// Postgres 42602-class).
+				if (isset($generatedColumns[(string)$column])) {
+					continue;
+				}
 				if (!UpgradeBackupIntegrity::isAllowedColumn((string)$column)) {
 					throw new UpgradeBackupException('Snapshot contains invalid column name: ' . $column);
 				}
@@ -668,6 +677,44 @@ class UpgradeBackupService
 			}
 			$qb->executeStatement();
 		}
+	}
+
+	/**
+	 * Column names declared GENERATED ALWAYS on $table. MySQL/MariaDB report
+	 * them via SHOW COLUMNS Extra containing "GENERATED"; PostgreSQL exposes
+	 * attgenerated <> ''. Unknown/unsupported platforms return an empty set —
+	 * worst case the engine raises its own error on insert, as before.
+	 *
+	 * @return array<string, true>
+	 */
+	private function generatedColumnsOf(string $table): array
+	{
+		$physical = $this->tablePrefix() . $table;
+		$out = [];
+		try {
+			if ($this->db->getDatabaseProvider() === IDBConnection::PLATFORM_POSTGRES) {
+				$rows = $this->db->executeQuery(
+					"SELECT a.attname FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid"
+					. " JOIN pg_namespace n ON n.oid = c.relnamespace"
+					. " WHERE c.relname = :tbl AND n.nspname = current_schema()"
+					. " AND a.attnum > 0 AND NOT a.attisdropped AND a.attgenerated <> ''",
+					['tbl' => $physical],
+				)->fetchAll();
+				foreach ($rows as $r) {
+					$out[(string)$r['attname']] = true;
+				}
+				return $out;
+			}
+			$safe = str_replace('`', '``', $physical);
+			foreach ($this->db->executeQuery("SHOW COLUMNS FROM `{$safe}`")->fetchAll() as $col) {
+				if (str_contains(strtoupper((string)($col['Extra'] ?? '')), 'GENERATED')) {
+					$out[(string)$col['Field']] = true;
+				}
+			}
+		} catch (\Throwable) {
+			return [];
+		}
+		return $out;
 	}
 
 	/**
@@ -801,9 +848,6 @@ class UpgradeBackupService
 		}
 	}
 
-	/**
-	 * @param array<string, mixed> $payload
-	 */
 	/**
 	 * @param array<array-key, mixed> $payload
 	 */

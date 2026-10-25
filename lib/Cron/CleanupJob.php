@@ -21,7 +21,10 @@ use OCA\ProjectCheck\Service\CustomerService;
 use OCA\ProjectCheck\Service\ProjectService;
 use OCA\ProjectCheck\Service\SchemaGuardService;
 use OCA\ProjectCheck\Service\TimeEntryService;
+use OCA\ProjectCheck\Service\UpgradeBackupService;
 use OCP\IConfig;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 
 /**
  * Cron job for cleanup tasks
@@ -49,6 +52,9 @@ class CleanupJob extends Job implements IJob
 	/** @var SchemaGuardService */
 	private $schemaGuard;
 
+	/** @var ILockingProvider */
+	private $locking;
+
 	/**
 	 * CleanupJob constructor
 	 *
@@ -60,6 +66,7 @@ class CleanupJob extends Job implements IJob
 	 * @param BudgetAlertService $budgetAlertService
 	 * @param IConfig $config
 	 * @param SchemaGuardService $schemaGuard
+	 * @param ILockingProvider $locking
 	 */
 	public function __construct(
 		ITimeFactory $time,
@@ -69,7 +76,8 @@ class CleanupJob extends Job implements IJob
 		CustomerService $customerService,
 		BudgetAlertService $budgetAlertService,
 		IConfig $config,
-		SchemaGuardService $schemaGuard
+		SchemaGuardService $schemaGuard,
+		ILockingProvider $locking
 	) {
 		parent::__construct($time);
 		$this->logger = $logger;
@@ -79,6 +87,7 @@ class CleanupJob extends Job implements IJob
 		$this->budgetAlertService = $budgetAlertService;
 		$this->config = $config;
 		$this->schemaGuard = $schemaGuard;
+		$this->locking = $locking;
 	}
 
 	/**
@@ -87,6 +96,33 @@ class CleanupJob extends Job implements IJob
 	 * @param array $argument
 	 */
 	public function run($argument)
+	{
+		// Shared lock on the upgrade-backup key: a restore holds it
+		// exclusively (UpgradeBackupService::runExclusive) — app-table
+		// scans/writes must not interleave with a mid-restore
+		// truncate+reinsert. A skip is not a failure: cron re-runs the
+		// job on its interval.
+		try {
+			$this->locking->acquireLock(
+				UpgradeBackupService::LOCK_KEY,
+				ILockingProvider::LOCK_SHARED,
+				'cleanup',
+			);
+		} catch (LockedException) {
+			$this->logger->warning(
+				'ProjectCheck: skipping cleanup — upgrade backup/restore in progress.',
+				['app' => 'projectcheck'],
+			);
+			return;
+		}
+		try {
+			$this->doRun($argument);
+		} finally {
+			$this->locking->releaseLock(UpgradeBackupService::LOCK_KEY, ILockingProvider::LOCK_SHARED);
+		}
+	}
+
+	private function doRun($argument)
 	{
 		$this->logger->info('Starting ProjectControl cron cleanup job', ['app' => 'projectcheck']);
 
