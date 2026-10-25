@@ -13,6 +13,7 @@ namespace OCA\ProjectCheck\Service;
 
 use OCA\ProjectCheck\Db\EmployeeHourlyRate;
 use OCA\ProjectCheck\Db\EmployeeHourlyRateMapper;
+use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCA\ProjectCheck\Util\Money;
 use OCP\IL10N;
@@ -68,7 +69,7 @@ class EmployeeHourlyRateService
 	public function addRateRow(string $targetUserId, array $data, string $actorUserId): EmployeeHourlyRate
 	{
 		if (!$this->accessControl->canManageAppConfiguration($actorUserId)) {
-			throw new \Exception($this->l->t('Access denied'));
+			throw new PermissionDeniedException('manage', 'employee hourly rate', $this->l->t('Access denied'));
 		}
 		$targetUserId = trim($targetUserId);
 		if ($targetUserId === '' || $this->userManager->get($targetUserId) === null) {

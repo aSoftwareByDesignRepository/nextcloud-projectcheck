@@ -12,6 +12,14 @@ declare(strict_types=1);
  * use EXPECTED_TABLES; uninstall drop lists use UninstallDropTables::TABLES
  * (which deliberately keeps dropped legacy tables for complete cleanup).
  *
+ * App-specific note (keep in sync on regen): projectcheck has legacy table
+ * renames (customers -> pc_customers et al. via LegacyTableRenamer), so
+ * EXPECTED_TABLES is deliberately NOT a must-exist set here — it still
+ * lists the pre-rename source names. EnsureProjectCheckSchema and
+ * SchemaGuardService verify ProjectCheckTableCatalog::REQUIRED_TABLES,
+ * the true post-rename set; EXPECTED_TABLES serves the sync-uninstall
+ * drop list only.
+ *
  * Regenerate via:
  *     php scripts/check-nextcloud-db-standards.php sync-uninstall --app=projectcheck
  */

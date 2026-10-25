@@ -1033,7 +1033,7 @@ class TimeEntryService
 		string $description,
 	): int {
 		if (!$this->projectService->mayBillArbeitszeitCheckTimeForUser($actorUserId, $billableUserId, $projectId)) {
-			throw new \Exception($this->l->t('Access denied'));
+			throw new PermissionDeniedException('bill', 'time entry', $this->l->t('Access denied'));
 		}
 
 		$parsedDate = \DateTime::createFromInterface($dateOnly);
@@ -1172,7 +1172,7 @@ class TimeEntryService
 
 		$pid = (int)$row->getProjectId();
 		if (!$this->projectService->mayBillArbeitszeitCheckTimeForUser($actorUserId, $billableUserId, $pid)) {
-			throw new \Exception($this->l->t('Access denied'));
+			throw new PermissionDeniedException('delete', 'time entry', $this->l->t('Access denied'));
 		}
 
 		if ($row->isBillingLocked()) {

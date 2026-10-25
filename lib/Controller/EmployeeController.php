@@ -546,9 +546,6 @@ class EmployeeController extends Controller
 				'code' => $e->getCodeKey(),
 			], 400);
 		} catch (\Exception $e) {
-			if (stripos($e->getMessage(), 'Access denied') !== false) {
-				return new JSONResponse(['error' => $this->l->t('Access denied')], 403);
-			}
 			return new JSONResponse(['error' => $this->l->t('Could not save rate. Please check your input.')], 400);
 		}
 	}

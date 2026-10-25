@@ -6,6 +6,7 @@ namespace OCA\ProjectCheck\Tests\Unit\Service;
 
 use OCA\ProjectCheck\Db\EmployeeHourlyRate;
 use OCA\ProjectCheck\Db\EmployeeHourlyRateMapper;
+use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Exception\RateResolutionException;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\EmployeeHourlyRateService;
@@ -68,7 +69,7 @@ class EmployeeHourlyRateServiceTest extends TestCase
 		$mapper = $this->createMock(EmployeeHourlyRateMapper::class);
 		$svc = $this->makeService($mapper, false);
 
-		$this->expectException(\Exception::class);
+		$this->expectException(PermissionDeniedException::class);
 		$this->expectExceptionMessage('Access denied');
 		$svc->addRateRow('alice', ['hourly_rate' => 50, 'effective_from' => '2026-01-01'], 'bob');
 	}
