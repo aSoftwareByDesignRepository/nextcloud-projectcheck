@@ -8805,7 +8805,7 @@ a.project-title:hover,
    ============================================================= */
 .pc-form-callout {
 	display: grid;
-	grid-template-columns: auto 1fr;
+	grid-template-columns: auto minmax(0, 1fr);
 	grid-template-areas:
 		"icon body"
 		"actions actions";
@@ -8823,7 +8823,7 @@ a.project-title:hover,
 
 @media (min-width: 721px) {
 	.pc-form-callout {
-		grid-template-columns: auto 1fr auto;
+		grid-template-columns: auto minmax(0, 1fr) auto;
 		grid-template-areas: "icon body actions";
 		padding: var(--pc-space-4, 1rem) var(--pc-space-5, 1.25rem);
 	}

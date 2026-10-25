@@ -137,7 +137,7 @@
 
 .pc-page-header__main {
 	display: grid;
-	grid-template-columns: auto 1fr;
+	grid-template-columns: auto minmax(0, 1fr);
 	align-items: start;
 	gap: var(--pc-space-4);
 	min-width: 0;
@@ -170,6 +170,9 @@
 	font-weight: 600;
 	line-height: var(--pc-line-tight);
 	color: var(--pc-text, var(--color-main-text));
+	/* Long compounds must wrap, never widen the header track. */
+	overflow-wrap: anywhere;
+	hyphens: auto;
 }
 
 @media (max-width: 768.98px) {
