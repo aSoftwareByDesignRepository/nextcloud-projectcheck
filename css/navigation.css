@@ -379,7 +379,8 @@
 	font-size: var(--pc-fs-sm, 0.875rem);
 	line-height: var(--pc-line-base, 1.45);
 	white-space: normal;
-	overflow-wrap: anywhere;
+	/* Menu labels keep normal word breaks — anywhere tears mid-word. */
+	overflow-wrap: break-word;
 }
 
 .pc-nav-footer__menu-item:hover {
