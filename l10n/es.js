@@ -608,7 +608,7 @@ OC.L10N.register(
 	"Entry Date" : "Fecha de entrada",
 	"Entry Details" : "Detalles de entrada",
 	"Entry cost: {entryCost}. Remaining budget: {remaining}." : "Costo de entrada: {entryCost}. Presupuesto restante: {remaining}.",
-	"Error" : "Error del sistema",
+	"Error" : "Error",
 	"Error Code:" : "Código de error:",
 	"Error checking budget impact" : "Error al comprobar el impacto en el presupuesto",
 	"Error deleting project" : "Error al eliminar el proyecto",

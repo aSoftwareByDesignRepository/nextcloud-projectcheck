@@ -1272,7 +1272,7 @@ OC.L10N.register(
 	"Remove seat for %s" : "Remover o posto de %s",
 	"Remove the project manager role from {name}?" : "Remover a função de gestor de projeto de {name}?",
 	"Remove this license?" : "Remover esta licença?",
-	"Remove this time entry permanently. This cannot be undone." : "Remove este registo de horas permanentemente. Esta ação é irreversível.",
+	"Remove this time entry permanently. This cannot be undone." : "Remova este registo de horas permanentemente. Esta ação é irreversível.",
 	"Removing…" : "A remover…",
 	"Reopen" : "Reabrir",
 	"Reopen all matching" : "Reabrir todos os correspondentes",

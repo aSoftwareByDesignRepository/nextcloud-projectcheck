@@ -8770,6 +8770,11 @@ a.project-title:hover,
 	gap: var(--pc-space-3, 0.75rem);
 	min-height: var(--pc-touch-min, 44px);
 	line-height: var(--pc-line-base, 1.45);
+	overflow-wrap: break-word;
+}
+
+.pc-create-workflow__step > :not(.pc-create-workflow__num) {
+	min-width: 0;
 }
 
 .pc-create-workflow__num {

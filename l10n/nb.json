@@ -452,7 +452,7 @@
         "DETAILED DESCRIPTION": "DETALJERT BESKRIVELSE",
         "Dashboard": "Dashbord",
         "Dashboard Refresh Interval (seconds)": "Oppdateringsintervall for dashbord (sekunder)",
-        "Dashboard analytics only include your own time entries. Project cards still reflect the projects you are allowed to access.": "Dashboard-analysen omfatter kun egne tidsregistreringer. Prosjektkort viser prosjekter som kontoen har tilgang til.",
+        "Dashboard analytics only include your own time entries. Project cards still reflect the projects you are allowed to access.": "Dashbord-analysen omfatter kun egne tidsregistreringer. Prosjektkort viser prosjekter som kontoen har tilgang til.",
         "Dashboard summary": "Dashbordsammendrag",
         "Date": "Dato",
         "Date Format": "Datoformat",

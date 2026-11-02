@@ -872,7 +872,7 @@ OC.L10N.register(
 	"Maximum team members must be at least 1" : "Maximale Teammitglieder müssen mindestens 1 sein",
 	"Medium" : "Mittel",
 	"Meetings & Overhead" : "Besprechungen & Overhead",
-	"Meetings & Overhead - Internal meetings, planning" : "Meetings & Overhead - Interne Meetings, Planung",
+	"Meetings & Overhead - Internal meetings, planning" : "Besprechungen & Overhead - Interne Meetings, Planung",
 	"Member" : "Mitglied",
 	"Menu" : "Menü",
 	"Message History" : "Nachrichtenverlauf",

@@ -9,7 +9,9 @@
  * visual substitute (chips/swatch/icon), never a content list whose bullets
  * a CSS reset silently ate.
  */
-const { test } = require('@playwright/test');
+const { test, expect } = require('@playwright/test');
+const fs = require('fs');
+const path = require('path');
 const { assertAtlasRenderedSurface } = require('../../_shared/e2e/atlas-rendered-surface-contract');
 const { gotoApp } = require('./helpers/auth-guard');
 
@@ -59,4 +61,120 @@ test.describe('ATLAS_RENDERED_SURFACE_CONTRACT', () => {
 			});
 		});
 	}
+
+	// LEARNED-REGRESSIONS probe (pc-intake-20261102T193907Z —
+	// workflow_step_text_clip sibling sweep from mobilitycheck): the
+	// .pc-create-workflow__* stepper block floors its columns via grid
+	// repeat(2, minmax(0,1fr)) >=720px, but the step is a flex row whose
+	// text child needs the overflow-wrap residual guard so a single
+	// unbreakable compound never paints past the step card edge. The
+	// markup is dormant in templates (pinned absent by
+	// tests/js/project-form.test.cjs), so the leg mounts the shipped DOM
+	// shape onto a real styled surface — the starvation leg
+	// (scrollWidth>clientWidth per step) doubles as card-edge paint here.
+	test('workflow stepper words never clip across the step card edge', async ({ page }) => {
+		const probe = () => {
+			const bad = [];
+			document.querySelectorAll('.pc-create-workflow__step').forEach((step) => {
+				const sRect = step.getBoundingClientRect();
+				step.querySelectorAll(':scope > :not(.pc-create-workflow__num)').forEach((el) => {
+					const label = (el.textContent || '').trim().slice(0, 48);
+					if (el.scrollWidth > el.clientWidth + 0.5) {
+						bad.push(`overflow: "${label}" scrollW=${el.scrollWidth} > clientW=${el.clientWidth}`);
+					}
+					const r = el.getBoundingClientRect();
+					if (r.width > 0 && r.left + el.scrollWidth > sRect.right + 0.5) {
+						bad.push(`card-edge: "${label}" paints to ${(r.left + el.scrollWidth).toFixed(1)} past step.right=${sRect.right.toFixed(1)}`);
+					}
+				});
+			});
+			return bad;
+		};
+
+		await gotoApp(page, SURFACES['project-create']);
+		const mounted = await page.evaluate(() => {
+			const main = document.querySelector('#pc-main-content, #projectcheck-org-main, main.pc-main');
+			if (!main) return false;
+			const nav = document.createElement('nav');
+			nav.className = 'pc-create-workflow pc-section';
+			nav.id = 'pc-e2e-create-workflow';
+			const title = document.createElement('h2');
+			title.className = 'pc-create-workflow__title';
+			title.textContent = 'Setup steps';
+			const list = document.createElement('ol');
+			list.className = 'pc-create-workflow__list';
+			[
+				'Enter name, customer, and description',
+				'Set schedule and status',
+				'Choose how hours are priced',
+				'After saving, add your team so people can log time',
+			].forEach((text, i) => {
+				const li = document.createElement('li');
+				li.className = 'pc-create-workflow__step';
+				const num = document.createElement('span');
+				num.className = 'pc-create-workflow__num';
+				num.setAttribute('aria-hidden', 'true');
+				num.textContent = String(i + 1);
+				const body = document.createElement('span');
+				body.textContent = text;
+				li.appendChild(num);
+				li.appendChild(body);
+				list.appendChild(li);
+			});
+			nav.appendChild(title);
+			nav.appendChild(list);
+			main.prepend(nav);
+			return true;
+		});
+		expect(mounted, 'app main surface missing — cannot mount stepper').toBe(true);
+
+		const flow = page.locator('#pc-e2e-create-workflow');
+		await expect(flow).toBeVisible();
+		const outDir = path.resolve(
+			__dirname,
+			'../../../../.cursor/atlas-farm-v3/artifacts/projectcheck',
+		);
+		fs.mkdirSync(outDir, { recursive: true });
+
+		// Two-column grid band at 1280/768 (>=720px) — the tightest the
+		// columns get on desktop widths.
+		for (const width of [1280, 768]) {
+			await page.setViewportSize({ width, height: 900 });
+			const violations = await page.evaluate(probe);
+			expect(violations, `create-workflow stepper @${width}px: step text overflow`).toEqual([]);
+		}
+
+		// Synthesized long-compound step — locale-independent stress. The
+		// token must be wider than the ~450px floored column to reproduce
+		// the clip class; normal words and short compounds always fit.
+		const synth = await page.evaluate((probeSrc) => {
+			const list = document.querySelector('.pc-create-workflow__list');
+			if (!list) return { bad: ['no .pc-create-workflow__list mounted'] };
+			const li = document.createElement('li');
+			li.className = 'pc-create-workflow__step';
+			const num = document.createElement('span');
+			num.className = 'pc-create-workflow__num';
+			num.setAttribute('aria-hidden', 'true');
+			num.textContent = '9';
+			const body = document.createElement('span');
+			body.textContent = 'Zeiterfassungsfreigabeworkflowkonfigurationsverwaltungseinstellungenübersichtsseite';
+			li.appendChild(num);
+			li.appendChild(body);
+			list.appendChild(li);
+			const bad = new Function(`return (${probeSrc})()`)();
+			return { bad };
+		}, probe.toString());
+		for (const width of [1280, 768]) {
+			await page.setViewportSize({ width, height: 900 });
+			const violations = await page.evaluate(probe);
+			expect(violations, `synthesized long-compound step @${width}px`).toEqual([]);
+		}
+		expect(synth.bad, 'synthesized long-compound step @1280px').toEqual([]);
+
+		await flow.screenshot({ path: path.join(outDir, 'pc-workflow-1280px.png') });
+		await page.setViewportSize({ width: 375, height: 900 });
+		const singleCol = await page.evaluate(probe);
+		expect(singleCol, 'create-workflow stepper @375px: step text overflow').toEqual([]);
+		await flow.screenshot({ path: path.join(outDir, 'pc-workflow-375px.png') });
+	});
 });

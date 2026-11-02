@@ -1506,7 +1506,7 @@ OC.L10N.register(
 	"This applies to every entry matching the current filters (all pages), not only this page." : "Cela s’applique à chaque entrée correspondant aux filtres actuels (toutes les pages), pas seulement cette page.",
 	"This confirmation was already used. Run the preview again." : "Cette confirmation a déjà été utilisée. Relancez l’aperçu.",
 	"This customer doesn't have any projects yet." : "Ce client n'a pas encore de projets.",
-	"This customer has associated projects. Choose Cascade or Reassign to continue." : "Ce client a des projets associés. Choisissez Cascade ou Réaffecter pour continuer.",
+	"This customer has associated projects. Choose Cascade or Reassign to continue." : "Ce client a des projets associés. Choisissez Cascade hiérarchique ou Réaffecter pour continuer.",
 	"This customer is inactive and cannot be assigned to new projects" : "Ce client est inactif et ne peut pas être affecté à de nouveaux projets",
 	"This entry changed. Refresh and try again." : "Cette saisie a changé. Actualisez et réessayez.",
 	"This entry has been invoiced or paid, so its content is locked. Ask a project manager to reopen it if something needs fixing." : "Cette entrée a été facturée ou payée, son contenu est donc verrouillé. Demandez à un chef de projet de la rouvrir si une correction est nécessaire.",
