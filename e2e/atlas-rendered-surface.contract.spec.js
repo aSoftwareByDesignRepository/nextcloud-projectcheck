@@ -63,20 +63,31 @@ test.describe('ATLAS_RENDERED_SURFACE_CONTRACT', () => {
 	}
 
 	// LEARNED-REGRESSIONS probe (pc-intake-20261102T193907Z —
-	// workflow_step_text_clip sibling sweep from mobilitycheck): the
+	// workflow_step_text_clip sibling sweep from mobilitycheck,
+	// hardened by pc-critic-r12-workflow-stepper-sub720-live-clip): the
 	// .pc-create-workflow__* stepper block floors its columns via grid
-	// repeat(2, minmax(0,1fr)) >=720px, but the step is a flex row whose
-	// text child needs the overflow-wrap residual guard so a single
-	// unbreakable compound never paints past the step card edge. The
-	// markup is dormant in templates (pinned absent by
+	// minmax(0,1fr) at every width, so neither a step nor a single
+	// unbreakable compound ever paints past the card edge. The markup
+	// is dormant in templates (pinned absent by
 	// tests/js/project-form.test.cjs), so the leg mounts the shipped DOM
-	// shape onto a real styled surface — the starvation leg
-	// (scrollWidth>clientWidth per step) doubles as card-edge paint here.
+	// shape onto a real styled surface. Canonical oracle: each step's
+	// rect must stay inside its list/card edge — a step-relative text
+	// check alone is tautologically clean when the step overflows
+	// together with its text.
 	test('workflow stepper words never clip across the step card edge', async ({ page }) => {
 		const probe = () => {
 			const bad = [];
 			document.querySelectorAll('.pc-create-workflow__step').forEach((step) => {
 				const sRect = step.getBoundingClientRect();
+				const list = step.closest('.pc-create-workflow__list');
+				const card = step.closest('.pc-create-workflow');
+				const edgeRight = Math.min(
+					list ? list.getBoundingClientRect().right : Infinity,
+					card ? card.getBoundingClientRect().right : Infinity,
+				);
+				if (sRect.right > edgeRight + 0.5) {
+					bad.push(`card-edge: step paints to right=${sRect.right.toFixed(1)} past list/card edge=${edgeRight.toFixed(1)}`);
+				}
 				step.querySelectorAll(':scope > :not(.pc-create-workflow__num)').forEach((el) => {
 					const label = (el.textContent || '').trim().slice(0, 48);
 					if (el.scrollWidth > el.clientWidth + 0.5) {
@@ -84,7 +95,7 @@ test.describe('ATLAS_RENDERED_SURFACE_CONTRACT', () => {
 					}
 					const r = el.getBoundingClientRect();
 					if (r.width > 0 && r.left + el.scrollWidth > sRect.right + 0.5) {
-						bad.push(`card-edge: "${label}" paints to ${(r.left + el.scrollWidth).toFixed(1)} past step.right=${sRect.right.toFixed(1)}`);
+						bad.push(`step-edge: "${label}" paints to ${(r.left + el.scrollWidth).toFixed(1)} past step.right=${sRect.right.toFixed(1)}`);
 					}
 				});
 			});

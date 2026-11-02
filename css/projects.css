@@ -8755,6 +8755,7 @@ a.project-title:hover,
 	padding: 0;
 	list-style: none;
 	display: grid;
+	grid-template-columns: minmax(0, 1fr);
 	gap: var(--pc-space-3, 0.75rem);
 }
 
@@ -8768,6 +8769,7 @@ a.project-title:hover,
 	display: flex;
 	align-items: flex-start;
 	gap: var(--pc-space-3, 0.75rem);
+	min-width: 0;
 	min-height: var(--pc-touch-min, 44px);
 	line-height: var(--pc-line-base, 1.45);
 	overflow-wrap: break-word;
