@@ -411,8 +411,16 @@ class UpgradeBackupService
 	private function deleteSnapshotFolderIfExists(string $snapshotId): void
 	{
 		try {
-			$this->getSnapshotFolder($snapshotId)->delete();
+			$folder = $this->getSnapshotFolder($snapshotId);
 		} catch (\Throwable) {
+			return;
+		}
+		try {
+			$folder->delete();
+		} catch (\Throwable $e) {
+			// best-effort: called from rollback paths — a leaked partial
+			// snapshot folder is preferable to masking the original failure.
+			$this->logger->warning('Failed to delete leftover upgrade backup snapshot folder.', ['exception' => $e]);
 		}
 	}
 
@@ -615,9 +623,11 @@ class UpgradeBackupService
 
 		$destPath = $this->getAppDataPath($folderName);
 		try {
-			$this->rootFolder->get($destPath)->delete();
+			$existing = $this->rootFolder->get($destPath);
 		} catch (NotFoundException) {
+			$existing = null;
 		}
+		$existing?->delete();
 
 		try {
 			$source = $snapshotFolder->get($folderName);
