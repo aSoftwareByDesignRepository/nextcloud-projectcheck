@@ -469,6 +469,42 @@ final class MobileBookingServiceTest extends TestCase
 		self::assertSame('A', $result['projects'][0]['name']);
 	}
 
+	public function testListProjectsScopesQueryToAccessibleIdsAndDoesNotLimitSql(): void
+	{
+		// The SQL page must be cut *after* scoping + the PHP capability gate —
+		// an unscoped LIMIT silently hid bookable projects beyond the page.
+		$this->projects->method('getAccessibleProjectIdListForUser')->willReturn([7, 8]);
+		$this->projects->expects(self::once())->method('getProjectsForUserTimeEntry')
+			->with(
+				'alice',
+				self::callback(static function (array $filters): bool {
+					return ($filters['status'] ?? null) === ['Active', 'On Hold']
+						&& ($filters['id_in'] ?? null) === [7, 8]
+						&& !array_key_exists('limit', $filters);
+				})
+			)
+			->willReturn([$this->makeProject(7, 'Scoped')]);
+		$this->projects->method('canUserAddTimeEntryForProject')->willReturn(true);
+
+		$result = $this->svc->listProjectsForBooking('alice', null, 50);
+		self::assertCount(1, $result['projects']);
+		self::assertSame(7, $result['projects'][0]['id']);
+	}
+
+	public function testListProjectsCapsOutputAfterCapabilityFilter(): void
+	{
+		$this->projects->method('getAccessibleProjectIdListForUser')->willReturn(null);
+		$projects = [];
+		for ($i = 1; $i <= 5; $i++) {
+			$projects[] = $this->makeProject($i, "P$i");
+		}
+		$this->projects->method('getProjectsForUserTimeEntry')->willReturn($projects);
+		$this->projects->method('canUserAddTimeEntryForProject')->willReturn(true);
+
+		$result = $this->svc->listProjectsForBooking('alice', null, 2);
+		self::assertCount(2, $result['projects']);
+	}
+
 	public function testResolveHourlyRateAllowsSelfPreview(): void
 	{
 		$this->projects->method('canUserAddTimeEntryForProject')->willReturn(true);
@@ -526,6 +562,33 @@ final class MobileBookingServiceTest extends TestCase
 		} catch (MobileApiException $e) {
 			self::assertSame('rate_unresolved', $e->getErrorCode());
 			self::assertSame(422, $e->getHttpStatus());
+			throw $e;
+		}
+	}
+
+	public function testCreatePreservesSpecificRateCodeFromValidation(): void
+	{
+		// member_rate_missing / not_on_team / … must reach the envelope verbatim —
+		// collapsing them to 'validation' erased the cause for companions.
+		$this->projects->method('canUserAddTimeEntryForProject')->willReturn(true);
+		$this->timeEntries->method('validateTimeEntryDataDetailed')->willReturn(['errors' => [], 'errorCodes' => []]);
+		$this->timeEntries->method('createTimeEntry')->willThrowException(
+			new \OCA\ProjectCheck\Exception\ValidationException(
+				['rate' => 'member_rate_missing'],
+				'No project rate is effective for this person on this date.'
+			)
+		);
+		$this->expectException(MobileApiException::class);
+		try {
+			$this->svc->createEntry('alice', [
+				'projectId' => 12,
+				'date' => '2026-07-24',
+				'durationMinutes' => 60,
+			]);
+		} catch (MobileApiException $e) {
+			self::assertSame('member_rate_missing', $e->getErrorCode());
+			self::assertSame(422, $e->getHttpStatus());
+			self::assertSame(['rate' => 'member_rate_missing'], $e->getDetails()['fields'] ?? null);
 			throw $e;
 		}
 	}

@@ -48,11 +48,19 @@ class MobileBookingService
 		$limit = max(1, min(self::MAX_PROJECTS, $limit ?? 50));
 		$filters = [
 			'status' => ['Active', 'On Hold'],
-			'limit' => $limit,
 		];
+		// Scope the SQL to projects the user can at least see. A bare LIMIT over
+		// the unscoped table (status filter only) silently drops bookable rows:
+		// the per-user capability gate below runs in PHP after the page is cut.
+		$scopeIds = $this->projects->getAccessibleProjectIdListForUser($uid);
+		if ($scopeIds !== null) {
+			$filters['id_in'] = $scopeIds;
+		}
 		if ($q !== null && trim($q) !== '') {
 			$filters['search'] = trim($q);
 		}
+		// Intentionally no 'limit' in $filters: the output cap applies to the
+		// *filtered* rows, not to the pre-filter SQL page.
 
 		$rows = [];
 		foreach ($this->projects->getProjectsForUserTimeEntry($uid, $filters) as $project) {
@@ -688,12 +696,15 @@ class MobileBookingService
 	/**
 	 * Promote rate-resolution failures to a stable mobile error code so companions
 	 * can show a clear soft-pricing / missing-rate message (not a generic 422).
+	 * Every rate codeKey is preserved verbatim (`member_rate_missing`,
+	 * `employee_rate_missing`, `not_on_team`, `project_closed`, …); the field map
+	 * keeps `rate` so clients can also localize from `details.fields.rate`.
 	 */
 	private function validationToMobile(ValidationException $e): MobileApiException
 	{
 		$fields = $e->getErrors();
 		$rateKey = isset($fields['rate']) && is_string($fields['rate']) ? $fields['rate'] : '';
-		$code = $rateKey === 'rate_unresolved' ? 'rate_unresolved' : 'validation';
+		$code = $rateKey !== '' ? $rateKey : 'validation';
 		$message = $e->getMessage() !== '' ? $e->getMessage() : $this->l->t('Validation failed.');
 		return new MobileApiException($code, $message, 422, [
 			'fields' => $fields,
