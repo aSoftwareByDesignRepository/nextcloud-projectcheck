@@ -114,6 +114,53 @@ MANUAL: dict[str, str | list[str]] = {
 	"Currency": "Moeda",
 	"Language": "Idioma",
 	'Project "%s" was created successfully!': 'Projeto "%s" criado com sucesso!',
+	# --- domain-term pins (l10n_wrong_sense_token, farm r15) -----------------
+	# Canonical pt_BR lexicon: duration/billable hours = "horas" (never
+	# "horário"/"horário de funcionamento" = clock-time/business hours),
+	# time entry = "lançamento de horas" (masculine), settle = "liquidação".
+	'Administrator time entry': 'Lançamento de horas do administrador',
+	'Available Hours': 'Horas disponíveis',
+	'Entries': 'Lançamentos',
+	'entries': 'lançamentos',
+	'Hours cannot exceed 24': 'As horas não podem exceder 24',
+	'No matching hours found — there is nothing to change.':
+		'Nenhuma hora correspondente encontrada — não há nada para alterar.',
+	'No open hours left to invoice. Continuing with invoiced → paid.':
+		'Não há mais horas em aberto para faturar. Continuando com faturado → pago.',
+	'Please enter valid hours': 'Insira horas válidas',
+	'Recent Time Entries': 'Lançamentos de horas recentes',
+	'Recent time entries': 'Lançamentos de horas recentes',
+	'Review open hours': 'Revise as horas em aberto',
+	'Start Time Entry': 'Iniciar lançamento de horas',
+	'TIME ENTRIES': 'LANÇAMENTOS DE HORAS',
+	'Time Entry: %s hours on %s': 'Lançamento de horas: %s horas em %s',
+	'Time entry by %s': 'Lançamento de horas por %s',
+	'Time entry not found': 'Lançamento de horas não encontrado',
+	'Time entry not found.': 'Lançamento de horas não encontrado.',
+	'View Entry': 'Ver lançamento',
+	'%s is now a regular member and can no longer settle hours for this project.':
+		'%s agora é um membro regular e não pode mais liquidar horas neste projeto.',
+	'Change settlement status': 'Alterar status de liquidação',
+	'Filter by settlement': 'Filtrar por liquidação',
+	'Invalid billing status filter.': 'Filtro de status de liquidação inválido.',
+	'Invalid settlement status': 'Status de liquidação inválido',
+	'Invalid settlement status.': 'Status de liquidação inválido.',
+	'Partially settled': 'Parcialmente liquidado',
+	'SETTLEMENT': 'LIQUIDAÇÃO',
+	'Settlement': 'Liquidação',
+	'Settlement actions for selected entries': 'Ações de liquidação para lançamentos selecionados',
+	'Settlement dates': 'Datas de liquidação',
+	'Settlement metrics': 'Métricas de liquidação',
+	'Settlement overview for the filtered entries':
+		'Visão geral da liquidação para os lançamentos filtrados',
+	'Settlement progress': 'Progresso da liquidação',
+	'Settlement status updated.': 'Status de liquidação atualizado.',
+	'Settlement summary': 'Resumo da liquidação',
+	'Settlement updated': 'Liquidação atualizada',
+	'Settlement: all': 'Liquidação: todos',
+	'The settlement action failed. Please try again.':
+		'A ação de liquidação falhou. Tente novamente.',
+	'Unknown settlement action': 'Ação de liquidação desconhecida',
 }
 
 
