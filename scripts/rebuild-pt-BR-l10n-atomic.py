@@ -164,6 +164,48 @@ MANUAL: dict[str, str | list[str]] = {
 }
 
 
+# --- wrong-sense forbid mirror (l10n_wrong_sense_token, farm r16) ---------
+# Mirror of the farm glossary families scoped to this app
+# (.cursor/atlas-farm-v3/dicts/wrong-sense-glossary.json —
+# ptbr_hours_clocktime_wrong_sense, ptbr_settlement_wrong_sense,
+# ptbr_time_entry_lancamento). Placeholder parity alone cannot detect a
+# wrong-sense msgstr, so a stale cache cell or a bad machine translation
+# carrying these tokens is rejected and falls through to re-translation
+# (or an EN fallback) instead of resurrecting into the shipped catalog.
+# Each tuple: (forbid regex, optional unless regex that exempts the two
+# legit clock-time uses 'horário comercial' / 'horário válido (HH:MM)').
+FORBID_MSGSTR: list[tuple[re.Pattern[str], re.Pattern[str] | None]] = [
+	(rx, re.compile(uv, re.I) if uv else None)
+	for rx, uv in (
+		# hours-as-clocktime family
+		(r"hor[áa]rios? de funcionamento", None),
+		(r"definir hor[áa]rios?", None),
+		(r"nov[oa]s? hor[áa]rios?", None),
+		(r"entradas? de hor[áa]rios?", None),
+		(r"hor[áa]rios? dispon[íi]ve(?:l|is)", None),
+		(r"hor[áa]rios? correspondentes?", None),
+		(r"hor[áa]rios? inici(?:al|ais)", None),
+		(r"hor[áa]rios? v[áa]lidos?", r"HH:MM"),
+		(r"hor[áa]rios? n[ãa]o podem? exceder", None),
+		(r"seus? hor[áa]rios?", None),
+		(r"pr[óo]pri[oa]s? hor[áa]rios?", None),
+		(r"\bo hor[áa]rio\b", r"hor[áa]rio comercial|HH:MM"),
+		(r"hor[áa]rios? em aberto", None),
+		(r"hor[áa]rios? abertos?", None),
+		# settlement family
+		(r"\bpovoado\b", None),
+		(r"\bacerto\b", None),
+		(r"status de faturamento", None),
+		(r"parcialmente resolvid", None),
+		# time-entry gender-agreement family (coarse mirror; the gate
+		# carries the full determiner/adjective list)
+		(r"entradas? de hora", None),
+		(r"lançamentos? de tempo", None),
+	)
+	for rx in [re.compile(rx, re.I)]
+]
+
+
 def printf_ph(s: str) -> list[str]:
 	return re.findall(r"%%|%(?:\d+\$)?[sd]|%n", s)
 
@@ -173,7 +215,12 @@ def named_ph(s: str) -> list[str]:
 
 
 def ok(src: str, dst: str) -> bool:
-	return printf_ph(src) == printf_ph(dst) and named_ph(src) == named_ph(dst)
+	if printf_ph(src) != printf_ph(dst) or named_ph(src) != named_ph(dst):
+		return False
+	for rx, unless in FORBID_MSGSTR:
+		if rx.search(dst) and not (unless and unless.search(dst)):
+			return False
+	return True
 
 
 def protect(text: str) -> tuple[str, list[str]]:
