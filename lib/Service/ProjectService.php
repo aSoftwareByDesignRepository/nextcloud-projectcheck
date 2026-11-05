@@ -1632,7 +1632,17 @@ class ProjectService
 		$qb->insert('pc_project_members')
 			->values($ins);
 
-		$qb->executeStatement();
+		try {
+			$qb->executeStatement();
+		} catch (\OCP\DB\Exception $e) {
+			// Two concurrent adds of the same (project_id, user_id): the unique
+			// index serializes the race — the loser takes the same
+			// already-assigned branch the pre-check above would have taken.
+			if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				throw new \Exception('User is already assigned to this project');
+			}
+			throw $e;
+		}
 		$member->setId((int) $this->db->lastInsertId('pc_project_members'));
 
 		$this->seedMemberRateHistoryAfterAdd($project, $member, $hourlyRate, $sessionUser->getUID());

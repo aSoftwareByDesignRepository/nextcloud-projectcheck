@@ -16,6 +16,10 @@ use OCP\IDBConnection;
 
 class DeletionService
 {
+    // unique-conflict:ok CustomerMapper is used for find()/delete() only; the
+    // query-builder update below targets pc_projects.customer_id (reassign) —
+    // no write here ever touches pc_customers.name (pc_cus_name_uq).
+
     /** @var IDBConnection */
     private $db;
 
