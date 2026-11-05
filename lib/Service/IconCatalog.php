@@ -67,6 +67,11 @@ final class IconCatalog
 		'wrench' => '<path d="M14.7 6.3a4 4 0 0 0-5.5 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-3 3-2.4-.6-.6-2.4Z"/>',
 	];
 
+	public static function has(string $name): bool
+	{
+		return isset(self::ICONS[$name]);
+	}
+
 	public static function render(string $name, ?string $extraClass = null): string
 	{
 		$inner = self::ICONS[$name] ?? null;
