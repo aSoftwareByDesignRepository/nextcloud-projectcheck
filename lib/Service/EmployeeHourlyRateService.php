@@ -98,7 +98,17 @@ class EmployeeHourlyRateService
 		$entity->setEffectiveFrom(new \DateTime($effectiveFrom));
 		$entity->setCreatedBy($actorUserId);
 
-		$saved = $this->mapper->insertRate($entity);
+		try {
+			$saved = $this->mapper->insertRate($entity);
+		} catch (\OCP\DB\Exception $e) {
+			// Two concurrent adds for the same (user_id, effective_from):
+			// pc_emp_rates_uq serializes the race — the loser takes the same
+			// translated conflict the pre-check above reports.
+			if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				throw new \Exception($this->l->t('A rate with this effective-from date already exists. Choose a different date.'));
+			}
+			throw $e;
+		}
 		$this->logger->info('ProjectCheck: employee hourly rate row added', [
 			'app' => 'projectcheck',
 			'user_id' => $targetUserId,

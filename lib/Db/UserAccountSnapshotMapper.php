@@ -12,10 +12,15 @@ namespace OCA\ProjectCheck\Db;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Db\MultipleObjectsReturnedException;
 use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\Exception as DbException;
 use OCP\IDBConnection;
 
 class UserAccountSnapshotMapper extends QBMapper
 {
+	// unique-conflict:ok the update() below re-writes the same user_id that
+	// the unique lookup just fetched — it cannot violate pc_uas_user_uidx.
+	// The insert() above it carries the REASON_UNIQUE catch for the race.
+
 	public function __construct(IDBConnection $db)
 	{
 		parent::__construct($db, 'pc_user_account_snapshots', UserAccountSnapshot::class);
@@ -53,7 +58,20 @@ class UserAccountSnapshotMapper extends QBMapper
 			$e->setUserId($userId);
 			$e->setDisplayName($displayName);
 			$e->setAccountDeletedAt(\DateTime::createFromInterface($accountDeletedAt));
-			return $this->insert($e);
+			try {
+				return $this->insert($e);
+			} catch (DbException $ex) {
+				// Concurrent snapshot write for the same user_id:
+				// pc_uas_user_uidx serializes the race — the loser re-reads
+				// and takes the update branch below.
+				if ($ex->getReason() !== DbException::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+					throw $ex;
+				}
+				$existing = $this->findByUserId($userId);
+				if ($existing === null) {
+					throw $ex;
+				}
+			}
 		}
 		$e = $existing;
 		$e->setDisplayName($displayName);

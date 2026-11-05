@@ -173,7 +173,17 @@ class CustomerService
 		}
 
 		// Save customer
-		return $this->customerMapper->insert($customer);
+		try {
+			return $this->customerMapper->insert($customer);
+		} catch (\OCP\DB\Exception $e) {
+			// Two concurrent creates of the same name: pc_cus_name_uq serializes
+			// the race — the loser takes the same already-exists branch the
+			// pre-check above would have taken.
+			if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				throw new \Exception('A customer with this name already exists');
+			}
+			throw $e;
+		}
 	}
 
 	/**
@@ -280,7 +290,17 @@ class CustomerService
 		}
 
 		// Save updated customer
-		return $this->customerMapper->update($customer);
+		try {
+			return $this->customerMapper->update($customer);
+		} catch (\OCP\DB\Exception $e) {
+			// Concurrent rename into a name another customer just claimed:
+			// pc_cus_name_uq serializes the race — map it to the same
+			// already-exists branch the pre-check above would have taken.
+			if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+				throw new \Exception('A customer with this name already exists');
+			}
+			throw $e;
+		}
 	}
 
 	/**

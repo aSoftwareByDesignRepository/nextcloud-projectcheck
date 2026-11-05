@@ -105,4 +105,64 @@ class EmployeeHourlyRateServiceTest extends TestCase
 		$this->expectException(\Exception::class);
 		$svc->addRateRow('alice', ['hourly_rate' => 50, 'effective_from' => '01.01.2026'], 'admin');
 	}
+
+	public function testAddRateRowMapsUniqueViolationToConflictMessage(): void
+	{
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+
+		// The pre-check passes (empty slot) but the unique index fires on the
+		// write — the serialized outcome must be the same translated conflict
+		// the sequential pre-check reports, never the raw DB exception.
+		$mapper = $this->createMock(EmployeeHourlyRateMapper::class);
+		$mapper->method('existsForUserAndDate')->willReturn(false);
+		$mapper->method('insertRate')->willThrowException(
+			self::dbException(\OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION)
+		);
+
+		$svc = $this->makeService($mapper, true, $user);
+
+		$this->expectException(\Exception::class);
+		$this->expectExceptionMessage('A rate with this effective-from date already exists.');
+		$svc->addRateRow('alice', ['hourly_rate' => 50, 'effective_from' => '2026-01-01'], 'admin');
+	}
+
+	public function testAddRateRowRethrowsNonUniqueDbException(): void
+	{
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+
+		$dbError = self::dbException(\OCP\DB\Exception::REASON_CONNECTION_LOST);
+		$mapper = $this->createMock(EmployeeHourlyRateMapper::class);
+		$mapper->method('existsForUserAndDate')->willReturn(false);
+		$mapper->method('insertRate')->willThrowException($dbError);
+
+		$svc = $this->makeService($mapper, true, $user);
+
+		try {
+			$svc->addRateRow('alice', ['hourly_rate' => 50, 'effective_from' => '2026-01-01'], 'admin');
+			$this->fail('expected the DB exception to propagate');
+		} catch (\Exception $e) {
+			$this->assertSame($dbError, $e);
+		}
+	}
+
+	private static function dbException(int $reason): \OCP\DB\Exception
+	{
+		return new class('db error', 0, null, $reason) extends \OCP\DB\Exception {
+			public function __construct(
+				string $message,
+				int $code,
+				?\Throwable $previous,
+				private int $reasonValue,
+			) {
+				parent::__construct($message, $code, $previous);
+			}
+
+			public function getReason(): ?int
+			{
+				return $this->reasonValue;
+			}
+		};
+	}
 }

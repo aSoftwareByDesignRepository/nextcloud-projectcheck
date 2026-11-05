@@ -170,7 +170,17 @@ class ProjectMemberService
                 'archived_at' => $qb->createNamedParameter(null, IQueryBuilder::PARAM_NULL),
             ]);
 
-        $qb->executeStatement();
+        try {
+            $qb->executeStatement();
+        } catch (\OCP\DB\Exception $e) {
+            // Two concurrent adds of the same (project_id, user_id):
+            // pc_members_unique_idx serializes the race — the loser takes the
+            // same already-member branch the pre-check above would have taken.
+            if ($e->getReason() === \OCP\DB\Exception::REASON_UNIQUE_CONSTRAINT_VIOLATION) {
+                throw new \Exception('User is already a member of this project');
+            }
+            throw $e;
+        }
         $member->setId((int)$this->db->lastInsertId('pc_project_members'));
 
         return $member;
