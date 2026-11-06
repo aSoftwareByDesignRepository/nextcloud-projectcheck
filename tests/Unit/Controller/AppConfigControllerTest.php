@@ -159,9 +159,11 @@ class AppConfigControllerTest extends TestCase {
 		$bob = $this->createMock(IUser::class);
 		$bob->method('getUID')->willReturn('bob');
 		$bob->method('getDisplayName')->willReturn('Bob B');
+		$bob->method('isEnabled')->willReturn(true);
 		$bobby = $this->createMock(IUser::class);
 		$bobby->method('getUID')->willReturn('bobby');
 		$bobby->method('getDisplayName')->willReturn('Bobby B');
+		$bobby->method('isEnabled')->willReturn(true);
 
 		// Same user appears in both maps but must be returned once.
 		$this->userManager->method('search')->willReturn([$bob]);
@@ -172,6 +174,32 @@ class AppConfigControllerTest extends TestCase {
 		$body = $response->getData();
 		$ids = array_map(static fn ($u) => $u['id'], $body['items']);
 		$this->assertSame(['bob', 'bobby'], $ids);
+	}
+
+	public function testSearchUsersSkipsDeactivatedAccounts(): void {
+		$this->userSession->method('getUser')->willReturn($this->user);
+		$this->accessControl->method('canManageOrganization')->willReturn(true);
+		$this->request->method('getParam')->with('q', '')->willReturn('bob');
+
+		$bob = $this->createMock(IUser::class);
+		$bob->method('getUID')->willReturn('bob');
+		$bob->method('getDisplayName')->willReturn('Bob B');
+		$bob->method('isEnabled')->willReturn(true);
+		$ghost = $this->createMock(IUser::class);
+		$ghost->method('getUID')->willReturn('deactivated-bob');
+		$ghost->method('getDisplayName')->willReturn('Bob Deactivated');
+		$ghost->method('isEnabled')->willReturn(false);
+
+		// Deactivated accounts can never sign in — they are never offered for
+		// org/team assignment.
+		$this->userManager->method('search')->willReturn([$ghost]);
+		$this->userManager->method('searchDisplayName')->willReturn([$bob, $ghost]);
+
+		$response = $this->makeController()->searchUsers();
+		$this->assertSame(200, $response->getStatus());
+		$body = $response->getData();
+		$ids = array_map(static fn ($u) => $u['id'], $body['items']);
+		$this->assertSame(['bob'], $ids);
 	}
 
 	public function testSavePolicyRequiresAuthentication(): void {

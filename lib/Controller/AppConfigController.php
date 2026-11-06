@@ -108,6 +108,11 @@ class AppConfigController extends Controller
 			if (!($user instanceof IUser)) {
 				continue;
 			}
+			// Deactivated accounts can never sign in — do not offer them for
+			// org/team assignment.
+			if (!$user->isEnabled()) {
+				continue;
+			}
 			$uid = $user->getUID();
 			if (!isset($merged[$uid])) {
 				$merged[$uid] = $user;
