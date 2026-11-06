@@ -61,44 +61,63 @@ echo "==> packing ${OUT}"
 PACK_PARENT="$(dirname "${APP_DIR}")"
 PACK_BASE="$(basename "${APP_DIR}")"
 
+# Dev-artifact denylist (release_tarball_dev_artifact_leak, family class —
+# mobilitycheck mc-crit37). Single source for BOTH tar branches — vendor/
+# ships (composer install --no-dev autoloader; vendor/bin excluded),
+# composer.json ships (family norm: composer manifests ship), docs/ stays
+# tracked in the repo but is barred from the artifact (Admin-License docs are
+# maintainer-facing, not runtime-rendered), everything below is
+# build/QA/repo scaffolding that must never reach the app store.
+EXCLUDE_NAMES=(
+	.git .github .auth .vscode .idea .DS_Store
+	node_modules 'node_modules.broken-*'
+	test-results playwright-report blob-report
+	tests scripts build e2e tools documentation docs release
+	vendor/bin
+	.phpunit.result.cache
+	'phpunit*.xml' 'playwright.config.*' 'vitest.config.*'
+	'infection*.json' 'infection*.html' 'infection*.log'
+	package.json package-lock.json composer.lock Makefile
+	'ATLAS-*.md' '*.log' appinfo/signature.json
+)
+
+tar_excludes() {
+	local prefix="$1" name
+	for name in "${EXCLUDE_NAMES[@]}"; do
+		printf -- "--exclude=%s%s\n" "${prefix}" "${name}"
+	done
+}
+
+mapfile -t EXCLUDES_MONOREPO < <(tar_excludes "${APP}/")
+mapfile -t EXCLUDES_STANDALONE < <(tar_excludes "./")
+
 if [[ "${PACK_BASE}" == "${APP}" ]]; then
 	# Monorepo (…/apps/projectcheck) or standalone clone checked out as …/projectcheck
 	(cd "${PACK_PARENT}" && tar --mode='u+rwX,go+rX,go-w' --owner=0 --group=0 --numeric-owner \
-		--exclude="${APP}/node_modules" \
-		--exclude="${APP}/node_modules.broken-*" \
-		--exclude="${APP}/.git" \
-		--exclude="${APP}/.github" \
-		--exclude="${APP}/test-results" \
-		--exclude="${APP}/.phpunit.result.cache" \
-		--exclude="${APP}/playwright-report" \
-		--exclude="${APP}/e2e" \
-		--exclude="${APP}/.auth" \
-		--exclude="${APP}/release/${APP}-*.tar.gz" \
-		--exclude="${APP}/tests" \
-		--exclude="${APP}/scripts" \
-		--exclude="${APP}/build" \
-		--exclude="${APP}/phpunit.xml" \
+		"${EXCLUDES_MONOREPO[@]}" \
 		-czf "${OUT}" "${APP}")
 else
 	# Standalone clone with another directory name (e.g. nextcloud-projectcheck): archive top folder must be projectcheck/
 	(cd "${APP_DIR}" && tar --mode='u+rwX,go+rX,go-w' --owner=0 --group=0 --numeric-owner \
 		--transform "s,^,${APP}/," \
-		--exclude='node_modules' \
-		--exclude='node_modules.broken-*' \
-		--exclude='.git' \
-		--exclude='.github' \
-		--exclude='test-results' \
-		--exclude='.phpunit.result.cache' \
-		--exclude='playwright-report' \
-		--exclude='e2e' \
-		--exclude='.auth' \
-		--exclude='release/projectcheck-*.tar.gz' \
-		--exclude='tests' \
-		--exclude='scripts' \
-		--exclude='build' \
-		--exclude='phpunit.xml' \
+		"${EXCLUDES_STANDALONE[@]}" \
 		-czf "${OUT}" .)
 fi
+
+# Post-build member audit — the denylist is enforced on the real artifact so a
+# packaging regression fails the build instead of shipping. vendor/ internals
+# are exempt (dependency packages own their own trees); the nested-archive /
+# dev-cache patterns are checked unanchored because they are never legitimate.
+AUDIT_MEMBERS="$(tar -tzf "${OUT}")"
+DENY_APP_RE="^${APP}/(\.git|\.github|\.auth|\.vscode|\.idea|node_modules[^/]*|test-results|playwright-report|blob-report|tests|scripts|build|e2e|tools|documentation|docs|release)(/|$)|^${APP}/(phpunit[^/]*\.xml|playwright\.config\.[^/]*|vitest\.config\.[^/]*|infection[^/]*\.[^/]*|package(-lock)?\.json|composer\.lock|Makefile|ATLAS-[^/]*|[^/]*\.log|appinfo/signature\.json)$"
+leaks="$(printf '%s\n' "${AUDIT_MEMBERS}" | grep -v "^${APP}/vendor/" | grep -E "${DENY_APP_RE}" || true)"
+nested="$(printf '%s\n' "${AUDIT_MEMBERS}" | grep -nE '(\.phpunit\.result\.cache|\.DS_Store|\.tar\.gz|\.tgz)$' || true)"
+if [[ -n "${leaks}${nested}" ]]; then
+	printf '%s\n%s\n' "${leaks}" "${nested}" | sed '/^$/d' >&2
+	echo "RELEASE MEMBER AUDIT FAILED — ${OUT} carries dev artifacts (see above)." >&2
+	exit 1
+fi
+echo "    member audit clean — 0 denylist members in $(printf '%s\n' "${AUDIT_MEMBERS}" | wc -l) members"
 
 echo "Done: ${OUT}"
 echo "Next: sha256sum / sha512sum, openssl signature (see nextcloud-development ready2publish/APPSTORE-RELEASE.md)"
