@@ -942,3 +942,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `appinfo/info.xml` repository and bugs URLs now point at the **`nextcloud-projectcheck`** GitHub repository (canonical public home for ProjectCheck only; optional monorepo layout: `ready2publish/REPOSITORY-LAYOUT.md`).
+
+## [2.0.105] — 2026-11-05
+
+### Added
+
+- + hardened test-state guard + shared-lock jobs
+
+### Fixed
+
+- indexes
+- index
+- runs
+- gallery
+- modal
+- — wrong-sense forbid check in ok()
+- — horas/liquidação/lançamento canon
+- wrong-sense, feedback tpl resync, swallowed-write triage
+- filter; promote rate error codes
+- + card-edge oracle
+- + label-in-name stales
+- break-word)
+- SchemaTableCatalog
+- classifier
+- minmax(0,1fr) grid tracks + compound wrap on header/callout/scope-banner
+- copy
+
+### Changed
+
+- select
+- Refresh App Store screenshots from clean marketing captures
+
