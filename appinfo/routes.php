@@ -176,4 +176,5 @@ return [
 		['name' => 'mobile#projectSettlementPreview', 'url' => '/mobile/v1/projects/{id}/settlement/preview', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 		['name' => 'mobile#projectSettlementApply', 'url' => '/mobile/v1/projects/{id}/settlement/apply', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 	],
+		['name' => 'mobile#widgetSnapshot', 'url' => '/api/widget-snapshot', 'verb' => 'GET'],
 ];

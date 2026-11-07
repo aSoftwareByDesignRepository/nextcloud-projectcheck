@@ -269,4 +269,20 @@ class MobileController extends Controller
 		unset($params['id'], $params['_route']);
 		return $params;
 	}
+	/** Compact widget snapshot (NH-P2): one doc per sync + serverNow (MH-P18), 60 s/user cache. */
+	#[NoAdminRequired]
+	public function widgetSnapshot(): JSONResponse
+	{
+		$uid = \OCP\Server::get(\OCP\IUserSession::class)->getUser()?->getUID();
+		if ($uid === null) return new JSONResponse(['error' => 'unauthenticated'], 401);
+		$cache = \OCP\Server::get(\OCP\ICacheFactory::class)->createDistributed('projectcheck_wsnap');
+		$key = $uid . ':bootstrap';
+		if (($hit = $cache->get($key)) !== null) return new JSONResponse($hit);
+		$status = $this->bootstrap()->getData();
+		$payload = ['status' => $status,
+			'serverNow' => (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM)];
+		$cache->set($key, $payload, 60);
+		return new JSONResponse($payload);
+	}
+
 }
