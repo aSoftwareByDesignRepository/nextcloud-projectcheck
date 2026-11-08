@@ -13,6 +13,7 @@ use OCP\App\IAppManager;
 use OCP\Authentication\Exceptions\InvalidTokenException;
 use OCP\Authentication\Token\IProvider;
 use OCP\Authentication\Token\IToken;
+use OCP\ICacheFactory;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -42,6 +43,7 @@ final class MobileControllerCsrfTest extends TestCase
 			$this->createMock(IAppManager::class),
 			$users,
 			$tokens ?? $this->createMock(IProvider::class),
+			$this->createMock(ICacheFactory::class),
 		);
 		$method = new ReflectionMethod(MobileController::class, 'assertSafeMutationChannel');
 		$method->setAccessible(true);

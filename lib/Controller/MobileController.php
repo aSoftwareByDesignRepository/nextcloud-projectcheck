@@ -20,6 +20,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\ICacheFactory;
 use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -42,6 +43,7 @@ class MobileController extends Controller
 		private readonly IAppManager $appManager,
 		private readonly IUserManager $userManager,
 		private readonly IProvider $tokenProvider,
+		private readonly ICacheFactory $cacheFactory,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -271,18 +273,22 @@ class MobileController extends Controller
 	}
 	/** Compact widget snapshot (NH-P2): one doc per sync + serverNow (MH-P18), 60 s/user cache. */
 	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function widgetSnapshot(): JSONResponse
 	{
-		$uid = \OCP\Server::get(\OCP\IUserSession::class)->getUser()?->getUID();
-		if ($uid === null) return new JSONResponse(['error' => 'unauthenticated'], 401);
-		$cache = \OCP\Server::get(\OCP\ICacheFactory::class)->createDistributed('projectcheck_wsnap');
+		$uid = $this->requireUid();
+		$cache = $this->cacheFactory->createDistributed('projectcheck_wsnap');
 		$key = $uid . ':bootstrap';
-		if (($hit = $cache->get($key)) !== null) return new JSONResponse($hit);
-		$status = $this->bootstrap()->getData();
-		$payload = ['status' => $status,
-			'serverNow' => (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM)];
-		$cache->set($key, $payload, 60);
-		return new JSONResponse($payload);
+		$status = $cache->get($key);
+		if (!is_array($status)) {
+			$status = $this->bootstrap()->getData();
+			$cache->set($key, $status, 60);
+		}
+		return new JSONResponse([
+			'ok' => true,
+			'status' => $status,
+			'serverNow' => (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM),
+		]);
 	}
 
 }

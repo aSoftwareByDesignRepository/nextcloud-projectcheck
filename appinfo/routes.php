@@ -175,6 +175,7 @@ return [
 		['name' => 'mobile#changeEntryBilling', 'url' => '/mobile/v1/time-entries/{id}/billing', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 		['name' => 'mobile#projectSettlementPreview', 'url' => '/mobile/v1/projects/{id}/settlement/preview', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 		['name' => 'mobile#projectSettlementApply', 'url' => '/mobile/v1/projects/{id}/settlement/apply', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
-	],
+		// Home-screen widget snapshot (compact bootstrap + serverNow)
 		['name' => 'mobile#widgetSnapshot', 'url' => '/api/widget-snapshot', 'verb' => 'GET'],
+	],
 ];

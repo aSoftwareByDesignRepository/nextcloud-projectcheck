@@ -56,6 +56,7 @@ final class MobileCompanionRoutesContractTest extends TestCase
 			['verb' => 'POST', 'url' => '/mobile/v1/time-entries/{id}/billing', 'name' => 'mobile#changeEntryBilling'],
 			['verb' => 'POST', 'url' => '/mobile/v1/projects/{id}/settlement/preview', 'name' => 'mobile#projectSettlementPreview'],
 			['verb' => 'POST', 'url' => '/mobile/v1/projects/{id}/settlement/apply', 'name' => 'mobile#projectSettlementApply'],
+			['verb' => 'GET', 'url' => '/api/widget-snapshot', 'name' => 'mobile#widgetSnapshot'],
 		];
 	}
 

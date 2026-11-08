@@ -595,6 +595,7 @@ class Application extends App implements IBootstrap
 				$c->query(IAppManager::class),
 				$c->query(\OCP\IUserManager::class),
 				$c->query(\OCP\Authentication\Token\IProvider::class),
+				$c->query(\OCP\ICacheFactory::class),
 			);
 		});
 
