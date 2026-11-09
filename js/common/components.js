@@ -697,6 +697,8 @@ const ProjectControlComponents = {
         element.className = value;
       } else if (key === 'textContent') {
         element.textContent = value;
+      } else if (key.slice(0, 2) === 'on' && typeof value === 'function') {
+        element.addEventListener(key.slice(2).toLowerCase(), value);
       } else {
         element.setAttribute(key, value);
       }

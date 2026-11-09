@@ -1080,7 +1080,7 @@ include __DIR__ . '/common/page-start.php';
 ?>
 <?php if ($hasStatusModal): ?>
 <div id="statusChangeModal" class="modal projectcheck-dialog" style="display: none;" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="statusChangeModalTitle">
-    <div class="modal-content projectcheck-dialog__panel" onclick="event.stopPropagation();">
+    <div class="modal-content projectcheck-dialog__panel">
         <div class="modal-header projectcheck-dialog__header">
             <h3 id="statusChangeModalTitle"><?php p($l->t('Change project status')); ?></h3>
             <button type="button" class="close" id="close-status-modal" aria-label="<?php p($l->t('Close')); ?>"><span aria-hidden="true">&times;</span></button>
@@ -1113,7 +1113,7 @@ include __DIR__ . '/common/page-start.php';
 <?php if (!empty($settlementInfo['can_settle'])): ?>
 <!-- Project-level settle confirm modal (feature spec §12.3): preview numbers + optional date range, then apply with token. -->
 <div id="projectSettleModal" class="modal projectcheck-dialog" style="display: none;" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="projectSettleTitle" aria-describedby="projectSettleHelp">
-    <div class="modal-content projectcheck-dialog__panel" onclick="event.stopPropagation();">
+    <div class="modal-content projectcheck-dialog__panel">
         <div class="modal-header projectcheck-dialog__header">
             <h3 id="projectSettleTitle"><?php p($l->t('Invoice all open hours')); ?></h3>
             <button type="button" class="close" id="close-project-settle-modal" aria-label="<?php p($l->t('Close')); ?>"><span aria-hidden="true">&times;</span></button>

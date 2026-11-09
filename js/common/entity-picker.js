@@ -20,7 +20,11 @@
 		}
 		if (opts && opts.attrs) {
 			Object.keys(opts.attrs).forEach((k) => {
-				el.setAttribute(k, opts.attrs[k]);
+				if (k.slice(0, 2) === 'on' && typeof opts.attrs[k] === 'function') {
+					el.addEventListener(k.slice(2).toLowerCase(), opts.attrs[k]);
+				} else {
+					el.setAttribute(k, opts.attrs[k]);
+				}
 			});
 		}
 		if (opts && opts.text) {

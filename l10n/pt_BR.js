@@ -1841,6 +1841,5 @@ OC.L10N.register(
 	"💻 Product Development" : "💻 Desenvolvimento de Produto",
 	"📊 Why This Matters" : "📊 Por que isso é importante",
 	"🔬 Research & Development" : "🔬 Pesquisa e Desenvolvimento"
-	},
-	"nplurals=2; plural=(n > 1);"
+	}
 );
