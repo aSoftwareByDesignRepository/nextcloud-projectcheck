@@ -108,7 +108,7 @@ OC.L10N.register(
 	"Address" : "Adress",
 	"Address must be 500 characters or less" : "Adressen får vara högst 500 tecken",
 	"Adjust Time" : "Justera tid",
-	"Admin" : "Admin",
+	"Admin" : "Administratör",
 	"Admin override" : "Administratörsåsidosättning",
 	"Admin settings saved successfully" : "Administratörsinställningarna sparades",
 	"Administrative" : "Administrativt",

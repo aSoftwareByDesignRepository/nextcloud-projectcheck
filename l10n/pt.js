@@ -805,7 +805,7 @@ OC.L10N.register(
 	"Last updated" : "Última atualização",
 	"Leave blank to use the project name." : "Deixe em branco para usar o nome do projeto.",
 	"Leave empty to include all dates." : "Deixe vazio para incluir todas as datas.",
-	"Legal" : "Legal",
+	"Legal" : "Jurídico",
 	"Legend" : "Legenda",
 	"License" : "Licença",
 	"License key" : "Chave de licença",

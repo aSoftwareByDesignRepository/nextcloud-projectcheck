@@ -108,7 +108,7 @@ OC.L10N.register(
 	"Address" : "Adres",
 	"Address must be 500 characters or less" : "Adres mag maximaal 500 tekens bevatten",
 	"Adjust Time" : "Pas de tijd aan",
-	"Admin" : "Admin",
+	"Admin" : "Beheerder",
 	"Admin override" : "Admin-overschrijving",
 	"Admin settings saved successfully" : "Admin-instellingen opgeslagen",
 	"Administrative" : "Administratief",
