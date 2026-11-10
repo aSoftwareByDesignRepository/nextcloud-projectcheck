@@ -1796,7 +1796,7 @@ OC.L10N.register(
 	"internal" : "kurum içi",
 	"logged" : "kaydedildi",
 	"product" : "ürün",
-	"project, time, management, nextcloud" : "project, time, management, nextcloud",
+	"project, time, management, nextcloud" : "proje, zaman, yönetim, nextcloud",
 	"projects are associated" : "ilişkili proje",
 	"remaining" : "kalan",
 	"remaining (estimate)" : "kalan (tahmini)",
