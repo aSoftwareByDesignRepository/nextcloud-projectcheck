@@ -1841,5 +1841,6 @@ OC.L10N.register(
 	"💻 Product Development" : "💻 Ürün Geliştirme",
 	"📊 Why This Matters" : "📊 Neden Önemli",
 	"🔬 Research & Development" : "🔬 Araştırma ve Geliştirme"
-	}
+	},
+	"nplurals=2; plural=(n != 1);"
 );
