@@ -51,6 +51,7 @@ $pcSettingsSectionFiles = [
 	'admins' => 'admins.php',
 	'defaults' => 'defaults.php',
 	'license' => 'license.php',
+	'transfer' => 'transfer.php',
 	'support' => 'support.php',
 ];
 $pcRequestedSection = (string) ($settingsSection ?? ($_['settingsSection'] ?? 'access'));
@@ -84,6 +85,15 @@ $nav = [
 ];
 $_ = array_merge(is_array($_) ? $_ : [], $nav);
 include __DIR__ . '/common/navigation.php';
+
+// Config & data transfer UI — registered AFTER navigation.php so the bridge
+// loads after common/messaging.js (it augments window.ProjectCheckMessaging),
+// and transfer.js always sees the bridge's API contract.
+if ($pcRequestedSection === 'transfer') {
+	Util::addStyle('projectcheck', 'common/transfer');
+	Util::addScript('projectcheck', 'transfer-bridge');
+	Util::addScript('projectcheck', 'transfer');
+}
 
 $pageId = 'org-settings';
 $pageKicker = (string) ($pageKicker ?? $_['pageKicker'] ?? $l->t('Settings'));

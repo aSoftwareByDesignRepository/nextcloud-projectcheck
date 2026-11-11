@@ -113,6 +113,7 @@ class AppConfigControllerTest extends TestCase {
 			$this->cspService,
 			$this->licenseService,
 			new SettingsSectionCatalog(),
+			new \OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore($this->config, 'projectcheck'),
 		);
 	}
 

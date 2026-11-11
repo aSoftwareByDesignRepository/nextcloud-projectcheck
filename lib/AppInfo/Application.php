@@ -474,6 +474,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Service\CSPService::class),
 				$c->query(\OCA\ProjectCheck\Service\LicenseService::class),
 				$c->query(\OCA\ProjectCheck\Service\SettingsSectionCatalog::class),
+				$c->query(\OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore::class),
 			);
 		});
 
@@ -635,6 +636,58 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IDBConnection::class),
 				$c->query(\OCP\IConfig::class),
 				$c->query(IRootFolder::class),
+			);
+		});
+
+		// ── Config & data transfer (test → production) ──────────────────
+		$context->registerService(\OCA\ProjectCheck\ConfigTransfer\TransferManifest::class, fn () => new \OCA\ProjectCheck\ConfigTransfer\TransferManifest());
+		$context->registerService(\OCA\ProjectCheck\ConfigTransfer\TransferHooks::class, function ($c): \OCA\ProjectCheck\ConfigTransfer\TransferHooks {
+			return new \OCA\ProjectCheck\ConfigTransfer\TransferHooks(
+				$c->query(\OCA\ProjectCheck\Service\AccessControlService::class),
+				$c->query(UpgradeBackupService::class),
+				$c->query(\Psr\Log\LoggerInterface::class),
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\ConfigTransfer\TransferPendingStore::class, fn ($c) => new \OCA\ProjectCheck\ConfigTransfer\TransferPendingStore($c->query(IRootFolder::class), $c->query(\OCP\IConfig::class), self::APP_ID));
+		$context->registerService(\OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore::class, fn ($c) => new \OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore($c->query(\OCP\IConfig::class), self::APP_ID));
+		$context->registerService(\OCA\ProjectCheck\ConfigTransfer\TransferService::class, function ($c): \OCA\ProjectCheck\ConfigTransfer\TransferService {
+			return new \OCA\ProjectCheck\ConfigTransfer\TransferService(
+				$c->query(IDBConnection::class),
+				$c->query(IConfig::class),
+				$c->query(\OCP\IUserManager::class),
+				$c->query(\OCP\IGroupManager::class),
+				$c->query(IRootFolder::class),
+				$c->query(IAppManager::class),
+				$c->query(ILockingProvider::class),
+				$c->query(\OCP\IURLGenerator::class),
+				$c->query(\Psr\Log\LoggerInterface::class),
+				$c->query(\OCA\ProjectCheck\ConfigTransfer\TransferManifest::class),
+				$c->query(\OCA\ProjectCheck\ConfigTransfer\TransferHooks::class),
+				$c->query(\OCA\ProjectCheck\ConfigTransfer\TransferPendingStore::class),
+				$c->query(\OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore::class),
+				self::APP_ID,
+				$c->query(\OCP\IAppConfig::class),
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\BackgroundJob\TransferApplyJob::class, function ($c): \OCA\ProjectCheck\BackgroundJob\TransferApplyJob {
+			return new \OCA\ProjectCheck\BackgroundJob\TransferApplyJob(
+				$c->query(\OCP\AppFramework\Utility\ITimeFactory::class),
+				$c->query(\OCA\ProjectCheck\ConfigTransfer\TransferService::class),
+				$c->query(ILockingProvider::class),
+				$c->query(\OCP\BackgroundJob\IJobList::class),
+				$c->query(\Psr\Log\LoggerInterface::class),
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Controller\TransferApiController::class, function ($c): \OCA\ProjectCheck\Controller\TransferApiController {
+			return new \OCA\ProjectCheck\Controller\TransferApiController(
+				self::APP_ID,
+				$c->query(\OCP\IRequest::class),
+				$c->query(\OCA\ProjectCheck\ConfigTransfer\TransferHooks::class),
+				$c->query(\OCA\ProjectCheck\ConfigTransfer\TransferService::class),
+				$c->query(\OCP\BackgroundJob\IJobList::class),
+				$c->query(\OCP\Security\Bruteforce\IThrottler::class),
+				$c->query(\OCP\IGroupManager::class),
+				$c->query(\OCP\IUserSession::class),
 			);
 		});
 

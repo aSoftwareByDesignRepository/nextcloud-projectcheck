@@ -69,6 +69,7 @@ class AppConfigController extends Controller
 		CSPService $cspService,
 		private LicenseService $licenseService,
 		private SettingsSectionCatalog $settingsSections,
+		private \OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore $transferReceipts,
 	) {
 		parent::__construct($appName, $request);
 		$this->setCspService($cspService);
@@ -671,6 +672,9 @@ class AppConfigController extends Controller
 			'licenseStatus' => $licenseStatus,
 			'licenseSeatsList' => $licenseSeatsList,
 			'licenseI18n' => LicenseUiStrings::forPanel($l),
+			'isSystemAdmin' => $viewUid !== null && $viewUid !== ''
+				&& $this->accessControl->isSystemAdministrator($viewUid),
+			'transferLastReceipt' => $this->transferReceipts->lastReceipt(),
 			'requesttoken' => \OCP\Util::callRegister(),
 		];
 	}

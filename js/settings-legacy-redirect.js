@@ -32,6 +32,7 @@
 		'pc-license-panel': 'license',
 		'pc-license-heading': 'license',
 		'pc-license-seats-heading': 'license',
+		'pc-transfer-export-card': 'transfer',
 		'projectcheck-support-us': 'support',
 		'projectcheck-support-us-title': 'support',
 		'projectcheck-org-trust-h': 'access',

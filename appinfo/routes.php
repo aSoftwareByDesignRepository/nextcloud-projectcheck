@@ -154,6 +154,13 @@ return [
 		['name' => 'project_member#remove', 'url' => '/api/project-members/{id}/remove', 'verb' => 'DELETE', 'requirements' => ['id' => '\\d+']],
 		['name' => 'project_member#removePost', 'url' => '/api/project-members/{id}/remove', 'verb' => 'POST', 'requirements' => ['id' => '\\d+']],
 
+		// ── Config & data transfer (test → production) ──────────────────
+		['name' => 'transfer_api#status',    'url' => '/api/admin/transfer/status',         'verb' => 'GET'],
+		['name' => 'transfer_api#export',    'url' => '/api/admin/transfer/export',         'verb' => 'POST'],
+		['name' => 'transfer_api#preview',   'url' => '/api/admin/transfer/preview',        'verb' => 'POST'],
+		['name' => 'transfer_api#apply',     'url' => '/api/admin/transfer/apply',          'verb' => 'POST'],
+		['name' => 'transfer_api#reconcile', 'url' => '/api/admin/transfer/reconcile',      'verb' => 'POST'],
+
 		// PC2 commercial license (settings / mobile prep)
 		['name' => 'license#show', 'url' => '/api/license', 'verb' => 'GET'],
 		['name' => 'license#apply', 'url' => '/api/license', 'verb' => 'POST'],

@@ -296,6 +296,9 @@ as taxas horárias nos lançamentos são resolvidas no servidor a partir do hist
 	<commands>
 		<command>OCA\ProjectCheck\Command\UpgradeBackupCommand</command>
 		<command>OCA\ProjectCheck\Command\SettlementRecomputeCommand</command>
+		<command>OCA\ProjectCheck\Command\ConfigExportCommand</command>
+		<command>OCA\ProjectCheck\Command\ConfigImportCommand</command>
+		<command>OCA\ProjectCheck\Command\ConfigReconcileCommand</command>
 	</commands>
 
 	<background-jobs>

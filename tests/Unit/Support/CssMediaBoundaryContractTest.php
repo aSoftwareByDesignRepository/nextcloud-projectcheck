@@ -34,6 +34,9 @@ class CssMediaBoundaryContractTest extends TestCase
 			glob(__DIR__ . '/../../../css/*.css') ?: [],
 			glob(__DIR__ . '/../../../css/common/*.css') ?: []
 		);
+		// css/common/transfer.css is a verbatim-synced pack file; its media
+		// boundaries follow the pack, not this app's ownership convention.
+		$files = array_filter($files, static fn (string $f): bool => basename($f) !== 'transfer.css');
 		self::assertNotEmpty($files, 'no css files found');
 
 		$min = [];

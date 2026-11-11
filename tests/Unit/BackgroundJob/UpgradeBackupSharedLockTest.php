@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Tests\Unit\BackgroundJob;
 
 use OCA\ProjectCheck\BackgroundJob\CleanupJob as BgCleanupJob;
+use OCA\ProjectCheck\BackgroundJob\TransferApplyJob;
 use OCA\ProjectCheck\Cron\CleanupJob as CronCleanupJob;
 use OCA\ProjectCheck\Service\BudgetAlertService;
 use OCA\ProjectCheck\Service\CustomerService;
@@ -35,6 +36,7 @@ class UpgradeBackupSharedLockTest extends TestCase
 	private const JOB_CLASSES = [
 		BgCleanupJob::class,
 		CronCleanupJob::class,
+		TransferApplyJob::class,
 	];
 
 	/**

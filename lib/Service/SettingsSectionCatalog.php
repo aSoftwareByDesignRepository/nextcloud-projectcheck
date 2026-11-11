@@ -32,6 +32,7 @@ final class SettingsSectionCatalog
 		'admins',
 		'defaults',
 		'license',
+		'transfer',
 		'support',
 	];
 
@@ -59,6 +60,7 @@ final class SettingsSectionCatalog
 		'pc-license-panel' => 'license',
 		'pc-license-heading' => 'license',
 		'pc-license-seats-heading' => 'license',
+		'pc-transfer-export-card' => 'transfer',
 		'projectcheck-support-us' => 'support',
 		'projectcheck-support-us-title' => 'support',
 		'projectcheck-org-trust-h' => 'access',
@@ -87,6 +89,7 @@ final class SettingsSectionCatalog
 			'admins' => $l->t('App administrators'),
 			'defaults' => $l->t('App defaults'),
 			'license' => $l->t('Mobile license'),
+			'transfer' => $l->t('Transfer configuration'),
 			'support' => $l->t('Support & us'),
 			default => $l->t('Settings'),
 		};
@@ -102,6 +105,7 @@ final class SettingsSectionCatalog
 			'admins' => $l->t('App admins'),
 			'defaults' => $l->t('Defaults'),
 			'license' => $l->t('License'),
+			'transfer' => $l->t('Transfer'),
 			'support' => $l->t('Support us'),
 			default => $l->t('Settings'),
 		};
@@ -119,6 +123,7 @@ final class SettingsSectionCatalog
 			'access' => $l->t('Decide who may open ProjectCheck. Wrong allowlists can lock people out or grant access too widely.'),
 			'admins' => $l->t('These people can open ProjectCheck settings. System administrators always keep access. Search and pick — never type a raw user id.'),
 			'defaults' => $l->t('Default values for projects and budgets. Changes apply to all users in this Nextcloud.'),
+			'transfer' => $l->t('Copy all settings, catalogues and data between a test and a production instance — one encrypted file, dry-run before anything is written.'),
 			default => '',
 		};
 	}

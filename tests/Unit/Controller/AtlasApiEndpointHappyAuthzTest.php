@@ -441,6 +441,14 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			return $this->byType[$key];
 		}
 
+		if ($typeName === \OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore::class) {
+			$this->byType[$key] = new \OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore(
+				$this->mockFor(IConfig::class, $allow, $mode, $controllerClass),
+				'projectcheck',
+			);
+			return $this->byType[$key];
+		}
+
 		if ($typeName === CSPService::class) {
 			$mock = $this->createMock(CSPService::class);
 			$mock->method('applyPolicyWithNonce')->willReturnArgument(0);
