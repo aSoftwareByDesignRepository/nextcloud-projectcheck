@@ -10,7 +10,7 @@
 .pc-form-row input[type="password"],
 .pc-form-row input[type="text"] {
 	padding: 8px 12px;
-	border: 1px solid var(--color-border, #c8c8c8);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, #767676));
 	border-radius: var(--pc-radius-md, 8px);
 	background: var(--color-main-background, #fff);
 	color: var(--color-main-text, #222);
@@ -44,7 +44,7 @@
 .pc-file-input {
 	min-height: 44px;
 	padding: var(--pc-space-2, 8px);
-	border: 1px dashed var(--color-border, #c8c8c8);
+	border: 1px dashed var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border, #c8c8c8)));
 	border-radius: var(--pc-radius-md, 8px);
 	width: 100%;
 	box-sizing: border-box;
@@ -58,6 +58,13 @@
 	box-sizing: border-box;
 	background: var(--color-main-background, #fff);
 	color: var(--color-main-text, #222);
+}
+/* NC core ships an HTML5 shim (server.css: article, aside, dialog, …
+   { display:block }) — an author rule that beats the UA closed-dialog
+   rule, so a static <dialog> renders inline in the page flow until
+   showModal(). Re-hide the closed state here. */
+dialog.pc-dialog:not([open]) {
+	display: none !important;
 }
 .pc-dialog::backdrop { background: color-mix(in srgb, var(--color-main-text, #222) 45%, transparent); }
 .pc-dialog__body { padding: var(--pc-space-5, 20px); max-height: 65vh; overflow: auto; }
