@@ -5,6 +5,20 @@
 .pc-section__header { margin: 0 0 var(--pc-space-4, 16px); }
 .pc-section__sub { color: var(--color-text-maxcontrast, #6b6b6b); margin: var(--pc-space-1, 4px) 0 0; }
 .pc-form-row { margin: 0 0 var(--pc-space-4, 16px); }
+/* The transfer forms are wrap-flex containers at ≥1024 and column stacks
+   below (.pc-form is app css). Direct children are flex items — and a
+   fieldset cannot shrink below its content width (Blink/WebKit fieldset
+   quirk), dragging sibling rows out with it. Pin every direct child of the
+   two transfer forms to a real full-width column so label and hint text
+   wraps inside the sheet on narrow viewports instead of clipping mid-word
+   at its right edge. Scoped by form id — .pc-form/.pc-form-row are
+   app-wide classes that also mark up deliberate side-by-side filter rows. */
+#pc-transfer-export-form > *,
+#pc-transfer-import-form > * {
+	min-width: 0;
+	width: 100%;
+	box-sizing: border-box;
+}
 .pc-form-row > label,
 .pc-form-row legend { display: block; font-weight: 600; margin-bottom: var(--pc-space-1, 4px); }
 .pc-form-row input[type="password"],
@@ -48,8 +62,14 @@
 .pc-fieldset legend { font-weight: 600; padding: 0 0 var(--pc-space-2, 8px); }
 .pc-radio { display: flex; gap: var(--pc-space-2, 8px); align-items: flex-start; min-height: 44px; padding: var(--pc-space-1, 4px) 0; }
 .pc-radio input { margin-top: 4px; min-width: 20px; min-height: 20px; }
+.pc-radio span { min-width: 0; }
 .pc-radio--danger strong { color: var(--color-element-error, #e9322d); }
-.pc-file-input {
+/* NC core pins input[type=file] to width:auto (inputs.css, 0-1-1) — the
+   intrinsic ~320px min-size overflows narrow sheets. check-shell
+   form-controls.css re-pins it at #content.app-* #app-content level (2-2-1)
+   which loads AFTER this file, so the extra .pc-form-row class hop (2-3-1)
+   is needed for the 100% column width to land regardless of sheet order. */
+#content #app-content .pc-form-row input[type="file"].pc-file-input {
 	min-height: 44px;
 	padding: var(--pc-space-2, 8px);
 	border: 1px dashed var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border, #c8c8c8)));
@@ -66,6 +86,14 @@
 	box-sizing: border-box;
 	background: var(--color-main-background, #fff);
 	color: var(--color-main-text, #222);
+	/* Column flex so the footer is a layout child pinned inside the dialog's
+	   own client box — never scrollable shell overflow (apply action must
+	   always paint, required_field_or_step_undiscoverable). Body absorbs the
+	   overflow; overflow:auto on the shell stays only as last-resort fallback
+	   (e.g. single-child dialogs without __body). */
+	display: flex;
+	flex-direction: column;
+	overflow: auto;
 }
 /* NC core ships an HTML5 shim (server.css: article, aside, dialog, …
    { display:block }) — an author rule that beats the UA closed-dialog
@@ -75,8 +103,18 @@ dialog.pc-dialog:not([open]) {
 	display: none !important;
 }
 .pc-dialog::backdrop { background: color-mix(in srgb, var(--color-main-text, #222) 45%, transparent); }
-.pc-dialog__body { padding: var(--pc-space-5, 20px); max-height: 65vh; overflow: auto; }
+/* min-height:0 lets the body shrink below its content height so it becomes
+   the scroller; without it flex min-height:auto keeps the body content-sized
+   and the footer overflows the shell again. 65vh stays the body's own cap. */
+.pc-dialog__body {
+	flex: 1 1 auto;
+	min-height: 0;
+	padding: var(--pc-space-5, 20px);
+	max-height: 65vh;
+	overflow: auto;
+}
 .pc-dialog__footer {
+	flex: 0 0 auto;
 	padding: var(--pc-space-4, 16px) var(--pc-space-5, 20px);
 	border-top: 1px solid var(--color-border, #c8c8c8);
 	display: flex;
