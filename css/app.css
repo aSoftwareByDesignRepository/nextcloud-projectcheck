@@ -367,7 +367,7 @@ dialog .pc-btn--ghost:active,
 	margin: 0 !important;
 	padding: var(--pc-space-1, 4px) !important;
 	background: var(--color-main-background) !important;
-	border: 1px solid var(--color-border) !important;
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
 	min-width: var(--pc-touch-min, 44px);
 	min-height: var(--pc-touch-min, 44px);
 }
