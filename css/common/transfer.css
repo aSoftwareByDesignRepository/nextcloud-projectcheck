@@ -162,7 +162,11 @@ progress {
 	white-space: nowrap;
 }
 @media (max-width: 480px) {
-	.pc-dialog { max-width: 100vw; margin: 0; border-radius: 0; }
+	/* Element+class selector: app stylesheets commonly pin
+	   'dialog.pc-dialog { max-width: … }' unified-dialog rules at
+	   specificity (0,1,1); a bare class here (0,1,0) could never
+	   override them and the sheet would stay capped on phones. */
+	dialog.pc-dialog { max-width: 100vw; margin: 0; border-radius: 0; }
 	.pc-dialog__body { padding: var(--pc-space-4, 16px); }
 	.pc-dialog__footer .pc-actions { flex-direction: column; }
 	.pc-dialog__footer .pc-btn { width: 100%; min-height: 48px; }
