@@ -28,6 +28,7 @@ const SECTION_URLS = Object.freeze({
 	defaults: '/apps/projectcheck/settings/defaults',
 	license: '/apps/projectcheck/settings/license',
 	support: '/apps/projectcheck/settings/support',
+	transfer: '/apps/projectcheck/settings/transfer',
 });
 
 /**
