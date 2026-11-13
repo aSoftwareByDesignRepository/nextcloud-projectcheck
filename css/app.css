@@ -40,3 +40,334 @@
 	border-color: var(--color-border-error, var(--color-element-error));
 	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-element-error) 22%, transparent);
 }
+
+/* ── Button base + variants (.pc-btn / .pc-btn--*) ──────────────────────
+ * BEM base fallback: the modifiers need a real button to rest on — without
+ * this base the pack templates' <button class="pc-btn pc-btn--*"> render
+ * with bare core chrome. Element-qualified pairs ride the armor block
+ * below; the single-class rules keep anchors and <summary> styled even
+ * where the armor's scope list does not reach. */
+.pc-btn,
+button.pc-btn,
+a.pc-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--pc-space-2, 8px);
+	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch-min, 44px);
+	padding: 0 var(--pc-space-4, 16px);
+	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
+	border-radius: var(--pc-radius-md, 12px);
+	background: transparent;
+	color: var(--color-main-text);
+	font: inherit;
+	font-weight: 500;
+	line-height: 1.5;
+	text-decoration: none;
+	white-space: nowrap;
+	box-sizing: border-box;
+	cursor: pointer;
+}
+.pc-btn:hover {
+	background: var(--color-background-hover);
+}
+.pc-btn:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 55%, transparent);
+	outline-offset: 2px;
+}
+.pc-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.pc-btn--primary {
+	background: var(--color-primary-element, #0082c9);
+	border-color: var(--color-primary-element, #0082c9);
+	color: var(--color-primary-element-text, #fff);
+}
+.pc-btn--primary:hover {
+	background: var(--color-primary-element-hover, var(--color-primary-element, #0082c9));
+}
+.pc-btn--secondary {
+	background: var(--color-background-hover);
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
+}
+.pc-btn--secondary:hover {
+	background: var(--color-background-dark, var(--color-background-hover));
+}
+.pc-btn--ghost {
+	background: transparent;
+	border-color: transparent;
+}
+.pc-btn--ghost:hover {
+	background: var(--color-background-hover);
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
+}
+
+/* ── Button-variant armor (.pc-btn--*) ────────────────────────────────────
+ * Why !important everywhere: NC core inputs.scss repaints every
+ * <button>:not(.button-vue,[class^=vs__]) at specificity 0-1-1 with the
+ * pale --color-primary-element-light fill + light-text ink — stronger than
+ * a lone .pc-btn--{variant} class (0-1-0). On <button> elements the
+ * variant collapses to the pale core skin; anchors/<summary> keep working,
+ * which is why the defect looks asymmetric (button_variant_specificity_collapse;
+ * canonical fix shape ported from arbeitszeitcheck/whistlecheck css/app.css).
+ * The synced config-transfer pack emits class="pc-btn pc-btn--{v}".
+ *
+ * ONE overlay scope list — app scopes + every body-mounted overlay scope —
+ * applying !important background/border/color for EVERY fill variant incl.
+ * :hover/:focus-visible/:active. A new overlay is armored by landing on the
+ * scope list, never by a per-dialog-class rule.
+ */
+.pc-app .pc-btn,
+.pc-dialog .pc-btn,
+.modal .pc-btn,
+.modal-backdrop .pc-btn,
+.projectcheck-deletion-modal .pc-btn,
+dialog .pc-btn,
+[role="dialog"] .pc-btn,
+[role="alertdialog"] .pc-btn {
+	background: transparent !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+}
+.pc-app .pc-btn:hover,
+.pc-dialog .pc-btn:hover,
+.modal .pc-btn:hover,
+.modal-backdrop .pc-btn:hover,
+.projectcheck-deletion-modal .pc-btn:hover,
+dialog .pc-btn:hover,
+[role="dialog"] .pc-btn:hover,
+[role="alertdialog"] .pc-btn:hover {
+	background: var(--color-background-hover) !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+}
+.pc-app .pc-btn:active,
+.pc-dialog .pc-btn:active,
+.modal .pc-btn:active,
+.modal-backdrop .pc-btn:active,
+.projectcheck-deletion-modal .pc-btn:active,
+dialog .pc-btn:active,
+[role="dialog"] .pc-btn:active,
+[role="alertdialog"] .pc-btn:active {
+	background: var(--color-background-dark, var(--color-background-hover)) !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+}
+.pc-app .pc-btn:focus-visible,
+.pc-dialog .pc-btn:focus-visible,
+.modal .pc-btn:focus-visible,
+.modal-backdrop .pc-btn:focus-visible,
+.projectcheck-deletion-modal .pc-btn:focus-visible,
+dialog .pc-btn:focus-visible,
+[role="dialog"] .pc-btn:focus-visible,
+[role="alertdialog"] .pc-btn:focus-visible {
+	background: transparent !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 55%, transparent);
+	outline-offset: 2px;
+}
+
+.pc-app .pc-btn--primary,
+.pc-dialog .pc-btn--primary,
+.modal .pc-btn--primary,
+.modal-backdrop .pc-btn--primary,
+.projectcheck-deletion-modal .pc-btn--primary,
+dialog .pc-btn--primary,
+[role="dialog"] .pc-btn--primary,
+[role="alertdialog"] .pc-btn--primary {
+	background: var(--color-primary-element, #0082c9) !important;
+	border-color: var(--color-primary-element, #0082c9) !important;
+	color: var(--color-primary-element-text, #fff) !important;
+}
+.pc-app .pc-btn--primary:hover,
+.pc-dialog .pc-btn--primary:hover,
+.modal .pc-btn--primary:hover,
+.modal-backdrop .pc-btn--primary:hover,
+.projectcheck-deletion-modal .pc-btn--primary:hover,
+dialog .pc-btn--primary:hover,
+[role="dialog"] .pc-btn--primary:hover,
+[role="alertdialog"] .pc-btn--primary:hover {
+	background: var(--color-primary-element-hover, var(--color-primary-element, #0082c9)) !important;
+	border-color: var(--color-primary-element-hover, var(--color-primary-element, #0082c9)) !important;
+	color: var(--color-primary-element-text, #fff) !important;
+}
+.pc-app .pc-btn--primary:focus-visible,
+.pc-dialog .pc-btn--primary:focus-visible,
+.modal .pc-btn--primary:focus-visible,
+.modal-backdrop .pc-btn--primary:focus-visible,
+.projectcheck-deletion-modal .pc-btn--primary:focus-visible,
+dialog .pc-btn--primary:focus-visible,
+[role="dialog"] .pc-btn--primary:focus-visible,
+[role="alertdialog"] .pc-btn--primary:focus-visible {
+	background: var(--color-primary-element-hover, var(--color-primary-element, #0082c9)) !important;
+	border-color: var(--color-primary-element-hover, var(--color-primary-element, #0082c9)) !important;
+	color: var(--color-primary-element-text, #fff) !important;
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 55%, transparent);
+	outline-offset: 2px;
+}
+.pc-app .pc-btn--primary:active,
+.pc-dialog .pc-btn--primary:active,
+.modal .pc-btn--primary:active,
+.modal-backdrop .pc-btn--primary:active,
+.projectcheck-deletion-modal .pc-btn--primary:active,
+dialog .pc-btn--primary:active,
+[role="dialog"] .pc-btn--primary:active,
+[role="alertdialog"] .pc-btn--primary:active {
+	background: var(--color-primary-element-hover, var(--color-primary-element, #0082c9)) !important;
+	border-color: var(--color-primary-element-hover, var(--color-primary-element, #0082c9)) !important;
+	color: var(--color-primary-element-text, #fff) !important;
+}
+
+.pc-app .pc-btn--secondary,
+.pc-dialog .pc-btn--secondary,
+.modal .pc-btn--secondary,
+.modal-backdrop .pc-btn--secondary,
+.projectcheck-deletion-modal .pc-btn--secondary,
+dialog .pc-btn--secondary,
+[role="dialog"] .pc-btn--secondary,
+[role="alertdialog"] .pc-btn--secondary {
+	background: var(--color-background-hover) !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+}
+.pc-app .pc-btn--secondary:hover,
+.pc-dialog .pc-btn--secondary:hover,
+.modal .pc-btn--secondary:hover,
+.modal-backdrop .pc-btn--secondary:hover,
+.projectcheck-deletion-modal .pc-btn--secondary:hover,
+dialog .pc-btn--secondary:hover,
+[role="dialog"] .pc-btn--secondary:hover,
+[role="alertdialog"] .pc-btn--secondary:hover {
+	background: var(--color-background-dark, var(--color-background-hover)) !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+}
+.pc-app .pc-btn--secondary:focus-visible,
+.pc-dialog .pc-btn--secondary:focus-visible,
+.modal .pc-btn--secondary:focus-visible,
+.modal-backdrop .pc-btn--secondary:focus-visible,
+.projectcheck-deletion-modal .pc-btn--secondary:focus-visible,
+dialog .pc-btn--secondary:focus-visible,
+[role="alertdialog"] .pc-btn--secondary:focus-visible {
+	background: var(--color-background-dark, var(--color-background-hover)) !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 55%, transparent);
+	outline-offset: 2px;
+}
+.pc-app .pc-btn--secondary:active,
+.pc-dialog .pc-btn--secondary:active,
+.modal .pc-btn--secondary:active,
+.modal-backdrop .pc-btn--secondary:active,
+.projectcheck-deletion-modal .pc-btn--secondary:active,
+dialog .pc-btn--secondary:active,
+[role="dialog"] .pc-btn--secondary:active,
+[role="alertdialog"] .pc-btn--secondary:active {
+	background: var(--color-background-dark, var(--color-background-hover)) !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+}
+
+.pc-app .pc-btn--ghost,
+.pc-dialog .pc-btn--ghost,
+.modal .pc-btn--ghost,
+.modal-backdrop .pc-btn--ghost,
+.projectcheck-deletion-modal .pc-btn--ghost,
+dialog .pc-btn--ghost,
+[role="dialog"] .pc-btn--ghost,
+[role="alertdialog"] .pc-btn--ghost {
+	background: transparent !important;
+	border-color: transparent !important;
+	color: var(--color-main-text) !important;
+}
+.pc-app .pc-btn--ghost:hover,
+.pc-dialog .pc-btn--ghost:hover,
+.modal .pc-btn--ghost:hover,
+.modal-backdrop .pc-btn--ghost:hover,
+.projectcheck-deletion-modal .pc-btn--ghost:hover,
+dialog .pc-btn--ghost:hover,
+[role="dialog"] .pc-btn--ghost:hover,
+[role="alertdialog"] .pc-btn--ghost:hover {
+	background: var(--color-background-hover) !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+}
+.pc-app .pc-btn--ghost:focus-visible,
+.pc-dialog .pc-btn--ghost:focus-visible,
+.modal .pc-btn--ghost:focus-visible,
+.modal-backdrop .pc-btn--ghost:focus-visible,
+.projectcheck-deletion-modal .pc-btn--ghost:focus-visible,
+dialog .pc-btn--ghost:focus-visible,
+[role="dialog"] .pc-btn--ghost:focus-visible,
+[role="alertdialog"] .pc-btn--ghost:focus-visible {
+	background: var(--color-background-hover) !important;
+	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
+	color: var(--color-main-text) !important;
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 55%, transparent);
+	outline-offset: 2px;
+}
+.pc-app .pc-btn--ghost:active,
+.pc-dialog .pc-btn--ghost:active,
+.modal .pc-btn--ghost:active,
+.modal-backdrop .pc-btn--ghost:active,
+.projectcheck-deletion-modal .pc-btn--ghost:active,
+dialog .pc-btn--ghost:active,
+[role="dialog"] .pc-btn--ghost:active,
+[role="alertdialog"] .pc-btn--ghost:active {
+	background: var(--color-background-dark, var(--color-background-hover)) !important;
+	border-color: transparent !important;
+	color: var(--color-main-text) !important;
+}
+
+/* ── Forced-colors affordance (WCAG 1.4.11) ──────────────────────────────
+ * Under forced-colors:active the primary fill collapses and the inherited
+ * transparent border leaves the CTA as bare text. Pin a visible system-colour
+ * boundary on every .pc-btn variant — never forced-color-adjust:none.
+ * !important is required: the armor above carries !important border-color and
+ * would otherwise defeat this rule. */
+@media (forced-colors: active) {
+	.pc-btn,
+	.pc-app .pc-btn,
+	.pc-dialog .pc-btn,
+	dialog .pc-btn,
+	[role="dialog"] .pc-btn,
+	[role="alertdialog"] .pc-btn {
+		border-color: ButtonBorder !important;
+	}
+}
+
+/* ── Overlay control armor — body-mounted overlay close/dismiss controls ──
+ * Same mechanism as the variant armor above: the js-mounted overlays
+ * (.modal-backdrop > .modal, .persistent-notification) live on
+ * document.body OUTSIDE .pc-app, so the variant scope list can never
+ * reach them and the bare (0,1,0) class rules lose to core's button
+ * repaint on width/background/border/padding/min-height/margin —
+ * the close renders a ~130px pale block instead of the declared icon
+ * button (overlay_toast_button_armor_gap; canonical shape:
+ * whistlecheck .wc-toasts button.wc-toast__close). The overlay-scoped
+ * selectors pin every repainted property !important. */
+.modal-backdrop button.modal-close,
+.modal button.modal-close,
+.modal-header button.modal-close {
+	width: auto !important;
+	margin: 0 !important;
+	margin-inline-start: auto !important;
+	padding: var(--pc-space-2, 8px) !important;
+	background: transparent !important;
+	border: 0 !important;
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+}
+.persistent-notification button.persistent-notification__dismiss,
+.persistent-notification button.persistent-notification__acknowledge {
+	width: auto !important;
+	margin: 0 !important;
+	padding: var(--pc-space-1, 4px) !important;
+	background: var(--color-main-background) !important;
+	border: 1px solid var(--color-border) !important;
+	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch-min, 44px);
+}
