@@ -12,6 +12,7 @@ const settingsSections = [
   'admins',
   'defaults',
   'license',
+  'transfer',
   'support',
 ];
 
