@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.107 - 2026-11-13
+
+### Fixed
+
+- form-border token on overlay dismiss + label-in-name deps
+- pc-btn variant armor + overlay close/dismiss armor
+- parity roster covers zh_CN/zh_TW + shipped-vs-roster guard
+- catalog + translate 89 transfer-pack runtime strings
+- re-sync pack — promote <=480px sheet rule to dialog.pc-dialog
+- margin:auto on pack dialog — NC core reset uncenters top-layer dialogs
+- sync config-transfer pack — schema cache, file-input specificity, sheet clip
+- sync config-transfer pack — positional t() interpolation
+- nl beheerder dependents + pl german-cell repair + plural mirrors
+- tr app-keywords cell translation — complete tr catalog
+- common components/entity-picker + l10n parity
+- register widget-snapshot inside routes array + CSRF parity
+- org user search never offers deactivated accounts
+
+### Added
+
+- config & data transfer — encrypted test→prod pack
+- widget-snapshot endpoint
+
+### Changed
+
+- settings sections list covers transfer
+- stub covers transfer section URL
+- pack re-sync — replace-confirm token width (cramped_form_controls)
+- l10n: zh-Hant/zh_TW catalog + locale wiring
+- l10n: complete translations across the app language set
+
 ## 2.0.106 - 2026-11-06
 
 ### Changed
