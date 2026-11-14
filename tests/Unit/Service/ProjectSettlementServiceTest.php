@@ -107,7 +107,6 @@ class ProjectSettlementServiceTest extends TestCase
 		$service = $this->makeService();
 		$ref = new \ReflectionClass($service);
 		$method = $ref->getMethod('resolveAction');
-		$method->setAccessible(true);
 
 		$this->expectException(\OCA\ProjectCheck\Exception\ValidationException::class);
 		$method->invoke($service, 'skip_to_paid');

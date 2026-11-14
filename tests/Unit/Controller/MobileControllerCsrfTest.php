@@ -46,7 +46,6 @@ final class MobileControllerCsrfTest extends TestCase
 			$this->createMock(ICacheFactory::class),
 		);
 		$method = new ReflectionMethod(MobileController::class, 'assertSafeMutationChannel');
-		$method->setAccessible(true);
 		$method->invoke($controller);
 	}
 

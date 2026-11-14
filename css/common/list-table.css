@@ -763,7 +763,7 @@
 	line-height: 1.35;
 }
 
-@media (max-width: 479.98px) {
+@media (max-width: 480px) {
 	.pc-export {
 		width: 100%;
 	}

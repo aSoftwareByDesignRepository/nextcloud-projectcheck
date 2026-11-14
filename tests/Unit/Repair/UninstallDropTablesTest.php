@@ -95,7 +95,6 @@ final class UninstallDropTablesTest extends TestCase
 
 		$step = new UninstallDropTables($this->connection, $this->config, $this->rootFolder);
 		$method = (new ReflectionClass(UninstallDropTables::class))->getMethod('dropAllTablesAndMetadata');
-		$method->setAccessible(true);
 		$method->invoke($step, $this->output);
 	}
 }

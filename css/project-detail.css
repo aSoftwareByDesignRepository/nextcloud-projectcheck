@@ -170,7 +170,7 @@
 	margin-top: 0.85rem;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 480.02px) {
 	.pc-app--project-detail .pc-pd-budget-progress .budget-breakdown {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -398,7 +398,7 @@
 	}
 }
 
-@media (max-width: 479.98px) {
+@media (max-width: 480px) {
 	.pc-app--project-detail .section > .section-header,
 	.pc-app--project-detail .section > .section-content,
 	.pc-app--project-detail .pc-stats-panel {

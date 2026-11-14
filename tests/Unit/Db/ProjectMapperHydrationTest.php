@@ -58,7 +58,6 @@ class ProjectMapperHydrationTest extends TestCase
 	{
 		$ref = new \ReflectionClass($mapper);
 		$method = $ref->getMethod('mapRowToEntity');
-		$method->setAccessible(true);
 		return $method->invoke($mapper, $row);
 	}
 

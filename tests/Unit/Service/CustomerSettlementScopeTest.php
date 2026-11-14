@@ -66,7 +66,6 @@ class CustomerSettlementScopeTest extends TestCase
 			$projectService
 		);
 		$ref = new \ReflectionMethod(CustomerSettlementService::class, 'resolveRollupProjectScope');
-		$ref->setAccessible(true);
 		/** @var list<int>|null $scope */
 		$scope = $ref->invoke($service, $userId);
 		return $scope;

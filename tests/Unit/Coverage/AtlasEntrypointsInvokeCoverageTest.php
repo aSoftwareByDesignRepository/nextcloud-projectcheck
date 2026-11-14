@@ -74,7 +74,6 @@ final class AtlasEntrypointsInvokeCoverageTest extends TestCase
 			$ref = new ReflectionClass($job);
 			$obj = $ref->newInstanceArgs($ctorArgs);
 			$run = $ref->getMethod('run');
-			$run->setAccessible(true);
 			try {
 				$run->invoke($obj, null);
 			} catch (\Throwable) {

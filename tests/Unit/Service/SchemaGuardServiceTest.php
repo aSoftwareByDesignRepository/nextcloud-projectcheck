@@ -21,7 +21,6 @@ class SchemaGuardServiceTest extends TestCase
 	{
 		$ref = new \ReflectionClass(SchemaGuardService::class);
 		$prop = $ref->getProperty('requestState');
-		$prop->setAccessible(true);
 		$prop->setValue(null, null);
 		parent::tearDown();
 	}

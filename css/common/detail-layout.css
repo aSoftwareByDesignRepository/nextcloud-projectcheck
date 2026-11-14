@@ -767,7 +767,7 @@
 	overflow-wrap: anywhere;
 }
 
-@media (max-width: 479.98px) {
+@media (max-width: 480px) {
 	.pc-entity-facts__row {
 		grid-template-columns: 1fr;
 		gap: 0.25rem;

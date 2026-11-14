@@ -737,7 +737,6 @@ class ProjectControllerTest extends TestCase {
 	 */
 	public function testSafeProjectErrorMessageDoesNotLeakDatabaseErrors(): void {
 		$ref = new \ReflectionMethod(ProjectController::class, 'toSafeProjectErrorMessage');
-		$ref->setAccessible(true);
 		$fallback = 'Could not update project. Please check your input.';
 
 		$leaky = [

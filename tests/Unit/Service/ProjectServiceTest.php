@@ -126,7 +126,6 @@ class ProjectServiceTest extends TestCase {
 	public function testCreateProjectFillsBlankShortDescriptionFromName(): void {
 		$ref = new \ReflectionClass(ProjectService::class);
 		$method = $ref->getMethod('validateProjectData');
-		$method->setAccessible(true);
 		$svc = new ProjectService(
 			$this->createDbWithExistingCustomer(),
 			$this->createMock(IUserSession::class),
