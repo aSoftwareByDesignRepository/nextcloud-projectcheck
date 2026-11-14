@@ -1,0 +1,732 @@
+/*
+ * Check family — canonical license page (canonical source in _shared/license-page).
+ * SYNCED FILE — never edit the in-app copy; edit the source and re-run
+ * sync_license_page.py. pc is substituted with the app prefix at sync time.
+ *
+ * Self-contained: every class lives under .pc-license-page so the block looks
+ * identical whether it is a standalone admin page or a settings section.
+ * Token vars (--pc-*) fall back to the canonical values so the page renders
+ * correctly even in apps without a full token block.
+ *
+ * Design: ArbeitszeitCheck admin-license page (the family reference).
+ *
+ * @license AGPL-3.0-or-later
+ */
+
+.pc-license-page {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pc-space-5, 1.25rem);
+	width: 100%;
+	max-width: none;
+	min-width: 0;
+}
+
+/* ── Screen-reader-only + live regions ───────────────────────── */
+.pc-license-sr-only,
+.pc-license-page .pc-license-sr-only {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
+}
+
+/* ── Visible feedback banner ─────────────────────────────────── */
+.pc-license-feedback {
+	margin: 0;
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+	border-radius: var(--pc-radius-sm, 8px);
+	border: 1px solid var(--color-border);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: var(--pc-line-base, 1.5);
+}
+
+.pc-license-feedback--success {
+	border-color: var(--color-success-text, var(--color-success));
+	background: color-mix(in srgb, var(--color-success-text, var(--color-success)) 12%, var(--color-main-background));
+	color: var(--color-main-text);
+}
+
+.pc-license-feedback--error {
+	border-color: var(--color-error-text, var(--color-error));
+	background: color-mix(in srgb, var(--color-error-text, var(--color-error)) 12%, var(--color-main-background));
+	color: var(--color-main-text);
+}
+
+/* ── Callouts ────────────────────────────────────────────────── */
+.pc-license-callout {
+	display: flex;
+	gap: var(--pc-space-3, 0.75rem);
+	margin: 0;
+	padding: var(--pc-space-4, 1rem);
+	border: 1px solid var(--color-border);
+	border-inline-start: 4px solid var(--color-primary-element);
+	border-radius: var(--pc-radius-md, 10px);
+	background: var(--color-main-background);
+}
+
+.pc-license-callout--info {
+	border-inline-start-color: var(--color-primary-element);
+	background: color-mix(in srgb, var(--color-primary-element) 7%, var(--color-main-background));
+}
+
+.pc-license-callout--warning {
+	border-inline-start-color: var(--color-warning-text, var(--color-warning));
+	background: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 12%, var(--color-main-background));
+}
+
+.pc-license-callout--danger {
+	border-inline-start-color: var(--color-error-text, var(--color-error));
+	background: color-mix(in srgb, var(--color-error-text, var(--color-error)) 10%, var(--color-main-background));
+}
+
+.pc-license-callout__title {
+	margin: 0 0 var(--pc-space-1, 0.25rem);
+	font-size: var(--pc-fs-md, 1rem);
+	font-weight: 600;
+}
+
+.pc-license-callout__text {
+	margin: 0;
+	line-height: var(--pc-line-base, 1.5);
+}
+
+.pc-license-callout__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--pc-space-3, 0.75rem);
+	margin-top: var(--pc-space-3, 0.75rem);
+}
+
+/* ── Stat tiles (design-system §3.5) ─────────────────────────── */
+.pc-license-stat-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+	gap: var(--pc-space-3, 0.75rem);
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	min-width: 0;
+	list-style: none;
+}
+
+.pc-license-stat-tile {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: flex-start;
+	gap: 0.25rem;
+	min-height: 6.5rem;
+	min-width: 0;
+	margin: 0;
+	padding: var(--pc-space-4, 1rem);
+	border: 1px solid var(--color-border);
+	border-inline-start: 3px solid var(--color-border-maxcontrast, var(--color-border));
+	border-radius: var(--pc-radius-md, 10px);
+	background: var(--color-main-background);
+	text-align: left;
+	color: inherit;
+}
+
+.pc-license-stat-tile--primary { border-inline-start-color: var(--color-primary-element); }
+.pc-license-stat-tile--success { border-inline-start-color: var(--color-success-text, var(--color-success)); }
+.pc-license-stat-tile--warning { border-inline-start-color: var(--color-warning-text, var(--color-warning)); }
+.pc-license-stat-tile--neutral { border-inline-start-color: var(--color-border); }
+
+.pc-license-stat-tile__label {
+	margin: 0;
+	font-size: var(--pc-fs-xs, 0.8125rem);
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+}
+
+.pc-license-stat-tile__value {
+	margin: 0;
+	font-size: clamp(1.25rem, 2vw, 1.6rem);
+	font-weight: 700;
+	line-height: var(--pc-line-tight, 1.2);
+	font-variant-numeric: tabular-nums;
+	overflow-wrap: anywhere;
+}
+
+.pc-license-stat-tile__sep {
+	margin-inline: 0.15em;
+	font-weight: 500;
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+}
+
+.pc-license-stat-tile__meta {
+	margin: 0;
+	font-size: var(--pc-fs-xs, 0.8125rem);
+	line-height: 1.4;
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+}
+
+.pc-license-stat__meta-label { font-weight: 600; }
+
+/* Usage meter */
+.pc-license-meter {
+	height: 0.375rem;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--color-main-text) 8%, transparent);
+	overflow: hidden;
+	margin-top: auto;
+}
+
+.pc-license-meter__fill {
+	height: 100%;
+	border-radius: inherit;
+	background: var(--color-primary-element);
+	transition: width 0.25s ease;
+}
+
+.pc-license-meter__fill--full {
+	background: var(--color-warning-text, var(--color-warning));
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pc-license-meter__fill { transition: none; }
+}
+
+/* ── Badges ──────────────────────────────────────────────────── */
+.pc-license-badge {
+	display: inline-block;
+	padding: 0.25rem 0.65rem;
+	border-radius: 999px;
+	font-size: var(--pc-fs-xs, 0.8125rem);
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.pc-license-badge--success {
+	background: color-mix(in srgb, var(--color-success-text, var(--color-success)) 18%, var(--color-main-background));
+	color: var(--color-success-text, var(--color-success));
+}
+
+.pc-license-badge--warning {
+	background: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 22%, var(--color-main-background));
+	color: var(--color-warning-text, var(--color-warning));
+}
+
+/* ── Section cards ───────────────────────────────────────────── */
+.pc-license-card {
+	margin: 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-md, 12px);
+	background: var(--color-main-background);
+	min-width: 0;
+}
+
+.pc-license-card__header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--pc-space-3, 0.75rem);
+	padding: var(--pc-space-4, 1rem) var(--pc-space-4, 1rem) 0;
+}
+
+.pc-license-card__title {
+	margin: 0;
+	font-size: var(--pc-fs-lg, 1.125rem);
+	font-weight: 700;
+}
+
+.pc-license-card__lead {
+	margin: var(--pc-space-1, 0.25rem) 0 0;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: var(--pc-line-base, 1.5);
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+}
+
+.pc-license-card__header-actions {
+	flex: 0 0 auto;
+}
+
+.pc-license-card__body {
+	padding: var(--pc-space-4, 1rem);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.pc-license-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4em;
+	min-height: var(--pc-touch, 44px);
+	min-width: 44px;
+	padding: 0.5rem 1rem;
+	border: 2px solid transparent;
+	border-radius: var(--pc-radius-sm, 8px);
+	font: inherit;
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+	box-sizing: border-box;
+}
+
+.pc-license-btn--primary {
+	background: var(--color-primary-element);
+	color: var(--color-primary-element-text, var(--color-primary-text));
+	border-color: var(--color-primary-element);
+}
+
+.pc-license-btn--secondary {
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	border-color: var(--color-border-maxcontrast, var(--color-border));
+}
+
+.pc-license-btn--danger {
+	background: var(--color-element-error, var(--color-error));
+	color: var(--color-primary-element-text, var(--color-primary-text));
+	border-color: var(--color-element-error, var(--color-error));
+}
+
+.pc-license-btn--sm {
+	min-height: var(--pc-touch, 44px);
+	padding: 0.375rem 0.875rem;
+	font-size: var(--pc-fs-sm, 0.875rem);
+}
+
+.pc-license-btn:hover { filter: brightness(0.95); }
+
+.pc-license-btn:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 55%, transparent);
+	outline-offset: 2px;
+}
+
+.pc-license-btn--danger:hover,
+.pc-license-btn--danger:focus-visible {
+	filter: brightness(0.92);
+	outline: 3px solid color-mix(in srgb, var(--color-element-error, var(--color-error)) 55%, transparent);
+	outline-offset: 2px;
+}
+
+.pc-license-btn:disabled,
+.pc-license-btn[aria-disabled='true'] {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+.pc-license-btn--icon {
+	padding: 0.5rem;
+}
+
+.pc-license-btn--icon svg {
+	width: 1.125rem;
+	height: 1.125rem;
+	display: block;
+}
+
+/* ── Form elements ───────────────────────────────────────────── */
+.pc-license-field__label {
+	display: block;
+	margin: 0 0 var(--pc-space-2, 0.5rem);
+	font-weight: 600;
+	font-size: var(--pc-fs-sm, 0.875rem);
+}
+
+.pc-license-field__hint {
+	margin: var(--pc-space-2, 0.5rem) 0 0;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: var(--pc-line-base, 1.5);
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+}
+
+.pc-license-input,
+.pc-license-page .pc-license-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--pc-space-3, 0.75rem);
+	border: 2px solid var(--color-border-maxcontrast, var(--color-border));
+	border-radius: var(--pc-radius-sm, 8px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font: inherit;
+}
+
+.pc-license-input:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 55%, transparent);
+	outline-offset: 2px;
+	border-color: var(--color-primary-element);
+}
+
+.pc-license-input:disabled,
+.pc-license-input[aria-disabled='true'] {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+.pc-license-key-input {
+	min-height: 6rem;
+	font-family: var(--font-face-monospace, ui-monospace, monospace);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	line-height: 1.45;
+	resize: vertical;
+}
+
+.pc-license-instance-box {
+	margin-top: var(--pc-space-4, 1rem);
+	padding: var(--pc-space-4, 1rem);
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	background: color-mix(in srgb, var(--color-primary-element) 6%, var(--color-main-background));
+}
+
+.pc-license-instance-box .pc-license-field__label { margin-bottom: 0; }
+
+.pc-license-instance-id {
+	display: block;
+	margin-top: var(--pc-space-2, 0.5rem);
+	padding: var(--pc-space-2, 0.5rem) var(--pc-space-3, 0.75rem);
+	font-family: var(--font-face-monospace, ui-monospace, monospace);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	word-break: break-all;
+	background: var(--color-main-background);
+	border-radius: var(--pc-radius-sm, 8px);
+	border: 1px solid var(--color-border);
+}
+
+.pc-license-form__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--pc-space-3, 0.75rem);
+	margin-top: var(--pc-space-4, 1rem);
+}
+
+/* ── Current license details ─────────────────────────────────── */
+.pc-license-status {
+	margin-top: var(--pc-space-5, 1.25rem);
+	padding-top: var(--pc-space-5, 1.25rem);
+	border-top: 1px solid var(--color-border);
+}
+
+/* Neutralise Nextcloud core server.css definition-list styling. */
+.pc-license-status__grid dt,
+.pc-license-status__grid dd {
+	display: block;
+	width: auto;
+	padding: 0;
+	text-align: start;
+	white-space: normal;
+}
+
+.pc-license-status__title {
+	font-size: var(--pc-fs-md, 1rem);
+	font-weight: 600;
+	margin: 0 0 var(--pc-space-3, 0.75rem);
+}
+
+.pc-license-status__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+	gap: var(--pc-space-4, 1rem);
+	margin: 0;
+}
+
+.pc-license-status__item dt {
+	font-size: var(--pc-fs-xs, 0.8125rem);
+	font-weight: 600;
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+	margin: 0 0 var(--pc-space-1, 0.25rem);
+}
+
+.pc-license-status__item dd {
+	margin: 0;
+	font-size: var(--pc-fs-md, 1rem);
+	word-break: break-word;
+}
+
+.pc-license-status__purchase {
+	margin: var(--pc-space-4, 1rem) 0 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--pc-space-3, 0.75rem);
+}
+
+.pc-license-expiry-callout { margin-top: var(--pc-space-4, 1rem); }
+.pc-license-no-key-callout { margin-bottom: 0; }
+
+/* ── Seat picker combobox ────────────────────────────────────── */
+.pc-license-seat-picker { margin-bottom: var(--pc-space-5, 1.25rem); }
+
+.pc-license-search-wrap {
+	position: relative;
+	max-width: 32rem;
+}
+
+.pc-license-search-input { width: 100%; }
+
+.pc-license-seat-count {
+	margin: var(--pc-space-2, 0.5rem) 0 0;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	font-weight: 600;
+}
+
+.pc-license-seats-full-hint {
+	color: var(--color-warning-text, var(--color-warning));
+	font-weight: 500;
+}
+
+.pc-license-assign-btn { margin-top: var(--pc-space-3, 0.75rem); }
+
+.pc-license-batch-result { margin-top: var(--pc-space-3, 0.75rem); }
+
+.pc-seat-search-results {
+	list-style: none;
+	position: absolute;
+	z-index: 20;
+	left: 0;
+	right: 0;
+	margin: var(--pc-space-1, 0.25rem) 0 0;
+	padding: 0;
+	border: 2px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	background: var(--color-main-background);
+	max-height: 14rem;
+	overflow-y: auto;
+	box-shadow: 0 8px 24px color-mix(in srgb, var(--color-main-text) 12%, transparent);
+}
+
+.pc-seat-search-results li { margin: 0; }
+
+.pc-seat-search-results li[role='option'] {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-height: var(--pc-touch, 44px);
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+	color: var(--color-main-text);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	box-sizing: border-box;
+}
+
+.pc-seat-search-results li[role='option']:hover {
+	background: var(--color-background-hover);
+}
+
+.pc-seat-search-results li[role='option'][aria-selected='true'],
+.pc-seat-search-results li[role='option'].is-active {
+	background: color-mix(in srgb, var(--color-primary-element) 14%, transparent);
+	box-shadow: inset 3px 0 0 var(--color-primary-element);
+}
+
+.pc-seat-search-results__label {
+	display: flex;
+	align-items: center;
+	gap: var(--pc-space-3, 0.75rem);
+	width: 100%;
+	cursor: pointer;
+}
+
+.pc-seat-search-results__check {
+	width: 1.1rem;
+	height: 1.1rem;
+	margin: 0;
+	flex: 0 0 auto;
+}
+
+.pc-seat-search-results__empty {
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+	font-size: var(--pc-fs-sm, 0.875rem);
+}
+
+/* ── Seats / devices tables ──────────────────────────────────── */
+.pc-license-seats-table-wrap { margin-top: var(--pc-space-3, 0.75rem); }
+
+/* Self-contained table styling: NC core server.css sets
+   table { white-space: nowrap; border-collapse: separate }. */
+.pc-license-seats-table {
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	white-space: normal;
+}
+
+.pc-license-seats-table th,
+.pc-license-seats-table td {
+	padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
+	text-align: start;
+	vertical-align: middle;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.pc-license-seats-table thead th {
+	font-weight: 600;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+	background: var(--color-background-dark, var(--color-background-hover));
+}
+
+.pc-license-seats-table tbody tr:last-child td { border-bottom: none; }
+.pc-license-seats-table tbody tr:hover { background: var(--color-background-hover); }
+
+.pc-license-seats-table td.actions-cell {
+	text-align: end;
+	white-space: nowrap;
+}
+
+.pc-license-table-actions {
+	display: inline-flex;
+	gap: var(--pc-space-2, 0.5rem);
+}
+
+.pc-license-user-id {
+	font-size: var(--pc-fs-xs, 0.8125rem);
+	padding: 0.1rem 0.35rem;
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--color-main-text) 6%, transparent);
+}
+
+/* ── Empty states ────────────────────────────────────────────── */
+.pc-license-empty-state {
+	padding: var(--pc-space-5, 1.25rem) var(--pc-space-4, 1rem);
+	text-align: center;
+}
+
+.pc-license-empty-state__title {
+	margin: 0 0 var(--pc-space-1, 0.25rem);
+	font-weight: 600;
+}
+
+.pc-license-empty-state__text {
+	margin: 0;
+	font-size: var(--pc-fs-sm, 0.875rem);
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+}
+
+/* ── Devices card ────────────────────────────────────────────── */
+.pc-license-terminal-summary {
+	margin: 0 0 var(--pc-space-4, 1rem);
+	font-size: var(--pc-fs-md, 1rem);
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.pc-license-terminal-form { margin-bottom: var(--pc-space-4, 1rem); }
+
+.pc-license-terminal-fields {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+	gap: var(--pc-space-4, 1rem);
+}
+
+.pc-license-terminal-field { min-width: 0; }
+
+.pc-license-token-value {
+	display: block;
+	margin: 0 0 var(--pc-space-4, 1rem);
+	padding: var(--pc-space-3, 0.75rem);
+	font-family: var(--font-face-monospace, ui-monospace, monospace);
+	font-size: var(--pc-fs-sm, 0.875rem);
+	word-break: break-all;
+	white-space: pre-wrap;
+	background: color-mix(in srgb, var(--color-main-text) 5%, var(--color-main-background));
+	border: 1px solid var(--color-border);
+	border-radius: var(--pc-radius-sm, 8px);
+	max-height: 10rem;
+	overflow-y: auto;
+}
+
+/* ── Confirmation / token modals ─────────────────────────────── */
+.pc-license-modal::backdrop {
+	background: var(--pc-scrim, color-mix(in srgb, var(--color-main-text) 45%, transparent));
+}
+
+.pc-license-modal {
+	margin: auto;
+	padding: var(--pc-space-5, 1.25rem);
+	max-width: min(28rem, calc(100vw - 2rem));
+	width: 100%;
+	border: 2px solid var(--color-primary-element);
+	border-radius: var(--pc-radius-lg, 12px);
+	background: var(--color-main-background);
+	box-shadow: 0 8px 24px color-mix(in srgb, var(--color-main-text) 12%, transparent);
+	box-sizing: border-box;
+}
+
+.pc-license-modal h3 {
+	margin: 0 0 var(--pc-space-2, 0.5rem);
+	font-size: var(--pc-fs-lg, 1.125rem);
+}
+
+.pc-license-modal__hint {
+	color: var(--pc-muted, var(--color-text-maxcontrast));
+	margin: 0 0 var(--pc-space-4, 1rem);
+	line-height: var(--pc-line-base, 1.5);
+}
+
+.pc-license-modal__actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: var(--pc-space-3, 0.75rem);
+}
+
+body.pc-license-modal-open { overflow: hidden; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+	.pc-license-stat-grid { grid-template-columns: 1fr; }
+	.pc-license-status__grid { grid-template-columns: 1fr; }
+
+	.pc-license-form__actions .pc-license-btn,
+	.pc-license-modal__actions .pc-license-btn {
+		flex: 1 1 auto;
+		justify-content: center;
+	}
+}
+
+/* Mobile table → labeled rows (design-system §3.7) */
+@media (max-width: 768.98px) {
+	.pc-license-seats-table thead { display: none; }
+
+	.pc-license-seats-table,
+	.pc-license-seats-table tbody,
+	.pc-license-seats-table tr,
+	.pc-license-seats-table td { display: block; width: 100%; }
+
+	.pc-license-seats-table tr {
+		border: 1px solid var(--color-border);
+		border-radius: var(--pc-radius-sm, 8px);
+		margin-bottom: var(--pc-space-3, 0.75rem);
+		padding: var(--pc-space-2, 0.5rem) 0;
+	}
+
+	.pc-license-seats-table td {
+		border-bottom: none;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: var(--pc-space-3, 0.75rem);
+	}
+
+	.pc-license-seats-table td::before {
+		content: attr(data-label);
+		font-weight: 600;
+		font-size: var(--pc-fs-xs, 0.8125rem);
+		color: var(--pc-muted, var(--color-text-maxcontrast));
+	}
+
+	.pc-license-seats-table td.actions-cell { text-align: start; }
+}
+
+@media (forced-colors: active) {
+	.pc-license-stat-tile,
+	.pc-license-modal,
+	.pc-license-card { border-color: CanvasText; }
+
+	.pc-license-meter__fill { background: Highlight; }
+}

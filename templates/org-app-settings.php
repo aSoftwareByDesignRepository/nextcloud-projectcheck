@@ -65,8 +65,8 @@ if (in_array($pcRequestedSection, $policySections, true)) {
 	Util::addScript('projectcheck', 'org-policy-pickers');
 }
 if ($pcRequestedSection === 'license') {
-	Util::addScript('projectcheck', 'license-settings');
-	Util::addStyle('projectcheck', 'license-settings');
+	Util::addScript('projectcheck', 'common/license-page');
+	Util::addStyle('projectcheck', 'common/license-page');
 }
 $formId = 'projectcheck-org-form';
 $nav = [

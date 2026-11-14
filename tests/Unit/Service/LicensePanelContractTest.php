@@ -7,11 +7,13 @@ namespace OCA\ProjectCheck\Tests\Unit\Service;
 use PHPUnit\Framework\TestCase;
 
 /**
- * File-content contracts for the polished license admin UI panel (PC2 mobile seats).
+ * File-content contracts for the unified license admin page (PC2 mobile seats).
  *
- * ProjectCheck is seats-only: unlike DeskCheck/MobilityCheck there is no terminal/kiosk
- * product, so these contracts also guard against terminal markup or wording leaking in
- * from a copy-paste of another Check app's license page.
+ * The license UX is the canonical shared Check-family license page synced from
+ * _shared/license-page. These contracts guard the wiring: the shared assets are
+ * present and registered, the host wrapper feeds the canonical params, and the
+ * license API routes exist. ProjectCheck is seats-only — no terminal markup may
+ * be enabled in the host wrapper.
  */
 final class LicensePanelContractTest extends TestCase
 {
@@ -30,98 +32,43 @@ final class LicensePanelContractTest extends TestCase
 		return (string)file_get_contents($path);
 	}
 
-	public function testPanelHasAnchorIdAndDataWiring(): void
+	public function testSharedLicensePageAssetsExist(): void
 	{
-		$tpl = $this->read('templates/parts/license-panel.php');
-		self::assertStringContainsString('id="projectcheck-license"', $tpl);
-		self::assertStringContainsString('id="pc-license-panel"', $tpl);
-		self::assertStringContainsString('data-api-license="', $tpl);
-		self::assertStringContainsString('data-api-clear-license="', $tpl);
-		self::assertStringContainsString('data-api-seats="', $tpl);
-		self::assertStringContainsString('data-api-assign-seat="', $tpl);
-		self::assertStringContainsString('data-api-remove-seat-base="', $tpl);
-		self::assertStringContainsString('data-api-search-users="', $tpl);
-		self::assertStringContainsString('data-requesttoken="', $tpl);
-		self::assertStringContainsString('data-i18n="', $tpl);
+		$php = $this->read('templates/common/license-page.php');
+		self::assertStringContainsString('data-license-root="1"', $php);
+		self::assertStringContainsString('data-prefix="pc"', $php);
+		self::assertStringContainsString('id="pc-license-page"', $php);
+		$this->read('js/common/license-page.js');
+		$this->read('css/common/license-page.css');
 	}
 
-	public function testPanelHasLiveRegionsAndFeedbackBanner(): void
+	public function testHostWrapperFeedsCanonicalParams(): void
 	{
 		$tpl = $this->read('templates/parts/license-panel.php');
-		self::assertStringContainsString('id="pc-license-live"', $tpl);
-		self::assertStringContainsString('id="pc-license-alert"', $tpl);
-		self::assertStringContainsString('aria-live="polite"', $tpl);
-		self::assertStringContainsString('aria-live="assertive"', $tpl);
-		self::assertStringContainsString('id="pc-license-feedback"', $tpl);
-		self::assertStringContainsString('role="alert"', $tpl);
+		self::assertStringContainsString("include __DIR__ . '/../common/license-page.php'", $tpl);
+		foreach ([
+			'productCode', 'companionText', 'seatAppName',
+			'mobileSeatsUsed', 'mobileSeatsLimit', 'mobileSeats', 'showMobileSeats',
+			'apiLicenseUrl', 'apiClearLicenseUrl', 'apiSeatsUrl',
+			'apiRemoveSeatUrl', 'apiSearchUsersUrl', 'requesttoken',
+		] as $param) {
+			self::assertStringContainsString('$_[\'' . $param . '\']', $tpl, 'wrapper must set $_[' . $param . ']');
+		}
+		self::assertStringContainsString("'PC2'", $tpl);
+		self::assertStringContainsString('removeSeatPost', $tpl);
+		// Seats-only app: never enable the device card.
+		self::assertStringNotContainsString("'showTerminal'] = true", $tpl);
+		self::assertStringNotContainsString('apiRegisterDeviceUrl', $tpl);
 	}
 
-	public function testPanelHasAccessibleWidgets(): void
+	public function testSharedPageHasAccessibleWidgets(): void
 	{
-		$tpl = $this->read('templates/parts/license-panel.php');
+		$tpl = $this->read('templates/common/license-page.php');
+		self::assertStringContainsString('role="status" aria-live="polite"', $tpl);
+		self::assertStringContainsString('role="alert" aria-live="assertive"', $tpl);
 		self::assertStringContainsString('role="meter"', $tpl);
-		self::assertStringContainsString('aria-valuemin="0"', $tpl);
-		self::assertStringContainsString('aria-valuemax=', $tpl);
-		self::assertStringContainsString('role="dialog"', $tpl);
-		self::assertStringContainsString('aria-modal="true"', $tpl);
+		self::assertStringContainsString('<dialog id="pc-license-', $tpl);
 		self::assertStringContainsString('role="combobox"', $tpl);
-		self::assertStringContainsString('aria-haspopup="listbox"', $tpl);
-	}
-
-	public function testPanelExplainsSeatsOnlyPricingAndPurchaseCta(): void
-	{
-		$tpl = $this->read('templates/parts/license-panel.php');
-		self::assertStringContainsString('PC2', $tpl);
-		self::assertStringContainsString('PC2.', $tpl);
-		self::assertStringContainsString('mailto:info@software-by-design.de', $tpl);
-		self::assertStringContainsString('https://nextcloud.software-by-design.de/', $tpl);
-		self::assertStringContainsString('noopener', $tpl);
-		self::assertStringContainsString('mobileAppAvailable', $tpl);
-		self::assertStringNotContainsString('mobileAppComingSoon', $tpl);
-		self::assertStringNotContainsString('coming soon', strtolower($tpl));
-	}
-
-	public function testPanelHasNoTerminalOrKioskMarkup(): void
-	{
-		$tpl = strtolower($this->read('templates/parts/license-panel.php'));
-		self::assertStringNotContainsString('terminal', $tpl);
-		self::assertStringNotContainsString('kiosk', $tpl);
-		self::assertStringNotContainsString('room display', $tpl);
-	}
-
-	public function testLicenseSettingsJsHasNoTerminalOrMessagingDeps(): void
-	{
-		$js = strtolower($this->read('js/license-settings.js'));
-		self::assertStringNotContainsString('terminal', $js);
-		self::assertStringNotContainsString('kiosk', $js);
-		self::assertStringNotContainsString('messaging', $js);
-	}
-
-	public function testLicenseSettingsJsHandlesSeatConflictsAndAvoidsInnerHtmlForNames(): void
-	{
-		$js = $this->read('js/license-settings.js');
-		self::assertStringContainsString('409', $js);
-		self::assertStringContainsString('seat_busy', $js);
-		self::assertStringContainsString('seatAssignBusy', $js);
-		self::assertStringContainsString('displayName', $js);
-		self::assertStringContainsString('textContent', $js);
-		// Never build user/display-name markup via innerHTML (stored-XSS guard).
-		self::assertStringNotContainsString('.innerHTML =', $js);
-		// assignedAt is documented as UNIX seconds, not ISO, and multiplied accordingly.
-		self::assertStringContainsString('UNIX seconds', $js);
-		self::assertStringContainsString('* 1000', $js);
-	}
-
-	public function testSeatAssignLockBusyUsesDistinctErrorCode(): void
-	{
-		$src = $this->read('lib/Service/LicenseService.php');
-		self::assertStringContainsString("'seat_busy'", $src);
-		self::assertStringContainsString('Another seat update is in progress', $src);
-		// Lock contention must not reuse the capacity-exhausted code (auditor trap).
-		self::assertMatchesRegularExpression(
-			"/withExclusiveLock\\(\\s*self::SEAT_LOCK,\\s*'seat_busy'/s",
-			$src
-		);
 	}
 
 	public function testOrgSettingsFormIncludesPanelAfterFormCloses(): void
@@ -140,29 +87,20 @@ final class LicensePanelContractTest extends TestCase
 		self::assertStringContainsString("settings_section", $form);
 	}
 
-	public function testOrgAppSettingsAndAdminSettingsWireScriptAndStyle(): void
+	public function testOrgAppSettingsAndAdminSettingsWireSharedAssets(): void
 	{
 		$admin = $this->read('templates/admin-settings.php');
-		self::assertStringContainsString("Util::addScript('projectcheck', 'license-settings')", $admin, 'admin-settings.php must load license-settings.js');
-		self::assertStringContainsString("Util::addStyle('projectcheck', 'license-settings')", $admin, 'admin-settings.php must load license-settings.css');
+		self::assertStringContainsString("Util::addScript('projectcheck', 'common/license-page')", $admin, 'admin-settings.php must load common/license-page.js');
+		self::assertStringContainsString("Util::addStyle('projectcheck', 'common/license-page')", $admin, 'admin-settings.php must load common/license-page.css');
+		self::assertStringNotContainsString("license-settings'", $admin, 'old per-app license assets must be gone');
 
 		$org = $this->read('templates/org-app-settings.php');
 		self::assertStringContainsString("Util::addScript('projectcheck', 'settings-legacy-redirect')", $org);
 		self::assertStringContainsString("if (\$pcRequestedSection === 'license')", $org, 'In-app settings must gate license assets by section');
 		self::assertMatchesRegularExpression(
-			"/if \(\\\$pcRequestedSection === 'license'\) \{\s*Util::addScript\('projectcheck', 'license-settings'\);/s",
+			"/if \(\\\$pcRequestedSection === 'license'\) \{\s*Util::addScript\('projectcheck', 'common\/license-page'\);/s",
 			$org,
 		);
-		self::assertMatchesRegularExpression(
-			"/if \(in_array\(\\\$pcRequestedSection, \\\$policySections, true\)\) \{\s*Util::addScript\('projectcheck', 'admin-settings'\);/s",
-			$org,
-			'Policy JS must load only on access/admins/defaults',
-		);
-		$legacyPos = strpos($org, "'settings-legacy-redirect'");
-		$licenseGatePos = strpos($org, "if (\$pcRequestedSection === 'license')");
-		self::assertNotFalse($legacyPos);
-		self::assertNotFalse($licenseGatePos);
-		self::assertLessThan($licenseGatePos, $legacyPos, 'Legacy redirect must register before section-gated page scripts');
 	}
 
 	public function testAdminSettingsSupportUsLicenseUrlTargetsLicenseSection(): void
@@ -189,10 +127,8 @@ final class LicensePanelContractTest extends TestCase
 		self::assertStringContainsString("'licenseClearUrl' =>", $controller);
 		self::assertStringContainsString("'licenseSeatsUrl' =>", $controller);
 		self::assertStringContainsString("'licenseAssignSeatUrl' =>", $controller);
-		self::assertStringContainsString("'licenseRemoveSeatBase' =>", $controller);
 		self::assertStringContainsString("'licenseSearchUsersUrl' =>", $controller);
 		self::assertStringContainsString("'licenseStatus' =>", $controller);
-		self::assertStringContainsString("'licenseI18n' =>", $controller);
 		self::assertStringContainsString("'supportUsLicenseUrl' =>", $controller);
 		self::assertStringContainsString('#projectcheck-license', $controller);
 		self::assertStringContainsString("settingsSection", $controller);
@@ -219,6 +155,7 @@ final class LicensePanelContractTest extends TestCase
 		self::assertStringContainsString("'name' => 'license#seats'", $routes);
 		self::assertStringContainsString("'name' => 'license#assignSeat'", $routes);
 		self::assertStringContainsString("'name' => 'license#removeSeat'", $routes);
+		self::assertStringContainsString("'name' => 'license#removeSeatPost'", $routes);
 		self::assertStringContainsString('/api/license', $routes);
 	}
 

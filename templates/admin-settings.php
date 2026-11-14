@@ -28,11 +28,11 @@ Util::addStyle('projectcheck', 'common/feedback-system');
 Util::addScript('projectcheck', 'admin-settings');
 Util::addScript('projectcheck', 'pc-l10n', 'core', true);
 Util::addScript('projectcheck', 'org-policy-pickers');
-Util::addScript('projectcheck', 'license-settings');
+Util::addScript('projectcheck', 'common/license-page');
 // Soft keyboard: NC Settings shell skips in-app navigation.php — load IME helper here.
 Util::addScript('projectcheck', 'common/keep-focused-visible');
 Util::addStyle('projectcheck', 'admin-settings');
-Util::addStyle('projectcheck', 'license-settings');
+Util::addStyle('projectcheck', 'common/license-page');
 $restrictOn = !empty($policy['restrictionEnabled']);
 $formId = 'projectcheck-admin-form';
 $settingsSectionsToShow = ['access', 'admins', 'defaults', 'license', 'support'];

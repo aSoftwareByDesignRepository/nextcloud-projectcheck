@@ -115,6 +115,20 @@ class LicenseController extends Controller
 		}
 	}
 
+	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
+	public function removeSeatPost(): JSONResponse
+	{
+		try {
+			$actor = $this->requireAppAdmin();
+			$uid = (string)$this->request->getParam('userId', '');
+			$this->license->removeSeat($actor, $uid);
+			return new JSONResponse(['ok' => true, 'deleted' => true]);
+		} catch (LicenseException $e) {
+			return $this->fromLicenseException($e);
+		}
+	}
+
 	private function requireAppAdmin(): string
 	{
 		$user = $this->userSession->getUser();

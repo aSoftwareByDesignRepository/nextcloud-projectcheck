@@ -168,6 +168,7 @@ return [
 		['name' => 'license#seats', 'url' => '/api/license/seats', 'verb' => 'GET'],
 		['name' => 'license#assignSeat', 'url' => '/api/license/seats', 'verb' => 'POST'],
 		['name' => 'license#removeSeat', 'url' => '/api/license/seats/{uid}', 'verb' => 'DELETE'],
+		['name' => 'license#removeSeatPost', 'url' => '/api/license/seats/remove', 'verb' => 'POST'],
 
 		// Mobile companion API v1 (PC2 gated; web stays free)
 		['name' => 'mobile#bootstrap', 'url' => '/mobile/v1/bootstrap', 'verb' => 'GET'],
