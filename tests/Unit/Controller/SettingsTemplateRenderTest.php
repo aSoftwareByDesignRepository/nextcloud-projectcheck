@@ -88,19 +88,6 @@ final class SettingsTemplateRenderTest extends TestCase
 	private function licenseVars(): array
 	{
 		return [
-			'licenseI18n' => [
-				'badgeNotConfigured' => 'Not configured',
-				'seatsMeterLabel' => 'Seats',
-				'seatsHeading' => 'Seats',
-				'keyHint' => 'Paste key',
-				'saveButton' => 'Save',
-				'removeButton' => 'Remove',
-				'confirmRemoveTitle' => 'Remove?',
-				'confirmRemoveBody' => 'Sure',
-				'confirmRemoveCancel' => 'Cancel',
-				'confirmRemoveConfirm' => 'Remove',
-				'expirySoonTitle' => 'Expiring',
-			],
 			'licenseStatus' => null,
 			'licenseSeatsList' => ['data' => [], 'total' => 0, 'limit' => 200, 'offset' => 0],
 			'licenseApiUrl' => 'https://cloud.example/apps/projectcheck/api/license',

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Tests\Unit\Coverage;
 
 use OCA\ProjectCheck\Service\IconCatalog;
-use OCA\ProjectCheck\Service\LicenseUiStrings;
 use OCA\ProjectCheck\Service\OrgPolicySaveAudit;
 use OCA\ProjectCheck\Service\SavePolicyUiStrings;
 use OCA\ProjectCheck\Service\SeatRank;
@@ -37,7 +36,6 @@ final class AtlasReachableServiceInvokeCoverageTest extends TestCase
 			SettingsSectionCatalog::class,
 			SeatRank::class,
 			IconCatalog::class,
-			LicenseUiStrings::class,
 			OrgPolicySaveAudit::class,
 			SavePolicyUiStrings::class,
 			UpgradeBackupCatalog::class,

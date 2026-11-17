@@ -22,6 +22,12 @@
 	min-width: 0;
 }
 
+/* [hidden] wins over any display rule — JS toggles el.hidden on elements
+ * whose classes declare display (callout, buttons, results list). */
+.pc-license-page [hidden] {
+	display: none !important;
+}
+
 /* ── Screen-reader-only + live regions ───────────────────────── */
 .pc-license-sr-only,
 .pc-license-page .pc-license-sr-only {
@@ -325,6 +331,187 @@
 	display: block;
 }
 
+/* ── Button-variant armor ──────────────────────────────────────
+ * NC core inputs.scss repaints every button:not(.button-vue,
+ * [class^=vs__]) at specificity (0,1,1) with the pale
+ * --color-primary-element-light fill + light-text ink — stronger
+ * than the lone .pc-license-btn--{variant} rules above (0,1,0),
+ * so every variant collapses to the same pale skin
+ * (button_variant_specificity_collapse; dutycheck visual r40:
+ * destructive "Remove license" ≡ secondary "Cancel").
+ *
+ * Canonical fix shape (same as the .dc-btn armor in app
+ * css/app.css): ONE scope list — the pack page root, the app's
+ * content canvas, and every body-mounted overlay scope the pack
+ * <dialog> modals can land under — applying !important fills for
+ * EVERY variant incl. :hover/:focus-visible/:active. A new
+ * overlay is armored by landing on the scope list, never by a
+ * per-dialog-class rule. */
+.pc-license-page .pc-license-btn--primary,
+#app-content .pc-license-btn--primary,
+#app-content-wrapper .pc-license-btn--primary,
+.pc-license-modal .pc-license-btn--primary,
+.pc-modal .pc-license-btn--primary,
+.pc-dialog .pc-license-btn--primary,
+dialog .pc-license-btn--primary,
+[role="dialog"] .pc-license-btn--primary,
+[role="alertdialog"] .pc-license-btn--primary {
+	background: var(--color-primary-element) !important;
+	border-color: var(--color-primary-element) !important;
+	color: var(--color-primary-element-text, var(--color-primary-text)) !important;
+}
+.pc-license-page .pc-license-btn--primary:hover,
+#app-content .pc-license-btn--primary:hover,
+#app-content-wrapper .pc-license-btn--primary:hover,
+.pc-license-modal .pc-license-btn--primary:hover,
+.pc-modal .pc-license-btn--primary:hover,
+.pc-dialog .pc-license-btn--primary:hover,
+dialog .pc-license-btn--primary:hover,
+[role="dialog"] .pc-license-btn--primary:hover,
+[role="alertdialog"] .pc-license-btn--primary:hover {
+	background: var(--color-primary-element-hover, var(--color-primary-element)) !important;
+	border-color: var(--color-primary-element-hover, var(--color-primary-element)) !important;
+	color: var(--color-primary-element-text, var(--color-primary-text)) !important;
+}
+.pc-license-page .pc-license-btn--primary:focus-visible,
+#app-content .pc-license-btn--primary:focus-visible,
+#app-content-wrapper .pc-license-btn--primary:focus-visible,
+.pc-license-modal .pc-license-btn--primary:focus-visible,
+.pc-modal .pc-license-btn--primary:focus-visible,
+.pc-dialog .pc-license-btn--primary:focus-visible,
+dialog .pc-license-btn--primary:focus-visible,
+[role="dialog"] .pc-license-btn--primary:focus-visible,
+[role="alertdialog"] .pc-license-btn--primary:focus-visible {
+	background: var(--color-primary-element-hover, var(--color-primary-element)) !important;
+	border-color: var(--color-primary-element-hover, var(--color-primary-element)) !important;
+	color: var(--color-primary-element-text, var(--color-primary-text)) !important;
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 55%, transparent);
+	outline-offset: 2px;
+}
+.pc-license-page .pc-license-btn--primary:active,
+#app-content .pc-license-btn--primary:active,
+#app-content-wrapper .pc-license-btn--primary:active,
+.pc-license-modal .pc-license-btn--primary:active,
+.pc-modal .pc-license-btn--primary:active,
+.pc-dialog .pc-license-btn--primary:active,
+dialog .pc-license-btn--primary:active,
+[role="dialog"] .pc-license-btn--primary:active,
+[role="alertdialog"] .pc-license-btn--primary:active {
+	background: var(--color-primary-element) !important;
+	border-color: var(--color-primary-element) !important;
+	color: var(--color-primary-element-text, var(--color-primary-text)) !important;
+}
+
+.pc-license-page .pc-license-btn--secondary,
+#app-content .pc-license-btn--secondary,
+#app-content-wrapper .pc-license-btn--secondary,
+.pc-license-modal .pc-license-btn--secondary,
+.pc-modal .pc-license-btn--secondary,
+.pc-dialog .pc-license-btn--secondary,
+dialog .pc-license-btn--secondary,
+[role="dialog"] .pc-license-btn--secondary,
+[role="alertdialog"] .pc-license-btn--secondary {
+	background: var(--color-main-background) !important;
+	border-color: var(--color-border-maxcontrast, var(--color-border)) !important;
+	color: var(--color-main-text) !important;
+}
+.pc-license-page .pc-license-btn--secondary:hover,
+#app-content .pc-license-btn--secondary:hover,
+#app-content-wrapper .pc-license-btn--secondary:hover,
+.pc-license-modal .pc-license-btn--secondary:hover,
+.pc-dialog .pc-license-btn--secondary:hover,
+.pc-modal .pc-license-btn--secondary:hover,
+dialog .pc-license-btn--secondary:hover,
+[role="dialog"] .pc-license-btn--secondary:hover,
+[role="alertdialog"] .pc-license-btn--secondary:hover {
+	background: var(--color-background-hover, var(--color-main-background)) !important;
+	border-color: var(--color-border-maxcontrast, var(--color-border)) !important;
+	color: var(--color-main-text) !important;
+}
+.pc-license-page .pc-license-btn--secondary:focus-visible,
+#app-content .pc-license-btn--secondary:focus-visible,
+#app-content-wrapper .pc-license-btn--secondary:focus-visible,
+.pc-license-modal .pc-license-btn--secondary:focus-visible,
+.pc-dialog .pc-license-btn--secondary:focus-visible,
+.pc-modal .pc-license-btn--secondary:focus-visible,
+dialog .pc-license-btn--secondary:focus-visible,
+[role="dialog"] .pc-license-btn--secondary:focus-visible,
+[role="alertdialog"] .pc-license-btn--secondary:focus-visible {
+	background: var(--color-background-hover, var(--color-main-background)) !important;
+	border-color: var(--color-border-maxcontrast, var(--color-border)) !important;
+	color: var(--color-main-text) !important;
+	outline: 3px solid color-mix(in srgb, var(--color-primary-element) 55%, transparent);
+	outline-offset: 2px;
+}
+.pc-license-page .pc-license-btn--secondary:active,
+#app-content .pc-license-btn--secondary:active,
+#app-content-wrapper .pc-license-btn--secondary:active,
+.pc-license-modal .pc-license-btn--secondary:active,
+.pc-dialog .pc-license-btn--secondary:active,
+.pc-modal .pc-license-btn--secondary:active,
+dialog .pc-license-btn--secondary:active,
+[role="dialog"] .pc-license-btn--secondary:active,
+[role="alertdialog"] .pc-license-btn--secondary:active {
+	background: var(--color-main-background) !important;
+	border-color: var(--color-border-maxcontrast, var(--color-border)) !important;
+	color: var(--color-main-text) !important;
+}
+
+.pc-license-page .pc-license-btn--danger,
+#app-content .pc-license-btn--danger,
+#app-content-wrapper .pc-license-btn--danger,
+.pc-license-modal .pc-license-btn--danger,
+.pc-modal .pc-license-btn--danger,
+.pc-dialog .pc-license-btn--danger,
+dialog .pc-license-btn--danger,
+[role="dialog"] .pc-license-btn--danger,
+[role="alertdialog"] .pc-license-btn--danger {
+	background: var(--color-element-error, var(--color-error)) !important;
+	border-color: var(--color-element-error, var(--color-error)) !important;
+	color: var(--color-primary-element-text, var(--color-primary-text)) !important;
+}
+.pc-license-page .pc-license-btn--danger:hover,
+#app-content .pc-license-btn--danger:hover,
+#app-content-wrapper .pc-license-btn--danger:hover,
+.pc-license-modal .pc-license-btn--danger:hover,
+.pc-modal .pc-license-btn--danger:hover,
+.pc-dialog .pc-license-btn--danger:hover,
+dialog .pc-license-btn--danger:hover,
+[role="dialog"] .pc-license-btn--danger:hover,
+[role="alertdialog"] .pc-license-btn--danger:hover {
+	background: var(--color-element-error, var(--color-error)) !important;
+	border-color: var(--color-element-error, var(--color-error)) !important;
+	color: var(--color-primary-element-text, var(--color-primary-text)) !important;
+}
+.pc-license-page .pc-license-btn--danger:focus-visible,
+#app-content .pc-license-btn--danger:focus-visible,
+#app-content-wrapper .pc-license-btn--danger:focus-visible,
+.pc-license-modal .pc-license-btn--danger:focus-visible,
+.pc-modal .pc-license-btn--danger:focus-visible,
+.pc-dialog .pc-license-btn--danger:focus-visible,
+dialog .pc-license-btn--danger:focus-visible,
+[role="dialog"] .pc-license-btn--danger:focus-visible,
+[role="alertdialog"] .pc-license-btn--danger:focus-visible {
+	background: var(--color-element-error, var(--color-error)) !important;
+	border-color: var(--color-element-error, var(--color-error)) !important;
+	color: var(--color-primary-element-text, var(--color-primary-text)) !important;
+	outline: 3px solid color-mix(in srgb, var(--color-element-error, var(--color-error)) 55%, transparent);
+	outline-offset: 2px;
+}
+.pc-license-page .pc-license-btn--danger:active,
+#app-content .pc-license-btn--danger:active,
+#app-content-wrapper .pc-license-btn--danger:active,
+.pc-license-modal .pc-license-btn--danger:active,
+.pc-modal .pc-license-btn--danger:active,
+.pc-dialog .pc-license-btn--danger:active,
+dialog .pc-license-btn--danger:active,
+[role="dialog"] .pc-license-btn--danger:active,
+[role="alertdialog"] .pc-license-btn--danger:active {
+	background: var(--color-element-error, var(--color-error)) !important;
+	border-color: var(--color-element-error, var(--color-error)) !important;
+	color: var(--color-primary-element-text, var(--color-primary-text)) !important;
+}
+
 /* ── Form elements ───────────────────────────────────────────── */
 .pc-license-field__label {
 	display: block;
@@ -347,7 +534,9 @@
 	padding: var(--pc-space-3, 0.75rem);
 	border: 2px solid var(--color-border-maxcontrast, var(--color-border));
 	border-radius: var(--pc-radius-sm, 8px);
-	background: var(--color-main-background);
+	/* background-color, never bare background: — the shorthand would reset
+	 * the native chevron on <select> consumers (select-background-shorthand). */
+	background-color: var(--color-main-background);
 	color: var(--color-main-text);
 	font: inherit;
 }
@@ -655,6 +844,14 @@
 	background: var(--color-main-background);
 	box-shadow: 0 8px 24px color-mix(in srgb, var(--color-main-text) 12%, transparent);
 	box-sizing: border-box;
+}
+
+/* Nextcloud core's reset prints `dialog { display: block }` at author
+   origin — it outranks the UA `dialog:not([open]) { display: none }`
+   rule, so a closed license modal would still paint (and catch clicks /
+   enter the a11y tree) mid-page. Re-hide it explicitly. */
+.pc-license-modal:not([open]) {
+	display: none;
 }
 
 .pc-license-modal h3 {

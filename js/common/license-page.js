@@ -265,6 +265,36 @@
 			return result;
 		}
 
+		// Navigation/teardown aborts are not connectivity failures — suppress
+		// the network-error flash when the fetch was cancelled by page unload
+		// or an in-flight abort (mirrors common/api.js REQUEST_ABORTED).
+		function isNavOrAbort(e) {
+			return !!(e && (e.name === 'AbortError' || e.code === 'REQUEST_ABORTED'
+				|| (e.cause && (e.cause.name === 'AbortError' || e.cause.code === 20))));
+		}
+		function showNetworkErrorUnlessAbort(e) {
+			if (!isNavOrAbort(e)) {
+				showFeedback(t('Network error. Please try again.'), 'error');
+			}
+		}
+
+		// Focus lost to <body> on dialog close (trigger detached by a re-render)
+		// strands keyboard users — only restore when the trigger is still
+		// connected, else land on the app's main landmark.
+		function restoreFocus(el) {
+			if (el && el.isConnected) {
+				el.focus();
+				return;
+			}
+			const main = document.getElementById(p + '-main-content');
+			if (main && main.focus) {
+				if (main.tabIndex < 0) {
+					main.tabIndex = -1;
+				}
+				main.focus();
+			}
+		}
+
 		function escapeHtml(s) {
 			const d = document.createElement('div');
 			d.textContent = s;
@@ -402,9 +432,7 @@
 				confirmModal.close();
 			}
 			document.body.classList.remove(p + '-license-modal-open');
-			if (confirmReturnFocus && confirmReturnFocus.focus) {
-				confirmReturnFocus.focus();
-			}
+			restoreFocus(confirmReturnFocus);
 			confirmReturnFocus = null;
 			if (confirmResolver) {
 				const resolve = confirmResolver;
@@ -448,9 +476,7 @@
 				tokenModal.close();
 			}
 			document.body.classList.remove(p + '-license-modal-open');
-			if (tokenReturnFocus && tokenReturnFocus.focus) {
-				tokenReturnFocus.focus();
-			}
+			restoreFocus(tokenReturnFocus);
 			tokenReturnFocus = null;
 		}
 
@@ -492,17 +518,60 @@
 				}
 			});
 		};
+		// NC's notifications app preventDefault()s the global Escape keydown,
+		// which suppresses the native <dialog> `cancel` event — wire an
+		// explicit Escape keydown close for each modal.
+		const onEscapeClose = (dlg, closeFn) => {
+			dlg.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape') {
+					e.stopPropagation();
+					closeFn();
+				}
+			});
+		};
+		// Chrome lets Tab/Shift+Tab leave a modal <dialog> at its boundaries —
+		// focus lands on <body>/browser chrome, and once outside, Escape never
+		// reaches the dialog's keydown handler (and the suppressed `cancel`
+		// event cannot close it either) leaving the modal stuck open. Trap Tab
+		// at both boundaries — same fix shape as dc-swap-dialog.
+		const FOCUSABLE_SEL = 'a[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])';
+		const onFocusTrap = (dlg) => {
+			dlg.addEventListener('keydown', (e) => {
+				if (e.key !== 'Tab') return;
+				const list = Array.from(dlg.querySelectorAll(FOCUSABLE_SEL))
+					.filter((node) => node.offsetParent !== null || node === document.activeElement);
+				if (list.length === 0) {
+					e.preventDefault();
+					return;
+				}
+				const first = list[0];
+				const last = list[list.length - 1];
+				if (e.shiftKey && document.activeElement === first) {
+					e.preventDefault();
+					last.focus();
+				} else if (!e.shiftKey && document.activeElement === last) {
+					e.preventDefault();
+					first.focus();
+				}
+			});
+		};
 		if (clearModal) {
 			clearModal.addEventListener('cancel', (e) => { e.preventDefault(); closeClearModal(); });
 			onOutsideClick(clearModal, () => closeClearModal());
+			onEscapeClose(clearModal, () => closeClearModal());
+			onFocusTrap(clearModal);
 		}
 		if (confirmModal) {
 			confirmModal.addEventListener('cancel', (e) => { e.preventDefault(); closeConfirm({ confirmed: false }); });
 			onOutsideClick(confirmModal, () => closeConfirm({ confirmed: false }));
+			onEscapeClose(confirmModal, () => closeConfirm({ confirmed: false }));
+			onFocusTrap(confirmModal);
 		}
 		if (tokenModal) {
 			tokenModal.addEventListener('cancel', (e) => { e.preventDefault(); closeTokenModal(); });
 			onOutsideClick(tokenModal, () => closeTokenModal());
+			onEscapeClose(tokenModal, () => closeTokenModal());
+			onFocusTrap(tokenModal);
 		}
 
 		/* ── Save / clear license ────────────────────────────────── */
@@ -534,7 +603,7 @@
 					}
 					showFeedback(data.message || data.error || t('Could not save license.'), 'error');
 				} catch (e) {
-					showFeedback(t('Network error. Please try again.'), 'error');
+					showNetworkErrorUnlessAbort(e);
 				}
 				saveBtn.disabled = false;
 				saveBtn.textContent = originalLabel;
@@ -561,9 +630,7 @@
 				clearModal.close();
 			}
 			document.body.classList.remove(p + '-license-modal-open');
-			if (modalReturnFocus) {
-				modalReturnFocus.focus();
-			}
+			restoreFocus(modalReturnFocus);
 		}
 
 		if (clearBtn) {
@@ -595,7 +662,7 @@
 					}
 					showFeedback(data.message || data.error || t('Could not remove license.'), 'error');
 				} catch (e) {
-					showFeedback(t('Network error. Please try again.'), 'error');
+					showNetworkErrorUnlessAbort(e);
 				}
 				if (clearBtn) {
 					clearBtn.disabled = false;
@@ -715,7 +782,7 @@
 						showFeedback(data.message || data.error || t('Could not remove seat.'), 'error');
 					}
 				} catch (e) {
-					showFeedback(t('Network error. Please try again.'), 'error');
+					showNetworkErrorUnlessAbort(e);
 				} finally {
 					btn.disabled = false;
 				}
@@ -918,7 +985,7 @@
 					showFeedback(data.message || data.error || t('Could not assign seat.'), 'error');
 				}
 			} catch (e) {
-				showFeedback(t('Network error. Please try again.'), 'error');
+				showNetworkErrorUnlessAbort(e);
 			} finally {
 				updateAssignSelectedButton();
 			}
@@ -1089,6 +1156,7 @@
 			if (terminalEmpty) {
 				terminalEmpty.hidden = true;
 			}
+			const colActions = escapeAttr(t('Actions'));
 			devices.forEach((dev) => {
 				const devId = String(dev.id || dev.deviceId || '');
 				const tr = document.createElement('tr');
@@ -1149,7 +1217,7 @@
 						showFeedback(data.message || data.error || t('Could not register device.'), 'error');
 					}
 				} catch (e) {
-					showFeedback(t('Network error. Please try again.'), 'error');
+					showNetworkErrorUnlessAbort(e);
 				} finally {
 					terminalRegister.disabled = false;
 				}
@@ -1196,7 +1264,7 @@
 							showFeedback(regen.data.message || regen.data.error || t('Could not generate a pairing code.'), 'error');
 						}
 					} catch (e) {
-						showFeedback(t('Network error. Please try again.'), 'error');
+						showNetworkErrorUnlessAbort(e);
 					}
 					regenBtn.disabled = false;
 					return;
@@ -1243,7 +1311,7 @@
 						showFeedback(data.message || data.error || t('Could not revoke device.'), 'error');
 					}
 				} catch (e) {
-					showFeedback(t('Network error. Please try again.'), 'error');
+					showNetworkErrorUnlessAbort(e);
 				} finally {
 					btn.disabled = false;
 				}

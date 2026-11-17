@@ -12,8 +12,6 @@
 		"%d days": "%d 天",
 		"%d items have been processed successfully.": "%d 項處理成功。",
 		"%d items processed successfully, %d failed.": "%d 項處理成功，%d 項失敗。",
-		"%d row(s) need a value on this instance": "%d 列需要在此實例上填寫值",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "已略過 %d 列，%d 個參照未能解析——請查看下方群組。",
 		"%d skipped (already members or disabled).": "%d 已跳過（已是成員或已停用）。",
 		"%n entries selected": "已選 %n 條",
 		"%n entries updated.": "%n 條已更新。",
@@ -42,10 +40,6 @@
 		"%s%% used": "已使用 %s%%",
 		"%sh remaining": "剩餘 %s 小時",
 		"%sh remaining (estimate)": "約剩餘 %s 小時（估算）",
-		"(%d env-bound value(s) emptied)": "（已清空 %d 個實例綁定值）",
-		"(%d filtered)": "（已篩選 %d 項）",
-		"(%d secret(s) redacted)": "（已遮蔽 %d 個密鑰）",
-		"(%d unresolved ref)": "（%d 個參照未解析）",
 		"(open + invoiced hours still unpaid in ProjectCheck)": "（ProjectCheck 中仍未支付的開放 + 已開票工時）",
 		"(opens in a new tab)": "（在新標籤頁中開啟）",
 		"(today)": "（今天）",
@@ -409,6 +403,7 @@
 		"Could not save rate.": "無法儲存費率。",
 		"Could not save rate. Please check your input.": "無法儲存費率。請檢查輸入。",
 		"Could not save settings": "無法儲存設定",
+		"Could not save your settings. Please try again.": "無法儲存您的設定，請重試。",
 		"Could not search projects.": "無法搜尋專案。",
 		"Could not update customer. Please check your input.": "無法更新客戶。請檢查輸入。",
 		"Could not update project status.": "無法更新專案狀態。",
@@ -1181,6 +1176,7 @@
 		"Performance": "績效",
 		"Permission Denied": "授權被拒絕",
 		"Permission Issue - ProjectCheck": "授權問題——ProjectCheck",
+		"Permissions Updated": "權限已更新",
 		"Person": "成員",
 		"Personal Overview": "個人概覽",
 		"Personal dashboard": "個人儀表板",
@@ -1250,6 +1246,7 @@
 		"Project \"%s\" has been created successfully.": "專案“%s”建立成功。",
 		"Project \"%s\" has been deleted.": "專案“%s”已刪除。",
 		"Project \"%s\" has been updated successfully.": "專案“%s”更新成功。",
+		"Project \"%s\" status changed to \"%s\".": "專案「%s」的狀態已變更為「%s」。",
 		"Project \"%s\" was created successfully!": "專案“%s”建立成功！",
 		"Project Budget Overview": "專案預算概覽",
 		"Project Control": "ProjectCheck",
@@ -1261,6 +1258,7 @@
 		"Project Information": "專案資訊",
 		"Project Name": "專案名稱",
 		"Project Statistics": "專案統計",
+		"Project Status Changed": "專案狀態已變更",
 		"Project Timeline": "專案時間線",
 		"Project Type": "專案型別",
 		"Project Type Analysis": "專案型別分析",
@@ -1502,6 +1500,8 @@
 		"Set who may use the app, who can manage these settings, and default values for projects and budgets. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "設定誰可以使用應用、誰可以管理這些設定，以及專案和預算的預設值。更改適用於此 Nextcloud 的所有使用者。伺服器管理員也可在“管理”下編輯。",
 		"Set who may use the app, who can manage these settings, and default values. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "設定誰可以使用應用、誰可以管理這些設定及預設值。更改適用於此 Nextcloud 的所有使用者。伺服器管理員也可在“管理”下編輯。",
 		"Settings": "設定",
+		"Settings Updated": "設定已更新",
+		"Settings have been updated successfully.": "設定已成功更新。",
 		"Settings pages": "設定頁面",
 		"Settings saved": "設定已儲存",
 		"Settings saved successfully": "設定儲存成功",
@@ -1675,15 +1675,20 @@
 		"This time entry has already been invoiced or paid and can no longer be edited.": "此工時記錄已開票或已支付，不能再編輯。",
 		"This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.": "此工時記錄已開票或已支付，不能再編輯。請先讓專案經理重新開啟。",
 		"This time entry overlaps with an existing entry": "此工時記錄與現有記錄重疊",
+		"This time entry overlaps with an existing entry. Please adjust the time range.": "此時間條目與現有條目重疊，請調整時間範圍。",
 		"This time entry was changed by someone else in the meantime. Please reload and try again.": "此工時記錄在此期間被他人更改。請重新載入後重試。",
 		"This time entry was changed by someone else. Refresh and try again.": "此工時記錄已被他人更改。請重新整理後重試。",
 		"This time entry would exceed the project budget": "此工時記錄將超出專案預算",
 		"This token is shown only once. Paste it into the companion app on the device.": "此權杖僅顯示一次。請將其貼上到裝置上的配套應用程式中。",
 		"This will update %d settings and %d rows — nothing is deleted.": "這將更新 %d 項設定與 %d 列資料——不會刪除任何內容。",
 		"Time Entries": "工時記錄",
+		"Time Entry Created": "時間條目已建立",
+		"Time Entry Deleted": "時間條目已刪除",
 		"Time Entry Details": "工時記錄詳情",
 		"Time Entry Information": "工時記錄資訊",
+		"Time Entry Overlap": "時間條目重疊",
 		"Time Entry Reminder": "工時記錄提醒",
+		"Time Entry Updated": "時間條目已更新",
 		"Time Entry: %s hours on %s": "工時記錄：%s 上 %s 小時",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries.": "此專案不能記錄工時。只有“進行中”和“已暫停”專案接受新記錄。",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.": "此專案不能記錄工時。只有“進行中”和“已暫停”專案接受新記錄；如有需要請重新啟用已歸檔專案。",
@@ -1694,6 +1699,9 @@
 		"Time entry by %s": "%s 的工時記錄",
 		"Time entry created successfully": "工時記錄建立成功",
 		"Time entry deleted from project {project}": "工時記錄已從專案 {project} 刪除",
+		"Time entry for %s hours has been created successfully.": "已成功建立 %s 小時的時間條目。",
+		"Time entry has been deleted.": "時間條目已刪除。",
+		"Time entry has been updated successfully.": "時間條目已成功更新。",
 		"Time entry information and associated details": "工時記錄資訊及關聯詳情",
 		"Time entry logged: {hours} hours on {project}": "已記錄工時：{project} 上 {hours} 小時",
 		"Time entry must be at least %s minutes": "工時記錄須至少 %s 分鐘",
@@ -1827,6 +1835,7 @@
 		"User menu": "使用者選單",
 		"User not authenticated": "使用者未認證",
 		"User not found": "未找到使用者",
+		"User permissions have been updated.": "使用者權限已更新。",
 		"User search failed. Check your connection and try again.": "使用者搜尋失敗。請檢查連線後重試。",
 		"Users allowed to use the app (when restriction is on)": "允許使用應用的使用者（限制開啟時）",
 		"Uses Nextcloud Login Flow — your main password is never stored in the app.": "使用 Nextcloud 登入流程——你的主密碼不會儲存在應用中。",
@@ -1870,7 +1879,6 @@
 		"Warning threshold": "警告閾值",
 		"Warning threshold must be between 0 and 100": "警告閾值須在 0 至 100 之間",
 		"Warning threshold must be less than critical threshold": "警告閾值須低於告急閾值",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "警告：%d 列將被永久刪除，然後載入檔案資料。",
 		"Watch budgets": "關注預算",
 		"We could not save your settings. Please try again.": "無法儲存您的設定。請重試。",
 		"What you can do": "你可以做什麼",
@@ -1937,8 +1945,40 @@
 		"_%n team member_::_%n team members_": [
 			"%n 名團隊成員"
 		],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"（已清空 1 個實例綁定值）",
+			"（已清空 %n 個實例綁定值）"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"（已篩選 1 項）",
+			"（已篩選 %n 項）"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"（已遮蔽 1 個密鑰）",
+			"（已遮蔽 %n 個密鑰）"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"（1 個參照未解析）",
+			"（%n 個參照未解析）"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 個參照未能解析——請查看下方群組。",
+			"%n 個參照未能解析——請查看下方群組。"
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 列需要在此實例上填寫值",
+			"%n 列需要在此實例上填寫值"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"已略過 1 列。",
+			"已略過 %n 列。"
+		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"已上傳 %n 個檔案。"
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"警告：1 列將被永久刪除，然後載入檔案資料。",
+			"警告：%n 列將被永久刪除，然後載入檔案資料。"
 		],
 		"a project": "一個專案",
 		"active": "生效中",
@@ -1971,6 +2011,7 @@
 		"set it on this instance": "在此執行個體上設定",
 		"team members across all projects": "所有專案的團隊成員",
 		"team members will be removed": "團隊成員將被移除",
+		"the ProjectCheck mobile companion app": "ProjectCheck 行動版配套應用程式",
 		"the companion apps": "配套應用程式",
 		"the mobile companion app": "行動版配套應用程式",
 		"this customer": "此客戶",

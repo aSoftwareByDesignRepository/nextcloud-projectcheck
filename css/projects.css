@@ -9951,7 +9951,7 @@ a.project-title:hover,
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-@media (max-width: 520px) {
+@media (max-width: 519.98px) {
 	.pc-stl-progress--full .pc-stl-progress__stats {
 		grid-template-columns: 1fr;
 	}

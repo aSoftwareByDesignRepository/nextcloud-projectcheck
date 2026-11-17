@@ -1,8 +1,9 @@
 {
+	"pluralForm": "nplurals=2; plural=(n > 1);",
 	"translations": {
 		"\"{name}\" is selected. One more step:": "«{name}» está selecionado. Mais um passo:",
 		"\"{name}\" is selected. Press Save at the bottom when you are done.": "«{name}» está selecionado. Prima Guardar em baixo quando terminar.",
-		"%1$d of %2$d device slots in use.": "%1$d de %2$d espaços para dispositivos em uso.",
+		"%1$d of %2$d device slots in use.": "%1$d de %2$d lugares para dispositivos em uso.",
 		"%1$d of %2$d seats assigned": "%1$d de %2$d lugares atribuídos",
 		"%1$s entries updated, %2$s skipped (changed meanwhile or not allowed).": "%1$s entradas atualizadas, %2$s ignoradas (alteradas entretanto ou não permitidas).",
 		"%1$s h · %2$s": "%1$s h · %2$s",
@@ -12,8 +13,6 @@
 		"%d days": "%d dias",
 		"%d items have been processed successfully.": "%d itens foram processados com sucesso.",
 		"%d items processed successfully, %d failed.": "%d itens processados com sucesso, %d falharam.",
-		"%d row(s) need a value on this instance": "%d linha(s) precisam de um valor nesta instância",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d linha(s) ignorada(s) e %d referência(s) por resolver — vê os grupos abaixo.",
 		"%d skipped (already members or disabled).": "%d ignorados (já membros ou desativados).",
 		"%n entries selected": "%n entradas selecionadas",
 		"%n entries updated.": "%n entradas atualizadas.",
@@ -42,10 +41,6 @@
 		"%s%% used": "%s%% usado",
 		"%sh remaining": "restam %sh",
 		"%sh remaining (estimate)": "restam %sh (estimativa)",
-		"(%d env-bound value(s) emptied)": "(%d valor(es) ligados à instância esvaziados)",
-		"(%d filtered)": "(%d filtrada(s))",
-		"(%d secret(s) redacted)": "(%d segredo(s) ocultado(s))",
-		"(%d unresolved ref)": "(%d referência(s) por resolver)",
 		"(open + invoiced hours still unpaid in ProjectCheck)": "(horas abertas + faturadas ainda por pagar no ProjectCheck)",
 		"(opens in a new tab)": "(abre num novo separador)",
 		"(today)": "(hoje)",
@@ -138,7 +133,7 @@
 		"All Types": "Todos os tipos",
 		"All Users": "Todos os utilizadores",
 		"All customers": "Todos os clientes",
-		"All device slots are in use. Revoke a device or upgrade your license.": "Todos os espaços para dispositivos estão em uso. Revoga um dispositivo ou aumenta a tua licença.",
+		"All device slots are in use. Revoke a device or upgrade your license.": "Todos os lugares para dispositivos estão em uso. Revoga um dispositivo ou aumenta a tua licença.",
 		"All employees": "Todos os colaboradores",
 		"All invoiced hours on this project will be marked as paid.": "Todas as horas faturadas deste projeto serão marcadas como pagas.",
 		"All licensed seats are assigned. Remove a seat or upgrade the license.": "Todos os postos licenciados estão atribuídos. Remova um posto ou aumente a licença.",
@@ -409,6 +404,7 @@
 		"Could not save rate.": "Não foi possível guardar a tarifa.",
 		"Could not save rate. Please check your input.": "Não foi possível guardar a tarifa. Verifique os dados introduzidos.",
 		"Could not save settings": "Não foi possível guardar as definições",
+		"Could not save your settings. Please try again.": "Não foi possível guardar as suas definições. Tente novamente.",
 		"Could not search projects.": "Não foi possível pesquisar projetos.",
 		"Could not update customer. Please check your input.": "Não foi possível atualizar o cliente. Verifique os dados introduzidos.",
 		"Could not update project status.": "Não foi possível atualizar o estado do projeto.",
@@ -1160,7 +1156,7 @@
 		"Paid on %s": "Pago em %s",
 		"Paid so far": "Pago até agora",
 		"Paid so far: %s%%": "Pago até agora: %s%%",
-		"Pair devices from the linked administration area. Each paired device uses one license slot.": "Emparelha dispositivos a partir da área de administração ligada. Cada dispositivo emparelhado usa um espaço de licença.",
+		"Pair devices from the linked administration area. Each paired device uses one license slot.": "Emparelha dispositivos a partir da área de administração ligada. Cada dispositivo emparelhado usa um lugar de licença.",
 		"Partially settled": "Parcialmente liquidado",
 		"Passphrase generated and copied.": "Frase-passe gerada e copiada.",
 		"Passphrase generated — copy it now.": "Frase-passe gerada — copie-a agora.",
@@ -1181,6 +1177,7 @@
 		"Performance": "Desempenho",
 		"Permission Denied": "Permissão negada",
 		"Permission Issue - ProjectCheck": "Problema de permissões — ProjectCheck",
+		"Permissions Updated": "Permissões atualizadas",
 		"Person": "Pessoa",
 		"Personal Overview": "Resumo pessoal",
 		"Personal dashboard": "Painel pessoal",
@@ -1250,6 +1247,7 @@
 		"Project \"%s\" has been created successfully.": "O projeto «%s» foi criado com sucesso.",
 		"Project \"%s\" has been deleted.": "O projeto «%s» foi eliminado.",
 		"Project \"%s\" has been updated successfully.": "O projeto «%s» foi atualizado com sucesso.",
+		"Project \"%s\" status changed to \"%s\".": "O estado do projeto \"%s\" mudou para \"%s\".",
 		"Project \"%s\" was created successfully!": "O projeto «%s» foi criado com sucesso!",
 		"Project Budget Overview": "Resumo do orçamento do projeto",
 		"Project Control": "ProjectCheck",
@@ -1261,6 +1259,7 @@
 		"Project Information": "Informação do projeto",
 		"Project Name": "Nome do projeto",
 		"Project Statistics": "Estatísticas do projeto",
+		"Project Status Changed": "Estado do projeto alterado",
 		"Project Timeline": "Cronograma do projeto",
 		"Project Type": "Tipo de projeto",
 		"Project Type Analysis": "Análise por tipo de projeto",
@@ -1502,6 +1501,8 @@
 		"Set who may use the app, who can manage these settings, and default values for projects and budgets. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "Defina quem pode usar a aplicação, quem pode gerir estas definições e os valores predefinidos para projetos e orçamentos. As alterações aplicam-se a todos os utilizadores deste Nextcloud. Os administradores de servidor também podem editar isto em Administração.",
 		"Set who may use the app, who can manage these settings, and default values. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "Defina quem pode usar a aplicação, quem pode gerir estas definições e os valores predefinidos. As alterações aplicam-se a todos os utilizadores deste Nextcloud. Os administradores de servidor também podem editar isto em Administração.",
 		"Settings": "Definições",
+		"Settings Updated": "Definições atualizadas",
+		"Settings have been updated successfully.": "As definições foram atualizadas com sucesso.",
 		"Settings pages": "Páginas de definições",
 		"Settings saved": "Definições guardadas",
 		"Settings saved successfully": "Definições guardadas com sucesso",
@@ -1675,15 +1676,20 @@
 		"This time entry has already been invoiced or paid and can no longer be edited.": "Este registo de horas já foi faturado ou pago e já não pode ser editado.",
 		"This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.": "Este registo de horas já foi faturado ou pago e já não pode ser editado. Peça primeiro a um gestor de projeto para o reabrir.",
 		"This time entry overlaps with an existing entry": "Este registo de horas sobrepõe-se a uma entrada existente",
+		"This time entry overlaps with an existing entry. Please adjust the time range.": "Este registo de horas sobrepõe-se a um registo existente. Ajusta o intervalo de tempo.",
 		"This time entry was changed by someone else in the meantime. Please reload and try again.": "Este registo de horas foi alterado por outra pessoa entretanto. Recarregue e tente novamente.",
 		"This time entry was changed by someone else. Refresh and try again.": "Este registo de horas foi alterado por outra pessoa. Atualize e tente novamente.",
 		"This time entry would exceed the project budget": "Este registo de horas excederia o orçamento do projeto",
 		"This token is shown only once. Paste it into the companion app on the device.": "Este token só é mostrado uma vez. Cole-o na aplicação complementar no dispositivo.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Isto irá atualizar %d definições e %d linhas — nada será eliminado.",
 		"Time Entries": "Registos de horas",
+		"Time Entry Created": "Registo de horas criado",
+		"Time Entry Deleted": "Registo de horas eliminado",
 		"Time Entry Details": "Detalhes do registo de horas",
 		"Time Entry Information": "Informação do registo de horas",
+		"Time Entry Overlap": "Sobreposição de registo de horas",
 		"Time Entry Reminder": "Lembrete de registo de horas",
+		"Time Entry Updated": "Registo de horas atualizado",
 		"Time Entry: %s hours on %s": "Registo de horas: %s horas em %s",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries.": "Não é possível registar tempo neste projeto. Só projetos Ativos ou Em pausa aceitam novas entradas.",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.": "Não é possível registar tempo neste projeto. Só projetos Ativos ou Em pausa aceitam novas entradas; reative um projeto arquivado se necessário.",
@@ -1694,6 +1700,9 @@
 		"Time entry by %s": "Registo de horas de %s",
 		"Time entry created successfully": "Registo de horas criado com sucesso",
 		"Time entry deleted from project {project}": "Registo de horas eliminado do projeto {project}",
+		"Time entry for %s hours has been created successfully.": "Foi criado com sucesso um registo de %s horas.",
+		"Time entry has been deleted.": "O registo de horas foi eliminado.",
+		"Time entry has been updated successfully.": "O registo de horas foi atualizado com sucesso.",
 		"Time entry information and associated details": "Informação do registo de horas e detalhes associados",
 		"Time entry logged: {hours} hours on {project}": "Registo de horas: {hours} horas em {project}",
 		"Time entry must be at least %s minutes": "O registo de horas tem de ter pelo menos %s minutos",
@@ -1827,6 +1836,7 @@
 		"User menu": "Menu do utilizador",
 		"User not authenticated": "Utilizador não autenticado",
 		"User not found": "Utilizador não encontrado",
+		"User permissions have been updated.": "As permissões de utilizador foram atualizadas.",
 		"User search failed. Check your connection and try again.": "A pesquisa de utilizadores falhou. Verifique a sua ligação e tente novamente.",
 		"Users allowed to use the app (when restriction is on)": "Utilizadores permitidos a usar a aplicação (quando a restrição está ativa)",
 		"Uses Nextcloud Login Flow — your main password is never stored in the app.": "Usa o Nextcloud Login Flow — a sua palavra-passe principal nunca é guardada na aplicação.",
@@ -1870,7 +1880,6 @@
 		"Warning threshold": "Limite de aviso",
 		"Warning threshold must be between 0 and 100": "O limite de aviso tem de estar entre 0 e 100",
 		"Warning threshold must be less than critical threshold": "O limite de aviso tem de ser inferior ao limite crítico",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Aviso: %d linha(s) serão eliminadas permanentemente e, depois, os dados do ficheiro serão carregados.",
 		"Watch budgets": "Vigiar orçamentos",
 		"We could not save your settings. Please try again.": "Não foi possível guardar as suas definições. Tente novamente.",
 		"What you can do": "O que pode fazer",
@@ -1939,9 +1948,41 @@
 			"%n membro da equipa",
 			"%n membros da equipa"
 		],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 valor ligado à instância esvaziado)",
+			"(%n valores ligados à instância esvaziados)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtrada)",
+			"(%n filtradas)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 segredo ocultado)",
+			"(%n segredos ocultados)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 referência por resolver)",
+			"(%n referências por resolver)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 referência por resolver — vê os grupos abaixo.",
+			"%n referências por resolver — vê os grupos abaixo."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 linha precisa de um valor nesta instância",
+			"%n linhas precisam de um valor nesta instância"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 linha ignorada.",
+			"%n linhas ignoradas."
+		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"Carregado %n ficheiro.",
 			"Carregados %n ficheiros."
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Aviso: 1 linha será eliminada permanentemente e, depois, os dados do ficheiro serão carregados.",
+			"Aviso: %n linhas serão eliminadas permanentemente e, depois, os dados do ficheiro serão carregados."
 		],
 		"a project": "um projeto",
 		"active": "ativo",
@@ -1974,6 +2015,7 @@
 		"set it on this instance": "defini-lo nesta instância",
 		"team members across all projects": "membros da equipa em todos os projetos",
 		"team members will be removed": "os membros da equipa serão removidos",
+		"the ProjectCheck mobile companion app": "a aplicação complementar móvel ProjectCheck",
 		"the companion apps": "as aplicações complementares",
 		"the mobile companion app": "a aplicação complementar móvel",
 		"this customer": "este cliente",
@@ -2015,6 +2057,5 @@
 		"💻 Product Development": "💻 Desenvolvimento de produto",
 		"📊 Why This Matters": "📊 Porque é que isto importa",
 		"🔬 Research & Development": "🔬 Investigação e desenvolvimento"
-	},
-	"pluralForm": "nplurals=2; plural=(n > 1);"
+	}
 }

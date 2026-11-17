@@ -12,8 +12,6 @@
 		"%d days": "%d days",
 		"%d items have been processed successfully.": "%d items have been processed successfully.",
 		"%d items processed successfully, %d failed.": "%d items processed successfully, %d failed.",
-		"%d row(s) need a value on this instance": "%d row(s) need a value on this instance",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d row(s) skipped and %d reference(s) unresolved — see the groups below.",
 		"%d skipped (already members or disabled).": "%d skipped (already members or disabled).",
 		"%n entries selected": "%n entries selected",
 		"%n entries updated.": "%n entries updated.",
@@ -42,10 +40,6 @@
 		"%s%% used": "%s%% used",
 		"%sh remaining": "%sh remaining",
 		"%sh remaining (estimate)": "%sh remaining (estimate)",
-		"(%d env-bound value(s) emptied)": "(%d env-bound value(s) emptied)",
-		"(%d filtered)": "(%d filtered)",
-		"(%d secret(s) redacted)": "(%d secret(s) redacted)",
-		"(%d unresolved ref)": "(%d unresolved ref)",
 		"(open + invoiced hours still unpaid in ProjectCheck)": "(open + invoiced hours still unpaid in ProjectCheck)",
 		"(opens in a new tab)": "(opens in a new tab)",
 		"(today)": "(today)",
@@ -409,6 +403,7 @@
 		"Could not save rate.": "Could not save rate.",
 		"Could not save rate. Please check your input.": "Could not save rate. Please check your input.",
 		"Could not save settings": "Could not save settings",
+		"Could not save your settings. Please try again.": "Could not save your settings. Please try again.",
 		"Could not search projects.": "Could not search projects.",
 		"Could not update customer. Please check your input.": "Could not update customer. Please check your input.",
 		"Could not update project status.": "Could not update project status.",
@@ -1181,6 +1176,7 @@
 		"Performance": "Performance",
 		"Permission Denied": "Permission Denied",
 		"Permission Issue - ProjectCheck": "Permission issue – ProjectCheck",
+		"Permissions Updated": "Permissions Updated",
 		"Person": "Person",
 		"Personal Overview": "Personal Overview",
 		"Personal dashboard": "Personal dashboard",
@@ -1250,6 +1246,7 @@
 		"Project \"%s\" has been created successfully.": "Project \"%s\" has been created successfully.",
 		"Project \"%s\" has been deleted.": "Project \"%s\" has been deleted.",
 		"Project \"%s\" has been updated successfully.": "Project \"%s\" has been updated successfully.",
+		"Project \"%s\" status changed to \"%s\".": "Project \"%s\" status changed to \"%s\".",
 		"Project \"%s\" was created successfully!": "Project \"%s\" was created successfully!",
 		"Project Budget Overview": "Project Budget Overview",
 		"Project Control": "ProjectCheck",
@@ -1261,6 +1258,7 @@
 		"Project Information": "Project Information",
 		"Project Name": "Project Name",
 		"Project Statistics": "Project Statistics",
+		"Project Status Changed": "Project Status Changed",
 		"Project Timeline": "Project Timeline",
 		"Project Type": "Project Type",
 		"Project Type Analysis": "Project Type Analysis",
@@ -1502,6 +1500,8 @@
 		"Set who may use the app, who can manage these settings, and default values for projects and budgets. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "Set who may use the app, who can manage these settings, and default values for projects and budgets. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.",
 		"Set who may use the app, who can manage these settings, and default values. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "Set who may use the app, who can manage these settings, and default values. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.",
 		"Settings": "Settings",
+		"Settings Updated": "Settings Updated",
+		"Settings have been updated successfully.": "Settings have been updated successfully.",
 		"Settings pages": "Settings pages",
 		"Settings saved": "Settings saved",
 		"Settings saved successfully": "Settings saved successfully",
@@ -1675,15 +1675,20 @@
 		"This time entry has already been invoiced or paid and can no longer be edited.": "This time entry has already been invoiced or paid and can no longer be edited.",
 		"This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.": "This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.",
 		"This time entry overlaps with an existing entry": "This time entry overlaps with an existing entry",
+		"This time entry overlaps with an existing entry. Please adjust the time range.": "This time entry overlaps with an existing entry. Please adjust the time range.",
 		"This time entry was changed by someone else in the meantime. Please reload and try again.": "This time entry was changed by someone else in the meantime. Please reload and try again.",
 		"This time entry was changed by someone else. Refresh and try again.": "This time entry was changed by someone else. Refresh and try again.",
 		"This time entry would exceed the project budget": "This time entry would exceed the project budget",
 		"This token is shown only once. Paste it into the companion app on the device.": "This token is shown only once. Paste it into the companion app on the device.",
 		"This will update %d settings and %d rows — nothing is deleted.": "This will update %d settings and %d rows — nothing is deleted.",
 		"Time Entries": "Time Entries",
+		"Time Entry Created": "Time Entry Created",
+		"Time Entry Deleted": "Time Entry Deleted",
 		"Time Entry Details": "Time Entry Details",
 		"Time Entry Information": "Time Entry Information",
+		"Time Entry Overlap": "Time Entry Overlap",
 		"Time Entry Reminder": "Time Entry Reminder",
+		"Time Entry Updated": "Time Entry Updated",
 		"Time Entry: %s hours on %s": "Time Entry: %s hours on %s",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries.": "Time cannot be logged on this project. Only Active and On Hold projects accept new entries.",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.": "Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.",
@@ -1694,6 +1699,9 @@
 		"Time entry by %s": "Time entry by %s",
 		"Time entry created successfully": "Time entry created successfully",
 		"Time entry deleted from project {project}": "Time entry deleted from project {project}",
+		"Time entry for %s hours has been created successfully.": "Time entry for %s hours has been created successfully.",
+		"Time entry has been deleted.": "Time entry has been deleted.",
+		"Time entry has been updated successfully.": "Time entry has been updated successfully.",
 		"Time entry information and associated details": "Time entry information and associated details",
 		"Time entry logged: {hours} hours on {project}": "Time entry logged: {hours} hours on {project}",
 		"Time entry must be at least %s minutes": "Time entry must be at least %s minutes",
@@ -1827,6 +1835,7 @@
 		"User menu": "User menu",
 		"User not authenticated": "User not authenticated",
 		"User not found": "User not found",
+		"User permissions have been updated.": "User permissions have been updated.",
 		"User search failed. Check your connection and try again.": "User search failed. Check your connection and try again.",
 		"Users allowed to use the app (when restriction is on)": "Users allowed to use the app (when restriction is on)",
 		"Uses Nextcloud Login Flow — your main password is never stored in the app.": "Uses Nextcloud Login Flow — your main password is never stored in the app.",
@@ -1870,7 +1879,6 @@
 		"Warning threshold": "Warning threshold",
 		"Warning threshold must be between 0 and 100": "Warning threshold must be between 0 and 100",
 		"Warning threshold must be less than critical threshold": "Warning threshold must be less than critical threshold",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Warning: %d row(s) will be permanently deleted, then the file data is loaded.",
 		"Watch budgets": "Watch budgets",
 		"We could not save your settings. Please try again.": "We could not save your settings. Please try again.",
 		"What you can do": "What you can do",
@@ -1939,9 +1947,41 @@
 			"%n team member",
 			"%n team members"
 		],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 env-bound value emptied)",
+			"(%n env-bound values emptied)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtered)",
+			"(%n filtered)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 secret redacted)",
+			"(%n secrets redacted)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 unresolved ref)",
+			"(%n unresolved refs)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 reference unresolved — see the groups below.",
+			"%n references unresolved — see the groups below."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 row needs a value on this instance",
+			"%n rows need a value on this instance"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 row skipped.",
+			"%n rows skipped."
+		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"Uploaded %n file.",
 			"Uploaded %n files."
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Warning: 1 row will be permanently deleted, then the file data is loaded.",
+			"Warning: %n rows will be permanently deleted, then the file data is loaded."
 		],
 		"a project": "a project",
 		"active": "active",
@@ -1974,6 +2014,7 @@
 		"set it on this instance": "set it on this instance",
 		"team members across all projects": "team members across all projects",
 		"team members will be removed": "team members will be removed",
+		"the ProjectCheck mobile companion app": "the ProjectCheck mobile companion app",
 		"the companion apps": "the companion apps",
 		"the mobile companion app": "the mobile companion app",
 		"this customer": "this customer",

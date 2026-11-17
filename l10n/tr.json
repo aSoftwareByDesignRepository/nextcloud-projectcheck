@@ -1,4 +1,5 @@
 {
+	"pluralForm": "nplurals=2; plural=(n != 1);",
 	"translations": {
 		"\"{name}\" is selected. One more step:": "\"{name}\" seçildi. Bir adım daha:",
 		"\"{name}\" is selected. Press Save at the bottom when you are done.": "\"{name}\" seçildi. Bitirdiğinizde alttaki Kaydet düğmesine basın.",
@@ -12,8 +13,6 @@
 		"%d days": "%d gün",
 		"%d items have been processed successfully.": "%d öğe başarıyla işlendi.",
 		"%d items processed successfully, %d failed.": "%d öğe başarıyla işlendi, %d öğe başarısız oldu.",
-		"%d row(s) need a value on this instance": "%d satırın bu örnekte bir değere ihtiyacı var",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d satır atlandı ve %d başvuru çözümlenemedi — aşağıdaki gruplara bakın.",
 		"%d skipped (already members or disabled).": "%d atlandı (zaten üye veya devre dışı).",
 		"%n entries selected": "%n kayıt seçildi",
 		"%n entries updated.": "%n kayıt güncellendi.",
@@ -42,10 +41,6 @@
 		"%s%% used": "%%%s kullanıldı",
 		"%sh remaining": "%s sa kaldı",
 		"%sh remaining (estimate)": "%s sa kaldı (tahmin)",
-		"(%d env-bound value(s) emptied)": "(%d örneğe bağlı değer boşaltıldı)",
-		"(%d filtered)": "(%d filtrelendi)",
-		"(%d secret(s) redacted)": "(%d sır gizlendi)",
-		"(%d unresolved ref)": "(%d çözümlenemeyen başvuru)",
 		"(open + invoiced hours still unpaid in ProjectCheck)": "(ProjectCheck'te hâlâ ödenmemiş açık + faturalandırılmış saatler)",
 		"(opens in a new tab)": "(yeni bir sekmede açılır)",
 		"(today)": "(bugün)",
@@ -354,7 +349,7 @@
 		"Control who can see and use ProjectCheck, set delegated app administrators, and adjust app defaults. Nextcloud system administrators always have full access.": "ProjectCheck'i kimlerin görebileceğini ve kullanabileceğini denetleyin, yetki verilmiş uygulama yöneticilerini belirleyin ve uygulama varsayılanlarını ayarlayın. Nextcloud sistem yöneticileri her zaman tam erişime sahiptir.",
 		"Copied.": "Kopyalandı.",
 		"Copy all settings, catalogues and data between a test and a production instance — one encrypted file, dry-run before anything is written.": "Bir test ve bir üretim ortamı arasında tüm ayarları, katalogları ve verileri kopyalayın — tek şifreli dosya, yazmadan önce deneme çalıştırması.",
-		"Copy token": "Belirteci kopyala",
+		"Copy token": "Tokenı kopyala",
 		"Cost": "Maliyet",
 		"Cost Share": "Maliyet Payı",
 		"Cost share": "Maliyet payı",
@@ -409,6 +404,7 @@
 		"Could not save rate.": "Ücret kaydedilemedi.",
 		"Could not save rate. Please check your input.": "Ücret kaydedilemedi. Lütfen girdinizi denetleyin.",
 		"Could not save settings": "Ayarlar kaydedilemedi",
+		"Could not save your settings. Please try again.": "Ayarlarınız kaydedilemedi. Lütfen tekrar deneyin.",
 		"Could not search projects.": "Projeler aranamadı.",
 		"Could not update customer. Please check your input.": "Müşteri güncellenemedi. Lütfen girdinizi denetleyin.",
 		"Could not update project status.": "Proje durumu güncellenemedi.",
@@ -1181,6 +1177,7 @@
 		"Performance": "Performans",
 		"Permission Denied": "İzin Reddedildi",
 		"Permission Issue - ProjectCheck": "İzin sorunu – ProjectCheck",
+		"Permissions Updated": "İzinler güncellendi",
 		"Person": "Kişi",
 		"Personal Overview": "Kişisel Genel Bakış",
 		"Personal dashboard": "Kişisel pano",
@@ -1250,6 +1247,7 @@
 		"Project \"%s\" has been created successfully.": "\"%s\" projesi başarıyla oluşturuldu.",
 		"Project \"%s\" has been deleted.": "\"%s\" projesi silindi.",
 		"Project \"%s\" has been updated successfully.": "\"%s\" projesi başarıyla güncellendi.",
+		"Project \"%s\" status changed to \"%s\".": "\"%s\" projesinin durumu \"%s\" olarak değiştirildi.",
 		"Project \"%s\" was created successfully!": "\"%s\" projesi başarıyla oluşturuldu!",
 		"Project Budget Overview": "Proje Bütçe Genel Bakışı",
 		"Project Control": "ProjectCheck",
@@ -1261,6 +1259,7 @@
 		"Project Information": "Proje Bilgileri",
 		"Project Name": "Proje Adı",
 		"Project Statistics": "Proje İstatistikleri",
+		"Project Status Changed": "Proje durumu değiştirildi",
 		"Project Timeline": "Proje Zaman Çizelgesi",
 		"Project Type": "Proje Türü",
 		"Project Type Analysis": "Proje Türü Analizi",
@@ -1370,7 +1369,7 @@
 		"Remove from selection": "Seçimden kaldır",
 		"Remove license": "Lisansı kaldır",
 		"Remove mobile seat": "Mobil lisansı kaldır",
-		"Remove mobile seat for this person?": "Bu kişinin mobil koltuğu kaldırılsın mı?",
+		"Remove mobile seat for this person?": "Bu kişinin mobil lisansı kaldırılsın mı?",
 		"Remove project manager role from %s": "%s kullanıcısından proje yöneticisi rolünü kaldır",
 		"Remove seat for %s": "%s için mobil lisansı kaldır",
 		"Remove the organisation license and revoke all seats and devices? This cannot be undone.": "Kuruluş lisansı kaldırılsın ve tüm koltuklar ile cihazlar iptal edilsin mi? Bu işlem geri alınamaz.",
@@ -1502,6 +1501,8 @@
 		"Set who may use the app, who can manage these settings, and default values for projects and budgets. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "Uygulamayı kimlerin kullanabileceğini, bu ayarları kimlerin yönetebileceğini ve projeler ile bütçeler için varsayılan değerleri belirleyin. Değişiklikler bu Nextcloud'daki tüm kullanıcılara uygulanır. Sunucu yöneticileri bunu Yönetim altında da düzenleyebilir.",
 		"Set who may use the app, who can manage these settings, and default values. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "Uygulamayı kimlerin kullanabileceğini, bu ayarları kimlerin yönetebileceğini ve varsayılan değerleri belirleyin. Değişiklikler bu Nextcloud'daki tüm kullanıcılara uygulanır. Sunucu yöneticileri bunu Yönetim altında da düzenleyebilir.",
 		"Settings": "Ayarlar",
+		"Settings Updated": "Ayarlar güncellendi",
+		"Settings have been updated successfully.": "Ayarlar başarıyla güncellendi.",
 		"Settings pages": "Ayarlar sayfaları",
 		"Settings saved": "Ayarlar kaydedildi",
 		"Settings saved successfully": "Ayarlar başarıyla kaydedildi",
@@ -1675,15 +1676,20 @@
 		"This time entry has already been invoiced or paid and can no longer be edited.": "Bu mesai kaydı zaten faturalandırıldı veya ödendi ve artık düzenlenemez.",
 		"This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.": "Bu mesai kaydı zaten faturalandırıldı veya ödendi ve artık düzenlenemez. Önce bir proje yöneticisinden onu yeniden açmasını isteyin.",
 		"This time entry overlaps with an existing entry": "Bu mesai kaydı mevcut bir kayıtla çakışıyor",
+		"This time entry overlaps with an existing entry. Please adjust the time range.": "Bu mesai kaydı mevcut bir kayıtla çakışıyor. Lütfen zaman aralığını ayarlayın.",
 		"This time entry was changed by someone else in the meantime. Please reload and try again.": "Bu mesai kaydı bu arada başka biri tarafından değiştirildi. Lütfen yeniden yükleyip tekrar deneyin.",
 		"This time entry was changed by someone else. Refresh and try again.": "Bu mesai kaydı başka biri tarafından değiştirildi. Yenileyip tekrar deneyin.",
 		"This time entry would exceed the project budget": "Bu mesai kaydı proje bütçesini aşar",
-		"This token is shown only once. Paste it into the companion app on the device.": "Bu belirteç yalnızca bir kez gösterilir. Cihazdaki eşlik uygulamasına yapıştır.",
+		"This token is shown only once. Paste it into the companion app on the device.": "Bu token yalnızca bir kez gösterilir. Cihazdaki eşlik uygulamasına yapıştır.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Bu işlem %d ayarı ve %d satırı güncelleyecek — hiçbir şey silinmeyecek.",
 		"Time Entries": "Mesai Kayıtları",
+		"Time Entry Created": "Mesai kaydı oluşturuldu",
+		"Time Entry Deleted": "Mesai kaydı silindi",
 		"Time Entry Details": "Mesai Kaydı Ayrıntıları",
 		"Time Entry Information": "Mesai Kaydı Bilgileri",
+		"Time Entry Overlap": "Mesai kaydı çakışması",
 		"Time Entry Reminder": "Mesai Kaydı Hatırlatması",
+		"Time Entry Updated": "Mesai kaydı güncellendi",
 		"Time Entry: %s hours on %s": "Mesai kaydı: %s saat, %s",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries.": "Bu projeye mesai girilemez. Yalnızca Etkin ve Duraklatıldı durumundaki projeler yeni kayıt kabul eder.",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.": "Bu projeye mesai girilemez. Yalnızca Etkin ve Duraklatıldı durumundaki projeler yeni kayıt kabul eder; gerekirse arşivlenmiş bir projeyi yeniden etkinleştirin.",
@@ -1694,6 +1700,9 @@
 		"Time entry by %s": "%s tarafından mesai kaydı",
 		"Time entry created successfully": "Mesai kaydı başarıyla oluşturuldu",
 		"Time entry deleted from project {project}": "{project} projesinden mesai kaydı silindi",
+		"Time entry for %s hours has been created successfully.": "%s saatlik mesai kaydı başarıyla oluşturuldu.",
+		"Time entry has been deleted.": "Mesai kaydı silindi.",
+		"Time entry has been updated successfully.": "Mesai kaydı başarıyla güncellendi.",
 		"Time entry information and associated details": "Mesai kaydı bilgileri ve ilişkili ayrıntılar",
 		"Time entry logged: {hours} hours on {project}": "Mesai kaydedildi: {project} projesinde {hours} saat",
 		"Time entry must be at least %s minutes": "Mesai kaydı en az %s dakika olmalıdır",
@@ -1827,6 +1836,7 @@
 		"User menu": "Kullanıcı menüsü",
 		"User not authenticated": "Kullanıcı oturum açmamış",
 		"User not found": "Kullanıcı bulunamadı",
+		"User permissions have been updated.": "Kullanıcı izinleri güncellendi.",
 		"User search failed. Check your connection and try again.": "Kullanıcı araması başarısız oldu. Bağlantınızı kontrol edip yeniden deneyin.",
 		"Users allowed to use the app (when restriction is on)": "Uygulamayı kullanmasına izin verilen kullanıcılar (kısıtlama açıkken)",
 		"Uses Nextcloud Login Flow — your main password is never stored in the app.": "Nextcloud Login Flow kullanır — ana parolanız uygulamada asla saklanmaz.",
@@ -1870,7 +1880,6 @@
 		"Warning threshold": "Uyarı eşiği",
 		"Warning threshold must be between 0 and 100": "Uyarı eşiği 0 ile 100 arasında olmalıdır",
 		"Warning threshold must be less than critical threshold": "Uyarı eşiği kritik eşikten küçük olmalıdır",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Uyarı: %d satır kalıcı olarak silinecek, ardından dosya verileri yüklenecek.",
 		"Watch budgets": "Bütçeleri takip edin",
 		"We could not save your settings. Please try again.": "Ayarlarınız kaydedilemedi. Lütfen yeniden deneyin.",
 		"What you can do": "Yapabilecekleriniz",
@@ -1939,9 +1948,41 @@
 			"%n ekip üyesi",
 			"%n ekip üyesi"
 		],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 örneğe bağlı değer boşaltıldı)",
+			"(%n örneğe bağlı değer boşaltıldı)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtrelendi)",
+			"(%n filtrelendi)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 sır gizlendi)",
+			"(%n sır gizlendi)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 çözümlenemeyen başvuru)",
+			"(%n çözümlenemeyen başvuru)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 başvuru çözümlenemedi — aşağıdaki gruplara bakın.",
+			"%n başvuru çözümlenemedi — aşağıdaki gruplara bakın."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 satırın bu örnekte bir değere ihtiyacı var",
+			"%n satırın bu örnekte bir değere ihtiyacı var"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 satır atlandı.",
+			"%n satır atlandı."
+		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"%n dosya yüklendi.",
 			"%n dosya yüklendi."
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Uyarı: 1 satır kalıcı olarak silinecek, ardından dosya verileri yüklenecek.",
+			"Uyarı: %n satır kalıcı olarak silinecek, ardından dosya verileri yüklenecek."
 		],
 		"a project": "bir proje",
 		"active": "etkin",
@@ -1974,6 +2015,7 @@
 		"set it on this instance": "bu ortamda ayarla",
 		"team members across all projects": "ekip üyesi (tüm projelerde)",
 		"team members will be removed": "ekip üyesi kaldırılacak",
+		"the ProjectCheck mobile companion app": "ProjectCheck mobil eşlik",
 		"the companion apps": "eşlik uygulamaları",
 		"the mobile companion app": "mobil eşlik uygulaması",
 		"this customer": "bu müşteri",
@@ -2015,6 +2057,5 @@
 		"💻 Product Development": "💻 Ürün Geliştirme",
 		"📊 Why This Matters": "📊 Neden Önemli",
 		"🔬 Research & Development": "🔬 Araştırma ve Geliştirme"
-	},
-	"pluralForm": "nplurals=2; plural=(n != 1);"
+	}
 }

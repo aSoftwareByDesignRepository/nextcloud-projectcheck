@@ -12,8 +12,6 @@
 		"%d days": "%d giorni",
 		"%d items have been processed successfully.": "%d elementi sono stati elaborati correttamente.",
 		"%d items processed successfully, %d failed.": "%d elementi elaborati correttamente, %d non riusciti.",
-		"%d row(s) need a value on this instance": "%d riga/e richiedono un valore su questa istanza",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "%d riga/e saltata/e e %d riferimento/i non risolto/i — vedi i gruppi sotto.",
 		"%d skipped (already members or disabled).": "%d saltati (già membri o disattivati).",
 		"%n entries selected": "%n voci selezionate",
 		"%n entries updated.": "%n voci aggiornate.",
@@ -42,10 +40,6 @@
 		"%s%% used": "%s%% utilizzato",
 		"%sh remaining": "%s h rimanenti",
 		"%sh remaining (estimate)": "%s h rimanenti (stima)",
-		"(%d env-bound value(s) emptied)": "(%d valori legati all’istanza svuotati)",
-		"(%d filtered)": "(%d filtrate)",
-		"(%d secret(s) redacted)": "(%d segreti oscurati)",
-		"(%d unresolved ref)": "(%d riferimenti non risolti)",
 		"(open + invoiced hours still unpaid in ProjectCheck)": "(ore aperte + fatturate ancora non pagate in ProjectCheck)",
 		"(opens in a new tab)": "(si apre in una nuova scheda)",
 		"(today)": "(oggi)",
@@ -409,6 +403,7 @@
 		"Could not save rate.": "Impossibile salvare la tariffa.",
 		"Could not save rate. Please check your input.": "Impossibile salvare la tariffa. Controlla i dati inseriti.",
 		"Could not save settings": "Impossibile salvare le impostazioni",
+		"Could not save your settings. Please try again.": "Impossibile salvare le impostazioni. Riprova.",
 		"Could not search projects.": "Impossibile cercare i progetti.",
 		"Could not update customer. Please check your input.": "Impossibile aggiornare il cliente. Controlla i dati inseriti.",
 		"Could not update project status.": "Impossibile aggiornare lo stato del progetto.",
@@ -1181,6 +1176,7 @@
 		"Performance": "Prestazioni",
 		"Permission Denied": "Permesso negato",
 		"Permission Issue - ProjectCheck": "Problema di permessi – ProjectCheck",
+		"Permissions Updated": "Autorizzazioni aggiornate",
 		"Person": "Persona",
 		"Personal Overview": "Panoramica personale",
 		"Personal dashboard": "Dashboard personale",
@@ -1250,6 +1246,7 @@
 		"Project \"%s\" has been created successfully.": "Il progetto \"%s\" è stato creato correttamente.",
 		"Project \"%s\" has been deleted.": "Il progetto \"%s\" è stato eliminato.",
 		"Project \"%s\" has been updated successfully.": "Il progetto \"%s\" è stato aggiornato correttamente.",
+		"Project \"%s\" status changed to \"%s\".": "Lo stato del progetto \"%s\" è cambiato in \"%s\".",
 		"Project \"%s\" was created successfully!": "Il progetto \"%s\" è stato creato correttamente!",
 		"Project Budget Overview": "Panoramica budget progetto",
 		"Project Control": "ProjectCheck",
@@ -1261,6 +1258,7 @@
 		"Project Information": "Informazioni progetto",
 		"Project Name": "Nome progetto",
 		"Project Statistics": "Statistiche progetto",
+		"Project Status Changed": "Stato del progetto modificato",
 		"Project Timeline": "Cronologia progetto",
 		"Project Type": "Tipo progetto",
 		"Project Type Analysis": "Analisi tipo progetto",
@@ -1502,6 +1500,8 @@
 		"Set who may use the app, who can manage these settings, and default values for projects and budgets. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "Imposta chi può usare l'app, chi può gestire queste impostazioni e i valori predefiniti per progetti e budget. Le modifiche si applicano a tutti gli utenti di questo Nextcloud. Gli amministratori di server possono modificarlo anche in Amministrazione.",
 		"Set who may use the app, who can manage these settings, and default values. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "Imposta chi può usare l'app, chi può gestire queste impostazioni e i valori predefiniti. Le modifiche si applicano a tutti gli utenti di questo Nextcloud. Gli amministratori di server possono modificarlo anche in Amministrazione.",
 		"Settings": "Impostazioni",
+		"Settings Updated": "Impostazioni aggiornate",
+		"Settings have been updated successfully.": "Le impostazioni sono state aggiornate.",
 		"Settings pages": "Pagine delle impostazioni",
 		"Settings saved": "Impostazioni salvate",
 		"Settings saved successfully": "Impostazioni salvate correttamente",
@@ -1675,15 +1675,20 @@
 		"This time entry has already been invoiced or paid and can no longer be edited.": "Questa voce oraria è già stata fatturata o pagata e non può più essere modificata.",
 		"This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.": "Questa registrazione oraria è già stata fatturata o pagata e non può più essere modificata. Chiedi prima a un project manager di riaprirla.",
 		"This time entry overlaps with an existing entry": "Questa voce di tempo si sovrappone a una voce esistente",
+		"This time entry overlaps with an existing entry. Please adjust the time range.": "Questa voce di tempo si sovrappone a una voce esistente. Modifica l’intervallo di tempo.",
 		"This time entry was changed by someone else in the meantime. Please reload and try again.": "Questa registrazione oraria è stata modificata da qualcun altro nel frattempo. Ricarica e riprova.",
 		"This time entry was changed by someone else. Refresh and try again.": "Questa voce oraria è stata modificata da qualcun altro. Aggiorna e riprova.",
 		"This time entry would exceed the project budget": "Questa voce di tempo supererebbe il budget del progetto",
 		"This token is shown only once. Paste it into the companion app on the device.": "Questo token viene mostrato una sola volta. Incollalo nell’app companion sul dispositivo.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Verranno aggiornate %d impostazioni e %d righe — non verrà eliminato nulla.",
 		"Time Entries": "Voci di tempo",
+		"Time Entry Created": "Voce di tempo creata",
+		"Time Entry Deleted": "Voce di tempo eliminata",
 		"Time Entry Details": "Dettagli voce di tempo",
 		"Time Entry Information": "Informazioni voce di tempo",
+		"Time Entry Overlap": "Sovrapposizione di voci di tempo",
 		"Time Entry Reminder": "Promemoria voce di tempo",
+		"Time Entry Updated": "Voce di tempo aggiornata",
 		"Time Entry: %s hours on %s": "Voce di tempo: %s ore il %s",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries.": "Non è possibile registrare tempo su questo progetto. Solo i progetti Attivi e In pausa accettano nuove voci.",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.": "Non è possibile registrare tempo su questo progetto. Solo i progetti Attivi e In pausa accettano nuove voci; riattiva un progetto archiviato se necessario.",
@@ -1694,6 +1699,9 @@
 		"Time entry by %s": "Voce di tempo di %s",
 		"Time entry created successfully": "Voce di tempo creata correttamente",
 		"Time entry deleted from project {project}": "Voce di tempo eliminata dal progetto {project}",
+		"Time entry for %s hours has been created successfully.": "Una voce di tempo di %s ore è stata creata.",
+		"Time entry has been deleted.": "La voce di tempo è stata eliminata.",
+		"Time entry has been updated successfully.": "La voce di tempo è stata aggiornata.",
 		"Time entry information and associated details": "Informazioni voce di tempo e dettagli associati",
 		"Time entry logged: {hours} hours on {project}": "Voce di tempo registrata: {hours} ore su {project}",
 		"Time entry must be at least %s minutes": "La voce di tempo deve essere di almeno %s minuti",
@@ -1827,6 +1835,7 @@
 		"User menu": "Menu utente",
 		"User not authenticated": "Utente non autenticato",
 		"User not found": "Utente non trovato",
+		"User permissions have been updated.": "Le autorizzazioni utente sono state aggiornate.",
 		"User search failed. Check your connection and try again.": "Ricerca utenti non riuscita. Controlla la connessione e riprova.",
 		"Users allowed to use the app (when restriction is on)": "Utenti autorizzati a usare l'app (quando la restrizione è attiva)",
 		"Uses Nextcloud Login Flow — your main password is never stored in the app.": "Usa il Login Flow Nextcloud — la password principale non viene mai salvata nell’app.",
@@ -1870,7 +1879,6 @@
 		"Warning threshold": "Soglia di avviso",
 		"Warning threshold must be between 0 and 100": "La soglia di avviso deve essere tra 0 e 100",
 		"Warning threshold must be less than critical threshold": "La soglia di avviso deve essere inferiore alla soglia critica",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "Attenzione: %d riga/e verranno eliminate definitivamente, quindi verranno caricati i dati del file.",
 		"Watch budgets": "Controllare i budget",
 		"We could not save your settings. Please try again.": "Impossibile salvare le impostazioni. Riprova.",
 		"What you can do": "Cosa può fare",
@@ -1939,9 +1947,41 @@
 			"%n membro del team",
 			"%n membri del team"
 		],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"(1 valore legato all’istanza svuotato)",
+			"(%n valori legati all’istanza svuotati)"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"(1 filtrata)",
+			"(%n filtrate)"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"(1 segreto oscurato)",
+			"(%n segreti oscurati)"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"(1 riferimento non risolto)",
+			"(%n riferimenti non risolti)"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 riferimento non risolto — vedi i gruppi sotto.",
+			"%n riferimenti non risolti — vedi i gruppi sotto."
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 riga richiede un valore su questa istanza",
+			"%n righe richiedono un valore su questa istanza"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"1 riga saltata.",
+			"%n righe saltate."
+		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"Caricato %n file.",
 			"Caricati %n file."
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"Attenzione: 1 riga verrà eliminata definitivamente, quindi verranno caricati i dati del file.",
+			"Attenzione: %n righe verranno eliminate definitivamente, quindi verranno caricati i dati del file."
 		],
 		"a project": "un progetto",
 		"active": "attivo",
@@ -1974,6 +2014,7 @@
 		"set it on this instance": "impostalo su questa istanza",
 		"team members across all projects": "membri del team in tutti i progetti",
 		"team members will be removed": "i membri del team verranno rimossi",
+		"the ProjectCheck mobile companion app": "l’app companion mobile ProjectCheck",
 		"the companion apps": "le app companion",
 		"the mobile companion app": "l’app companion mobile",
 		"this customer": "questo cliente",

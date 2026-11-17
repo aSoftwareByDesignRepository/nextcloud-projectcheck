@@ -37,7 +37,6 @@ use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\CSPService;
 use OCA\ProjectCheck\Util\ErrorPageParams;
 use OCA\ProjectCheck\Service\LicenseService;
-use OCA\ProjectCheck\Service\LicenseUiStrings;
 use OCA\ProjectCheck\Service\SavePolicyUiStrings;
 use OCA\ProjectCheck\Service\OrgPolicySaveAudit;
 use OCA\ProjectCheck\Service\ProjectService;
@@ -671,7 +670,6 @@ class AppConfigController extends Controller
 			'licenseSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
 			'licenseStatus' => $licenseStatus,
 			'licenseSeatsList' => $licenseSeatsList,
-			'licenseI18n' => LicenseUiStrings::forPanel($l),
 			'isSystemAdmin' => $viewUid !== null && $viewUid !== ''
 				&& $this->accessControl->isSystemAdministrator($viewUid),
 			'transferLastReceipt' => $this->transferReceipts->lastReceipt(),

@@ -19,7 +19,6 @@ use OCP\L10N\IFactory;
 use Psr\Log\LoggerInterface;
 use OCA\ProjectCheck\Service\AccessControlService;
 use OCA\ProjectCheck\Service\LicenseService;
-use OCA\ProjectCheck\Service\LicenseUiStrings;
 use OCA\ProjectCheck\Service\SavePolicyUiStrings;
 
 /**
@@ -130,7 +129,6 @@ class AdminSettings implements ISettings
             'licenseSearchUsersUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.searchUsers'),
             'licenseStatus' => $licenseStatus,
             'licenseSeatsList' => $licenseSeatsList,
-            'licenseI18n' => LicenseUiStrings::forPanel($l),
             'requesttoken' => \OCP\Util::callRegister(),
         ];
 

@@ -12,8 +12,6 @@
 		"%d days": "%d 天",
 		"%d items have been processed successfully.": "%d 项处理成功。",
 		"%d items processed successfully, %d failed.": "%d 项处理成功，%d 项失败。",
-		"%d row(s) need a value on this instance": "%d 行需要在此实例上填写值",
-		"%d row(s) skipped and %d reference(s) unresolved — see the groups below.": "已跳过 %d 行，%d 个引用未能解析——请查看下方分组。",
 		"%d skipped (already members or disabled).": "%d 已跳过（已是成员或已禁用）。",
 		"%n entries selected": "已选 %n 条",
 		"%n entries updated.": "%n 条已更新。",
@@ -42,10 +40,6 @@
 		"%s%% used": "已使用 %s%%",
 		"%sh remaining": "剩余 %s 小时",
 		"%sh remaining (estimate)": "约剩余 %s 小时（估算）",
-		"(%d env-bound value(s) emptied)": "（已清空 %d 个实例绑定值）",
-		"(%d filtered)": "（已过滤 %d 项）",
-		"(%d secret(s) redacted)": "（已遮蔽 %d 个机密）",
-		"(%d unresolved ref)": "（%d 个引用未解析）",
 		"(open + invoiced hours still unpaid in ProjectCheck)": "（ProjectCheck 中仍未支付的开放 + 已开票工时）",
 		"(opens in a new tab)": "（在新标签页中打开）",
 		"(today)": "（今天）",
@@ -409,6 +403,7 @@
 		"Could not save rate.": "无法保存费率。",
 		"Could not save rate. Please check your input.": "无法保存费率。请检查输入。",
 		"Could not save settings": "无法保存设置",
+		"Could not save your settings. Please try again.": "无法保存您的设置，请重试。",
 		"Could not search projects.": "无法搜索项目。",
 		"Could not update customer. Please check your input.": "无法更新客户。请检查输入。",
 		"Could not update project status.": "无法更新项目状态。",
@@ -1181,6 +1176,7 @@
 		"Performance": "绩效",
 		"Permission Denied": "权限被拒绝",
 		"Permission Issue - ProjectCheck": "权限问题——ProjectCheck",
+		"Permissions Updated": "权限已更新",
 		"Person": "成员",
 		"Personal Overview": "个人概览",
 		"Personal dashboard": "个人仪表板",
@@ -1250,6 +1246,7 @@
 		"Project \"%s\" has been created successfully.": "项目“%s”创建成功。",
 		"Project \"%s\" has been deleted.": "项目“%s”已删除。",
 		"Project \"%s\" has been updated successfully.": "项目“%s”更新成功。",
+		"Project \"%s\" status changed to \"%s\".": "项目“%s”的状态已更改为“%s”。",
 		"Project \"%s\" was created successfully!": "项目“%s”创建成功！",
 		"Project Budget Overview": "项目预算概览",
 		"Project Control": "ProjectCheck",
@@ -1261,6 +1258,7 @@
 		"Project Information": "项目信息",
 		"Project Name": "项目名称",
 		"Project Statistics": "项目统计",
+		"Project Status Changed": "项目状态已更改",
 		"Project Timeline": "项目时间线",
 		"Project Type": "项目类型",
 		"Project Type Analysis": "项目类型分析",
@@ -1502,6 +1500,8 @@
 		"Set who may use the app, who can manage these settings, and default values for projects and budgets. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "设置谁可以使用应用、谁可以管理这些设置，以及项目和预算的默认值。更改适用于此 Nextcloud 的所有用户。服务器管理员也可在“管理”下编辑。",
 		"Set who may use the app, who can manage these settings, and default values. Changes apply to all users in this Nextcloud. Server administrators can also edit this under Administration.": "设置谁可以使用应用、谁可以管理这些设置及默认值。更改适用于此 Nextcloud 的所有用户。服务器管理员也可在“管理”下编辑。",
 		"Settings": "设置",
+		"Settings Updated": "设置已更新",
+		"Settings have been updated successfully.": "设置已成功更新。",
 		"Settings pages": "设置页面",
 		"Settings saved": "设置已保存",
 		"Settings saved successfully": "设置保存成功",
@@ -1675,15 +1675,20 @@
 		"This time entry has already been invoiced or paid and can no longer be edited.": "此工时记录已开票或已支付，不能再编辑。",
 		"This time entry has already been invoiced or paid and can no longer be edited. Ask a project manager to reopen it first.": "此工时记录已开票或已支付，不能再编辑。请先让项目经理重新打开。",
 		"This time entry overlaps with an existing entry": "此工时记录与现有记录重叠",
+		"This time entry overlaps with an existing entry. Please adjust the time range.": "此时间条目与现有条目重叠，请调整时间范围。",
 		"This time entry was changed by someone else in the meantime. Please reload and try again.": "此工时记录在此期间被他人更改。请重新加载后重试。",
 		"This time entry was changed by someone else. Refresh and try again.": "此工时记录已被他人更改。请刷新后重试。",
 		"This time entry would exceed the project budget": "此工时记录将超出项目预算",
 		"This token is shown only once. Paste it into the companion app on the device.": "此令牌仅显示一次。请将其粘贴到设备上的配套应用中。",
 		"This will update %d settings and %d rows — nothing is deleted.": "这将更新 %d 项设置和 %d 行数据——不会删除任何内容。",
 		"Time Entries": "工时记录",
+		"Time Entry Created": "时间条目已创建",
+		"Time Entry Deleted": "时间条目已删除",
 		"Time Entry Details": "工时记录详情",
 		"Time Entry Information": "工时记录信息",
+		"Time Entry Overlap": "时间条目重叠",
 		"Time Entry Reminder": "工时记录提醒",
+		"Time Entry Updated": "时间条目已更新",
 		"Time Entry: %s hours on %s": "工时记录：%s 上 %s 小时",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries.": "此项目不能记录工时。只有“进行中”和“已暂停”项目接受新记录。",
 		"Time cannot be logged on this project. Only Active and On Hold projects accept new entries; reactivate an archived project if needed.": "此项目不能记录工时。只有“进行中”和“已暂停”项目接受新记录；如有需要请重新激活已归档项目。",
@@ -1694,6 +1699,9 @@
 		"Time entry by %s": "%s 的工时记录",
 		"Time entry created successfully": "工时记录创建成功",
 		"Time entry deleted from project {project}": "工时记录已从项目 {project} 删除",
+		"Time entry for %s hours has been created successfully.": "已成功创建 %s 小时的时间条目。",
+		"Time entry has been deleted.": "时间条目已删除。",
+		"Time entry has been updated successfully.": "时间条目已成功更新。",
 		"Time entry information and associated details": "工时记录信息及关联详情",
 		"Time entry logged: {hours} hours on {project}": "已记录工时：{project} 上 {hours} 小时",
 		"Time entry must be at least %s minutes": "工时记录须至少 %s 分钟",
@@ -1827,6 +1835,7 @@
 		"User menu": "用户菜单",
 		"User not authenticated": "用户未认证",
 		"User not found": "未找到用户",
+		"User permissions have been updated.": "用户权限已更新。",
 		"User search failed. Check your connection and try again.": "用户搜索失败。请检查连接后重试。",
 		"Users allowed to use the app (when restriction is on)": "允许使用应用的用户（限制开启时）",
 		"Uses Nextcloud Login Flow — your main password is never stored in the app.": "使用 Nextcloud 登录流程——你的主密码不会存储在应用中。",
@@ -1870,7 +1879,6 @@
 		"Warning threshold": "警告阈值",
 		"Warning threshold must be between 0 and 100": "警告阈值须在 0 至 100 之间",
 		"Warning threshold must be less than critical threshold": "警告阈值须低于告急阈值",
-		"Warning: %d row(s) will be permanently deleted, then the file data is loaded.": "警告：%d 行将被永久删除，然后加载文件数据。",
 		"Watch budgets": "关注预算",
 		"We could not save your settings. Please try again.": "无法保存您的设置。请重试。",
 		"What you can do": "你可以做什么",
@@ -1937,8 +1945,40 @@
 		"_%n team member_::_%n team members_": [
 			"%n 名团队成员"
 		],
+		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
+			"（已清空 1 个实例绑定值）",
+			"（已清空 %n 个实例绑定值）"
+		],
+		"_(1 filtered)_::_(%n filtered)_": [
+			"（已过滤 1 项）",
+			"（已过滤 %n 项）"
+		],
+		"_(1 secret redacted)_::_(%n secrets redacted)_": [
+			"（已遮蔽 1 个机密）",
+			"（已遮蔽 %n 个机密）"
+		],
+		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
+			"（1 个引用未解析）",
+			"（%n 个引用未解析）"
+		],
+		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
+			"1 个引用未能解析——请查看下方分组。",
+			"%n 个引用未能解析——请查看下方分组。"
+		],
+		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
+			"1 行需要在此实例上填写值",
+			"%n 行需要在此实例上填写值"
+		],
+		"_1 row skipped._::_%n rows skipped._": [
+			"已跳过 1 行。",
+			"已跳过 %n 行。"
+		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"已上传 %n 个文件。"
+		],
+		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
+			"警告：1 行将被永久删除，然后加载文件数据。",
+			"警告：%n 行将被永久删除，然后加载文件数据。"
 		],
 		"a project": "一个项目",
 		"active": "生效中",
@@ -1971,6 +2011,7 @@
 		"set it on this instance": "在此实例上设置",
 		"team members across all projects": "所有项目的团队成员",
 		"team members will be removed": "团队成员将被移除",
+		"the ProjectCheck mobile companion app": "ProjectCheck 移动端配套应用",
 		"the companion apps": "配套应用",
 		"the mobile companion app": "移动端配套应用",
 		"this customer": "此客户",
