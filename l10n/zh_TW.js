@@ -2023,6 +2023,14 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 可計費工作",
 	"💻 Product Development" : "💻 產品開發",
 	"📊 Why This Matters" : "📊 重要性說明",
-	"🔬 Research & Development" : "🔬 研發"
+	"🔬 Research & Development" : "🔬 研發",
+	"1 setting" : "1 項設定",
+	"%n settings" : "%n 項設定",
+	"1 row" : "1 列",
+	"%n rows" : "%n 列",
+	"_1 row_::_%n rows_" : ["%n 列"],
+	"_1 setting_::_%n settings_" : ["%n 項設定"],
+	"This will update %1$s and %2$s — nothing is deleted." : "這將更新 %1$s 與 %2$s——不會刪除任何內容。",
+	"Import applied. %1$s and %2$s written." : "匯入已套用。已寫入 %1$s 與 %2$s。"
 	}
 );

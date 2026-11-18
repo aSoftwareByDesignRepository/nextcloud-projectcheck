@@ -2023,6 +2023,14 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 Factureerbaar werk",
 	"💻 Product Development" : "💻 Productontwikkeling",
 	"📊 Why This Matters" : "📊 Waarom dit belangrijk is",
-	"🔬 Research & Development" : "🔬 Onderzoek en ontwikkeling"
+	"🔬 Research & Development" : "🔬 Onderzoek en ontwikkeling",
+	"1 setting" : "1 instelling",
+	"%n settings" : "%n instellingen",
+	"1 row" : "1 rij",
+	"%n rows" : "%n rijen",
+	"_1 row_::_%n rows_" : ["1 rij","%n rijen"],
+	"_1 setting_::_%n settings_" : ["1 instelling","%n instellingen"],
+	"This will update %1$s and %2$s — nothing is deleted." : "Dit werkt %1$s en %2$s bij — er wordt niets verwijderd.",
+	"Import applied. %1$s and %2$s written." : "Import toegepast. %1$s en %2$s geschreven."
 	}
 );

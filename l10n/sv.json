@@ -2055,6 +2055,20 @@
 		"💰 Billable Work": "💰 Fakturerbart arbete",
 		"💻 Product Development": "💻 Produktutveckling",
 		"📊 Why This Matters": "📊 Varför det är viktigt",
-		"🔬 Research & Development": "🔬 Forskning och utveckling"
+		"🔬 Research & Development": "🔬 Forskning och utveckling",
+		"1 setting": "1 inställning",
+		"%n settings": "%n inställningar",
+		"1 row": "1 rad",
+		"%n rows": "%n rader",
+		"_1 row_::_%n rows_": [
+			"1 rad",
+			"%n rader"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 inställning",
+			"%n inställningar"
+		],
+		"This will update %1$s and %2$s — nothing is deleted.": "Detta uppdaterar %1$s och %2$s — inget raderas.",
+		"Import applied. %1$s and %2$s written.": "Importen har tillämpats. %1$s och %2$s skrivna."
 	}
 }

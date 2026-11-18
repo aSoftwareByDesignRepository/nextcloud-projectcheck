@@ -2023,7 +2023,15 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 Faturalandırılabilir İş",
 	"💻 Product Development" : "💻 Ürün Geliştirme",
 	"📊 Why This Matters" : "📊 Neden Önemli",
-	"🔬 Research & Development" : "🔬 Araştırma ve Geliştirme"
+	"🔬 Research & Development" : "🔬 Araştırma ve Geliştirme",
+	"1 setting" : "1 ayar",
+	"%n settings" : "%n ayar",
+	"1 row" : "1 satır",
+	"%n rows" : "%n satır",
+	"_1 row_::_%n rows_" : ["%n satır"],
+	"_1 setting_::_%n settings_" : ["%n ayar"],
+	"This will update %1$s and %2$s — nothing is deleted." : "Bu işlem %1$s ve %2$s güncelleyecek — hiçbir şey silinmeyecek.",
+	"Import applied. %1$s and %2$s written." : "İçe aktarma uygulandı. %1$s ve %2$s yazıldı."
 	},
 	"nplurals=2; plural=(n != 1);"
 );

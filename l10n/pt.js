@@ -2023,7 +2023,15 @@ OC.L10N.register(
 	"💰 Billable Work" : "💰 Trabalho faturável",
 	"💻 Product Development" : "💻 Desenvolvimento de produto",
 	"📊 Why This Matters" : "📊 Porque é que isto importa",
-	"🔬 Research & Development" : "🔬 Investigação e desenvolvimento"
+	"🔬 Research & Development" : "🔬 Investigação e desenvolvimento",
+	"1 setting" : "1 definição",
+	"%n settings" : "%n definições",
+	"1 row" : "1 linha",
+	"%n rows" : "%n linhas",
+	"_1 row_::_%n rows_" : ["1 linha","%n linhas"],
+	"_1 setting_::_%n settings_" : ["1 definição","%n definições"],
+	"This will update %1$s and %2$s — nothing is deleted." : "Isto irá atualizar %1$s e %2$s — nada será eliminado.",
+	"Import applied. %1$s and %2$s written." : "Importação aplicada. %1$s e %2$s escritas."
 	},
 	"nplurals=2; plural=(n > 1);"
 );
