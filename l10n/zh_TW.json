@@ -1615,7 +1615,7 @@
 		"The server could not complete the request. You can try again. If the problem remains, your administrator can check the server log.": "伺服器無法完成請求。您可以重試。如問題持續，管理員可檢視伺服器日誌。",
 		"The server could not run the search. Try again in a moment, or use manual entry below.": "伺服器無法執行搜尋。請稍後重試，或使用下方手動輸入。",
 		"The server could not run the search. Try again in a moment.": "伺服器無法執行搜尋。請稍候重試。",
-		"The server rejected the data. Check the form values and try again, or use your organization’s help channel.": "伺服器拒絕了資料。請檢查表單值後重試，或使用貴組織的幫助渠道。",
+		"The server rejected the data. Check the form values and try again, or use your organization’s help channel.": "伺服器拒絕了資料。請檢查表單值後重試，或使用貴組織的幫助管道。",
 		"The settlement action failed. Please try again.": "結算操作失敗。請重試。",
 		"The start date must be on or before the end date.": "開始日期須不晚於結束日期。",
 		"The team list lives on the project page, not in this edit form. Open it to see who can log time and their hours.": "團佇列表在專案頁，不在此編輯表單。開啟專案頁可檢視誰能記錄工時及其工時數。",

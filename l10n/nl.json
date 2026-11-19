@@ -22,8 +22,10 @@
 		"%n matching entries": "%n overeenkomende registraties",
 		"%n matching entry": "%n overeenkomende registratie",
 		"%n overdue": "%n te laat",
+		"%n rows": "%n rijen",
 		"%n selected entries will be skipped because this change is not allowed from their current status.": "%n geselecteerde regels worden overgeslagen omdat deze wijziging vanuit hun huidige status niet is toegestaan.",
 		"%n selected entry will be skipped because this change is not allowed from its current status.": "%n geselecteerde regel wordt overgeslagen omdat deze wijziging vanuit de huidige status niet is toegestaan.",
+		"%n settings": "%n instellingen",
 		"%s active": "%s actief",
 		"%s is now a project manager and can mark hours as invoiced or paid for this project.": "%s is nu projectmanager en kan uren voor dit project als gefactureerd of betaald markeren.",
 		"%s is now a regular member and can no longer settle hours for this project.": "%s is nu gewoon lid en kan uren voor dit project niet meer afrekenen.",
@@ -45,6 +47,8 @@
 		"(today)": "(vandaag)",
 		"(unknown — skipped)": "(onbekend — overgeslagen)",
 		"/hour": "/uur",
+		"1 row": "1 rij",
+		"1 setting": "1 instelling",
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Er is een licentiesleutel opgeslagen, maar deze server kan de handtekening niet verifiëren met de openbare sleutel van de leverancier. De companion-apps weigeren de licentie totdat de sleutel met de overeenkomstige ondertekeningssleutel van de leverancier is ondertekend. Pas een correct ondertekende licentie opnieuw toe of neem contact op met support als dit na een app-update blijft voorkomen.",
 		"A name and a customer are enough to save.": "Een naam en een klant volstaan om op te slaan.",
 		"A network error occurred": "Er is een netwerkfout opgetreden",
@@ -132,7 +136,7 @@
 		"All Types": "Alle typen",
 		"All Users": "Alle gebruikers",
 		"All customers": "Alle klanten",
-		"All device slots are in use. Revoke a device or upgrade your license.": "Alle apparaatplaatsen zijn in gebruik. Trek een apparaat in of upgrade je licentie.",
+		"All device slots are in use. Revoke a device or upgrade your license.": "Alle apparaatplaatsen zijn in gebruik. Trek een apparaat in of upgrade uw licentie.",
 		"All employees": "Alle medewerkers",
 		"All invoiced hours on this project will be marked as paid.": "Alle gefactureerde uren op dit project worden als betaald gemarkeerd.",
 		"All licensed seats are assigned. Remove a seat or upgrade the license.": "Alle gelicentieerde plaatsen zijn toegewezen. Verwijder een plaats of upgrade de licentie.",
@@ -805,6 +809,7 @@
 		"How to set up a new project": "Hoe u een nieuw project opzet",
 		"I am experiencing a permission issue in ProjectCheck. Please help.": "Ik ondervind een toestemmingsprobleem in ProjectCheck. Help alsjeblieft.",
 		"Impact Analysis": "Impactanalyse",
+		"Import applied. %1$s and %2$s written.": "Import toegepast. %1$s en %2$s geschreven.",
 		"Import applied. %d settings and %d rows written.": "Import toegepast. %d instellingen en %d rijen geschreven.",
 		"Import configuration": "Configuratie importeren",
 		"Import failed — nothing was changed.": "Import mislukt — er is niets gewijzigd.",
@@ -1164,8 +1169,8 @@
 		"Past time entries keep their previous rate. Effective-from cannot be in the future.": "Inzendingen uit het verleden behouden hun vorige tarief. Effectief vanaf kan niet in de toekomst liggen.",
 		"Paste a PC2 license key.": "Plak een PC2-licentiesleutel.",
 		"Paste the full key from your license email. Line breaks are OK.": "Plak de volledige sleutel uit uw licentie-e-mail. Regeleinden mogen.",
-		"Paste the license key you received after purchase. The web app stays free — this key unlocks %1$s for your organisation.": "Plak de licentiesleutel die je na aankoop hebt ontvangen. De webapp blijft gratis — deze sleutel ontgrendelt %1$s voor je organisatie.",
-		"Paste your %1$s license key below to unlock %2$s. The web app stays free.": "Plak hieronder je %1$s-licentiesleutel om %2$s te ontgrendelen. De webapp blijft gratis.",
+		"Paste the license key you received after purchase. The web app stays free — this key unlocks %1$s for your organisation.": "Plak de licentiesleutel die u na aankoop hebt ontvangen. De webapp blijft gratis — deze sleutel ontgrendelt %1$s voor uw organisatie.",
+		"Paste your %1$s license key below to unlock %2$s. The web app stays free.": "Plak hieronder uw %1$s-licentiesleutel om %2$s te ontgrendelen. De webapp blijft gratis.",
 		"Payments always go through \"Invoiced\" first — there is no shortcut from Open to Paid.": "Betalingen lopen altijd eerst via „Gefactureerd“ — er is geen snelkoppeling van Open naar Betaald.",
 		"Pending": "In behandeling",
 		"People": "Personen",
@@ -1680,6 +1685,7 @@
 		"This time entry was changed by someone else. Refresh and try again.": "Deze tijdregistratie is door iemand anders gewijzigd. Vernieuw en probeer opnieuw.",
 		"This time entry would exceed the project budget": "Deze tijdsbesteding zou het projectbudget overschrijden",
 		"This token is shown only once. Paste it into the companion app on the device.": "Dit token wordt slechts één keer getoond. Plak het in de companion-app op het apparaat.",
+		"This will update %1$s and %2$s — nothing is deleted.": "Dit werkt %1$s en %2$s bij — er wordt niets verwijderd.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Dit werkt %d instellingen en %d rijen bij — er wordt niets verwijderd.",
 		"Time Entries": "Tijdregistraties",
 		"Time Entry Created": "Tijdregistratie aangemaakt",
@@ -1930,7 +1936,7 @@
 		"Your default hourly rate for time entries": "Uw standaard uurtarief voor tijdregistraties",
 		"Your latest project activities": "Uw nieuwste projectactiviteiten",
 		"Your latest time tracking activities": "Uw nieuwste tijdregistratieactiviteiten",
-		"Your license expires within 30 days. Contact your vendor to renew.": "Je licentie verloopt binnen 30 dagen. Neem contact op met je leverancier om te verlengen.",
+		"Your license expires within 30 days. Contact your vendor to renew.": "Uw licentie verloopt binnen 30 dagen. Neem contact op met uw leverancier om te verlengen.",
 		"Your license is about to expire": "Uw licentie verloopt binnenkort",
 		"Your mobile seat is above the licensed limit.": "Uw mobiele plaats ligt boven de gelicentieerde limiet.",
 		"Your preferences were saved.": "Uw voorkeuren zijn opgeslagen.",
@@ -1974,6 +1980,14 @@
 		"_1 row skipped._::_%n rows skipped._": [
 			"1 rij overgeslagen.",
 			"%n rijen overgeslagen."
+		],
+		"_1 row_::_%n rows_": [
+			"1 rij",
+			"%n rijen"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 instelling",
+			"%n instellingen"
 		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"%n bestand geüpload.",
@@ -2055,20 +2069,6 @@
 		"💰 Billable Work": "💰 Factureerbaar werk",
 		"💻 Product Development": "💻 Productontwikkeling",
 		"📊 Why This Matters": "📊 Waarom dit belangrijk is",
-		"🔬 Research & Development": "🔬 Onderzoek en ontwikkeling",
-		"1 setting": "1 instelling",
-		"%n settings": "%n instellingen",
-		"1 row": "1 rij",
-		"%n rows": "%n rijen",
-		"_1 row_::_%n rows_": [
-			"1 rij",
-			"%n rijen"
-		],
-		"_1 setting_::_%n settings_": [
-			"1 instelling",
-			"%n instellingen"
-		],
-		"This will update %1$s and %2$s — nothing is deleted.": "Dit werkt %1$s en %2$s bij — er wordt niets verwijderd.",
-		"Import applied. %1$s and %2$s written.": "Import toegepast. %1$s en %2$s geschreven."
+		"🔬 Research & Development": "🔬 Onderzoek en ontwikkeling"
 	}
 }

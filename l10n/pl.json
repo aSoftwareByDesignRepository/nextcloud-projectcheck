@@ -22,8 +22,10 @@
 		"%n matching entries": "%n pasujących wpisów",
 		"%n matching entry": "%n pasujący wpis",
 		"%n overdue": "%n przeterminowanych",
+		"%n rows": "%n wiersze",
 		"%n selected entries will be skipped because this change is not allowed from their current status.": "%n zaznaczonych wpisów zostanie pominiętych, ponieważ ta zmiana nie jest dozwolona z ich bieżącego statusu.",
 		"%n selected entry will be skipped because this change is not allowed from its current status.": "%n zaznaczony wpis zostanie pominięty, ponieważ ta zmiana nie jest dozwolona z jego bieżącego statusu.",
+		"%n settings": "%n ustawienia",
 		"%s active": "%s aktywnych",
 		"%s is now a project manager and can mark hours as invoiced or paid for this project.": "%s jest teraz kierownikiem projektu i może oznaczać godziny tego projektu jako zafakturowane lub zapłacone.",
 		"%s is now a regular member and can no longer settle hours for this project.": "%s jest teraz zwykłym członkiem i nie może już rozliczać godzin tego projektu.",
@@ -45,6 +47,8 @@
 		"(today)": "(dziś)",
 		"(unknown — skipped)": "(nieznane — pominięto)",
 		"/hour": "/godz.",
+		"1 row": "1 wiersz",
+		"1 setting": "1 ustawienie",
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Klucz licencyjny jest zapisany, ale ten serwer nie może zweryfikować jego podpisu kluczem publicznym dostawcy. Aplikacje towarzyszące odrzucą licencję, dopóki klucz nie zostanie podpisany pasującym kluczem podpisującym dostawcy. Zastosuj ponownie poprawnie podpisaną licencję albo skontaktuj się ze wsparciem, jeśli problem nadal występuje po aktualizacji aplikacji.",
 		"A name and a customer are enough to save.": "Nazwa i klient wystarczą, aby zapisać.",
 		"A network error occurred": "Wystąpił błąd sieci.",
@@ -805,6 +809,7 @@
 		"How to set up a new project": "Jak skonfigurować nowy projekt",
 		"I am experiencing a permission issue in ProjectCheck. Please help.": "Mam problem z uprawnieniami w ProjectCheck. Proszę o pomoc.",
 		"Impact Analysis": "Analiza wpływu",
+		"Import applied. %1$s and %2$s written.": "Import zastosowany. Zapisano %1$s i %2$s.",
 		"Import applied. %d settings and %d rows written.": "Import zastosowany. Zapisano %d ustawień i %d wierszy.",
 		"Import configuration": "Importuj konfigurację",
 		"Import failed — nothing was changed.": "Import nie powiódł się — nic nie zmieniono.",
@@ -1164,8 +1169,8 @@
 		"Past time entries keep their previous rate. Effective-from cannot be in the future.": "Wcześniejsze wpisy czasu zachowują poprzednią stawkę. Data obowiązywania od nie może być w przyszłości.",
 		"Paste a PC2 license key.": "Wklej klucz licencyjny PC2.",
 		"Paste the full key from your license email. Line breaks are OK.": "Wklej pełny klucz z e-maila licencyjnego. Łamanie wierszy jest dozwolone.",
-		"Paste the license key you received after purchase. The web app stays free — this key unlocks %1$s for your organisation.": "Wklej klucz licencyjny otrzymany po zakupie. Aplikacja internetowa pozostaje bezpłatna — ten klucz odblokowuje %1$s dla twojej organizacji.",
-		"Paste your %1$s license key below to unlock %2$s. The web app stays free.": "Wklej poniżej swój klucz licencyjny %1$s, aby odblokować %2$s. Aplikacja internetowa pozostaje bezpłatna.",
+		"Paste the license key you received after purchase. The web app stays free — this key unlocks %1$s for your organisation.": "Wklej klucz licencyjny otrzymany po zakupie. Aplikacja internetowa pozostaje bezpłatna — ten klucz odblokowuje %1$s dla organizacji.",
+		"Paste your %1$s license key below to unlock %2$s. The web app stays free.": "Wklej poniżej klucz licencyjny %1$s, aby odblokować %2$s. Aplikacja internetowa pozostaje bezpłatna.",
 		"Payments always go through \"Invoiced\" first — there is no shortcut from Open to Paid.": "Płatności zawsze przechodzą najpierw przez „Zafakturowane” — nie ma skrótu z Otwarte do Zapłacone.",
 		"Pending": "Oczekujące",
 		"People": "Osoby",
@@ -1680,6 +1685,7 @@
 		"This time entry was changed by someone else. Refresh and try again.": "Ten wpis czasu został zmieniony przez kogoś innego. Odśwież i spróbuj ponownie.",
 		"This time entry would exceed the project budget": "Ten wpis czasu przekroczyłby budżet projektu",
 		"This token is shown only once. Paste it into the companion app on the device.": "Ten token jest wyświetlany tylko raz. Wklej go w aplikacji towarzyszącej na urządzeniu.",
+		"This will update %1$s and %2$s — nothing is deleted.": "Spowoduje to aktualizację %1$s i %2$s — nic nie zostanie usunięte.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Spowoduje to aktualizację %d ustawień i %d wierszy — nic nie zostanie usunięte.",
 		"Time Entries": "Wpisy czasu",
 		"Time Entry Created": "Wpis czasu utworzony",
@@ -1976,6 +1982,16 @@
 			"Pominięto 1 wiersz.",
 			"Pominięto %n wierszy."
 		],
+		"_1 row_::_%n rows_": [
+			"1 wiersz",
+			"%n wiersze",
+			"%n wierszy"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 ustawienie",
+			"%n ustawienia",
+			"%n ustawień"
+		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"Przesłano %n plik.",
 			"Przesłano %n plików."
@@ -2056,22 +2072,6 @@
 		"💰 Billable Work": "💰 Praca rozliczalna",
 		"💻 Product Development": "💻 Rozwój produktu",
 		"📊 Why This Matters": "📊 Dlaczego to ma znaczenie",
-		"🔬 Research & Development": "🔬 Badania i rozwój",
-		"1 setting": "1 ustawienie",
-		"%n settings": "%n ustawienia",
-		"1 row": "1 wiersz",
-		"%n rows": "%n wiersze",
-		"_1 row_::_%n rows_": [
-			"1 wiersz",
-			"%n wiersze",
-			"%n wierszy"
-		],
-		"_1 setting_::_%n settings_": [
-			"1 ustawienie",
-			"%n ustawienia",
-			"%n ustawień"
-		],
-		"This will update %1$s and %2$s — nothing is deleted.": "Spowoduje to aktualizację %1$s i %2$s — nic nie zostanie usunięte.",
-		"Import applied. %1$s and %2$s written.": "Import zastosowany. Zapisano %1$s i %2$s."
+		"🔬 Research & Development": "🔬 Badania i rozwój"
 	}
 }

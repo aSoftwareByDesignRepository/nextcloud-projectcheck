@@ -23,8 +23,10 @@
 		"%n matching entries": "%n entradas correspondentes",
 		"%n matching entry": "%n entrada correspondente",
 		"%n overdue": "%n em atraso",
+		"%n rows": "%n linhas",
 		"%n selected entries will be skipped because this change is not allowed from their current status.": "%n entradas selecionadas serão ignoradas porque esta alteração não é permitida a partir do seu estado atual.",
 		"%n selected entry will be skipped because this change is not allowed from its current status.": "%n entrada selecionada será ignorada porque esta alteração não é permitida a partir do seu estado atual.",
+		"%n settings": "%n definições",
 		"%s active": "%s ativo",
 		"%s is now a project manager and can mark hours as invoiced or paid for this project.": "%s é agora gestor de projeto e pode marcar horas como faturadas ou pagas neste projeto.",
 		"%s is now a regular member and can no longer settle hours for this project.": "%s é agora um membro normal e já não pode liquidar horas neste projeto.",
@@ -46,7 +48,9 @@
 		"(today)": "(hoje)",
 		"(unknown — skipped)": "(desconhecido — ignorado)",
 		"/hour": "/hora",
-		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Está guardada uma chave de licença, mas este servidor não consegue verificar a assinatura com a chave pública do fornecedor. As aplicações complementares rejeitarão a licença até a chave ser assinada com a chave de assinatura do fornecedor correspondente. Volta a aplicar uma licença corretamente assinada ou contacta o suporte se persistir após uma atualização da aplicação.",
+		"1 row": "1 linha",
+		"1 setting": "1 definição",
+		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Está guardada uma chave de licença, mas este servidor não consegue verificar a assinatura com a chave pública do fornecedor. As aplicações complementares rejeitarão a licença até a chave ser assinada com a chave de assinatura do fornecedor correspondente. Volte a aplicar uma licença corretamente assinada ou contacte o suporte se persistir após uma atualização da aplicação.",
 		"A name and a customer are enough to save.": "Um nome e um cliente chegam para guardar.",
 		"A network error occurred": "Ocorreu um erro de rede",
 		"A pre-flight check failed — see the report for details.": "Uma verificação prévia falhou — consulte o relatório para detalhes.",
@@ -133,7 +137,7 @@
 		"All Types": "Todos os tipos",
 		"All Users": "Todos os utilizadores",
 		"All customers": "Todos os clientes",
-		"All device slots are in use. Revoke a device or upgrade your license.": "Todos os lugares para dispositivos estão em uso. Revoga um dispositivo ou aumenta a tua licença.",
+		"All device slots are in use. Revoke a device or upgrade your license.": "Todos os lugares para dispositivos estão em uso. Revogue um dispositivo ou aumente a sua licença.",
 		"All employees": "Todos os colaboradores",
 		"All invoiced hours on this project will be marked as paid.": "Todas as horas faturadas deste projeto serão marcadas como pagas.",
 		"All licensed seats are assigned. Remove a seat or upgrade the license.": "Todos os postos licenciados estão atribuídos. Remova um posto ou aumente a licença.",
@@ -303,7 +307,7 @@
 		"Choose how to handle associated projects": "Escolha como tratar os projetos associados",
 		"Choose project files to upload": "Escolher ficheiros do projeto a carregar",
 		"Choose the next state. Archived projects are hidden from your default list and do not accept new time until reactivated.": "Escolha o estado seguinte. Os projetos arquivados ficam ocultos da sua lista predefinida e não aceitam novas horas até serem reativados.",
-		"Choose which people may use %1$s. Only assigned users can sign in from their companion device.": "Escolhe quem pode usar %1$s. Apenas os utilizadores atribuídos podem iniciar sessão a partir do dispositivo complementar.",
+		"Choose which people may use %1$s. Only assigned users can sign in from their companion device.": "Escolha quem pode usar %1$s. Apenas os utilizadores atribuídos podem iniciar sessão a partir do dispositivo complementar.",
 		"Classification": "Classificação",
 		"Classification & priority": "Classificação e prioridade",
 		"Clear": "Limpar",
@@ -806,6 +810,7 @@
 		"How to set up a new project": "Como configurar um novo projeto",
 		"I am experiencing a permission issue in ProjectCheck. Please help.": "Estou a ter um problema de permissões no ProjectCheck. Peço ajuda.",
 		"Impact Analysis": "Análise de impacto",
+		"Import applied. %1$s and %2$s written.": "Importação aplicada. %1$s e %2$s escritas.",
 		"Import applied. %d settings and %d rows written.": "Importação aplicada. %d definições e %d linhas escritas.",
 		"Import configuration": "Importar configuração",
 		"Import failed — nothing was changed.": "A importação falhou — nada foi alterado.",
@@ -1156,7 +1161,7 @@
 		"Paid on %s": "Pago em %s",
 		"Paid so far": "Pago até agora",
 		"Paid so far: %s%%": "Pago até agora: %s%%",
-		"Pair devices from the linked administration area. Each paired device uses one license slot.": "Emparelha dispositivos a partir da área de administração ligada. Cada dispositivo emparelhado usa um lugar de licença.",
+		"Pair devices from the linked administration area. Each paired device uses one license slot.": "Emparelhe dispositivos a partir da área de administração ligada. Cada dispositivo emparelhado usa um lugar de licença.",
 		"Partially settled": "Parcialmente liquidado",
 		"Passphrase generated and copied.": "Frase-passe gerada e copiada.",
 		"Passphrase generated — copy it now.": "Frase-passe gerada — copie-a agora.",
@@ -1207,7 +1212,7 @@
 		"Please enter date in format dd.mm.yyyy": "Introduza a data no formato dd.mm.aaaa",
 		"Please enter the date in the format dd.mm.yyyy.": "Introduza a data no formato dd.mm.aaaa.",
 		"Please enter valid hours": "Introduza horas válidas",
-		"Please fill in all required fields.": "Preenche todos os campos obrigatórios.",
+		"Please fill in all required fields.": "Preencha todos os campos obrigatórios.",
 		"Please fix the following errors:": "Corrija os seguintes erros:",
 		"Please paste a license key.": "Cole uma chave de licença.",
 		"Please review the following warnings:": "Reveja os seguintes avisos:",
@@ -1356,7 +1361,7 @@
 		"Recent Time Entries": "Registos de horas recentes",
 		"Recent time entries": "Registos de horas recentes",
 		"Refresh Page": "Atualizar página",
-		"Register a device above to give it access.": "Regista um dispositivo acima para lhe dar acesso.",
+		"Register a device above to give it access.": "Registe um dispositivo acima para lhe dar acesso.",
 		"Register device": "Registar dispositivo",
 		"Registered": "Registado",
 		"Remaining": "Restante",
@@ -1681,6 +1686,7 @@
 		"This time entry was changed by someone else. Refresh and try again.": "Este registo de horas foi alterado por outra pessoa. Atualize e tente novamente.",
 		"This time entry would exceed the project budget": "Este registo de horas excederia o orçamento do projeto",
 		"This token is shown only once. Paste it into the companion app on the device.": "Este token só é mostrado uma vez. Cole-o na aplicação complementar no dispositivo.",
+		"This will update %1$s and %2$s — nothing is deleted.": "Isto irá atualizar %1$s e %2$s — nada será eliminado.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Isto irá atualizar %d definições e %d linhas — nada será eliminado.",
 		"Time Entries": "Registos de horas",
 		"Time Entry Created": "Registo de horas criado",
@@ -1976,6 +1982,14 @@
 			"1 linha ignorada.",
 			"%n linhas ignoradas."
 		],
+		"_1 row_::_%n rows_": [
+			"1 linha",
+			"%n linhas"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 definição",
+			"%n definições"
+		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"Carregado %n ficheiro.",
 			"Carregados %n ficheiros."
@@ -2056,20 +2070,6 @@
 		"💰 Billable Work": "💰 Trabalho faturável",
 		"💻 Product Development": "💻 Desenvolvimento de produto",
 		"📊 Why This Matters": "📊 Porque é que isto importa",
-		"🔬 Research & Development": "🔬 Investigação e desenvolvimento",
-		"1 setting": "1 definição",
-		"%n settings": "%n definições",
-		"1 row": "1 linha",
-		"%n rows": "%n linhas",
-		"_1 row_::_%n rows_": [
-			"1 linha",
-			"%n linhas"
-		],
-		"_1 setting_::_%n settings_": [
-			"1 definição",
-			"%n definições"
-		],
-		"This will update %1$s and %2$s — nothing is deleted.": "Isto irá atualizar %1$s e %2$s — nada será eliminado.",
-		"Import applied. %1$s and %2$s written.": "Importação aplicada. %1$s e %2$s escritas."
+		"🔬 Research & Development": "🔬 Investigação e desenvolvimento"
 	}
 }
