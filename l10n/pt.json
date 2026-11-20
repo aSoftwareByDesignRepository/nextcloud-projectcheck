@@ -1707,7 +1707,7 @@
 		"Time entry has been deleted.": "O registo de horas foi eliminado.",
 		"Time entry has been updated successfully.": "O registo de horas foi atualizado com sucesso.",
 		"Time entry information and associated details": "Informação do registo de horas e detalhes associados",
-		"Time entry logged: {hours} hours on {project}": "Registo de horas: {hours} horas em {project}",
+		"Time entry logged: {hours} hours on {project}": "Registo de horas registado: {hours} horas em {project}",
 		"Time entry must be at least %s minutes": "O registo de horas tem de ter pelo menos %s minutos",
 		"Time entry must be between %s and %s hours": "O registo de horas tem de estar entre %s e %s horas",
 		"Time entry not found": "Registo de horas não encontrado",
