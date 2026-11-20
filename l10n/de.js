@@ -7,7 +7,7 @@ OC.L10N.register(
 	"%1$d of %2$d seats assigned" : "%1$d von %2$d Plätzen belegt",
 	"%1$s entries updated, %2$s skipped (changed meanwhile or not allowed)." : "%1$s Einträge aktualisiert, %2$s übersprungen (inzwischen geändert oder nicht erlaubt).",
 	"%1$s h · %2$s" : "%1$s Std. · %2$s",
-	"%1$s of %2$s seats used" : "%1$s von %2$s Plätzen belegt",
+	"%1$s of %2$s seats used" : "%1$s von %2$s Plätzen verwendet",
 	"%1$s · %2$s" : "%1$s · %2$s",
 	"%1$s · Budget %2$s%% used" : "%1$s · Budget %2$s %% genutzt",
 	"%d days" : "%d Tage",
