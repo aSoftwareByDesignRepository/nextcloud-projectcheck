@@ -33,7 +33,7 @@
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice — or official mobile licenses — choose an option below:": "%s 在您的 Nextcloud 上保持免费（AGPL）。欢迎在 GitHub 提交缺陷报告和建议——这是自由开源的关怀。如果您的组织需要可开票的帮助或官方移动端许可证，请选择下方选项：",
 		"%s stays free (AGPL) on your Nextcloud. Bug reports and ideas on GitHub stay welcome — that is free open-source care. If your organisation needs bookable help on an invoice, choose an option below:": "%s 在您的 Nextcloud 上保持免费（AGPL）。欢迎在 GitHub 提交缺陷报告和建议——这是自由开源的关怀。如果您的组织需要可开票的帮助，请选择下方选项：",
 		"%s stays free (AGPL) on your Nextcloud. GitHub issues for bugs and ideas remain welcome. For bookable help on an invoice — setup, hour packs, commissioned work — or the official mobile app:": "%s 在您的 Nextcloud 上保持免费（AGPL）。欢迎在 GitHub 提交缺陷和建议。需要可开票的帮助——部署、工时包或委托开发——或官方移动应用：",
-		"%s stays free (AGPL) on your Nextcloud. GitHub issues for bugs and ideas remain welcome. For bookable help on an invoice — setup, hour packs, or commissioned work:": "%s 在您的 Nextcloud 上保持免费（AGPL）。欢迎在 GitHub 提交缺陷报告和建议——这是自由开源的关怀。如果您的组织需要可开票的帮助，请选择下方选项：",
+		"%s stays free (AGPL) on your Nextcloud. GitHub issues for bugs and ideas remain welcome. For bookable help on an invoice — setup, hour packs, or commissioned work:": "%s 在您的 Nextcloud 上保持免费（AGPL）。欢迎在 GitHub 提交缺陷报告和建议。需要可开票的帮助——部署、工时包或委托开发：",
 		"%s total budget": "总预算 %s",
 		"%s%% invoiced or paid": "%s%% 已开票或已支付",
 		"%s%% paid": "%s%% 已支付",
@@ -226,7 +226,6 @@
 		"Budget & timeline": "预算与时间线",
 		"Budget Alerts": "预算提醒",
 		"Budget Critical": "预算告急",
-		"Budget Critical Threshold (%)": "预算告急阈值（%%）",
 		"Budget Critical Threshold (Percent)": "预算告急阈值（百分比）",
 		"Budget Earned": "预算已获",
 		"Budget Exceeded": "预算超出",
@@ -234,7 +233,6 @@
 		"Budget Usage": "预算使用",
 		"Budget Utilization": "预算利用率",
 		"Budget Warning": "预算警告",
-		"Budget Warning Threshold (%)": "预算警告阈值（%%）",
 		"Budget Warning Threshold (Percent)": "预算警告阈值（百分比）",
 		"Budget alert thresholds": "预算提醒阈值",
 		"Budget consumption: %s": "预算消耗：%s",
@@ -976,7 +974,7 @@
 		"Network error while saving.": "保存时发生网络错误。",
 		"Network error. Please try again.": "网络错误，请重试。",
 		"Network problem — check your connection and try again.": "网络问题——请检查连接后重试。",
-		"Network response was not ok": "网络响应异常",
+		"Network response was not ok": "网络响应无效",
 		"Never": "从不",
 		"Never type a raw group id. Directory search must be available to change this list.": "不要直接输入群组 ID。更改此列表需目录搜索可用。",
 		"Never type a raw user id. Directory search must be available to change this list.": "不要直接输入用户 ID。更改此列表需目录搜索可用。",
@@ -1303,10 +1301,9 @@
 		"Project types for %s": "%s 的项目类型",
 		"Project updated successfully": "项目更新成功",
 		"Project updated: {project}": "项目已更新：{project}",
-		"Project was created, but one or more files could not be uploaded. You can add files from the project page.": "项目已创建，但一个或多个文件上传失败。您可以在项目页添加文件。",
+		"Project was created, but one or more files could not be uploaded. You can add files from the project page.": "项目已创建，但一个或多个文件未能上传。您可以在项目页添加文件。",
 		"Project was deleted successfully!": "项目删除成功！",
 		"Project was modified by someone else. Reload the form and try again.": "项目已被他人修改。请重新加载表单后重试。",
-		"Project {project} has reached {percentage}% of its budget": "项目 {project} 已达预算的 {percentage}%%",
 		"Project: %s": "项目：%s",
 		"ProjectCheck": "ProjectCheck",
 		"ProjectCheck Mobile": "ProjectCheck 移动端",
@@ -1946,38 +1943,30 @@
 			"%n 名团队成员"
 		],
 		"_(1 env-bound value emptied)_::_(%n env-bound values emptied)_": [
-			"（已清空 1 个实例绑定值）",
 			"（已清空 %n 个实例绑定值）"
 		],
 		"_(1 filtered)_::_(%n filtered)_": [
-			"（已过滤 1 项）",
 			"（已过滤 %n 项）"
 		],
 		"_(1 secret redacted)_::_(%n secrets redacted)_": [
-			"（已遮蔽 1 个机密）",
 			"（已遮蔽 %n 个机密）"
 		],
 		"_(1 unresolved ref)_::_(%n unresolved refs)_": [
-			"（1 个引用未解析）",
 			"（%n 个引用未解析）"
 		],
 		"_1 reference unresolved — see the groups below._::_%n references unresolved — see the groups below._": [
-			"1 个引用未能解析——请查看下方分组。",
 			"%n 个引用未能解析——请查看下方分组。"
 		],
 		"_1 row needs a value on this instance_::_%n rows need a value on this instance_": [
-			"1 行需要在此实例上填写值",
 			"%n 行需要在此实例上填写值"
 		],
 		"_1 row skipped._::_%n rows skipped._": [
-			"已跳过 1 行。",
 			"已跳过 %n 行。"
 		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"已上传 %n 个文件。"
 		],
 		"_Warning: 1 row will be permanently deleted, then the file data is loaded._::_Warning: %n rows will be permanently deleted, then the file data is loaded._": [
-			"警告：1 行将被永久删除，然后加载文件数据。",
 			"警告：%n 行将被永久删除，然后加载文件数据。"
 		],
 		"a project": "一个项目",
@@ -2064,6 +2053,9 @@
 			"%n 项设置"
 		],
 		"This will update %1$s and %2$s — nothing is deleted.": "这将更新 %1$s 和 %2$s——不会删除任何内容。",
-		"Import applied. %1$s and %2$s written.": "导入已应用。已写入 %1$s 和 %2$s。"
+		"Import applied. %1$s and %2$s written.": "导入已应用。已写入 %1$s 和 %2$s。",
+		"Budget Warning Threshold (%%)": "预算警告阈值（%%）",
+		"Budget Critical Threshold (%%)": "预算告急阈值（%%）",
+		"Project {project} has reached {percentage}%% of its budget": "项目 {project} 已达预算的 {percentage}%%"
 	}
 }

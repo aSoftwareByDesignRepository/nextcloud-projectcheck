@@ -112,7 +112,7 @@ class Provider implements IProvider
 				$subject = $this->l10n->t('{actor} changed the project role of {member} to {status}');
 				break;
 			case 'budget_warning':
-				$subject = $this->l10n->t('Project {project} has reached {percentage}% of its budget');
+				$subject = $this->l10n->t('Project {project} has reached {percentage}%% of its budget');
 				break;
 			default:
 				throw new UnknownActivityException();

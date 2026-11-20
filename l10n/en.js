@@ -227,7 +227,6 @@ OC.L10N.register(
 	"Budget & timeline" : "Budget & timeline",
 	"Budget Alerts" : "Budget Alerts",
 	"Budget Critical" : "Budget Critical",
-	"Budget Critical Threshold (%)" : "Budget Critical Threshold (%%)",
 	"Budget Critical Threshold (Percent)" : "Budget Critical Threshold (Percent)",
 	"Budget Earned" : "Budget Earned",
 	"Budget Exceeded" : "Budget Exceeded",
@@ -235,7 +234,6 @@ OC.L10N.register(
 	"Budget Usage" : "Budget Usage",
 	"Budget Utilization" : "Budget Utilization",
 	"Budget Warning" : "Budget Warning",
-	"Budget Warning Threshold (%)" : "Budget Warning Threshold (%%)",
 	"Budget Warning Threshold (Percent)" : "Budget Warning Threshold (Percent)",
 	"Budget alert thresholds" : "Budget alert thresholds",
 	"Budget consumption: %s" : "Budget consumption: %s",
@@ -1307,7 +1305,6 @@ OC.L10N.register(
 	"Project was created, but one or more files could not be uploaded. You can add files from the project page." : "Project was created, but one or more files could not be uploaded. You can add files from the project page.",
 	"Project was deleted successfully!" : "Project was deleted successfully!",
 	"Project was modified by someone else. Reload the form and try again." : "Project was modified by someone else. Reload the form and try again.",
-	"Project {project} has reached {percentage}% of its budget" : "Project {project} has reached {percentage}%% of its budget",
 	"Project: %s" : "Project: %s",
 	"ProjectCheck" : "ProjectCheck",
 	"ProjectCheck Mobile" : "ProjectCheck Mobile",
@@ -2031,6 +2028,9 @@ OC.L10N.register(
 	"_1 row_::_%n rows_" : ["1 row","%n rows"],
 	"_1 setting_::_%n settings_" : ["1 setting","%n settings"],
 	"This will update %1$s and %2$s — nothing is deleted." : "This will update %1$s and %2$s — nothing is deleted.",
-	"Import applied. %1$s and %2$s written." : "Import applied. %1$s and %2$s written."
+	"Import applied. %1$s and %2$s written." : "Import applied. %1$s and %2$s written.",
+	"Budget Warning Threshold (%%)" : "Budget Warning Threshold (%%)",
+	"Budget Critical Threshold (%%)" : "Budget Critical Threshold (%%)",
+	"Project {project} has reached {percentage}%% of its budget" : "Project {project} has reached {percentage}%% of its budget"
 	}
 );

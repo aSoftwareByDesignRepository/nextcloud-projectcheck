@@ -66,12 +66,12 @@
 				<p class="projectcheck-hint" id="pc_def_priority_hint"><?php p($l->t('Default priority used when creating a project.')); ?></p>
 			</div>
 			<div class="projectcheck-form-group">
-				<label for="pc_budget_th"><?php p($l->t('Budget Warning Threshold (%)')); ?></label>
+				<label for="pc_budget_th"><?php p($l->t('Budget Warning Threshold (%%)')); ?></label>
 				<input type="number" id="pc_budget_th" name="budget_warning_threshold" class="projectcheck-input" value="<?php p($budget_warning_threshold); ?>" min="0" max="100" inputmode="numeric" aria-describedby="pc_budget_th_hint">
 				<p class="projectcheck-hint" id="pc_budget_th_hint"><?php p($l->t('Show warnings when this percentage of the budget is used.')); ?></p>
 			</div>
 			<div class="projectcheck-form-group">
-				<label for="pc_budget_crit"><?php p($l->t('Budget Critical Threshold (%)')); ?></label>
+				<label for="pc_budget_crit"><?php p($l->t('Budget Critical Threshold (%%)')); ?></label>
 				<input type="number" id="pc_budget_crit" name="budget_critical_threshold" class="projectcheck-input" value="<?php p($budget_critical_threshold ?? '90'); ?>" min="0" max="100" inputmode="numeric" aria-describedby="pc_budget_crit_hint">
 				<p class="projectcheck-hint" id="pc_budget_crit_hint"><?php p($l->t('Show critical alerts when this percentage of the budget is used.')); ?></p>
 			</div>

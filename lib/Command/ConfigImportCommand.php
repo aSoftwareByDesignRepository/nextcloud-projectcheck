@@ -93,6 +93,9 @@ class ConfigImportCommand extends Command
 		return Command::SUCCESS;
 	}
 
+	/**
+	 * @param array<string,mixed> $report
+	 */
 	private function printReport(SymfonyStyle $io, array $report): void
 	{
 		$io->title('ProjectCheck — transfer dry run (' . ($report['mode'] ?? 'merge') . ')');
@@ -135,10 +138,13 @@ class ConfigImportCommand extends Command
 		}
 	}
 
+	/**
+	 * @param array<string,mixed> $payload
+	 */
 	private function emit(SymfonyStyle $io, OutputInterface $output, bool $json, array $payload): void
 	{
 		if ($json) {
-			$output->writeln(json_encode($payload, JSON_UNESCAPED_UNICODE));
+			$output->writeln(json_encode($payload, JSON_UNESCAPED_UNICODE) ?: '{}');
 			return;
 		}
 		if (($payload['ok'] ?? false) === false) {

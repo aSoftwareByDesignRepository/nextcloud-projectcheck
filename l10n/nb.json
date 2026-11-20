@@ -226,7 +226,6 @@
 		"Budget & timeline": "Budsjett og tidslinje",
 		"Budget Alerts": "Budsjettvarsler",
 		"Budget Critical": "Kritisk budsjett",
-		"Budget Critical Threshold (%)": "Kritisk budsjettterskel (%%)",
 		"Budget Critical Threshold (Percent)": "Kritisk budsjettterskel (prosent)",
 		"Budget Earned": "Opptjent budsjett",
 		"Budget Exceeded": "Budsjett overskredet",
@@ -234,7 +233,6 @@
 		"Budget Usage": "Budsjettbruk",
 		"Budget Utilization": "Budsjettutnyttelse",
 		"Budget Warning": "Budsjettadvarsel",
-		"Budget Warning Threshold (%)": "Budsjettadvarselsterskel (%%)",
 		"Budget Warning Threshold (Percent)": "Budsjettadvarselsterskel (prosent)",
 		"Budget alert thresholds": "Budsjettvarselsterskler",
 		"Budget consumption: %s": "Budsjettforbruk: %s",
@@ -748,7 +746,7 @@
 		"Governance": "Styring",
 		"Group identifiers are shown in Nextcloud user management. Search, pick, or use manual entry to type or paste one ID per line.": "Gruppe-ID-er vises i Nextclouds brukeradministrasjon. Søk, velg eller bruk manuell inntasting for å skrive eller lime inn én ID per linje.",
 		"Groups allowed to use the app (when restriction is on)": "Grupper som kan bruke appen (når begrensning er på)",
-		"Groups that may use the app (when restriction is on)": "Grupper som kan bruke appen (når begrensning er på)",
+		"Groups that may use the app (when restriction is on)": "Grupper som har lov til å bruke appen (når begrensning er på)",
 		"Guest": "Gjest",
 		"HOURLY RATE": "TIMEPRIS",
 		"HOURS": "TIMER",
@@ -961,8 +959,8 @@
 		"Move projects to another customer": "Flytt prosjekter til en annen kunde",
 		"Must be at least %s": "Må være minst %s",
 		"Must be at least %s characters long": "Må være minst %s tegn lang",
-		"Must be no more than %s": "Må være maks %s",
-		"Must be no more than %s characters long": "Må være maks %s tegn lang",
+		"Must be no more than %s": "Må ikke overstige %s",
+		"Must be no more than %s characters long": "Må ikke være lengre enn %s tegn",
 		"My projects": "Mine prosjekter",
 		"N/A": "i/t",
 		"Name": "Navn",
@@ -1306,7 +1304,6 @@
 		"Project was created, but one or more files could not be uploaded. You can add files from the project page.": "Prosjektet ble opprettet, men én eller flere filer kunne ikke lastes opp. Filer kan legges til fra prosjektsiden.",
 		"Project was deleted successfully!": "Prosjekt ble slettet!",
 		"Project was modified by someone else. Reload the form and try again.": "Prosjektet ble endret av noen andre. Last inn skjemaet på nytt og prøv igjen.",
-		"Project {project} has reached {percentage}% of its budget": "Prosjekt {project} har nådd {percentage} %% av budsjettet",
 		"Project: %s": "Prosjekt: %s",
 		"ProjectCheck": "ProjectCheck",
 		"ProjectCheck Mobile": "ProjectCheck Mobile",
@@ -2069,6 +2066,9 @@
 			"%n innstillinger"
 		],
 		"This will update %1$s and %2$s — nothing is deleted.": "Dette oppdaterer %1$s og %2$s — ingenting slettes.",
-		"Import applied. %1$s and %2$s written.": "Importert. %1$s og %2$s skrevet."
+		"Import applied. %1$s and %2$s written.": "Importert. %1$s og %2$s skrevet.",
+		"Budget Warning Threshold (%%)": "Budsjettadvarselsterskel (%%)",
+		"Budget Critical Threshold (%%)": "Kritisk budsjettterskel (%%)",
+		"Project {project} has reached {percentage}%% of its budget": "Prosjekt {project} har nådd {percentage} %% av budsjettet"
 	}
 }
