@@ -1,15 +1,11 @@
+/* Auto-adapted from arbeitszeitcheck/css/common/tokens.css for the Check-family shell. Do not invent divergent layout rules here. */
 /*
- * ProjectCheck design tokens (--pc-*).
- * Spacing/typography/icons on :root; theme colours on body
- * (Nextcloud sets --color-* on body[data-theme-*], not :root).
- * WCAG 2.1 AA: 44px touch targets, visible focus, prefers-reduced-motion.
- * Source of truth: planning/design-system/DESIGN-SYSTEM.md (+ AZC tokens.css).
+ * Projectcheck design tokens (--pc-*).
+ * Colors derive from Nextcloud theme variables; no raw hex in feature CSS.
+ * Spacing/typography on :root; theme colors on body + themed app surfaces
+ * (NC sets --color-* on body [data-theme-*]).
  */
 :root {
-	--pc-breakpoint-sm: 480px;
-	--pc-breakpoint-md: 768px;
-	--pc-breakpoint-lg: 1024px;
-
 	--pc-space-1: 4px;
 	--pc-space-2: 8px;
 	--pc-space-3: 12px;
@@ -19,12 +15,33 @@
 	--pc-space-7: 48px;
 	--pc-space-8: 64px;
 
-	--pc-radius-sm: 6px;
-	--pc-radius-md: 12px;
-	--pc-radius-lg: 16px;
-	--pc-radius-pill: 999px;
+	/* Legacy --space-* aliases used by ported AZC layout/dialog sheets */
+	--space-1: var(--pc-space-1);
+	--space-2: var(--pc-space-2);
+	--space-3: var(--pc-space-3);
+	--space-4: var(--pc-space-4);
+	--space-5: var(--pc-space-5);
+	--space-6: var(--pc-space-6);
+	--space-7: var(--pc-space-7);
+	--space-8: var(--pc-space-8);
+	--space-10: 80px;
+	--space-12: 96px;
 
-	--pc-fs-xs: 0.75rem;
+	/* Radii — design-system scale, bound to NC --border-radius-* when present */
+	--pc-radius-sm: var(--border-radius, 6px);
+	--pc-radius-md: var(--border-radius-element, var(--border-radius-large, 12px));
+	--pc-radius-lg: var(--border-radius-large, 16px);
+	--pc-radius-pill: var(--border-radius-pill, 999px);
+
+	/* Legacy --radius-* used by ported app-layout / dialogs sheets */
+	--radius-base: var(--pc-radius-sm);
+	--radius-lg: var(--pc-radius-md);
+	--radius-xl: var(--pc-radius-lg);
+	--radius-2xl: var(--pc-radius-lg);
+	--radius-full: var(--pc-radius-pill);
+
+	/* Floor 0.875rem (14px) — no type below 14px on mobile (responsive directive) */
+	--pc-fs-xs: 0.875rem;
 	--pc-fs-sm: 0.875rem;
 	--pc-fs-md: 1rem;
 	--pc-fs-lg: 1.125rem;
@@ -33,42 +50,105 @@
 
 	--pc-line-tight: 1.2;
 	--pc-line-base: 1.45;
-	--pc-tab-num: tabular-nums;
 
+	--pc-breakpoint-sm: 480px;
+	--pc-breakpoint-md: 768px;
+	--pc-breakpoint-lg: 1024px;
+
+	/* Inline SVG catalogue (IconCatalog / AzcCatalog) */
 	--pc-icon-sm: 1rem;
 	--pc-icon-md: 1.125rem;
 	--pc-icon-lg: 1.375rem;
 	--pc-icon-well: 2.25rem;
 	--pc-icon-stroke: 2;
 
-	--pc-touch-min: 44px;
-	--pc-nav-width: 280px;
-	--pc-nav-width-compact: 240px;
+	--pc-tab-num: tabular-nums;
+	/* Touch targets (WCAG 2.5.5 / design-system) */
+	--pc-touch: 44px;
+	--pc-touch-lg: 48px;
+
+	/*
+	 * QR / barcode canvas must stay light for scannability in every theme.
+	 * This is the only intentional non-theme surface in Projectcheck feature CSS.
+	 */
+	--pc-qr-canvas: #ffffff;
 }
 
-/* Theme-bound tokens — must follow body [data-theme-*] where NC defines --color-* */
-body {
+/*
+ * Theme-dependent tokens MUST resolve where Nextcloud sets --color-* (body /
+ * [data-theme-*]) and on themed app surfaces. Resolving color-mix only on
+ * :root can fall back to light surfaces while text inherits dark-theme ink.
+ */
+body,
+#content.app-projectcheck,
+#app-content.pc-app,
+.pc-app,
+.pc-dialog,
+.pc-modal,
+.pc-toast-region,
+.pc-toasts,
+.pc-license-modal {
+	/* Fixed overlays (panels, backdrops, mobile nav) sit below NC #header */
 	--pc-overlay-top: var(--header-height, 50px);
 	--pc-overlay-height: calc(100dvh - var(--header-height, 50px));
-	/* Alias for mobile-nav placement (legacy name) */
-	--pc-nc-header-height: var(--pc-overlay-top);
 
 	--pc-bg-soft: color-mix(in srgb, var(--color-main-background) 96%, var(--color-main-text) 4%);
 	--pc-bg-card: var(--color-main-background);
+	--pc-bg-stripe: color-mix(in srgb, var(--color-main-background) 92%, var(--color-main-text) 8%);
+	--pc-bg-hover: var(--color-background-hover);
 	--pc-text: var(--color-main-text);
 	--pc-muted: var(--color-text-maxcontrast);
+	/* Muted ink on tinted surfaces (callouts/badges): main-text keeps it
+	   readable where pure maxcontrast washes out on the tint fill. */
+	--pc-muted-on-tint: color-mix(in srgb, var(--color-text-maxcontrast) 55%, var(--color-main-text));
+	/* Monospace for codes/refs (claim numbers, payment refs): NC ships no mono
+	   var, so pin a platform-native stack. */
+	--pc-mono: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', 'Liberation Mono', Menlo, Consolas, monospace;
 	--pc-border: color-mix(in srgb, var(--color-main-text) 12%, transparent);
-	--pc-border-strong: color-mix(in srgb, var(--color-main-text) 24%, transparent);
-	/* Form controls need NC's strong border — --color-border (#ededed light)
-	   is invisible on main-background. NC core inputs use border-maxcontrast. */
+	/* Boundaries of cards/controls/callouts/dialogs need >=3:1 vs the adjacent
+	   surface (WCAG 1.4.11): NC's --color-border-maxcontrast is theme-tuned for
+	   exactly that (dark + high-contrast themes included). The faint 24% mix
+	   measured ~1.3:1 — below the floor in every theme. */
+	--pc-border-strong: var(--color-border-maxcontrast, color-mix(in srgb, var(--color-main-text) 24%, transparent));
+	/* Interactive controls need >=3:1 (WCAG 1.4.11): maxcontrast is NC's own
+	   input border; --color-border / --pc-border stay surface-only. */
 	--pc-form-border: var(--color-border-maxcontrast, var(--pc-border-strong));
+	/* Filled controls (secondary/ghost/summary buttons): the border sits on a
+	   mid-gray fill, so it must read against BOTH fill and page — maxcontrast
+	   lands ~2.9:1 on the 18%-ink secondary fill. Ink-tuned maxcontrast text
+	   token clears 3:1 against both in every theme. */
+	--pc-control-border: var(--color-text-maxcontrast, var(--color-border-maxcontrast, var(--pc-border-strong)));
 
-	/* Mix INTO main-background (not transparent) so tints stay visible on every theme */
+	/* Primary / focus — track NC accent for custom branding */
+	--pc-primary: var(--color-primary-element);
+	--pc-primary-text: var(--color-primary-element-text);
+	/* Accent used as text/icon ink on surfaces: pure --color-primary-element
+	   drops below WCAG AA 4.5:1 on dark themes (~4.3:1); the dark override
+	   below blends it toward main-text. Fills keep --pc-primary. */
+	--pc-accent-ink: var(--color-primary-element);
+	--pc-focus: 3px solid var(--color-primary-element);
+	--pc-focus-offset: 2px;
+
+	/* Mix with main background — not transparent — so callouts stay visible on all NC themes */
 	--pc-tint-success: color-mix(in srgb, var(--color-success-text, var(--color-success)) 18%, var(--color-main-background));
 	--pc-tint-warning: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 22%, var(--color-main-background));
 	--pc-tint-danger: color-mix(in srgb, var(--color-error-text, var(--color-error)) 18%, var(--color-main-background));
+	/* Alias used by badges/callouts/toasts — mix into main-bg (never transparent) so dark themes stay visible */
+	--pc-tint-critical: var(--pc-tint-danger);
 	--pc-tint-info: color-mix(in srgb, var(--color-primary-element) 16%, var(--color-main-background));
 
+	/*
+	 * Solid danger CTA fill (design-system §3.3 / WCAG 1.4.3).
+	 * NC 30+ maps --color-error to a pale tint — never put on-fill text on that.
+	 */
+	--pc-danger-fill: var(--color-element-error, var(--color-error));
+	--pc-danger-on-fill: var(--color-primary-element-text, var(--color-primary-text));
+	--pc-danger-ink: var(--color-error-text, var(--color-error));
+
+	/*
+	 * Notification icon wells — pale tint + semantic stroke (see .pc-page-header__icon).
+	 * NC *-text tokens are tuned per theme for contrast on main-background.
+	 */
 	--pc-notif-fg-info: var(--color-primary-element);
 	--pc-notif-fg-warning: var(--color-warning-text, var(--color-warning));
 	--pc-notif-fg-success: var(--color-success-text, var(--color-success));
@@ -76,36 +156,90 @@ body {
 
 	--pc-shadow-sm: 0 1px 2px color-mix(in srgb, var(--color-main-text) 8%, transparent);
 	--pc-shadow-md: 0 8px 24px color-mix(in srgb, var(--color-main-text) 12%, transparent);
-	--pc-shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-primary-element) 45%, transparent);
+	--pc-shadow-lg: 0 1rem 3rem color-mix(in srgb, var(--color-main-text) 28%, transparent);
 
-	/* Scrim / modal overlay — theme-aware, never raw rgba(0,0,0,…) */
+	/* Overlay scrims — theme ink, never hardcoded #000 */
 	--pc-scrim: color-mix(in srgb, var(--color-main-text) 45%, transparent);
+	--pc-scrim-strong: color-mix(in srgb, var(--color-main-text) 55%, transparent);
 
 	/*
-	 * Solid danger CTA fill (design-system §3.1 / WCAG 1.4.3).
-	 * NC 30+ maps --color-error to a pale tint — never put on-fill text on that.
-	 * Use --color-element-error; dark themes darken the fill so ink stays ≥ 4.5:1.
+	 * Legacy --projectcheck-* aliases (shell dialogs / app-layout ported from AZC).
+	 * Feature CSS should prefer --pc-*; every alias maps to NC/--pc-* so
+	 * undefined custom properties never blank out surfaces in any theme.
 	 */
-	--pc-danger-fill: var(--color-element-error, var(--color-error-text));
-	--pc-danger-on-fill: var(--color-primary-element-text, var(--color-primary-text));
-	--pc-danger-ink: var(--color-error-text, var(--color-error));
-
-	/* Sheen overlay on saturated fills (progress stripes). Must be
-	   always-light: --color-primary-element-text resolves to BLACK in
-	   dark themes, so mixing toward it darkens instead of lightening
-	   (learned class: theme-flipping tokens in color-mix targets). */
-	--pc-sheen-on-fill: color-mix(in srgb, #fff 15%, transparent);
+	--projectcheck-color-modal-background: var(--pc-bg-card);
+	--projectcheck-color-modal-border: var(--pc-border);
+	--projectcheck-color-modal-footer-background: var(--pc-bg-soft);
+	--projectcheck-color-background: var(--color-main-background);
+	--projectcheck-color-background-elevated: var(--pc-bg-card);
+	--projectcheck-color-background-secondary: var(--pc-bg-soft);
+	--projectcheck-color-background-tertiary: var(--pc-bg-soft);
+	--projectcheck-color-text: var(--pc-text);
+	--projectcheck-color-text-muted: var(--pc-muted);
+	--projectcheck-color-text-maxcontrast: var(--pc-muted);
+	--projectcheck-color-text-secondary: var(--pc-muted);
+	--projectcheck-color-text-tertiary: var(--pc-muted);
+	--projectcheck-color-primary: var(--color-primary-element);
+	--projectcheck-color-primary-element: var(--color-primary-element);
+	--projectcheck-color-primary-light: color-mix(in srgb, var(--color-primary-element) 28%, transparent);
+	--projectcheck-color-border: var(--pc-border);
+	--projectcheck-color-border-focus: var(--color-primary-element);
+	--projectcheck-color-border-warning: var(--color-warning-text, var(--color-warning));
+	--projectcheck-color-error: var(--pc-danger-ink);
+	--projectcheck-color-error-light: color-mix(in srgb, var(--pc-danger-ink) 28%, transparent);
+	--projectcheck-color-success-light: color-mix(in srgb, var(--color-success-text, var(--color-success)) 28%, transparent);
+	--projectcheck-color-warning-light: color-mix(in srgb, var(--color-warning-text, var(--color-warning)) 28%, transparent);
+	--projectcheck-color-form-required: var(--pc-danger-ink);
+	--projectcheck-color-form-label: var(--pc-text);
+	--projectcheck-color-form-background: var(--color-main-background);
+	--projectcheck-color-form-border: var(--color-border-maxcontrast, var(--pc-border-strong));
+	--projectcheck-color-form-border-focus: var(--color-primary-element);
+	--projectcheck-color-form-border-error: var(--pc-danger-ink);
+	--projectcheck-color-form-border-success: var(--color-success-text, var(--color-success));
+	--projectcheck-color-table-border: var(--pc-border);
+	--projectcheck-color-table-header-background: var(--color-background-dark, var(--pc-bg-stripe));
+	--projectcheck-font-family-sans: var(--font-face, inherit);
+	--projectcheck-font-size-sm: var(--pc-fs-sm);
+	--projectcheck-font-size-base: var(--pc-fs-md);
+	--projectcheck-font-size-lg: var(--pc-fs-lg);
+	--projectcheck-font-size-xl: var(--pc-fs-xl);
+	--projectcheck-font-size-3xl: var(--pc-fs-2xl);
+	--projectcheck-font-weight-medium: 500;
+	--projectcheck-font-weight-semibold: 600;
+	--projectcheck-font-weight-bold: 700;
+	--projectcheck-letter-spacing-tight: -0.02em;
+	--projectcheck-line-height-tight: var(--pc-line-tight);
+	--projectcheck-line-height-normal: var(--pc-line-base);
+	--projectcheck-line-height-relaxed: 1.6;
 }
 
-/* Bright accent fills on dark themes fail AA with white/black ink — darken fill + use main-text. */
+/* Bright accent fills on dark themes fail AA with white ink — darken fill + use main-text. */
 body[data-theme-dark],
-body[data-theme-dark-highcontrast] {
+body[data-theme-dark-highcontrast],
+body[data-theme-dark] #content.app-projectcheck,
+body[data-theme-dark-highcontrast] #content.app-projectcheck {
 	--pc-danger-fill: color-mix(
 		in srgb,
-		var(--color-element-error, var(--color-error-text)) 40%,
+		var(--color-element-error, var(--color-error)) 40%,
 		var(--color-main-background)
 	);
 	--pc-danger-on-fill: var(--color-main-text);
+	--pc-accent-ink: color-mix(in srgb, var(--color-primary-element) 70%, var(--color-main-text));
+}
+
+/* NC high-contrast themes: stronger borders / shadows for 3:1 UI chrome */
+body[data-theme-light-highcontrast],
+body[data-theme-dark-highcontrast],
+body[data-theme-light-highcontrast] #content.app-projectcheck,
+body[data-theme-dark-highcontrast] #content.app-projectcheck {
+	--pc-border: color-mix(in srgb, var(--color-main-text) 32%, transparent);
+	/* HC themes push --color-border-maxcontrast to near-ink — keep it first so
+	   boundary chrome stays >=3:1 against HC surfaces. */
+	--pc-border-strong: var(--color-border-maxcontrast, color-mix(in srgb, var(--color-main-text) 48%, transparent));
+	--pc-shadow-sm: 0 0 0 1px var(--pc-border-strong);
+	--pc-shadow-md: 0 0 0 2px var(--pc-border-strong);
+	--projectcheck-color-border: var(--pc-border);
+	--projectcheck-color-modal-border: var(--pc-border);
 }
 
 @media (prefers-contrast: more) {
@@ -113,43 +247,23 @@ body[data-theme-dark-highcontrast] {
 		--pc-icon-stroke: 2.25;
 	}
 
-	/* BudgetCheck parity: strengthen borders under forced/high contrast */
-	body {
+	body,
+	#content.app-projectcheck,
+	#app-content.pc-app,
+	.pc-app,
+	.pc-dialog,
+	.pc-modal,
+	.pc-toast-region,
+	.pc-toasts,
+	.pc-license-modal {
 		--pc-border: color-mix(in srgb, var(--color-main-text) 28%, transparent);
-		--pc-border-strong: color-mix(in srgb, var(--color-main-text) 40%, transparent);
+		--pc-border-strong: var(--color-border-maxcontrast, color-mix(in srgb, var(--color-main-text) 40%, transparent));
+		--pc-shadow-sm: 0 0 0 1px var(--pc-border-strong);
+		--pc-shadow-md: 0 0 0 1px var(--pc-border-strong);
 	}
 }
 
-@media (prefers-reduced-motion: reduce) {
-	:root {
-		--pc-motion-safe: 0.01ms;
-	}
-}
-
-/* Long-name + short-name aliases referenced by admin-settings/get-the-app
-   (dead names silently fell back to literals — keep them real). */
+/* Alias for dead-name ref (literal fallback masked it). */
 body {
-	--projectcheck-fs-sm: var(--pc-fs-sm);
-	--projectcheck-fs-md: var(--pc-fs-md);
-	--projectcheck-fs-lg: var(--pc-fs-lg);
-	--projectcheck-fs-xl: var(--pc-fs-xl);
-	--projectcheck-line-base: var(--pc-line-base);
-	--projectcheck-line-tight: var(--pc-line-tight);
-	--projectcheck-radius-md: var(--pc-radius-md);
-	--projectcheck-space-2: var(--pc-space-2);
-	--projectcheck-space-3: var(--pc-space-3);
-	--projectcheck-space-4: var(--pc-space-4);
-	--projectcheck-space-5: var(--pc-space-5);
-	--pc-touch: var(--pc-touch-min);
-}
-
-/* Accent ink for text-on-surface: --color-primary-element as text drops below
-   WCAG AA (~4.3:1) on dark themes — blend toward main-text there. */
-body {
-	--pc-accent-ink: var(--color-primary-element);
-}
-
-body[data-theme-dark],
-body[data-theme-dark-highcontrast] {
-	--pc-accent-ink: color-mix(in srgb, var(--color-primary-element) 70%, var(--color-main-text));
+	--pc-bg: var(--pc-bg-card);
 }
