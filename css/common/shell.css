@@ -13,8 +13,8 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
 	padding: var(--pc-space-3) var(--pc-space-4);
 	background: var(--color-primary-element);
 	color: var(--color-primary-element-text);
@@ -469,7 +469,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--pc-space-2);
-	min-height: var(--pc-touch-min);
+	min-height: var(--pc-touch);
 }
 
 .pc-section {

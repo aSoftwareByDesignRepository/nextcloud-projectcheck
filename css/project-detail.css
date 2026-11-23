@@ -82,7 +82,7 @@
 	align-items: center;
 	justify-content: center;
 	gap: 0.4rem;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: 0.5rem 1rem;
 	border-radius: var(--border-radius-element, 6px);
 	font-weight: 600;
@@ -275,7 +275,7 @@
 
 .pc-app--project-detail .invoicing-actions .button,
 .pc-app--project-detail .pc-invoicing-actions .button {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	box-shadow: none !important;
 	transform: none !important;
 }

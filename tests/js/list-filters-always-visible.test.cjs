@@ -49,7 +49,7 @@ describe('list filters always visible (projects + customers)', () => {
 		assert.match(filtersCss, /\.pc-filters--all-visible/);
 		assert.match(filtersCss, /grid-column:\s*span 2/);
 		assert.match(filtersCss, /grid-column:\s*1\s*\/\s*-1/);
-		assert.match(filtersCss, /--pc-touch-min,\s*44px/);
+		assert.match(filtersCss, /--pc-touch,\s*44px/);
 		assert.match(filtersCss, /:focus-visible/);
 	});
 });

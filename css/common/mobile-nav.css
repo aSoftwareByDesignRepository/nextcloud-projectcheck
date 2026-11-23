@@ -103,7 +103,7 @@
 
 .pc-page-header__actions .button {
 	justify-content: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 .pc-page-header__actions .button.secondary {
@@ -157,7 +157,7 @@
 
 	#content.app-projectcheck > #app-navigation.pc-app-nav:not(.vue) {
 		position: fixed !important;
-		top: var(--pc-nc-header-height, var(--header-height, 50px)) !important;
+		top: var(--pc-overlay-top, var(--header-height, 50px)) !important;
 		inset-inline-start: 0;
 		width: min(18rem, 88vw) !important;
 		max-width: 88vw;

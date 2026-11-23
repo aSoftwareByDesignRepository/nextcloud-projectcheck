@@ -7,6 +7,20 @@
 @import url('common/colors.css');
 
 /*
+ * App-owned tokens (not in the synced check-shell token pack). Keep here —
+ * css/common/tokens.css is regenerated from the shared template.
+ */
+:root {
+	--pc-nav-width: 280px;
+	--pc-nav-width-compact: 240px;
+}
+
+body {
+	--pc-shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-primary-element) 45%, transparent);
+	--pc-sheen-on-fill: color-mix(in srgb, #fff 15%, transparent);
+}
+
+/*
  * Global control-border baseline (WCAG 1.4.11 ≥3:1 vs background).
  * NC core styles every button/input with the faint `--color-border-dark`
  * (core/css/inputs.scss), and its `button:disabled` rule (0,2,1) outranks
@@ -54,8 +68,8 @@ a.pc-btn {
 	align-items: center;
 	justify-content: center;
 	gap: var(--pc-space-2, 8px);
-	min-height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
 	padding: 0 var(--pc-space-4, 16px);
 	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border)));
 	border-radius: var(--pc-radius-md, 12px);
@@ -358,8 +372,8 @@ dialog .pc-btn--ghost:active,
 	padding: var(--pc-space-2, 8px) !important;
 	background: transparent !important;
 	border: 0 !important;
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 .persistent-notification button.persistent-notification__dismiss,
 .persistent-notification button.persistent-notification__acknowledge {
@@ -368,6 +382,6 @@ dialog .pc-btn--ghost:active,
 	padding: var(--pc-space-1, 4px) !important;
 	background: var(--color-main-background) !important;
 	border: 1px solid var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 }

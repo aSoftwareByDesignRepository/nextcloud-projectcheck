@@ -22,10 +22,8 @@
 		"%n matching entries": "%n passende Einträge",
 		"%n matching entry": "%n passender Eintrag",
 		"%n overdue": "%n überfällig",
-		"%n rows": "%n Zeilen",
 		"%n selected entries will be skipped because this change is not allowed from their current status.": "%n ausgewählte Einträge werden übersprungen, weil diese Änderung aus dem aktuellen Status nicht erlaubt ist.",
 		"%n selected entry will be skipped because this change is not allowed from its current status.": "%n ausgewählter Eintrag wird übersprungen, weil diese Änderung aus dem aktuellen Status nicht erlaubt ist.",
-		"%n settings": "%n Einstellungen",
 		"%s active": "%s aktiv",
 		"%s is now a project manager and can mark hours as invoiced or paid for this project.": "%s ist jetzt Projektmanager und kann Stunden dieses Projekts als in Rechnung gestellt oder bezahlt markieren.",
 		"%s is now a regular member and can no longer settle hours for this project.": "%s ist jetzt normales Mitglied und kann Stunden dieses Projekts nicht mehr abrechnen.",
@@ -47,9 +45,7 @@
 		"(today)": "(heute)",
 		"(unknown — skipped)": "(unbekannt — übersprungen)",
 		"/hour": "/Stunde",
-		"1 row": "1 Zeile",
-		"1 setting": "1 Einstellung",
-		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Ein Lizenzschlüssel ist hinterlegt, aber dieser Server kann die Signatur nicht mit dem öffentlichen Herstellerschlüssel prüfen. Die Begleit-Apps lehnen die Lizenz ab, bis der Schlüssel mit dem passenden Signierschlüssel erstellt wurde. Hinterlege eine korrekt signierte Lizenz erneut oder kontaktiere den Support, falls das nach einem App-Update weiterhin auftritt.",
+		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Ein Lizenzschlüssel ist hinterlegt, aber dieser Server kann die Signatur nicht mit dem öffentlichen Herstellerschlüssel prüfen. Die Begleit-Apps lehnen die Lizenz ab, bis der Schlüssel mit dem passenden Signierschlüssel erstellt wurde. Hinterlegen Sie eine korrekt signierte Lizenz erneut oder kontaktieren Sie den Support, falls das nach einem App-Update weiterhin auftritt.",
 		"A name and a customer are enough to save.": "Name und Kunde reichen zum Speichern.",
 		"A network error occurred": "Ein Netzwerkfehler ist aufgetreten.",
 		"A pre-flight check failed — see the report for details.": "Eine Vorab-Prüfung ist fehlgeschlagen — Details siehe Bericht.",
@@ -807,7 +803,6 @@
 		"How to set up a new project": "So richten Sie ein neues Projekt ein",
 		"I am experiencing a permission issue in ProjectCheck. Please help.": "Ich habe ein Berechtigungsproblem in ProjectCheck. Bitte helfen Sie mir.",
 		"Impact Analysis": "Auswirkungsanalyse",
-		"Import applied. %1$s and %2$s written.": "Import angewendet. %1$s und %2$s geschrieben.",
 		"Import applied. %d settings and %d rows written.": "Import angewendet. %d Einstellungen und %d Zeilen geschrieben.",
 		"Import configuration": "Konfiguration importieren",
 		"Import failed — nothing was changed.": "Import fehlgeschlagen — es wurde nichts geändert.",
@@ -1682,7 +1677,6 @@
 		"This time entry was changed by someone else. Refresh and try again.": "Dieser Zeiteintrag wurde von jemand anderem geändert. Aktualisieren und erneut versuchen.",
 		"This time entry would exceed the project budget": "Dieser Zeiteintrag würde das Projektbudget überschreiten",
 		"This token is shown only once. Paste it into the companion app on the device.": "Dieses Token wird nur einmal angezeigt. Fügen Sie es in der Begleit-App auf dem Gerät ein.",
-		"This will update %1$s and %2$s — nothing is deleted.": "Dies aktualisiert %1$s und %2$s — nichts wird gelöscht.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Dies aktualisiert %d Einstellungen und %d Zeilen — nichts wird gelöscht.",
 		"Time Entries": "Zeiterfassung",
 		"Time Entry Created": "Zeiteintrag erstellt",
@@ -1978,14 +1972,6 @@
 			"1 Zeile übersprungen.",
 			"%n Zeilen übersprungen."
 		],
-		"_1 row_::_%n rows_": [
-			"1 Zeile",
-			"%n Zeilen"
-		],
-		"_1 setting_::_%n settings_": [
-			"1 Einstellung",
-			"%n Einstellungen"
-		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"%n Datei hochgeladen.",
 			"%n Dateien hochgeladen."
@@ -2067,6 +2053,20 @@
 		"💻 Product Development": "💻 Produktentwicklung",
 		"📊 Why This Matters": "📊 Warum das wichtig ist",
 		"🔬 Research & Development": "🔬 Forschung & Entwicklung",
+		"1 setting": "1 Einstellung",
+		"%n settings": "%n Einstellungen",
+		"1 row": "1 Zeile",
+		"%n rows": "%n Zeilen",
+		"_1 row_::_%n rows_": [
+			"1 Zeile",
+			"%n Zeilen"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 Einstellung",
+			"%n Einstellungen"
+		],
+		"This will update %1$s and %2$s — nothing is deleted.": "Dies aktualisiert %1$s und %2$s — nichts wird gelöscht.",
+		"Import applied. %1$s and %2$s written.": "Import angewendet. %1$s und %2$s geschrieben.",
 		"Budget Warning Threshold (%%)": "Budget-Warnschwelle (%%)",
 		"Budget Critical Threshold (%%)": "Budget-Kritische Schwelle (%%)",
 		"Project {project} has reached {percentage}%% of its budget": "Projekt {project} hat {percentage}%% des Budgets erreicht"

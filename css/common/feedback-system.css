@@ -174,8 +174,8 @@
   top: 0.25rem;
   inset-inline-end: 0.25rem;
   /* px floor: 2.75rem rem-collapses to 41.25px under the 15px root (ds_chrome). */
-  min-width: var(--pc-touch-min, 44px);
-  min-height: var(--pc-touch-min, 44px);
+  min-width: var(--pc-touch, 44px);
+  min-height: var(--pc-touch, 44px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -287,8 +287,8 @@
 .persistent-notification__acknowledge,
 .persistent-notification__dismiss {
   /* px floor: 2.75rem rem-collapses below 44px (ds_chrome). */
-  min-width: var(--pc-touch-min, 44px);
-  min-height: var(--pc-touch-min, 44px);
+  min-width: var(--pc-touch, 44px);
+  min-height: var(--pc-touch, 44px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -620,8 +620,8 @@
 #app-content .alert-close,
 .alert-close {
   /* px floor: 2.75rem rem-collapses below 44px (ds_chrome). */
-  min-width: var(--pc-touch-min, 44px);
-  min-height: var(--pc-touch-min, 44px);
+  min-width: var(--pc-touch, 44px);
+  min-height: var(--pc-touch, 44px);
   display: inline-flex;
   align-items: center;
   justify-content: center;

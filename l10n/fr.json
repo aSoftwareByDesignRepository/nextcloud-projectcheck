@@ -22,10 +22,8 @@
 		"%n matching entries": "%n entrées correspondantes",
 		"%n matching entry": "%n entrée correspondante",
 		"%n overdue": "%n en retard",
-		"%n rows": "%n lignes",
 		"%n selected entries will be skipped because this change is not allowed from their current status.": "%n entrées sélectionnées seront ignorées car ce changement n’est pas autorisé depuis leur statut actuel.",
 		"%n selected entry will be skipped because this change is not allowed from its current status.": "%n entrée sélectionnée sera ignorée car ce changement n’est pas autorisé depuis son statut actuel.",
-		"%n settings": "%n paramètres",
 		"%s active": "%s actif",
 		"%s is now a project manager and can mark hours as invoiced or paid for this project.": "%s est désormais chef de projet et peut marquer les heures de ce projet comme facturées ou payées.",
 		"%s is now a regular member and can no longer settle hours for this project.": "%s est désormais membre standard et ne peut plus régler les heures de ce projet.",
@@ -47,8 +45,6 @@
 		"(today)": "(aujourd'hui)",
 		"(unknown — skipped)": "(inconnu — ignoré)",
 		"/hour": "/heure",
-		"1 row": "1 ligne",
-		"1 setting": "1 paramètre",
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Une clé de licence est enregistrée, mais ce serveur ne peut pas vérifier sa signature avec la clé publique du fournisseur. Les applications compagnon rejetteront la licence tant que la clé n’aura pas été signée avec la clé de signature du fournisseur correspondante. Appliquez à nouveau une licence correctement signée, ou contactez le support si le problème persiste après une mise à jour de l’application.",
 		"A name and a customer are enough to save.": "Un nom et un client suffisent pour enregistrer.",
 		"A network error occurred": "Une erreur réseau s'est produite",
@@ -807,7 +803,6 @@
 		"How to set up a new project": "Comment monter un nouveau projet",
 		"I am experiencing a permission issue in ProjectCheck. Please help.": "Je rencontre un problème d'autorisation dans ProjectCheck. S'il vous plaît, aidez-moi.",
 		"Impact Analysis": "Analyse d'impact",
-		"Import applied. %1$s and %2$s written.": "Import appliqué. %1$s et %2$s écrits.",
 		"Import applied. %d settings and %d rows written.": "Import appliqué. %d paramètres et %d lignes écrits.",
 		"Import configuration": "Importer la configuration",
 		"Import failed — nothing was changed.": "Échec de l’import — rien n’a été modifié.",
@@ -1682,7 +1677,6 @@
 		"This time entry was changed by someone else. Refresh and try again.": "Cette saisie de temps a été modifiée par quelqu'un d'autre. Actualisez et réessayez.",
 		"This time entry would exceed the project budget": "Cette saisie de temps dépasserait le budget du projet",
 		"This token is shown only once. Paste it into the companion app on the device.": "Ce jeton n’est affiché qu’une seule fois. Collez-le dans l’application compagnon sur l’appareil.",
-		"This will update %1$s and %2$s — nothing is deleted.": "Cette opération mettra à jour %1$s et %2$s — rien ne sera supprimé.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Cette opération mettra à jour %d paramètres et %d lignes — rien ne sera supprimé.",
 		"Time Entries": "Entrées de temps",
 		"Time Entry Created": "Entrée de temps créée",
@@ -1978,14 +1972,6 @@
 			"1 ligne ignorée.",
 			"%n lignes ignorées."
 		],
-		"_1 row_::_%n rows_": [
-			"1 ligne",
-			"%n lignes"
-		],
-		"_1 setting_::_%n settings_": [
-			"1 paramètre",
-			"%n paramètres"
-		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"%n fichier téléversé.",
 			"%n fichiers téléversés."
@@ -2067,6 +2053,20 @@
 		"💻 Product Development": "💻 Développement de produits",
 		"📊 Why This Matters": "📊 Pourquoi c'est important",
 		"🔬 Research & Development": "🔬 Recherche & Développement",
+		"1 setting": "1 paramètre",
+		"%n settings": "%n paramètres",
+		"1 row": "1 ligne",
+		"%n rows": "%n lignes",
+		"_1 row_::_%n rows_": [
+			"1 ligne",
+			"%n lignes"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 paramètre",
+			"%n paramètres"
+		],
+		"This will update %1$s and %2$s — nothing is deleted.": "Cette opération mettra à jour %1$s et %2$s — rien ne sera supprimé.",
+		"Import applied. %1$s and %2$s written.": "Import appliqué. %1$s et %2$s écrits.",
 		"Budget Warning Threshold (%%)": "Seuil d'avertissement budgétaire (%%)",
 		"Budget Critical Threshold (%%)": "Seuil critique budgétaire (%%)",
 		"Project {project} has reached {percentage}%% of its budget": "Le projet {project} a atteint {percentage}%% de son budget"

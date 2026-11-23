@@ -22,10 +22,8 @@
 		"%n matching entries": "%n overeenkomende registraties",
 		"%n matching entry": "%n overeenkomende registratie",
 		"%n overdue": "%n te laat",
-		"%n rows": "%n rijen",
 		"%n selected entries will be skipped because this change is not allowed from their current status.": "%n geselecteerde regels worden overgeslagen omdat deze wijziging vanuit hun huidige status niet is toegestaan.",
 		"%n selected entry will be skipped because this change is not allowed from its current status.": "%n geselecteerde regel wordt overgeslagen omdat deze wijziging vanuit de huidige status niet is toegestaan.",
-		"%n settings": "%n instellingen",
 		"%s active": "%s actief",
 		"%s is now a project manager and can mark hours as invoiced or paid for this project.": "%s is nu projectmanager en kan uren voor dit project als gefactureerd of betaald markeren.",
 		"%s is now a regular member and can no longer settle hours for this project.": "%s is nu gewoon lid en kan uren voor dit project niet meer afrekenen.",
@@ -47,8 +45,6 @@
 		"(today)": "(vandaag)",
 		"(unknown — skipped)": "(onbekend — overgeslagen)",
 		"/hour": "/uur",
-		"1 row": "1 rij",
-		"1 setting": "1 instelling",
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Er is een licentiesleutel opgeslagen, maar deze server kan de handtekening niet verifiëren met de openbare sleutel van de leverancier. De companion-apps weigeren de licentie totdat de sleutel met de overeenkomstige ondertekeningssleutel van de leverancier is ondertekend. Pas een correct ondertekende licentie opnieuw toe of neem contact op met support als dit na een app-update blijft voorkomen.",
 		"A name and a customer are enough to save.": "Een naam en een klant volstaan om op te slaan.",
 		"A network error occurred": "Er is een netwerkfout opgetreden",
@@ -807,7 +803,6 @@
 		"How to set up a new project": "Hoe u een nieuw project opzet",
 		"I am experiencing a permission issue in ProjectCheck. Please help.": "Ik ondervind een toestemmingsprobleem in ProjectCheck. Help alsjeblieft.",
 		"Impact Analysis": "Impactanalyse",
-		"Import applied. %1$s and %2$s written.": "Import toegepast. %1$s en %2$s geschreven.",
 		"Import applied. %d settings and %d rows written.": "Import toegepast. %d instellingen en %d rijen geschreven.",
 		"Import configuration": "Configuratie importeren",
 		"Import failed — nothing was changed.": "Import mislukt — er is niets gewijzigd.",
@@ -1682,7 +1677,6 @@
 		"This time entry was changed by someone else. Refresh and try again.": "Deze tijdregistratie is door iemand anders gewijzigd. Vernieuw en probeer opnieuw.",
 		"This time entry would exceed the project budget": "Deze tijdsbesteding zou het projectbudget overschrijden",
 		"This token is shown only once. Paste it into the companion app on the device.": "Dit token wordt slechts één keer getoond. Plak het in de companion-app op het apparaat.",
-		"This will update %1$s and %2$s — nothing is deleted.": "Dit werkt %1$s en %2$s bij — er wordt niets verwijderd.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Dit werkt %d instellingen en %d rijen bij — er wordt niets verwijderd.",
 		"Time Entries": "Tijdregistraties",
 		"Time Entry Created": "Tijdregistratie aangemaakt",
@@ -1978,14 +1972,6 @@
 			"1 rij overgeslagen.",
 			"%n rijen overgeslagen."
 		],
-		"_1 row_::_%n rows_": [
-			"1 rij",
-			"%n rijen"
-		],
-		"_1 setting_::_%n settings_": [
-			"1 instelling",
-			"%n instellingen"
-		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"%n bestand geüpload.",
 			"%n bestanden geüpload."
@@ -2067,6 +2053,20 @@
 		"💻 Product Development": "💻 Productontwikkeling",
 		"📊 Why This Matters": "📊 Waarom dit belangrijk is",
 		"🔬 Research & Development": "🔬 Onderzoek en ontwikkeling",
+		"1 setting": "1 instelling",
+		"%n settings": "%n instellingen",
+		"1 row": "1 rij",
+		"%n rows": "%n rijen",
+		"_1 row_::_%n rows_": [
+			"1 rij",
+			"%n rijen"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 instelling",
+			"%n instellingen"
+		],
+		"This will update %1$s and %2$s — nothing is deleted.": "Dit werkt %1$s en %2$s bij — er wordt niets verwijderd.",
+		"Import applied. %1$s and %2$s written.": "Import toegepast. %1$s en %2$s geschreven.",
 		"Budget Warning Threshold (%%)": "Budgetwaarschuwingsdrempel (%%)",
 		"Budget Critical Threshold (%%)": "Kritieke budgetdrempel (%%)",
 		"Project {project} has reached {percentage}%% of its budget": "Project {project} heeft {percentage}%% van zijn budget bereikt"

@@ -95,7 +95,7 @@
 	width: 100%;
 	min-width: 0;
 	max-width: 100%;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	box-sizing: border-box;
 	margin: 0;
 	padding: 0.75rem 1rem;
@@ -230,7 +230,7 @@ body.dark .pc-filters .filter-select,
 .pc-filters__actions .pc-export,
 .pc-filters__actions .pc-export__toggle {
 	flex: 0 0 auto;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 .pc-filters__actions .pc-export {
@@ -272,7 +272,7 @@ body.dark .pc-filters .filter-select,
 .pc-filters__more-summary {
 	display: inline-flex;
 	align-items: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: var(--pc-space-2, 8px) var(--pc-space-3, 12px);
 	margin: 0 0 var(--pc-space-2, 8px);
 	border-radius: var(--pc-radius-sm, 6px);
@@ -335,7 +335,7 @@ body.dark .pc-filters .filter-select,
 .pc-advanced-details__summary {
 	display: flex;
 	align-items: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: var(--pc-space-2, 8px) var(--pc-space-3, 12px);
 	margin: 0 0 var(--pc-space-2, 8px);
 	border-radius: var(--pc-radius-sm, 6px);

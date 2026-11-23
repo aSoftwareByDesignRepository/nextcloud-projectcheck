@@ -52,8 +52,8 @@
   background: var(--color-primary-element);
   color: var(--color-primary-element-text);
   padding: var(--pc-space-3, 0.75rem) var(--pc-space-4, 1rem);
-  min-height: var(--pc-touch-min, 44px);
-  min-width: var(--pc-touch-min, 44px);
+  min-height: var(--pc-touch, 44px);
+  min-width: var(--pc-touch, 44px);
   display: inline-flex;
   align-items: center;
   text-decoration: none;
@@ -531,7 +531,7 @@ a[aria-disabled="true"] {
 /* NOTE (ds_chrome): a previous `html { font-size: 16px/18px }` block was
    removed — Nextcloud core's html rule (15px) wins the cascade anyway,
    and apps must not pin the root font-size (it defeats the user's font
-   preference). Interactive floors are enforced in px via --pc-touch-min.
+   preference). Interactive floors are enforced in px via --pc-touch.
 
 /* Line Height for Readability */
 p,
@@ -953,8 +953,8 @@ textarea {
 #app-content a.button,
 #app-content button.button,
 #app-content label.button {
-	min-height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
 }
 
 /* Form controls inside the app shell. NC core sizes inputs/selects at
@@ -963,7 +963,7 @@ textarea {
    hidden file inputs are triggered through ≥44px labels/dropzones. */
 #app-content input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 #app-content select {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 /* Checkbox + sibling-label rows: the label is the real click target.
@@ -975,7 +975,7 @@ textarea {
 
 #app-content .projectcheck-form-row--checkbox label,
 .projectcheck-form-row--checkbox label {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	display: inline-flex;
 	align-items: center;
 }
@@ -991,14 +991,14 @@ textarea {
 #app-navigation .pc-nav-footer__trigger,
 #app-navigation .pc-nav-footer__menu-item,
 #app-navigation .pc-nav-footer__toast-link {
-	min-height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
 }
 
 /* Standalone content links rendered as block-level targets in meta rows
    (project detail customer link measured 27.2px). */
 #app-content .customer-link {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	display: inline-flex;
 	align-items: center;
 }
@@ -1018,8 +1018,8 @@ textarea {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 	box-sizing: border-box;
 }
 
@@ -1028,13 +1028,13 @@ textarea {
    15px root font-size; pin px so rem-collapse cannot reappear. */
 .projectcheck-entity-picker .projectcheck-entity-picker__q,
 input.projectcheck-entity-picker__q {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 .projectcheck-entity-picker .projectcheck-entity-chip__remove,
 .projectcheck-entity-chip .projectcheck-entity-chip__remove {
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 /* ---- Body-mounted surfaces (outside #app-content) ---- */
@@ -1044,13 +1044,13 @@ input.projectcheck-entity-picker__q {
    reach (0,2,1). Re-assert under the body-mounted root id (1,1,0). */
 #projectcheck-deletion-modal .projectcheck-deletion-modal__close,
 #projectcheck-deletion-modal .projectcheck-deletion-modal__btn {
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 /* Strategy radios are 17px glyphs; the wrapping label row is the target. */
 #projectcheck-deletion-modal .projectcheck-deletion-modal__strategy-option {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 /* Toasts / persistent notifications are body-mounted too; the feedback
@@ -1059,6 +1059,6 @@ input.projectcheck-entity-picker__q {
 .toastify .toast-close,
 .persistent-notification .persistent-notification__acknowledge,
 .persistent-notification .persistent-notification__dismiss {
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 }

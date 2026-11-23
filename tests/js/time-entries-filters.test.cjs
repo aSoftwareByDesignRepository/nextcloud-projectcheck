@@ -44,7 +44,7 @@ describe('time-entries filters always visible', () => {
 		assert.match(tpl, /for="billing-status-filter"/);
 		assert.match(tpl, /for="date-from-filter"/);
 		assert.match(tpl, /for="date-to-filter"/);
-		assert.match(filtersCss, /--pc-touch-min,\s*44px/);
+		assert.match(filtersCss, /--pc-touch,\s*44px/);
 		assert.match(filtersCss, /:focus-visible/);
 	});
 

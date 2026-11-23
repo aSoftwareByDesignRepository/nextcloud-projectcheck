@@ -41,10 +41,10 @@
 }
 
 .productivity-analysis-section .info-popup-trigger {
-	width: var(--pc-touch-min, 44px);
-	height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	width: var(--pc-touch, 44px);
+	height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 	margin-left: 0.35rem;
 	padding: 0;
 	border-radius: var(--pc-radius-sm, 8px);

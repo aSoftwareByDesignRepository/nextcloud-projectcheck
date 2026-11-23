@@ -95,7 +95,7 @@
 	min-width: 10rem;
 	max-width: 100%;
 	flex: 0 1 auto;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	box-sizing: border-box;
 }
 
@@ -160,7 +160,7 @@
 .pc-list-panel .search-input,
 .pc-app--time-entries .search-input {
 	width: 100%;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: var(--pc-space-3, 12px) var(--pc-space-4, 16px) var(--pc-space-3, 12px) 2.75rem;
 	border: 1px solid var(--pc-form-border, var(--pc-border, var(--color-border)));
 	border-radius: var(--pc-radius-sm, 8px);
@@ -236,10 +236,10 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--pc-touch-min, 44px);
-	height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	width: var(--pc-touch, 44px);
+	height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: 0;
 	border: 1px solid var(--color-border);
 	border-radius: var(--pc-radius-sm, var(--border-radius));
@@ -313,10 +313,10 @@
 @media (pointer: coarse) {
 	.pc-list-panel .pc-data-table .action-item,
 	.pc-app--time-entries .time-entries-table .action-item {
-		width: var(--pc-touch-min, 44px);
-		height: var(--pc-touch-min, 44px);
-		min-width: var(--pc-touch-min, 44px);
-		min-height: var(--pc-touch-min, 44px);
+		width: var(--pc-touch, 44px);
+		height: var(--pc-touch, 44px);
+		min-width: var(--pc-touch, 44px);
+		min-height: var(--pc-touch, 44px);
 	}
 }
 
@@ -684,7 +684,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--pc-space-2, 0.5rem);
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 .pc-export__chevron {
@@ -730,7 +730,7 @@
 	align-items: flex-start;
 	gap: 0.15rem;
 	width: 100%;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: var(--pc-space-3, 0.75rem) var(--pc-space-3, 0.75rem);
 	border: 0;
 	border-radius: var(--pc-radius-sm, 8px);

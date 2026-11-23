@@ -302,7 +302,7 @@
 .pc-app--time-entries .filter-select,
 .pc-app--time-entries .filter-date {
 	/* Visual chrome lives in common/filters.css */
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	width: 100%;
 }
 
@@ -319,7 +319,7 @@
 .pc-app--time-entries .filter-actions .button {
 	flex: 1 1 auto;
 	justify-content: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	gap: var(--pc-space-2, 0.5rem);
 }
 
@@ -421,7 +421,7 @@
 	font-size: var(--pc-fs-sm, 0.875rem);
 	min-width: 0;
 	width: 100%;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	box-sizing: border-box;
 	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -958,10 +958,10 @@ body[dir="rtl"] .filters-row select {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--pc-touch-min, 44px);
-	height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	width: var(--pc-touch, 44px);
+	height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 	border: none;
 	border-radius: var(--border-radius);
 	background: var(--color-background-hover);
@@ -974,10 +974,10 @@ body[dir="rtl"] .filters-row select {
 /* Keep action buttons ≥44×44 at all breakpoints (WCAG 2.5.5 / DS §1) */
 @media (min-width: 1024px) {
 	.action-item {
-		width: var(--pc-touch-min, 44px);
-		height: var(--pc-touch-min, 44px);
-		min-width: var(--pc-touch-min, 44px);
-		min-height: var(--pc-touch-min, 44px);
+		width: var(--pc-touch, 44px);
+		height: var(--pc-touch, 44px);
+		min-width: var(--pc-touch, 44px);
+		min-height: var(--pc-touch, 44px);
 	}
 }
 

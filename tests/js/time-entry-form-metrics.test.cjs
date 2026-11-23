@@ -45,7 +45,7 @@ describe('time-entry-form metrics layout', () => {
 			css,
 			/minmax\(0,\s*1\.2fr\)\s+minmax\(0,\s*0\.7fr\)\s+minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\)/,
 		);
-		assert.match(css, /--pc-touch-min,\s*44px/);
+		assert.match(css, /--pc-touch,\s*44px/);
 		assert.match(css, /form-row--metrics__date-hint/);
 	});
 });

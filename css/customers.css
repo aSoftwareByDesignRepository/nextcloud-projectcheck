@@ -1000,7 +1000,7 @@
 	color: var(--color-main-text);
 	font-size: 0.875rem;
 	min-width: auto;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	box-sizing: border-box;
 	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -1884,7 +1884,7 @@ body[dir="rtl"] .filters-row select {
 	align-items: center;
 	justify-content: center;
 	gap: 0.4rem;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: 0.5rem 1rem;
 	border-radius: var(--border-radius-element, 6px);
 	box-shadow: none !important;

@@ -77,7 +77,7 @@ class TimeEntryFormMetricsLayoutContractTest extends TestCase
 		self::assertStringNotContainsString('form-row--split-4', $css);
 		self::assertStringContainsString('minmax(0, 1.2fr) minmax(0, 0.7fr) minmax(0, 1fr) minmax(0, 1fr)', $css);
 		self::assertStringContainsString('form-row--metrics__date-hint', $css);
-		self::assertStringContainsString('min-height: var(--pc-touch-min, 44px)', $css);
+		self::assertStringContainsString('min-height: var(--pc-touch, 44px)', $css);
 	}
 
 	public function testJsStillResolvesRateFromServer(): void

@@ -159,7 +159,7 @@
 }
 
 .pc-section__primary-action {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	display: inline-flex;
 	align-items: center;
 	gap: var(--pc-space-2, 0.5rem);
@@ -205,7 +205,7 @@
 	justify-content: center;
 	gap: var(--pc-space-3, 0.75rem);
 	width: 100%;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: var(--pc-space-5, 1.5rem);
 	border: 2px dashed var(--color-border, #e1e5eb);
 	border-radius: var(--pc-radius-md, 12px);
@@ -348,7 +348,7 @@
 .pc-files-section .pc-section__primary-action {
 	width: 100%;
 	justify-content: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 .pc-file-dropzone--compact {
@@ -903,7 +903,7 @@ body {
 	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 	min-width: 0;
 	width: 100%;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	/* No appearance:none here — it removes Chromium's calendar affordance
 	   with no painted replacement (learned class: dead affordance). */
 	box-sizing: border-box;
@@ -1028,10 +1028,10 @@ body[dir="rtl"] .filters-row select {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--pc-touch-min, 44px);
-	height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	width: var(--pc-touch, 44px);
+	height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 	border-radius: var(--pc-radius-sm, var(--border-radius));
 	background-color: var(--color-background-hover);
 	color: var(--color-text-maxcontrast);
@@ -1422,10 +1422,10 @@ body[dir="rtl"] .filters-row select {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--pc-touch-min, 44px);
-	height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	width: var(--pc-touch, 44px);
+	height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 	border-radius: var(--pc-radius-pill, 999px);
 	border: 1px solid transparent;
 	background: transparent;
@@ -1476,7 +1476,7 @@ body[dir="rtl"] .filters-row select {
 	gap: 0.5rem;
 	width: auto;
 	min-width: 0;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: 0.55rem 1.1rem;
 	margin: 0;
 	border-radius: var(--border-radius-element, var(--border-radius, 6px));
@@ -1992,10 +1992,10 @@ body[dir="rtl"] .filters-row select {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: var(--pc-touch-min, 44px);
-	height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	width: var(--pc-touch, 44px);
+	height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 	border-radius: var(--pc-radius-sm, var(--border-radius));
 	background-color: var(--color-background-hover);
 	color: var(--color-text-maxcontrast);
@@ -2063,7 +2063,7 @@ body[dir="rtl"] .filters-row select {
 .filters-row .button {
 	width: 100%;
 	justify-content: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 @media (min-width: 769px) {
@@ -2155,7 +2155,7 @@ body[dir="rtl"] .filters-row select {
 .pc-quick-customer__input {
 	flex: 1 1 12rem;
 	min-width: 0;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	box-sizing: border-box;
 }
 
@@ -2165,8 +2165,8 @@ body[dir="rtl"] .filters-row select {
 	align-items: center;
 	justify-content: center;
 	gap: var(--pc-space-2, 8px);
-	min-height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
 	padding: 0 var(--pc-space-4, 16px);
 	box-sizing: border-box;
 	flex: 0 0 auto;
@@ -2220,7 +2220,7 @@ body[dir="rtl"] .filters-row select {
 	align-items: center;
 	justify-content: center;
 	gap: var(--pc-space-2, 8px);
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	width: 100%;
 	box-sizing: border-box;
 }
@@ -2279,7 +2279,7 @@ body[dir="rtl"] .filters-row select {
 /* Enhanced Select Dropdown Styling for Proper Vertical Centering */
 .form-group select,
 .form-input.form-select {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	line-height: 1.5;
 	padding: var(--space-2, 0.5rem) 2.5rem var(--space-2, 0.5rem) 1rem;
 	vertical-align: middle;
@@ -2320,7 +2320,7 @@ body[dir="rtl"] .filters-row select {
 .form-group select,
 .form-input,
 .form-input.form-select {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	display: block;
 	box-sizing: border-box;
 }
@@ -2464,7 +2464,7 @@ body[dir="rtl"] .filters-row select {
 .form-actions .button {
 	width: 100%;
 	justify-content: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 @media (min-width: 769px) {
@@ -2776,7 +2776,7 @@ body[dir="rtl"] .filters-row select {
 /* Mobile base: larger touch targets on project-detail action grids */
 .actions-grid .button {
 	padding: 1rem 1.5rem;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	font-size: var(--pc-fs-sm, 0.875rem);
 }
 
@@ -7783,8 +7783,8 @@ a.project-title:hover,
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 #team-section .team-former-section {
@@ -7940,10 +7940,10 @@ a.project-title:hover,
 
 #employee-project-assignments .member-actions .action-btn {
 	/* 44px Atlas touch-target floor (ds_chrome: was 40x40) */
-	width: var(--pc-touch-min, 44px);
-	height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	width: var(--pc-touch, 44px);
+	height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -7961,7 +7961,7 @@ a.project-title:hover,
 .employee-assignments-form .button {
 	width: 100%;
 	justify-content: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 @media (min-width: 1024px) {
@@ -8770,7 +8770,7 @@ a.project-title:hover,
 	align-items: flex-start;
 	gap: var(--pc-space-3, 0.75rem);
 	min-width: 0;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	line-height: var(--pc-line-base, 1.45);
 	overflow-wrap: break-word;
 }
@@ -8944,7 +8944,7 @@ a.project-title:hover,
 }
 
 .pc-form-callout__cta {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	display: inline-flex;
 	align-items: center;
 	gap: 0.4rem;
@@ -9103,8 +9103,8 @@ a.project-title:hover,
 	justify-content: center;
 	gap: 0.4rem;
 	padding: 0.4rem 0.55rem;
-	min-width: var(--pc-touch-min, 44px);
-	min-height: var(--pc-touch-min, 44px);
+	min-width: var(--pc-touch, 44px);
+	min-height: var(--pc-touch, 44px);
 	border-radius: var(--pc-radius-pill, 999px);
 	border: 1px solid color-mix(in srgb, var(--color-primary-element, #0082c9) 35%, var(--color-border, #e1e5eb));
 	background: color-mix(in srgb, var(--color-primary-element, #0082c9) 8%, var(--color-main-background, #fff));
@@ -9225,7 +9225,7 @@ a.project-title:hover,
 }
 
 .pc-member-rate__form .form-input {
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	max-width: 8rem;
 }
 
@@ -9234,8 +9234,8 @@ a.project-title:hover,
 }
 
 .pc-member-rate-save {
-	min-height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
 }
 
 .pc-member-rate-error {

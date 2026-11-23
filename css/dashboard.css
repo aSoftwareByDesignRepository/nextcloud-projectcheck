@@ -1012,8 +1012,8 @@ body {
 	align-items: center;
 	gap: var(--pc-space-2, 8px);
 	padding: var(--pc-space-2, 8px) var(--pc-space-4, 16px);
-	min-height: var(--pc-touch-min, 44px);
-	min-width: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
+	min-width: var(--pc-touch, 44px);
 	/* Never use --color-background-plain (often primary) with main-text — AA fails */
 	background: var(--color-main-background);
 	color: var(--color-main-text);

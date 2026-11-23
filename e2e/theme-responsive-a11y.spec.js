@@ -90,7 +90,7 @@ async function assertThemeTokensResolved(page) {
 			dangerFill: bodyCs.getPropertyValue('--pc-danger-fill').trim(),
 			dangerOnFill: bodyCs.getPropertyValue('--pc-danger-on-fill').trim(),
 			dangerInk: bodyCs.getPropertyValue('--pc-danger-ink').trim(),
-			touch: bodyCs.getPropertyValue('--pc-touch-min').trim(),
+			touch: bodyCs.getPropertyValue('--pc-touch').trim(),
 			scrim: bodyCs.getPropertyValue('--pc-scrim').trim(),
 			shadowSm: bodyCs.getPropertyValue('--pc-shadow-sm').trim(),
 			shellMax: shell ? getComputedStyle(shell).maxWidth : '',

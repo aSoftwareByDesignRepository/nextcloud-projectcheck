@@ -239,7 +239,7 @@
 	.pc-app--time-entries .time-entries-panel .filter-actions .button {
 		flex: 1 1 100%;
 		justify-content: center;
-		min-height: var(--pc-touch-min, 44px);
+		min-height: var(--pc-touch, 44px);
 		white-space: normal;
 		line-height: 1.3;
 	}

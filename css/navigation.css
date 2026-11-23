@@ -29,8 +29,8 @@
 .pc-nav__brand-icon {
 	display: grid;
 	place-items: center;
-	width: var(--pc-touch-min, 44px);
-	height: var(--pc-touch-min, 44px);
+	width: var(--pc-touch, 44px);
+	height: var(--pc-touch, 44px);
 	flex-shrink: 0;
 	background: var(--pc-tint-info);
 	color: var(--pc-accent-ink, var(--color-primary-element));
@@ -126,7 +126,7 @@
 	border-radius: var(--pc-radius-sm, 6px);
 	text-decoration: none;
 	color: inherit;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	align-items: center;
 	box-sizing: border-box;
 }
@@ -234,7 +234,7 @@
 .projectcheck-nav__sublink {
 	display: flex;
 	align-items: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding: 0.25rem 0.75rem;
 	border-radius: var(--pc-radius-sm, 6px);
 	color: var(--color-main-text);

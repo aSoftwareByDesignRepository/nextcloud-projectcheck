@@ -127,10 +127,10 @@
 #app-content.pc-app--time-entry-edit .time-entry-form .form-row--metrics input.form-input {
 	width: 100%;
 	/*
-	 * Prefer --pc-touch-min (app SSOT = 44px). Do NOT lead with
+	 * Prefer --pc-touch (app SSOT = 44px). Do NOT lead with
 	 * --default-clickable-area: NC themes often set that to ~34px.
 	 */
-	min-height: var(--pc-touch-min, 44px) !important;
+	min-height: var(--pc-touch, 44px) !important;
 	height: auto !important;
 	line-height: 1.35;
 	padding-block: 0.55rem;
@@ -193,7 +193,7 @@
 	background: var(--color-main-background);
 	color: var(--color-main-text);
 	font-size: var(--pc-fs-sm, 0.875rem);
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	transition: border-color 0.2s ease, box-shadow 0.2s ease;
 	box-sizing: border-box;
 }
@@ -209,7 +209,7 @@
 	max-width: 100% !important;
 	/* Atlas floor is 44px — NC's --default-clickable-area (~37px) must not
 	   win this chain (ds_chrome rem-collapse/cascade finding). */
-	min-height: var(--pc-touch-min, 44px) !important;
+	min-height: var(--pc-touch, 44px) !important;
 	height: auto !important;
 	line-height: 1.35 !important;
 	padding: 0.65rem 2.75rem 0.65rem 0.75rem !important;
@@ -347,7 +347,7 @@ body[data-theme-dark] .time-entry-form .form-group select,
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 }
 
 .time-entry-form > .form-actions .btn-primary {
@@ -512,7 +512,7 @@ body[data-theme-dark] .time-entry-form .form-group select,
 	align-items: center;
 	justify-content: center;
 	gap: var(--pc-space-2, 0.5rem);
-	min-height: var(--pc-touch-min, 44px);
+	min-height: var(--pc-touch, 44px);
 	padding-inline: var(--pc-space-4, 1rem);
 	background: var(--pc-danger-fill, var(--color-element-error));
 	color: var(--pc-danger-on-fill, var(--color-primary-element-text));

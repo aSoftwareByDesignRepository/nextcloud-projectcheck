@@ -84,7 +84,7 @@ class ThemeComplianceContractTest extends TestCase
 		self::assertStringContainsString('--pc-muted: var(--color-text-maxcontrast)', $css);
 		self::assertStringContainsString('--pc-tint-info: color-mix(in srgb, var(--color-primary-element)', $css);
 		self::assertStringContainsString('var(--color-main-background)', $css);
-		self::assertStringContainsString('--pc-touch-min: 44px', $css);
+		self::assertStringContainsString('--pc-touch: 44px', $css);
 	}
 
 	public function testLegacyNavActiveSolidPrimaryPoisonRemoved(): void

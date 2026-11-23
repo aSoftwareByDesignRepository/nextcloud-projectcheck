@@ -39,7 +39,7 @@ test.describe('ProjectCheck shell chrome a11y smoke', () => {
 				const cs = getComputedStyle(document.body);
 				return {
 					tintInfo: cs.getPropertyValue('--pc-tint-info').trim(),
-					touch: cs.getPropertyValue('--pc-touch-min').trim(),
+					touch: cs.getPropertyValue('--pc-touch').trim(),
 					shellMax: (() => {
 						const shell = document.querySelector('#app-content-wrapper.pc-shell');
 						return shell ? getComputedStyle(shell).maxWidth : '';

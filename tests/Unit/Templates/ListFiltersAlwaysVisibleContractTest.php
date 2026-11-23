@@ -85,7 +85,7 @@ class ListFiltersAlwaysVisibleContractTest extends TestCase
 		self::assertStringContainsString('.pc-filters--all-visible .pc-filters__field--search', $css);
 		self::assertStringContainsString('grid-column: span 2', $css);
 		self::assertStringContainsString('grid-column: 1 / -1', $css);
-		self::assertStringContainsString('min-height: var(--pc-touch-min, 44px)', $css);
+		self::assertStringContainsString('min-height: var(--pc-touch, 44px)', $css);
 		self::assertStringContainsString(':focus-visible', $css);
 	}
 

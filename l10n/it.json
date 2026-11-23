@@ -22,10 +22,8 @@
 		"%n matching entries": "%n voci corrispondenti",
 		"%n matching entry": "%n voce corrispondente",
 		"%n overdue": "%n scadute",
-		"%n rows": "%n righe",
 		"%n selected entries will be skipped because this change is not allowed from their current status.": "%n voci selezionate verranno saltate perché questa modifica non è consentita dal loro stato attuale.",
 		"%n selected entry will be skipped because this change is not allowed from its current status.": "%n voce selezionata verrà saltata perché questa modifica non è consentita dal suo stato attuale.",
-		"%n settings": "%n impostazioni",
 		"%s active": "%s attivo",
 		"%s is now a project manager and can mark hours as invoiced or paid for this project.": "%s è ora project manager e può segnare le ore di questo progetto come fatturate o pagate.",
 		"%s is now a regular member and can no longer settle hours for this project.": "%s è ora un membro normale e non può più liquidare le ore di questo progetto.",
@@ -47,8 +45,6 @@
 		"(today)": "(oggi)",
 		"(unknown — skipped)": "(sconosciuto — saltato)",
 		"/hour": "/ora",
-		"1 row": "1 riga",
-		"1 setting": "1 impostazione",
 		"A license key is stored, but this server cannot verify its signature with the vendor public key. The companion apps will reject the license until the key was signed with the matching vendor signing key. Re-apply a correctly signed license, or contact support if this persists after an app update.": "Una chiave di licenza è memorizzata, ma questo server non può verificarne la firma con la chiave pubblica del fornitore. Le app companion rifiuteranno la licenza finché la chiave non sarà firmata con la chiave di firma del fornitore corrispondente. Applichi nuovamente una licenza firmata correttamente, oppure contatti il supporto se il problema persiste dopo un aggiornamento dell’app.",
 		"A name and a customer are enough to save.": "Nome e cliente bastano per salvare.",
 		"A network error occurred": "Si è verificato un errore di rete.",
@@ -807,7 +803,6 @@
 		"How to set up a new project": "Come impostare un nuovo progetto",
 		"I am experiencing a permission issue in ProjectCheck. Please help.": "Ho un problema di permessi in ProjectCheck. Per favore aiutami.",
 		"Impact Analysis": "Analisi dell'impatto",
-		"Import applied. %1$s and %2$s written.": "Importazione applicata. %1$s e %2$s scritte.",
 		"Import applied. %d settings and %d rows written.": "Importazione applicata. %d impostazioni e %d righe scritte.",
 		"Import configuration": "Importa configurazione",
 		"Import failed — nothing was changed.": "Importazione non riuscita — niente è stato modificato.",
@@ -1682,7 +1677,6 @@
 		"This time entry was changed by someone else. Refresh and try again.": "Questa voce oraria è stata modificata da qualcun altro. Aggiorna e riprova.",
 		"This time entry would exceed the project budget": "Questa voce di tempo supererebbe il budget del progetto",
 		"This token is shown only once. Paste it into the companion app on the device.": "Questo token viene mostrato una sola volta. Lo incolli nell’app companion sul dispositivo.",
-		"This will update %1$s and %2$s — nothing is deleted.": "Verranno aggiornate %1$s e %2$s — non verrà eliminato nulla.",
 		"This will update %d settings and %d rows — nothing is deleted.": "Verranno aggiornate %d impostazioni e %d righe — non verrà eliminato nulla.",
 		"Time Entries": "Voci di tempo",
 		"Time Entry Created": "Voce di tempo creata",
@@ -1978,14 +1972,6 @@
 			"1 riga saltata.",
 			"%n righe saltate."
 		],
-		"_1 row_::_%n rows_": [
-			"1 riga",
-			"%n righe"
-		],
-		"_1 setting_::_%n settings_": [
-			"1 impostazione",
-			"%n impostazioni"
-		],
 		"_Uploaded %n file._::_Uploaded %n files._": [
 			"Caricato %n file.",
 			"Caricati %n file."
@@ -2067,6 +2053,20 @@
 		"💻 Product Development": "💻 Sviluppo prodotto",
 		"📊 Why This Matters": "📊 Perché è importante",
 		"🔬 Research & Development": "🔬 Ricerca e sviluppo",
+		"1 setting": "1 impostazione",
+		"%n settings": "%n impostazioni",
+		"1 row": "1 riga",
+		"%n rows": "%n righe",
+		"_1 row_::_%n rows_": [
+			"1 riga",
+			"%n righe"
+		],
+		"_1 setting_::_%n settings_": [
+			"1 impostazione",
+			"%n impostazioni"
+		],
+		"This will update %1$s and %2$s — nothing is deleted.": "Verranno aggiornate %1$s e %2$s — non verrà eliminato nulla.",
+		"Import applied. %1$s and %2$s written.": "Importazione applicata. %1$s e %2$s scritte.",
 		"Budget Warning Threshold (%%)": "Soglia avviso budget (%%)",
 		"Budget Critical Threshold (%%)": "Soglia critica budget (%%)",
 		"Project {project} has reached {percentage}%% of its budget": "Il progetto {project} ha raggiunto il {percentage}%% del budget"
