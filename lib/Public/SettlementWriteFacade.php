@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 /**
- * Settlement write API for trusted sibling apps (InvoiceCheck).
+ * Settlement write API for trusted sibling apps (the invoicing app).
  *
  * All mutations go through {@see TimeEntryBillingService} — never raw SQL.
  * Optimistic `expectedUpdatedAt` checks fail fast before any write so a
  * stale invoice draft cannot silently overwrite concurrent settlement.
  *
  * `$trustedSiblingApp` skips ProjectCheck settle ACL for server-side callers
- * that already authorized the actor as an InvoiceCheck global invoicer.
+ * that already authorized the actor as an the invoicing app global invoicer.
  * Never expose that flag on HTTP surfaces.
  *
  * @copyright Copyright (c) 2026, Nextcloud GmbH

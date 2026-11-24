@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Result of a trusted-app settlement write (InvoiceCheck handshake).
+ * Result of a trusted-app settlement write (the invoicing app handshake).
  *
  * @copyright Copyright (c) 2026, Nextcloud GmbH
  * @license AGPL-3.0-or-later

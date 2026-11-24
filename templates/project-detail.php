@@ -467,8 +467,8 @@ include __DIR__ . '/common/page-start.php';
                                 : $currencyCode . ' ' . number_format($icAmount, 2);
                         ?>
                         <p class="pc-invoicing-ic-unpaid" data-testid="pc-ic-unpaid-strip" role="status"
-                            aria-label="<?php p($l->t('Unpaid invoices in InvoiceCheck')); ?>">
-                            <strong><?php p($l->t('Unpaid invoices (InvoiceCheck):')); ?></strong>
+                            aria-label="<?php p($l->t('Unpaid invoices in the invoicing app')); ?>">
+                            <strong><?php p($l->t('Unpaid invoices (the invoicing app):')); ?></strong>
                             <?php if ($icCount === 0): ?>
                                 <?php p($l->t('None open')); ?>
                             <?php else: ?>
@@ -491,13 +491,13 @@ include __DIR__ . '/common/page-start.php';
                         <?php if (!empty($_['invoicingCheckCreateUrl'])): ?>
                             <a class="button secondary" href="<?php p((string)$_['invoicingCheckCreateUrl']); ?>">
                                 <span data-lucide="receipt" class="lucide-icon" aria-hidden="true"></span>
-                                <?php p($l->t('Create invoice (InvoiceCheck)')); ?>
+                                <?php p($l->t('Create invoice (the invoicing app)')); ?>
                             </a>
                         <?php endif; ?>
                         <?php if (!empty($_['invoicingCheckReceivablesUrl'])): ?>
                             <a class="button secondary" href="<?php p((string)$_['invoicingCheckReceivablesUrl']); ?>">
                                 <span data-lucide="wallet" class="lucide-icon" aria-hidden="true"></span>
-                                <?php p($l->t('Open unpaid invoices (InvoiceCheck)')); ?>
+                                <?php p($l->t('Open unpaid invoices (the invoicing app)')); ?>
                             </a>
                         <?php endif; ?>
                         <?php if ($stlCanSettle): ?>

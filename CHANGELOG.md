@@ -242,13 +242,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Sidebar shell uses main background (MobilityCheck parity) instead of a dark fill; theme/CSS compliance contracts and UX journey e2e coverage expanded.
+- Sidebar shell uses main background (the mobility app parity) instead of a dark fill; theme/CSS compliance contracts and UX journey e2e coverage expanded.
 
 ## 2.0.90 - 2026-08-02
 
 ### Added
 
-- **InvoiceCheck unpaid strip** on project detail: when InvoiceCheck exposes `CrmInvoiceReadFacade::summarizeUnpaidByPcProject`, shows remaining €, open invoice count, and overdue count (soft feature-detect; never invents amounts). Clarifies that ProjectCheck “Not yet paid” is open + invoiced hours still unpaid in ProjectCheck.
+- **the invoicing app unpaid strip** on project detail: when the invoicing app exposes `CrmInvoiceReadFacade::summarizeUnpaidByPcProject`, shows remaining €, open invoice count, and overdue count (soft feature-detect; never invents amounts). Clarifies that ProjectCheck “Not yet paid” is open + invoiced hours still unpaid in ProjectCheck.
 
 ## 2.0.89 - 2026-07-31
 

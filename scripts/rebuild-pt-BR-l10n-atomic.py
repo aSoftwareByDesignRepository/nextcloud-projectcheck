@@ -23,7 +23,7 @@ PROTECT_LITERALS = [
 	"DutyCheck",
 	"BudgetCheck",
 	"InventoryCheck",
-	"MobilityCheck",
+	"the mobility app",
 	"TimeCheck",
 	"Nextcloud",
 	"GitHub Sponsors",
