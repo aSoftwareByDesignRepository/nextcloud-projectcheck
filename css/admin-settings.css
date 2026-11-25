@@ -614,6 +614,19 @@ body[dir="rtl"] .projectcheck-select {
     color: var(--color-main-text);
 }
 
+/* Synced config-transfer pack emits .pc-callout/--info/--warning; the pack
+   styles --warning only — the base + info tone get their styled home here. */
+.pc-callout {
+    padding: var(--pc-space-2, 8px) var(--pc-space-3, 12px);
+    margin: 0 0 var(--pc-space-4, 16px);
+    border-inline-start: 4px solid var(--pc-border, var(--color-border));
+    border-radius: var(--pc-radius-sm, 6px);
+}
+.pc-callout--info {
+    border-inline-start-color: var(--pc-primary, var(--color-primary-element));
+    background: var(--pc-tint-info, color-mix(in srgb, var(--color-primary-element) 16%, var(--color-main-background)));
+}
+
 /* Defaults: responsive two-column grid on large screens */
 .projectcheck-defaults-grid {
     display: grid;

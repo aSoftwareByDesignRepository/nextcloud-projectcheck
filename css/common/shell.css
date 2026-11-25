@@ -472,6 +472,12 @@
 	min-height: var(--pc-touch);
 }
 
+.pc-scope-strip__label,
+.pc-scope-strip__meta {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--pc-fs-xs);
+}
+
 .pc-section {
 	margin-bottom: var(--pc-space-5);
 	padding: var(--pc-space-4);

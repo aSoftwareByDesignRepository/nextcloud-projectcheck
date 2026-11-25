@@ -286,7 +286,6 @@ body.theme--light-highcontrast {
 body[data-theme-dark],
 body[data-theme-dark-highcontrast],
 body.theme--dark,
-body.theme--dark-highcontrast,
-html[data-theme="dark"] {
+body.theme--dark-highcontrast {
 	color-scheme: dark;
 }

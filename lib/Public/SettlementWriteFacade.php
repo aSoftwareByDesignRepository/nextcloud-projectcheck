@@ -10,7 +10,7 @@ declare(strict_types=1);
  * stale invoice draft cannot silently overwrite concurrent settlement.
  *
  * `$trustedSiblingApp` skips ProjectCheck settle ACL for server-side callers
- * that already authorized the actor as an the invoicing app global invoicer.
+ * that already authorized the actor as an invoicing-app global invoicer.
  * Never expose that flag on HTTP surfaces.
  *
  * @copyright Copyright (c) 2026, Nextcloud GmbH
