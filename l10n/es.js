@@ -291,7 +291,7 @@ OC.L10N.register(
 	"Change status" : "Cambiar estado",
 	"Changelog" : "Registro de cambios",
 	"Changes: {changes}" : "Cambios: {changes}",
-	"Check Partner" : "Check Partner",
+	"Check Partner" : "Comprobar socio",
 	"Check connection" : "Comprobar conexión",
 	"Checking connection…" : "Comprobando conexión...",
 	"Choose a passphrase of at least 12 characters." : "Elija una frase de contraseña de al menos 12 caracteres.",

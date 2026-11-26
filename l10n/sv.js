@@ -291,7 +291,7 @@ OC.L10N.register(
 	"Change status" : "Ändra status",
 	"Changelog" : "Ändringslogg",
 	"Changes: {changes}" : "Ändringar: {changes}",
-	"Check Partner" : "Check Partner",
+	"Check Partner" : "Check-partner",
 	"Check connection" : "Kontrollera anslutningen",
 	"Checking connection…" : "Kontrollerar anslutning…",
 	"Choose a passphrase of at least 12 characters." : "Välj en lösenfras på minst 12 tecken.",
