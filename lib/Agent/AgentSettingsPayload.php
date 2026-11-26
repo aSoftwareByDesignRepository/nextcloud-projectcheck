@@ -41,15 +41,18 @@ class AgentSettingsPayload
 		$selfMint = $this->selfMintEnabled();
 		$canUse = $this->accessGate->canUseApp($uid);
 		$canMint = $isAdmin || ($selfMint && $canUse);
+		$now = time();
+		$rows = $isAdmin ? $this->tokenMapper->findAll() : $this->tokenMapper->findByUser($uid);
+
 		// The section is hidden for users who can neither mint nor see their
-		// own tokens — including when the app declares no agent surface.
-		$visible = $canMint || $isAdmin;
+		// own tokens. An app user holding live tokens must ALWAYS see the
+		// section — if an admin toggles self-mint off, their existing tokens
+		// stay valid and the UI must still let them inspect/revoke them
+		// (the mint button is gated separately by canMint).
+		$visible = $canMint || $isAdmin || ($canUse && $rows !== []);
 		if (!$this->manifest->isDeclared()) {
 			$visible = $isAdmin;
 		}
-
-		$now = time();
-		$rows = $isAdmin ? $this->tokenMapper->findAll() : $this->tokenMapper->findByUser($uid);
 
 		return [
 			'visible' => $visible,

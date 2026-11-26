@@ -61,7 +61,10 @@ class AgentTokenController extends Controller
 	{
 		$uid = $this->requireSessionUid();
 		$isAdmin = $this->accessGate->canAdminister($uid);
-		if (!$isAdmin && !$this->selfMintEnabled() && !$this->accessGate->canUseApp($uid)) {
+		// App access — not the self-mint flag — gates the listing: a user
+		// without app access gains nothing by enumerating their (dead)
+		// tokens and the policy payload.
+		if (!$isAdmin && !$this->accessGate->canUseApp($uid)) {
 			throw new AgentException('forbidden', 'No app access.', 403);
 		}
 		$now = time();
