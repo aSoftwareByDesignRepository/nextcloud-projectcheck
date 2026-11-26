@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.108 - 2026-11-26
+
+### Fixed
+
+- heal copy-sweep residuals and emitted-class coverage
+- mint missing msgstrs for invoicing-app suite-flange msgids
+- restore color-scheme pins in synced check-shell tokens
+- heal post-sync dead tokens, key order, de license cell
+- differentiate pt time-entry-logged template (checker r3)
+- round-2 dup differentiation + license-pack parity
+- heal catalog quality + transfer donor resync (r2 delta heal)
+- re-sync config-transfer pack; register n() plural msgids in l10n catalogs
+- ATLAS delta-reverify — pack resync, l10n parity, dead licenseI18n removal
+- close untranslated gaps — license-page pack propagation, hand-translated headers, sbdlicenseops zh_TW catalog
+
+### Added
+
+- mobile v1 catalog API: `GET/POST /mobile/v1/projects` and
+  `GET/POST /mobile/v1/customers` — licensed mobile clients (and
+  integrations like the GitHub→timesheet agent) can now list and create
+  catalog entries, with idempotent `clientRequestId` semantics
+
+### Security
+
+- hardened the mobile v1 request boundary: non-scalar JSON fields and
+  non-digit project ids are rejected with 422 instead of being silently
+  coerced by PHP casts (wrong-id writes, "Array" literals)
+- query params on read endpoints reject array syntax (`?q[]=x`) with 422
+  instead of a 500
+- invalid project dates now error instead of silently storing NULL or
+  normalizing impossible dates (e.g. "2026-02-30")
+- add Russian (ru) catalog
+- converge on shared family license page (_shared/license-page)
+
+### Changed
+
+- commit pending workspace changes (bulk sync)
+- use generic phrasing for suite sibling references
+- define --pc-mono + muted-on-tint tokens (check-shell sync)
+- re-sync shared packs (config-transfer, view-components) + l10n catalog regen
+- l10n: formal register + identical-gap cleanup, zh_TW vocabulary flip
+- re-sync config-transfer pack + css/test tidy
+
 ## 2.0.107 - 2026-11-13
 
 ### Fixed
