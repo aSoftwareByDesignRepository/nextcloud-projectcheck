@@ -54,6 +54,7 @@ class AgentAuthMiddleware extends Middleware
 	private const SYSTEM_PARAMS = ['confirm', 'clientRequestId', 'client_request_id', 'dry_run'];
 
 	private ?array $auditedTool = null;
+	private bool $auditedDryRun = false;
 	private bool $auditWritten = false;
 
 	public function __construct(
@@ -131,7 +132,18 @@ class AgentAuthMiddleware extends Middleware
 
 		$this->assertNoUnknownParams($tool, $path);
 
-		if ($this->manifest->requiresConfirm($tool) && !$this->confirmFlagIsTrue()) {
+		// NH-05 dry-run (fail-closed): dry_run is only honored on tools
+		// declaring "dryRun": true — everywhere else a truthy flag is a
+		// hard 422, never a silent commit. A supported dry-run commits
+		// nothing, so the confirm gate and its confirmation requirement
+		// do not apply to it.
+		$this->auditedDryRun = $this->truthyFlag('dry_run');
+		if ($this->auditedDryRun && !$this->manifest->supportsDryRun($tool)) {
+			$this->writeAudit($token, $tool, $path, AgentAudit::RESULT_DENIED);
+			throw new AgentException('agent_dryrun_unsupported', 'This tool does not support dry_run.', 422);
+		}
+
+		if (!$this->auditedDryRun && $this->manifest->requiresConfirm($tool) && !$this->truthyFlag('confirm')) {
 			$this->writeAudit($token, $tool, $path, AgentAudit::RESULT_DENIED);
 			throw new AgentException('confirmation_required', 'This action requires confirm=true.', 422);
 		}
@@ -153,7 +165,15 @@ class AgentAuthMiddleware extends Middleware
 	{
 		if ($this->auditedTool !== null && $this->agentContext->isArmed() && $this->manifest->isMutating($this->auditedTool)) {
 			$status = $response->getStatus();
-			$this->writeAuditByContext($status < 400 ? AgentAudit::RESULT_OK : AgentAudit::RESULT_ERROR);
+			// 'dryrun' is a distinct audit result: an auditor filtering
+			// result='ok' sees actual commits only, never previews.
+			// 'dryrun' is a distinct audit result but only on success — a
+			// failed dry-run is still an error, and an auditor filtering
+			// result='ok' sees actual commits only, never previews.
+			$this->writeAuditByContext(
+				$this->auditedDryRun && $status < 400 ? AgentAudit::RESULT_DRYRUN
+					: ($status < 400 ? AgentAudit::RESULT_OK : AgentAudit::RESULT_ERROR)
+			);
 		}
 		return $response;
 	}
@@ -209,9 +229,9 @@ class AgentAuthMiddleware extends Middleware
 	 * equivalents keeps server-side enforcement honest for form clients
 	 * while 'false'/'0'/presence-only NEVER count (InputCoercion footgun).
 	 */
-	private function confirmFlagIsTrue(): bool
+	private function truthyFlag(string $name): bool
 	{
-		$value = $this->param('confirm');
+		$value = $this->param($name);
 		return in_array($value, [true, 1, '1', 'true', 'on'], true);
 	}
 

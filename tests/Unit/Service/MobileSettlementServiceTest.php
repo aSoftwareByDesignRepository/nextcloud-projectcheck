@@ -195,6 +195,49 @@ final class MobileSettlementServiceTest extends TestCase
 		self::assertSame(2, $row['count']);
 	}
 
+	public function testApplyDryRunRendersPreviewWithoutCommitting(): void
+	{
+		$this->projects->method('canUserSettleProject')->willReturn(true);
+		$this->projectSettlement->expects(self::once())->method('previewProjectSettle')
+			->with(9, 'mark_paid', ['date_from' => '2026-07-01', 'date_to' => ''], 'mgr')
+			->willReturn([
+				'count' => 4,
+				'hours' => 6.0,
+				'amount' => 600.0,
+				'token' => 'tok',
+				'cap' => 0,
+				'capExceeded' => false,
+				'target' => 'paid',
+			]);
+		// apply must never be reached on a dry-run
+		$this->projectSettlement->expects(self::never())->method('applyProjectSettle');
+
+		// no 'token' in the body — a dry-run must not require the preview token
+		$row = $this->svc->applyProjectSettle('mgr', 9, [
+			'action' => 'mark_paid',
+			'date_from' => '2026-07-01',
+			'dry_run' => true,
+		]);
+		self::assertTrue($row['dryRun']);
+		self::assertSame(4, $row['entryCount']);
+		self::assertSame(600.0, $row['totalAmount']);
+		self::assertSame('tok', $row['token']);
+	}
+
+	public function testApplyDryRunStringTrueCounts(): void
+	{
+		$this->projects->method('canUserSettleProject')->willReturn(true);
+		$this->projectSettlement->expects(self::once())->method('previewProjectSettle')
+			->willReturn(['count' => 0, 'token' => 'tok', 'cap' => 0, 'capExceeded' => false, 'target' => 'paid']);
+		$this->projectSettlement->expects(self::never())->method('applyProjectSettle');
+
+		$row = $this->svc->applyProjectSettle('mgr', 9, [
+			'action' => 'mark_paid',
+			'dry_run' => 'true',
+		]);
+		self::assertTrue($row['dryRun']);
+	}
+
 	public function testApplyNormalizesAppliedCount(): void
 	{
 		$this->projects->method('canUserSettleProject')->willReturn(true);

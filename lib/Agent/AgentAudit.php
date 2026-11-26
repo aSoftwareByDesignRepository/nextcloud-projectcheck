@@ -36,6 +36,7 @@ class AgentAudit extends Entity
 	public const RESULT_OK = 'ok';
 	public const RESULT_DENIED = 'denied';
 	public const RESULT_ERROR = 'error';
+	public const RESULT_DRYRUN = 'dryrun';
 
 	protected int $tokenId = 0;
 	protected string $userId = '';

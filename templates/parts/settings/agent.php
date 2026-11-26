@@ -48,7 +48,7 @@ $pc_tokens = is_array($pc_state['tokens']) ? $pc_state['tokens'] : [];
 		<?php endif; ?>
 	</div>
 	<?php else: ?>
-	<div class="pc-table-wrap pc-agent-tablewrap">
+	<div class="pc-table-wrap pc-agent-tablewrap" tabindex="0" role="region" aria-labelledby="pc-agent-h">
 		<table class="pc-table pc-table--cards pc-agent-table" id="pc-agent-table">
 			<thead>
 				<tr>

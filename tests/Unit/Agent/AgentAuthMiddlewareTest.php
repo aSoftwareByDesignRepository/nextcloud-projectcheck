@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace OCA\ProjectCheck\Tests\Unit\Agent;
 
+use OCA\ProjectCheck\Agent\AgentAudit;
 use OCA\ProjectCheck\Agent\AgentContext;
 use OCA\ProjectCheck\Agent\AgentException;
 use OCA\ProjectCheck\Agent\AgentManifest;
@@ -250,6 +251,68 @@ class AgentAuthMiddlewareTest extends TestCase
 		} catch (AgentException $e) {
 			$this->assertSame('confirmation_required', $e->getErrorCode());
 		}
+	}
+
+	public function testDryRunOnUndeclaredToolIsHardDenied(): void
+	{
+		// dry_run on a tool that does not declare "dryRun": true must fail
+		// closed — an agent must never believe it previewed while a commit ran.
+		$this->middlewareWithManifest([self::TOOL_WRITE]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getParams')->willReturn(['title' => 'x', 'dry_run' => true]);
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $n) => ['title' => 'x', 'dry_run' => true][$n] ?? null
+		);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken(['projectcheck:things:write']));
+		try {
+			$this->middleware->beforeController(new \stdClass(), 'x');
+			$this->fail('dry_run on an unsupported tool must be denied');
+		} catch (AgentException $e) {
+			$this->assertSame('agent_dryrun_unsupported', $e->getErrorCode());
+			$this->assertSame(422, $e->getHttpStatus());
+		}
+	}
+
+	public function testDryRunSkipsConfirmGateOnSupportedTool(): void
+	{
+		// A supported dry-run commits nothing → confirm is not required.
+		$tool = self::TOOL_WRITE + ['riskClass' => 3, 'confirm' => 'required', 'dryRun' => true];
+		$this->middlewareWithManifest([$tool]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getParams')->willReturn(['title' => 'x', 'dry_run' => true]);
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $n) => ['title' => 'x', 'dry_run' => true][$n] ?? null
+		);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken(['projectcheck:things:write']));
+		$this->tokenService->method('consumeMutationBudget')->willReturn(null);
+		$this->middleware->beforeController(new \stdClass(), 'x'); // no exception
+		$this->assertTrue(
+			$this->context->isArmed(),
+			'dry-run on a supported tool reaches dispatch without confirm',
+		);
+	}
+
+	public function testDryRunAuditedAsDryrunNotOk(): void
+	{
+		// Audit integrity: a dry-run must not look like a commit.
+		$tool = self::TOOL_WRITE + ['riskClass' => 3, 'confirm' => 'required', 'dryRun' => true];
+		$this->middlewareWithManifest([$tool]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getParams')->willReturn(['title' => 'x', 'dry_run' => true]);
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $n) => ['title' => 'x', 'dry_run' => true][$n] ?? null
+		);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken(['projectcheck:things:write']));
+		$this->auditMapper->expects($this->once())->method('record')
+			->with(5, 'agent-owner', 'pc_write', 'mobile#writeThing', null, AgentAudit::RESULT_DRYRUN, $this->anything());
+		$this->middleware->beforeController(new \stdClass(), 'x');
+		$this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 200));
 	}
 
 	public function testUnknownParamRejected(): void

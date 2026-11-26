@@ -15,13 +15,13 @@
 	align-items: flex-start;
 	gap: var(--pc-space-3, 12px);
 	padding: var(--pc-space-5, 24px);
-	border: 1px dashed var(--color-border-maxcontrast, var(--pc-border, #d4d4d4));
+	border: 1px dashed var(--color-border-maxcontrast, var(--pc-border));
 	border-radius: var(--pc-radius-md, 8px);
 	background: color-mix(in srgb, var(--color-main-background) 96%, var(--color-primary-element));
 }
 .pc-agent-empty__text {
 	margin: 0;
-	color: var(--color-text-maxcontrast, var(--pc-muted, #555));
+	color: var(--color-text-maxcontrast, var(--pc-muted));
 }
 
 /* Token table — cards by default (mobile), real table ≥768px. */
@@ -44,9 +44,9 @@
 	gap: var(--pc-space-1, 4px);
 	padding: var(--pc-space-3, 12px) var(--pc-space-4, 16px);
 	margin-bottom: var(--pc-space-3, 12px);
-	border: 1px solid var(--color-border-dark, var(--pc-border, #e0e0e0));
+	border: 1px solid var(--color-border-dark, var(--pc-border));
 	border-radius: var(--pc-radius-md, 8px);
-	background: var(--color-main-background, var(--pc-bg-card, #fff));
+	background: var(--color-main-background, var(--pc-bg-card));
 }
 .pc-agent-table td { border: 0; padding: 0; }
 .pc-agent-table td[data-cell]::before {
@@ -56,7 +56,7 @@
 	font-weight: 700;
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
-	color: var(--color-text-maxcontrast, var(--pc-muted, #666));
+	color: var(--color-text-maxcontrast, var(--pc-muted));
 	margin-bottom: 2px;
 }
 .pc-agent-table .pc-row-actions {
@@ -88,7 +88,7 @@
 		padding: 0;
 		margin-bottom: 0;
 		border: 0;
-		border-bottom: 1px solid var(--color-border-dark, var(--pc-border, #e0e0e0));
+		border-bottom: 1px solid var(--color-border-dark, var(--pc-border));
 		border-radius: 0;
 		background: transparent;
 	}
@@ -107,7 +107,7 @@
 .pc-agent-owner {
 	margin-left: var(--pc-space-2, 8px);
 	font-size: var(--pc-fs-xs, 0.75rem);
-	color: var(--color-text-maxcontrast, var(--pc-muted, #666));
+	color: var(--color-text-maxcontrast, var(--pc-muted));
 }
 .pc-agent-scopes {
 	display: inline-flex;
@@ -115,7 +115,7 @@
 	gap: var(--pc-space-1, 4px);
 }
 .pc-agent-never {
-	color: var(--color-text-maxcontrast, var(--pc-muted, #666));
+	color: var(--color-text-maxcontrast, var(--pc-muted));
 	font-style: italic;
 }
 
@@ -141,13 +141,13 @@
 	flex-shrink: 0;
 }
 .pc-badge--neutral {
-	color: var(--color-text-maxcontrast, #555);
+	color: var(--color-text-maxcontrast);
 	background: color-mix(in srgb, var(--color-main-background) 85%, var(--color-text-maxcontrast));
 	border-color: color-mix(in srgb, var(--color-main-background) 70%, var(--color-text-maxcontrast));
 }
 .pc-badge--info {
-	color: var(--color-primary-element-text, #fff);
-	background: var(--color-primary-element, #0082c9);
+	color: var(--color-primary-element-text);
+	background: var(--color-primary-element);
 }
 
 /* Scope chips (custom preset) — multi-select per design-system chips recipe. */
@@ -161,20 +161,20 @@
 	align-items: center;
 	gap: var(--pc-space-1, 4px);
 	padding: var(--pc-space-1, 4px) var(--pc-space-3, 12px);
-	border: 1px solid var(--color-border-dark, var(--pc-border, #ccc));
+	border: 1px solid var(--color-border-dark, var(--pc-border));
 	border-radius: 999px;
 	cursor: pointer;
 	font-size: var(--pc-fs-s, 0.875rem);
 	min-height: 44px;
-	background: var(--color-main-background, #fff);
+	background: var(--color-main-background);
 }
 .pc-agent-chip:has(:checked) {
-	border-color: var(--color-primary-element, #0082c9);
+	border-color: var(--color-primary-element);
 	background: color-mix(in srgb, var(--color-main-background) 88%, var(--color-primary-element));
 }
-.pc-agent-chip input { accent-color: var(--color-primary-element, #0082c9); }
+.pc-agent-chip input { accent-color: var(--color-primary-element); }
 .pc-agent-chip:focus-within {
-	outline: 2px solid var(--color-primary-element, #0082c9);
+	outline: 2px solid var(--color-primary-element);
 	outline-offset: 2px;
 }
 
@@ -185,10 +185,10 @@
 	font-family: var(--pc-font-mono, monospace);
 	font-size: var(--pc-fs-s, 0.8125rem);
 	padding: var(--pc-space-2, 8px);
-	border: 1px solid var(--color-border-dark, var(--pc-border, #ccc));
+	border: 1px solid var(--color-border-dark, var(--pc-border));
 	border-radius: var(--pc-radius-md, 8px);
 	background: color-mix(in srgb, var(--color-main-background) 94%, var(--color-text-maxcontrast));
-	color: var(--color-main-text, #222);
+	color: var(--color-main-text);
 	resize: vertical;
 }
 #pc-agent-secret {

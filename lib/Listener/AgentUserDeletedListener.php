@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Listener;
 
 use OCA\ProjectCheck\Agent\AgentTokenMapper;
+use Psr\Log\LoggerInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\User\Events\UserDeletedEvent;
@@ -25,6 +26,7 @@ final class AgentUserDeletedListener implements IEventListener
 {
 	public function __construct(
 		private readonly AgentTokenMapper $tokens,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -33,6 +35,16 @@ final class AgentUserDeletedListener implements IEventListener
 		if (!$event instanceof UserDeletedEvent) {
 			return;
 		}
-		$this->tokens->deleteByUserId($event->getUser()->getUID());
+		// This listener fires on EVERY user deletion system-wide — a
+		// missing table (mid-upgrade, app freshly installed but repair
+		// step not yet run, partial uninstall) must not turn a user
+		// deletion into a 500 for an unrelated app.
+		try {
+			$this->tokens->deleteByUserId($event->getUser()->getUID());
+		} catch (\Throwable $e) {
+			$this->logger->warning('agent token purge failed', [
+				'exception' => $e,
+			]);
+		}
 	}
 }

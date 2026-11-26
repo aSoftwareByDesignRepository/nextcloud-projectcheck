@@ -190,6 +190,14 @@ class MobileSettlementService
 			throw new MobileApiException('forbidden', $this->l->t('You cannot settle this project.'), 403);
 		}
 
+		// NH-05 dry-run (declared on pc_apply_project_settlement): render the
+		// exact preview the commit would consume — nothing is written and the
+		// preview token is not required (the agent hasn't committed to one yet).
+		if (in_array($body['dry_run'] ?? null, [true, 1, '1', 'true', 'on'], true)) {
+			$preview = $this->previewProjectSettle($uid, $projectId, $body);
+			return ['dryRun' => true] + $preview;
+		}
+
 		$token = (string)($body['token'] ?? '');
 		if ($token === '') {
 			throw new MobileApiException('validation', $this->l->t('Preview token is required.'), 422, [

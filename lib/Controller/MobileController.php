@@ -19,6 +19,7 @@ use OCP\Authentication\Token\IProvider;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\ICacheFactory;
@@ -70,6 +71,7 @@ class MobileController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]
 	#[NoCSRFRequired]
 	public function projects(mixed $q = null, mixed $limit = null): JSONResponse
 	{
@@ -93,6 +95,7 @@ class MobileController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]
 	#[NoCSRFRequired]
 	public function timeEntries(
 		mixed $from = null,
@@ -111,6 +114,7 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[PublicPage]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function createTimeEntry(): JSONResponse
 	{
@@ -122,6 +126,7 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[PublicPage]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function updateTimeEntry(int $id): JSONResponse
 	{
@@ -133,6 +138,7 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[PublicPage]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function deleteTimeEntry(int $id): JSONResponse
 	{
@@ -144,6 +150,7 @@ class MobileController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]
 	#[NoCSRFRequired]
 	public function customers(): JSONResponse
 	{
@@ -154,6 +161,7 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[PublicPage]
 	#[UserRateLimit(limit: 30, period: 60)]
 	public function createProject(): JSONResponse
 	{
@@ -165,6 +173,7 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[PublicPage]
 	#[UserRateLimit(limit: 30, period: 60)]
 	public function createCustomer(): JSONResponse
 	{
@@ -175,6 +184,7 @@ class MobileController extends Controller
 	}
 
 	#[NoAdminRequired]
+	#[PublicPage]
 	#[NoCSRFRequired]
 	public function settlementEntries(
 		mixed $from = null,
@@ -193,6 +203,7 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[PublicPage]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function changeEntryBilling(int $id): JSONResponse
 	{
@@ -206,6 +217,7 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[PublicPage]
 	#[UserRateLimit(limit: 30, period: 60)]
 	public function projectSettlementPreview(int $id): JSONResponse
 	{
@@ -218,6 +230,7 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[PublicPage]
 	#[UserRateLimit(limit: 30, period: 60)]
 	public function projectSettlementApply(int $id): JSONResponse
 	{
@@ -263,6 +276,12 @@ class MobileController extends Controller
 	 */
 	private function assertSafeMutationChannel(): void
 	{
+		// Scoped agent credential (D-01): the middleware resolved and
+		// entitled the token — an explicit custom-header credential is
+		// CSRF-immune by construction (no ambient cookie to forge).
+		if ($this->agentContext->isArmed()) {
+			return;
+		}
 		if ($this->request->passesCSRFCheck()) {
 			return;
 		}

@@ -167,6 +167,16 @@ class AgentManifest
 			|| (int)($tool['riskClass'] ?? 0) >= self::RISK_STATE_TRANSITION;
 	}
 
+	/**
+	 * NH-05 dry-run: only write tools may declare "dryRun": true — the
+	 * middleware rejects a truthy dry_run on anything else (fail-closed:
+	 * an agent must never believe it previewed while a commit ran).
+	 */
+	public function supportsDryRun(array $tool): bool
+	{
+		return ($tool['dryRun'] ?? null) === true && $this->isMutating($tool);
+	}
+
 	public function isMutating(array $tool): bool
 	{
 		return in_array(strtoupper((string)($tool['method'] ?? 'GET')), self::MUTATING_METHODS, true);

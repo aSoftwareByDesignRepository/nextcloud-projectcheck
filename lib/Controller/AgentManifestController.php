@@ -13,6 +13,7 @@ use OCA\ProjectCheck\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -41,6 +42,11 @@ class AgentManifestController extends Controller
 		parent::__construct(Application::APP_ID, $request);
 	}
 
+	// PublicPage: agent tokens never establish a session (NN-10), so the
+	// framework login gate would kill every agent request before our
+	// middleware runs. Auth is manual below — armed context OR session
+	// user with app access; anonymous still 401s.
+	#[PublicPage]
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function show(): JSONResponse

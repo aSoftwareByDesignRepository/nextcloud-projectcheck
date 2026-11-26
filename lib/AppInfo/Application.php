@@ -100,7 +100,7 @@ class Application extends App implements IBootstrap
 		$context->registerService(\OCA\ProjectCheck\Agent\AgentManifest::class, function ($c) {
 			return new \OCA\ProjectCheck\Agent\AgentManifest(
 				'projectcheck',
-				\dirname(__DIR__) . '/appinfo/agent-manifest.json'
+				\dirname(__DIR__, 2) . '/appinfo/agent-manifest.json'
 			);
 		});
 		$context->registerService(\OCA\ProjectCheck\Agent\AgentSeatGate::class, function ($c) {
