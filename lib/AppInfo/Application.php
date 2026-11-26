@@ -577,6 +577,14 @@ class Application extends App implements IBootstrap
 				$c->query(IDBConnection::class),
 			);
 		});
+		$context->registerService(\OCA\ProjectCheck\Service\MobileCatalogService::class, function ($c) {
+			return new \OCA\ProjectCheck\Service\MobileCatalogService(
+				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
+				$c->query(\OCA\ProjectCheck\Service\CustomerService::class),
+				$c->query(\OCA\ProjectCheck\Service\FormSubmitIdempotencyService::class),
+				$c->query(\OCP\L10N\IFactory::class)->get(self::APP_ID),
+			);
+		});
 		$context->registerService(\OCA\ProjectCheck\Service\MobileSettlementService::class, function ($c) {
 			return new \OCA\ProjectCheck\Service\MobileSettlementService(
 				$c->query(\OCA\ProjectCheck\Service\ProjectService::class),
@@ -592,6 +600,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCP\IUserSession::class),
 				$c->query(\OCA\ProjectCheck\Service\MobileGateService::class),
 				$c->query(\OCA\ProjectCheck\Service\MobileBookingService::class),
+				$c->query(\OCA\ProjectCheck\Service\MobileCatalogService::class),
 				$c->query(\OCA\ProjectCheck\Service\MobileSettlementService::class),
 				$c->query(IAppManager::class),
 				$c->query(\OCP\IUserManager::class),

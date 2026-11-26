@@ -2095,6 +2095,16 @@ class ProjectService
 	 */
 	private function validateProjectData(array &$data, ?int $projectId = null, bool $pricingTouched = true): void
 	{
+		// strict_types: strlen()/CostRateMode::normalize()/date parsing below
+		// detonate on non-string values (TypeError → 500 on crafted input).
+		// Reject them as a validation error before any of that runs.
+		foreach (['name', 'short_description', 'detailed_description', 'category', 'priority',
+			'status', 'start_date', 'end_date', 'tags', 'project_type', 'cost_rate_mode'] as $field) {
+			if (array_key_exists($field, $data) && $data[$field] !== null && !is_string($data[$field])) {
+				throw new \Exception("Field '{$field}' must be a string");
+			}
+		}
+
 		// Normalize leading/trailing whitespace on the project name so that
 		// stray spaces (e.g. copy/paste artefacts) cannot push a project to
 		// the top of alphabetically-sorted dropdowns. The trimmed value is
@@ -2372,36 +2382,40 @@ class ProjectService
 	}
 
 	/**
-	 * Parse European date format (dd.mm.yyyy) to DateTime object
+	 * Parse European date format (dd.mm.yyyy) or ISO (yyyy-mm-dd) strictly.
 	 *
-	 * @param string|null $dateString
+	 * Returns null for absent input; throws for anything present but invalid.
+	 * Storing NULL for garbage input silently drops the user's date, and
+	 * \DateTime would normalize impossible dates ("2026-02-30" → March 2nd).
+	 *
+	 * @param mixed $dateString Request-sourced value; non-strings are rejected
 	 * @return \DateTime|null
+	 * @throws \Exception on unparseable or impossible dates
 	 */
-	private function parseEuropeanDate(?string $dateString): ?\DateTime
+	private function parseEuropeanDate(mixed $dateString): ?\DateTime
 	{
-		if (empty($dateString)) {
+		if ($dateString === null || (is_string($dateString) && trim($dateString) === '')) {
 			return null;
 		}
 
-		// Handle both European format (dd.mm.yyyy) and ISO format (yyyy-mm-dd)
-		if (preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $dateString, $matches)) {
+		if (is_string($dateString) && preg_match('/^(\d{2})\.(\d{2})\.(\d{4})$/', $dateString, $matches)) {
 			// European format: dd.mm.yyyy
-			$day = $matches[1];
-			$month = $matches[2];
-			$year = $matches[3];
-			$isoDate = $year . '-' . $month . '-' . $day;
-		} elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $dateString, $matches)) {
-			// ISO format: yyyy-mm-dd (already in correct format)
-			$isoDate = $dateString;
+			$day = (int)$matches[1];
+			$month = (int)$matches[2];
+			$year = (int)$matches[3];
+		} elseif (is_string($dateString) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $dateString, $matches)) {
+			// ISO format: yyyy-mm-dd
+			$year = (int)$matches[1];
+			$month = (int)$matches[2];
+			$day = (int)$matches[3];
 		} else {
-			// Invalid format, return null
-			return null;
+			throw new \Exception('Invalid start or end date');
 		}
 
-		try {
-			return new \DateTime($isoDate);
-		} catch (\Throwable $e) {
-			return null;
+		if (!checkdate($month, $day, $year)) {
+			throw new \Exception('Invalid start or end date');
 		}
+
+		return new \DateTime(sprintf('%04d-%02d-%02d', $year, $month, $day));
 	}
 }

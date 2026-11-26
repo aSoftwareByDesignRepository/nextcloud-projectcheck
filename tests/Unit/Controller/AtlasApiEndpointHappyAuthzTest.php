@@ -42,6 +42,7 @@ use OCA\ProjectCheck\Service\IRequestTokenProvider;
 use OCA\ProjectCheck\Service\LicenseService;
 use OCA\ProjectCheck\Service\ListExportService;
 use OCA\ProjectCheck\Service\MobileBookingService;
+use OCA\ProjectCheck\Service\MobileCatalogService;
 use OCA\ProjectCheck\Service\MobileGateService;
 use OCA\ProjectCheck\Service\MobileSettlementService;
 use OCA\ProjectCheck\Service\ProjectFileService;
@@ -499,6 +500,15 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			$mock->method('createEntry')->willReturn(['ok' => true, 'entry' => ['id' => 1]]);
 			$mock->method('updateEntry')->willReturn(['ok' => true, 'entry' => ['id' => 1]]);
 			$mock->method('deleteEntry')->willReturnCallback(static function (): void {});
+			$this->byType[$key] = $mock;
+			return $mock;
+		}
+
+		if ($typeName === MobileCatalogService::class) {
+			$mock = $this->createMock(MobileCatalogService::class);
+			$mock->method('listCustomers')->willReturn(['ok' => true, 'customers' => []]);
+			$mock->method('createCustomer')->willReturn(['ok' => true, 'customer' => ['id' => 1]]);
+			$mock->method('createProject')->willReturn(['ok' => true, 'project' => ['id' => 1]]);
 			$this->byType[$key] = $mock;
 			return $mock;
 		}

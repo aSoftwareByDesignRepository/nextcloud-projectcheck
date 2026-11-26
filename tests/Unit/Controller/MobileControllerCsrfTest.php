@@ -7,6 +7,7 @@ namespace OCA\ProjectCheck\Tests\Unit\Controller;
 use OCA\ProjectCheck\Controller\MobileController;
 use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Service\MobileBookingService;
+use OCA\ProjectCheck\Service\MobileCatalogService;
 use OCA\ProjectCheck\Service\MobileGateService;
 use OCA\ProjectCheck\Service\MobileSettlementService;
 use OCP\App\IAppManager;
@@ -39,6 +40,7 @@ final class MobileControllerCsrfTest extends TestCase
 			$session,
 			$this->createMock(MobileGateService::class),
 			$this->createMock(MobileBookingService::class),
+			$this->createMock(MobileCatalogService::class),
 			$this->createMock(MobileSettlementService::class),
 			$this->createMock(IAppManager::class),
 			$users,

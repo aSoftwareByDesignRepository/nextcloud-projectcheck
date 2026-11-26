@@ -8,6 +8,7 @@ use OCA\ProjectCheck\AppInfo\Application;
 use OCA\ProjectCheck\Exception\MobileApiException;
 use OCA\ProjectCheck\Exception\PermissionDeniedException;
 use OCA\ProjectCheck\Service\MobileBookingService;
+use OCA\ProjectCheck\Service\MobileCatalogService;
 use OCA\ProjectCheck\Service\MobileGateService;
 use OCA\ProjectCheck\Service\MobileSettlementService;
 use OCP\App\IAppManager;
@@ -39,6 +40,7 @@ class MobileController extends Controller
 		private readonly IUserSession $userSession,
 		private readonly MobileGateService $gate,
 		private readonly MobileBookingService $booking,
+		private readonly MobileCatalogService $catalog,
 		private readonly MobileSettlementService $settlement,
 		private readonly IAppManager $appManager,
 		private readonly IUserManager $userManager,
@@ -68,33 +70,42 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function projects(?string $q = null, ?string $limit = null): JSONResponse
+	public function projects(mixed $q = null, mixed $limit = null): JSONResponse
 	{
 		$uid = $this->requireUid();
 		$this->gate->assertGatePassed($uid);
+		$q = $this->stringParam($q, 'q');
+		$limit = $this->stringParam($limit, 'limit');
 		$limitInt = $limit !== null && is_numeric($limit) ? (int)$limit : null;
 		return new JSONResponse($this->booking->listProjectsForBooking($uid, $q, $limitInt));
 	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
-	public function resolveHourlyRate(int $id, ?string $date = null, ?string $employeeUserId = null): JSONResponse
+	public function resolveHourlyRate(int $id, mixed $date = null, mixed $employeeUserId = null): JSONResponse
 	{
 		$uid = $this->requireUid();
 		$this->gate->assertGatePassed($uid);
-		return new JSONResponse($this->booking->resolveHourlyRate($uid, $id, $date, $employeeUserId));
+		return new JSONResponse($this->booking->resolveHourlyRate(
+			$uid, $id, $this->stringParam($date, 'date'), $this->stringParam($employeeUserId, 'employeeUserId')
+		));
 	}
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function timeEntries(
-		?string $from = null,
-		?string $to = null,
-		?string $billingStatus = null,
+		mixed $from = null,
+		mixed $to = null,
+		mixed $billingStatus = null,
 	): JSONResponse {
 		$uid = $this->requireUid();
 		$this->gate->assertGatePassed($uid);
-		return new JSONResponse($this->booking->listMyEntries($uid, $from, $to, $billingStatus));
+		return new JSONResponse($this->booking->listMyEntries(
+			$uid,
+			$this->stringParam($from, 'from'),
+			$this->stringParam($to, 'to'),
+			$this->stringParam($billingStatus, 'billingStatus')
+		));
 	}
 
 	#[NoAdminRequired]
@@ -133,14 +144,50 @@ class MobileController extends Controller
 
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	public function customers(): JSONResponse
+	{
+		$uid = $this->requireUid();
+		$this->gate->assertGatePassed($uid);
+		return new JSONResponse($this->catalog->listCustomers($uid));
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
+	public function createProject(): JSONResponse
+	{
+		$this->assertSafeMutationChannel();
+		$uid = $this->requireUid();
+		$this->gate->assertGatePassed($uid);
+		return new JSONResponse($this->catalog->createProject($uid, $this->jsonBody()), 201);
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 30, period: 60)]
+	public function createCustomer(): JSONResponse
+	{
+		$this->assertSafeMutationChannel();
+		$uid = $this->requireUid();
+		$this->gate->assertGatePassed($uid);
+		return new JSONResponse($this->catalog->createCustomer($uid, $this->jsonBody()), 201);
+	}
+
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
 	public function settlementEntries(
-		?string $from = null,
-		?string $to = null,
-		?string $billingStatus = null,
+		mixed $from = null,
+		mixed $to = null,
+		mixed $billingStatus = null,
 	): JSONResponse {
 		$uid = $this->requireUid();
 		$this->gate->assertGatePassed($uid);
-		return new JSONResponse($this->settlement->listSettleableEntries($uid, $from, $to, $billingStatus));
+		return new JSONResponse($this->settlement->listSettleableEntries(
+			$uid,
+			$this->stringParam($from, 'from'),
+			$this->stringParam($to, 'to'),
+			$this->stringParam($billingStatus, 'billingStatus')
+		));
 	}
 
 	#[NoAdminRequired]
@@ -187,6 +234,20 @@ class MobileController extends Controller
 			throw new MobileApiException('unauthenticated', 'Authentication required.', 401);
 		}
 		return $user->getUID();
+	}
+
+	/**
+	 * Array query params (?from[]=x) arrive here as PHP arrays — TypeErrors on
+	 * ?string params would be a 500; a machine API answers 422 instead.
+	 */
+	private function stringParam(mixed $value, string $field): ?string
+	{
+		if ($value === null || is_string($value)) {
+			return $value;
+		}
+		throw new MobileApiException('validation', 'Invalid query parameter.', 422, [
+			'fields' => [$field => 'invalid_type'],
+		]);
 	}
 
 	/**

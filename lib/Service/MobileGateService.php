@@ -90,6 +90,8 @@ class MobileGateService
 				// v1.1 companion capabilities (clients hide UI when false/absent).
 				'settlement' => true,
 				'offlineCreate' => true,
+				// v1.2 catalog writes for companions/agents (gated like the rest).
+				'catalogWrite' => true,
 				// Advertise push only when the notifications app can deliver it.
 				'push' => $pushAvailable,
 				// Companion API floor (must stay advertised). Clients treat a *higher*

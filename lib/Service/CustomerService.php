@@ -144,6 +144,12 @@ class CustomerService
 			throw new \Exception('Access denied');
 		}
 
+		// strict_types: non-string fields detonate strlen()/findByName() below
+		// (TypeError → 500). Reject them as a validation error instead.
+		if (($badField = self::firstNonStringField($data)) !== null) {
+			throw new \Exception("Field '{$badField}' must be a string");
+		}
+
 		// Validate required fields
 		if (empty($data['name'])) {
 			throw new \Exception('Customer name is required');
@@ -253,6 +259,9 @@ class CustomerService
 		$customer = $this->getCustomer($id);
 		if (!$customer) {
 			throw new \Exception('Customer not found');
+		}
+		if (($badField = self::firstNonStringField($data)) !== null) {
+			throw new \Exception("Field '{$badField}' must be a string");
 		}
 		$originalName = $customer->getName();
 
@@ -600,6 +609,11 @@ class CustomerService
 	{
 		$errors = [];
 
+		if (($badField = self::firstNonStringField($data)) !== null) {
+			$errors[$badField] = "Field '{$badField}' must be a string";
+			return $errors;
+		}
+
 		// Validate name
 		if (empty($data['name'])) {
 			$errors['name'] = 'Customer name is required';
@@ -661,5 +675,19 @@ class CustomerService
 		// Check if customer has associated projects
 		$projectCount = $this->customerMapper->getProjectCount($id);
 		return $projectCount === 0;
+	}
+
+	/**
+	 * First customer field holding a non-null, non-string value, or null.
+	 * Every field below lands in strlen()/mapper calls under strict_types.
+	 */
+	private static function firstNonStringField(array $data): ?string
+	{
+		foreach (['name', 'email', 'phone', 'address', 'contact_person'] as $field) {
+			if (array_key_exists($field, $data) && $data[$field] !== null && !is_string($data[$field])) {
+				return $field;
+			}
+		}
+		return null;
 	}
 }

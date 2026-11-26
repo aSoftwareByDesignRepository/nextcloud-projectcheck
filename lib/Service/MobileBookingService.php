@@ -182,6 +182,11 @@ class MobileBookingService
 	 */
 	public function createEntry(string $uid, array $body): array
 	{
+		$this->assertScalarBodyFields($body, [
+			'projectId', 'project_id', 'date', 'description',
+			'clientRequestId', 'client_request_id',
+			'durationMinutes', 'hours', 'startTime', 'endTime',
+		]);
 		$clientRequestId = $this->normalizeClientRequestId(
 			isset($body['clientRequestId']) ? (string)$body['clientRequestId'] : (isset($body['client_request_id']) ? (string)$body['client_request_id'] : null)
 		);
@@ -207,12 +212,7 @@ class MobileBookingService
 			}
 		}
 
-		$projectId = (int)($body['projectId'] ?? $body['project_id'] ?? 0);
-		if ($projectId < 1) {
-			throw new MobileApiException('validation', $this->l->t('Project is required.'), 422, [
-				'fields' => ['projectId' => 'required'],
-			]);
-		}
+		$projectId = $this->resolveProjectId($body);
 		if (!$this->projects->canUserAddTimeEntryForProject($uid, $projectId)) {
 			throw new MobileApiException('forbidden', $this->l->t('You cannot book time on this project.'), 403);
 		}
@@ -391,13 +391,14 @@ class MobileBookingService
 		}
 		// Spec D5 / SERVER-MOBILE-API §3.6: mobile may mutate only open entries.
 		$this->assertEntryOpenForMutation($existing, 'edit');
+		$this->assertScalarBodyFields($body, [
+			'projectId', 'project_id', 'date', 'description',
+			'durationMinutes', 'hours', 'startTime', 'endTime',
+		]);
 
 		$data = [];
 		if (array_key_exists('projectId', $body) || array_key_exists('project_id', $body)) {
-			$projectId = (int)($body['projectId'] ?? $body['project_id']);
-			if ($projectId < 1) {
-				throw new MobileApiException('validation', $this->l->t('Project is required.'), 422);
-			}
+			$projectId = $this->resolveProjectId($body);
 			if (!$this->projects->canUserAddTimeEntryForProject($uid, $projectId)) {
 				throw new MobileApiException('forbidden', $this->l->t('You cannot book time on this project.'), 403);
 			}
@@ -542,6 +543,44 @@ class MobileBookingService
 		throw new MobileApiException('validation', $this->l->t('Provide durationMinutes or startTime and endTime.'), 422, [
 			'fields' => ['durationMinutes' => 'required'],
 		]);
+	}
+
+	/**
+	 * PHP's (int)/(string) casts silently mangle arrays, objects and bools:
+	 * ["x"] → 1 (projectId lands on project 1 or a fake 403 that leaks its
+	 * bookability) and ["x"] → "Array" (stored verbatim, and even passes the
+	 * clientRequestId charset regex). A JSON mutation API must reject
+	 * non-scalars, never coerce them.
+	 *
+	 * @param list<string> $fields
+	 */
+	private function assertScalarBodyFields(array $body, array $fields): void
+	{
+		foreach ($fields as $field) {
+			if (array_key_exists($field, $body) && $body[$field] !== null
+				&& !is_string($body[$field]) && !is_int($body[$field]) && !is_float($body[$field])) {
+				throw new MobileApiException('validation', $this->l->t('Invalid field type.'), 422, [
+					'fields' => [$field => 'invalid_type'],
+				]);
+			}
+		}
+	}
+
+	/**
+	 * (int) silently truncates "12abc" → 12 and 12.9 → 12 — a crafted id would
+	 * book the WRONG project without an error. Accept only ints/digit-strings.
+	 */
+	private function resolveProjectId(array $body): int
+	{
+		$raw = $body['projectId'] ?? $body['project_id'] ?? null;
+		$id = is_int($raw) ? $raw
+			: (is_string($raw) && ctype_digit($raw) ? (int)$raw : 0);
+		if ($id < 1) {
+			throw new MobileApiException('validation', $this->l->t('Project is required.'), 422, [
+				'fields' => ['projectId' => 'required'],
+			]);
+		}
+		return $id;
 	}
 
 	private function assertMinutesRange(int $minutes): int

@@ -173,6 +173,9 @@ return [
 		// Mobile companion API v1 (PC2 gated; web stays free)
 		['name' => 'mobile#bootstrap', 'url' => '/mobile/v1/bootstrap', 'verb' => 'GET'],
 		['name' => 'mobile#projects', 'url' => '/mobile/v1/projects', 'verb' => 'GET'],
+		['name' => 'mobile#createProject', 'url' => '/mobile/v1/projects', 'verb' => 'POST'],
+		['name' => 'mobile#customers', 'url' => '/mobile/v1/customers', 'verb' => 'GET'],
+		['name' => 'mobile#createCustomer', 'url' => '/mobile/v1/customers', 'verb' => 'POST'],
 		['name' => 'mobile#resolveHourlyRate', 'url' => '/mobile/v1/projects/{id}/resolve-hourly-rate', 'verb' => 'GET', 'requirements' => ['id' => '\\d+']],
 		['name' => 'mobile#timeEntries', 'url' => '/mobile/v1/time-entries', 'verb' => 'GET'],
 		['name' => 'mobile#createTimeEntry', 'url' => '/mobile/v1/time-entries', 'verb' => 'POST'],
