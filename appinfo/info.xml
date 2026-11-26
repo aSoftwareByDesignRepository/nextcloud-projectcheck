@@ -18,7 +18,7 @@
 	<summary lang="nb">IT-prosjektstyring med tidsregistrering og budsjettkontroll</summary>
 	<summary lang="pt-br">Controle projetos, tempo e orçamentos no seu Nextcloud</summary>
 	<description><![CDATA[
-# Projects, time and budgets — in one place.
+# Projects, time and budgets, in one place.
 
 ProjectCheck keeps customers, projects, people, time entries and optional budgets on the Nextcloud you already host. Book time against projects. Resolve hourly rates on the server from dated history. See remaining budget before the month runs away.
 
@@ -26,27 +26,27 @@ ProjectCheck keeps customers, projects, people, time entries and optional budget
 
 ## Why teams install it
 
-- **Run the portfolio** — customers and projects with status, dates, search and sort
-- **Invite the right people** — Nextcloud users with roles and permissions per project
-- **Book and export time** — browse, filter and export entries against projects
-- **Price with a history** — server-side rates from project, employee master data or per-person on the project; append-only rate history
-- **Watch the numbers** — optional budgets and remaining visibility; dashboard overview; files on projects
+- **Run the portfolio**: customers and projects with status, dates, search and sort
+- **Invite the right people**: Nextcloud users with roles and permissions per project
+- **Book and export time**: browse, filter and export entries against projects
+- **Price with a history**: server-side rates from project, employee master data or per-person on the project; append-only rate history
+- **Watch the numbers**: optional budgets and remaining visibility; dashboard overview; files on projects
 
 ## Clear limits
 
 - Mobile may preview rates; the server stays authoritative.
-- Prefer `ProjectCheck*` in new integrations — `ProjectControl*` / `OCA.ProjectControl` are deprecated aliases.
+- Prefer `ProjectCheck*` in new integrations. `ProjectControl*` / `OCA.ProjectControl` are deprecated aliases.
 
 ## Feedback welcome
 
-We improve this app with real-world use. Bug reports, rough edges, and ideas help — open a GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) or write to info@software-by-design.de. Your feedback directly shapes what we build next.
+We improve this app with real-world use. Bug reports, rough edges, and ideas help. Open a GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) or write to info@software-by-design.de. Your feedback directly shapes what we build next.
 
 ## Requirements
 
 - Nextcloud 32–35 · PHP 8.2–8.5 · MySQL/MariaDB or PostgreSQL
 	]]></description>
 	<description lang="de"><![CDATA[
-# Projekte, Zeit und Budgets — an einem Ort.
+# Projekte, Zeit und Budgets, an einem Ort.
 
 ProjectCheck führt Kunden, Projekte, Personen, Zeiteinträge und optionale Budgets in der Nextcloud, die Sie schon betreiben. Zeit auf Projekte buchen. Stundensätze serverseitig aus historisierten Tarifen auflösen. Restbudget sehen, bevor der Monat davonläuft.
 
@@ -54,20 +54,20 @@ ProjectCheck führt Kunden, Projekte, Personen, Zeiteinträge und optionale Budg
 
 ## Warum Teams es einsetzen
 
-- **Portfolio führen** — Kunden und Projekte mit Status, Terminen, Suche und Sortierung
-- **Die richtigen Leute einladen** — Nextcloud-Benutzer mit Rollen und Rechten am Projekt
-- **Zeit buchen und exportieren** — Einträge filtern und exportieren
-- **Mit Historie tarifieren** — Sätze vom Projekt, aus Stammdaten oder personenspezifisch; nur anhängbare Tarifhistorie
-- **Zahlen im Blick** — optionale Budgets und Restsicht; Dashboard; Dateien am Projekt
+- **Portfolio führen**: Kunden und Projekte mit Status, Terminen, Suche und Sortierung
+- **Die richtigen Leute einladen**: Nextcloud-Benutzer mit Rollen und Rechten am Projekt
+- **Zeit buchen und exportieren**: Einträge filtern und exportieren
+- **Mit Historie tarifieren**: Sätze vom Projekt, aus Stammdaten oder personenspezifisch; nur anhängbare Tarifhistorie
+- **Zahlen im Blick**: optionale Budgets und Restsicht; Dashboard; Dateien am Projekt
 
 ## Klare Grenzen
 
 - Mobile kann Tarife nur voranzeigen; maßgeblich ist der Server.
-- Für neue Anbindungen `ProjectCheck*` verwenden — `ProjectControl*` / `OCA.ProjectControl` sind veraltete Aliase.
+- Für neue Anbindungen `ProjectCheck*` verwenden. `ProjectControl*` / `OCA.ProjectControl` sind veraltete Aliase.
 
 ## Feedback willkommen
 
-Wir verbessern diese App mit Rückmeldungen aus der Praxis. Fehlerberichte, Stolpersteine und Ideen helfen — öffnen Sie ein GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) oder schreiben Sie an info@software-by-design.de. Ihr Feedback prägt direkt, was wir als Nächstes bauen.
+Wir verbessern diese App mit Rückmeldungen aus der Praxis. Fehlerberichte, Stolpersteine und Ideen helfen. Öffnen Sie ein GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) oder schreiben Sie an info@software-by-design.de. Ihr Feedback prägt direkt, was wir als Nächstes bauen.
 
 ## Voraussetzungen
 
@@ -88,7 +88,7 @@ les taux horaires des saisies de temps sont résolus côté serveur à partir de
 
 ## Retours bienvenus
 
-Nous améliorons cette app grâce à votre usage réel. Bugs, frottements et idées aident — ouvrez une GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) ou écrivez à info@software-by-design.de. Vos retours façonnent directement la suite.
+Nous améliorons cette app grâce à votre usage réel. Bugs, frottements et idées aident. Ouvrez une GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) ou écrivez à info@software-by-design.de. Vos retours façonnent directement la suite.
 ]]></description>
 	<description lang="da"><![CDATA[
 # ProjectCheck
@@ -105,7 +105,7 @@ timesatser på tidsregistreringer beregnes på serveren ud fra historik med ikra
 
 ## Feedback er velkommen
 
-Vi forbedrer denne app med brug i praksis. Fejlrapporter, friktioner og idéer hjælper — åbn et GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) eller skriv til info@software-by-design.de. Jeres feedback former direkte det, vi bygger næste gang.
+Vi forbedrer denne app med brug i praksis. Fejlrapporter, friktioner og idéer hjælper. Åbn et GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) eller skriv til info@software-by-design.de. Jeres feedback former direkte det, vi bygger næste gang.
 ]]></description>
 	<description lang="es"><![CDATA[
 # ProjectCheck
@@ -122,7 +122,7 @@ las tarifas horarias en entradas de tiempo se resuelven en el servidor desde el 
 
 ## Comentarios bienvenidos
 
-Mejoramos esta app con el uso real. Informes de errores, fricciones e ideas ayudan — abra un GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) o escriba a info@software-by-design.de. Su feedback da forma directa a lo que construimos después.
+Mejoramos esta app con el uso real. Informes de errores, fricciones e ideas ayudan. Abra un GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) o escriba a info@software-by-design.de. Su feedback da forma directa a lo que construimos después.
 ]]></description>
 	<description lang="nl"><![CDATA[
 # ProjectCheck
@@ -139,7 +139,7 @@ uurtarieven op tijdregistraties worden op de server bepaald vanuit historie met 
 
 ## Feedback welkom
 
-We verbeteren deze app met gebruik in de praktijk. Bugmeldingen, struikelblokken en ideeën helpen — open een GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) of mail naar info@software-by-design.de. Uw feedback bepaalt mede wat we als volgende bouwen.
+We verbeteren deze app met gebruik in de praktijk. Bugmeldingen, struikelblokken en ideeën helpen. Open een GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) of mail naar info@software-by-design.de. Uw feedback bepaalt mede wat we als volgende bouwen.
 ]]></description>
 	<description lang="it"><![CDATA[
 # ProjectCheck
@@ -156,7 +156,7 @@ le tariffe orarie sulle registrazioni sono risolte sul server dalla cronologia c
 
 ## Feedback benvenuto
 
-Miglioriamo questa app con l’uso reale. Segnalazioni di bug, punti deboli e idee aiutano — aprite una GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) o scrivete a info@software-by-design.de. Il vostro feedback guida direttamente ciò che costruiamo dopo.
+Miglioriamo questa app con l’uso reale. Segnalazioni di bug, punti deboli e idee aiutano. Aprite una GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) o scrivete a info@software-by-design.de. Il vostro feedback guida direttamente ciò che costruiamo dopo.
 ]]></description>
 	<description lang="pl"><![CDATA[
 # ProjectCheck
@@ -173,7 +173,7 @@ stawki godzinowe w wpisach czasu są ustalane na serwerze z historii obowiązywa
 
 ## Feedback mile widziany
 
-Ulepszamy tę aplikację dzięki realnemu użyciu. Zgłoszenia błędów, tarcia i pomysły pomagają — otwórz GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) lub napisz na info@software-by-design.de. Wasza opinia bezpośrednio kształtuje to, co budujemy dalej.
+Ulepszamy tę aplikację dzięki realnemu użyciu. Zgłoszenia błędów, tarcia i pomysły pomagają. Otwórz GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) lub napisz na info@software-by-design.de. Wasza opinia bezpośrednio kształtuje to, co budujemy dalej.
 ]]></description>
 	<description lang="sv"><![CDATA[
 # ProjectCheck
@@ -190,7 +190,7 @@ timpriser på tidposter löses på servern från historik med giltighetsdatum.
 
 ## Feedback välkomnas
 
-Vi förbättrar den här appen med verklig användning. Felrapporter, friktioner och idéer hjälper — öppna en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) eller skriv till info@software-by-design.de. Er feedback formar direkt det vi bygger härnäst.
+Vi förbättrar den här appen med verklig användning. Felrapporter, friktioner och idéer hjälper. Öppna en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) eller skriv till info@software-by-design.de. Er feedback formar direkt det vi bygger härnäst.
 ]]></description>
 	<description lang="nb"><![CDATA[
 # ProjectCheck
@@ -207,7 +207,7 @@ timesatser på tidsregistreringer beregnes på serveren fra historikk med ikraft
 
 ## Feedback er velkommen
 
-Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer hjelper — åpne en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) eller skriv til info@software-by-design.de. Tilbakemeldingen deres former direkte det vi bygger videre.
+Vi forbedrer denne appen med bruk i praksis. Feilrapporter, friksjon og idéer hjelper. Åpne en GitHub Issue (https://github.com/aSoftwareByDesignRepository/nextcloud-projectcheck/issues) eller skriv til info@software-by-design.de. Tilbakemeldingen deres former direkte det vi bygger videre.
 ]]></description>
 	<description lang="pt-br"><![CDATA[
 # ProjectCheck
