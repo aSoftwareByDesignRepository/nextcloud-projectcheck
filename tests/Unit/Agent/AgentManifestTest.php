@@ -76,6 +76,16 @@ class AgentManifestTest extends TestCase
 		$this->assertSame('pc_send_invoice', $send['name']);
 	}
 
+	public function testDryRunIsNeverSupportedOnReadTools(): void
+	{
+		$read = ['kind' => 'read', 'method' => 'GET', 'dryRun' => true];
+		$write = ['kind' => 'write', 'method' => 'POST', 'dryRun' => true];
+		$undeclared = ['kind' => 'write', 'method' => 'POST'];
+		$this->assertFalse($this->manifest->supportsDryRun($read));
+		$this->assertTrue($this->manifest->supportsDryRun($write));
+		$this->assertFalse($this->manifest->supportsDryRun($undeclared));
+	}
+
 	public function testPathParamNeverCrossesSlashBoundary(): void
 	{
 		$this->assertFalse(

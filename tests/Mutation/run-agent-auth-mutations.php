@@ -111,7 +111,7 @@ $mutants = [
 	[
 		'name' => 'mw_confirm_gate_bypassed',
 		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
-		'search' => 'if ($this->manifest->requiresConfirm($tool) && !$this->confirmFlagIsTrue()) {',
+		'search' => 'if (!$this->auditedDryRun && $this->manifest->requiresConfirm($tool) && !$this->truthyFlag(\'confirm\')) {',
 		'replace' => 'if (false) {',
 	],
 	[
@@ -137,6 +137,30 @@ $mutants = [
 		'file' => 'lib/Agent/AgentContext.php',
 		'search' => '$this->uid = $uid;',
 		'replace' => '$this->uid = \'admin\';',
+	],
+	[
+		'name' => 'mw_dryrun_gate_skipped',
+		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
+		'search' => 'if ($this->auditedDryRun && !$this->manifest->supportsDryRun($tool)) {',
+		'replace' => 'if (false) {',
+	],
+	[
+		'name' => 'mw_dryrun_still_requires_confirm',
+		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
+		'search' => 'if (!$this->auditedDryRun && $this->manifest->requiresConfirm($tool)',
+		'replace' => 'if (true && $this->manifest->requiresConfirm($tool)',
+	],
+	[
+		'name' => 'mw_dryrun_audited_as_ok',
+		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
+		'search' => 'AgentAudit::RESULT_DRYRUN',
+		'replace' => 'AgentAudit::RESULT_OK',
+	],
+	[
+		'name' => 'manifest_dryrun_on_read_allowed',
+		'file' => 'lib/Agent/AgentManifest.php',
+		'search' => '($tool[\'dryRun\'] ?? null) === true && $this->isMutating($tool)',
+		'replace' => '($tool[\'dryRun\'] ?? null) === true',
 	],
 	[
 		'name' => 'mw_confirm_string_false_accepted',
