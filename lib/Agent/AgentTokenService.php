@@ -93,7 +93,14 @@ class AgentTokenService
 		if (!self::isWireFormat($raw) || strlen($raw) > 200) {
 			throw new AgentException('agent_token_invalid', 'Invalid agent token.', 401);
 		}
-		$token = $this->tokens->findByHash(self::hashToken($raw));
+		// A missing table (mid-upgrade, disabled-but-enabled state) must not
+		// surface as a 500 — no token can be valid, so fail closed on the
+		// same undifferentiated 401.
+		try {
+			$token = $this->tokens->findByHash(self::hashToken($raw));
+		} catch (\OCP\DB\Exception) {
+			$token = null;
+		}
 		if ($token === null || $token->isRevoked() || $token->isExpired($now)) {
 			throw new AgentException('agent_token_invalid', 'Invalid agent token.', 401);
 		}

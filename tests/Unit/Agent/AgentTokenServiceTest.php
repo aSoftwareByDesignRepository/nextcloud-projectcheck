@@ -152,6 +152,22 @@ class AgentTokenServiceTest extends TestCase
 		}
 	}
 
+	public function testResolveMissingTableFailsClosed401(): void
+	{
+		// oc_*_agent_tokens can be absent in a disabled-but-enabled app
+		// state or mid-upgrade — the lookup must collapse to the same
+		// undifferentiated 401, never a 500.
+		$this->tokens->method('findByHash')
+			->willThrowException(new \OCP\DB\Exception('table missing'));
+		try {
+			$this->service->resolve('ckst_projectcheck_' . str_repeat('ab', 16), self::NOW);
+			$this->fail('missing table must not resolve');
+		} catch (AgentException $e) {
+			$this->assertSame('agent_token_invalid', $e->getErrorCode());
+			$this->assertSame(401, $e->getHttpStatus());
+		}
+	}
+
 	public function testIsWireFormatIsStrictPrefix(): void
 	{
 		$this->assertTrue(AgentTokenService::isWireFormat('ckst_anything'));

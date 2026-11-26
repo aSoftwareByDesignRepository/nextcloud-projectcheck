@@ -168,6 +168,24 @@ $mutants = [
 		'search' => 'in_array($value, [true, 1, \'1\', \'true\', \'on\'], true)',
 		'replace' => 'in_array($value, [true, 1, \'1\', \'true\', \'on\', \'false\'], true)',
 	],
+	[
+		'name' => 'audit_result_default_swallows_ok',
+		'file' => 'lib/Agent/AgentAudit.php',
+		'search' => "protected string \$result = '';",
+		'replace' => 'protected string $result = self::RESULT_OK;',
+	],
+	[
+		'name' => 'audit_actortype_default_swallows_agent',
+		'file' => 'lib/Agent/AgentAudit.php',
+		'search' => "protected string \$actorType = '';",
+		'replace' => "protected string \$actorType = 'agent';",
+	],
+	[
+		'name' => 'resolve_missing_table_leaks_500',
+		'file' => 'lib/Agent/AgentTokenService.php',
+		'search' => "} catch (\\OCP\\DB\\Exception) {\n\t\t\t\$token = null;",
+		'replace' => '} catch (\\OCP\\DB\\Exception $e) {\n\t\t\tthrow $e;',
+	],
 ];
 
 runMutations($appRoot, 'Agent', $mutants);

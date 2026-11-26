@@ -272,6 +272,11 @@
           "required": true,
           "description": "Path parameter."
         },
+        "action": {
+          "type": "string",
+          "required": true,
+          "description": "One of invoice_open, mark_paid."
+        },
         "date_from": {
           "type": "string",
           "required": false
@@ -358,7 +363,8 @@
         },
         "action": {
           "type": "string",
-          "required": false
+          "required": true,
+          "description": "One of invoice_open, mark_paid."
         }
       },
       "dryRun": true

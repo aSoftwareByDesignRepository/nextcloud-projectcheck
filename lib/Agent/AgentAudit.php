@@ -40,11 +40,11 @@ class AgentAudit extends Entity
 
 	protected int $tokenId = 0;
 	protected string $userId = '';
-	protected string $actorType = 'agent';
+	protected string $actorType = '';
 	protected string $tool = '';
 	protected string $route = '';
 	protected ?string $clientRequestId = null;
-	protected string $result = self::RESULT_OK;
+	protected string $result = '';
 	protected int $createdAt = 0;
 
 	public function __construct()
