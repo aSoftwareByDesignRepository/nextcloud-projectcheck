@@ -48,6 +48,24 @@ class AgentScopeCheckerTest extends TestCase
 		}
 	}
 
+	public function testPrefixGrantIsNotSatisfaction(): void
+	{
+		// granted scope that is a string-prefix of the requirement must NOT
+		// satisfy — exact match is the whole security model.
+		$this->assertFalse(
+			AgentScopeChecker::satisfied(
+				['projectcheck:time_ent'],
+				'projectcheck:time_entries:write',
+			)
+		);
+		$this->assertFalse(
+			AgentScopeChecker::satisfied(
+				['projectcheck:time_entries:write_extra'],
+				'projectcheck:time_entries:write',
+			)
+		);
+	}
+
 	public function testReadDoesNotSatisfyWrite(): void
 	{
 		$granted = ['projectcheck:time_entries:read'];

@@ -76,6 +76,17 @@ class AgentManifestTest extends TestCase
 		$this->assertSame('pc_send_invoice', $send['name']);
 	}
 
+	public function testPathParamNeverCrossesSlashBoundary(): void
+	{
+		$this->assertFalse(
+			$this->manifest->pathMatches(
+				'/mobile/v1/invoices/{id}/send',
+				'/mobile/v1/invoices/a/b/send',
+			),
+			'a {param} placeholder must match one segment, never a path with slashes',
+		);
+	}
+
 	public function testToolForDoesNotMatchOtherMethodOrPath(): void
 	{
 		$this->assertNull($this->manifest->toolFor('DELETE', '/mobile/v1/things'));

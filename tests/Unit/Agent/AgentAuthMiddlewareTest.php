@@ -157,6 +157,11 @@ class AgentAuthMiddlewareTest extends TestCase
 		} catch (AgentException $e) {
 			$this->assertSame('agent_scope_denied', $e->getErrorCode());
 			$this->assertSame(403, $e->getHttpStatus());
+			$this->assertStringContainsString(
+				'manage agent tokens',
+				$e->getMessage(),
+				'the admin-prefix guard — not the generic undeclared-path denial — must fire',
+			);
 		}
 	}
 

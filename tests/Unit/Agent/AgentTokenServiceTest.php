@@ -136,9 +136,11 @@ class AgentTokenServiceTest extends TestCase
 			}
 		}
 
-		// revoked → same 401 as unknown (no oracle)
+		// revoked → same 401 as unknown (no oracle); expiry must be valid
+		// so the revoked check itself is the one under test.
 		$revoked = new AgentToken();
 		$revoked->setRevokedAt(self::NOW - 10);
+		$revoked->setExpiresAt(self::NOW + 3600);
 		$this->tokens->method('findByHash')->willReturnOnConsecutiveCalls($revoked, null);
 		foreach ([0, 1] as $i) {
 			try {
@@ -148,6 +150,14 @@ class AgentTokenServiceTest extends TestCase
 				$this->assertSame('agent_token_invalid', $e->getErrorCode());
 			}
 		}
+	}
+
+	public function testIsWireFormatIsStrictPrefix(): void
+	{
+		$this->assertTrue(AgentTokenService::isWireFormat('ckst_anything'));
+		$this->assertFalse(AgentTokenService::isWireFormat(''));
+		$this->assertFalse(AgentTokenService::isWireFormat('Bearer ckst_x'));
+		$this->assertFalse(AgentTokenService::isWireFormat('xckst_abc'));
 	}
 
 	public function testResolveExpiredIs401(): void
@@ -227,7 +237,11 @@ class AgentTokenServiceTest extends TestCase
 		$token->setExpiresAt(self::NOW + 1000);
 		$out = $this->service->serialize($token, self::NOW);
 		$json = json_encode($out);
-		$this->assertStringNotContainsString('hash', $json);
+		$this->assertArrayNotHasKey('tokenHash', $out);
+		$this->assertArrayNotHasKey('token_hash', $out);
+		$this->assertArrayNotHasKey('secret', $out);
+		$this->assertStringNotContainsString('tokenHash', $json);
+		$this->assertStringNotContainsString('token_hash', $json);
 		$this->assertStringNotContainsString('ckst_', $json);
 		$this->assertSame('active', $out['state']);
 	}
