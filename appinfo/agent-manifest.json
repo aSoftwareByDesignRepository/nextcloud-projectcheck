@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 1,
+  "appId": "projectcheck",
+  "agentExposure": "declared",
+  "tools": [
+    {
+      "name": "pc_list_projects",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "mobile#projects",
+      "method": "GET",
+      "path": "/mobile/v1/projects",
+      "scope": "projectcheck:projects:read",
+      "label": "List projects",
+      "description": "List the agent owner's projects with status and budget summary.",
+      "params": {
+        "q": {
+          "type": "string",
+          "required": false,
+          "description": "Substring filter on project name."
+        },
+        "limit": {
+          "type": "integer",
+          "required": false,
+          "description": "Max rows (server-capped)."
+        }
+      }
+    },
+    {
+      "name": "pc_create_project",
+      "kind": "write",
+      "riskClass": 1,
+      "route": "mobile#createProject",
+      "method": "POST",
+      "path": "/mobile/v1/projects",
+      "idempotency": "clientRequestId",
+      "scope": "projectcheck:projects:write",
+      "label": "Create project",
+      "description": "Create a new project owned by the token user.",
+      "params": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "required": false
+        },
+        "customer_id": {
+          "type": "integer",
+          "required": false
+        },
+        "hourly_rate": {
+          "type": "string",
+          "required": false,
+          "description": "Decimal hourly rate."
+        },
+        "hourlyRate": {
+          "type": "string",
+          "required": false,
+          "description": "camelCase alias of hourly_rate."
+        }
+      }
+    },
+    {
+      "name": "pc_list_customers",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "mobile#customers",
+      "method": "GET",
+      "path": "/mobile/v1/customers",
+      "scope": "projectcheck:customers:read",
+      "label": "List customers",
+      "description": "List the agent owner's customers."
+    },
+    {
+      "name": "pc_create_customer",
+      "kind": "write",
+      "riskClass": 1,
+      "route": "mobile#createCustomer",
+      "method": "POST",
+      "path": "/mobile/v1/customers",
+      "idempotency": "clientRequestId",
+      "scope": "projectcheck:customers:write",
+      "label": "Create customer",
+      "description": "Create a customer record for the token user.",
+      "params": {
+        "name": {
+          "type": "string",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pc_list_time_entries",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "mobile#timeEntries",
+      "method": "GET",
+      "path": "/mobile/v1/time-entries",
+      "scope": "projectcheck:time_entries:read",
+      "label": "List time entries",
+      "description": "List the agent owner's time entries, optionally filtered by date range and billing status.",
+      "params": {
+        "from": {
+          "type": "string",
+          "required": false,
+          "description": "ISO date lower bound."
+        },
+        "to": {
+          "type": "string",
+          "required": false,
+          "description": "ISO date upper bound."
+        },
+        "billingStatus": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "pc_create_time_entry",
+      "kind": "write",
+      "riskClass": 1,
+      "route": "mobile#createTimeEntry",
+      "method": "POST",
+      "path": "/mobile/v1/time-entries",
+      "idempotency": "clientRequestId",
+      "scope": "projectcheck:time_entries:write",
+      "label": "Log time",
+      "description": "Book a time entry on a project the token user may write.",
+      "params": {
+        "project_id": {
+          "type": "integer",
+          "required": true
+        },
+        "projectId": {
+          "type": "integer",
+          "required": false,
+          "description": "camelCase alias of project_id."
+        },
+        "date": {
+          "type": "string",
+          "required": true,
+          "description": "ISO date."
+        },
+        "hours": {
+          "type": "string",
+          "required": false,
+          "description": "Decimal hours (mutually exclusive with durationMinutes/startTime+endTime)."
+        },
+        "durationMinutes": {
+          "type": "integer",
+          "required": false
+        },
+        "startTime": {
+          "type": "string",
+          "required": false
+        },
+        "endTime": {
+          "type": "string",
+          "required": false
+        },
+        "description": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "pc_update_time_entry",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "mobile#updateTimeEntry",
+      "method": "PUT",
+      "path": "/mobile/v1/time-entries/{id}",
+      "idempotency": "clientRequestId",
+      "scope": "projectcheck:time_entries:write",
+      "label": "Update time entry",
+      "description": "Modify an existing time entry (state transition — confirm required).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "date": {
+          "type": "string",
+          "required": false
+        },
+        "hours": {
+          "type": "string",
+          "required": false
+        },
+        "durationMinutes": {
+          "type": "integer",
+          "required": false
+        },
+        "startTime": {
+          "type": "string",
+          "required": false
+        },
+        "endTime": {
+          "type": "string",
+          "required": false
+        },
+        "description": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "pc_delete_time_entry",
+      "kind": "write",
+      "riskClass": 2,
+      "confirm": "required",
+      "route": "mobile#deleteTimeEntry",
+      "method": "DELETE",
+      "path": "/mobile/v1/time-entries/{id}",
+      "scope": "projectcheck:time_entries:write",
+      "label": "Delete time entry",
+      "description": "Delete a time entry (state transition — confirm required).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        }
+      },
+      "idempotency": "natural"
+    },
+    {
+      "name": "pc_list_settlement_entries",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "mobile#settlementEntries",
+      "method": "GET",
+      "path": "/mobile/v1/settlement/entries",
+      "scope": "projectcheck:settlement:read",
+      "label": "List settlement entries",
+      "description": "List time entries eligible for settlement.",
+      "params": {
+        "from": {
+          "type": "string",
+          "required": false
+        },
+        "to": {
+          "type": "string",
+          "required": false
+        },
+        "billingStatus": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "pc_preview_project_settlement",
+      "kind": "read",
+      "riskClass": 0,
+      "route": "mobile#projectSettlementPreview",
+      "method": "POST",
+      "path": "/mobile/v1/projects/{id}/settlement/preview",
+      "scope": "projectcheck:settlement:read",
+      "label": "Preview settlement",
+      "description": "Compute a project settlement preview. Writes nothing; returns the token required by pc_apply_project_settlement.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "date_from": {
+          "type": "string",
+          "required": false
+        },
+        "date_to": {
+          "type": "string",
+          "required": false
+        },
+        "dateFrom": {
+          "type": "string",
+          "required": false
+        },
+        "dateTo": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "pc_change_entry_billing",
+      "kind": "write",
+      "riskClass": 3,
+      "confirm": "required",
+      "batch": "forbidden",
+      "route": "mobile#changeEntryBilling",
+      "method": "POST",
+      "path": "/mobile/v1/time-entries/{id}/billing",
+      "idempotency": "clientRequestId",
+      "scope": "projectcheck:settlement:write",
+      "label": "Change billing status",
+      "description": "Change the billing status of a time entry (money-adjacent — confirm required, never batched).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "target": {
+          "type": "string",
+          "required": true,
+          "description": "Target billing status."
+        }
+      }
+    },
+    {
+      "name": "pc_apply_project_settlement",
+      "kind": "write",
+      "riskClass": 3,
+      "confirm": "required",
+      "batch": "forbidden",
+      "route": "mobile#projectSettlementApply",
+      "method": "POST",
+      "path": "/mobile/v1/projects/{id}/settlement/apply",
+      "idempotency": "clientRequestId",
+      "scope": "projectcheck:settlement:write",
+      "label": "Apply settlement",
+      "description": "Apply a project settlement using the preview token (money action — confirm required, never batched).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "required": true,
+          "description": "Path parameter."
+        },
+        "token": {
+          "type": "string",
+          "required": true,
+          "description": "Preview token from pc_preview_project_settlement."
+        },
+        "date_from": {
+          "type": "string",
+          "required": false
+        },
+        "date_to": {
+          "type": "string",
+          "required": false
+        },
+        "dateFrom": {
+          "type": "string",
+          "required": false
+        },
+        "dateTo": {
+          "type": "string",
+          "required": false
+        },
+        "action": {
+          "type": "string",
+          "required": false
+        }
+      }
+    }
+  ],
+  "deny": [
+    "mobile#bootstrap",
+    "mobile#resolveHourlyRate",
+    "mobile#widgetSnapshot"
+  ]
+}

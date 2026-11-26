@@ -832,6 +832,13 @@ final class AtlasApiEndpointHappyAuthzTest extends TestCase
 			return $this->byType[$key];
 		}
 
+		// AgentContext is final by design (request-scoped principal, D-01) —
+		// instantiate a real, unarmed context instead of doubling it.
+		if ($typeName === \OCA\ProjectCheck\Agent\AgentContext::class) {
+			$this->byType[$key] = new \OCA\ProjectCheck\Agent\AgentContext();
+			return $this->byType[$key];
+		}
+
 		/** @var MockObject $mock */
 		$mock = $this->createMock($typeName);
 		$this->byType[$key] = $mock;

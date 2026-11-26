@@ -114,6 +114,7 @@ class AppConfigControllerTest extends TestCase {
 			$this->licenseService,
 			new SettingsSectionCatalog(),
 			new \OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore($this->config, 'projectcheck'),
+			$this->createMock(\OCA\ProjectCheck\Agent\AgentSettingsPayload::class),
 		);
 	}
 

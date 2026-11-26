@@ -134,4 +134,14 @@ $appCrit = (string) ($appBudgetCriticalDefault ?? '90');
 		Util::addScript('projectcheck', 'personal-settings');
 		?>
 	<?php endif; ?>
+
+	<?php
+	// "AI access (MCP)" — scoped agent tokens (self-mint when enabled).
+	// The partial self-guards on $agentAccess['visible'].
+	if (is_array($agentAccess ?? null)) {
+		Util::addScript('projectcheck', 'agent-access');
+		Util::addStyle('projectcheck', 'agent-access');
+		include __DIR__ . '/parts/settings/agent.php';
+	}
+	?>
 </section>

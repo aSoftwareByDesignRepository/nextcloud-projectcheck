@@ -281,15 +281,18 @@ as taxas horárias nos lançamentos são resolvidas no servidor a partir do hist
 	<repair-steps>
 		<install>
 			<step>OCA\ProjectCheck\Repair\EnsureProjectCheckSchema</step>
+			<step>OCA\ProjectCheck\Repair\EnsureAgentTables</step>
 		</install>
 		<pre-migration>
 			<step>OCA\ProjectCheck\Repair\BackupBeforeUpdate</step>
 		</pre-migration>
 		<post-migration>
 			<step>OCA\ProjectCheck\Repair\EnsureProjectCheckSchema</step>
+			<step>OCA\ProjectCheck\Repair\EnsureAgentTables</step>
 		</post-migration>
 		<uninstall>
 			<step>OCA\ProjectCheck\Repair\UninstallDropTables</step>
+			<step>OCA\ProjectCheck\Repair\UninstallAgentTables</step>
 		</uninstall>
 	</repair-steps>
 

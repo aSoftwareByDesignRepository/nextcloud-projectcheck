@@ -69,6 +69,7 @@ class AppConfigController extends Controller
 		private LicenseService $licenseService,
 		private SettingsSectionCatalog $settingsSections,
 		private \OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore $transferReceipts,
+		private \OCA\ProjectCheck\Agent\AgentSettingsPayload $agentSettings,
 	) {
 		parent::__construct($appName, $request);
 		$this->setCspService($cspService);
@@ -260,6 +261,9 @@ class AppConfigController extends Controller
 
 		$resp = $this->buildFormParameters($l, $section);
 		$resp['settingsSection'] = $section;
+		if ($section === 'agent') {
+			$resp['agentAccess'] = $this->agentSettings->payload($user->getUID());
+		}
 		$resp['pageTitle'] = $this->settingsSections->label($l, $section);
 		$resp['pageHelp'] = $this->settingsSections->help($l, $section);
 		$resp['pageKicker'] = $l->t('Settings');

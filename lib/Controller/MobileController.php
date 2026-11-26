@@ -45,6 +45,7 @@ class MobileController extends Controller
 		private readonly IAppManager $appManager,
 		private readonly IUserManager $userManager,
 		private readonly IProvider $tokenProvider,
+		private readonly \OCA\ProjectCheck\Agent\AgentContext $agentContext,
 		private readonly ICacheFactory $cacheFactory,
 	) {
 		parent::__construct(Application::APP_ID, $request);
@@ -229,6 +230,11 @@ class MobileController extends Controller
 
 	private function requireUid(): string
 	{
+		// Scoped agent token (D-01): the middleware armed a request-scoped
+		// principal — no session, no setUser(). Fall through to session auth.
+		if ($this->agentContext->isArmed()) {
+			return (string)$this->agentContext->uid();
+		}
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			throw new MobileApiException('unauthenticated', 'Authentication required.', 401);

@@ -64,6 +64,7 @@ final class SettingsTemplateRenderTest extends TestCase
 		$enable_budget_tracking = (string)($vars['enable_budget_tracking'] ?? 'yes');
 		$formId = 'projectcheck-org-form';
 		$formUiStrings = is_array($vars['formUiStrings'] ?? null) ? $vars['formUiStrings'] : ['errors' => []];
+		$agentAccess = is_array($vars['agentAccess'] ?? null) ? $vars['agentAccess'] : ['visible' => false];
 		$urlGenerator = new class {
 			public function linkToRoute(string $route, array $params = []): string
 			{
@@ -103,6 +104,43 @@ final class SettingsTemplateRenderTest extends TestCase
 	/**
 	 * @return array<string, mixed>
 	 */
+	private function agentVars(): array
+	{
+		return [
+			'agentAccess' => [
+				'visible' => true,
+				'appId' => 'projectcheck',
+				'agentHeader' => 'X-ProjectCheck-Agent',
+				'ncUrl' => 'https://cloud.example.test',
+				'isAdmin' => true,
+				'canMint' => true,
+				'selfMintEnabled' => false,
+				'tokens' => [
+					[
+						'id' => 1,
+						'userId' => 'alice',
+						'label' => 'ci-bot',
+						'scopes' => ['projectcheck:time_entries:read'],
+						'createdAt' => 1800000000,
+						'expiresAt' => 1831536000,
+						'lastUsedAt' => null,
+						'lastTool' => null,
+						'state' => 'active',
+					],
+				],
+				'presets' => [
+					'read' => ['projectcheck:time_entries:read'],
+					'act' => ['projectcheck:time_entries:read', 'projectcheck:time_entries:write'],
+				],
+				'allScopes' => ['projectcheck:time_entries:read', 'projectcheck:time_entries:write'],
+				'scopeLabels' => [
+					'projectcheck:time_entries:read' => 'Read time entries',
+					'projectcheck:time_entries:write' => 'Log and edit time entries',
+				],
+			],
+		];
+	}
+
 	private function policyVars(): array
 	{
 		return [
@@ -136,6 +174,7 @@ final class SettingsTemplateRenderTest extends TestCase
 			}
 			$vars = match ($section) {
 				'license' => $this->licenseVars(),
+				'agent' => $this->agentVars(),
 				'access', 'admins', 'defaults' => $this->policyVars(),
 				default => [],
 			};

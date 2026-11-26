@@ -33,6 +33,7 @@
 		'pc-license-heading': 'license',
 		'pc-license-seats-heading': 'license',
 		'pc-transfer-export-card': 'transfer',
+		'pc-agent-access': 'agent',
 		'projectcheck-support-us': 'support',
 		'projectcheck-support-us-title': 'support',
 		'projectcheck-org-trust-h': 'access',

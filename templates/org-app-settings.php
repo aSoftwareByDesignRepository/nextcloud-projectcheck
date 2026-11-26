@@ -51,6 +51,7 @@ $pcSettingsSectionFiles = [
 	'admins' => 'admins.php',
 	'defaults' => 'defaults.php',
 	'license' => 'license.php',
+	'agent' => 'agent.php',
 	'transfer' => 'transfer.php',
 	'support' => 'support.php',
 ];
@@ -67,6 +68,10 @@ if (in_array($pcRequestedSection, $policySections, true)) {
 if ($pcRequestedSection === 'license') {
 	Util::addScript('projectcheck', 'common/license-page');
 	Util::addStyle('projectcheck', 'common/license-page');
+}
+if ($pcRequestedSection === 'agent') {
+	Util::addScript('projectcheck', 'agent-access');
+	Util::addStyle('projectcheck', 'agent-access');
 }
 $formId = 'projectcheck-org-form';
 $nav = [

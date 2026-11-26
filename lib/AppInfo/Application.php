@@ -15,6 +15,8 @@ use OC\Security\CSP\ContentSecurityPolicyNonceManager;
 use OCA\ProjectCheck\Repair\BackupBeforeUpdate;
 use OCA\ProjectCheck\Repair\EnsureProjectCheckSchema;
 use OCA\ProjectCheck\Repair\UninstallDropTables;
+use OCA\ProjectCheck\Repair\EnsureAgentTables;
+use OCA\ProjectCheck\Repair\UninstallAgentTables;
 use OCA\ProjectCheck\Service\UpgradeBackupService;
 use OCA\ProjectCheck\Support\NavGate;
 use OCP\AppFramework\App;
@@ -93,6 +95,38 @@ class Application extends App implements IBootstrap
 		});
 		$context->registerMiddleware(\OCA\ProjectCheck\Middleware\SchemaGuardMiddleware::class);
 		$context->registerMiddleware(\OCA\ProjectCheck\Middleware\AppAccessMiddleware::class);
+
+		// _shared/agent-auth pack — scoped AI-agent tokens (suite MCP contract)
+		$context->registerService(\OCA\ProjectCheck\Agent\AgentManifest::class, function ($c) {
+			return new \OCA\ProjectCheck\Agent\AgentManifest(
+				'projectcheck',
+				\dirname(__DIR__) . '/appinfo/agent-manifest.json'
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Agent\AgentSeatGate::class, function ($c) {
+			return new \OCA\ProjectCheck\Agent\ProjectCheckAgentSeatGate(
+				$c->query(\OCA\ProjectCheck\Service\LicenseService::class)
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Agent\AgentAccessGate::class, function ($c) {
+			return new \OCA\ProjectCheck\Agent\ProjectCheckAgentAccessGate(
+				$c->query(\OCA\ProjectCheck\Service\AccessControlService::class),
+				$c->query(\OCP\IGroupManager::class)
+			);
+		});
+		$context->registerService(\OCA\ProjectCheck\Middleware\AgentAuthMiddleware::class, function ($c) {
+			return new \OCA\ProjectCheck\Middleware\AgentAuthMiddleware(
+				$c->query(\OCP\IRequest::class),
+				$c->query(\OCA\ProjectCheck\Agent\AgentContext::class),
+				$c->query(\OCA\ProjectCheck\Agent\AgentTokenService::class),
+				$c->query(\OCA\ProjectCheck\Agent\AgentManifest::class),
+				$c->query(\OCA\ProjectCheck\Agent\AgentSeatGate::class),
+				$c->query(\OCA\ProjectCheck\Agent\AgentAuditMapper::class),
+				$c->query(\Psr\Log\LoggerInterface::class),
+				'projectcheck'
+			);
+		});
+		$context->registerMiddleware(\OCA\ProjectCheck\Middleware\AgentAuthMiddleware::class);
 
 		$context->registerService(\OCA\ProjectCheck\Db\EmployeeHourlyRateMapper::class, function ($c) {
 			return new \OCA\ProjectCheck\Db\EmployeeHourlyRateMapper($c->query(\OCP\IDBConnection::class));
@@ -475,6 +509,7 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Service\LicenseService::class),
 				$c->query(\OCA\ProjectCheck\Service\SettingsSectionCatalog::class),
 				$c->query(\OCA\ProjectCheck\ConfigTransfer\TransferReceiptStore::class),
+				$c->query(\OCA\ProjectCheck\Agent\AgentSettingsPayload::class),
 			);
 		});
 
@@ -605,6 +640,7 @@ class Application extends App implements IBootstrap
 				$c->query(IAppManager::class),
 				$c->query(\OCP\IUserManager::class),
 				$c->query(\OCP\Authentication\Token\IProvider::class),
+				$c->query(\OCA\ProjectCheck\Agent\AgentContext::class),
 				$c->query(\OCP\ICacheFactory::class),
 			);
 		});
@@ -630,6 +666,17 @@ class Application extends App implements IBootstrap
 			return new EnsureProjectCheckSchema(
 				$c->query(IDBConnection::class),
 				$c->query(IConfig::class),
+			);
+		});
+
+		$context->registerService(EnsureAgentTables::class, function ($c): EnsureAgentTables {
+			return new EnsureAgentTables(
+				$c->query(IDBConnection::class),
+			);
+		});
+		$context->registerService(UninstallAgentTables::class, function ($c): UninstallAgentTables {
+			return new UninstallAgentTables(
+				$c->query(IDBConnection::class),
 			);
 		});
 
@@ -702,6 +749,7 @@ class Application extends App implements IBootstrap
 
 		// Register event listeners
 		$context->registerEventListener(UserDeletedEvent::class, \OCA\ProjectCheck\Listener\UserDeletedListener::class);
+		$context->registerEventListener(UserDeletedEvent::class, \OCA\ProjectCheck\Listener\AgentUserDeletedListener::class);
 		$context->registerEventListener(BeforeTemplateRenderedEvent::class, \OCA\ProjectCheck\Listener\EnrichTemplateNavigationContext::class);
 		$context->registerEventListener(
 			\OCP\Security\CSP\AddContentSecurityPolicyEvent::class,

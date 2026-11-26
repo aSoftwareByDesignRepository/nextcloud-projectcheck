@@ -52,11 +52,18 @@ final class AppIconAssetsContractTest extends TestCase
 
 		$app = (string)file_get_contents($this->root . '/lib/AppInfo/Application.php');
 		$this->assertStringContainsString('AppIconService', $app);
-		$this->assertStringContainsString('headerIconPath()', $app);
+		$this->assertStringContainsString('registerDashboardWidget', $app);
 		$this->assertStringNotContainsString(
 			"imagePath(self::APP_ID, 'app.svg')",
 			$app,
-			'Navigation must use cache-busted header icon',
+			'App icon surfaces must go through AppIconService (cache-busted), never raw imagePath',
+		);
+		$nav = (string)file_get_contents($this->root . '/templates/common/navigation.php');
+		$this->assertStringContainsString('IconCatalog', $nav);
+		$this->assertStringNotContainsString(
+			"imagePath('projectcheck', 'app.svg')",
+			$nav,
+			'Nav chrome uses IconCatalog (design system), not raw imagePath',
 		);
 	}
 
@@ -64,7 +71,7 @@ final class AppIconAssetsContractTest extends TestCase
 	{
 		$info = (string)file_get_contents($this->root . '/appinfo/info.xml');
 		$ver = trim((string)file_get_contents($this->root . '/appinfo/version'));
-		$this->assertSame('2.0.100', $ver);
+		$this->assertSame('2.0.108', $ver);
 		$this->assertMatchesRegularExpression('/<version>\s*' . preg_quote($ver, '/') . '\s*<\/version>/', $info);
 	}
 }

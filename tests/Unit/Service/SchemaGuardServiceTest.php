@@ -17,6 +17,16 @@ use Psr\Log\LoggerInterface;
 
 class SchemaGuardServiceTest extends TestCase
 {
+	protected function setUp(): void
+	{
+		parent::setUp();
+		// requestState is static per request — an upstream test that ran a
+		// failing ensureReady() must not poison this suite's fresh request.
+		$ref = new \ReflectionClass(SchemaGuardService::class);
+		$prop = $ref->getProperty('requestState');
+		$prop->setValue(null, null);
+	}
+
 	protected function tearDown(): void
 	{
 		$ref = new \ReflectionClass(SchemaGuardService::class);

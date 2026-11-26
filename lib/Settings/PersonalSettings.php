@@ -32,6 +32,7 @@ class PersonalSettings implements ISettings
 		private IURLGenerator $urlGenerator,
 		private IFactory $l10nFactory,
 		private AccessControlService $accessControl,
+		private \OCA\ProjectCheck\Agent\AgentSettingsPayload $agentSettings,
 	) {
 	}
 
@@ -52,6 +53,7 @@ class PersonalSettings implements ISettings
 				'appBudgetWarningDefault' => $this->config->getAppValue('projectcheck', 'budget_warning_threshold', '80'),
 				'appBudgetCriticalDefault' => $this->config->getAppValue('projectcheck', 'budget_critical_threshold', '90'),
 				'saveUrl' => '',
+				'agentAccess' => ['visible' => false],
 			]);
 		}
 
@@ -72,6 +74,7 @@ class PersonalSettings implements ISettings
 			'appBudgetWarningDefault' => (string) $appWarning,
 			'appBudgetCriticalDefault' => (string) $appCritical,
 			'saveUrl' => $this->urlGenerator->linkToRoute('projectcheck.app_config.savePersonalPreferences'),
+			'agentAccess' => $this->agentSettings->payload($userId),
 		]);
 	}
 

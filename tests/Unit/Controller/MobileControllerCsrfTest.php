@@ -45,6 +45,7 @@ final class MobileControllerCsrfTest extends TestCase
 			$this->createMock(IAppManager::class),
 			$users,
 			$tokens ?? $this->createMock(IProvider::class),
+			new \OCA\ProjectCheck\Agent\AgentContext(),
 			$this->createMock(ICacheFactory::class),
 		);
 		$method = new ReflectionMethod(MobileController::class, 'assertSafeMutationChannel');
