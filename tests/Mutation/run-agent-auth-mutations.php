@@ -186,6 +186,30 @@ $mutants = [
 		'search' => "} catch (\\OCP\\DB\\Exception) {\n\t\t\t\$token = null;",
 		'replace' => '} catch (\\OCP\\DB\\Exception $e) {\n\t\t\tthrow $e;',
 	],
+	[
+		'name' => 'mint_cap_counts_dead_tokens',
+		'file' => 'lib/Agent/AgentTokenService.php',
+		'search' => '$this->tokens->countActiveByUser($uid, $now) - ($replacing !== null ? 1 : 0);',
+		'replace' => 'count($this->tokens->findByUser($uid));',
+	],
+	[
+		'name' => 'rotate_at_cap_deadlocks',
+		'file' => 'lib/Agent/AgentTokenService.php',
+		'search' => ' - ($replacing !== null ? 1 : 0)',
+		'replace' => '',
+	],
+	[
+		'name' => 'audit_failure_masks_denial',
+		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
+		'search' => 'catch (\\Throwable $e) {',
+		'replace' => 'catch (\\LogicException $e) {',
+	],
+	[
+		'name' => 'uninstall_drops_on_disable',
+		'file' => 'lib/Repair/UninstallAgentTables.php',
+		'search' => '		if (!UninstallRepairFlow::isRemovalContext()) {',
+		'replace' => '		if (false) {',
+	],
 ];
 
 runMutations($appRoot, 'Agent', $mutants);

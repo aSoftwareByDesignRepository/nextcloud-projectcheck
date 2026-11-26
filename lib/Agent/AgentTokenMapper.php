@@ -72,6 +72,26 @@ class AgentTokenMapper extends QBMapper
 		return $this->findEntities($qb);
 	}
 
+	/**
+	 * Live-token count for the per-user mint cap. Dead rows (revoked or
+	 * expired) must NOT count — otherwise a user who mints+revokes 25
+	 * times over the app's lifetime is permanently locked out of minting,
+	 * even though every credential they ever held is dead.
+	 */
+	public function countActiveByUser(string $uid, int $now): int
+	{
+		$qb = $this->db->getQueryBuilder();
+		$qb->select($qb->func()->count('*', 'c'))
+			->from($this->getTableName())
+			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($uid)))
+			->andWhere($qb->expr()->isNull('revoked_at'))
+			->andWhere($qb->expr()->gt('expires_at', $qb->createNamedParameter($now)));
+		$result = $qb->executeQuery();
+		$count = (int)($result->fetchOne() ?: 0);
+		$result->closeCursor();
+		return $count;
+	}
+
 	public function revoke(int $id, int $now): void
 	{
 		$qb = $this->db->getQueryBuilder();

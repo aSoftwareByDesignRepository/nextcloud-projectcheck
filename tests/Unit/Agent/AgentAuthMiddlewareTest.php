@@ -392,4 +392,47 @@ class AgentAuthMiddlewareTest extends TestCase
 		$this->middleware->beforeController(new \stdClass(), 'x');
 		$this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 200));
 	}
+
+	/**
+	 * An audit-INSERT failure (dropped/locked table) must never mask the
+	 * auth decision or a committed response — the denial still surfaces.
+	 */
+	public function testAuditWriteFailureDoesNotMaskDenial(): void
+	{
+		$this->middlewareWithManifest([self::TOOL_WRITE]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getParams')->willReturn(['title' => 'x']);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken(['projectcheck:things:read']));
+		$this->auditMapper->method('record')->willThrowException(new \RuntimeException('no such table'));
+		$this->logger->expects($this->once())->method('error');
+		try {
+			$this->middleware->beforeController(new \stdClass(), 'x');
+			$this->fail('denial must survive an audit write failure');
+		} catch (AgentException $e) {
+			$this->assertSame('agent_scope_denied', $e->getErrorCode());
+		}
+	}
+
+	/**
+	 * Same for the post-dispatch path: a committed mutation must report
+	 * its real status even when the audit row cannot be written.
+	 */
+	public function testAuditWriteFailureDoesNotCorruptSuccess(): void
+	{
+		$this->middlewareWithManifest([self::TOOL_WRITE]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getParams')->willReturn(['title' => 'x']);
+		$this->request->method('getParam')->willReturnCallback(static fn (string $n) => $n === 'title' ? 'x' : null);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken(['projectcheck:things:write']));
+		$this->tokenService->method('consumeMutationBudget')->willReturn(null);
+		$this->auditMapper->method('record')->willThrowException(new \RuntimeException('no such table'));
+		$this->logger->expects($this->once())->method('error');
+		$this->middleware->beforeController(new \stdClass(), 'x');
+		$resp = $this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 200));
+		$this->assertSame(200, $resp->getStatus());
+	}
 }

@@ -51,7 +51,7 @@ class AgentTokenService
 	 *                             (re-validated here; mint is a trust boundary)
 	 * @return array{0: string, 1: AgentToken}
 	 */
-	public function mint(string $uid, string $label, array $scopes, int $now): array
+	public function mint(string $uid, string $label, array $scopes, int $now, ?AgentToken $replacing = null): array
 	{
 		$label = trim($label);
 		if ($label === '' || mb_strlen($label) > 190) {
@@ -61,7 +61,10 @@ class AgentTokenService
 		}
 		$grants = AgentScopeChecker::validateGrantRequest($scopes, $this->manifest->scopeSet());
 
-		if (count($this->tokens->findByUser($uid)) >= self::MAX_TOKENS_PER_USER) {
+		// $replacing: the source row of a rotate() still counts as live until
+		// revoked below — rotation at the cap must not deadlock itself.
+		$live = $this->tokens->countActiveByUser($uid, $now) - ($replacing !== null ? 1 : 0);
+		if ($live >= self::MAX_TOKENS_PER_USER) {
 			throw new AgentException('validation', 'Token limit reached — revoke an existing token first.', 422, [
 				'fields' => ['tokens' => 'limit_reached'],
 			]);
@@ -117,7 +120,7 @@ class AgentTokenService
 	 */
 	public function rotate(AgentToken $source, int $now): array
 	{
-		[$raw, $entity] = $this->mint($source->getUserId(), $source->getLabel(), $source->scopeList(), $now);
+		[$raw, $entity] = $this->mint($source->getUserId(), $source->getLabel(), $source->scopeList(), $now, replacing: $source);
 		$this->tokens->revoke($source->getId(), $now);
 		return [$raw, $entity];
 	}

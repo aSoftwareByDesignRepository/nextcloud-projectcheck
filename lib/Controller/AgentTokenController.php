@@ -162,7 +162,11 @@ class AgentTokenController extends Controller
 
 	/**
 	 * NH-06: admin toggles self-service mint for app users.
+	 * NoAdminRequired is mandatory here: canAdminister() covers app-level
+	 * admins who are NOT server admins — without the attribute the
+	 * framework's default admin gate would 404 them before our check runs.
 	 */
+	#[NoAdminRequired]
 	public function updatePolicy(): JSONResponse
 	{
 		$uid = $this->requireSessionUid();

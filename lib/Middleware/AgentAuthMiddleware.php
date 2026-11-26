@@ -311,15 +311,25 @@ class AgentAuthMiddleware extends Middleware
 			return;
 		}
 		$this->auditWritten = true;
-		$this->auditMapper->record(
-			$token->getId(),
-			$token->getUserId(),
-			(string)($tool['name'] ?? 'unknown'),
-			(string)($tool['route'] ?? $path),
-			$this->clientRequestId(),
-			$result,
-			time(),
-		);
+		try {
+			$this->auditMapper->record(
+				$token->getId(),
+				$token->getUserId(),
+				(string)($tool['name'] ?? 'unknown'),
+				(string)($tool['route'] ?? $path),
+				$this->clientRequestId(),
+				$result,
+				time(),
+			);
+		} catch (\Throwable $e) {
+			// An audit-INSERT failure must never mask the auth decision or a
+			// committed response: a dropped/locked audit table turning a 403
+			// into a 500 — or a committed mutation into a client-visible
+			// failure that triggers a retry — is worse than a missing row.
+			$this->logger->error('agent audit write failed', [
+				'exception' => $e->getMessage(),
+			]);
+		}
 	}
 
 	private function writeAuditByContext(string $result): void
@@ -330,15 +340,21 @@ class AgentAuthMiddleware extends Middleware
 			return;
 		}
 		$this->auditWritten = true;
-		$this->auditMapper->record(
-			$tokenId,
-			$uid,
-			(string)($this->auditedTool['name'] ?? 'unknown'),
-			(string)($this->auditedTool['route'] ?? ''),
-			$this->clientRequestId(),
-			$result,
-			time(),
-		);
+		try {
+			$this->auditMapper->record(
+				$tokenId,
+				$uid,
+				(string)($this->auditedTool['name'] ?? 'unknown'),
+				(string)($this->auditedTool['route'] ?? ''),
+				$this->clientRequestId(),
+				$result,
+				time(),
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error('agent audit write failed', [
+				'exception' => $e->getMessage(),
+			]);
+		}
 	}
 
 	private function clientRequestId(): ?string

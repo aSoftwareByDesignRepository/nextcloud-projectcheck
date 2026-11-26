@@ -112,9 +112,7 @@ class AgentTokenServiceTest extends TestCase
 
 	public function testMintPerUserCap(): void
 	{
-		$this->tokens->method('findByUser')->willReturn(
-			array_fill(0, AgentTokenService::MAX_TOKENS_PER_USER, new AgentToken())
-		);
+		$this->tokens->method('countActiveByUser')->willReturn(AgentTokenService::MAX_TOKENS_PER_USER);
 		try {
 			$this->service->mint('alice', 'x', self::SCOPES, self::NOW);
 			$this->fail('cap must throw');
@@ -122,6 +120,40 @@ class AgentTokenServiceTest extends TestCase
 			$this->assertSame('validation', $e->getErrorCode());
 			$this->assertSame('limit_reached', $e->getDetails()['fields']['tokens']);
 		}
+	}
+
+	/**
+	 * Dead rows must not count: a user who minted+revoked 25 times is not
+	 * locked out — the cap consults countActiveByUser, never the raw list.
+	 */
+	public function testMintCapIgnoresDeadTokens(): void
+	{
+		$this->tokens->method('findByUser')->willReturn(
+			array_fill(0, AgentTokenService::MAX_TOKENS_PER_USER, new AgentToken())
+		);
+		$this->tokens->method('countActiveByUser')->willReturn(0);
+		$this->tokens->expects($this->once())->method('insert')
+			->willReturnCallback(function (AgentToken $t) { $t->setId(1); return $t; });
+		$this->service->mint('alice', 'x', self::SCOPES, self::NOW);
+	}
+
+	/**
+	 * Rotation at the cap: the source row still counts as live, so mint()
+	 * would reject — rotate() must pass it through as the replaced token.
+	 */
+	public function testRotateAtCapAllowed(): void
+	{
+		$old = new AgentToken();
+		$old->setId(9);
+		$old->setUserId('alice');
+		$old->setLabel('deploy-bot');
+		$old->setScopes(implode(' ', self::SCOPES));
+		$this->tokens->method('countActiveByUser')->willReturn(AgentTokenService::MAX_TOKENS_PER_USER);
+		$this->tokens->expects($this->once())->method('insert')
+			->willReturnCallback(function (AgentToken $t) { $t->setId(10); return $t; });
+		$this->tokens->expects($this->once())->method('revoke');
+		[$raw] = $this->service->rotate($old, self::NOW);
+		$this->assertStringStartsWith('ckst_', $raw);
 	}
 
 	public function testResolveCollapsesAllFailuresToOne401(): void
