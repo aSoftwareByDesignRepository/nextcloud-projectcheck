@@ -13,6 +13,7 @@ use OCA\ProjectCheck\Agent\AgentManifest;
 use OCA\ProjectCheck\Agent\AgentSeatGate;
 use OCA\ProjectCheck\Agent\AgentToken;
 use OCA\ProjectCheck\Agent\AgentTokenService;
+use OCA\ProjectCheck\Agent\AgentWebhookDispatcher;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
@@ -66,6 +67,7 @@ class AgentAuthMiddleware extends Middleware
 		private readonly AgentAuditMapper $auditMapper,
 		private readonly LoggerInterface $logger,
 		private readonly string $appId,
+		private readonly ?AgentWebhookDispatcher $webhookDispatcher = null,
 	) {
 	}
 
@@ -174,6 +176,25 @@ class AgentAuthMiddleware extends Middleware
 				$this->auditedDryRun && $status < 400 ? AgentAudit::RESULT_DRYRUN
 					: ($status < 400 ? AgentAudit::RESULT_OK : AgentAudit::RESULT_ERROR)
 			);
+			// NH-02: committed agent writes fan out to webhook subscriptions.
+			// Dry-runs and failures are not events — they committed nothing.
+			// Failures inside emit() are swallowed+logged by the dispatcher:
+			// a webhook hiccup must never turn a committed 200 into a 500.
+			if ($status < 400 && !$this->auditedDryRun && $this->webhookDispatcher !== null) {
+				try {
+					$this->webhookDispatcher->emit(AgentWebhookDispatcher::EVENT_WRITE_COMPLETED, [
+						'tool' => (string)($this->auditedTool['name'] ?? 'unknown'),
+						'route' => (string)($this->auditedTool['route'] ?? ''),
+						'status' => $status,
+						'tokenId' => $this->agentContext->tokenId(),
+						'userId' => $this->agentContext->uid(),
+					]);
+				} catch (\Throwable $e) {
+					$this->logger->warning('agent webhook emit failed', [
+						'exception' => $e->getMessage(),
+					]);
+				}
+			}
 		}
 		return $response;
 	}

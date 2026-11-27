@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\Listener;
 
 use OCA\ProjectCheck\Agent\AgentTokenMapper;
+use OCA\ProjectCheck\Agent\AgentWebhookMapper;
 use Psr\Log\LoggerInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -27,6 +28,7 @@ final class AgentUserDeletedListener implements IEventListener
 	public function __construct(
 		private readonly AgentTokenMapper $tokens,
 		private readonly LoggerInterface $logger,
+		private readonly ?AgentWebhookMapper $webhooks = null,
 	) {
 	}
 
@@ -45,6 +47,15 @@ final class AgentUserDeletedListener implements IEventListener
 			$this->logger->warning('agent token purge failed', [
 				'exception' => $e,
 			]);
+		}
+		if ($this->webhooks !== null) {
+			try {
+				$this->webhooks->deleteByUserId($event->getUser()->getUID());
+			} catch (\Throwable $e) {
+				$this->logger->warning('agent webhook purge failed', [
+					'exception' => $e,
+				]);
+			}
 		}
 	}
 }

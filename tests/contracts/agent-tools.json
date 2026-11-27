@@ -368,11 +368,90 @@
         }
       },
       "dryRun": true
+    },
+    {
+      "name": "pc_webhooks_list",
+      "kind": "read",
+      "riskClass": 0,
+      "method": "GET",
+      "path": "/agent/v1/webhooks",
+      "scope": "projectcheck:webhooks:read",
+      "route": "agent_webhook#index",
+      "label": "List webhooks",
+      "description": "List outbound webhook subscriptions for the token owner."
+    },
+    {
+      "name": "pc_webhooks_create",
+      "kind": "write",
+      "riskClass": 2,
+      "method": "POST",
+      "path": "/agent/v1/webhooks",
+      "scope": "projectcheck:webhooks:write",
+      "route": "agent_webhook#create",
+      "confirm": "required",
+      "batch": "forbidden",
+      "idempotency": "clientRequestId",
+      "label": "Create webhook",
+      "description": "Subscribe to app events — creates an HTTPS endpoint subscription.",
+      "params": {
+        "url": {
+          "type": "string",
+          "required": true,
+          "description": "Public https endpoint."
+        },
+        "events": {
+          "type": "array",
+          "required": true,
+          "description": "Event names or ['*']."
+        }
+      }
+    },
+    {
+      "name": "pc_webhooks_delete",
+      "kind": "write",
+      "riskClass": 2,
+      "method": "DELETE",
+      "path": "/agent/v1/webhooks/{id}",
+      "scope": "projectcheck:webhooks:write",
+      "route": "agent_webhook#delete",
+      "confirm": "required",
+      "batch": "forbidden",
+      "idempotency": "natural",
+      "label": "Delete webhook",
+      "description": "Remove a webhook subscription.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pc_webhooks_test",
+      "kind": "write",
+      "riskClass": 1,
+      "method": "POST",
+      "path": "/agent/v1/webhooks/{id}/test",
+      "scope": "projectcheck:webhooks:write",
+      "route": "agent_webhook#test",
+      "idempotency": "natural",
+      "label": "Test webhook",
+      "description": "Queue a signed test delivery to a subscription.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "required": true
+        }
+      }
     }
   ],
   "deny": [
     "mobile#bootstrap",
     "mobile#resolveHourlyRate",
     "mobile#widgetSnapshot"
+  ],
+  "events": [
+    "agent.write.completed",
+    "webhook.test"
   ]
 }

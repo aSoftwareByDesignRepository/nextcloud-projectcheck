@@ -123,7 +123,8 @@ class Application extends App implements IBootstrap
 				$c->query(\OCA\ProjectCheck\Agent\AgentSeatGate::class),
 				$c->query(\OCA\ProjectCheck\Agent\AgentAuditMapper::class),
 				$c->query(\Psr\Log\LoggerInterface::class),
-				'projectcheck'
+				'projectcheck',
+				$c->query(\OCA\ProjectCheck\Agent\AgentWebhookDispatcher::class)
 			);
 		});
 		$context->registerMiddleware(\OCA\ProjectCheck\Middleware\AgentAuthMiddleware::class);

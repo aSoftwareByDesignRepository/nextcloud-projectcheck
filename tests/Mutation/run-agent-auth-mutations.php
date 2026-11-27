@@ -234,6 +234,80 @@ $mutants = [
 		'search' => 'if ($this->selfMintEnabled() && $this->accessGate->canUseApp($uid)) {',
 		'replace' => 'if (false && $this->accessGate->canUseApp($uid)) {',
 	],
+
+	// ── NH-02 outbound webhooks ──────────────────────────────────────
+	[
+		'name' => 'wh_guard_http_allowed',
+		'file' => 'lib/Agent/WebhookUrlGuard.php',
+		'search' => "if (!\$dev && \$scheme !== 'https') {",
+		'replace' => 'if (false) {',
+	],
+	[
+		'name' => 'wh_guard_userinfo_allowed',
+		'file' => 'lib/Agent/WebhookUrlGuard.php',
+		'search' => "if (isset(\$parts['user']) || isset(\$parts['pass'])) {",
+		'replace' => 'if (false) {',
+	],
+	[
+		'name' => 'wh_guard_private_ip_allowed',
+		'file' => 'lib/Agent/WebhookUrlGuard.php',
+		'search' => 'filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false',
+		'replace' => 'false',
+	],
+	[
+		'name' => 'wh_cap_ignored',
+		'file' => 'lib/Controller/AgentWebhookController.php',
+		'search' => '>= self::MAX_SUBSCRIPTIONS_PER_USER',
+		'replace' => '>= 9999',
+	],
+	[
+		'name' => 'wh_foreign_sub_403_oracle',
+		'file' => 'lib/Controller/AgentWebhookController.php',
+		'search' => "if (\$webhook === null || \$webhook->getUserId() !== \$uid) {\n\t\t\tthrow new AgentException('not_found', 'Webhook not found.', 404);",
+		'replace' => "if (\$webhook === null || \$webhook->getUserId() !== \$uid) {\n\t\t\tthrow new AgentException('forbidden', 'Not your webhook.', 403);",
+	],
+	[
+		'name' => 'wh_serialize_leaks_secret',
+		'file' => 'lib/Controller/AgentWebhookController.php',
+		'search' => "'events' => \$w->eventList(),",
+		'replace' => "'events' => \$w->eventList(), 'secret' => \$w->getSecret(),",
+	],
+	[
+		'name' => 'wh_wildcard_broken',
+		'file' => 'lib/Agent/AgentWebhook.php',
+		'search' => 'in_array(self::ALL_EVENTS, $events, true) || ',
+		'replace' => '',
+	],
+	[
+		'name' => 'wh_job_allows_redirects',
+		'file' => 'lib/BackgroundJob/AgentWebhookDeliverJob.php',
+		'search' => "'allow_redirects' => false,",
+		'replace' => "'allow_redirects' => true,",
+	],
+	[
+		'name' => 'wh_job_never_disables',
+		'file' => 'lib/BackgroundJob/AgentWebhookDeliverJob.php',
+		'search' => '$disable = !$ok && ($failCount >= self::MAX_FAILURES || $attempt + 1 >= self::MAX_ATTEMPTS);',
+		'replace' => '$disable = false;',
+	],
+	[
+		'name' => 'wh_job_delivers_to_inactive',
+		'file' => 'lib/BackgroundJob/AgentWebhookDeliverJob.php',
+		'search' => 'if ($webhook === null || !$webhook->isActive()) {',
+		'replace' => 'if ($webhook === null) {',
+	],
+	[
+		'name' => 'mw_emit_on_failed_write',
+		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
+		'search' => 'if ($status < 400 && !$this->auditedDryRun && $this->webhookDispatcher !== null) {',
+		'replace' => 'if ($status < 400 || !$this->auditedDryRun) {',
+	],
+	[
+		'name' => 'mw_emit_on_dryrun',
+		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
+		'search' => 'if ($status < 400 && !$this->auditedDryRun && $this->webhookDispatcher !== null) {',
+		'replace' => 'if ($status < 400 && true && $this->webhookDispatcher !== null) {',
+	],
 ];
 
 runMutations($appRoot, 'Agent', $mutants);

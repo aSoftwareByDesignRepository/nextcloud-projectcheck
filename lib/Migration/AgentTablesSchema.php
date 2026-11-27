@@ -20,8 +20,9 @@ final class AgentTablesSchema
 {
 	public const TOKENS_TABLE = 'pc_agent_tokens';
 	public const AUDIT_TABLE = 'pc_agent_audit';
+	public const WEBHOOKS_TABLE = 'pc_agent_webhooks';
 
-	public const TABLES = [self::TOKENS_TABLE, self::AUDIT_TABLE];
+	public const TABLES = [self::TOKENS_TABLE, self::AUDIT_TABLE, self::WEBHOOKS_TABLE];
 
 	public static function apply(ISchemaWrapper $schema): bool
 	{
@@ -62,6 +63,26 @@ final class AgentTablesSchema
 			$table->addIndex(['token_id'], 'pc_agent_aud_tok');
 			$table->addIndex(['user_id'], 'pc_agent_aud_uid');
 			$table->addIndex(['created_at'], 'pc_agent_aud_ts');
+			$changed = true;
+		}
+
+		if (!$schema->hasTable(self::WEBHOOKS_TABLE)) {
+			$table = $schema->createTable(self::WEBHOOKS_TABLE);
+			$table->addColumn('id', Types::BIGINT, ['autoincrement' => true, 'notnull' => true, 'unsigned' => true]);
+			$table->addColumn('user_id', Types::STRING, ['notnull' => true, 'length' => 64]);
+			$table->addColumn('url', Types::STRING, ['notnull' => true, 'length' => 500]);
+			// Signing secret stored readable (HMAC needs it on every delivery)
+			// but NEVER re-served by any API after creation.
+			$table->addColumn('secret', Types::STRING, ['notnull' => true, 'length' => 128]);
+			$table->addColumn('events', Types::STRING, ['notnull' => true, 'length' => 1000]);
+			$table->addColumn('created_at', Types::INTEGER, ['notnull' => true, 'unsigned' => true]);
+			$table->addColumn('last_delivery_at', Types::INTEGER, ['notnull' => false, 'unsigned' => true]);
+			$table->addColumn('last_status', Types::STRING, ['notnull' => true, 'length' => 32, 'default' => 'never']);
+			$table->addColumn('fail_count', Types::INTEGER, ['notnull' => true, 'default' => 0, 'unsigned' => true]);
+			$table->addColumn('disabled_at', Types::INTEGER, ['notnull' => false, 'unsigned' => true]);
+			$table->addColumn('revoked_at', Types::INTEGER, ['notnull' => false, 'unsigned' => true]);
+			$table->setPrimaryKey(['id'], 'pc_agent_wh_pk');
+			$table->addIndex(['user_id'], 'pc_agent_wh_uid');
 			$changed = true;
 		}
 

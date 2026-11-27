@@ -14,8 +14,13 @@ use OCA\ProjectCheck\Agent\AgentToken;
 use OCA\ProjectCheck\Agent\AgentTokenMapper;
 use OCA\ProjectCheck\Agent\AgentAuditMapper;
 use OCA\ProjectCheck\Agent\AgentTokenService;
+use OCA\ProjectCheck\Agent\AgentWebhook;
+use OCA\ProjectCheck\Agent\AgentWebhookDispatcher;
+use OCA\ProjectCheck\Agent\AgentWebhookMapper;
+use OCA\ProjectCheck\BackgroundJob\AgentWebhookDeliverJob;
 use OCA\ProjectCheck\Middleware\AgentAuthMiddleware;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\BackgroundJob\IJobList;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -66,7 +71,7 @@ class AgentAuthMiddlewareTest extends TestCase
 		@unlink($this->manifestFile);
 	}
 
-	private function middlewareWithManifest(array $tools): void
+	private function middlewareWithManifest(array $tools, ?AgentWebhookDispatcher $dispatcher = null): void
 	{
 		file_put_contents($this->manifestFile, json_encode([
 			'schemaVersion' => 1,
@@ -84,6 +89,7 @@ class AgentAuthMiddlewareTest extends TestCase
 			$this->auditMapper,
 			$this->logger,
 			'projectcheck',
+			$dispatcher,
 		);
 	}
 
@@ -431,6 +437,111 @@ class AgentAuthMiddlewareTest extends TestCase
 		$this->tokenService->method('consumeMutationBudget')->willReturn(null);
 		$this->auditMapper->method('record')->willThrowException(new \RuntimeException('no such table'));
 		$this->logger->expects($this->once())->method('error');
+		$this->middleware->beforeController(new \stdClass(), 'x');
+		$resp = $this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 200));
+		$this->assertSame(200, $resp->getStatus());
+	}
+
+	/**
+	 * NH-02: a committed agent mutation fans out to webhook subscribers.
+	 * Dry-runs, failures, and reads must stay silent.
+	 */
+	private function armedWriteRequest(bool $dryRun = false): void
+	{
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('POST');
+		$params = ['title' => 'x'] + ($dryRun ? ['dry_run' => true] : []);
+		$this->request->method('getParams')->willReturn($params);
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $n) => $params[$n] ?? null
+		);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken(['projectcheck:things:write']));
+		$this->tokenService->method('consumeMutationBudget')->willReturn(null);
+	}
+
+	private function webhookSub(): AgentWebhook
+	{
+		$w = new AgentWebhook();
+		$w->setId(7);
+		$w->setUserId('agent-owner');
+		$w->setUrl('https://receiver.test/hook');
+		$w->setSecret('whsec_x');
+		$w->setEvents('*');
+		return $w;
+	}
+
+	public function testCommittedWriteEmitsWebhookEvent(): void
+	{
+		$webhooks = $this->getMockBuilder(AgentWebhookMapper::class)
+			->disableOriginalConstructor()->getMock();
+		$webhooks->method('findAllActive')->willReturn([$this->webhookSub()]);
+		$jobList = $this->createMock(IJobList::class);
+		$dispatcher = new AgentWebhookDispatcher($webhooks, $jobList, $this->logger);
+		$this->middlewareWithManifest([self::TOOL_WRITE], $dispatcher);
+		$this->armedWriteRequest();
+		$this->auditMapper->method('record');
+
+		$jobList->expects($this->once())->method('add')
+			->willReturnCallback(function (string $class, array $args) {
+				$this->assertSame(AgentWebhookDeliverJob::class, $class);
+				$this->assertSame(7, $args['webhookId']);
+				$envelope = json_decode((string)$args['payload'], true);
+				$this->assertSame('agent.write.completed', $envelope['event']);
+				$this->assertSame('pc_write', $envelope['data']['tool']);
+				$this->assertSame('agent-owner', $envelope['data']['userId']);
+			});
+
+		$this->middleware->beforeController(new \stdClass(), 'x');
+		$this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 200));
+	}
+
+	public function testDryRunWriteDoesNotEmitWebhookEvent(): void
+	{
+		$webhooks = $this->getMockBuilder(AgentWebhookMapper::class)
+			->disableOriginalConstructor()->getMock();
+		$jobList = $this->createMock(IJobList::class);
+		$dispatcher = new AgentWebhookDispatcher($webhooks, $jobList, $this->logger);
+		$tool = self::TOOL_WRITE + ['riskClass' => 3, 'confirm' => 'required', 'dryRun' => true];
+		$this->middlewareWithManifest([$tool], $dispatcher);
+		$this->armedWriteRequest(dryRun: true);
+		$this->auditMapper->method('record');
+
+		$jobList->expects($this->never())->method('add');
+		$webhooks->expects($this->never())->method('findAllActive');
+
+		$this->middleware->beforeController(new \stdClass(), 'x');
+		$this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 200));
+	}
+
+	public function testFailedWriteDoesNotEmitWebhookEvent(): void
+	{
+		$webhooks = $this->getMockBuilder(AgentWebhookMapper::class)
+			->disableOriginalConstructor()->getMock();
+		$jobList = $this->createMock(IJobList::class);
+		$dispatcher = new AgentWebhookDispatcher($webhooks, $jobList, $this->logger);
+		$this->middlewareWithManifest([self::TOOL_WRITE], $dispatcher);
+		$this->armedWriteRequest();
+		$this->auditMapper->method('record');
+
+		$jobList->expects($this->never())->method('add');
+
+		$this->middleware->beforeController(new \stdClass(), 'x');
+		$this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 500));
+	}
+
+	public function testWebhookEmitFailureNeverBreaksResponse(): void
+	{
+		$webhooks = $this->getMockBuilder(AgentWebhookMapper::class)
+			->disableOriginalConstructor()->getMock();
+		$webhooks->method('findAllActive')
+			->willThrowException(new \RuntimeException('webhooks table missing'));
+		$jobList = $this->createMock(IJobList::class);
+		$dispatcher = new AgentWebhookDispatcher($webhooks, $jobList, $this->logger);
+		$this->middlewareWithManifest([self::TOOL_WRITE], $dispatcher);
+		$this->armedWriteRequest();
+		$this->auditMapper->method('record');
+
 		$this->middleware->beforeController(new \stdClass(), 'x');
 		$resp = $this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 200));
 		$this->assertSame(200, $resp->getStatus());
