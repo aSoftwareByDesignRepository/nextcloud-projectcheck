@@ -18,6 +18,10 @@ use OCP\DB\Types;
  */
 final class AgentTablesSchema
 {
+	// Space-joined scope strings live here; a full "act" preset must always
+	// fit (scripts/check-agent-contracts.py asserts the universe length).
+	public const SCOPES_LENGTH = 2000;
+
 	public const TOKENS_TABLE = 'pc_agent_tokens';
 	public const AUDIT_TABLE = 'pc_agent_audit';
 	public const WEBHOOKS_TABLE = 'pc_agent_webhooks';
@@ -34,7 +38,7 @@ final class AgentTablesSchema
 			$table->addColumn('user_id', Types::STRING, ['notnull' => true, 'length' => 64]);
 			$table->addColumn('label', Types::STRING, ['notnull' => true, 'length' => 190]);
 			$table->addColumn('token_hash', Types::STRING, ['notnull' => true, 'length' => 64]);
-			$table->addColumn('scopes', Types::STRING, ['notnull' => true, 'length' => 500]);
+			$table->addColumn('scopes', Types::STRING, ['notnull' => true, 'length' => self::SCOPES_LENGTH]);
 			$table->addColumn('created_at', Types::INTEGER, ['notnull' => true, 'unsigned' => true]);
 			$table->addColumn('expires_at', Types::INTEGER, ['notnull' => true, 'unsigned' => true]);
 			$table->addColumn('last_used_at', Types::INTEGER, ['notnull' => false, 'unsigned' => true]);
@@ -84,6 +88,18 @@ final class AgentTablesSchema
 			$table->setPrimaryKey(['id'], 'pc_agent_wh_pk');
 			$table->addIndex(['user_id'], 'pc_agent_wh_uid');
 			$changed = true;
+		}
+
+		// Widen scopes on installs that predate SCOPES_LENGTH — a universe
+		// joined beyond 500 chars made "act" presets fail mint with a DB
+		// error (mobilitycheck: 566 chars over varchar(500)).
+		if ($schema->hasTable(self::TOKENS_TABLE)) {
+			$tokens = $schema->getTable(self::TOKENS_TABLE);
+			if ($tokens->hasColumn('scopes')
+				&& $tokens->getColumn('scopes')->getLength() < self::SCOPES_LENGTH) {
+				$tokens->changeColumn('scopes', ['length' => self::SCOPES_LENGTH]);
+				$changed = true;
+			}
 		}
 
 		return $changed;

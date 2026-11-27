@@ -98,6 +98,44 @@ class AgentTokenServiceTest extends TestCase
 		}
 	}
 
+	/**
+	 * The joined scope string must fit agent_tokens.scopes (SCOPES_MAX_LENGTH):
+	 * a grant-everything preset on a scope-rich manifest must fail 422, never
+	 * surface as a raw DB length error (mobilitycheck regression).
+	 */
+	public function testMintRejectsScopeSetExceedingColumn(): void
+	{
+		$tools = [];
+		$scopes = [];
+		for ($i = 0; $i < 80; $i++) {
+			$scope = sprintf('projectcheck:resource_%02d:read', $i);
+			$tools[] = ['name' => 't' . $i, 'kind' => 'read', 'riskClass' => 0,
+				'method' => 'GET', 'path' => '/r' . $i, 'scope' => $scope];
+			$scopes[] = $scope;
+		}
+		$this->assertGreaterThan(AgentTokenService::SCOPES_MAX_LENGTH, strlen(implode(' ', $scopes)));
+
+		$file = (string)tempnam(sys_get_temp_dir(), 'agent-ts-big-');
+		file_put_contents($file, json_encode([
+			'schemaVersion' => 1, 'appId' => 'projectcheck',
+			'agentExposure' => 'declared', 'tools' => $tools,
+		]));
+		try {
+			$big = new AgentTokenService($this->tokens, $this->audit,
+				new AgentManifest('projectcheck', $file));
+			$this->tokens->expects($this->never())->method('insert');
+			try {
+				$big->mint('alice', 'x', $scopes, self::NOW);
+				$this->fail('overlong scope set must throw');
+			} catch (AgentException $e) {
+				$this->assertSame('validation', $e->getErrorCode());
+				$this->assertSame('too_long', $e->getDetails()['fields']['scopes']);
+			}
+		} finally {
+			@unlink($file);
+		}
+	}
+
 	public function testMintRejectsBlankAndOverlongLabel(): void
 	{
 		foreach (['', '   ', str_repeat('x', 191)] as $label) {

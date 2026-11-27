@@ -25,6 +25,9 @@ class AgentTokenService
 	public const MUTATION_BUDGET_PER_WINDOW = 60;
 	public const RATE_WINDOW_SECONDS = 60;
 	public const MAX_TOKENS_PER_USER = 25;
+	// Mirrors AgentTablesSchema::SCOPES_LENGTH — the joined scope string must
+	// fit the column; fail with a clean 422, never a DB length error.
+	public const SCOPES_MAX_LENGTH = 2000;
 
 	public function __construct(
 		private readonly AgentTokenMapper $tokens,
@@ -60,6 +63,11 @@ class AgentTokenService
 			]);
 		}
 		$grants = AgentScopeChecker::validateGrantRequest($scopes, $this->manifest->scopeSet());
+		if (strlen(implode(' ', $grants)) > self::SCOPES_MAX_LENGTH) {
+			throw new AgentException('validation', 'Scope selection exceeds the storage limit.', 422, [
+				'fields' => ['scopes' => 'too_long'],
+			]);
+		}
 
 		// $replacing: the source row of a rotate() still counts as live until
 		// revoked below — rotation at the cap must not deadlock itself.
