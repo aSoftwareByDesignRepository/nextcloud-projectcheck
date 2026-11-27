@@ -368,9 +368,11 @@
 	function askConfirm(kind, tokenId, label) {
 		pendingAction = { kind: kind, tokenId: tokenId };
 		if (revokeText) {
-			revokeText.textContent = kind === 'rotate'
-				? t('Rotate') + ' "' + label + '"? ' + t('The old token stops working within a minute — you will get a new one.')
-				: t('Revoke') + ' "' + label + '"? ' + t('AI clients using it stop working within a minute.');
+			revokeText.textContent = kind === 'webhook'
+				? t('Stop notifications to') + ' "' + label + '"? ' + t('Pending events are dropped — your AI can register a new endpoint any time.')
+				: (kind === 'rotate'
+					? t('Rotate') + ' "' + label + '"? ' + t('The old token stops working within a minute — you will get a new one.')
+					: t('Revoke') + ' "' + label + '"? ' + t('AI clients using it stop working within a minute.'));
 		}
 		if (revokeConfirm) {
 			revokeConfirm.textContent = kind === 'rotate' ? t('Rotate') : t('Revoke');
@@ -387,6 +389,18 @@
 		var rot = e.target.closest('.' + prefix + '-agent-rotate');
 		if (rot) {
 			askConfirm('rotate', rot.getAttribute('data-token-id'), (rot.closest('tr') || {}).getAttribute ? rot.closest('tr').getAttribute('data-token-label') : '');
+			return;
+		}
+		var wt = e.target.closest('.' + prefix + '-agent-webhook-test');
+		if (wt) {
+			var wtr = wt.closest('tr');
+			testWebhook(wtr ? wtr.getAttribute('data-webhook-id') : '', wt);
+			return;
+		}
+		var wr = e.target.closest('.' + prefix + '-agent-webhook-revoke');
+		if (wr) {
+			var wrr = wr.closest('tr');
+			askConfirm('webhook', wrr ? wrr.getAttribute('data-webhook-id') : '', wrr ? wrr.getAttribute('data-webhook-url') : '');
 		}
 	});
 
@@ -404,10 +418,15 @@
 			var action = pendingAction;
 			pendingAction = null;
 			revokeConfirm.disabled = true;
-			var path = '/agent/v1/tokens/' + encodeURIComponent(action.tokenId) + (action.kind === 'rotate' ? '/rotate' : '/revoke');
-			api(path, { method: 'POST' }).then(function (data) {
+			var path = action.kind === 'webhook'
+				? '/agent/v1/webhooks/' + encodeURIComponent(action.tokenId)
+				: '/agent/v1/tokens/' + encodeURIComponent(action.tokenId) + (action.kind === 'rotate' ? '/rotate' : '/revoke');
+			api(path, action.kind === 'webhook' ? { method: 'DELETE' } : { method: 'POST' }).then(function (data) {
 				close(revokeDialog);
-				if (action.kind === 'rotate' && data.secret) {
+				if (action.kind === 'webhook') {
+					announce(t('Endpoint revoked.'));
+					reloadWebhooks();
+				} else if (action.kind === 'rotate' && data.secret) {
 					showSecret(data.secret, data.mcpConfig);
 					announce(t('Token rotated.'));
 				} else {
@@ -537,6 +556,110 @@
 			}
 		}
 	}
+
+	// ── webhook endpoints ───────────────────────────────────────────
+	// Transparency surface: the user sees every endpoint their AI
+	// registered — and can test or kill it. Creation itself stays
+	// agent-driven (the signed secret is shown once, to the caller).
+
+	var webhookTbody = document.getElementById(prefix + '-agent-webhook-tbody');
+	var webhooks = [];
+
+	function testWebhook(id, btn) {
+		if (!id) {
+			return;
+		}
+		btn.disabled = true;
+		api('/agent/v1/webhooks/' + encodeURIComponent(id) + '/test', { method: 'POST', body: {} }).then(function () {
+			announce(t('Test notification queued — check your endpoint.'));
+		}).catch(function (err) {
+			announce(err.message || t('Could not queue the test.'));
+		}).finally(function () {
+			btn.disabled = false;
+		});
+	}
+
+	function reloadWebhooks() {
+		if (!webhookTbody) {
+			return;
+		}
+		api('/agent/v1/webhooks', { method: 'GET' }).then(function (data) {
+			webhooks = data.webhooks || [];
+			rebuildWebhookTable();
+		}).catch(function () {
+			webhookTbody.textContent = '';
+			var tr = document.createElement('tr');
+			var td = document.createElement('td');
+			td.colSpan = 5;
+			td.className = prefix + '-agent-never';
+			td.textContent = t('Endpoints could not be loaded.');
+			tr.appendChild(td);
+			webhookTbody.appendChild(tr);
+		});
+	}
+
+	function rebuildWebhookTable() {
+		webhookTbody.textContent = '';
+		if (!webhooks.length) {
+			var emptyTr = document.createElement('tr');
+			var emptyTd = document.createElement('td');
+			emptyTd.colSpan = 5;
+			emptyTd.className = prefix + '-agent-never';
+			emptyTd.textContent = t('No webhook endpoints yet.');
+			emptyTr.appendChild(emptyTd);
+			webhookTbody.appendChild(emptyTr);
+			return;
+		}
+		webhooks.forEach(function (w) {
+			var tr = document.createElement('tr');
+			tr.setAttribute('data-webhook-id', String(w.id));
+			tr.setAttribute('data-webhook-url', w.url || '');
+			if (w.state !== 'active') {
+				tr.className = prefix + '-agent-row--inactive';
+			}
+			var urlSpan = document.createElement('span');
+			urlSpan.className = prefix + '-agent-label';
+			urlSpan.textContent = w.url || '';
+			urlSpan.title = w.url || '';
+			tr.appendChild(cell(t('Endpoint'), urlSpan, prefix + '-agent-label-cell'));
+			var evSpan = document.createElement('span');
+			evSpan.className = prefix + '-agent-scopes';
+			(w.events || []).forEach(function (ev) {
+				var b = document.createElement('span');
+				b.className = prefix + '-badge ' + prefix + '-badge--neutral ' + prefix + '-agent-scope';
+				b.textContent = ev === '*' ? t('All events') : ev;
+				evSpan.appendChild(b);
+			});
+			tr.appendChild(cell(t('Events'), evSpan, prefix + '-agent-scopes-cell'));
+			var stateSpan = document.createElement('span');
+			stateSpan.className = prefix + '-badge ' + (w.state === 'active' ? prefix + '-badge--info' : prefix + '-badge--neutral');
+			stateSpan.textContent = w.state === 'active' ? t('Active') : (w.state === 'disabled' ? t('Disabled') : t('Revoked'));
+			tr.appendChild(cell(t('State'), stateSpan));
+			var last = w.lastDeliveryAt ? fmtTs(w.lastDeliveryAt) : t('never');
+			if (w.lastStatus === 'failed') {
+				last += ' — ' + t('failed');
+			}
+			tr.appendChild(cell(t('Last delivery'), last));
+			var actions = document.createElement('td');
+			actions.className = prefix + '-row-actions';
+			if (w.state === 'active') {
+				var tb = document.createElement('button');
+				tb.type = 'button';
+				tb.className = prefix + '-btn ' + prefix + '-btn--ghost ' + prefix + '-agent-webhook-test';
+				tb.textContent = t('Test');
+				var rb = document.createElement('button');
+				rb.type = 'button';
+				rb.className = prefix + '-btn ' + prefix + '-btn--danger ' + prefix + '-agent-webhook-revoke';
+				rb.textContent = t('Revoke');
+				actions.appendChild(tb);
+				actions.appendChild(rb);
+			}
+			tr.appendChild(actions);
+			webhookTbody.appendChild(tr);
+		});
+	}
+
+	reloadWebhooks();
 
 	function cell(label, inner, cls) {
 		var td = document.createElement('td');

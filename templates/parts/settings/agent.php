@@ -102,6 +102,25 @@ $pc_tokens = is_array($pc_state['tokens']) ? $pc_state['tokens'] : [];
 	</div>
 	<?php endif; ?>
 
+	<div class="pc-agent-webhooks" id="pc-agent-webhooks">
+		<h3 class="pc-agent-sub-h" id="pc-agent-webhooks-h"><?php p($l->t('Webhook endpoints')); ?></h3>
+		<p class="pc-form-row__hint"><?php p($l->t('Your AI assistant can register endpoints that receive a signed notification whenever it changes something here. They belong to you — test or revoke them any time.')); ?></p>
+		<div class="pc-table-wrap pc-agent-tablewrap" tabindex="0" role="region" aria-labelledby="pc-agent-webhooks-h">
+			<table class="pc-table pc-table--cards pc-agent-table" id="pc-agent-webhook-table">
+				<thead>
+					<tr>
+						<th scope="col"><?php p($l->t('Endpoint')); ?></th>
+						<th scope="col"><?php p($l->t('Events')); ?></th>
+						<th scope="col"><?php p($l->t('State')); ?></th>
+						<th scope="col"><?php p($l->t('Last delivery')); ?></th>
+						<th scope="col"><span class="pc-visually-hidden"><?php p($l->t('Actions')); ?></span></th>
+					</tr>
+				</thead>
+				<tbody id="pc-agent-webhook-tbody"></tbody>
+			</table>
+		</div>
+	</div>
+
 	<?php if ($pc_state['isAdmin']): ?>
 	<div class="pc-form-row pc-agent-selfmint">
 		<input type="hidden" name="agent_self_mint" value="0">

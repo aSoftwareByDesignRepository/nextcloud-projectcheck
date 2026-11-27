@@ -477,6 +477,14 @@ dialog.pc-agent-revoke-dialog:not([open]) {
 	font-size: var(--pc-fs-sm);
 	line-height: var(--pc-line-base);
 }
+.pc-agent-sub-h {
+	margin: var(--pc-space-6, 32px) 0 var(--pc-space-1, 4px);
+	font-size: var(--pc-fs-lg, 1.125rem);
+	line-height: var(--pc-line-tight, 1.25);
+}
+.pc-agent-webhooks > .pc-form-row__hint {
+	margin-bottom: var(--pc-space-3, 12px);
+}
 
 /* Inline field error (mint dialog) — family field-errors recipe: danger
    ink, small type; next-step copy lives in the text the server fields-map
