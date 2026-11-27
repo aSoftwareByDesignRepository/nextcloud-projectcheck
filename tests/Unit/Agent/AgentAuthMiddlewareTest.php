@@ -547,4 +547,135 @@ class AgentAuthMiddlewareTest extends TestCase
 		$resp = $this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 200));
 		$this->assertSame(200, $resp->getStatus());
 	}
+
+	/**
+	 * Audit-amplification fix: the budget check must run BEFORE every deny
+	 * gate that writes an audit row — a flooding token hits 429 (no row)
+	 * instead of an unbounded stream of denied writes.
+	 */
+	public function testDeniedCallsConsumeBudgetBeforeDenyGates(): void
+	{
+		$this->middlewareWithManifest([self::TOOL_WRITE]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getParams')->willReturn(['title' => 'x']);
+		// Token lacks the write scope — the call will be denied later.
+		$this->tokenService->method('resolve')->willReturn($this->agentToken(['projectcheck:things:read']));
+		$this->tokenService->expects($this->once())->method('consumeMutationBudget')
+			->willReturn(null);
+		try {
+			$this->middleware->beforeController(new \stdClass(), 'x');
+			$this->fail('scope deny expected');
+		} catch (AgentException $e) {
+			$this->assertSame('agent_scope_denied', $e->getErrorCode());
+		}
+	}
+
+	public function testRateLimitedCallWritesNoAuditRow(): void
+	{
+		$this->middlewareWithManifest([self::TOOL_WRITE]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getParams')->willReturn(['title' => 'x']);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken(['projectcheck:things:write']));
+		$this->tokenService->method('consumeMutationBudget')->willReturn(30);
+		$this->auditMapper->expects($this->never())->method('record');
+		try {
+			$this->middleware->beforeController(new \stdClass(), 'x');
+			$this->fail('rate breach must deny');
+		} catch (AgentException $e) {
+			$this->assertSame('rate_limited', $e->getErrorCode());
+			$this->assertSame(429, $e->getHttpStatus());
+		}
+	}
+
+	public function testReadToolConsumesReadBudget(): void
+	{
+		$this->middlewareWithManifest([self::TOOL_READ]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getParams')->willReturn([]);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken());
+		$this->tokenService->expects($this->once())->method('consumeReadBudget')
+			->willReturn(null);
+		$this->tokenService->expects($this->never())->method('consumeMutationBudget');
+		$this->middleware->beforeController(new \stdClass(), 'x');
+	}
+
+	public function testReadBudgetBreachedDenies429(): void
+	{
+		$this->middlewareWithManifest([self::TOOL_READ]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getParams')->willReturn([]);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken());
+		$this->tokenService->method('consumeReadBudget')->willReturn(15);
+		try {
+			$this->middleware->beforeController(new \stdClass(), 'x');
+			$this->fail('read budget breach must deny');
+		} catch (AgentException $e) {
+			$this->assertSame('rate_limited', $e->getErrorCode());
+			$this->assertSame(429, $e->getHttpStatus());
+			$this->assertSame(15, $e->getDetails()['retryAfter']);
+		}
+	}
+
+	public function testStrayIdParamOnIdlessRouteRejected(): void
+	{
+		$this->middlewareWithManifest([self::TOOL_READ]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getParams')->willReturn(['id' => '999']);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken());
+		try {
+			$this->middleware->beforeController(new \stdClass(), 'x');
+			$this->fail('stray ?id= must be an unknown param');
+		} catch (AgentException $e) {
+			$this->assertSame('unknown_param', $e->getErrorCode());
+			$this->assertContains('id', $e->getDetails()['unknownParams']);
+		}
+	}
+
+	public function testRouteIdParamIsAllowed(): void
+	{
+		$tool = ['name' => 'pc_get', 'kind' => 'read', 'riskClass' => 0,
+			'method' => 'GET', 'path' => '/mobile/v1/things/{id}',
+			'scope' => 'projectcheck:things:read', 'route' => 'mobile#getThing'];
+		$this->middlewareWithManifest([$tool]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things/42');
+		$this->request->method('getMethod')->willReturn('GET');
+		$this->request->method('getParams')->willReturn(['id' => '42', '_route' => 'x']);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken());
+		$this->middleware->beforeController(new \stdClass(), 'x');
+		$this->assertTrue($this->context->isArmed());
+	}
+
+	public function testConflictingClientRequestIdSpellingsRejected(): void
+	{
+		$this->middlewareWithManifest([self::TOOL_WRITE]);
+		$this->headers([self::HEADER => 'ckst_projectcheck_abc', 'Authorization' => '']);
+		$this->request->method('getPathInfo')->willReturn('/apps/projectcheck/mobile/v1/things');
+		$this->request->method('getMethod')->willReturn('POST');
+		$this->request->method('getParams')->willReturn([
+			'title' => 'x', 'clientRequestId' => 'a', 'client_request_id' => 'b',
+		]);
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $n): mixed => ['title' => 'x', 'clientRequestId' => 'a', 'client_request_id' => 'b'][$n] ?? null
+		);
+		$this->tokenService->method('resolve')->willReturn($this->agentToken(['projectcheck:things:write']));
+		try {
+			$this->middleware->beforeController(new \stdClass(), 'x');
+			$this->fail('conflicting idempotency keys must 422');
+		} catch (AgentException $e) {
+			$this->assertSame('validation', $e->getErrorCode());
+			$this->assertSame(422, $e->getHttpStatus());
+			$this->assertSame('ambiguous_value', $e->getDetails()['fields']['clientRequestId']);
+		}
+	}
 }

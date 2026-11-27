@@ -23,6 +23,9 @@ class AgentTokenService
 	public const TOKEN_PREFIX = 'ckst_projectcheck_';
 	public const EXPIRY_SECONDS = 31536000; // 365d — hard max, no override
 	public const MUTATION_BUDGET_PER_WINDOW = 60;
+	// Reads were unmetered by spec — a leaked read token could pull at line
+	// rate forever. 600/min is generous for real adapters and still a wall.
+	public const READ_BUDGET_PER_WINDOW = 600;
 	public const RATE_WINDOW_SECONDS = 60;
 	public const MAX_TOKENS_PER_USER = 25;
 	// Mirrors AgentTablesSchema::SCOPES_LENGTH — the joined scope string must
@@ -149,9 +152,29 @@ class AgentTokenService
 		if ($count <= self::MUTATION_BUDGET_PER_WINDOW) {
 			return null;
 		}
-		// The entity was read before the conditional UPDATE — if its window
-		// start is stale, the row just rolled into a fresh window (full 60s).
-		$windowStart = $token->getRateWindowStart();
+		return $this->retryAfter($token->getRateWindowStart(), $now);
+	}
+
+	/**
+	 * Read-call budget — separate counter, same atomic mechanics: a flooding
+	 * token is stopped at READ_BUDGET_PER_WINDOW calls/minute for reads and
+	 * manifest fetches. Mutations never draw on this pool.
+	 */
+	public function consumeReadBudget(AgentToken $token, int $now): ?int
+	{
+		$count = $this->tokens->consumeReadSlot($token->getId(), $now, self::RATE_WINDOW_SECONDS);
+		if ($count <= self::READ_BUDGET_PER_WINDOW) {
+			return null;
+		}
+		return $this->retryAfter($token->getReadWindowStart(), $now);
+	}
+
+	/**
+	 * The entity was read before the conditional UPDATE — if its window
+	 * start is stale, the row just rolled into a fresh window (full 60s).
+	 */
+	private function retryAfter(?int $windowStart, int $now): int
+	{
 		if ($windowStart === null || $windowStart < $now - self::RATE_WINDOW_SECONDS) {
 			return self::RATE_WINDOW_SECONDS;
 		}

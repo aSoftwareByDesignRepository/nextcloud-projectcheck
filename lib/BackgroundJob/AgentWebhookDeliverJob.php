@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace OCA\ProjectCheck\BackgroundJob;
 
 use OCA\ProjectCheck\Agent\AgentWebhookMapper;
+use OCA\ProjectCheck\Agent\WebhookUrlGuard;
 use OCA\ProjectCheck\AppInfo\Application;
 use OCA\ProjectCheck\Service\UpgradeBackupService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -42,6 +43,7 @@ final class AgentWebhookDeliverJob extends QueuedJob
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 		private readonly ILockingProvider $locking,
+		private readonly WebhookUrlGuard $urlGuard,
 	) {
 		parent::__construct($time);
 	}
@@ -86,6 +88,31 @@ final class AgentWebhookDeliverJob extends QueuedJob
 			return;
 		}
 
+		// SSRF TOCTOU: the URL was validated at registration, but DNS answers
+		// change — re-resolve NOW and pin exactly the verified public IPs on
+		// the connection, so a rebind between registration (or even between
+		// this check and connect) cannot retarget the POST at an internal
+		// host. A URL failing here is tampered or broken, not transient:
+		// disable the webhook — blind retries can't heal DNS.
+		$pinIps = [];
+		try {
+			$pinIps = $this->urlGuard->resolveForDelivery($webhook->getUrl());
+		} catch (\Throwable $e) {
+			$this->logger->warning('agent webhook disabled: URL failed delivery-time SSRF re-check', [
+				'webhookId' => $id,
+				'exception' => $e->getMessage(),
+			]);
+			try {
+				$this->webhooks->recordDelivery($id, time(), false, true);
+			} catch (\Throwable $inner) {
+				$this->logger->warning('agent webhook bookkeeping failed', [
+					'webhookId' => $id,
+					'exception' => $inner->getMessage(),
+				]);
+			}
+			return;
+		}
+
 		$envelope = json_decode($payload, true);
 		$event = is_array($envelope) ? (string)($envelope['event'] ?? 'unknown') : 'unknown';
 		$timestamp = time();
@@ -99,7 +126,9 @@ final class AgentWebhookDeliverJob extends QueuedJob
 			} else {
 				$headerStem = 'X-' . ucfirst($stem);
 			}
-			$response = $this->clientService->newClient()->post($webhook->getUrl(), [
+			$requestOptions = [
+				'timeout' => self::TIMEOUT_SECONDS,
+				'connect_timeout' => self::TIMEOUT_SECONDS,
 				'timeout' => self::TIMEOUT_SECONDS,
 				'connect_timeout' => self::TIMEOUT_SECONDS,
 				'headers' => [
@@ -112,7 +141,21 @@ final class AgentWebhookDeliverJob extends QueuedJob
 				// Never follow redirects: a 30x could silently retarget the
 				// subscription at a different host — treat as failure.
 				'allow_redirects' => false,
-			]);
+			];
+			// Pin the connection to exactly the IPs validated above —
+			// CURLOPT_RESOLVE overrides DNS for this request, closing the
+			// re-check→connect rebind window entirely.
+			if ($pinIps !== [] && defined('CURLOPT_RESOLVE')) {
+				$urlParts = parse_url($webhook->getUrl());
+				$port = (int)($urlParts['port']
+					?? (strtolower((string)($urlParts['scheme'] ?? 'https')) === 'https' ? 443 : 80));
+				$requestOptions['curl'] = [
+					CURLOPT_RESOLVE => [
+						sprintf('%s:%d:%s', (string)$urlParts['host'], $port, implode(',', $pinIps)),
+					],
+				];
+			}
+			$response = $this->clientService->newClient()->post($webhook->getUrl(), $requestOptions);
 			$status = $response->getStatusCode();
 			$ok = $status >= 200 && $status < 300;
 		} catch (\Throwable $e) {

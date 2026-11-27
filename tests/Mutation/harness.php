@@ -22,6 +22,20 @@ function runMutations(string $appRoot, string $testFilter, array $mutants): neve
 		exit(2);
 	}
 
+	// Two concurrent runs corrupt each other: the loser snapshots files the
+	// winner has already mutated, then "restores" the MUTANT. One run at a
+	// time, or the reported score is fiction.
+	$lockFile = $appRoot . '/tests/Mutation/.run.lock';
+	$lock = fopen($lockFile, 'c');
+	if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
+		fwrite(STDERR, "Another mutation run holds {$lockFile} — refusing to run concurrently.\n");
+		exit(2);
+	}
+	register_shutdown_function(static function () use ($lock, $lockFile): void {
+		flock($lock, LOCK_UN);
+		@unlink($lockFile);
+	});
+
 	/** @var array<string, string> $originals */
 	$originals = [];
 	foreach ($mutants as $mutant) {

@@ -154,6 +154,38 @@ class AgentTokenMapper extends QBMapper
 	}
 
 	/**
+	 * Fixed-window read counter — same single-conditional-UPDATE guarantee
+	 * as consumeMutationSlot, on its own columns so reads can never starve
+	 * (or hide inside) the mutation budget.
+	 *
+	 * @return int the post-increment read count in the current window
+	 */
+	public function consumeReadSlot(int $id, int $now, int $windowSeconds): int
+	{
+		$qb = $this->db->getQueryBuilder();
+		$cutoff = $now - $windowSeconds;
+		$qb->update($this->getTableName())
+			->set('read_count', $qb->createFunction(
+				'CASE WHEN (read_window_start IS NULL OR read_window_start < ' . $qb->createNamedParameter($cutoff) . ')'
+				. ' THEN 1 ELSE read_count + 1 END'
+			))
+			->set('read_window_start', $qb->createFunction(
+				'CASE WHEN (read_window_start IS NULL OR read_window_start < ' . $qb->createNamedParameter($cutoff) . ')'
+				. ' THEN ' . $qb->createNamedParameter($now) . ' ELSE read_window_start END'
+			))
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($id)));
+		$qb->executeStatement();
+
+		$qb2 = $this->db->getQueryBuilder();
+		$qb2->select('read_count')->from($this->getTableName())
+			->where($qb2->expr()->eq('id', $qb2->createNamedParameter($id)));
+		$result = $qb2->executeQuery();
+		$count = (int)($result->fetchOne() ?: 0);
+		$result->closeCursor();
+		return $count;
+	}
+
+	/**
 	 * Free all tokens when the Nextcloud account is deleted (GDPR / least
 	 * privilege — a deleted identity must not leave live credentials).
 	 * Audit rows are kept: they are the forensic trail.

@@ -136,6 +136,37 @@ class AgentTokenServiceTest extends TestCase
 		}
 	}
 
+	/**
+	 * Reads were unmetered — a leaked read token could pull at line rate
+	 * forever. consumeReadBudget is a separate counter from the mutation
+	 * budget: reads can't starve writes and vice versa.
+	 */
+	public function testReadBudgetAllowsUnderWindowCap(): void
+	{
+		$token = new AgentToken();
+		$token->setId(7);
+		$this->tokens->method('consumeReadSlot')->willReturn(600);
+		$this->assertNull($this->service->consumeReadBudget($token, self::NOW));
+	}
+
+	public function testReadBudgetDeniesOverWindowCap(): void
+	{
+		$token = new AgentToken();
+		$token->setId(7);
+		$token->setReadWindowStart(self::NOW - 20);
+		$this->tokens->method('consumeReadSlot')->willReturn(601);
+		$this->assertSame(40, $this->service->consumeReadBudget($token, self::NOW));
+	}
+
+	public function testReadBudgetFullRetryAfterOnStaleWindow(): void
+	{
+		$token = new AgentToken();
+		$token->setId(7);
+		$token->setReadWindowStart(null);
+		$this->tokens->method('consumeReadSlot')->willReturn(601);
+		$this->assertSame(60, $this->service->consumeReadBudget($token, self::NOW));
+	}
+
 	public function testMintRejectsBlankAndOverlongLabel(): void
 	{
 		foreach (['', '   ', str_repeat('x', 191)] as $label) {

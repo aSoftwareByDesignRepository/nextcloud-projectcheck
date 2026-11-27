@@ -57,6 +57,8 @@ class AgentAuthMiddleware extends Middleware
 	private ?array $auditedTool = null;
 	private bool $auditedDryRun = false;
 	private bool $auditWritten = false;
+	private ?array $jsonBodyCache = null;
+	private bool $jsonBodyMalformed = false;
 
 	public function __construct(
 		private readonly IRequest $request,
@@ -111,6 +113,20 @@ class AgentAuthMiddleware extends Middleware
 		$token = $this->tokenService->resolve($header, $now);
 		$this->agentContext->arm($token->getUserId(), $token->getId(), $token->scopeList());
 
+		// Attempt budget BEFORE any gate that writes an audit row: denied
+		// calls (seat/scope/params/confirm) still get their forensic row,
+		// but the budget bounds the whole class — a flooded token cannot
+		// out-write the limiter (audit-amplification fix). A 429 writes NO
+		// row: the rate counter itself is the flood record. Mutating tools
+		// draw on the mutation budget; reads and the manifest draw on the
+		// read budget — separate counters so reads can't starve writes.
+		$retryAfter = ($tool !== null && $this->manifest->isMutating($tool))
+			? $this->tokenService->consumeMutationBudget($token, $now)
+			: $this->tokenService->consumeReadBudget($token, $now);
+		if ($retryAfter !== null) {
+			throw new AgentException('rate_limited', 'Agent rate limit exceeded.', 429, ['retryAfter' => $retryAfter]);
+		}
+
 		// Per-request seat entitlement (BQ-3): mint-time checks are not
 		// sufficient — a revoked seat must kill the token on the next call.
 		try {
@@ -132,6 +148,21 @@ class AgentAuthMiddleware extends Middleware
 		$this->agentContext->setTool((string)($tool['name'] ?? 'unknown'));
 		$this->auditedTool = $tool;
 
+		// Two spellings of the idempotency key must not carry different
+		// values: the audit row records one, the app's idem layer may key on
+		// the other — silently divergent forensic trails are worse than a
+		// loud 422.
+		$cridCamel = $this->param('clientRequestId');
+		$cridSnake = $this->param('client_request_id');
+		if (is_string($cridCamel) && trim($cridCamel) !== ''
+			&& is_string($cridSnake) && trim($cridSnake) !== ''
+			&& $cridCamel !== $cridSnake) {
+			$this->writeAudit($token, $tool, $path, AgentAudit::RESULT_DENIED);
+			throw new AgentException('validation', 'clientRequestId and client_request_id must not carry different values.', 422, [
+				'fields' => ['clientRequestId' => 'ambiguous_value'],
+			]);
+		}
+
 		$this->assertNoUnknownParams($tool, $path);
 
 		// NH-05 dry-run (fail-closed): dry_run is only honored on tools
@@ -148,15 +179,6 @@ class AgentAuthMiddleware extends Middleware
 		if (!$this->auditedDryRun && $this->manifest->requiresConfirm($tool) && !$this->truthyFlag('confirm')) {
 			$this->writeAudit($token, $tool, $path, AgentAudit::RESULT_DENIED);
 			throw new AgentException('confirmation_required', 'This action requires confirm=true.', 422);
-		}
-
-		if ($this->manifest->isMutating($tool)) {
-			$retryAfter = $this->tokenService->consumeMutationBudget($token, $now);
-			if ($retryAfter !== null) {
-				$this->writeAudit($token, $tool, $path, AgentAudit::RESULT_DENIED);
-				$e = new AgentException('rate_limited', 'Mutation rate limit exceeded.', 429, ['retryAfter' => $retryAfter]);
-				throw $e;
-			}
 		}
 
 		// One row write per request — "last used" stays honest within seconds.
@@ -268,9 +290,19 @@ class AgentAuthMiddleware extends Middleware
 		$declared = array_keys((array)($tool['params'] ?? []));
 		$allowed = array_merge($declared, self::SYSTEM_PARAMS, $this->pathParamNames((string)($tool['path'] ?? '')));
 
+		if ($this->jsonBodyMalformed) {
+			// A declared JSON body that fails to decode must never be treated
+			// as an empty body — the caller's params simply vanish otherwise.
+			throw new AgentException('malformed_json', 'Request body is not valid JSON.', 400);
+		}
+
 		$unknown = [];
 		foreach (array_keys($this->request->getParams()) as $name) {
-			if (!in_array($name, $allowed, true) && !in_array($name, ['id', '_route'], true)) {
+			// '_route' is NC routing internals, always present — never a
+			// caller param. Route params like {id} are already whitelisted
+			// via pathParamNames; a stray ?id= on a route without {id} is a
+			// contract violation like any other undeclared param.
+			if (!in_array($name, $allowed, true) && $name !== '_route') {
 				$unknown[] = $name;
 			}
 		}
@@ -312,20 +344,35 @@ class AgentAuthMiddleware extends Middleware
 	 * php://input is re-readable (PHP ≥5.6) — safe to peek for middleware
 	 * checks; controllers still read it themselves afterwards.
 	 *
+	 * A declared JSON content-type with an undecodable body is NOT an empty
+	 * body: jsonBodyMalformed flips so the param gate can reject the call
+	 * loudly (400) instead of letting a caller's params silently vanish.
+	 * Decoded once and cached — called from several checks per request.
+	 *
 	 * @return array<string, mixed>
 	 */
 	private function jsonBody(): array
 	{
+		if ($this->jsonBodyCache !== null) {
+			return $this->jsonBodyCache;
+		}
+		$this->jsonBodyCache = [];
+		$contentType = (string)$this->request->getHeader('Content-Type');
+		$isJson = str_contains(strtolower($contentType), 'application/json');
 		$raw = file_get_contents('php://input');
 		if (!is_string($raw) || $raw === '') {
-			return [];
+			return $this->jsonBodyCache;
 		}
 		try {
 			$decoded = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
 		} catch (\JsonException) {
-			return [];
+			$this->jsonBodyMalformed = $isJson;
+			return $this->jsonBodyCache;
 		}
-		return is_array($decoded) ? $decoded : [];
+		if (is_array($decoded)) {
+			$this->jsonBodyCache = $decoded;
+		}
+		return $this->jsonBodyCache;
 	}
 
 	private function writeAudit(AgentToken $token, ?array $tool, string $path, string $result): void

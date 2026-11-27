@@ -7,7 +7,9 @@ namespace OCA\ProjectCheck\Tests\Unit\BackgroundJob;
 
 use OCA\ProjectCheck\Agent\AgentWebhook;
 use OCA\ProjectCheck\Agent\AgentWebhookMapper;
+use OCA\ProjectCheck\Agent\WebhookUrlGuard;
 use OCA\ProjectCheck\BackgroundJob\AgentWebhookDeliverJob;
+use OCP\IConfig;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
 use OCP\Http\Client\IClient;
@@ -48,7 +50,30 @@ class AgentWebhookDeliverJobTest extends TestCase
 		$this->locking = $this->createMock(ILockingProvider::class);
 		$this->job = new AgentWebhookDeliverJob(
 			$time, $this->webhooks, $this->clientService, $this->jobList, $this->logger,
-			$this->locking,
+			$this->locking, $this->guard(dev: true),
+		);
+	}
+
+	/**
+	 * The guard is final — build real instances, never mocks. dev mode
+	 * skips DNS enforcement for delivery tests; strict mode exercises the
+	 * real resolve+deny path on hosts that cannot resolve publicly.
+	 */
+	private function guard(bool $dev): WebhookUrlGuard
+	{
+		$config = $this->createMock(IConfig::class);
+		$config->method('getAppValue')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string =>
+				$key === WebhookUrlGuard::DEV_FLAG ? ($dev ? '1' : '0') : $default
+		);
+		return new WebhookUrlGuard($config);
+	}
+
+	private function jobWithGuard(WebhookUrlGuard $guard): AgentWebhookDeliverJob
+	{
+		return new AgentWebhookDeliverJob(
+			$this->createMock(ITimeFactory::class), $this->webhooks, $this->clientService,
+			$this->jobList, $this->logger, $this->locking, $guard,
 		);
 	}
 
@@ -208,5 +233,45 @@ class AgentWebhookDeliverJobTest extends TestCase
 			->with(9, $this->anything(), false, false);
 		$this->jobList->expects($this->once())->method('add');
 		$this->runJob($this->args());
+	}
+
+	/**
+	 * SSRF TOCTOU: a URL that resolved public at registration but answers
+	 * private/unresolvable NOW must be disabled, not delivered and not
+	 * retried — DNS tampering is not a transient transport failure.
+	 */
+	public function testDeliveryTimeSsrfRecheckDisablesTamperedWebhook(): void
+	{
+		// .test is RFC-6761 reserved — it cannot resolve publicly, so the
+		// strict guard fails 'unresolvable' exactly like a private rebind.
+		$this->webhooks->method('findById')->willReturn($this->sub());
+		$job = $this->jobWithGuard($this->guard(dev: false));
+		$this->client->expects($this->never())->method('post');
+		$this->webhooks->expects($this->once())->method('recordDelivery')
+			->with(9, $this->anything(), false, true);
+		$this->jobList->expects($this->never())->method('add');
+		$run = new \ReflectionMethod(AgentWebhookDeliverJob::class, 'run');
+		$run->invoke($job, $this->args());
+	}
+
+	/**
+	 * The validated IPs must be pinned on the request: connect resolves
+	 * DNS again otherwise and the re-check→connect gap stays open.
+	 * An IP-literal URL needs no DNS — deterministic in any environment.
+	 */
+	public function testDeliveryPinsValidatedIps(): void
+	{
+		$webhook = $this->sub();
+		$webhook->setUrl('https://8.8.8.8/hook');
+		$this->webhooks->method('findById')->willReturn($webhook);
+		$job = $this->jobWithGuard($this->guard(dev: false));
+		$this->client->expects($this->once())->method('post')
+			->with($this->anything(), $this->callback(function (array $opts): bool {
+				$resolve = $opts['curl'][CURLOPT_RESOLVE] ?? [];
+				return $resolve !== [] && str_contains($resolve[0], '8.8.8.8');
+			}))
+			->willReturn($this->response(200));
+		$run = new \ReflectionMethod(AgentWebhookDeliverJob::class, 'run');
+		$run->invoke($job, $this->args());
 	}
 }

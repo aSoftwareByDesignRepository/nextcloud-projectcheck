@@ -39,6 +39,31 @@ final class WebhookUrlGuard
 	 */
 	public function assertAllowed(string $url): void
 	{
+		$this->validate($url);
+	}
+
+	/**
+	 * Delivery-time re-validation (SSRF TOCTOU): registration validated
+	 * once, but DNS answers change — the host must be re-resolved at send
+	 * time AND the caller must pin exactly the validated addresses, or a
+	 * rebind between validation and connect wins. Returns the verified
+	 * public IPs for the caller to pin (empty in dev mode — no pinning).
+	 *
+	 * @return list<string> validated public IPs
+	 * @throws AgentException 422 validation with a stable field code
+	 */
+	public function resolveForDelivery(string $url): array
+	{
+		return $this->validate($url);
+	}
+
+	/**
+	 * @return list<string> validated public IPs (empty when dev mode skips
+	 *         DNS enforcement)
+	 * @throws AgentException 422 validation with a stable field code
+	 */
+	private function validate(string $url): array
+	{
 		$fail = static function (string $fieldCode, string $message): void {
 			throw new AgentException('validation', $message, 422, [
 				'fields' => ['url' => $fieldCode],
@@ -79,7 +104,7 @@ final class WebhookUrlGuard
 			$host = substr($host, 1, -1);
 		}
 		if ($dev) {
-			return;
+			return [];
 		}
 		$ips = $this->resolve($host);
 		if ($ips === []) {
@@ -90,6 +115,7 @@ final class WebhookUrlGuard
 				$fail('private_target', 'Webhook host must resolve to a public address.');
 			}
 		}
+		return $ips;
 	}
 
 	/**

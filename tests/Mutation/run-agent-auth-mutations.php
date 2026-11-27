@@ -129,7 +129,43 @@ $mutants = [
 	[
 		'name' => 'mw_rate_limit_bypassed',
 		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
-		'search' => 'if ($this->manifest->isMutating($tool)) {',
+		'search' => "\t\t\$retryAfter = (\$tool !== null && \$this->manifest->isMutating(\$tool))\n\t\t\t? \$this->tokenService->consumeMutationBudget(\$token, \$now)\n\t\t\t: \$this->tokenService->consumeReadBudget(\$token, \$now);",
+		'replace' => "\t\t\$retryAfter = null;",
+	],
+	[
+		'name' => 'mw_429_writes_audit_row',
+		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
+		'search' => "\t\tif (\$retryAfter !== null) {\n\t\t\tthrow new AgentException('rate_limited', 'Agent rate limit exceeded.', 429, ['retryAfter' => \$retryAfter]);\n\t\t}",
+		'replace' => "\t\tif (\$retryAfter !== null) {\n\t\t\t\$this->writeAudit(\$token, \$tool, \$path, AgentAudit::RESULT_DENIED);\n\t\t\tthrow new AgentException('rate_limited', 'Agent rate limit exceeded.', 429, ['retryAfter' => \$retryAfter]);\n\t\t}",
+	],
+	[
+		'name' => 'mw_stray_id_whitelisted',
+		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
+		'search' => "\$name !== '_route'",
+		'replace' => "!in_array(\$name, ['id', '_route'], true)",
+	],
+	[
+		'name' => 'mw_crid_ambiguity_skipped',
+		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
+		'search' => "\t\tif (is_string(\$cridCamel) && trim(\$cridCamel) !== ''",
+		'replace' => "\t\tif (false && is_string(\$cridCamel) && trim(\$cridCamel) !== ''",
+	],
+	[
+		'name' => 'svc_read_budget_always_allows',
+		'file' => 'lib/Agent/AgentTokenService.php',
+		'search' => 'if ($count <= self::READ_BUDGET_PER_WINDOW) {',
+		'replace' => 'if (true) {',
+	],
+	[
+		'name' => 'wh_job_no_ssrf_recheck',
+		'file' => 'lib/BackgroundJob/AgentWebhookDeliverJob.php',
+		'search' => '$pinIps = $this->urlGuard->resolveForDelivery($webhook->getUrl());',
+		'replace' => '$pinIps = [];',
+	],
+	[
+		'name' => 'wh_job_no_ip_pin',
+		'file' => 'lib/BackgroundJob/AgentWebhookDeliverJob.php',
+		'search' => 'if ($pinIps !== [] && defined(\'CURLOPT_RESOLVE\')) {',
 		'replace' => 'if (false) {',
 	],
 	[
@@ -174,12 +210,11 @@ $mutants = [
 		'search' => "protected string \$result = '';",
 		'replace' => 'protected string $result = self::RESULT_OK;',
 	],
-	[
-		'name' => 'audit_actortype_default_swallows_agent',
-		'file' => 'lib/Agent/AgentAudit.php',
-		'search' => "protected string \$actorType = '';",
-		'replace' => "protected string \$actorType = 'agent';",
-	],
+	// audit_actortype_default_swallows_agent removed: dead-by-construction —
+	// AgentAuditMapper::record() calls setActorType('agent') explicitly, so
+	// the entity default can never reach the DB (and the column has its own
+	// 'agent' default as backstop). A mutant there can never be killed by
+	// unit tests that mock the mapper.
 	[
 		'name' => 'resolve_missing_table_leaks_500',
 		'file' => 'lib/Agent/AgentTokenService.php',

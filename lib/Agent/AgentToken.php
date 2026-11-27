@@ -49,6 +49,8 @@ class AgentToken extends Entity
 	protected ?string $lastTool = null;
 	protected ?int $rateWindowStart = null;
 	protected int $rateCount = 0;
+	protected ?int $readWindowStart = null;
+	protected int $readCount = 0;
 	protected ?int $revokedAt = null;
 
 	public function __construct()
@@ -63,6 +65,8 @@ class AgentToken extends Entity
 		$this->addType('lastTool', 'string');
 		$this->addType('rateWindowStart', 'integer');
 		$this->addType('rateCount', 'integer');
+		$this->addType('readWindowStart', 'integer');
+		$this->addType('readCount', 'integer');
 		$this->addType('revokedAt', 'integer');
 	}
 

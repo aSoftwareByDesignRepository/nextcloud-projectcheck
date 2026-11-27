@@ -45,6 +45,8 @@ final class AgentTablesSchema
 			$table->addColumn('last_tool', Types::STRING, ['notnull' => false, 'length' => 190]);
 			$table->addColumn('rate_window_start', Types::INTEGER, ['notnull' => false, 'unsigned' => true]);
 			$table->addColumn('rate_count', Types::INTEGER, ['notnull' => true, 'default' => 0, 'unsigned' => true]);
+			$table->addColumn('read_window_start', Types::INTEGER, ['notnull' => false, 'unsigned' => true]);
+			$table->addColumn('read_count', Types::INTEGER, ['notnull' => true, 'default' => 0, 'unsigned' => true]);
 			$table->addColumn('revoked_at', Types::INTEGER, ['notnull' => false, 'unsigned' => true]);
 			$table->setPrimaryKey(['id'], 'pc_agent_tok_pk');
 			$table->addUniqueIndex(['token_hash'], 'pc_agent_tok_hash_uq');
@@ -90,14 +92,24 @@ final class AgentTablesSchema
 			$changed = true;
 		}
 
-		// Widen scopes on installs that predate SCOPES_LENGTH — a universe
-		// joined beyond 500 chars made "act" presets fail mint with a DB
-		// error (mobilitycheck: 566 chars over varchar(500)).
 		if ($schema->hasTable(self::TOKENS_TABLE)) {
 			$tokens = $schema->getTable(self::TOKENS_TABLE);
+			// Widen scopes on installs that predate SCOPES_LENGTH — a universe
+			// joined beyond 500 chars made "act" presets fail mint with a DB
+			// error (mobilitycheck: 566 chars over varchar(500)).
 			if ($tokens->hasColumn('scopes')
 				&& $tokens->getColumn('scopes')->getLength() < self::SCOPES_LENGTH) {
 				$tokens->changeColumn('scopes', ['length' => self::SCOPES_LENGTH]);
+				$changed = true;
+			}
+			// Read-call budget counters (600/min/token — reads were unmetered;
+			// a leaked read token could pull at line rate forever).
+			if (!$tokens->hasColumn('read_window_start')) {
+				$tokens->addColumn('read_window_start', Types::INTEGER, ['notnull' => false, 'unsigned' => true]);
+				$changed = true;
+			}
+			if (!$tokens->hasColumn('read_count')) {
+				$tokens->addColumn('read_count', Types::INTEGER, ['notnull' => true, 'default' => 0, 'unsigned' => true]);
 				$changed = true;
 			}
 		}
