@@ -7,10 +7,13 @@ namespace OCA\ProjectCheck\BackgroundJob;
 
 use OCA\ProjectCheck\Agent\AgentWebhookMapper;
 use OCA\ProjectCheck\AppInfo\Application;
+use OCA\ProjectCheck\Service\UpgradeBackupService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
 use OCP\BackgroundJob\QueuedJob;
 use OCP\Http\Client\IClientService;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,11 +41,39 @@ final class AgentWebhookDeliverJob extends QueuedJob
 		private readonly IClientService $clientService,
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
+		private readonly ILockingProvider $locking,
 	) {
 		parent::__construct($time);
 	}
 
 	protected function run($argument): void
+	{
+		// Shared lock on the upgrade-backup key: a restore holds it
+		// exclusively — webhook table reads/writes must not interleave
+		// with a mid-restore truncate+reinsert. A contended delivery is
+		// re-queued unchanged (NOT counted as an attempt or a failure —
+		// the event must not be silently dropped during a restore).
+		try {
+			$this->locking->acquireLock(
+				UpgradeBackupService::LOCK_KEY,
+				ILockingProvider::LOCK_SHARED,
+				'agent-webhook-deliver',
+			);
+		} catch (LockedException) {
+			$this->logger->info('agent webhook delivery deferred: upgrade backup/restore in progress', [
+				'webhookId' => (int)($argument['webhookId'] ?? 0),
+			]);
+			$this->jobList->add(self::class, $argument);
+			return;
+		}
+		try {
+			$this->deliver(is_array($argument) ? $argument : []);
+		} finally {
+			$this->locking->releaseLock(UpgradeBackupService::LOCK_KEY, ILockingProvider::LOCK_SHARED);
+		}
+	}
+
+	private function deliver(array $argument): void
 	{
 		$id = (int)($argument['webhookId'] ?? 0);
 		$payload = (string)($argument['payload'] ?? '');

@@ -475,7 +475,8 @@ class AgentAuthMiddlewareTest extends TestCase
 	{
 		$webhooks = $this->getMockBuilder(AgentWebhookMapper::class)
 			->disableOriginalConstructor()->getMock();
-		$webhooks->method('findAllActive')->willReturn([$this->webhookSub()]);
+		$webhooks->method('findActiveByUser')->with('agent-owner')
+			->willReturn([$this->webhookSub()]);
 		$jobList = $this->createMock(IJobList::class);
 		$dispatcher = new AgentWebhookDispatcher($webhooks, $jobList, $this->logger);
 		$this->middlewareWithManifest([self::TOOL_WRITE], $dispatcher);
@@ -508,7 +509,7 @@ class AgentAuthMiddlewareTest extends TestCase
 		$this->auditMapper->method('record');
 
 		$jobList->expects($this->never())->method('add');
-		$webhooks->expects($this->never())->method('findAllActive');
+		$webhooks->expects($this->never())->method('findActiveByUser');
 
 		$this->middleware->beforeController(new \stdClass(), 'x');
 		$this->middleware->afterController(new \stdClass(), 'x', new JSONResponse([], 200));
@@ -534,7 +535,7 @@ class AgentAuthMiddlewareTest extends TestCase
 	{
 		$webhooks = $this->getMockBuilder(AgentWebhookMapper::class)
 			->disableOriginalConstructor()->getMock();
-		$webhooks->method('findAllActive')
+		$webhooks->method('findActiveByUser')
 			->willThrowException(new \RuntimeException('webhooks table missing'));
 		$jobList = $this->createMock(IJobList::class);
 		$dispatcher = new AgentWebhookDispatcher($webhooks, $jobList, $this->logger);

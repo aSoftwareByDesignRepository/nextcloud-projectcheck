@@ -285,6 +285,23 @@ class AgentWebhookControllerTest extends TestCase
 		$this->assertTrue($this->controller->delete(9)->getData()['ok']);
 	}
 
+	public function testDeleteRevokedSubscriptionIsUniform404(): void
+	{
+		// Repeat mutation: a second delete on a terminal row fails — no
+		// resurrection, same uniform-404 shape as foreign or missing.
+		$this->asAgent('alice');
+		$this->webhooks->method('findById')
+			->willReturn($this->sub(9, 'alice', revokedAt: 1700000001));
+		$this->webhooks->expects($this->never())->method('revoke');
+		try {
+			$this->controller->delete(9);
+			$this->fail('expected AgentException');
+		} catch (AgentException $e) {
+			$this->assertSame(404, $e->getHttpStatus());
+			$this->assertSame('not_found', $e->getErrorCode());
+		}
+	}
+
 	public function testTestFireRejectsDisabledSubscription(): void
 	{
 		$this->asAgent('alice');
@@ -305,7 +322,9 @@ class AgentWebhookControllerTest extends TestCase
 		$sub = $this->sub(9, 'alice');
 		$sub->setEvents('*'); // wildcard subscribes to webhook.test too
 		$this->webhooks->method('findById')->willReturn($sub);
-		$this->webhooks->method('findAllActive')->willReturn([$sub]);
+		// deliverTo fires exactly once on the addressed row — no fan-out
+		// query, so a sibling '*' sub of the same owner stays silent.
+		$this->webhooks->expects($this->never())->method('findActiveByUser');
 		$this->jobList->expects($this->once())->method('add')
 			->with(AgentWebhookDeliverJob::class, $this->callback(
 				static fn (array $args): bool => $args['webhookId'] === 9

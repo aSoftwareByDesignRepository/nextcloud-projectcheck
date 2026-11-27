@@ -63,8 +63,7 @@ $pc_tokens = is_array($pc_state['tokens']) ? $pc_state['tokens'] : [];
 			<tbody id="pc-agent-tbody">
 				<?php foreach ($pc_tokens as $pc_tok): ?>
 				<tr data-token-id="<?php p((string)($pc_tok['id'] ?? '')); ?>" data-token-label="<?php p((string)($pc_tok['label'] ?? '')); ?>"<?php if (($pc_tok['state'] ?? '') !== 'active'): ?> class="pc-agent-row--inactive"<?php endif; ?>>
-					<td data-cell="<?php p($l->t('Label')); ?>">
-						<span class="pc-agent-label"><?php p((string)($pc_tok['label'] ?? '')); ?></span>
+					<td data-cell="<?php p($l->t('Label')); ?>" class="pc-agent-label-cell"><span class="pc-agent-labelcell"><span class="pc-agent-label" title="<?php p((string)($pc_tok['label'] ?? '')); ?>"><?php p((string)($pc_tok['label'] ?? '')); ?></span>
 						<?php if (($pc_tok['state'] ?? '') === 'revoked'): ?>
 							<span class="pc-badge pc-badge--neutral"><?php p($l->t('Revoked')); ?></span>
 						<?php elseif (($pc_tok['state'] ?? '') === 'expired'): ?>
@@ -74,9 +73,8 @@ $pc_tokens = is_array($pc_state['tokens']) ? $pc_state['tokens'] : [];
 						<?php endif; ?>
 						<?php if ($pc_state['isAdmin'] && ($pc_tok['userId'] ?? '') !== ''): ?>
 							<span class="pc-agent-owner"><?php p((string)$pc_tok['userId']); ?></span>
-						<?php endif; ?>
-					</td>
-					<td data-cell="<?php p($l->t('Scopes')); ?>">
+						<?php endif; ?></span></td>
+					<td data-cell="<?php p($l->t('Scopes')); ?>" class="pc-agent-scopes-cell">
 						<span class="pc-agent-scopes">
 						<?php foreach (($pc_tok['scopes'] ?? []) as $pc_scope): ?>
 							<span class="pc-badge pc-badge--neutral pc-agent-scope" title="<?php p((string)$pc_scope); ?>"><?php p((string)($pc_state['scopeLabels'][$pc_scope] ?? $pc_scope)); ?></span>

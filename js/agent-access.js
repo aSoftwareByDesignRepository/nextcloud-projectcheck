@@ -475,8 +475,8 @@
 			if (tok.state !== 'active') {
 				tr.className = prefix + '-agent-row--inactive';
 			}
-			tr.appendChild(cell(t('Label'), labelCellHtml(tok)));
-			tr.appendChild(cell(t('Scopes'), scopeCellHtml(tok)));
+			tr.appendChild(cell(t('Label'), labelCellHtml(tok), prefix + '-agent-label-cell'));
+			tr.appendChild(cell(t('Scopes'), scopeCellHtml(tok), prefix + '-agent-scopes-cell'));
 			tr.appendChild(cell(t('Created'), fmtTs(tok.createdAt)));
 			tr.appendChild(cell(t('Expires'), fmtTs(tok.expiresAt)));
 			tr.appendChild(cell(t('Last used'), tok.lastUsedAt ? fmtTs(tok.lastUsedAt) : t('never')));
@@ -538,9 +538,12 @@
 		}
 	}
 
-	function cell(label, inner) {
+	function cell(label, inner, cls) {
 		var td = document.createElement('td');
 		td.setAttribute('data-cell', label);
+		if (cls) {
+			td.className = cls;
+		}
 		if (inner instanceof Node) {
 			td.appendChild(inner);
 		} else {
@@ -550,10 +553,18 @@
 	}
 
 	function labelCellHtml(tok) {
+		// meta_pill_overlap (dc-vis-r62): the wrapper is a flex container
+		// (.pc-agent-labelcell) — the td's max-width caps the painted box
+		// only, and Blink lays the cell's inline content out at max-content
+		// width, so label+badge+owner overflowed ~390px and the scopes
+		// cell's opaque pills painted over badge + owner. flex-wrap breaks
+		// lines BETWEEN items against the clamped cell width.
 		var frag = document.createElement('span');
+		frag.className = prefix + '-agent-labelcell';
 		var name = document.createElement('span');
 		name.className = prefix + '-agent-label';
 		name.textContent = tok.label || '';
+		name.title = tok.label || '';
 		frag.appendChild(name);
 		var badge = document.createElement('span');
 		badge.className = prefix + '-badge ' + (tok.state === 'active' ? prefix + '-badge--info' : prefix + '-badge--neutral');

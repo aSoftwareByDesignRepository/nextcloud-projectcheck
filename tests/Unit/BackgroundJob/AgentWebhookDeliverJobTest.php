@@ -13,6 +13,8 @@ use OCP\BackgroundJob\IJobList;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -29,6 +31,7 @@ class AgentWebhookDeliverJobTest extends TestCase
 	private IClient&MockObject $client;
 	private IJobList&MockObject $jobList;
 	private LoggerInterface&MockObject $logger;
+	private ILockingProvider&MockObject $locking;
 	private AgentWebhookDeliverJob $job;
 
 	protected function setUp(): void
@@ -42,15 +45,16 @@ class AgentWebhookDeliverJobTest extends TestCase
 		$this->clientService->method('newClient')->willReturn($this->client);
 		$this->jobList = $this->createMock(IJobList::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->locking = $this->createMock(ILockingProvider::class);
 		$this->job = new AgentWebhookDeliverJob(
 			$time, $this->webhooks, $this->clientService, $this->jobList, $this->logger,
+			$this->locking,
 		);
 	}
 
 	private function runJob(array $args): void
 	{
 		$run = new \ReflectionMethod(AgentWebhookDeliverJob::class, 'run');
-		$run->setAccessible(true);
 		$run->invoke($this->job, $args);
 	}
 
@@ -180,6 +184,20 @@ class AgentWebhookDeliverJobTest extends TestCase
 		$this->jobList->expects($this->once())->method('add');
 		// Must not throw.
 		$this->runJob($this->args());
+	}
+
+	public function testLockContentionRequeuesUnchangedDelivery(): void
+	{
+		// A mid-restore lock must not consume an attempt, record a
+		// failure, or drop the event — the same argument is re-queued.
+		$this->locking->method('acquireLock')
+			->willThrowException(new LockedException('restore in progress'));
+		$this->client->expects($this->never())->method('post');
+		$this->webhooks->expects($this->never())->method('recordDelivery');
+		$args = $this->args();
+		$this->jobList->expects($this->once())->method('add')
+			->with(AgentWebhookDeliverJob::class, $args);
+		$this->runJob($args);
 	}
 
 	public function testRedirectResponseCountsAsFailure(): void

@@ -303,6 +303,12 @@ $mutants = [
 		'replace' => 'if ($status < 400 || !$this->auditedDryRun) {',
 	],
 	[
+		'name' => 'wh_job_drop_on_lock',
+		'file' => 'lib/BackgroundJob/AgentWebhookDeliverJob.php',
+		'search' => "\t\t\t\$this->jobList->add(self::class, \$argument);\n\t\t\treturn;\n\t\t}",
+		'replace' => "\t\t\treturn;\n\t\t}",
+	],
+	[
 		'name' => 'mw_emit_on_dryrun',
 		'file' => 'lib/Middleware/AgentAuthMiddleware.php',
 		'search' => 'if ($status < 400 && !$this->auditedDryRun && $this->webhookDispatcher !== null) {',

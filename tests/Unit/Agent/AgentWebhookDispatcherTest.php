@@ -16,8 +16,9 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Event fan-out: emit() must enqueue one deliver job per matching
- * subscription, never throw into the caller's request path, and never
- * deliver to a subscription that does not subscribe to the event.
+ * subscription OWNED BY the acting user, never throw into the caller's
+ * request path, and never deliver to a subscription that does not
+ * subscribe to the event — or to another owner's subscription.
  */
 class AgentWebhookDispatcherTest extends TestCase
 {
@@ -37,24 +38,26 @@ class AgentWebhookDispatcherTest extends TestCase
 		);
 	}
 
-	private function sub(int $id, string $events): AgentWebhook
+	private function sub(int $id, string $events, string $uid = 'alice'): AgentWebhook
 	{
 		$w = new AgentWebhook();
 		$w->setId($id);
-		$w->setUserId('alice');
+		$w->setUserId($uid);
 		$w->setUrl('https://example.test/hook');
 		$w->setSecret('whsec_x');
 		$w->setEvents($events);
 		return $w;
 	}
 
-	public function testEmitEnqueuesOnlyMatchingSubscriptions(): void
+	public function testEmitEnqueuesOnlyMatchingSubscriptionsOfTheOwner(): void
 	{
-		$this->webhooks->method('findAllActive')->willReturn([
-			$this->sub(1, 'agent.write.completed'),
-			$this->sub(2, 'some.other.event'),
-			$this->sub(3, AgentWebhook::ALL_EVENTS),
-		]);
+		$this->webhooks->expects($this->once())->method('findActiveByUser')
+			->with('alice')
+			->willReturn([
+				$this->sub(1, 'agent.write.completed'),
+				$this->sub(2, 'some.other.event'),
+				$this->sub(3, AgentWebhook::ALL_EVENTS),
+			]);
 		$seen = [];
 		$this->jobList->expects($this->exactly(2))
 			->method('add')
@@ -66,38 +69,76 @@ class AgentWebhookDispatcherTest extends TestCase
 				$this->assertSame('projectcheck', $envelope['app']);
 				$seen[] = $args['webhookId'];
 			});
-		$this->dispatcher->emit(AgentWebhookDispatcher::EVENT_WRITE_COMPLETED, ['tool' => 'x']);
+		$this->dispatcher->emit(AgentWebhookDispatcher::EVENT_WRITE_COMPLETED, ['tool' => 'x'], 'alice');
 		$this->assertEqualsCanonicalizing([1, 3], $seen);
+	}
+
+	public function testEmitNeverDeliversToAnotherOwnersWildcard(): void
+	{
+		// Fan-out is per-owner: user B's '*' subscription must receive ZERO
+		// deliveries for user A's event. The mapper query is owner-scoped —
+		// cross-owner rows are never even selected.
+		$this->webhooks->expects($this->once())->method('findActiveByUser')
+			->with('alice')
+			->willReturn([$this->sub(7, AgentWebhook::ALL_EVENTS, 'alice')]);
+		$seen = [];
+		$this->jobList->expects($this->once())->method('add')
+			->willReturnCallback(function (string $class, array $args) use (&$seen) {
+				$seen[] = $args['webhookId'];
+			});
+		$this->dispatcher->emit(AgentWebhookDispatcher::EVENT_WRITE_COMPLETED, [
+			'tool' => 'x', 'userId' => 'alice',
+		], 'alice');
+		$this->assertSame([7], $seen);
 	}
 
 	public function testEmitSwallowsMapperFailure(): void
 	{
-		$this->webhooks->method('findAllActive')
+		$this->webhooks->method('findActiveByUser')
 			->willThrowException(new \RuntimeException('table missing'));
 		$this->jobList->expects($this->never())->method('add');
 		$this->logger->expects($this->once())->method('warning');
 		// Must not throw — a broken delivery path can never break the
 		// agent request that fired the event.
-		$this->dispatcher->emit('agent.write.completed', []);
+		$this->dispatcher->emit('agent.write.completed', [], 'alice');
 		$this->addToAssertionCount(2);
 	}
 
 	public function testEmitDropsOversizePayload(): void
 	{
-		$this->webhooks->expects($this->never())->method('findAllActive');
+		$this->webhooks->expects($this->never())->method('findActiveByUser');
 		$this->jobList->expects($this->never())->method('add');
 		$this->logger->expects($this->once())->method('warning');
 		$this->dispatcher->emit('agent.write.completed', [
 			'blob' => str_repeat('x', 70000),
-		]);
+		], 'alice');
 	}
 
 	public function testEmitWithNoSubscribersDoesNothing(): void
 	{
-		$this->webhooks->method('findAllActive')->willReturn([
+		$this->webhooks->method('findActiveByUser')->with('alice')->willReturn([
 			$this->sub(1, 'unrelated.event'),
 		]);
 		$this->jobList->expects($this->never())->method('add');
-		$this->dispatcher->emit('agent.write.completed', []);
+		$this->dispatcher->emit('agent.write.completed', [], 'alice');
+	}
+
+	public function testDeliverToTargetsOnlyTheAddressedSubscription(): void
+	{
+		// Test-fire semantics: exactly one delivery on the addressed
+		// webhook — no owner scan, no event-list fan-out to sibling rows.
+		$sub = $this->sub(9, 'agent.write.completed', 'alice');
+		$this->webhooks->expects($this->never())->method('findActiveByUser');
+		$this->jobList->expects($this->once())->method('add')
+			->with(AgentWebhookDeliverJob::class, $this->callback(
+				static function (array $args): bool {
+					$envelope = json_decode((string)$args['payload'], true);
+					return $args['webhookId'] === 9
+						&& $envelope['event'] === 'webhook.test';
+				}
+			));
+		$this->dispatcher->deliverTo($sub, AgentWebhookDispatcher::EVENT_TEST, [
+			'webhookId' => 9,
+		]);
 	}
 }

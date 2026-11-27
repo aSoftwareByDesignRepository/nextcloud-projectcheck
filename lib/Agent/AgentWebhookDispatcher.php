@@ -36,25 +36,24 @@ final class AgentWebhookDispatcher
 	}
 
 	/**
+	 * Fan out an event to the OWNING user's subscriptions only.
+	 *
+	 * Fan-out is per-owner — subscriptions see their owner's actions,
+	 * never another user's. A '*' subscription owned by uid Y must
+	 * receive zero deliveries for events emitted by uid X; the mapper
+	 * query is owner-scoped so cross-owner delivery is impossible by
+	 * construction (not just filtered in PHP).
+	 *
 	 * @param array<string, mixed> $context caller-sanitized event data
 	 */
-	public function emit(string $event, array $context): void
+	public function emit(string $event, array $context, string $ownerUid): void
 	{
-		$envelope = [
-			'event' => $event,
-			'app' => Application::APP_ID,
-			'occurredAt' => time(),
-			'data' => $context,
-		];
-		$payload = json_encode($envelope, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-		if (!is_string($payload) || strlen($payload) > self::MAX_PAYLOAD_BYTES) {
-			$this->logger->warning('agent webhook event dropped: payload unencodable or oversize', [
-				'event' => $event,
-			]);
+		$payload = $this->envelope($event, $context);
+		if ($payload === null) {
 			return;
 		}
 		try {
-			$subs = $this->webhooks->findAllActive();
+			$subs = $this->webhooks->findActiveByUser($ownerUid);
 		} catch (\Throwable $e) {
 			// A missing table (mid-upgrade) must never break the emitting
 			// request path — delivery is best-effort by design.
@@ -67,11 +66,53 @@ final class AgentWebhookDispatcher
 			if (!$sub->subscribesTo($event)) {
 				continue;
 			}
-			$this->jobList->add(AgentWebhookDeliverJob::class, [
-				'webhookId' => $sub->getId(),
-				'payload' => $payload,
-				'attempt' => 0,
-			]);
+			$this->enqueue($sub, $payload);
 		}
+	}
+
+	/**
+	 * Deliver an event to exactly one subscription (test-fire). The
+	 * caller already resolved ownership — this never scans other rows,
+	 * so a test lands on the addressed webhook only.
+	 *
+	 * @param array<string, mixed> $context caller-sanitized event data
+	 */
+	public function deliverTo(AgentWebhook $sub, string $event, array $context): void
+	{
+		$payload = $this->envelope($event, $context);
+		if ($payload === null) {
+			return;
+		}
+		$this->enqueue($sub, $payload);
+	}
+
+	/**
+	 * @param array<string, mixed> $context
+	 */
+	private function envelope(string $event, array $context): ?string
+	{
+		$envelope = [
+			'event' => $event,
+			'app' => Application::APP_ID,
+			'occurredAt' => time(),
+			'data' => $context,
+		];
+		$payload = json_encode($envelope, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		if (!is_string($payload) || strlen($payload) > self::MAX_PAYLOAD_BYTES) {
+			$this->logger->warning('agent webhook event dropped: payload unencodable or oversize', [
+				'event' => $event,
+			]);
+			return null;
+		}
+		return $payload;
+	}
+
+	private function enqueue(AgentWebhook $sub, string $payload): void
+	{
+		$this->jobList->add(AgentWebhookDeliverJob::class, [
+			'webhookId' => $sub->getId(),
+			'payload' => $payload,
+			'attempt' => 0,
+		]);
 	}
 }

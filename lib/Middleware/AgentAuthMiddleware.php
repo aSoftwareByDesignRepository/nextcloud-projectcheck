@@ -182,13 +182,15 @@ class AgentAuthMiddleware extends Middleware
 			// a webhook hiccup must never turn a committed 200 into a 500.
 			if ($status < 400 && !$this->auditedDryRun && $this->webhookDispatcher !== null) {
 				try {
+					// Fan-out is owner-scoped: only the acting token owner's
+					// subscriptions receive the event.
 					$this->webhookDispatcher->emit(AgentWebhookDispatcher::EVENT_WRITE_COMPLETED, [
 						'tool' => (string)($this->auditedTool['name'] ?? 'unknown'),
 						'route' => (string)($this->auditedTool['route'] ?? ''),
 						'status' => $status,
 						'tokenId' => $this->agentContext->tokenId(),
 						'userId' => $this->agentContext->uid(),
-					]);
+					], (string)$this->agentContext->uid());
 				} catch (\Throwable $e) {
 					$this->logger->warning('agent webhook emit failed', [
 						'exception' => $e->getMessage(),

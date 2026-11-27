@@ -60,18 +60,20 @@ class AgentWebhookMapper extends QBMapper
 	}
 
 	/**
-	 * All rows that could match an event — active subs, filtered in PHP by
-	 * subscribesTo() (the events column is a space-list; a LIKE index would
-	 * be a lie about semantics). Subscription counts are small by design
-	 * (cap enforced in the controller).
+	 * One owner's rows that could match an event — active subs, filtered
+	 * in PHP by subscribesTo() (the events column is a space-list; a LIKE
+	 * index would be a lie about semantics). Fan-out is per-owner: an
+	 * event emitted by uid X must never reach a subscription owned by
+	 * uid Y — subscriptions see only their owner's actions.
 	 *
 	 * @return list<AgentWebhook>
 	 */
-	public function findAllActive(): array
+	public function findActiveByUser(string $uid): array
 	{
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')->from($this->getTableName())
-			->where($qb->expr()->isNull('revoked_at'))
+			->where($qb->expr()->eq('user_id', $qb->createNamedParameter($uid)))
+			->andWhere($qb->expr()->isNull('revoked_at'))
 			->andWhere($qb->expr()->isNull('disabled_at'));
 		return $this->findEntities($qb);
 	}

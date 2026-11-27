@@ -124,6 +124,12 @@ class AgentWebhookController extends Controller
 	{
 		$uid = $this->requireUid();
 		$webhook = $this->requireOwned($id, $uid);
+		if ($webhook->getRevokedAt() !== null) {
+			// Revocation is terminal — a second delete gets the same
+			// uniform 404 as a foreign or missing row (no resurrection,
+			// no state oracle).
+			throw new AgentException('not_found', 'Webhook not found.', 404);
+		}
 		$this->webhooks->revoke($webhook->getId(), time());
 		return new JSONResponse(['ok' => true]);
 	}
@@ -139,7 +145,10 @@ class AgentWebhookController extends Controller
 				'fields' => ['webhook' => 'inactive'],
 			]);
 		}
-		$this->dispatcher->emit(AgentWebhookDispatcher::EVENT_TEST, [
+		// Test-fire lands on the addressed subscription only — a deliverTo,
+		// never a fan-out, so no other row (same owner's '*' subs included)
+		// sees the probe.
+		$this->dispatcher->deliverTo($webhook, AgentWebhookDispatcher::EVENT_TEST, [
 			'message' => 'Test delivery from ' . Application::APP_ID,
 			'webhookId' => $webhook->getId(),
 		]);
