@@ -144,6 +144,15 @@ dialog .pc-btn,
 	background: transparent !important;
 	border-color: var(--pc-form-border, var(--color-border-maxcontrast, var(--color-border))) !important;
 	color: var(--color-main-text) !important;
+	/* Same repaint also carries core's 34px control height + 5.75px/12px
+	   padding: button.pc-btn (0-1-1) only TIES the core selector, so source
+	   order decides and core wins — every in-scope <button class=pc-btn>
+	   rendered below the 44px touch floor (observed live on the AI-access
+	   Connect button). Pin the touched layout props on the same scope
+	   list, same mechanism as the paint props above. */
+	min-height: var(--pc-touch, 44px) !important;
+	min-width: var(--pc-touch, 44px) !important;
+	padding: 0 var(--pc-space-4, 16px) !important;
 }
 .pc-app .pc-btn:hover,
 .pc-dialog .pc-btn:hover,
