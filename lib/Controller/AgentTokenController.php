@@ -84,7 +84,16 @@ class AgentTokenController extends Controller
 		$this->assertMayMint($uid);
 
 		$body = $this->jsonBody();
-		$label = (string)($body['label'] ?? '');
+		// Boundary coercion: a JSON array/object label must refuse, never
+		// PHP-coerce — (string)["x"] would mint a token labeled "Array"
+		// (api-security §2, same class as ApiTrait::strParam).
+		$rawLabel = $body['label'] ?? '';
+		if (!is_string($rawLabel)) {
+			throw new AgentException('validation', 'Label must be a string.', 422, [
+				'fields' => ['label' => 'invalid_type'],
+			]);
+		}
+		$label = $rawLabel;
 		$scopes = $this->resolveRequestedScopes($body);
 		[$raw, $entity] = $this->tokenService->mint($uid, $label, $scopes, time());
 

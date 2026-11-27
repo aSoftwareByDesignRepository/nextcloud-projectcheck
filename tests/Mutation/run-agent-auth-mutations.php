@@ -210,6 +210,30 @@ $mutants = [
 		'search' => '		if (!UninstallRepairFlow::isRemovalContext()) {',
 		'replace' => '		if (false) {',
 	],
+	[
+		'name' => 'mint_label_array_coerced',
+		'file' => 'lib/Controller/AgentTokenController.php',
+		'search' => 'if (!is_string($rawLabel)) {',
+		'replace' => 'if (false) {',
+	],
+	[
+		'name' => 'foreign_token_403_oracle',
+		'file' => 'lib/Controller/AgentTokenController.php',
+		'search' => "if (\$token->getUserId() === \$uid || \$this->accessGate->canAdminister(\$uid)) {\n\t\t\treturn \$token;\n\t\t}\n\t\tthrow new AgentException('not_found', 'Token not found.', 404);",
+		'replace' => "if (\$token->getUserId() === \$uid || \$this->accessGate->canAdminister(\$uid)) {\n\t\t\treturn \$token;\n\t\t}\n\t\tthrow new AgentException('forbidden', 'Not your token.', 403);",
+	],
+	[
+		'name' => 'updatepolicy_nonadmin_allowed',
+		'file' => 'lib/Controller/AgentTokenController.php',
+		'search' => "if (!\$this->accessGate->canAdminister(\$uid)) {\n\t\t\tthrow new AgentException('forbidden', 'App admin required.', 403);",
+		'replace' => 'if (false) {',
+	],
+	[
+		'name' => 'selfmint_flag_ignored',
+		'file' => 'lib/Controller/AgentTokenController.php',
+		'search' => 'if ($this->selfMintEnabled() && $this->accessGate->canUseApp($uid)) {',
+		'replace' => 'if (false && $this->accessGate->canUseApp($uid)) {',
+	],
 ];
 
 runMutations($appRoot, 'Agent', $mutants);

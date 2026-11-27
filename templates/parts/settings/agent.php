@@ -118,7 +118,7 @@ $pc_tokens = is_array($pc_state['tokens']) ? $pc_state['tokens'] : [];
 	<dialog id="pc-agent-mint-dialog" class="pc-dialog pc-agent-mint-dialog" aria-labelledby="pc-agent-mint-h">
 		<div class="pc-dialog__body">
 			<h3 id="pc-agent-mint-h"><?php p($l->t('Connect your AI')); ?></h3>
-			<form id="pc-agent-mint-form" novalidate>
+			<form id="pc-agent-mint-form" class="pc-form-stack" novalidate>
 				<div class="pc-form-row">
 					<label for="pc-agent-label"><?php p($l->t('Label')); ?></label>
 					<input type="text" id="pc-agent-label" name="label" maxlength="190" required autocomplete="off" placeholder="<?php p($l->t('Claude on my laptop')); ?>">

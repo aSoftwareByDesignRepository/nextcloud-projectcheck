@@ -114,6 +114,24 @@
 			d.close();
 		}
 	}
+	// NC notification handlers can preventDefault the global Escape
+	// keydown, suppressing the native <dialog> cancel event — a dialog
+	// opened via showModal() would then ignore Escape entirely. Bind a
+	// dialog-level close ourselves (host_app_escape_preventdefault).
+	function armEscape(dlg) {
+		if (dlg) {
+			dlg.addEventListener('keydown', function (e) {
+				if (e.key === 'Escape') {
+					e.preventDefault();
+					e.stopPropagation();
+					dlg.close();
+				}
+			});
+		}
+	}
+	armEscape(mintDialog);
+	armEscape(secretDialog);
+	armEscape(revokeDialog);
 
 	var connectBtn = document.getElementById(prefix + '-agent-connect');
 	var labelInput = document.getElementById(prefix + '-agent-label');
@@ -294,6 +312,13 @@
 			close(secretDialog);
 		});
 	}
+	if (secretDialog) {
+		secretDialog.addEventListener('close', function () {
+			if (pendingReload) {
+				window.location.reload();
+			}
+		});
+	}
 
 	function copyText(text, doneMsg) {
 		var done = function () { announce(doneMsg); };
@@ -335,6 +360,10 @@
 	var revokeConfirm = document.getElementById(prefix + '-agent-revoke-confirm');
 	var revokeCancel = document.getElementById(prefix + '-agent-revoke-cancel');
 	var pendingAction = null;
+	// First-ever mint on a previously-empty account: the server rendered
+	// no table-wrap at all, so rebuildTable() cannot inject the new row —
+	// reload once the secret dialog closes so canonical markup renders it.
+	var pendingReload = false;
 
 	function askConfirm(kind, tokenId, label) {
 		pendingAction = { kind: kind, tokenId: tokenId };
@@ -429,6 +458,13 @@
 	function rebuildTable() {
 		var tbody = document.getElementById(prefix + '-agent-tbody');
 		if (!tbody) {
+			if (state.tokens.length) {
+				pendingReload = true;
+				var staleEmpty = document.getElementById(prefix + '-agent-empty');
+				if (staleEmpty) {
+					staleEmpty.hidden = true;
+				}
+			}
 			return;
 		}
 		tbody.textContent = '';
