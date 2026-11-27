@@ -977,7 +977,7 @@ body[dir="rtl"] .projectcheck-select {
  */
 
 .projectcheck-support-us {
-	margin-block-start: var(--pc-space-5, 1.5rem);
+	margin-block-start: var(--projectcheck-space-5, 1.5rem);
 	min-width: 0;
 	width: 100%;
 	box-sizing: border-box;
@@ -991,14 +991,14 @@ body[dir="rtl"] .projectcheck-select {
 }
 
 .projectcheck-support-us__header {
-	margin-block-end: var(--pc-space-4, 1rem);
+	margin-block-end: var(--projectcheck-space-4, 1rem);
 }
 
 .projectcheck-support-us__title {
-	margin: 0 0 var(--pc-space-2, 0.5rem);
-	font-size: var(--pc-fs-xl, 1.5rem);
+	margin: 0 0 var(--projectcheck-space-2, 0.5rem);
+	font-size: var(--projectcheck-fs-xl, 1.5rem);
 	font-weight: 700;
-	line-height: var(--pc-line-tight, 1.2);
+	line-height: var(--projectcheck-line-tight, 1.2);
 	color: var(--color-main-text);
 	overflow-wrap: anywhere;
 }
@@ -1006,8 +1006,8 @@ body[dir="rtl"] .projectcheck-select {
 .projectcheck-support-us__intro {
 	margin: 0;
 	max-width: 65ch;
-	font-size: var(--pc-fs-md, 1rem);
-	line-height: var(--pc-line-base, 1.45);
+	font-size: var(--projectcheck-fs-md, 1rem);
+	line-height: var(--projectcheck-line-base, 1.45);
 	color: var(--color-text-maxcontrast);
 	overflow-wrap: anywhere;
 }
@@ -1015,7 +1015,7 @@ body[dir="rtl"] .projectcheck-select {
 .projectcheck-support-us__body {
 	display: flex;
 	flex-direction: column;
-	gap: var(--pc-space-5, 1.5rem);
+	gap: var(--projectcheck-space-5, 1.5rem);
 	min-width: 0;
 	width: 100%;
 }
@@ -1024,13 +1024,13 @@ body[dir="rtl"] .projectcheck-select {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: var(--pc-space-3, 0.75rem);
+	gap: var(--projectcheck-space-3, 0.75rem);
 	min-width: 0;
 	width: 100%;
-	padding: var(--pc-space-4, 1rem);
+	padding: var(--projectcheck-space-4, 1rem);
 	border: 1px solid var(--color-border-maxcontrast, var(--color-border));
 	border-inline-start: 4px solid var(--color-primary-element);
-	border-radius: var(--pc-radius-md, var(--border-radius-large, 12px));
+	border-radius: var(--projectcheck-radius-md, var(--border-radius-large, 12px));
 	background: color-mix(in srgb, var(--color-primary-element) 10%, var(--color-main-background));
 	box-sizing: border-box;
 }
@@ -1040,16 +1040,16 @@ body[dir="rtl"] .projectcheck-select {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: var(--pc-space-3, 0.75rem);
+	gap: var(--projectcheck-space-3, 0.75rem);
 	min-width: 0;
 	width: 100%;
 }
 
 .projectcheck-support-us__offer-title {
 	margin: 0;
-	font-size: var(--pc-fs-lg, 1.125rem);
+	font-size: var(--projectcheck-fs-lg, 1.125rem);
 	font-weight: 700;
-	line-height: var(--pc-line-tight, 1.25);
+	line-height: var(--projectcheck-line-tight, 1.25);
 	color: var(--color-main-text);
 	overflow-wrap: anywhere;
 }
@@ -1059,13 +1059,13 @@ body[dir="rtl"] .projectcheck-select {
 .projectcheck-support-us__hint {
 	margin: 0;
 	max-width: 65ch;
-	font-size: var(--pc-fs-sm, 0.875rem);
-	line-height: var(--pc-line-base, 1.45);
+	font-size: var(--projectcheck-fs-sm, 0.875rem);
+	line-height: var(--projectcheck-line-base, 1.45);
 	overflow-wrap: anywhere;
 }
 
 .projectcheck-support-us__benefit {
-	font-size: var(--pc-fs-md, 1rem);
+	font-size: var(--projectcheck-fs-md, 1rem);
 	color: var(--color-main-text);
 }
 
@@ -1083,23 +1083,23 @@ body[dir="rtl"] .projectcheck-select {
 .projectcheck-support-us__secondary {
 	display: flex;
 	flex-direction: column;
-	gap: var(--pc-space-3, 0.75rem);
+	gap: var(--projectcheck-space-3, 0.75rem);
 	min-width: 0;
 	width: 100%;
 }
 
 .projectcheck-support-us__secondary-title {
 	margin: 0;
-	font-size: var(--pc-fs-md, 1rem);
+	font-size: var(--projectcheck-fs-md, 1rem);
 	font-weight: 600;
-	line-height: var(--pc-line-tight, 1.25);
+	line-height: var(--projectcheck-line-tight, 1.25);
 	color: var(--color-main-text);
 }
 
 .projectcheck-support-us__options {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-	gap: var(--pc-space-4, 1rem);
+	gap: var(--projectcheck-space-4, 1rem);
 	width: 100%;
 	min-width: 0;
 }
@@ -1108,20 +1108,20 @@ body[dir="rtl"] .projectcheck-select {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
-	gap: var(--pc-space-3, 0.75rem);
+	gap: var(--projectcheck-space-3, 0.75rem);
 	min-width: 0;
-	padding: var(--pc-space-4, 1rem);
+	padding: var(--projectcheck-space-4, 1rem);
 	border: 1px solid var(--color-border);
-	border-radius: var(--pc-radius-md, var(--border-radius-large, 12px));
+	border-radius: var(--projectcheck-radius-md, var(--border-radius-large, 12px));
 	background: var(--color-main-background);
 	box-sizing: border-box;
 }
 
 .projectcheck-support-us__option-title {
 	margin: 0;
-	font-size: var(--pc-fs-lg, 1.125rem);
+	font-size: var(--projectcheck-fs-lg, 1.125rem);
 	font-weight: 700;
-	line-height: var(--pc-line-tight, 1.25);
+	line-height: var(--projectcheck-line-tight, 1.25);
 	color: var(--color-main-text);
 	overflow-wrap: anywhere;
 }
@@ -1129,8 +1129,8 @@ body[dir="rtl"] .projectcheck-select {
 .projectcheck-support-us__option-hint {
 	margin: 0;
 	flex: 1 1 auto;
-	font-size: var(--pc-fs-sm, 0.875rem);
-	line-height: var(--pc-line-base, 1.45);
+	font-size: var(--projectcheck-fs-sm, 0.875rem);
+	line-height: var(--projectcheck-line-base, 1.45);
 	color: var(--color-text-maxcontrast);
 	overflow-wrap: anywhere;
 }
@@ -1142,7 +1142,7 @@ body[dir="rtl"] .projectcheck-select {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding-inline: var(--pc-space-4, 1rem);
+	padding-inline: var(--projectcheck-space-4, 1rem);
 	text-align: center;
 	text-decoration: none;
 	box-sizing: border-box;
@@ -1179,16 +1179,16 @@ body[dir="rtl"] .projectcheck-select {
 .projectcheck-support-us__tertiary {
 	display: flex;
 	flex-direction: column;
-	gap: var(--pc-space-2, 0.5rem);
-	padding-block-start: var(--pc-space-4, 1rem);
+	gap: var(--projectcheck-space-2, 0.5rem);
+	padding-block-start: var(--projectcheck-space-4, 1rem);
 	border-block-start: 1px solid var(--color-border);
 }
 
 .projectcheck-support-us__more,
 .projectcheck-support-us__contact {
 	margin: 0;
-	font-size: var(--pc-fs-sm, 0.875rem);
-	line-height: var(--pc-line-base, 1.45);
+	font-size: var(--projectcheck-fs-sm, 0.875rem);
+	line-height: var(--projectcheck-line-base, 1.45);
 	color: var(--color-text-maxcontrast);
 	overflow-wrap: anywhere;
 }
@@ -1213,7 +1213,7 @@ body[dir="rtl"] .projectcheck-select {
 	border: 0;
 }
 
-@media (max-width: 768.98px) {
+@media (max-width: 767.98px) {
 	.projectcheck-support-us__options {
 		grid-template-columns: 1fr;
 	}
