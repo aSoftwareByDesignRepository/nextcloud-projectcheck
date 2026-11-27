@@ -2067,6 +2067,15 @@ OC.L10N.register(
 	"never" : "never",
 	"pick each permission yourself" : "pick each permission yourself",
 	"read and make changes — payments and legal stays with you" : "read and make changes — payments and legal stays with you",
-	"see your data, never change it" : "see your data, never change it"
+	"see your data, never change it" : "see your data, never change it",
+	"All events" : "All events",
+	"Could not queue the test." : "Could not queue the test.",
+	"Endpoint revoked." : "Endpoint revoked.",
+	"Endpoints could not be loaded." : "Endpoints could not be loaded.",
+	"No webhook endpoints yet." : "No webhook endpoints yet.",
+	"Pending events are dropped — your AI can register a new endpoint any time." : "Pending events are dropped — your AI can register a new endpoint any time.",
+	"Stop notifications to" : "Stop notifications to",
+	"Test" : "Test",
+	"Test notification queued — check your endpoint." : "Test notification queued — check your endpoint."
 	}
 );

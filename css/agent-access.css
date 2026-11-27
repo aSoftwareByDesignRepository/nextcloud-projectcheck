@@ -107,11 +107,16 @@
 	   cells so summed min-contents fit: the label ellipsizes with a title
 	   fallback, scope pills wrap between whole badges inside the capped
 	   cell, and the actions cell returns to a real table-cell (the card
-	   layout's flex rule would otherwise anonymous-wrap it) with nowrap
-	   buttons so the column sizes to Rotate+Revoke and no more. */
+	   layout's flex rule would otherwise anonymous-wrap it). Buttons keep
+	   normal wrapping: nowrap made the column's min-content the combined
+	   Rotate+Revoke width, which alone overran the wrap in long-action
+	   locales (de 'Widerrufen' clipped mid-glyph @1280px); with normal
+	   wrapping auto layout keeps both buttons on one line when space
+	   allows and stacks them when squeezed, so the table's summed
+	   min-content never exceeds the card. */
 	.pc-agent-table td.pc-row-actions {
 		display: table-cell;
-		white-space: nowrap;
+		white-space: normal;
 		text-align: end;
 	}
 	.pc-agent-table td.pc-agent-label-cell { max-width: 14rem; }
@@ -180,8 +185,13 @@
 }
 
 /* Badge fallback — apps whose shell lacks a pill+dot badge get the recipe
- * locally so scope badges never render as bare text (no color-only state). */
-.pc-badge {
+ * locally so scope badges never render as bare text (no color-only state).
+ * Scoped under .pc-agent: an unscoped .pc-badge redefines the app's own
+ * badge recipe wherever this file loads, leaking pack chrome (dot + pill
+ * radius + --neutral variant) into app chrome like the scope-strip role
+ * badge — the strip then renders differently on agent pages vs everywhere
+ * else, and picks up a variant it never owned. */
+.pc-agent .pc-badge {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--pc-space-1, 4px);
@@ -193,19 +203,24 @@
 	line-height: 1.6;
 	border: 1px solid transparent;
 }
-.pc-badge::before {
+.pc-agent .pc-badge::before {
 	content: '';
 	width: 6px; height: 6px;
 	border-radius: 50%;
 	background: currentColor;
 	flex-shrink: 0;
 }
-.pc-badge--neutral {
-	color: var(--color-text-maxcontrast);
+.pc-agent .pc-badge--neutral {
+	/* Muted ink must still clear AA on the tint: text-maxcontrast alone
+	 * measured ~3.4:1 on the 15% badge tint (axe color-contrast serious on
+	 * the populated /settings/agent cells). Pull the surviving token 62%
+	 * toward main-text — the family scheduled-badge recipe — keeps the
+	 * muted read and restores >=4.5:1 in light and dark. */
+	color: color-mix(in srgb, var(--color-text-maxcontrast) 62%, var(--color-main-text));
 	background: color-mix(in srgb, var(--color-main-background) 85%, var(--color-text-maxcontrast));
 	border-color: color-mix(in srgb, var(--color-main-background) 70%, var(--color-text-maxcontrast));
 }
-.pc-badge--info {
+.pc-agent .pc-badge--info {
 	color: var(--color-primary-element-text);
 	background: var(--color-primary-element);
 }

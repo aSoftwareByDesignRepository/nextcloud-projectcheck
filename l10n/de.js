@@ -2067,6 +2067,15 @@ OC.L10N.register(
 	"never" : "Nie",
 	"pick each permission yourself" : "jede Berechtigung selbst wählen",
 	"read and make changes — payments and legal stays with you" : "lesen und Änderungen vornehmen — Zahlungen und Rechtliches bleiben bei Ihnen",
-	"see your data, never change it" : "Ihre Daten sehen, nie ändern"
+	"see your data, never change it" : "Ihre Daten sehen, nie ändern",
+	"All events" : "Alle Ereignisse",
+	"Could not queue the test." : "Der Test konnte nicht eingereiht werden.",
+	"Endpoint revoked." : "Endpunkt widerrufen.",
+	"Endpoints could not be loaded." : "Endpunkte konnten nicht geladen werden.",
+	"No webhook endpoints yet." : "Noch keine Webhook-Endpunkte.",
+	"Pending events are dropped — your AI can register a new endpoint any time." : "Ausstehende Ereignisse werden verworfen — Ihre KI kann jederzeit einen neuen Endpunkt registrieren.",
+	"Stop notifications to" : "Benachrichtigungen an",
+	"Test" : "Test",
+	"Test notification queued — check your endpoint." : "Testbenachrichtigung eingereiht — prüfen Sie Ihren Endpunkt."
 	}
 );
